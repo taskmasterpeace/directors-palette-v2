@@ -6,6 +6,27 @@
 
 Director's Palette v2 is a sophisticated Next.js application that enables creators to generate high-quality images using multiple AI models (Replicate API). Built specifically for visual storytelling, it provides powerful prompt engineering tools, character consistency features, and a unified gallery for managing generated content.
 
+## 📸 Screenshots
+
+### Shot Creator Interface
+![Shot Creator with Reference Images and Gallery](./screenshots/shot-creator-interface.png)
+*Main interface showing reference image upload, unified gallery, and generated images*
+
+### AI Model Selection
+![Multi-Model Support](./screenshots/model-selection-dropdown.png)
+*Choose from 6 AI models: Nano Banana, Seedream-4, Gen4 Image, Gen4 Turbo, Qwen Edit, and Qwen Image*
+
+### Image Editing
+![Fullscreen Image Editing](./screenshots/image-editing-fullscreen.png)
+*Fullscreen editing mode with annotation tools and adjustments*
+
+### Video Generation
+![Video Generation Results](./screenshots/video-generation-results.png)
+*Generate videos from images with prompt variations*
+
+![Video Generation in Progress](./screenshots/video-generation-progress.png)
+*Real-time generation status with processing indicators*
+
 ## ✨ Key Features
 
 ### 🎯 Shot Creator
