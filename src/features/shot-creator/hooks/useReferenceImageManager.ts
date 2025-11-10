@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { getImageDimensions } from "@/features/shot-creator/helpers/short-creator.helper"
+import { validateImageFile, resizeImage } from "@/features/shot-creator/helpers/image-resize.helper"
 import { ShotCreatorReferenceImage } from "../types"
 import { useShotCreatorStore } from "../store/shot-creator.store"
 
@@ -20,6 +21,17 @@ export function useReferenceImageManager(maxImages: number = 3) {
         return Math.min(3, maxImages)
     }
     const visibleSlots = getVisibleSlots()
+
+    // Memory cleanup: Revoke ObjectURLs on unmount
+    useEffect(() => {
+        return () => {
+            shotCreatorReferenceImages.forEach(img => {
+                if (img.preview?.startsWith('blob:')) {
+                    URL.revokeObjectURL(img.preview)
+                }
+            })
+        }
+    }, [shotCreatorReferenceImages])
 
     // Load + Save images in Supabase
     useEffect(() => {
@@ -51,30 +63,54 @@ export function useReferenceImageManager(maxImages: number = 3) {
         saveImages()
     }, [shotCreatorReferenceImages, toast])
 
-    // Upload
+    // Upload with validation and resize
     const handleShotCreatorImageUpload = async (file: File) => {
         try {
+            // Step 1: Validate file
+            const validation = validateImageFile(file)
+            if (!validation.valid) {
+                toast({
+                    title: "Invalid Image",
+                    description: validation.error,
+                    variant: "destructive"
+                })
+                return
+            }
+
+            // Get dimensions before resize
+            const dimensions = await getImageDimensions(file)
+
+            // Step 2: Resize image (use detected aspect ratio)
+            const resizedFile = await resizeImage(file, dimensions.aspectRatio)
+
+            // Step 3: Create preview for immediate UI feedback
             const reader = new FileReader()
             reader.onload = async (e) => {
                 if (!e.target?.result) return
-                const imageUrl = e.target.result as string
-                const dimensions = await getImageDimensions(file)
+                const previewUrl = e.target.result as string
 
                 const newImage: ShotCreatorReferenceImage = {
                     id: `ref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    file,
-                    preview: imageUrl,
+                    file: resizedFile,
+                    preview: previewUrl,
                     tags: [],
                     detectedAspectRatio: dimensions.aspectRatio
                 }
 
                 setShotCreatorReferenceImages([...shotCreatorReferenceImages, newImage])
-                toast({ title: "Reference Image Added", description: `Added ${file.name} (${dimensions.aspectRatio})` })
+                toast({
+                    title: "Reference Image Added",
+                    description: `Added ${file.name} (${dimensions.aspectRatio})`
+                })
             }
-            reader.readAsDataURL(file)
+            reader.readAsDataURL(resizedFile)
         } catch (err) {
             console.error("Upload error:", err)
-            toast({ title: "Upload Failed", description: "Failed to upload reference image", variant: "destructive" })
+            toast({
+                title: "Upload Failed",
+                description: err instanceof Error ? err.message : "Failed to upload reference image",
+                variant: "destructive"
+            })
         }
     }
 

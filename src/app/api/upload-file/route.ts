@@ -5,6 +5,9 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB server-side limit
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
 export async function POST(request: NextRequest) {
   try {
     // Parse the multipart form data
@@ -14,6 +17,28 @@ export async function POST(request: NextRequest) {
     if (!file) {
       return NextResponse.json(
         { error: 'File is required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        {
+          error: 'File too large',
+          details: `Maximum file size is 50MB. Your file: ${(file.size / 1024 / 1024).toFixed(1)}MB`
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate file type
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json(
+        {
+          error: 'Invalid file type',
+          details: `Allowed types: JPEG, PNG, WebP. Your file: ${file.type}`
+        },
         { status: 400 }
       );
     }

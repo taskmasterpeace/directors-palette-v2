@@ -6,6 +6,7 @@ import { imageGenerationService } from '../services/image-generation.service'
 import { useShotCreatorStore } from '../store/shot-creator.store'
 import { getClient, TypedSupabaseClient } from '@/lib/db/client'
 import { parseDynamicPrompt } from '../helpers/prompt-syntax-feedback'
+import { uploadImageToReplicate } from '../helpers/image-resize.helper'
 import { ImageGenerationRequest, ImageModel, ImageModelSettings } from "../types/image-generation.types"
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
@@ -151,6 +152,46 @@ async function waitForImageCompletion(
     })
 }
 
+/**
+ * Converts reference images to HTTPS URLs for Replicate API
+ * Handles data URLs, blob URLs, and File objects
+ */
+async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<string[]> {
+    const uploadedUrls: string[] = []
+
+    for (const imageUrl of referenceImages) {
+        // If already HTTPS URL, use as-is
+        if (imageUrl.startsWith('https://')) {
+            uploadedUrls.push(imageUrl)
+            continue
+        }
+
+        // If data URL or blob URL, need to upload
+        if (imageUrl.startsWith('data:') || imageUrl.startsWith('blob:')) {
+            try {
+                // Convert to Blob
+                const response = await fetch(imageUrl)
+                const blob = await response.blob()
+
+                // Convert Blob to File
+                const file = new File([blob], `reference-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' })
+
+                // Upload to Replicate
+                const httpsUrl = await uploadImageToReplicate(file)
+                uploadedUrls.push(httpsUrl)
+            } catch (error) {
+                console.error('Failed to upload reference image:', error)
+                throw new Error(`Failed to upload reference image: ${error instanceof Error ? error.message : 'Unknown error'}`)
+            }
+        } else {
+            // Unknown format, skip it
+            console.warn('Unknown image URL format:', imageUrl)
+        }
+    }
+
+    return uploadedUrls
+}
+
 export function useImageGeneration() {
     const { toast } = useToast()
     const [progress, setProgress] = useState<GenerationProgress>({ status: 'idle' })
@@ -270,6 +311,27 @@ export function useImageGeneration() {
             const totalVariations = promptResult.totalCount
             const isPipeChaining = promptResult.hasPipes
 
+            // Upload reference images to Replicate first (convert data URLs / blob URLs to HTTPS URLs)
+            let uploadedReferenceImages: string[] = []
+            if (referenceImages.length > 0) {
+                toast({
+                    title: 'Preparing Reference Images',
+                    description: `Uploading ${referenceImages.length} reference image${referenceImages.length > 1 ? 's' : ''}...`,
+                })
+                try {
+                    uploadedReferenceImages = await prepareReferenceImagesForAPI(referenceImages)
+                } catch (uploadError) {
+                    setShotCreatorProcessing(false)
+                    setProgress({ status: 'failed', error: uploadError instanceof Error ? uploadError.message : 'Failed to upload reference images' })
+                    toast({
+                        title: 'Upload Failed',
+                        description: uploadError instanceof Error ? uploadError.message : 'Failed to upload reference images',
+                        variant: 'destructive',
+                    })
+                    return
+                }
+            }
+
             // Set processing state
             setShotCreatorProcessing(true)
             setProgress({ status: 'starting' })
@@ -291,9 +353,10 @@ export function useImageGeneration() {
                 const variationPrompt = variations[i]
                 const isFirstStep = i === 0
                 const isLastStep = i === variations.length - 1
+                // Use uploaded HTTPS URLs instead of original data URLs
                 const inputImages = isPipeChaining
-                    ? (isFirstStep ? (referenceImages.length > 0 ? referenceImages : undefined) : previousImageUrl ? [previousImageUrl] : undefined)
-                    : (referenceImages.length > 0 ? referenceImages : undefined)
+                    ? (isFirstStep ? (uploadedReferenceImages.length > 0 ? uploadedReferenceImages : undefined) : previousImageUrl ? [previousImageUrl] : undefined)
+                    : (uploadedReferenceImages.length > 0 ? uploadedReferenceImages : undefined)
 
                 // Update model settings for img2img if we have an input image from previous step
                 let currentModelSettings: ImageModelSettings = { ...modelSettings }

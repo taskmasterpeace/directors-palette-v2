@@ -3,6 +3,21 @@
  * Defines capabilities and parameters for each AI model in Shot Creator
  */
 
+/**
+ * Standard target sizes for image resizing
+ * Based on best practices for Replicate API
+ */
+export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number }> = {
+  '1:1': { width: 1024, height: 1024 },
+  '16:9': { width: 1280, height: 720 },
+  '9:16': { width: 720, height: 1280 },
+  '4:3': { width: 1024, height: 768 },
+  '3:4': { width: 768, height: 1024 },
+  '21:9': { width: 1344, height: 576 },
+  '3:2': { width: 1152, height: 768 },
+  '2:3': { width: 768, height: 1152 },
+};
+
 export type ModelType = 'generation' | 'editing'
 export type ModelId = 'nano-banana' | 'seedream-4' | 'gen4-image' | 'gen4-image-turbo' | 'qwen-image-edit' | 'qwen-image'
 
