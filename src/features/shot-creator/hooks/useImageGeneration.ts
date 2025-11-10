@@ -231,10 +231,6 @@ export function useImageGeneration() {
                             setShotCreatorProcessing(false)
                             setActiveGalleryId(null)
 
-                            // Reset prompt only (keep reference images for reuse)
-                            const { setShotCreatorPrompt } = useShotCreatorStore.getState()
-                            setShotCreatorPrompt('')
-
                             toast({
                                 title: 'Image Ready!',
                                 description: 'Your image has been saved to the gallery.',
@@ -420,10 +416,6 @@ export function useImageGeneration() {
                 galleryId: results[results.length - 1].galleryId,
             })
             setShotCreatorProcessing(false)
-
-            // Reset prompt after successful generation
-            const { setShotCreatorPrompt } = useShotCreatorStore.getState()
-            setShotCreatorPrompt('')
 
             toast({
                 title: isPipeChaining ? 'Chain Complete!' : 'Generation Started!',

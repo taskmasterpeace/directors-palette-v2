@@ -12,7 +12,8 @@ import {
 import {
     Sparkles,
     HelpCircle,
-    BookOpen
+    BookOpen,
+    X
 } from 'lucide-react'
 import { useShotCreatorStore } from "@/features/shot-creator/store/shot-creator.store"
 import { useShotCreatorSettings } from "../../hooks"
@@ -219,27 +220,43 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         </span>
                     </div>
                 </div>
-                <Textarea
-                    ref={textareaRef}
-                    value={shotCreatorPrompt}
-                    onChange={async (e) => {
-                        await handlePromptChange(e.target.value);
-                    }}
-                    placeholder={
-                        isEditingMode
-                            ? "Describe how you want to edit the image (e.g., 'change the background to a sunset', 'add more lighting')"
-                            : "Describe your shot... Use @ to reference tagged images"
-                    }
-                    className="min-h-[100px] bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 resize-none"
-                    maxLength={1000}
-                    onKeyDown={(e) => {
-                        // Ctrl+Enter or Cmd+Enter to generate
-                        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && canGenerate && !shotCreatorProcessing && !isGenerating) {
-                            e.preventDefault()
-                            void handleGenerate()
+                <div className="relative">
+                    <Textarea
+                        ref={textareaRef}
+                        value={shotCreatorPrompt}
+                        onChange={async (e) => {
+                            await handlePromptChange(e.target.value);
+                        }}
+                        placeholder={
+                            isEditingMode
+                                ? "Describe how you want to edit the image (e.g., 'change the background to a sunset', 'add more lighting')"
+                                : "Describe your shot... Use @ to reference tagged images"
                         }
-                    }}
-                />
+                        className="min-h-[100px] bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 resize-none pr-10"
+                        maxLength={1000}
+                        onKeyDown={(e) => {
+                            // Ctrl+Enter or Cmd+Enter to generate
+                            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && canGenerate && !shotCreatorProcessing && !isGenerating) {
+                                e.preventDefault()
+                                void handleGenerate()
+                            }
+                        }}
+                    />
+                    {shotCreatorPrompt.length > 0 && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-white hover:bg-slate-700"
+                            onClick={() => {
+                                setShotCreatorPrompt('')
+                                textareaRef.current?.focus()
+                            }}
+                            title="Clear prompt"
+                        >
+                            <X className="h-3 w-3" />
+                        </Button>
+                    )}
+                </div>
 
                 {/* Prompt Syntax Feedback - Shows bracket/wildcard notifications */}
                 <div className="space-y-2">
