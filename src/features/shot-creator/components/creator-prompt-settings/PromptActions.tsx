@@ -209,13 +209,13 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         {isEditingMode ? 'Edit Instructions' : 'Prompt'}
                     </Label>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                        <Badge variant="secondary" className="text-xs whitespace-nowrap">
+                        <Badge variant="secondary" className="text-xs whitespace-nowrap hidden sm:inline-flex">
                             @ refs
                         </Badge>
                         <Badge variant="secondary" className="text-xs whitespace-nowrap hidden sm:inline-flex">
                             Ctrl+Enter
                         </Badge>
-                        <span className="text-xs text-slate-400 whitespace-nowrap">
+                        <span className="text-xs text-slate-400 whitespace-nowrap hidden sm:inline-flex">
                             {shotCreatorPrompt.length}/1000
                         </span>
                     </div>
