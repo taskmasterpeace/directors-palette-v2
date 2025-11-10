@@ -39,6 +39,37 @@ function FullscreenModal({
     const isMobile = useIsMobile()
     const [showDetails, setShowDetails] = useState(false)
 
+    // Mobile-native download: Use Share API if available, fallback to standard download
+    const handleMobileDownload = async (imageUrl: string) => {
+        if (isMobile && navigator.share) {
+            try {
+                // Fetch the image as a blob
+                const response = await fetch(imageUrl)
+                const blob = await response.blob()
+                const file = new File([blob], `directors-palette-${Date.now()}.jpg`, { type: blob.type })
+
+                // Use native share API (allows saving to photo library)
+                await navigator.share({
+                    files: [file],
+                    title: 'Image from Directors Palette',
+                })
+
+                toast({
+                    title: 'Image Shared',
+                    description: 'Image shared successfully. You can save it to your photo library.',
+                })
+            } catch (error) {
+                // User cancelled or share failed, fallback to regular download
+                if ((error as Error).name !== 'AbortError') {
+                    onDownloadImage(imageUrl)
+                }
+            }
+        } else {
+            // Desktop or share API not available
+            onDownloadImage(imageUrl)
+        }
+    }
+
     if (!fullscreenImage) return null
     return (
         <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-0 md:p-4">
@@ -104,10 +135,10 @@ function FullscreenModal({
                     {/* Details Panel - Desktop: sidebar, Mobile: conditional overlay */}
                     {(!isMobile || showDetails) && (
                         <div className={`
-                            bg-slate-900/95 p-6 overflow-y-auto
+                            bg-slate-900/95 overflow-y-auto
                             ${isMobile
-                                ? 'absolute inset-x-0 bottom-0 top-auto max-h-[70vh] rounded-t-2xl'
-                                : 'w-96 rounded-lg max-h-[80vh]'
+                                ? 'absolute inset-x-0 bottom-0 top-auto max-h-[70vh] rounded-t-2xl pb-20 pt-6 px-6'
+                                : 'p-6 w-96 rounded-lg max-h-[80vh]'
                             }
                         `}>
                         <h3 className="text-white font-semibold mb-4">Generation Details</h3>
@@ -410,10 +441,10 @@ function FullscreenModal({
                                 size="lg"
                                 variant="default"
                                 className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border border-white/20"
-                                onClick={() => onDownloadImage(fullscreenImage.url)}
+                                onClick={() => handleMobileDownload(fullscreenImage.url)}
                             >
                                 <Download className="w-5 h-5 mr-2" />
-                                Download
+                                Save Image
                             </Button>
                             <Button
                                 size="lg"
@@ -427,17 +458,21 @@ function FullscreenModal({
                         </div>
                     )}
 
-                    {/* Mobile details close button */}
+                    {/* Mobile details close button - prominent and easy to tap */}
                     {isMobile && showDetails && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="absolute bottom-[72vh] left-1/2 -translate-x-1/2 text-white hover:bg-white/20 z-50"
-                            onClick={() => setShowDetails(false)}
-                        >
-                            <ChevronLeft className="h-4 w-4 mr-1 rotate-90" />
-                            Close Details
-                        </Button>
+                        <div className="absolute bottom-0 left-0 right-0 pb-safe">
+                            <div className="bg-slate-900/95 border-t border-slate-700 p-3">
+                                <Button
+                                    variant="default"
+                                    size="lg"
+                                    className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                                    onClick={() => setShowDetails(false)}
+                                >
+                                    <ChevronLeft className="h-5 w-5 mr-2 rotate-90" />
+                                    Close Details
+                                </Button>
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>
