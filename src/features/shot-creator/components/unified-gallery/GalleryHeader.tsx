@@ -29,15 +29,17 @@ export function GalleryHeader({
     <CardHeader className="pb-4">
       <div className="flex flex-col gap-3">
         {/* Top row with title and stats */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-2">
             <ImageIcon className="w-5 h-5 text-blue-400" />
             <CardTitle>Unified Gallery</CardTitle>
-            <Badge variant="outline" className="ml-2">
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant="outline" className="text-xs">
               {totalImages} images
             </Badge>
-            <Badge variant="outline" className="ml-1">
-              {totalCredits} credits used
+            <Badge variant="outline" className="text-xs">
+              {totalCredits} credits
             </Badge>
           </div>
         </div>
@@ -45,7 +47,7 @@ export function GalleryHeader({
         {/* Bottom row with search and controls */}
         <div className="flex items-center gap-2 flex-wrap">
           {/* Search Input */}
-          <div className="relative flex-1 min-w-[180px] max-w-[300px]">
+          <div className="relative flex-1 min-w-[140px] max-w-[300px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search prompts..."
