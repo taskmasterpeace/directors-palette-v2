@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
-import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2 } from 'lucide-react'
+import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 import { GeneratedImage } from "../../store/unified-gallery-store"
+import { useIsMobile } from '@/hooks/useMediaQuery'
 
 interface FullscreenModalProps {
     fullscreenImage: GeneratedImage | null
@@ -35,32 +36,37 @@ function FullscreenModal({
     showReferenceNamePrompt
 }: FullscreenModalProps) {
     const { toast } = useToast()
+    const isMobile = useIsMobile()
+    const [showDetails, setShowDetails] = useState(false)
 
     if (!fullscreenImage) return null
     return (
-        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
-            <div className="relative max-w-[90vw] w-full">
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-0 md:p-4">
+            <div className="relative w-full h-full md:max-w-[90vw] md:h-auto">
+                {/* Close button - always visible */}
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute -top-10 right-0 text-white hover:bg-white/20"
+                    className="absolute top-2 right-2 md:-top-10 md:right-0 text-white hover:bg-white/20 z-50"
                     onClick={onClose}
                 >
                     <X className="h-5 w-5" />
                 </Button>
 
-                {/* Navigation hint */}
-                <div className="absolute -top-10 left-0 text-white/60 text-sm">
-                    Use arrow keys to navigate • ESC to close
-                </div>
+                {/* Navigation hint - desktop only */}
+                {!isMobile && (
+                    <div className="absolute -top-10 left-0 text-white/60 text-sm">
+                        Use arrow keys to navigate • ESC to close
+                    </div>
+                )}
 
-                <div className="flex gap-6">
+                <div className={`flex ${isMobile ? 'flex-col h-full' : 'gap-6'}`}>
                     {/* Image with navigation buttons */}
-                    <div className="flex-1 relative">
+                    <div className={`relative ${isMobile ? 'flex-1 flex items-center justify-center' : 'flex-1'}`}>
                         <Image
                             src={fullscreenImage?.url}
                             alt="Fullscreen view"
-                            className="w-full max-h-[80vh] object-contain rounded-lg"
+                            className={`object-contain ${isMobile ? 'max-h-full w-auto' : 'w-full max-h-[80vh] rounded-lg'}`}
                             width={1000}
                             height={1000}
                         />
@@ -95,8 +101,15 @@ function FullscreenModal({
                         )}
                     </div>
 
-                    {/* Details Panel */}
-                    <div className="w-96 bg-slate-900/90 rounded-lg p-6 max-h-[80vh] overflow-y-auto">
+                    {/* Details Panel - Desktop: sidebar, Mobile: conditional overlay */}
+                    {(!isMobile || showDetails) && (
+                        <div className={`
+                            bg-slate-900/95 p-6 overflow-y-auto
+                            ${isMobile
+                                ? 'absolute inset-x-0 bottom-0 top-auto max-h-[70vh] rounded-t-2xl'
+                                : 'w-96 rounded-lg max-h-[80vh]'
+                            }
+                        `}>
                         <h3 className="text-white font-semibold mb-4">Generation Details</h3>
 
                         {/* Prompt */}
@@ -387,7 +400,45 @@ function FullscreenModal({
                                 </Button>
                             </div>
                         </div>
-                    </div>
+                        </div>
+                    )}
+
+                    {/* Mobile floating action buttons */}
+                    {isMobile && !showDetails && (
+                        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 px-4 z-40">
+                            <Button
+                                size="lg"
+                                variant="default"
+                                className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border border-white/20"
+                                onClick={() => onDownloadImage(fullscreenImage.url)}
+                            >
+                                <Download className="w-5 h-5 mr-2" />
+                                Download
+                            </Button>
+                            <Button
+                                size="lg"
+                                variant="default"
+                                className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border border-white/20"
+                                onClick={() => setShowDetails(true)}
+                            >
+                                <Info className="w-5 h-5 mr-2" />
+                                Details
+                            </Button>
+                        </div>
+                    )}
+
+                    {/* Mobile details close button */}
+                    {isMobile && showDetails && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute bottom-[72vh] left-1/2 -translate-x-1/2 text-white hover:bg-white/20 z-50"
+                            onClick={() => setShowDetails(false)}
+                        >
+                            <ChevronLeft className="h-4 w-4 mr-1 rotate-90" />
+                            Close Details
+                        </Button>
+                    )}
                 </div>
             </div>
         </div>
