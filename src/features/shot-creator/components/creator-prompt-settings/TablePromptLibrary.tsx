@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
+import { clipboardManager } from '@/utils/clipboard-manager'
 import {
   Table,
   TableBody,
@@ -326,16 +327,25 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
     return processedPrompt
   }
 
-  const handleSelectPromptForUse = (prompt: SavedPrompt) => {
+  const handleSelectPromptForUse = async (prompt: SavedPrompt) => {
     const processedPrompt = processPromptReplacements(prompt.prompt)
     if (onSelectPrompt) {
       onSelectPrompt(processedPrompt)
     }
-    navigator.clipboard.writeText(processedPrompt)
-    toast({
-      title: 'Copied',
-      description: 'Prompt copied to clipboard'
-    })
+    try {
+      await clipboardManager.writeText(processedPrompt)
+      toast({
+        title: 'Copied',
+        description: 'Prompt copied to clipboard'
+      })
+    } catch (error) {
+      console.error('Copy failed:', error)
+      toast({
+        title: 'Copy Failed',
+        description: 'Unable to copy prompt',
+        variant: 'destructive'
+      })
+    }
   }
 
   // Get category info

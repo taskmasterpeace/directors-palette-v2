@@ -20,6 +20,7 @@ import {
     Palette,
     Crop
 } from 'lucide-react'
+import { haptics } from '@/utils/haptics'
 import { CanvasState, DrawingProperties } from "../../types"
 
 interface CanvasToolbarProps {
@@ -83,14 +84,22 @@ export function CanvasToolbar({
                                 <Button
                                     key={tool.id}
                                     size="sm"
-                                    onClick={() => onToolChange(tool.id as CanvasState['tool'])}
-                                    className={`flex items-center gap-2 justify-start text-left h-8 ${isActive
+                                    onClick={() => {
+                                        haptics.light()
+                                        onToolChange(tool.id as CanvasState['tool'])
+                                    }}
+                                    className={`flex items-center gap-2 justify-start text-left
+                                        min-h-[44px] h-auto sm:h-8
+                                        min-w-[44px] sm:min-w-0
+                                        px-3 py-2
+                                        touch-manipulation
+                                        ${isActive
                                         ? 'bg-green-600 hover:bg-green-700 text-white'
                                         : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
                                         }`}
                                 >
-                                    <IconComponent className="w-4 h-4" />
-                                    <span className="text-xs">{tool.label}</span>
+                                    <IconComponent className="w-5 h-5" />
+                                    <span className="text-xs sm:text-sm">{tool.label}</span>
                                 </Button>
                             )
                         })}
@@ -100,19 +109,21 @@ export function CanvasToolbar({
                 {/* Color Selection - Simplified */}
                 <div className="space-y-2">
                     <Label className="text-sm font-medium text-slate-300">Color</Label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 sm:gap-2">
                         <input
                             type="color"
                             value={canvasState.color}
                             onChange={(e) => handleColorChange(e.target.value)}
-                            className="w-12 h-10 rounded border-2 border-slate-600 cursor-pointer bg-slate-700"
+                            className="w-14 sm:w-12 h-12 sm:h-10 rounded border-2 border-slate-600 cursor-pointer bg-slate-700 touch-manipulation flex-shrink-0"
+                            aria-label="Select color"
                         />
                         <Input
                             type="text"
                             value={canvasState.color}
                             onChange={(e) => handleColorChange(e.target.value)}
-                            className="flex-1 bg-slate-700 border-slate-600 text-white text-sm h-10 font-mono"
+                            className="flex-1 bg-slate-700 border-slate-600 text-white text-sm min-h-[44px] h-12 sm:h-10 font-mono touch-manipulation"
                             placeholder="#FF0000"
+                            aria-label="Color hex code"
                         />
                     </div>
                 </div>

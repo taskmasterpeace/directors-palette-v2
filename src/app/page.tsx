@@ -1,12 +1,12 @@
 "use client"
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Film, ImageIcon, Layout, Sparkles } from "lucide-react";
 import { useLayoutStore } from "@/store/layout.store";
 import { ShotCreator } from "@/features/shot-creator";
 import { ShotAnimator } from "@/features/shot-animator";
 import { LayoutAnnotation } from "@/features/layout-annotation";
+import { ScreenNavigationIconSelector } from "@/components/ScreenNavigationIconSelector";
 
 export default function Home() {
   const { activeTab, setActiveTab } = useLayoutStore();
@@ -25,39 +25,15 @@ export default function Home() {
             </p>
           </div>
         </div>
-        {/* Mobile-First Navigation */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          {/* Mobile: Dropdown Selector + Primary Tabs */}
-          <div className="block sm:hidden">
-            <div className="mb-3">
-              <Select value={activeTab} onValueChange={setActiveTab}>
-                <SelectTrigger className="w-full h-14 text-lg bg-slate-800 border-slate-600 text-white touch-manipulation">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="shot-creator">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4" />
-                      Shot Creator
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="shot-animator">
-                    <div className="flex items-center gap-2">
-                      <ImageIcon className="w-4 h-4" />
-                      Shot Animator
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="layout-annotation">
-                    <div className="flex items-center gap-2">
-                      <Layout className="w-4 h-4" />
-                      Layout & Annotation
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
+        {/* Mobile Screen Navigation Icon */}
+        <ScreenNavigationIconSelector
+          value={activeTab}
+          onChange={setActiveTab}
+        />
+
+        {/* Navigation Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 sm:space-y-4">
           {/* Desktop: Original Tab Layout */}
           <TabsList className="hidden sm:grid grid-cols-3 w-full max-w-none min-h-[48px] h-auto">
             {/* shot-creator */}

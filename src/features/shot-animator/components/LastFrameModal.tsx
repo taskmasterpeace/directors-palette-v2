@@ -56,7 +56,7 @@ export function LastFrameModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-slate-900 border-slate-700 text-white">
+      <DialogContent className="w-full max-w-2xl bg-slate-900 border-slate-700 text-white safe-bottom">
         <DialogHeader>
           <DialogTitle>Last Frame Image</DialogTitle>
           <DialogDescription className="text-slate-400">
@@ -64,7 +64,7 @@ export function LastFrameModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-4 px-4 sm:px-6 max-h-[60vh] sm:max-h-none overflow-y-auto">
           <div className="space-y-2">
             <Label className="text-white">Last Frame Image (Optional)</Label>
             <p className="text-sm text-slate-400">
@@ -75,7 +75,7 @@ export function LastFrameModal({
           {/* Image Preview */}
           <div className="flex justify-center">
             {image ? (
-              <div className="relative w-64 h-64">
+              <div className="relative w-full max-w-sm aspect-square sm:w-64 sm:h-64">
                 <Image
                   src={image}
                   alt="Last frame"
@@ -84,37 +84,38 @@ export function LastFrameModal({
                 />
                 <button
                   onClick={handleRemove}
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-2"
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-2.5 sm:p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center touch-manipulation"
+                  aria-label="Remove image"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5 sm:w-4 sm:h-4" />
                 </button>
               </div>
             ) : (
-              <label className="w-64 h-64 border-2 border-dashed border-slate-600 rounded flex flex-col items-center justify-center cursor-pointer hover:border-slate-500 transition-colors">
+              <label className="w-full max-w-sm aspect-square sm:w-64 sm:h-64 border-2 border-dashed border-slate-600 rounded flex flex-col items-center justify-center cursor-pointer hover:border-slate-500 transition-colors touch-manipulation">
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleFileUpload}
                   className="hidden"
                 />
-                <Upload className="w-12 h-12 text-slate-500 mb-4" />
-                <span className="text-sm text-slate-400">Upload Last Frame</span>
+                <Upload className="w-16 h-16 sm:w-12 sm:h-12 text-slate-500 mb-4" />
+                <span className="text-base sm:text-sm text-slate-400">Upload Last Frame</span>
               </label>
             )}
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 px-4 sm:px-6">
           <Button
             variant="outline"
             onClick={onClose}
-            className="bg-slate-800 border-slate-600"
+            className="bg-slate-800 border-slate-600 min-h-[44px] touch-manipulation w-full sm:w-auto"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-purple-600 hover:bg-purple-700 min-h-[44px] touch-manipulation w-full sm:w-auto"
           >
             Save Last Frame
           </Button>

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Layout, PanelLeft, PanelLeftClose, PanelRightClose, RotateCcw, Save, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { haptics } from "@/utils/haptics"
 import {
     useCanvasOperations,
     useCanvasSettings,
@@ -16,6 +17,7 @@ import { useToast } from "@/hooks/use-toast"
 import { FabricCanvas, FabricCanvasRef } from "./canvas-board"
 import { CanvasSettings, CanvasToolbar } from "./canvas-settings"
 import { CanvasExporter } from "./canvas-export"
+import { AspectRatioIconSelector } from "./AspectRatioIconSelector"
 
 interface LayoutAnnotationTabProps {
     className?: string
@@ -37,94 +39,138 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
     return (
         <div className={`flex flex-col h-full ${className}`}>
             {/* Header */}
-            <Card className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 border-purple-500/30 mb-4">
-                <CardHeader className="pb-3">
-                    <CardTitle className="text-white flex items-center gap-2">
-                        <Layout className="w-6 h-6 text-purple-400" />
-                        Layout & Annotation Canvas
+            <Card className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 border-purple-500/30 mb-2 sm:mb-4">
+                <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+                    <CardTitle className="text-white flex items-center gap-2 text-base sm:text-lg">
+                        <Layout className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
+                        <span className="hidden sm:inline">Layout & Annotation Canvas</span>
+                        <span className="sm:hidden">Canvas</span>
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <Button
-                            size="sm"
-                            type="button"
-                            onClick={handleImportClick}
-                            className="bg-purple-600 hover:bg-purple-700 text-white transition-all"
-                        >
-                            <Upload className="w-4 h-4 mr-1" />
-                            Import image
-                        </Button>
+                <CardContent className="pt-0 px-3 sm:px-6 pb-3 sm:pb-6">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-wrap">
+                        {/* Primary Actions Row */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <Button
+                                size="sm"
+                                type="button"
+                                onClick={() => {
+                                    haptics.light()
+                                    handleImportClick()
+                                }}
+                                className="flex-1 sm:flex-initial h-10 sm:h-8 min-h-[44px] sm:min-h-0 bg-purple-600 hover:bg-purple-700 text-white transition-all touch-manipulation"
+                            >
+                                <Upload className="w-4 h-4 sm:mr-1" />
+                                <span className="ml-1">Import</span>
+                            </Button>
 
-                        <Button
-                            size="sm"
-                            onClick={handleSaveCanvas}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all"
-                        >
-                            <Save className="w-4 h-4 mr-1" />
-                            Save
-                        </Button>
+                            <Button
+                                size="sm"
+                                onClick={() => {
+                                    haptics.success()
+                                    handleSaveCanvas()
+                                }}
+                                className="flex-1 sm:flex-initial h-10 sm:h-8 min-h-[44px] sm:min-h-0 bg-indigo-600 hover:bg-indigo-700 text-white transition-all touch-manipulation"
+                            >
+                                <Save className="w-4 h-4 sm:mr-1" />
+                                <span className="ml-1">Save</span>
+                            </Button>
 
-                        <Button
-                            size="sm"
-                            onClick={handleUndo}
-                            disabled={canvasState.historyIndex <= 0}
-                            className="bg-pink-600 hover:bg-pink-700 text-white disabled:opacity-50 transition-all"
-                        >
-                            <RotateCcw className="w-4 h-4 mr-1" />
-                            Undo
-                        </Button>
+                            <Button
+                                size="sm"
+                                onClick={() => {
+                                    haptics.medium()
+                                    handleUndo()
+                                }}
+                                disabled={canvasState.historyIndex <= 0}
+                                className="flex-1 sm:flex-initial h-10 sm:h-8 min-h-[44px] sm:min-h-0 bg-pink-600 hover:bg-pink-700 text-white disabled:opacity-50 transition-all touch-manipulation"
+                            >
+                                <RotateCcw className="w-4 h-4 sm:mr-1" />
+                                <span className="ml-1">Undo</span>
+                            </Button>
 
-                        <Button
-                            size="sm"
-                            onClick={handleClearCanvas}
-                            variant="destructive"
-                        >
-                            Clear Canvas
-                        </Button>
+                            <Button
+                                size="sm"
+                                onClick={() => {
+                                    haptics.warning()
+                                    handleClearCanvas()
+                                }}
+                                variant="destructive"
+                                className="flex-1 sm:flex-initial h-10 sm:h-8 min-h-[44px] sm:min-h-0 touch-manipulation"
+                            >
+                                <span>Clear</span>
+                            </Button>
+                        </div>
 
-                        <div className="flex items-center gap-3 text-sm text-purple-200">
+                        {/* Settings Row */}
+                        <div className="flex items-center gap-2 sm:gap-3 text-sm text-purple-200">
+                            {/* Mobile: Icon Button */}
+                            <AspectRatioIconSelector
+                                value={canvasState.aspectRatio}
+                                onChange={handleAspectRatioChange}
+                            />
+
+                            {/* Desktop: Keep existing Select */}
                             <Select
                                 value={canvasState.aspectRatio}
                                 onValueChange={handleAspectRatioChange}
                             >
-                                <SelectTrigger className="bg-slate-800 border-purple-500/30 text-white h-7 w-28">
+                                <SelectTrigger className="bg-slate-800 border-purple-500/30 text-white h-10 sm:h-7 w-full sm:w-28 touch-manipulation hidden sm:flex">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="bg-slate-800 border-purple-500/30">
-                                    <SelectItem value="16:9" className="text-white hover:bg-purple-600/30">16:9</SelectItem>
-                                    <SelectItem value="9:16" className="text-white hover:bg-purple-600/30">9:16</SelectItem>
-                                    <SelectItem value="1:1" className="text-white hover:bg-purple-600/30">1:1</SelectItem>
-                                    <SelectItem value="4:3" className="text-white hover:bg-purple-600/30">4:3</SelectItem>
-                                    <SelectItem value="21:9" className="text-white hover:bg-purple-600/30">21:9</SelectItem>
-                                    <SelectItem value="custom" className="text-white hover:bg-purple-600/30">Custom</SelectItem>
+                                    <SelectItem value="16:9" className="text-white hover:bg-purple-600/30 min-h-[44px] sm:min-h-0">16:9</SelectItem>
+                                    <SelectItem value="9:16" className="text-white hover:bg-purple-600/30 min-h-[44px] sm:min-h-0">9:16</SelectItem>
+                                    <SelectItem value="1:1" className="text-white hover:bg-purple-600/30 min-h-[44px] sm:min-h-0">1:1</SelectItem>
+                                    <SelectItem value="4:3" className="text-white hover:bg-purple-600/30 min-h-[44px] sm:min-h-0">4:3</SelectItem>
+                                    <SelectItem value="21:9" className="text-white hover:bg-purple-600/30 min-h-[44px] sm:min-h-0">21:9</SelectItem>
+                                    <SelectItem value="custom" className="text-white hover:bg-purple-600/30 min-h-[44px] sm:min-h-0">Custom</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <span>Zoom: {Math.round(canvasState.zoom * 100)}%</span>
+                            <span className="hidden sm:inline">Zoom: {Math.round(canvasState.zoom * 100)}%</span>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <div className="flex-1 flex gap-4 min-h-0">
-                {/* Left Sidebar - Tools & Settings */}
-                <div className={`${sidebarCollapsed ? 'w-12' : 'w-80'} transition-all duration-300 flex flex-col gap-4 relative`}>
+            <div className="flex-1 flex gap-2 sm:gap-4 min-h-0">
+                {/* Left Sidebar - Tools & Settings - Bottom sheet on mobile */}
+                <div className={`
+                    ${sidebarCollapsed ? 'hidden sm:block sm:w-12' : 'block'}
+                    sm:w-80 sm:relative
+                    fixed bottom-0 left-0 right-0 sm:inset-auto
+                    max-h-[60vh] sm:max-h-none
+                    bg-slate-950/98 sm:bg-transparent
+                    border-t sm:border-t-0 border-purple-500/30
+                    rounded-t-2xl sm:rounded-none
+                    z-40 sm:z-auto
+                    transition-all duration-300
+                    ${sidebarCollapsed ? 'translate-y-full sm:translate-y-0' : 'translate-y-0'}
+                    overflow-y-auto
+                `}
+                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
+                >
                     {/* Sidebar Toggle Button */}
                     <Button
                         size="sm"
                         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                        className="absolute -right-3 top-4 z-10 bg-purple-700 hover:bg-purple-600 text-white rounded-full p-1 w-6 h-6 transition-all"
+                        className="fixed sm:absolute left-2 sm:-right-3 top-20 sm:top-4 z-50 bg-purple-700 hover:bg-purple-600 text-white rounded-full p-2 sm:p-1 w-10 h-10 sm:w-6 sm:h-6 transition-all touch-manipulation"
                         title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                     >
                         {sidebarCollapsed ? (
-                            <PanelLeft className="w-4 h-4" />
+                            <PanelLeft className="w-5 h-5 sm:w-4 sm:h-4" />
                         ) : (
-                            <PanelLeftClose className="w-4 h-4" />
+                            <PanelLeftClose className="w-5 h-5 sm:w-4 sm:h-4" />
                         )}
                     </Button>
 
+                    {/* Mobile drag handle */}
+                    <div className="sm:hidden flex justify-center py-2 border-b border-purple-500/20 sticky top-0 bg-slate-950/95 backdrop-blur-sm z-10">
+                        <div className="w-12 h-1 bg-purple-500/50 rounded-full" />
+                    </div>
+
                     {/* Sidebar Content */}
-                    <div className={`${sidebarCollapsed ? 'hidden' : 'block'}`}>
+                    <div className="p-4 sm:p-0">
                         <CanvasSettings
                             aspectRatio={canvasState.aspectRatio}
                             canvasWidth={canvasState.canvasWidth}
@@ -142,7 +188,7 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
                 </div>
 
                 {/* Main Canvas Area */}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 overflow-hidden">
                     <FabricCanvas
                         ref={canvasRef}
                         tool={canvasState.tool}
@@ -160,24 +206,43 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
                     />
                 </div>
 
-                {/* Right Sidebar - Export */}
-                <div className={`${rightSidebarCollapsed ? 'w-12' : 'w-64'} transition-all duration-300 relative`}>
+                {/* Right Sidebar - Export - Bottom sheet on mobile */}
+                <div className={`
+                    ${rightSidebarCollapsed ? 'hidden sm:block sm:w-12' : 'block'}
+                    sm:w-64 sm:relative
+                    fixed bottom-0 left-0 right-0 sm:inset-auto
+                    max-h-[60vh] sm:max-h-none
+                    bg-slate-950/98 sm:bg-transparent
+                    border-t sm:border-t-0 border-purple-500/30
+                    rounded-t-2xl sm:rounded-none
+                    z-40 sm:z-auto
+                    transition-all duration-300
+                    ${rightSidebarCollapsed ? 'translate-y-full sm:translate-y-0' : 'translate-y-0'}
+                    overflow-y-auto
+                `}
+                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
+                >
                     {/* Right Sidebar Toggle Button */}
                     <Button
                         size="sm"
                         onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
-                        className="absolute -left-3 top-4 z-10 bg-purple-700 hover:bg-purple-600 text-white rounded-full p-1 w-6 h-6 transition-all"
+                        className="fixed sm:absolute right-2 sm:-left-3 top-20 sm:top-4 z-50 bg-purple-700 hover:bg-purple-600 text-white rounded-full p-2 sm:p-1 w-10 h-10 sm:w-6 sm:h-6 transition-all touch-manipulation"
                         title={rightSidebarCollapsed ? 'Expand export panel' : 'Collapse export panel'}
                     >
                         {rightSidebarCollapsed ? (
-                            <PanelLeft className="w-4 h-4" />
+                            <PanelLeft className="w-5 h-5 sm:w-4 sm:h-4" />
                         ) : (
-                            <PanelRightClose className="w-4 h-4" />
+                            <PanelRightClose className="w-5 h-5 sm:w-4 sm:h-4" />
                         )}
                     </Button>
 
+                    {/* Mobile drag handle */}
+                    <div className="sm:hidden flex justify-center py-2 border-b border-purple-500/20 sticky top-0 bg-slate-950/95 backdrop-blur-sm z-10">
+                        <div className="w-12 h-1 bg-purple-500/50 rounded-full" />
+                    </div>
+
                     {/* Right Sidebar Content */}
-                    <div className={`${rightSidebarCollapsed ? 'hidden' : 'block'}`}>
+                    <div className="p-4 sm:p-0">
                         <CanvasExporter
                             canvasRef={canvasRef}
                             setActiveTab={setActiveTab}

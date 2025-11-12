@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { useShotCreatorStore } from "../store"
 import Image from "next/image"
+import { clipboardManager } from '@/utils/clipboard-manager'
 
 interface FullscreenImageModalProps {
     open: boolean
@@ -49,13 +50,8 @@ export default function FullscreenImageModal({
 
     const handleCopyUrl = async () => {
         try {
-            // Try modern clipboard API first
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                await navigator.clipboard.writeText(fullscreenImage.imageData)
-                return
-            }
-
-            // Fallback for older browsers
+            await clipboardManager.writeText(fullscreenImage.imageData)
+            // Fallback for older browsers if needed
             const textArea = document.createElement('textarea')
             textArea.value = fullscreenImage.imageData
             textArea.style.position = 'fixed'

@@ -22,6 +22,7 @@ import {
   Unlock
 } from 'lucide-react'
 import * as fabric from 'fabric'
+import { clipboardManager } from '@/utils/clipboard-manager'
 
 interface FabricCanvasProps {
   tool: 'select' | 'brush' | 'rectangle' | 'circle' | 'line' | 'arrow' | 'text' | 'eraser' | 'crop'
@@ -703,41 +704,31 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
 
       if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
         e.preventDefault()
-        // Trigger paste programmatically
-        navigator.clipboard.read().then(items => {
-          for (const item of items) {
-            if (item.types.includes('image/png')) {
-              item.getType('image/png').then(blob => {
-                const reader = new FileReader()
-                reader.onload = (event) => {
-                  const imageUrl = event.target?.result as string
-                  importImage(imageUrl)
-                }
-                reader.readAsDataURL(blob)
-              })
-              return
-            }
-            if (item.types.includes('text/plain')) {
-              item.getType('text/plain').then(blob => {
-                blob.text().then(text => {
-                  const textObject = new fabric.Textbox(text, {
-                    left: canvas.width! / 2,
-                    top: canvas.height! / 2,
-                    fontSize: 20,
-                    fill: color,
-                    width: 200,
-                    originX: 'center',
-                    originY: 'center'
-                  })
-                  canvas.add(textObject)
-                  canvas.setActiveObject(textObject)
-                  canvas.renderAll()
-                })
-              })
-            }
+        // Trigger paste programmatically using clipboardManager
+        clipboardManager.readImage().then(imageDataURL => {
+          if (imageDataURL) {
+            importImage(imageDataURL)
+            return
+          }
+          // If no image, try text
+          return clipboardManager.readText()
+        }).then(text => {
+          if (text) {
+            const textObject = new fabric.Textbox(text, {
+              left: canvas.width! / 2,
+              top: canvas.height! / 2,
+              fontSize: 20,
+              fill: color,
+              width: 200,
+              originX: 'center',
+              originY: 'center'
+            })
+            canvas.add(textObject)
+            canvas.setActiveObject(textObject)
+            canvas.renderAll()
           }
         }).catch(err => {
-          console.log('Clipboard access denied:', err)
+          console.log('Clipboard paste failed:', err)
         })
       }
     }
@@ -896,9 +887,40 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
 
   return (
     <Card className="bg-slate-800/50 border-slate-600 h-full flex flex-col">
-      <CardContent className="p-4 flex-1 flex flex-col">
-        {/* Canvas Controls */}
-        <div className="flex items-center gap-2 mb-4">
+      <CardContent className="p-4 flex-1 flex flex-col relative">
+        {/* Mobile: Floating Zoom Controls */}
+        <div className="sm:hidden fixed left-4 z-30 flex flex-col gap-2" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 80px)' }}>
+          <Button
+            size="sm"
+            onClick={handleZoomIn}
+            disabled={!fabricRef.current}
+            className="bg-purple-700/90 hover:bg-purple-600 rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
+            aria-label="Zoom in"
+          >
+            <ZoomIn className="w-5 h-5 text-white" />
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleFitToScreen}
+            disabled={!fabricRef.current}
+            className="bg-purple-700/90 hover:bg-purple-600 rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
+            aria-label="Fit to screen"
+          >
+            <Maximize2 className="w-5 h-5 text-white" />
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleZoomOut}
+            disabled={!fabricRef.current}
+            className="bg-purple-700/90 hover:bg-purple-600 rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
+            aria-label="Zoom out"
+          >
+            <ZoomOut className="w-5 h-5 text-white" />
+          </Button>
+        </div>
+
+        {/* Desktop: Existing Top Controls */}
+        <div className="hidden sm:flex items-center gap-2 mb-4">
           <Button size="sm" onClick={handleZoomOut} className="bg-slate-700 hover:bg-slate-600 text-white">
             <ZoomOut className="w-4 h-4" />
           </Button>
@@ -942,6 +964,11 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
           ref={containerRef}
           className="flex-1 bg-slate-900 rounded-lg p-4 relative flex items-center justify-center overflow-auto border-2 border-purple-500/50"
           tabIndex={0}
+          style={{
+            touchAction: 'none',
+            WebkitOverflowScrolling: 'auto',
+            overscrollBehavior: 'contain'
+          }}
         >
           <canvas
             ref={canvasRef}

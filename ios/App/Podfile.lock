@@ -1,0 +1,58 @@
+PODS:
+  - Capacitor (7.4.4):
+    - CapacitorCordova
+  - CapacitorApp (7.1.0):
+    - Capacitor
+  - CapacitorCamera (7.0.2):
+    - Capacitor
+  - CapacitorClipboard (7.0.2):
+    - Capacitor
+  - CapacitorCordova (7.4.4)
+  - CapacitorHaptics (7.0.2):
+    - Capacitor
+  - CapacitorSplashScreen (7.0.3):
+    - Capacitor
+  - CapacitorStatusBar (7.0.3):
+    - Capacitor
+
+DEPENDENCIES:
+  - "Capacitor (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
+  - "CapacitorCamera (from `../../node_modules/@capacitor/camera`)"
+  - "CapacitorClipboard (from `../../node_modules/@capacitor/clipboard`)"
+  - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
+  - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
+  - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
+
+EXTERNAL SOURCES:
+  Capacitor:
+    :path: "../../node_modules/@capacitor/ios"
+  CapacitorApp:
+    :path: "../../node_modules/@capacitor/app"
+  CapacitorCamera:
+    :path: "../../node_modules/@capacitor/camera"
+  CapacitorClipboard:
+    :path: "../../node_modules/@capacitor/clipboard"
+  CapacitorCordova:
+    :path: "../../node_modules/@capacitor/ios"
+  CapacitorHaptics:
+    :path: "../../node_modules/@capacitor/haptics"
+  CapacitorSplashScreen:
+    :path: "../../node_modules/@capacitor/splash-screen"
+  CapacitorStatusBar:
+    :path: "../../node_modules/@capacitor/status-bar"
+
+SPEC CHECKSUMS:
+  Capacitor: 358dd1c3fdd71d969547b17e159fd8a7736cb45f
+  CapacitorApp: 26587c2ce485d88ddb39adb21cac64f8e481afe3
+  CapacitorCamera: f9e54db0a18bb218a8dc360907d63aaefe9209ff
+  CapacitorClipboard: 7e227702976d4435a5a40df54f65e154d0dfc1f3
+  CapacitorCordova: bf648a636f3c153f652d312ae145fb508b6ffced
+  CapacitorHaptics: b3fb2869e72c4466e18ce9ccbeb60a3d8723b3d4
+  CapacitorSplashScreen: e388b8e0ed0e982a9d3a40417f478e7a018a8763
+  CapacitorStatusBar: 0659ddc7b1713764a05831463d215b177a15d054
+
+PODFILE CHECKSUM: 7511085b18431161cbb39fba91dc6c1f4c9e39e6
+
+COCOAPODS: 1.16.2

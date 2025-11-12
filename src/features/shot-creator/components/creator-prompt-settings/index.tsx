@@ -18,6 +18,7 @@ import { useShotCreatorStore } from "@/features/shot-creator/store/shot-creator.
 import { useShotCreatorSettings } from "../../hooks"
 import { getModelConfig, ModelId } from "@/config/index"
 import { useCallback, useRef, useState } from "react"
+import { clipboardManager } from '@/utils/clipboard-manager'
 import { quickPresets } from "../../constants"
 import AdvancedSettings from "./AdvancedSettings"
 import BasicSettings from "./BasicSettings"
@@ -56,9 +57,13 @@ const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
     }, [shotCreatorPrompt, setShotCreatorPrompt])
 
     // Copy current settings
-    const copySettings = useCallback(() => {
-        const settingsText = JSON.stringify(shotCreatorSettings, null, 2)
-        navigator.clipboard.writeText(settingsText)
+    const copySettings = useCallback(async () => {
+        try {
+            const settingsText = JSON.stringify(shotCreatorSettings, null, 2)
+            await clipboardManager.writeText(settingsText)
+        } catch (error) {
+            console.error('Copy settings failed:', error)
+        }
     }, [shotCreatorSettings])
 
     return (

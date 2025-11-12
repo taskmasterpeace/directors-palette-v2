@@ -33,7 +33,9 @@ export function CompactVideoCard({
     loop: false,
     align: 'start',
     containScroll: 'trimSnaps',
-    skipSnaps: false
+    skipSnaps: false,
+    dragFree: false,
+    watchDrag: true
   })
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [playingIndex, setPlayingIndex] = useState<number | null>(null)
@@ -100,9 +102,9 @@ export function CompactVideoCard({
             {video.error && (
               <p className="text-xs text-red-400 mt-1 px-2 text-center">{video.error}</p>
             )}
-            {/* Retry button overlay for failed videos */}
+            {/* Retry button overlay for failed videos - larger on mobile */}
             {onRetryVideo && (
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -110,10 +112,10 @@ export function CompactVideoCard({
                     e.stopPropagation()
                     onRetryVideo(video.galleryId)
                   }}
-                  className="h-8 w-8 bg-purple-600 hover:bg-purple-700 text-white"
+                  className="h-11 w-11 min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white touch-manipulation"
                   title="Retry generation"
                 >
-                  <RotateCw className="h-4 w-4" />
+                  <RotateCw className="h-5 w-5 sm:h-4 sm:w-4" />
                 </Button>
               </div>
             )}
@@ -171,8 +173,8 @@ export function CompactVideoCard({
         <Badge variant="default" className="text-xs bg-purple-600 mb-2">
           Generated Videos ({visibleVideos.length})
         </Badge>
-        <div className="overflow-hidden rounded-xl w-full" ref={emblaRef}>
-          <div className="flex touch-pan-y" style={{ backfaceVisibility: 'hidden' }}>
+        <div className="overflow-hidden rounded-xl w-full touch-manipulation" ref={emblaRef}>
+          <div className="flex touch-pan-y touch-manipulation" style={{ backfaceVisibility: 'hidden' }}>
             {visibleVideos.map((video, index) => (
               <div
                 key={video.galleryId}
@@ -197,36 +199,38 @@ export function CompactVideoCard({
                           onClick={() => togglePlayPause(index)}
                         />
 
-                        {/* Play overlay */}
+                        {/* Play overlay - larger on mobile */}
                         {playingIndex !== index && (
                           <div
-                            className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-all cursor-pointer"
+                            className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-all cursor-pointer touch-manipulation"
                             onClick={() => togglePlayPause(index)}
                           >
-                            <div className="w-16 h-16 rounded-full bg-purple-600 flex items-center justify-center hover:scale-110 transition-transform">
-                              <Play className="h-8 w-8 text-white ml-1" fill="white" />
+                            <div className="w-20 h-20 sm:w-16 sm:h-16 md:w-16 md:h-16 rounded-full bg-purple-600 flex items-center justify-center hover:scale-110 transition-transform active:scale-95">
+                              <Play className="h-10 w-10 sm:h-8 sm:w-8 md:h-8 md:w-8 text-white ml-1" fill="white" />
                             </div>
                           </div>
                         )}
 
-                        {/* Hover controls (always visible when hovering anywhere) */}
-                        <div className="absolute inset-0 flex justify-end items-start p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                          <div className="flex gap-1 bg-gradient-to-t from-black/80 to-transparent rounded-lg p-1 pointer-events-auto">
+                        {/* Video controls - always visible on mobile, hover on desktop */}
+                        <div className="absolute inset-0 flex justify-end items-start p-2 sm:p-2 md:p-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity pointer-events-none">
+                          <div className="flex gap-1.5 sm:gap-1 bg-gradient-to-t from-black/80 to-transparent rounded-lg p-1.5 sm:p-1 pointer-events-auto touch-manipulation">
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => setFullscreenVideo(video.videoUrl!)}
-                              className="h-8 w-8 text-white hover:bg-white/20"
+                              className="h-11 w-11 min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0 md:h-8 md:w-8 text-white hover:bg-white/20 active:bg-white/30 touch-manipulation"
+                              title="Fullscreen"
                             >
-                              <Maximize2 className="h-4 w-4" />
+                              <Maximize2 className="h-5 w-5 sm:h-4 sm:w-4 md:h-4 md:w-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDownload(video.videoUrl!, video.galleryId)}
-                              className="h-8 w-8 text-white hover:bg-white/20"
+                              className="h-11 w-11 min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0 md:h-8 md:w-8 text-white hover:bg-white/20 active:bg-white/30 touch-manipulation"
+                              title="Download"
                             >
-                              <Download className="h-4 w-4" />
+                              <Download className="h-5 w-5 sm:h-4 sm:w-4 md:h-4 md:w-4" />
                             </Button>
                             {onDeleteVideo && (
                               <Button
@@ -236,9 +240,10 @@ export function CompactVideoCard({
                                   e.stopPropagation()
                                   onDeleteVideo(video.galleryId)
                                 }}
-                                className="h-8 w-8 text-red-400 hover:bg-red-500/20"
+                                className="h-11 w-11 min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0 md:h-8 md:w-8 text-red-400 hover:bg-red-500/20 active:bg-red-500/30 touch-manipulation"
+                                title="Delete"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-5 w-5 sm:h-4 sm:w-4 md:h-4 md:w-4" />
                               </Button>
                             )}
                           </div>
@@ -255,19 +260,20 @@ export function CompactVideoCard({
             ))}
           </div>
 
-          {/* Carousel Navigation */}
+          {/* Carousel Navigation - larger on mobile for easier touch */}
           {showNavigation && (
-            <div className="flex items-center justify-center gap-2 mt-2">
+            <div className="flex items-center justify-center gap-3 sm:gap-2 mt-3 sm:mt-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={scrollPrev}
                 disabled={!canScrollPrev}
-                className="h-6 w-6 rounded-full bg-slate-700 hover:bg-slate-600 disabled:opacity-30 text-white"
+                className="h-11 w-11 min-h-[44px] min-w-[44px] sm:h-6 sm:w-6 sm:min-h-0 sm:min-w-0 md:h-6 md:w-6 rounded-full bg-slate-700 hover:bg-slate-600 active:bg-slate-500 disabled:opacity-30 text-white touch-manipulation"
+                title="Previous video"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-6 w-6 sm:h-4 sm:w-4 md:h-4 md:w-4" />
               </Button>
-              <span className="text-xs text-slate-400 min-w-[40px] text-center font-medium">
+              <span className="text-sm sm:text-xs text-slate-400 min-w-[60px] sm:min-w-[40px] text-center font-medium">
                 {selectedIndex + 1}/{visibleVideos.length}
               </span>
               <Button
@@ -275,9 +281,10 @@ export function CompactVideoCard({
                 size="icon"
                 onClick={scrollNext}
                 disabled={!canScrollNext}
-                className="h-6 w-6 rounded-full bg-slate-700 hover:bg-slate-600 disabled:opacity-30 text-white"
+                className="h-11 w-11 min-h-[44px] min-w-[44px] sm:h-6 sm:w-6 sm:min-h-0 sm:min-w-0 md:h-6 md:w-6 rounded-full bg-slate-700 hover:bg-slate-600 active:bg-slate-500 disabled:opacity-30 text-white touch-manipulation"
+                title="Next video"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-6 w-6 sm:h-4 sm:w-4 md:h-4 md:w-4" />
               </Button>
             </div>
           )}

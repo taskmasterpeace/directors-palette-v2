@@ -1,5 +1,6 @@
 import { useToast } from '@/hooks/use-toast'
 import { useCallback } from 'react'
+import { clipboardManager } from '@/utils/clipboard-manager'
 
 /**
  * Custom hook for image-related actions
@@ -8,13 +9,22 @@ import { useCallback } from 'react'
 export function useImageActions() {
   const { toast } = useToast()
 
-  const handleCopyPrompt = useCallback((prompt?: string) => {
+  const handleCopyPrompt = useCallback(async (prompt?: string) => {
     if (prompt) {
-      navigator.clipboard.writeText(prompt)
-      toast({
-        title: "Prompt Copied",
-        description: "The prompt has been copied to your clipboard"
-      })
+      try {
+        await clipboardManager.writeText(prompt)
+        toast({
+          title: "Prompt Copied",
+          description: "The prompt has been copied to your clipboard"
+        })
+      } catch (error) {
+        console.error("Copy prompt failed", error)
+        toast({
+          title: "Copy Failed",
+          description: "Unable to copy prompt to clipboard",
+          variant: "destructive"
+        })
+      }
     }
   }, [toast])
 
@@ -23,19 +33,7 @@ export function useImageActions() {
       const response = await fetch(url)
       const blob = await response.blob()
 
-      // Check if clipboard API is available
-      if (!navigator.clipboard || !(navigator.clipboard as { write?: (items: ClipboardItem[]) => Promise<void> }).write) {
-        // Fallback: copy URL instead
-        await navigator.clipboard.writeText(url)
-        toast({
-          title: "Copied URL",
-          description: "Image URL copied to clipboard"
-        })
-        return
-      }
-
-      // Convert image to PNG - most browsers only support PNG in clipboard
-      // Only skip conversion if already PNG
+      // Convert image to PNG for clipboard compatibility
       if (blob.type !== 'image/png') {
         // Create an image element to convert the format
         const img = new Image()
@@ -57,23 +55,21 @@ export function useImageActions() {
         ctx.drawImage(img, 0, 0)
         URL.revokeObjectURL(objectUrl)
 
-        // Convert canvas to PNG blob
-        const pngBlob = await new Promise<Blob>((resolve, reject) => {
-          canvas.toBlob((b) => {
-            if (b) resolve(b)
-            else reject(new Error('Failed to convert to PNG'))
-          }, 'image/png')
+        // Convert canvas to PNG data URL
+        const dataURL = canvas.toDataURL('image/png')
+
+        // Copy using clipboardManager
+        await clipboardManager.writeImage(dataURL)
+      } else {
+        // Convert blob to data URL for clipboardManager
+        const reader = new FileReader()
+        const dataURL = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(blob)
         })
 
-        // Copy PNG to clipboard
-        await (navigator.clipboard as { write: (items: ClipboardItem[]) => Promise<void> }).write([
-          new ClipboardItem({ 'image/png': pngBlob })
-        ])
-      } else {
-        // Copy directly if already PNG
-        await (navigator.clipboard as { write: (items: ClipboardItem[]) => Promise<void> }).write([
-          new ClipboardItem({ 'image/png': blob })
-        ])
+        await clipboardManager.writeImage(dataURL)
       }
 
       toast({
@@ -84,7 +80,7 @@ export function useImageActions() {
       console.error("Copy failed", error)
       // Fallback: try to copy URL instead
       try {
-        await navigator.clipboard.writeText(url)
+        await clipboardManager.writeText(url)
         toast({
           title: "Copied URL",
           description: "Image URL copied to clipboard (image format not supported)"

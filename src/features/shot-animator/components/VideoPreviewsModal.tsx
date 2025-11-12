@@ -111,9 +111,9 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
     return (
         <>
             <Dialog open={isOpen} onOpenChange={onClose}>
-                <DialogContent className="max-w-6xl bg-slate-900 border-slate-700 text-white">
+                <DialogContent className="w-full max-w-6xl bg-slate-900 border-slate-700 text-white safe-bottom">
                     <DialogHeader>
-                        <div className="flex items-center justify-between mt-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-3">
                             <div>
                                 <DialogTitle>Video Gallery</DialogTitle>
                                 <DialogDescription className="text-slate-400">
@@ -124,19 +124,19 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                     </DialogHeader>
 
                     {/* View Mode Toggle */}
-                    <div className="my-2 flex justify-end pr-4">
+                    <div className="my-2 flex justify-end px-4 sm:px-0 sm:pr-4">
                         <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'grid' | 'list')}>
-                            <TabsList className="bg-slate-800 border border-slate-700 rounded-lg h-9">
+                            <TabsList className="bg-slate-800 border border-slate-700 rounded-lg h-11 sm:h-9 touch-manipulation">
                                 <TabsTrigger
                                     value="grid"
-                                    className="flex items-center gap-2 px-3 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-slate-300"
+                                    className="flex items-center gap-2 px-4 sm:px-3 min-h-[44px] sm:min-h-0 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-slate-300"
                                 >
                                     <Grid3x3 className="w-4 h-4" />
                                     Grid
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="list"
-                                    className="flex items-center gap-2 px-3 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-slate-300"
+                                    className="flex items-center gap-2 px-4 sm:px-3 min-h-[44px] sm:min-h-0 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-slate-300"
                                 >
                                     <List className="w-4 h-4" />
                                     List
@@ -144,7 +144,7 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                             </TabsList>
                         </Tabs>
                     </div>
-                    <ScrollArea className="h-[500px] pr-4">
+                    <ScrollArea className="h-[60vh] sm:h-[500px] px-2 sm:px-0 sm:pr-4">
                         {isLoading ? (
                             <div className="flex flex-col items-center justify-center h-64 text-slate-500">
                                 <div className="animate-spin w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full mb-4"></div>
@@ -157,19 +157,19 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                                 <p className="text-sm mt-2">Generate some videos to see them here</p>
                             </div>
                         ) : (
-                            <div className={viewMode === 'grid' ? 'grid grid-cols-2 gap-4' : 'flex flex-col gap-4'}>
+                            <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-4 sm:p-0' : 'flex flex-col gap-3 sm:gap-4 p-4 sm:p-0'}>
                                 {videos.map((video) => {
                                     const isPlaying = playingVideo === video.id
                                     return (
                                         <div
                                             key={video.id}
-                                            className={`relative group rounded-lg overflow-hidden border-2 transition-all ${isPlaying
+                                            className={`relative group rounded-lg overflow-hidden border-2 transition-all touch-manipulation ${isPlaying
                                                 ? 'border-purple-500 ring-2 ring-purple-500/30'
                                                 : 'border-slate-700 hover:border-slate-600'
-                                                } ${viewMode === 'list' ? 'flex flex-row' : ''}`}
+                                                } ${viewMode === 'list' ? 'flex flex-col sm:flex-row' : ''}`}
                                         >
                                             {/* Video Preview */}
-                                            <div className={`relative bg-slate-800 rounded-lg overflow-hidden ${viewMode === 'grid' ? 'aspect-video' : 'w-64 h-36'}`}>
+                                            <div className={`relative bg-slate-800 rounded-lg overflow-hidden ${viewMode === 'grid' ? 'aspect-video' : 'w-full sm:w-64 aspect-video sm:h-36'}`}>
                                                 <video
                                                     ref={(el) => {
                                                         videoRefs.current[video.id] = el
@@ -188,8 +188,8 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                                                 />
 
                                                 {/* Hover Controls - Top Right */}
-                                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                                    <div className="flex gap-2 bg-black/80 rounded-lg p-1">
+                                                <div className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10">
+                                                    <div className="flex gap-2 bg-black/80 rounded-lg p-1.5 sm:p-1">
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
@@ -198,9 +198,10 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                                                                 setFullscreenVideo(video.videoUrl)
                                                                 onClose()
                                                             }}
-                                                            className="h-5 w-5 text-white hover:bg-white/20"
+                                                            className="h-10 w-10 sm:h-5 sm:w-5 text-white hover:bg-white/20 touch-manipulation"
+                                                            aria-label="View fullscreen"
                                                         >
-                                                            <Maximize2 className="h-3 w-3" />
+                                                            <Maximize2 className="h-5 w-5 sm:h-3 sm:w-3" />
                                                         </Button>
                                                         <Button
                                                             variant="ghost"
@@ -209,9 +210,10 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                                                                 e.stopPropagation()
                                                                 handleDownload(video.videoUrl, video.id)
                                                             }}
-                                                            className="h-5 w-5 text-white hover:bg-white/20"
+                                                            className="h-10 w-10 sm:h-5 sm:w-5 text-white hover:bg-white/20 touch-manipulation"
+                                                            aria-label="Download video"
                                                         >
-                                                            <Download className="h-3 w-3" />
+                                                            <Download className="h-5 w-5 sm:h-3 sm:w-3" />
                                                         </Button>
                                                     </div>
                                                 </div>
@@ -222,21 +224,21 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                                                     onClick={() => togglePlayPause(video.id)}
                                                 >
                                                     {!isPlaying && (
-                                                        <div className="w-16 h-16 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors pointer-events-auto cursor-pointer">
-                                                            <Play className="h-8 w-8 text-white ml-1" fill="white" />
+                                                        <div className="w-16 h-16 sm:w-16 sm:h-16 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors pointer-events-auto cursor-pointer touch-manipulation">
+                                                            <Play className="h-8 w-8 sm:h-8 sm:w-8 text-white ml-1" fill="white" />
                                                         </div>
                                                     )}
                                                     {isPlaying && (
-                                                        <div className="w-16 h-16 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors opacity-0 group-hover:opacity-100 pointer-events-auto cursor-pointer">
-                                                            <Pause className="h-8 w-8 text-white" fill="white" />
+                                                        <div className="w-16 h-16 sm:w-16 sm:h-16 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors opacity-0 group-hover:opacity-100 pointer-events-auto cursor-pointer touch-manipulation">
+                                                            <Pause className="h-8 w-8 sm:h-8 sm:w-8 text-white" fill="white" />
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
 
                                             {/* Video Info */}
-                                            <div className={`bg-slate-800/90 ${viewMode === 'grid' ? 'p-2' : 'flex-1 p-4 flex flex-col justify-center'}`}>
-                                                <p className={`text-slate-300 ${viewMode === 'grid' ? 'text-xs truncate' : 'text-sm font-medium mb-1'}`}>
+                                            <div className={`bg-slate-800/90 ${viewMode === 'grid' ? 'p-3 sm:p-2' : 'flex-1 p-4 flex flex-col justify-center'}`}>
+                                                <p className={`text-slate-300 ${viewMode === 'grid' ? 'text-sm sm:text-xs truncate' : 'text-sm font-medium mb-1'}`}>
                                                     {video.shotName}
                                                 </p>
                                                 {viewMode === 'list' && (
@@ -254,7 +256,7 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                        <div className="mt-4">
+                        <div className="mt-4 px-4 sm:px-0">
                             <Pagination
                                 currentPage={currentPage}
                                 totalPages={totalPages}
@@ -263,11 +265,11 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                         </div>
                     )}
 
-                    <DialogFooter>
+                    <DialogFooter className="gap-2 px-4 sm:px-6">
                         <Button
                             variant="outline"
                             onClick={handleCancel}
-                            className="bg-slate-800 border-slate-600"
+                            className="bg-slate-800 border-slate-600 min-h-[44px] touch-manipulation w-full sm:w-auto"
                         >
                             Cancel
                         </Button>

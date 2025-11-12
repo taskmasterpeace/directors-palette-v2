@@ -5,6 +5,7 @@ import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Spar
 import { useToast } from "@/hooks/use-toast"
 import { GeneratedImage } from "../../store/unified-gallery-store"
 import { useIsMobile } from '@/hooks/useMediaQuery'
+import { clipboardManager } from '@/utils/clipboard-manager'
 
 interface FullscreenModalProps {
     fullscreenImage: GeneratedImage | null
@@ -284,13 +285,22 @@ function FullscreenModal({
                                     size="sm"
                                     variant="outline"
                                     className="flex-1 text-white border-slate-600"
-                                    onClick={() => {
+                                    onClick={async () => {
                                         if (fullscreenImage.prompt) {
-                                            navigator.clipboard.writeText(fullscreenImage.prompt)
-                                            toast({
-                                                title: "Prompt Copied",
-                                                description: "Prompt copied to clipboard"
-                                            })
+                                            try {
+                                                await clipboardManager.writeText(fullscreenImage.prompt)
+                                                toast({
+                                                    title: "Prompt Copied",
+                                                    description: "Prompt copied to clipboard"
+                                                })
+                                            } catch (error) {
+                                                console.error('Copy failed:', error)
+                                                toast({
+                                                    title: "Copy Failed",
+                                                    description: "Unable to copy prompt",
+                                                    variant: "destructive"
+                                                })
+                                            }
                                         }
                                     }}
                                     title="Copy Prompt"
@@ -303,12 +313,21 @@ function FullscreenModal({
                                     size="sm"
                                     variant="outline"
                                     className="flex-1 text-white border-slate-600"
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(fullscreenImage.url)
-                                        toast({
-                                            title: "URL Copied",
-                                            description: "Image URL copied to clipboard"
-                                        })
+                                    onClick={async () => {
+                                        try {
+                                            await clipboardManager.writeText(fullscreenImage.url)
+                                            toast({
+                                                title: "URL Copied",
+                                                description: "Image URL copied to clipboard"
+                                            })
+                                        } catch (error) {
+                                            console.error('Copy failed:', error)
+                                            toast({
+                                                title: "Copy Failed",
+                                                description: "Unable to copy URL",
+                                                variant: "destructive"
+                                            })
+                                        }
                                     }}
                                     title="Copy Image URL"
                                 >

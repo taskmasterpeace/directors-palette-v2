@@ -62,14 +62,14 @@ export function ModelSettingsModal({ settings, onSave }: ModelSettingsModalProps
         <Button
           variant="ghost"
           size="sm"
-          className="text-slate-400 hover:text-white hover:bg-slate-800"
+          className="h-10 sm:h-8 w-full sm:w-auto min-h-[44px] sm:min-h-0 text-slate-400 hover:text-white hover:bg-slate-800 touch-manipulation justify-center"
         >
-          <Settings className="w-4 h-4 mr-2" />
-          Settings
+          <Settings className="w-4 h-4 sm:mr-1" />
+          <span className="hidden sm:inline ml-1">Settings</span>
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-2xl bg-slate-900 border-slate-700 text-white">
+      <DialogContent className="w-full max-w-2xl bg-slate-900 border-slate-700 text-white safe-bottom">
         <DialogHeader>
           <DialogTitle>Model Settings</DialogTitle>
           <DialogDescription className="text-slate-400">
@@ -78,17 +78,17 @@ export function ModelSettingsModal({ settings, onSave }: ModelSettingsModalProps
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AnimationModel)}>
-          <TabsList className="grid w-full grid-cols-2 bg-slate-800">
-            <TabsTrigger value="seedance-lite" className="data-[state=active]:bg-slate-700">
+          <TabsList className="grid w-full grid-cols-2 bg-slate-800 h-11 sm:h-10 touch-manipulation">
+            <TabsTrigger value="seedance-lite" className="data-[state=active]:bg-slate-700 min-h-[44px] sm:min-h-0">
               Seedance Lite
             </TabsTrigger>
-            <TabsTrigger value="seedance-pro" className="data-[state=active]:bg-slate-700">
+            <TabsTrigger value="seedance-pro" className="data-[state=active]:bg-slate-700 min-h-[44px] sm:min-h-0">
               Seedance Pro
             </TabsTrigger>
           </TabsList>
 
           {/* Seedance Lite Settings */}
-          <div className="max-h-[60vh] overflow-y-auto mt-4">
+          <div className="max-h-[60vh] overflow-y-auto mt-4 px-2 sm:px-0">
             <TabsContent value="seedance-lite" className="space-y-6 mt-4">
               <ModelSettingsPanel
                 model="seedance-lite"
@@ -108,11 +108,11 @@ export function ModelSettingsModal({ settings, onSave }: ModelSettingsModalProps
           </div>
         </Tabs>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel} className="bg-slate-800 border-slate-600">
+        <DialogFooter className="gap-2 px-4 sm:px-6">
+          <Button variant="outline" onClick={handleCancel} className="bg-slate-800 border-slate-600 min-h-[44px] touch-manipulation w-full sm:w-auto">
             Cancel
           </Button>
-          <Button onClick={handleSave} className="bg-purple-600 hover:bg-purple-700">
+          <Button onClick={handleSave} className="bg-purple-600 hover:bg-purple-700 min-h-[44px] touch-manipulation w-full sm:w-auto">
             Save Settings
           </Button>
         </DialogFooter>
@@ -131,7 +131,7 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
   const modelConfig = ANIMATION_MODELS[model]
 
   return (
-    <div className="space-y-6 p-4 overflow-y-auto bg-slate-800/50 rounded-lg border border-slate-700">
+    <div className="space-y-6 p-4 sm:p-4 overflow-y-auto bg-slate-800/50 rounded-lg border border-slate-700">
       {/* Duration Slider */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -158,11 +158,11 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
         <RadioGroup
           value={settings.resolution}
           onValueChange={(value) => onUpdate({ resolution: value as '480p' | '720p' | '1080p' })}
-          className="flex gap-4"
+          className="flex flex-col sm:flex-row gap-3 sm:gap-4"
         >
           {RESOLUTIONS.map((res) => (
-            <div key={res} className="flex items-center space-x-2">
-              <RadioGroupItem value={res} id={`${model}-${res}`} />
+            <div key={res} className="flex items-center space-x-2 touch-manipulation min-h-[44px] sm:min-h-0">
+              <RadioGroupItem value={res} id={`${model}-${res}`} className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0" />
               <Label htmlFor={`${model}-${res}`} className="cursor-pointer text-slate-300">
                 {res}
               </Label>
@@ -177,11 +177,11 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
         <RadioGroup
           value={settings.aspectRatio}
           onValueChange={(value) => onUpdate({ aspectRatio: value as '16:9' | '4:3' | '1:1' | '3:4' | '9:16' | '21:9' | '9:21' })}
-          className="grid grid-cols-2 gap-3"
+          className="grid grid-cols-1 sm:grid-cols-2 gap-3"
         >
           {ASPECT_RATIOS.map((ratio) => (
-            <div key={ratio.value} className="flex items-center space-x-2">
-              <RadioGroupItem value={ratio.value} id={`${model}-${ratio.value}`} />
+            <div key={ratio.value} className="flex items-center space-x-2 touch-manipulation min-h-[44px] sm:min-h-0">
+              <RadioGroupItem value={ratio.value} id={`${model}-${ratio.value}`} className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0" />
               <Label
                 htmlFor={`${model}-${ratio.value}`}
                 className="cursor-pointer text-slate-300 text-sm"
@@ -202,11 +202,12 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
       {/* Camera Options */}
       <div className="space-y-3">
         <Label className="text-white">Camera Options</Label>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 touch-manipulation min-h-[44px] sm:min-h-0">
           <Checkbox
             id={`${model}-camera-fixed`}
             checked={settings.cameraFixed}
             onCheckedChange={(checked) => onUpdate({ cameraFixed: checked as boolean })}
+            className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0"
           />
           <Label
             htmlFor={`${model}-camera-fixed`}
@@ -227,7 +228,7 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
             value={settings.seed || ''}
             onChange={(e) => onUpdate({ seed: e.target.value ? parseInt(e.target.value) : undefined })}
             placeholder="Leave empty for random generation"
-            className="bg-slate-900 border-slate-600 text-white"
+            className="bg-slate-900 border-slate-600 text-white min-h-[44px] text-base sm:text-sm"
           />
           <p className="text-xs text-slate-500">
             💡 Leave empty for random generation

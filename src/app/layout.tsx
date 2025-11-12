@@ -3,13 +3,26 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { PromptProvider } from "@/components/providers/PromptProvider"
+import { CapacitorProvider } from "@/components/providers/CapacitorProvider"
 
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: "Directors Palette",
   description: "Visual story and music video breakdown tool",
-  generator: 'Directors Palette v0.dev'
+  generator: 'Directors Palette v0.dev',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: 'cover'
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Directors Palette'
+  }
 }
 
 export default function RootLayout({
@@ -20,12 +33,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen antialiased" suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <PromptProvider>
-            {children}
-          </PromptProvider>
-          <Toaster />
-        </ThemeProvider>
+        <CapacitorProvider>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+            <PromptProvider>
+              {children}
+            </PromptProvider>
+            <Toaster />
+          </ThemeProvider>
+        </CapacitorProvider>
       </body>
     </html>
   );

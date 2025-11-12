@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { SavedPrompt, usePromptLibraryStore } from "../store/prompt-library-store"
 import { getClient } from "@/lib/db/client"
+import { clipboardManager } from '@/utils/clipboard-manager'
 
 export interface NewPromptData {
     title: string
@@ -130,9 +131,14 @@ export function usePromptLibraryManager(onSelectPrompt?: (prompt: string) => voi
     }
 
     // Copy prompt
-    const handleCopyPrompt = (prompt: string) => {
-        navigator.clipboard.writeText(prompt)
-        toast({ title: 'Copied', description: 'Prompt copied to clipboard' })
+    const handleCopyPrompt = async (prompt: string) => {
+        try {
+            await clipboardManager.writeText(prompt)
+            toast({ title: 'Copied', description: 'Prompt copied to clipboard' })
+        } catch (error) {
+            console.error('Copy failed:', error)
+            toast({ title: 'Copy Failed', description: 'Unable to copy prompt', variant: 'destructive' })
+        }
     }
 
     // Random prompt from category

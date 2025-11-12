@@ -6,6 +6,7 @@ import { getImageDimensions } from "@/features/shot-creator/helpers/short-creato
 import { validateImageFile, resizeImage } from "@/features/shot-creator/helpers/image-resize.helper"
 import { ShotCreatorReferenceImage } from "../types"
 import { useShotCreatorStore } from "../store/shot-creator.store"
+import { clipboardManager } from "@/utils/clipboard-manager"
 
 export function useReferenceImageManager(maxImages: number = 3) {
     const { toast } = useToast()
@@ -122,39 +123,52 @@ export function useReferenceImageManager(maxImages: number = 3) {
         }
 
         try {
-            try {
-                const clipboardItems = await navigator.clipboard.read()
-                for (const item of clipboardItems) {
-                    const imageType = item.types.find((t) => t.startsWith("image/"))
-                    if (imageType) {
-                        const blob = await item.getType(imageType)
-                        const file = new File([blob], `pasted-image.${imageType.split("/")[1]}`, { type: imageType })
-                        await handleShotCreatorImageUpload(file)
-                        return
-                    }
-                }
-            } catch (readError) {
-                console.error("Clipboard read error:", readError)
+            // Try to read image from clipboard first
+            const imageDataURL = await clipboardManager.readImage()
+            if (imageDataURL) {
+                // Convert data URL to blob then to File
+                const response = await fetch(imageDataURL)
+                const blob = await response.blob()
+                const mimeType = blob.type || 'image/png'
+                const extension = mimeType.split('/')[1] || 'png'
+                const file = new File([blob], `pasted-image.${extension}`, { type: mimeType })
+                await handleShotCreatorImageUpload(file)
+                return
             }
 
-            const text = await navigator.clipboard.readText()
-            if (text && (text.startsWith("http") || text.startsWith("data:image"))) {
-                const newImage: ShotCreatorReferenceImage = {
-                    id: `ref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    url: text,
-                    preview: text,
-                    tags: [],
-                    detectedAspectRatio: "16:9",
-                    file: undefined
+            // If no image, try text (might be image URL)
+            try {
+                const text = await clipboardManager.readText()
+                if (text && (text.startsWith("http") || text.startsWith("data:image"))) {
+                    const newImage: ShotCreatorReferenceImage = {
+                        id: `ref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        url: text,
+                        preview: text,
+                        tags: [],
+                        detectedAspectRatio: "16:9",
+                        file: undefined
+                    }
+                    setShotCreatorReferenceImages([...shotCreatorReferenceImages, newImage])
+                    toast({ title: "Image Pasted", description: "Image URL pasted from clipboard" })
+                    return
                 }
-                setShotCreatorReferenceImages([...shotCreatorReferenceImages, newImage])
-                toast({ title: "Image Pasted", description: "Image URL pasted from clipboard" })
-            } else {
-                toast({ title: "No Image Found", description: "No image in clipboard", variant: "destructive" })
+            } catch (textError) {
+                console.error("Text read error:", textError)
             }
-        } catch (err) {
+
+            // No image or URL found
+            toast({
+                title: "No Image Found",
+                description: "Clipboard does not contain an image or image URL",
+                variant: "destructive"
+            })
+        } catch (err: any) {
             console.error("Paste error:", err)
-            toast({ title: "Paste Failed", description: "Unable to paste image", variant: "destructive" })
+            toast({
+                title: "Paste Failed",
+                description: err.message || "Unable to paste image",
+                variant: "destructive"
+            })
         }
     }
 

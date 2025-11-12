@@ -1,0 +1,29 @@
+{
+  "appId": "com.directorspalette.app",
+  "appName": "Directors Palette",
+  "webDir": "out",
+  "server": {
+    "url": "http://192.168.1.217:3001",
+    "cleartext": true
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "scrollEnabled": true
+  },
+  "android": {
+    "allowMixedContent": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#000000",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "StatusBar": {
+      "style": "dark",
+      "backgroundColor": "#000000"
+    }
+  }
+}

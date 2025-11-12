@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast'
 import { FabricCanvasRef } from "../canvas-board"
 import { ShotCreatorReferenceImage } from "@/features/shot-creator"
 import { EXPORT_FORMATS, SCALE_PRESETS } from "../../constants"
+import { clipboardManager } from '@/utils/clipboard-manager'
 
 interface CanvasExporterProps {
     canvasRef: React.RefObject<FabricCanvasRef | null>
@@ -106,14 +107,8 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
         try {
             const dataUrl = canvasRef.current.exportCanvas('png')
 
-            // Convert data URL to blob
-            const response = await fetch(dataUrl)
-            const blob = await response.blob()
-
-            // Copy to clipboard
-            await navigator.clipboard.write([
-                new ClipboardItem({ 'image/png': blob })
-            ])
+            // Copy to clipboard using clipboardManager
+            await clipboardManager.writeImage(dataUrl)
 
             toast({
                 title: "Copied to Clipboard",

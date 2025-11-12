@@ -367,102 +367,111 @@ export function ShotAnimatorView() {
       {/* Top Toolbar */}
       <div className="border-b border-slate-700 bg-slate-900/50">
         {/* Model Selection & Settings */}
-        <div className="px-4 py-2 flex items-center justify-between gap-4">
+        <div className="px-2 sm:px-4 py-2 flex flex-col gap-3">
+          {/* Model Selection */}
           <RadioGroup
             value={selectedModel}
             onValueChange={(value) => setSelectedModel(value as AnimationModel)}
-            className="flex gap-4"
+            className="flex gap-3 sm:gap-4"
           >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="seedance-lite" id="model-lite" />
-              <Label htmlFor="model-lite" className="cursor-pointer text-white text-sm">
+            <div className="flex items-center space-x-2 touch-manipulation">
+              <RadioGroupItem value="seedance-lite" id="model-lite" className="min-w-[20px] min-h-[20px]" />
+              <Label htmlFor="model-lite" className="cursor-pointer text-white text-sm whitespace-nowrap">
                 Seedance Lite
               </Label>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="seedance-pro" id="model-pro" />
-              <Label htmlFor="model-pro" className="cursor-pointer text-white text-sm">
+            <div className="flex items-center space-x-2 touch-manipulation">
+              <RadioGroupItem value="seedance-pro" id="model-pro" className="min-w-[20px] min-h-[20px]" />
+              <Label htmlFor="model-pro" className="cursor-pointer text-white text-sm whitespace-nowrap">
                 Seedance Pro
               </Label>
             </div>
           </RadioGroup>
 
-          <div className="flex items-center gap-2">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          {/* Action Buttons - Responsive Layout */}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            {/* Search - Full width on mobile, auto on desktop */}
+            <div className="relative w-full sm:w-auto order-1">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
               <Input
                 placeholder="Search images..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 h-8 w-48 bg-slate-800 border-slate-600 text-white text-sm"
+                className="pl-8 h-10 sm:h-8 w-full sm:w-48 bg-slate-800 border-slate-600 text-white text-sm touch-manipulation"
               />
             </div>
 
-            {/* Upload */}
-            <label htmlFor="file-upload-toolbar">
+            {/* Button Group - Grid on mobile for equal spacing */}
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-2 order-2">
+              {/* Upload */}
+              <label htmlFor="file-upload-toolbar" className="contents">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-10 sm:h-8 w-full sm:w-auto min-h-[44px] sm:min-h-0 border-slate-600 text-white hover:bg-slate-800 touch-manipulation justify-center"
+                  onClick={() => document.getElementById("file-upload-toolbar")?.click()}
+                >
+                  <Upload className="w-4 h-4 sm:mr-1" />
+                  <span className="hidden sm:inline ml-1">Upload</span>
+                </Button>
+              </label>
+              <input
+                id="file-upload-toolbar"
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+
+              {/* Video Gallery */}
               <Button
-                type="button"
+                onClick={() => setIsVideoModalOpen(true)}
                 size="sm"
-                variant="outline"
-                className="h-8 border-slate-600 text-white hover:bg-slate-800"
-                onClick={() => document.getElementById("file-upload-toolbar")?.click()}
+                className="h-10 sm:h-8 w-full sm:w-auto min-h-[44px] sm:min-h-0 bg-slate-700 hover:bg-slate-600 touch-manipulation justify-center"
               >
-                <Upload className="w-4 h-4 mr-1" />
-                Upload
+                <VideoIcon className="w-4 h-4 sm:mr-1" />
+                <span className="hidden sm:inline ml-1">Video</span>
               </Button>
-            </label>
-            <input
-              id="file-upload-toolbar"
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleFileUpload}
-              className="hidden"
-            />
 
-            {/* Shot animator Video Gallery */}
-            <Button
-              onClick={() => setIsVideoModalOpen(true)}
-              size="sm"
-              className="h-8 bg-slate-700 hover:bg-slate-600"
-            >
-              <VideoIcon className="w-4 h-4 mr-1" />
-              Video Gallery
-            </Button>
-            {/* Gallery */}
-            <Button
-              onClick={() => setIsGalleryModalOpen(true)}
-              size="sm"
-              className="h-8 bg-slate-700 hover:bg-slate-600"
-            >
-              <ImageIcon className="w-4 h-4 mr-1" />
-              Gallery
-            </Button>
+              {/* Image Gallery */}
+              <Button
+                onClick={() => setIsGalleryModalOpen(true)}
+                size="sm"
+                className="h-10 sm:h-8 w-full sm:w-auto min-h-[44px] sm:min-h-0 bg-slate-700 hover:bg-slate-600 touch-manipulation justify-center"
+              >
+                <ImageIcon className="w-4 h-4 sm:mr-1" />
+                <span className="hidden sm:inline ml-1">Gallery</span>
+              </Button>
 
-            {/* Settings */}
-            <ModelSettingsModal settings={modelSettings} onSave={handleSaveModelSettings} />
+              {/* Settings */}
+              <div className="w-full sm:w-auto">
+                <ModelSettingsModal settings={modelSettings} onSave={handleSaveModelSettings} />
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Selection Controls */}
-        <div className="px-4 py-2 flex items-center justify-between border-t border-slate-700/50">
-          <div className="flex items-center gap-4">
+        <div className="px-2 sm:px-4 py-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 border-t border-slate-700/50">
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleDeselectAll}
-              className="h-7 text-xs text-slate-400 hover:text-white"
+              className="h-8 sm:h-7 text-xs text-slate-400 hover:text-white min-h-[44px] sm:min-h-0 touch-manipulation"
             >
               Deselect All
             </Button>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-h-[44px] sm:min-h-0">
               <Checkbox
                 id="show-selected"
                 checked={showOnlySelected}
                 onCheckedChange={(checked) => setShowOnlySelected(checked as boolean)}
+                className="min-h-[20px] min-w-[20px]"
               />
-              <Label htmlFor="show-selected" className="text-xs text-slate-400 cursor-pointer">
+              <Label htmlFor="show-selected" className="text-xs text-slate-400 cursor-pointer whitespace-nowrap">
                 Show only selected
               </Label>
             </div>
@@ -471,7 +480,7 @@ export function ShotAnimatorView() {
       </div>
 
       {/* Main Content - Two Column Layout */}
-      <div className="flex-1 overflow-hidden grid grid-cols-[1fr_400px]">
+      <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-[1fr_400px]">
         {/* Left: Shots Grid */}
         <div className="overflow-hidden">
           <ScrollArea className="h-full">
@@ -482,7 +491,7 @@ export function ShotAnimatorView() {
                 <p className="text-sm mt-2">Upload images or add from gallery to get started</p>
               </div>
             ) : (
-              <div className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 pb-24 content-stretch">
+              <div className="p-2 sm:p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 pb-24 content-stretch">
                 {filteredShots.map((config) => (
                   <CompactShotCard
                     key={config.id}
@@ -511,16 +520,18 @@ export function ShotAnimatorView() {
 
       {/* Bottom Generate Bar */}
       {selectedCount > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-300 p-4 z-50">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-300 p-3 sm:p-4 safe-bottom z-50">
           <div className="max-w-7xl mx-auto flex items-center justify-center">
             <Button
               onClick={handleGenerateAll}
               disabled={isGenerating || !user}
               size="lg"
-              className="bg-purple-600 hover:bg-purple-700 text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 sm:px-8 w-full sm:w-auto min-h-[48px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Play className="w-5 h-5 mr-2" />
-              {isGenerating ? `Generating...` : `Generate Videos (${selectedCount} selected) - 75 credits`}
+              <span className="text-sm sm:text-base">
+                {isGenerating ? `Generating...` : `Generate Videos (${selectedCount} selected) - 75 credits`}
+              </span>
             </Button>
           </div>
         </div>
