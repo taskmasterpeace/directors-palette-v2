@@ -33,6 +33,7 @@ export function CreatorReferenceManager({
     setFullscreenImage,
     handleShotCreatorImageUpload,
     handlePasteImage,
+    handleCameraCapture,
     removeShotCreatorImage
   } = useReferenceImageManager(maxImages)
 
@@ -65,6 +66,7 @@ export function CreatorReferenceManager({
               setShotCreatorReferenceImages={setShotCreatorReferenceImages}
               handleShotCreatorImageUpload={handleShotCreatorImageUpload}
               handlePasteImage={handlePasteImage}
+              handleCameraCapture={handleCameraCapture}
               removeShotCreatorImage={removeShotCreatorImage}
               setFullscreenImage={setFullscreenImage}
             />

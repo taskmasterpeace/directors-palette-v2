@@ -7,6 +7,8 @@ import { validateImageFile, resizeImage } from "@/features/shot-creator/helpers/
 import { ShotCreatorReferenceImage } from "../types"
 import { useShotCreatorStore } from "../store/shot-creator.store"
 import { clipboardManager } from "@/utils/clipboard-manager"
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera'
+import { Capacitor } from '@capacitor/core'
 
 export function useReferenceImageManager(maxImages: number = 3) {
     const { toast } = useToast()
@@ -172,6 +174,53 @@ export function useReferenceImageManager(maxImages: number = 3) {
         }
     }
 
+    // Camera capture
+    const handleCameraCapture = async () => {
+        try {
+            // Check if we're on a native platform
+            if (!Capacitor.isNativePlatform()) {
+                toast({
+                    title: "Camera Not Available",
+                    description: "Camera is only available on mobile devices",
+                    variant: "destructive"
+                })
+                return
+            }
+
+            // Request photo from camera
+            const photo = await Camera.getPhoto({
+                quality: 90,
+                allowEditing: false,
+                resultType: CameraResultType.Uri,
+                source: CameraSource.Camera
+            })
+
+            if (!photo.webPath) {
+                throw new Error('No photo captured')
+            }
+
+            // Convert the photo to a File object
+            const response = await fetch(photo.webPath)
+            const blob = await response.blob()
+            const file = new File([blob], `camera-photo-${Date.now()}.jpg`, { type: 'image/jpeg' })
+
+            // Use existing upload handler
+            await handleShotCreatorImageUpload(file)
+        } catch (err: any) {
+            // User cancelled or error occurred
+            if (err.message === 'User cancelled photos app') {
+                // User cancelled, don't show error
+                return
+            }
+            console.error("Camera capture error:", err)
+            toast({
+                title: "Camera Error",
+                description: err.message || "Failed to capture photo from camera",
+                variant: "destructive"
+            })
+        }
+    }
+
     // Remove
     const removeShotCreatorImage = (id: string) => {
         setShotCreatorReferenceImages(shotCreatorReferenceImages.filter((img) => img.id !== id))
@@ -184,6 +233,7 @@ export function useReferenceImageManager(maxImages: number = 3) {
         setFullscreenImage,
         handleShotCreatorImageUpload,
         handlePasteImage,
+        handleCameraCapture,
         removeShotCreatorImage
     }
 }

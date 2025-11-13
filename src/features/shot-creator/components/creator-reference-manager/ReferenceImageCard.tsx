@@ -2,11 +2,12 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { Upload, Clipboard, Expand, Trash2, Edit } from "lucide-react"
+import { Upload, Clipboard, Expand, Trash2, Edit, Camera } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import InlineTagEditor from "./InlineTagEditor"
+import { Capacitor } from '@capacitor/core'
 
 // ImageData type can be extended
 export interface ShotImage {
@@ -25,6 +26,7 @@ interface ReferenceImageCardProps {
     setShotCreatorReferenceImages: React.Dispatch<React.SetStateAction<ShotImage[]>>
     handleShotCreatorImageUpload: (file: File) => void
     handlePasteImage: (e: React.MouseEvent<HTMLButtonElement>) => void
+    handleCameraCapture?: () => void
     removeShotCreatorImage: (id: string) => void
     setFullscreenImage: (img: ShotImage) => void
 }
@@ -39,9 +41,11 @@ export function ReferenceImageCard({
     setShotCreatorReferenceImages,
     handleShotCreatorImageUpload,
     handlePasteImage,
+    handleCameraCapture,
     removeShotCreatorImage,
     setFullscreenImage
 }: ReferenceImageCardProps) {
+    const isNative = Capacitor.isNativePlatform()
     return (
         <div key={index} className="space-y-3">
             {/* Upload / Preview Box */}
@@ -115,7 +119,7 @@ export function ReferenceImageCard({
             </div>
 
             {/* Action buttons */}
-            <div className="grid grid-cols-2 gap-4 md:flex md:flex-row md:gap-2">
+            <div className={`grid gap-4 md:flex md:flex-row md:gap-2 ${isNative && handleCameraCapture ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 <Button
                     size="lg"
                     variant="outline"
@@ -125,6 +129,17 @@ export function ReferenceImageCard({
                     <Clipboard className="h-6 w-6 md:h-4 md:w-4" />
                     <span className="ml-2 md:ml-1 text-sm md:text-xs">Paste</span>
                 </Button>
+                {isNative && handleCameraCapture && (
+                    <Button
+                        size="lg"
+                        variant="outline"
+                        className="h-16 md:h-8 md:flex-1 border-slate-600 hover:border-slate-500 bg-slate-800/50 hover:bg-slate-800 flex items-center justify-center"
+                        onClick={handleCameraCapture}
+                    >
+                        <Camera className="h-6 w-6 md:h-4 md:w-4" />
+                        <span className="ml-2 md:ml-1 text-sm md:text-xs">Camera</span>
+                    </Button>
+                )}
                 <Button
                     size="lg"
                     variant="outline"

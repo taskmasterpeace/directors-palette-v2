@@ -15,11 +15,13 @@
   },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 2000,
+      "launchShowDuration": 5000,
       "backgroundColor": "#000000",
       "showSpinner": false,
       "splashFullScreen": true,
-      "splashImmersive": true
+      "splashImmersive": true,
+      "androidSplashResourceName": "splash",
+      "iosSplashResourceName": "splash"
     },
     "StatusBar": {
       "style": "dark",
