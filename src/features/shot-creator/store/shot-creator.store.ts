@@ -53,7 +53,7 @@ export interface ShotCreatorStore {
     // functions
     onSendToReferenceLibrary: (imageUrl: string, galleryId?: string) => void;
     onUseAsReference: (imageUrl: string) => Promise<void>;
-    onSendToShotAnimator: (imageUrl: string, setActiveTab: (tab: string) => void) => Promise<void>;
+    onSendToShotAnimator: (imageUrl: string) => Promise<void>;
 }
 
 export const useShotCreatorStore = create<ShotCreatorStore>()((set) => ({
@@ -158,7 +158,7 @@ export const useShotCreatorStore = create<ShotCreatorStore>()((set) => ({
         }
     },
 
-    onSendToShotAnimator: async (imageUrl: string, setActiveTab: (tab: string) => void) => {
+    onSendToShotAnimator: async (imageUrl: string) => {
         if (!imageUrl) return;
 
         try {

@@ -209,7 +209,7 @@ const ShotCreator = () => {
                                     }}
                                     onSendToShotAnimator={(imageUrl) => {
                                         if (onSendToShotAnimator) {
-                                            onSendToShotAnimator(imageUrl, setActiveTab);
+                                            onSendToShotAnimator(imageUrl);
                                         }
                                     }}
                                     onUseAsReference={(imageUrl) => {

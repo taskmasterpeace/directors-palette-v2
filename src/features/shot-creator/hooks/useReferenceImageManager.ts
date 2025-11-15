@@ -164,11 +164,11 @@ export function useReferenceImageManager(maxImages: number = 3) {
                 description: "Clipboard does not contain an image or image URL",
                 variant: "destructive"
             })
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Paste error:", err)
             toast({
                 title: "Paste Failed",
-                description: err.message || "Unable to paste image",
+                description: err instanceof Error ? err.message : "Unable to paste image",
                 variant: "destructive"
             })
         }
@@ -206,16 +206,16 @@ export function useReferenceImageManager(maxImages: number = 3) {
 
             // Use existing upload handler
             await handleShotCreatorImageUpload(file)
-        } catch (err: any) {
+        } catch (err: unknown) {
             // User cancelled or error occurred
-            if (err.message === 'User cancelled photos app') {
+            if (err instanceof Error && err.message === 'User cancelled photos app') {
                 // User cancelled, don't show error
                 return
             }
             console.error("Camera capture error:", err)
             toast({
                 title: "Camera Error",
-                description: err.message || "Failed to capture photo from camera",
+                description: err instanceof Error ? err.message : "Failed to capture photo from camera",
                 variant: "destructive"
             })
         }
