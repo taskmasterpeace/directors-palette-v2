@@ -183,8 +183,6 @@ export const useShotCreatorStore = create<ShotCreatorStore>()((set) => ({
                 title: "Image Sent to Animator",
                 description: "The image has been added to the Shot Animator",
             });
-
-            setTimeout(() => setActiveTab('shot-animator'), 100);
         } catch (error) {
             console.error('Failed to save animator reference:', error);
             toast({
