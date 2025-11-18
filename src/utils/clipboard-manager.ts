@@ -60,7 +60,7 @@ class ClipboardManager {
         }
         return await navigator.clipboard.readText()
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Clipboard readText error:', error)
       throw this.formatError(error)
     }
@@ -81,7 +81,7 @@ class ClipboardManager {
         }
         await navigator.clipboard.writeText(text)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Clipboard writeText error:', error)
       throw this.formatError(error)
     }
@@ -128,7 +128,7 @@ class ClipboardManager {
 
         return null
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Clipboard readImage error:', error)
       // Don't throw on image read failures - just return null
       // This allows graceful degradation when clipboard is empty
@@ -156,7 +156,7 @@ class ClipboardManager {
           new ClipboardItem({ [blob.type]: blob })
         ])
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Clipboard writeImage error:', error)
       throw this.formatError(error)
     }
@@ -213,8 +213,8 @@ class ClipboardManager {
   /**
    * Format error into user-friendly ClipboardError
    */
-  private formatError(error: any): ClipboardError {
-    const message = error?.message || 'Unknown clipboard error'
+  private formatError(error: unknown): ClipboardError {
+    const message = (error instanceof Error ? error.message : undefined) || 'Unknown clipboard error'
 
     if (message.includes('permission') || message.includes('denied')) {
       return {

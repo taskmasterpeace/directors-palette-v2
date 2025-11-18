@@ -8,6 +8,7 @@ import { ImageActionMenu } from "./ImageActionMenu"
 import { ModelBadge } from "./ModelBadge"
 import { ReferenceBadge } from "./ReferenceBadge"
 import { PromptTooltip } from "./PromptTooltip"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface ImageCardProps {
   image: GalleryImage
@@ -29,6 +30,8 @@ interface ImageCardProps {
  */
 export function ImageCard({
   image,
+  isSelected,
+  onSelect,
   onZoom,
   onDownload,
   onDelete,
@@ -41,7 +44,16 @@ export function ImageCard({
   const [dropdownOpen, setDropdownOpen] = useState(false)
 
   return (
-    <div className="relative group rounded-lg overflow-hidden bg-slate-800 border border-slate-700 transition-all hover:border-purple-600/50">
+    <div className={`relative group rounded-lg overflow-hidden bg-slate-800 border transition-all ${isSelected ? 'border-purple-500 border-2' : 'border-slate-700 hover:border-purple-600/50'}`}>
+      {/* Selection Checkbox */}
+      <div className={`absolute top-2 left-2 z-10 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={onSelect}
+          className="bg-slate-900/80 border-slate-600 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+        />
+      </div>
+
       {/* Main image - show in native aspect ratio */}
       <div className="w-full aspect-square relative">
         <Image
