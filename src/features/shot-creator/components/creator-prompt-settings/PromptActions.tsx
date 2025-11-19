@@ -255,7 +255,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     }, [setShotCreatorPrompt, setShotCreatorReferenceImages, shotCreatorReferenceImages, textareaRef, handleAutocompleteTextChange]);
 
     // Handle autocomplete selection
-    const handleAutocompleteSelect = useCallback((item: AutocompleteOption | null) => {
+    const handleAutocompleteSelect = useCallback(async (item: AutocompleteOption | null) => {
         if (!item || !textareaRef.current) return
 
         const textarea = textareaRef.current
@@ -271,6 +271,9 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         // Close autocomplete
         closeAutocomplete()
 
+        // IMPORTANT: Manually trigger auto-attach logic since setShotCreatorPrompt doesn't trigger onChange
+        await handlePromptChange(newText)
+
         // Set cursor position after state update
         setTimeout(() => {
             if (textareaRef.current) {
@@ -279,7 +282,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 textareaRef.current.focus()
             }
         }, 0)
-    }, [insertAutocompleteItem, closeAutocomplete, shotCreatorPrompt, setShotCreatorPrompt, textareaRef]);
+    }, [insertAutocompleteItem, closeAutocomplete, shotCreatorPrompt, setShotCreatorPrompt, textareaRef, handlePromptChange]);
 
     // Calculate dropdown position when autocomplete opens
     useEffect(() => {

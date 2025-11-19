@@ -90,8 +90,8 @@ export function useGalleryLogic(
     selectedImages.forEach(url => removeImage(url))
     setSelectedImages([])
     toast({
-      title: "Images Deleted",
-      description: `${selectedImages.length} images removed from gallery`
+      title: "Images Deleted Permanently",
+      description: `${selectedImages.length} images removed from database and storage`
     })
   }
 
@@ -201,8 +201,8 @@ export function useGalleryLogic(
     if (success) {
       setSelectedImages(prev => prev.filter(url => url !== imageUrl))
       toast({
-        title: "Image Deleted",
-        description: "Image removed from gallery"
+        title: "Image Deleted Permanently",
+        description: "Removed from database and storage"
       })
     } else {
       toast({
