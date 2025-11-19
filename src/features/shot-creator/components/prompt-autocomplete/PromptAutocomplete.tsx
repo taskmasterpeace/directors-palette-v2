@@ -6,7 +6,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Command, CommandList, CommandEmpty, CommandGroup } from '@/components/ui/command'
+import { Command, CommandList, CommandGroup } from '@/components/ui/command'
 import { ReferenceItem } from './ReferenceItem'
 import { CategoryItem } from './CategoryItem'
 import type { AutocompleteOption } from '../../types/autocomplete.types'
