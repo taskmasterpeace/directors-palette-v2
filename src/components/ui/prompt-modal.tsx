@@ -37,6 +37,7 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const isClosingRef = useRef(false)
+  const prevIsOpenRef = useRef(isOpen)
 
   useEffect(() => {
     if (!isOpen) {
@@ -47,11 +48,17 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
     }
   }, [isOpen])
 
-  // Reset state when modal opens/closes
+  // Reset state ONLY when modal transitions from closed to open
   useEffect(() => {
-    console.log('[PromptModal] useEffect isOpen changed', { isOpen, isClosingRef: isClosingRef.current })
-    if (isOpen) {
-      console.log('[PromptModal] Resetting isClosingRef = false')
+    console.log('[PromptModal] useEffect isOpen changed', {
+      isOpen,
+      prevIsOpen: prevIsOpenRef.current,
+      isClosingRef: isClosingRef.current
+    })
+
+    // Only reset when transitioning from false -> true (opening)
+    if (isOpen && !prevIsOpenRef.current) {
+      console.log('[PromptModal] Modal opening (false->true) - resetting isClosingRef = false')
       isClosingRef.current = false
       setValue(config.defaultValue || '')
       setError(null)
@@ -61,6 +68,9 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
         inputRef.current?.select()
       }, 100)
     }
+
+    // Update previous value for next render
+    prevIsOpenRef.current = isOpen
   }, [isOpen, config.defaultValue])
 
   // Validate input value
