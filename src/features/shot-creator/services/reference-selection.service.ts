@@ -194,7 +194,7 @@ export async function getRandomReferences(
           }
         }
       })
-      .filter((img): img is GeneratedImage => img !== null)
+      .filter(img => img !== null) as GeneratedImage[]
 
     return images
   } catch (error) {
