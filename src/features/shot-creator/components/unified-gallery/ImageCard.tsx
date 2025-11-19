@@ -72,9 +72,9 @@ export function ImageCard({
       {/* Reference badge if exists */}
       <ReferenceBadge reference={image.reference || ''} />
 
-      {/* Action menu button */}
+      {/* Action menu button - always visible on mobile, hover on desktop */}
       {showActions && (
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
           <ImageActionMenu
             imageUrl={image.url}
             prompt={image.prompt}
