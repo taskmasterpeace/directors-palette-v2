@@ -6,6 +6,7 @@
 import { getClient } from '@/lib/db/client'
 import { GalleryRepository } from '@/lib/db/repositories/gallery.repository'
 import type { GalleryRow } from '@/lib/db/types'
+import type { Json } from '../../../supabase/database.types'
 
 export type GenerationType = 'image' | 'video'
 
