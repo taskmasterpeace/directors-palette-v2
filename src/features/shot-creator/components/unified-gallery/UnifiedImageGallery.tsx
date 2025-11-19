@@ -131,6 +131,12 @@ export function UnifiedImageGallery({
                                     updateImageReference(image.id, newRef)
                                 }
                             }}
+                            onEditReference={async () => {
+                                const newRef = await showReferenceNamePrompt(image.reference)
+                                if (newRef !== null) {
+                                    updateImageReference(image.id, newRef)
+                                }
+                            }}
                             onAddToLibrary={() => onSendToLibrary?.(image.url, image.id)}
                             showActions={true}
                         />
@@ -184,6 +190,12 @@ export function UnifiedImageGallery({
                                         onSetReference={async () => {
                                             const newRef = await showReferenceNamePrompt()
                                             if (newRef) {
+                                                updateImageReference(image.id, newRef)
+                                            }
+                                        }}
+                                        onEditReference={async () => {
+                                            const newRef = await showReferenceNamePrompt(image.reference)
+                                            if (newRef !== null) {
                                                 updateImageReference(image.id, newRef)
                                             }
                                         }}

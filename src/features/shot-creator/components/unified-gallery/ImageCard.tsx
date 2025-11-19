@@ -20,6 +20,7 @@ interface ImageCardProps {
   onDelete: () => void
   onSendTo?: (target: string) => void
   onSetReference?: () => void
+  onEditReference?: () => void
   onAddToLibrary?: () => void
   showActions?: boolean
 }
@@ -37,6 +38,7 @@ export function ImageCard({
   onDelete,
   onSendTo,
   onSetReference,
+  onEditReference,
   onAddToLibrary,
   showActions = true
 }: ImageCardProps) {
@@ -78,12 +80,14 @@ export function ImageCard({
           <ImageActionMenu
             imageUrl={image.url}
             prompt={image.prompt}
+            currentReference={image.reference}
             onCopyPrompt={() => handleCopyPrompt(image.prompt)}
             onCopyImage={() => handleCopyImage(image.url)}
             onDownload={onDownload}
             onDelete={onDelete}
             onSendTo={onSendTo}
             onSetReference={onSetReference}
+            onEditReference={onEditReference}
             onAddToLibrary={onAddToLibrary}
             dropdownOpen={dropdownOpen}
             onDropdownChange={setDropdownOpen}

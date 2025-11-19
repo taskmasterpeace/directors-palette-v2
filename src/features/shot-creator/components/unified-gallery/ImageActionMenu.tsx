@@ -16,18 +16,21 @@ import {
   FileText,
   Film,
   Layout,
-  Sparkles
+  Sparkles,
+  Edit
 } from 'lucide-react'
 
 interface ImageActionMenuProps {
   imageUrl: string
   prompt?: string
+  currentReference?: string
   onCopyPrompt: () => void
   onCopyImage: () => void
   onDownload: () => void
   onDelete: () => void
   onSendTo?: (target: string) => void
   onSetReference?: () => void
+  onEditReference?: () => void
   onAddToLibrary?: () => void
   dropdownOpen: boolean
   onDropdownChange: (open: boolean) => void
@@ -38,12 +41,14 @@ interface ImageActionMenuProps {
  * Provides common actions for gallery images
  */
 export function ImageActionMenu({
+  currentReference,
   onCopyPrompt,
   onCopyImage,
   onDownload,
   onDelete,
   onSendTo,
   onSetReference,
+  onEditReference,
   onAddToLibrary,
   dropdownOpen,
   onDropdownChange
@@ -85,13 +90,22 @@ export function ImageActionMenu({
 
         <DropdownMenuSeparator className="bg-slate-700" />
 
-        {onSetReference && (
+        {(onSetReference || onEditReference) && (
           <DropdownMenuItem
-            onClick={onSetReference}
+            onClick={currentReference ? onEditReference : onSetReference}
             className="hover:bg-slate-700 cursor-pointer"
           >
-            <Tag className="mr-2 h-4 w-4" />
-            Set Reference
+            {currentReference ? (
+              <>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Reference ({currentReference})
+              </>
+            ) : (
+              <>
+                <Tag className="mr-2 h-4 w-4" />
+                Set Reference
+              </>
+            )}
           </DropdownMenuItem>
         )}
 

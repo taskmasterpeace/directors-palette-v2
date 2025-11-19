@@ -96,14 +96,19 @@ export function useReferenceNamePrompt() {
   return useCallback(
     (defaultValue?: string) =>
       showPrompt({
-        title: 'Set Reference Name',
-        description:
-          'Enter a reference name for this image. Use @ prefix for easy identification.',
+        title: defaultValue ? 'Edit Reference Name' : 'Set Reference Name',
+        description: defaultValue
+          ? 'Update the reference name or clear it to remove the tag.'
+          : 'Enter a reference name for this image. Use @ prefix for easy identification.',
         placeholder: 'e.g., @hero, @villain, @location',
         defaultValue,
-        required: true,
+        required: false, // Allow empty to clear reference
         maxLength: 50,
         validation: (value: string) => {
+          // Allow empty string to clear reference
+          if (value.trim() === '') {
+            return null
+          }
           if (!value.startsWith('@')) {
             return 'Reference name must start with @'
           }

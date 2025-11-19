@@ -19,7 +19,7 @@ interface FullscreenModalProps {
     onSendTo: (url: string, target: string) => void
     onSetReference: (id: string, ref: string) => void
     onAddToLibrary?: (url: string) => void
-    showReferenceNamePrompt: () => Promise<string | null>
+    showReferenceNamePrompt: (defaultValue?: string) => Promise<string | null>
 }
 
 function FullscreenModal({
@@ -343,19 +343,19 @@ function FullscreenModal({
                                     variant="outline"
                                     className="flex-1 text-white border-slate-600"
                                     onClick={async () => {
-                                        const newRef = await showReferenceNamePrompt()
-                                        if (newRef) {
+                                        const newRef = await showReferenceNamePrompt(fullscreenImage.reference)
+                                        if (newRef !== null) {
                                             onSetReference(fullscreenImage.id, newRef)
                                             toast({
-                                                title: "Reference Set",
-                                                description: `Image tagged as ${newRef}`
+                                                title: newRef ? "Reference Updated" : "Reference Cleared",
+                                                description: newRef ? `Image tagged as ${newRef}` : "Reference tag removed"
                                             })
                                         }
                                     }}
-                                    title="Set as Reference"
+                                    title={fullscreenImage.reference ? `Edit Reference (${fullscreenImage.reference})` : "Set as Reference"}
                                 >
                                     <Tag className="w-3.5 h-3.5 mr-1" />
-                                    Reference
+                                    {fullscreenImage.reference ? `Edit (${fullscreenImage.reference})` : "Reference"}
                                 </Button>
 
                                 <Button
