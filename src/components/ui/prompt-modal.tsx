@@ -36,6 +36,7 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
   const [value, setValue] = useState(config.defaultValue || '')
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const isClosingRef = useRef(false)
 
   useEffect(() => {
     if (!isOpen) {
@@ -49,6 +50,7 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
   // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
+      isClosingRef.current = false
       setValue(config.defaultValue || '')
       setError(null)
       // Focus input after a short delay to ensure modal is fully rendered
@@ -103,7 +105,14 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
       return
     }
 
+    isClosingRef.current = true
     onConfirm(trimmedValue)
+  }
+
+  // Handle cancel
+  const handleCancel = () => {
+    isClosingRef.current = true
+    onCancel()
   }
 
   // Handle keyboard events
@@ -113,7 +122,7 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
       handleConfirm()
     } else if (e.key === 'Escape') {
       e.preventDefault()
-      onCancel()
+      handleCancel()
     }
   }
 
@@ -123,7 +132,13 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      // Only call onCancel if dialog is being closed externally (escape/click outside)
+      // Don't call it when we're manually closing via confirm button
+      if (!open && !isClosingRef.current) {
+        onCancel()
+      }
+    }}>
       <DialogContent
         className={cn(
           "sm:max-w-md",
@@ -183,7 +198,7 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
         <DialogFooter className="flex gap-3 sm:gap-3">
           <Button
             variant="outline"
-            onClick={onCancel}
+            onClick={handleCancel}
             className="flex-1 sm:flex-none"
           >
             Cancel
