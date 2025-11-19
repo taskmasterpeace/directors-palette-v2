@@ -1,4 +1,4 @@
-import React, { Fragment } from "react"
+import React, { Fragment, useState, useEffect } from "react"
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -20,6 +20,9 @@ import { useShotCreatorSettings } from "../../hooks"
 import { useImageGeneration } from "../../hooks/useImageGeneration"
 import { PromptSyntaxFeedback } from "./PromptSyntaxFeedback"
 import { PromptLibrary } from "./PromptLibrary"
+import { PromptAutocomplete } from "../prompt-autocomplete"
+import { usePromptAutocomplete } from "../../hooks/usePromptAutocomplete"
+import type { AutocompleteOption } from "../../types/autocomplete.types"
 import { useCallback } from "react"
 import { extractAtTags, urlToFile } from "../../helpers"
 import { ShotCreatorReferenceImage } from "../../types"
@@ -35,6 +38,22 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     } = useShotCreatorStore()
     const { settings: shotCreatorSettings } = useShotCreatorSettings()
     const { generateImage, isGenerating } = useImageGeneration()
+
+    // Autocomplete for @references - destructure to avoid circular dependencies
+    const autocomplete = usePromptAutocomplete()
+    const {
+        isOpen: autocompleteIsOpen,
+        items: autocompleteItems,
+        selectedIndex: autocompleteSelectedIndex,
+        selectedItem: autocompleteSelectedItem,
+        handleTextChange: handleAutocompleteTextChange,
+        insertItem: insertAutocompleteItem,
+        close: closeAutocomplete,
+        selectNext: selectNextAutocomplete,
+        selectPrevious: selectPreviousAutocomplete,
+        selectIndex: selectAutocompleteIndex
+    } = autocomplete
+    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
 
     const isEditingMode = shotCreatorSettings.model === 'qwen-image-edit'
     const canGenerate = isEditingMode
@@ -140,10 +159,42 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         // setIsPromptLibraryOpen(false)
     }, [setShotCreatorPrompt])
 
+    // Calculate dropdown position based on cursor
+    const calculateDropdownPosition = useCallback(() => {
+        if (!textareaRef.current) return
+
+        const textarea = textareaRef.current
+        const rect = textarea.getBoundingClientRect()
+
+        // Check if mobile (viewport width < 768px)
+        const isMobile = window.innerWidth < 768
+
+        if (isMobile) {
+            // Position above textarea on mobile to avoid keyboard
+            setDropdownPosition({
+                top: Math.max(rect.top + window.scrollY - 310, 10), // 300px height + 10px margin, min 10px from top
+                left: rect.left + window.scrollX
+            })
+        } else {
+            // Desktop: position below textarea
+            setDropdownPosition({
+                top: rect.bottom + window.scrollY + 4,
+                left: rect.left + window.scrollX
+            })
+        }
+    }, [textareaRef])
+
     // Handle @ symbol for reference support
     const handlePromptChange = useCallback(async (value: string) => {
         setShotCreatorPrompt(value);
-        // Extract @ references
+
+        // Trigger autocomplete
+        if (textareaRef.current) {
+            const cursorPosition = textareaRef.current.selectionStart
+            handleAutocompleteTextChange(value, cursorPosition)
+        }
+
+        // Extract @ references for auto-attaching images
         const references = extractAtTags(value);
         if (references.length === 0) {
             return;
@@ -199,7 +250,58 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 }
             }
         }
-    }, [setShotCreatorPrompt, setShotCreatorReferenceImages, shotCreatorReferenceImages]);
+    }, [setShotCreatorPrompt, setShotCreatorReferenceImages, shotCreatorReferenceImages, textareaRef, handleAutocompleteTextChange]);
+
+    // Handle autocomplete selection
+    const handleAutocompleteSelect = useCallback((item: AutocompleteOption | null) => {
+        if (!item || !textareaRef.current) return
+
+        const textarea = textareaRef.current
+        const cursorPosition = textarea.selectionStart
+        const currentText = shotCreatorPrompt
+
+        // Insert the selected item
+        const { newText, newCursorPosition } = insertAutocompleteItem(item, currentText, cursorPosition)
+
+        // Update prompt
+        setShotCreatorPrompt(newText)
+
+        // Close autocomplete
+        closeAutocomplete()
+
+        // Set cursor position after state update
+        setTimeout(() => {
+            if (textareaRef.current) {
+                textareaRef.current.selectionStart = newCursorPosition
+                textareaRef.current.selectionEnd = newCursorPosition
+                textareaRef.current.focus()
+            }
+        }, 0)
+    }, [insertAutocompleteItem, closeAutocomplete, shotCreatorPrompt, setShotCreatorPrompt, textareaRef]);
+
+    // Calculate dropdown position when autocomplete opens
+    useEffect(() => {
+        if (autocompleteIsOpen) {
+            calculateDropdownPosition()
+        }
+    }, [autocompleteIsOpen, calculateDropdownPosition])
+
+    // Recalculate position on window resize (for mobile rotation, etc.)
+    useEffect(() => {
+        if (!autocompleteIsOpen) return
+
+        const handleResize = () => {
+            calculateDropdownPosition()
+        }
+
+        window.addEventListener('resize', handleResize)
+        window.addEventListener('scroll', handleResize, true)
+
+        return () => {
+            window.removeEventListener('resize', handleResize)
+            window.removeEventListener('scroll', handleResize, true)
+        }
+    }, [autocompleteIsOpen, calculateDropdownPosition]);
 
     return (
         <Fragment>
@@ -235,6 +337,30 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         className="min-h-[100px] bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 resize-none pr-10"
                         maxLength={1000}
                         onKeyDown={(e) => {
+                            // Handle autocomplete keyboard navigation
+                            if (autocompleteIsOpen) {
+                                if (e.key === 'ArrowDown') {
+                                    e.preventDefault()
+                                    selectNextAutocomplete()
+                                    return
+                                }
+                                if (e.key === 'ArrowUp') {
+                                    e.preventDefault()
+                                    selectPreviousAutocomplete()
+                                    return
+                                }
+                                if (e.key === 'Enter' && autocompleteSelectedItem) {
+                                    e.preventDefault()
+                                    handleAutocompleteSelect(autocompleteSelectedItem)
+                                    return
+                                }
+                                if (e.key === 'Escape') {
+                                    e.preventDefault()
+                                    closeAutocomplete()
+                                    return
+                                }
+                            }
+
                             // Ctrl+Enter or Cmd+Enter to generate
                             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && canGenerate && !shotCreatorProcessing && !isGenerating) {
                                 e.preventDefault()
@@ -255,6 +381,17 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         >
                             <X className="h-3 w-3" />
                         </Button>
+                    )}
+
+                    {/* Autocomplete dropdown */}
+                    {autocompleteIsOpen && (
+                        <PromptAutocomplete
+                            items={autocompleteItems}
+                            selectedIndex={autocompleteSelectedIndex}
+                            onSelect={handleAutocompleteSelect}
+                            onSelectIndex={selectAutocompleteIndex}
+                            position={dropdownPosition}
+                        />
                     )}
                 </div>
 

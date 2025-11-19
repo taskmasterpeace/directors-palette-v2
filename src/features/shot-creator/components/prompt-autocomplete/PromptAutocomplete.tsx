@@ -48,7 +48,7 @@ export function PromptAutocomplete({
 
   return (
     <div
-      className="absolute z-50 w-80 rounded-md border bg-popover text-popover-foreground shadow-md outline-none"
+      className="absolute z-50 w-80 max-w-[calc(100vw-2rem)] sm:w-80 rounded-md border bg-popover text-popover-foreground shadow-md outline-none"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
