@@ -191,13 +191,16 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
         console.error('Failed to clear reference in database:', result.error)
       }
 
-      // Clear from local store
+      // Clear from local store AND fullscreen image
       set((state) => ({
         images: state.images.map(img =>
           img.id === imageId
             ? { ...img, reference: undefined }
             : img
-        )
+        ),
+        fullscreenImage: state.fullscreenImage?.id === imageId
+          ? { ...state.fullscreenImage, reference: undefined }
+          : state.fullscreenImage
       }))
       return
     }
@@ -213,13 +216,16 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       // Continue with local update anyway
     }
 
-    // Update in local store
+    // Update in local store AND fullscreen image
     set((state) => ({
       images: state.images.map(img =>
         img.id === imageId
           ? { ...img, reference: normalizedReference }
           : img
-      )
+      ),
+      fullscreenImage: state.fullscreenImage?.id === imageId
+        ? { ...state.fullscreenImage, reference: normalizedReference }
+        : state.fullscreenImage
     }))
   },
 
