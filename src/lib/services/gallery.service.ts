@@ -268,6 +268,108 @@ export class GalleryService {
   }
 
   /**
+   * Update reference tag for a gallery item
+   * Also adds/updates the item in the reference library
+   */
+  static async updateReference(
+    itemId: string,
+    reference: string | null,
+    options?: {
+      category?: 'people' | 'places' | 'props' | 'layouts'
+      addToLibrary?: boolean
+    }
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const supabase = await getClient()
+      if (!supabase) {
+        throw new Error('Supabase client not available')
+      }
+
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) {
+        throw new Error('User not authenticated')
+      }
+
+      const repository = new GalleryRepository(supabase)
+
+      // Get the gallery entry to verify ownership
+      const getResult = await repository.get({
+        id: itemId,
+        user_id: user.id,
+      })
+
+      if (getResult.error || getResult.data.length === 0) {
+        throw new Error('Gallery item not found or access denied')
+      }
+
+      const galleryItem = getResult.data[0]
+      const metadata = (galleryItem.metadata as Record<string, unknown>) || {}
+
+      // Update metadata with reference
+      const updatedMetadata = {
+        ...metadata,
+        reference: reference
+      }
+
+      // Update in database
+      const updateResult = await repository.update(itemId, {
+        metadata: updatedMetadata as unknown as Record<string, never>
+      })
+
+      if (updateResult.error) {
+        throw new Error(updateResult.error)
+      }
+
+      // Add to reference library if reference is set and addToLibrary is true (default)
+      const shouldAddToLibrary = options?.addToLibrary !== false
+      if (reference && shouldAddToLibrary) {
+        // Check if already in reference library
+        const { data: existingRef } = await supabase
+          .from('reference')
+          .select('id')
+          .eq('gallery_id', itemId)
+          .maybeSingle()
+
+        const category = options?.category || 'people' // Default to 'people' category
+        const tags = [reference.replace('@', '')] // Use reference name as tag
+
+        if (existingRef) {
+          // Update existing reference entry
+          await supabase
+            .from('reference')
+            .update({
+              category,
+              tags,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingRef.id)
+        } else {
+          // Create new reference entry
+          await supabase
+            .from('reference')
+            .insert({
+              gallery_id: itemId,
+              category,
+              tags
+            })
+        }
+      } else if (!reference) {
+        // If reference is removed, optionally remove from library
+        await supabase
+          .from('reference')
+          .delete()
+          .eq('gallery_id', itemId)
+      }
+
+      return { success: true }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update reference'
+      console.error('Update reference error:', error)
+      return { success: false, error: errorMessage }
+    }
+  }
+
+  /**
    * Get count of pending items (no public_url yet)
    */
   static async getPendingCount(generationType: GenerationType): Promise<number> {

@@ -64,6 +64,21 @@ export class GalleryService {
     }
 
     /**
+     * Update reference tag for a gallery image
+     * Also adds/updates the item in the reference library
+     */
+    static async updateReference(
+        imageId: string,
+        reference: string | null,
+        options?: {
+            category?: 'people' | 'places' | 'props' | 'layouts'
+            addToLibrary?: boolean
+        }
+    ): Promise<{ success: boolean; error?: string }> {
+        return UnifiedGalleryService.updateReference(imageId, reference, options)
+    }
+
+    /**
      * Transform database row to GeneratedImage
      */
     private static transformToGeneratedImage(item: GalleryRow): GeneratedImage {
@@ -84,12 +99,16 @@ export class GalleryService {
             (modelSettings.custom_height as number) ||
             undefined
 
+        // Extract reference from metadata if it exists
+        const reference = (metadata as { reference?: string }).reference || undefined
+
         return {
             id: item.id,
             url: item.public_url || '',
             prompt: metadata.prompt || '',
             source: 'shot-creator' as const,
             model,
+            reference,
             settings: {
                 aspectRatio,
                 resolution,

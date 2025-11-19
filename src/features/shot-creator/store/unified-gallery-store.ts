@@ -66,7 +66,7 @@ interface UnifiedGalleryState {
   setCurrentPage: (page: number) => void
   removeImage: (imageIdOrUrl: string) => Promise<boolean>
   setFullscreenImage: (image: GeneratedImage | null) => void
-  updateImageReference: (imageId: string, reference: string) => void
+  updateImageReference: (imageId: string, reference: string) => Promise<void>
 
   // Filtering
   getAllReferences: () => string[]
@@ -181,11 +181,23 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
     set({ fullscreenImage: image })
   },
 
-  updateImageReference: (imageId, reference) => {
+  updateImageReference: async (imageId, reference) => {
+    // Normalize reference (ensure @ prefix)
+    const normalizedReference = reference.startsWith('@') ? reference : `@${reference}`
+
+    // Update in database first
+    const result = await GalleryService.updateReference(imageId, normalizedReference)
+
+    if (!result.success) {
+      console.error('Failed to persist reference to database:', result.error)
+      // Continue with local update anyway
+    }
+
+    // Update in local store
     set((state) => ({
       images: state.images.map(img =>
         img.id === imageId
-          ? { ...img, reference: reference.startsWith('@') ? reference : `@${reference}` }
+          ? { ...img, reference: normalizedReference }
           : img
       )
     }))
