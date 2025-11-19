@@ -29,6 +29,9 @@ export function PromptProvider({ children }: PromptProviderProps) {
     config: { title: '' },
   })
 
+  // Track if we're transitioning to prevent double-open
+  const isTransitioningRef = React.useRef(false)
+
   // ✅ Track hydration to prevent SSR/client mismatch
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
@@ -38,10 +41,19 @@ export function PromptProvider({ children }: PromptProviderProps) {
   const showPrompt = useCallback(
     (config: PromptModalConfig): Promise<string | null> => {
       return new Promise((resolve) => {
-        setModalState({
-          isOpen: true,
-          config,
-          resolve,
+        setModalState((prev) => {
+          // Prevent opening a new modal if one is already open or transitioning
+          if (prev.isOpen || isTransitioningRef.current) {
+            console.warn('[PromptProvider] Attempted to open modal while one is already open or transitioning')
+            resolve(null)
+            return prev
+          }
+          isTransitioningRef.current = true
+          return {
+            isOpen: true,
+            config,
+            resolve,
+          }
         })
       })
     },
@@ -67,6 +79,11 @@ export function PromptProvider({ children }: PromptProviderProps) {
           console.log('[PromptProvider] Calling resolve in microtask with value:', value)
           resolveCallback(value)
         }
+        // Clear transition flag after a delay to prevent immediate re-open
+        setTimeout(() => {
+          isTransitioningRef.current = false
+          console.log('[PromptProvider] Transition complete, can open new modal')
+        }, 100)
         console.log('[PromptProvider] handleConfirm microtask completed')
       })
       console.log('[PromptProvider] handleConfirm sync completed')
@@ -87,6 +104,10 @@ export function PromptProvider({ children }: PromptProviderProps) {
       if (resolveCallback) {
         resolveCallback(null)
       }
+      // Clear transition flag after a delay
+      setTimeout(() => {
+        isTransitioningRef.current = false
+      }, 100)
     })
   }, [])
 
