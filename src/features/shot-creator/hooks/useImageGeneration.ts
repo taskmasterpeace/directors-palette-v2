@@ -8,6 +8,7 @@ import { useUnifiedGalleryStore } from '../store/unified-gallery-store'
 import { getClient, TypedSupabaseClient } from '@/lib/db/client'
 import { parseDynamicPrompt } from '../helpers/prompt-syntax-feedback'
 import { parseReferenceTags } from '../helpers/parse-reference-tags'
+import { getRandomFromCategory } from '../services/reference-selection.service'
 import { uploadImageToReplicate } from '../helpers/image-resize.helper'
 import { ImageGenerationRequest, ImageModel, ImageModelSettings } from "../types/image-generation.types"
 import type { RealtimeChannel } from '@supabase/supabase-js'
@@ -304,29 +305,22 @@ export function useImageGeneration() {
             }
 
             // Parse @reference tags from the prompt and auto-attach tagged images
-            const referenceTags = parseReferenceTags(prompt)
-            const autoReferencedImages = referenceTags.length > 0
-                ? useUnifiedGalleryStore.getState().getImagesByReferences(referenceTags)
-                : []
+            const parsedRefs = parseReferenceTags(prompt)
+            const autoReferencedImages: string[] = []
 
-            // Merge auto-referenced images with manually provided reference images
-            // Extract URLs from auto-referenced images and combine with manual references
-            const autoReferenceUrls = autoReferencedImages.map(img => img.url)
-            const allReferenceImages = [
-                ...referenceImages,
-                ...autoReferenceUrls
-            ]
+            // 1. Handle specific references (e.g., @hero, @villain)
+            if (parsedRefs.specificReferences.length > 0) {
+                const specificImages = useUnifiedGalleryStore.getState().getImagesByReferences(parsedRefs.specificReferences)
+                const specificUrls = specificImages.map(img => img.url)
+                autoReferencedImages.push(...specificUrls)
 
-            // Remove duplicates
-            const uniqueReferenceImages = [...new Set(allReferenceImages)]
+                console.log(`🏷️ Found ${parsedRefs.specificReferences.length} specific reference(s):`, parsedRefs.specificReferences)
+                console.log(`📸 Auto-attached ${specificImages.length} image(s) from specific tags`)
 
-            // Log what references were found (for debugging/UX feedback)
-            if (referenceTags.length > 0) {
-                console.log(`🏷️ Found ${referenceTags.length} reference tag(s):`, referenceTags)
-                console.log(`📸 Auto-attached ${autoReferencedImages.length} image(s) from tags`)
-                if (autoReferencedImages.length < referenceTags.length) {
-                    const missingTags = referenceTags.filter(
-                        tag => !autoReferencedImages.some(img => img.reference?.toLowerCase() === tag.toLowerCase())
+                // Warn about missing specific references
+                if (specificImages.length < parsedRefs.specificReferences.length) {
+                    const missingTags = parsedRefs.specificReferences.filter(
+                        tag => !specificImages.some(img => img.reference?.toLowerCase() === tag.toLowerCase())
                     )
                     console.warn(`⚠️ No images found for tag(s):`, missingTags)
                     toast({
@@ -335,6 +329,42 @@ export function useImageGeneration() {
                         variant: 'destructive',
                     })
                 }
+            }
+
+            // 2. Handle category references (e.g., @people, @places) - random selection
+            if (parsedRefs.categoryReferences.length > 0) {
+                console.log(`🎲 Found ${parsedRefs.categoryReferences.length} category reference(s):`, parsedRefs.categoryReferences)
+
+                for (const category of parsedRefs.categoryReferences) {
+                    const randomImage = await getRandomFromCategory(category)
+
+                    if (randomImage) {
+                        autoReferencedImages.push(randomImage.url)
+                        console.log(`✅ Random selection from ${category}:`, randomImage.reference || randomImage.id)
+                    } else {
+                        console.warn(`⚠️ No images found in category: ${category}`)
+                        toast({
+                            title: `No ${category} found`,
+                            description: `Add images to the "${category}" category in your reference library first.`,
+                            variant: 'destructive',
+                        })
+                    }
+                }
+            }
+
+            // Merge auto-referenced images with manually provided reference images
+            const allReferenceImages = [
+                ...referenceImages,
+                ...autoReferencedImages
+            ]
+
+            // Remove duplicates
+            const uniqueReferenceImages = [...new Set(allReferenceImages)]
+
+            // Log summary
+            if (parsedRefs.allReferences.length > 0) {
+                console.log(`📊 Total references processed: ${parsedRefs.allReferences.length}`)
+                console.log(`🖼️ Total images attached: ${uniqueReferenceImages.length}`)
             }
 
             // Expand bracket variations using existing prompt parser
