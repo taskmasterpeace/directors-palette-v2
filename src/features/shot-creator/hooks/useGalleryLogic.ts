@@ -196,13 +196,21 @@ export function useGalleryLogic(
     }
   }
 
-  const handleDeleteImage = (imageUrl: string) => {
-    removeImage(imageUrl)
-    setSelectedImages(prev => prev.filter(url => url !== imageUrl))
-    toast({
-      title: "Image Deleted",
-      description: "Image removed from gallery"
-    })
+  const handleDeleteImage = async (imageUrl: string) => {
+    const success = await removeImage(imageUrl)
+    if (success) {
+      setSelectedImages(prev => prev.filter(url => url !== imageUrl))
+      toast({
+        title: "Image Deleted",
+        description: "Image removed from gallery"
+      })
+    } else {
+      toast({
+        title: "Deletion Failed",
+        description: "Could not delete image",
+        variant: "destructive"
+      })
+    }
   }
 
   const handleSendTo = (imageUrl: string, target: string) => {

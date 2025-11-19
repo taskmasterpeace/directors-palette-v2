@@ -5,6 +5,7 @@
 
 import { getClient } from '@/lib/db/client'
 import { GalleryRepository } from '@/lib/db/repositories/gallery.repository'
+import { ReferenceRepository } from '@/lib/db/repositories/reference.repository'
 import type { GalleryRow } from '@/lib/db/types'
 
 export type GenerationType = 'image' | 'video'
@@ -155,6 +156,8 @@ export class GalleryService {
     }
   }
 
+
+
   /**
    * Delete a gallery item (database entry and storage file)
    */
@@ -171,6 +174,7 @@ export class GalleryService {
       }
 
       const repository = new GalleryRepository(supabase)
+      const referenceRepository = new ReferenceRepository(supabase)
 
       // Get the gallery entry to verify ownership and get storage path
       const getResult = await repository.get({
@@ -183,6 +187,19 @@ export class GalleryService {
       }
 
       const galleryItem = getResult.data[0]
+
+      // Delete associated references first to avoid foreign key constraints
+      // We use the raw supabase client here for efficiency to delete all matches at once
+      // instead of fetching and deleting one by one via repository
+      const { error: refDeleteError } = await supabase
+        .from('reference')
+        .delete()
+        .eq('gallery_id', itemId)
+
+      if (refDeleteError) {
+        console.warn('Error deleting associated references:', refDeleteError)
+        // Proceed anyway, as they might not exist or it might be a non-blocking error
+      }
 
       // Delete from storage if storage_path exists
       if (galleryItem.storage_path) {

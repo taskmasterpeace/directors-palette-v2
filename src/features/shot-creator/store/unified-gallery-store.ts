@@ -64,7 +64,7 @@ interface UnifiedGalleryState {
   loadImages: (images: GeneratedImage[]) => void
   loadImagesPaginated: (images: GeneratedImage[], total: number, totalPages: number) => void
   setCurrentPage: (page: number) => void
-  removeImage: (imageIdOrUrl: string) => void
+  removeImage: (imageIdOrUrl: string) => Promise<boolean>
   setFullscreenImage: (image: GeneratedImage | null) => void
   updateImageReference: (imageId: string, reference: string) => void
 
@@ -155,11 +155,11 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
 
     if (image) {
       // Delete from Supabase (database and storage)
-      const result = await GalleryService.deleteImage(image.id)
+      const result = await GalleryService.deleteItem(image.id)
 
       if (!result.success) {
         console.error('Failed to delete image:', result.error)
-        return
+        return false
       }
     }
 
@@ -172,6 +172,8 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       fullscreenImage: (state.fullscreenImage?.id === imageIdOrUrl || state.fullscreenImage?.url === imageIdOrUrl) ? null : state.fullscreenImage,
       recentImages: state.recentImages.filter(img => img.id !== imageIdOrUrl && img.url !== imageIdOrUrl)
     }))
+
+    return true
   },
 
   setFullscreenImage: (image) => {
@@ -187,12 +189,6 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       )
     }))
   },
-
-
-
-
-
-
 
   getAllReferences: () => {
     const refs = get().images
