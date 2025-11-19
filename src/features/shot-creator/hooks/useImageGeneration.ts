@@ -4,8 +4,10 @@ import { useState, useCallback, useEffect } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { imageGenerationService } from '../services/image-generation.service'
 import { useShotCreatorStore } from '../store/shot-creator.store'
+import { useUnifiedGalleryStore } from '../store/unified-gallery-store'
 import { getClient, TypedSupabaseClient } from '@/lib/db/client'
 import { parseDynamicPrompt } from '../helpers/prompt-syntax-feedback'
+import { parseReferenceTags } from '../helpers/parse-reference-tags'
 import { uploadImageToReplicate } from '../helpers/image-resize.helper'
 import { ImageGenerationRequest, ImageModel, ImageModelSettings } from "../types/image-generation.types"
 import type { RealtimeChannel } from '@supabase/supabase-js'
@@ -301,6 +303,40 @@ export function useImageGeneration() {
                 throw new Error('User not authenticated. Please log in.')
             }
 
+            // Parse @reference tags from the prompt and auto-attach tagged images
+            const referenceTags = parseReferenceTags(prompt)
+            const autoReferencedImages = referenceTags.length > 0
+                ? useUnifiedGalleryStore.getState().getImagesByReferences(referenceTags)
+                : []
+
+            // Merge auto-referenced images with manually provided reference images
+            // Extract URLs from auto-referenced images and combine with manual references
+            const autoReferenceUrls = autoReferencedImages.map(img => img.url)
+            const allReferenceImages = [
+                ...referenceImages,
+                ...autoReferenceUrls
+            ]
+
+            // Remove duplicates
+            const uniqueReferenceImages = [...new Set(allReferenceImages)]
+
+            // Log what references were found (for debugging/UX feedback)
+            if (referenceTags.length > 0) {
+                console.log(`🏷️ Found ${referenceTags.length} reference tag(s):`, referenceTags)
+                console.log(`📸 Auto-attached ${autoReferencedImages.length} image(s) from tags`)
+                if (autoReferencedImages.length < referenceTags.length) {
+                    const missingTags = referenceTags.filter(
+                        tag => !autoReferencedImages.some(img => img.reference?.toLowerCase() === tag.toLowerCase())
+                    )
+                    console.warn(`⚠️ No images found for tag(s):`, missingTags)
+                    toast({
+                        title: 'Some references not found',
+                        description: `Could not find images for: ${missingTags.join(', ')}`,
+                        variant: 'destructive',
+                    })
+                }
+            }
+
             // Expand bracket variations using existing prompt parser
             const promptResult = parseDynamicPrompt(prompt)
             const variations = promptResult.expandedPrompts
@@ -309,13 +345,13 @@ export function useImageGeneration() {
 
             // Upload reference images to Replicate first (convert data URLs / blob URLs to HTTPS URLs)
             let uploadedReferenceImages: string[] = []
-            if (referenceImages.length > 0) {
+            if (uniqueReferenceImages.length > 0) {
                 toast({
                     title: 'Preparing Reference Images',
-                    description: `Uploading ${referenceImages.length} reference image${referenceImages.length > 1 ? 's' : ''}...`,
+                    description: `Uploading ${uniqueReferenceImages.length} reference image${uniqueReferenceImages.length > 1 ? 's' : ''}...`,
                 })
                 try {
-                    uploadedReferenceImages = await prepareReferenceImagesForAPI(referenceImages)
+                    uploadedReferenceImages = await prepareReferenceImagesForAPI(uniqueReferenceImages)
                 } catch (uploadError) {
                     setShotCreatorProcessing(false)
                     setProgress({ status: 'failed', error: uploadError instanceof Error ? uploadError.message : 'Failed to upload reference images' })

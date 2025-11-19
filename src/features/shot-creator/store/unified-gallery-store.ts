@@ -70,6 +70,7 @@ interface UnifiedGalleryState {
 
   // Filtering
   getAllReferences: () => string[]
+  getImagesByReferences: (references: string[]) => GeneratedImage[]
 
   // Utilities
   getTotalImages: () => number
@@ -195,6 +196,22 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       .filter(img => img.reference)
       .map(img => img.reference!)
     return [...new Set(refs)] // Return unique references
+  },
+
+  getImagesByReferences: (references) => {
+    if (!references || references.length === 0) {
+      return []
+    }
+
+    // Normalize references to lowercase for case-insensitive matching
+    const normalizedRefs = references.map(ref => ref.toLowerCase())
+
+    // Find images whose reference matches any of the provided references
+    return get().images.filter(img => {
+      if (!img.reference) return false
+      const normalizedImgRef = img.reference.toLowerCase()
+      return normalizedRefs.includes(normalizedImgRef)
+    })
   },
 
   getTotalImages: () => {
