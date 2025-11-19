@@ -259,6 +259,23 @@ export function useGalleryLogic(
     storeSetCurrentPage(page)
   }
 
+  const handleUpdateImageReference = async (imageId: string, reference: string) => {
+    try {
+      await updateImageReference(imageId, reference)
+      toast({
+        title: "Reference Updated",
+        description: `Image reference set to ${reference.startsWith('@') ? reference : `@${reference}`}`
+      })
+    } catch (error) {
+      console.error('Failed to update reference:', error)
+      toast({
+        title: "Update Failed",
+        description: "Could not update image reference",
+        variant: "destructive"
+      })
+    }
+  }
+
   return {
     // Data
     images,
@@ -285,6 +302,6 @@ export function useGalleryLogic(
     handleViewModeChange,
     handlePageChange,
     setFullscreenImage,
-    updateImageReference
+    updateImageReference: handleUpdateImageReference
   }
 }

@@ -300,4 +300,60 @@ export class GalleryService {
       return 0
     }
   }
+
+  /**
+   * Update the reference tag for a gallery item
+   */
+  static async updateReference(
+    itemId: string,
+    reference: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const supabase = await getClient()
+      if (!supabase) {
+        throw new Error('Supabase client not available')
+      }
+
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) {
+        throw new Error('User not authenticated')
+      }
+
+      const repository = new GalleryRepository(supabase)
+
+      // Get the current gallery item to read its metadata
+      const getResult = await repository.get({
+        id: itemId,
+        user_id: user.id,
+      })
+
+      if (getResult.error || getResult.data.length === 0) {
+        throw new Error('Gallery item not found or access denied')
+      }
+
+      const galleryItem = getResult.data[0]
+      const currentMetadata = (galleryItem.metadata as Record<string, unknown>) || {}
+
+      // Update metadata with the new reference
+      const updatedMetadata = {
+        ...currentMetadata,
+        reference: reference.startsWith('@') ? reference : `@${reference}`
+      }
+
+      // Update the gallery item
+      const updateResult = await repository.update(itemId, {
+        metadata: updatedMetadata as unknown as Json
+      })
+
+      if (updateResult.error) {
+        throw new Error(updateResult.error)
+      }
+
+      return { success: true }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update reference'
+      console.error('Update reference error:', error)
+      return { success: false, error: errorMessage }
+    }
+  }
 }

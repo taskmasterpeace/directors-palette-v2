@@ -64,6 +64,13 @@ export class GalleryService {
     }
 
     /**
+     * Update the reference tag for a gallery image
+     */
+    static async updateReference(imageId: string, reference: string): Promise<{ success: boolean; error?: string }> {
+        return UnifiedGalleryService.updateReference(imageId, reference)
+    }
+
+    /**
      * Transform database row to GeneratedImage
      */
     private static transformToGeneratedImage(item: GalleryRow): GeneratedImage {
@@ -90,6 +97,7 @@ export class GalleryService {
             prompt: metadata.prompt || '',
             source: 'shot-creator' as const,
             model,
+            reference: (metadata as { reference?: string }).reference, // Read reference from metadata
             settings: {
                 aspectRatio,
                 resolution,
