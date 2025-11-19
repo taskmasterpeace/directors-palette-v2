@@ -155,7 +155,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
 
     if (image) {
       // Delete from Supabase (database and storage)
-      const result = await GalleryService.deleteItem(image.id)
+      const result = await GalleryService.deleteImage(image.id)
 
       if (!result.success) {
         console.error('Failed to delete image:', result.error)
