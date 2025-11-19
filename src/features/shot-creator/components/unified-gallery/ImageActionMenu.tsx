@@ -92,7 +92,18 @@ export function ImageActionMenu({
 
         {(onSetReference || onEditReference) && (
           <DropdownMenuItem
-            onClick={currentReference ? onEditReference : onSetReference}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              // Close dropdown first
+              onDropdownChange(false)
+              // Then call the handler
+              if (currentReference && onEditReference) {
+                onEditReference()
+              } else if (onSetReference) {
+                onSetReference()
+              }
+            }}
             className="hover:bg-slate-700 cursor-pointer"
           >
             {currentReference ? (
