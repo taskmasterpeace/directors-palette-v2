@@ -227,7 +227,6 @@ export function UnifiedImageGallery({
                         }
                     }}
                     onAddToLibrary={onSendToLibrary && fullscreenImage ? () => onSendToLibrary(fullscreenImage.url, fullscreenImage.id) : undefined}
-                    showReferenceNamePrompt={showReferenceNamePrompt}
                 />
             )}
         </Card>

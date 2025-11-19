@@ -17,9 +17,8 @@ interface FullscreenModalProps {
     onDownloadImage: (url: string) => void
     onDeleteImage: (url: string) => void
     onSendTo: (url: string, target: string) => void
-    onSetReference: (id: string, ref: string) => void
+    onSetReference: () => Promise<void>
     onAddToLibrary?: (url: string) => void
-    showReferenceNamePrompt: () => Promise<string | null>
 }
 
 function FullscreenModal({
@@ -33,8 +32,7 @@ function FullscreenModal({
     onDeleteImage,
     onSendTo,
     onSetReference,
-    onAddToLibrary,
-    showReferenceNamePrompt
+    onAddToLibrary
 }: FullscreenModalProps) {
     const { toast } = useToast()
     const isMobile = useIsMobile()
@@ -342,16 +340,7 @@ function FullscreenModal({
                                     size="sm"
                                     variant="outline"
                                     className="flex-1 text-white border-slate-600"
-                                    onClick={async () => {
-                                        const newRef = await showReferenceNamePrompt()
-                                        if (newRef) {
-                                            onSetReference(fullscreenImage.id, newRef)
-                                            toast({
-                                                title: "Reference Set",
-                                                description: `Image tagged as ${newRef}`
-                                            })
-                                        }
-                                    }}
+                                    onClick={() => onSetReference()}
                                     title="Set as Reference"
                                 >
                                     <Tag className="w-3.5 h-3.5 mr-1" />
