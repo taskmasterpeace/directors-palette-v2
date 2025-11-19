@@ -182,6 +182,26 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   },
 
   updateImageReference: async (imageId, reference) => {
+    // Handle empty reference (clearing the tag)
+    if (!reference || reference.trim() === '') {
+      // Update in database to clear reference
+      const result = await GalleryService.updateReference(imageId, '')
+
+      if (!result.success) {
+        console.error('Failed to clear reference in database:', result.error)
+      }
+
+      // Clear from local store
+      set((state) => ({
+        images: state.images.map(img =>
+          img.id === imageId
+            ? { ...img, reference: undefined }
+            : img
+        )
+      }))
+      return
+    }
+
     // Normalize reference (ensure @ prefix)
     const normalizedReference = reference.startsWith('@') ? reference : `@${reference}`
 

@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { ImageIcon } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { useReferenceNamePrompt } from '@/components/providers/PromptProvider'
+import { useToast } from '@/hooks/use-toast'
 import { Pagination } from './Pagination'
 import { useGalleryLogic } from "../../hooks/useGalleryLogic"
 import { ImageCard } from "./ImageCard"
@@ -61,6 +62,7 @@ export function UnifiedImageGallery({
     } = useGalleryLogic(onSendToTab, onUseAsReference, onSendToShotAnimator, onSendToLayoutAnnotation, onSendToLibrary, onImageSelect)
 
     const showReferenceNamePrompt = useReferenceNamePrompt()
+    const { toast } = useToast()
 
     // Keyboard navigation for fullscreen modal
     const navigateToImage = useCallback((direction: 'next' | 'previous') => {
@@ -135,6 +137,10 @@ export function UnifiedImageGallery({
                                 const newRef = await showReferenceNamePrompt(image.reference)
                                 if (newRef !== null) {
                                     updateImageReference(image.id, newRef)
+                                    toast({
+                                        title: newRef ? "Reference Updated" : "Reference Cleared",
+                                        description: newRef ? `Image tagged as ${newRef}` : "Reference tag removed"
+                                    })
                                 }
                             }}
                             onAddToLibrary={() => onSendToLibrary?.(image.url, image.id)}
@@ -197,6 +203,10 @@ export function UnifiedImageGallery({
                                             const newRef = await showReferenceNamePrompt(image.reference)
                                             if (newRef !== null) {
                                                 updateImageReference(image.id, newRef)
+                                                toast({
+                                                    title: newRef ? "Reference Updated" : "Reference Cleared",
+                                                    description: newRef ? `Image tagged as ${newRef}` : "Reference tag removed"
+                                                })
                                             }
                                         }}
                                         onAddToLibrary={() => {

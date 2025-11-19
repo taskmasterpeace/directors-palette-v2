@@ -50,20 +50,24 @@ export function PromptProvider({ children }: PromptProviderProps) {
 
   const handleConfirm = useCallback(
     (value: string) => {
-      if (modalState.resolve) {
-        modalState.resolve(value)
-      }
-      setModalState((prev) => ({ ...prev, isOpen: false }))
+      setModalState((prev) => {
+        if (prev.resolve) {
+          prev.resolve(value)
+        }
+        return { ...prev, isOpen: false }
+      })
     },
-    [modalState]
+    []
   )
 
   const handleCancel = useCallback(() => {
-    if (modalState.resolve) {
-      modalState.resolve(null)
-    }
-    setModalState((prev) => ({ ...prev, isOpen: false }))
-  }, [modalState])
+    setModalState((prev) => {
+      if (prev.resolve) {
+        prev.resolve(null)
+      }
+      return { ...prev, isOpen: false }
+    })
+  }, [])
 
   return (
     <PromptContext.Provider value={{ showPrompt }}>
