@@ -130,21 +130,17 @@ export function UnifiedImageGallery({
                             onSetReference={async () => {
                                 const newRef = await showReferenceNamePrompt()
                                 if (newRef) {
-                                    updateImageReference(image.id, newRef)
+                                    await updateImageReference(image.id, newRef)
                                 }
                             }}
                             onEditReference={async () => {
-                                console.log('[UnifiedImageGallery] onEditReference CALLED for image:', image.id)
                                 const newRef = await showReferenceNamePrompt(image.reference)
-                                console.log('[UnifiedImageGallery] showReferenceNamePrompt resolved with:', newRef)
                                 if (newRef !== null) {
-                                    console.log('[UnifiedImageGallery] Calling updateImageReference')
-                                    updateImageReference(image.id, newRef)
+                                    await updateImageReference(image.id, newRef)
                                     toast({
                                         title: newRef ? "Reference Updated" : "Reference Cleared",
                                         description: newRef ? `Image tagged as ${newRef}` : "Reference tag removed"
                                     })
-                                    console.log('[UnifiedImageGallery] onEditReference COMPLETED')
                                 }
                             }}
                             onAddToLibrary={() => onSendToLibrary?.(image.url, image.id)}
@@ -200,21 +196,17 @@ export function UnifiedImageGallery({
                                         onSetReference={async () => {
                                             const newRef = await showReferenceNamePrompt()
                                             if (newRef) {
-                                                updateImageReference(image.id, newRef)
+                                                await updateImageReference(image.id, newRef)
                                             }
                                         }}
                                         onEditReference={async () => {
-                                            console.log('[UnifiedImageGallery-FULLSCREEN] onEditReference CALLED for image:', image.id)
                                             const newRef = await showReferenceNamePrompt(image.reference)
-                                            console.log('[UnifiedImageGallery-FULLSCREEN] showReferenceNamePrompt resolved with:', newRef)
                                             if (newRef !== null) {
-                                                console.log('[UnifiedImageGallery-FULLSCREEN] Calling updateImageReference')
-                                                updateImageReference(image.id, newRef)
+                                                await updateImageReference(image.id, newRef)
                                                 toast({
                                                     title: newRef ? "Reference Updated" : "Reference Cleared",
                                                     description: newRef ? `Image tagged as ${newRef}` : "Reference tag removed"
                                                 })
-                                                console.log('[UnifiedImageGallery-FULLSCREEN] onEditReference COMPLETED')
                                             }
                                         }}
                                         onAddToLibrary={() => {
@@ -253,7 +245,7 @@ export function UnifiedImageGallery({
                     onSetReference={async () => {
                         const newRef = await showReferenceNamePrompt()
                         if (newRef) {
-                            updateImageReference(fullscreenImage.id, newRef)
+                            await updateImageReference(fullscreenImage.id, newRef)
                         }
                     }}
                     onAddToLibrary={onSendToLibrary && fullscreenImage ? () => onSendToLibrary(fullscreenImage.url, fullscreenImage.id) : undefined}

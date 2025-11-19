@@ -95,14 +95,15 @@ export function ImageActionMenu({
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
-              // Close dropdown first
+              // Close dropdown first, then open modal after a short delay
               onDropdownChange(false)
-              // Then call the handler
-              if (currentReference && onEditReference) {
-                onEditReference()
-              } else if (onSetReference) {
-                onSetReference()
-              }
+              setTimeout(() => {
+                if (currentReference && onEditReference) {
+                  onEditReference()
+                } else if (onSetReference) {
+                  onSetReference()
+                }
+              }, 50)
             }}
             className="hover:bg-slate-700 cursor-pointer"
           >

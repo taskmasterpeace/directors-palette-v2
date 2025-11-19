@@ -44,7 +44,6 @@ export function PromptProvider({ children }: PromptProviderProps) {
         setModalState((prev) => {
           // Prevent opening a new modal if one is already open or transitioning
           if (prev.isOpen || isTransitioningRef.current) {
-            console.warn('[PromptProvider] Attempted to open modal while one is already open or transitioning')
             resolve(null)
             return prev
           }
@@ -62,31 +61,23 @@ export function PromptProvider({ children }: PromptProviderProps) {
 
   const handleConfirm = useCallback(
     (value: string) => {
-      console.log('[PromptProvider] handleConfirm called', { value })
-      // Store the resolve function before clearing state
       let resolveCallback: ((value: string) => void) | undefined
 
       setModalState((prev) => {
-        console.log('[PromptProvider] setModalState before', { prevIsOpen: prev.isOpen, hasResolve: !!prev.resolve })
         resolveCallback = prev.resolve
-        console.log('[PromptProvider] Returning new state with isOpen = false')
         return { ...prev, isOpen: false, resolve: undefined }
       })
 
       // Defer resolve to next microtask to let React finish rendering
       queueMicrotask(() => {
         if (resolveCallback) {
-          console.log('[PromptProvider] Calling resolve in microtask with value:', value)
           resolveCallback(value)
         }
         // Clear transition flag after a delay to prevent immediate re-open
         setTimeout(() => {
           isTransitioningRef.current = false
-          console.log('[PromptProvider] Transition complete, can open new modal')
         }, 100)
-        console.log('[PromptProvider] handleConfirm microtask completed')
       })
-      console.log('[PromptProvider] handleConfirm sync completed')
     },
     []
   )
@@ -110,8 +101,6 @@ export function PromptProvider({ children }: PromptProviderProps) {
       }, 100)
     })
   }, [])
-
-  console.log('[PromptProvider] Rendering', { isOpen: modalState.isOpen, mounted })
 
   return (
     <PromptContext.Provider value={{ showPrompt }}>
