@@ -128,7 +128,7 @@ export function UnifiedImageGallery({
                             onSetReference={async () => {
                                 const newRef = await showReferenceNamePrompt()
                                 if (newRef) {
-                                    updateImageReference(image.id, newRef)
+                                    await updateImageReference(image.id, newRef)
                                 }
                             }}
                             onAddToLibrary={() => onSendToLibrary?.(image.url, image.id)}
@@ -184,7 +184,7 @@ export function UnifiedImageGallery({
                                         onSetReference={async () => {
                                             const newRef = await showReferenceNamePrompt()
                                             if (newRef) {
-                                                updateImageReference(image.id, newRef)
+                                                await updateImageReference(image.id, newRef)
                                             }
                                         }}
                                         onAddToLibrary={() => {
@@ -223,7 +223,7 @@ export function UnifiedImageGallery({
                     onSetReference={async () => {
                         const newRef = await showReferenceNamePrompt()
                         if (newRef) {
-                            updateImageReference(fullscreenImage.id, newRef)
+                            await updateImageReference(fullscreenImage.id, newRef)
                         }
                     }}
                     onAddToLibrary={onSendToLibrary && fullscreenImage ? () => onSendToLibrary(fullscreenImage.url, fullscreenImage.id) : undefined}
