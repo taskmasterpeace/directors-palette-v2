@@ -50,12 +50,17 @@ export function PromptProvider({ children }: PromptProviderProps) {
 
   const handleConfirm = useCallback(
     (value: string) => {
+      console.log('[PromptProvider] handleConfirm called', { value })
       setModalState((prev) => {
+        console.log('[PromptProvider] setModalState before', { prevIsOpen: prev.isOpen, hasResolve: !!prev.resolve })
         if (prev.resolve) {
+          console.log('[PromptProvider] Calling resolve with value:', value)
           prev.resolve(value)
         }
+        console.log('[PromptProvider] Returning new state with isOpen = false')
         return { ...prev, isOpen: false }
       })
+      console.log('[PromptProvider] handleConfirm completed')
     },
     []
   )
@@ -68,6 +73,8 @@ export function PromptProvider({ children }: PromptProviderProps) {
       return { ...prev, isOpen: false }
     })
   }, [])
+
+  console.log('[PromptProvider] Rendering', { isOpen: modalState.isOpen, mounted })
 
   return (
     <PromptContext.Provider value={{ showPrompt }}>

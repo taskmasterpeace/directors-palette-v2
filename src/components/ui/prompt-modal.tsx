@@ -49,7 +49,9 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
 
   // Reset state when modal opens/closes
   useEffect(() => {
+    console.log('[PromptModal] useEffect isOpen changed', { isOpen, isClosingRef: isClosingRef.current })
     if (isOpen) {
+      console.log('[PromptModal] Resetting isClosingRef = false')
       isClosingRef.current = false
       setValue(config.defaultValue || '')
       setError(null)
@@ -96,6 +98,7 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
 
   // Handle form submission
   const handleConfirm = () => {
+    console.log('[PromptModal] handleConfirm called', { value, isClosingRef: isClosingRef.current })
     const trimmedValue = value.trim()
     const validationError = validateValue(trimmedValue)
 
@@ -105,8 +108,10 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
       return
     }
 
+    console.log('[PromptModal] Setting isClosingRef = true and calling onConfirm')
     isClosingRef.current = true
     onConfirm(trimmedValue)
+    console.log('[PromptModal] onConfirm called, isClosingRef =', isClosingRef.current)
   }
 
   // Handle cancel
@@ -133,9 +138,11 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
+      console.log('[PromptModal] Dialog onOpenChange', { open, isClosingRef: isClosingRef.current, currentIsOpen: isOpen })
       // Only call onCancel if dialog is being closed externally (escape/click outside)
       // Don't call it when we're manually closing via confirm button
       if (!open && !isClosingRef.current) {
+        console.log('[PromptModal] Calling onCancel because dialog closed externally')
         onCancel()
       }
     }}>
