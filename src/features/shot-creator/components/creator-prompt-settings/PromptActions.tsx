@@ -171,15 +171,17 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
 
         if (isMobile) {
             // Position above textarea on mobile to avoid keyboard
+            // Use viewport coordinates directly (fixed positioning)
             setDropdownPosition({
-                top: Math.max(rect.top + window.scrollY - 310, 10), // 300px height + 10px margin, min 10px from top
-                left: rect.left + window.scrollX
+                top: Math.max(rect.top - 310, 10), // 300px height + 10px margin, min 10px from top
+                left: Math.max(rect.left, 10) // Min 10px from left edge
             })
         } else {
             // Desktop: position below textarea
+            // Use viewport coordinates directly (fixed positioning)
             setDropdownPosition({
-                top: rect.bottom + window.scrollY + 4,
-                left: rect.left + window.scrollX
+                top: rect.bottom + 4,
+                left: rect.left
             })
         }
     }, [textareaRef])
