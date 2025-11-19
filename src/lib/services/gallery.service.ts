@@ -5,7 +5,6 @@
 
 import { getClient } from '@/lib/db/client'
 import { GalleryRepository } from '@/lib/db/repositories/gallery.repository'
-import { ReferenceRepository } from '@/lib/db/repositories/reference.repository'
 import type { GalleryRow } from '@/lib/db/types'
 
 export type GenerationType = 'image' | 'video'
@@ -174,7 +173,6 @@ export class GalleryService {
       }
 
       const repository = new GalleryRepository(supabase)
-      const referenceRepository = new ReferenceRepository(supabase)
 
       // Get the gallery entry to verify ownership and get storage path
       const getResult = await repository.get({
