@@ -51,26 +51,42 @@ export function PromptProvider({ children }: PromptProviderProps) {
   const handleConfirm = useCallback(
     (value: string) => {
       console.log('[PromptProvider] handleConfirm called', { value })
+      // Store the resolve function before clearing state
+      let resolveCallback: ((value: string) => void) | undefined
+
       setModalState((prev) => {
         console.log('[PromptProvider] setModalState before', { prevIsOpen: prev.isOpen, hasResolve: !!prev.resolve })
-        if (prev.resolve) {
-          console.log('[PromptProvider] Calling resolve with value:', value)
-          prev.resolve(value)
-        }
+        resolveCallback = prev.resolve
         console.log('[PromptProvider] Returning new state with isOpen = false')
-        return { ...prev, isOpen: false }
+        return { ...prev, isOpen: false, resolve: undefined }
       })
-      console.log('[PromptProvider] handleConfirm completed')
+
+      // Defer resolve to next microtask to let React finish rendering
+      queueMicrotask(() => {
+        if (resolveCallback) {
+          console.log('[PromptProvider] Calling resolve in microtask with value:', value)
+          resolveCallback(value)
+        }
+        console.log('[PromptProvider] handleConfirm microtask completed')
+      })
+      console.log('[PromptProvider] handleConfirm sync completed')
     },
     []
   )
 
   const handleCancel = useCallback(() => {
+    let resolveCallback: ((value: string | null) => void) | undefined
+
     setModalState((prev) => {
-      if (prev.resolve) {
-        prev.resolve(null)
+      resolveCallback = prev.resolve
+      return { ...prev, isOpen: false, resolve: undefined }
+    })
+
+    // Defer resolve to next microtask to let React finish rendering
+    queueMicrotask(() => {
+      if (resolveCallback) {
+        resolveCallback(null)
       }
-      return { ...prev, isOpen: false }
     })
   }, [])
 
