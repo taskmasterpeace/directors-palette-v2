@@ -73,17 +73,6 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         return grouped
     }, [libraryItems])
 
-    // Get flattened list of all references
-    const getAllReferences = useCallback(() => {
-        const grouped = getReferencesGroupedByCategory()
-        return [
-            ...grouped.people,
-            ...grouped.places,
-            ...grouped.props,
-            ...grouped.unorganized
-        ]
-    }, [getReferencesGroupedByCategory])
-
     // Filter autocomplete suggestions with category grouping
     const autocompleteSuggestions = React.useMemo(() => {
         const grouped = getReferencesGroupedByCategory()
