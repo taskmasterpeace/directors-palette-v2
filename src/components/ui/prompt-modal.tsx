@@ -42,11 +42,24 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
 
   // Filter suggestions based on input
   const filteredSuggestions = React.useMemo(() => {
-    if (!config.suggestions || !value) return []
+    if (!config.suggestions || config.suggestions.length === 0) {
+      console.log('❌ No suggestions available')
+      return []
+    }
+
+    // If empty or just "@", show all suggestions
+    if (!value || value === '@') {
+      console.log('✅ Showing all suggestions:', config.suggestions)
+      return config.suggestions
+    }
+
+    // Filter by what user typed
     const lowerValue = value.toLowerCase()
-    return config.suggestions.filter(s =>
-      s.toLowerCase().includes(lowerValue) && s !== value
+    const filtered = config.suggestions.filter(s =>
+      s.toLowerCase().startsWith(lowerValue)
     )
+    console.log('🔍 Filtered suggestions:', { value, filtered })
+    return filtered
   }, [config.suggestions, value])
 
   useEffect(() => {
@@ -63,6 +76,8 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
     if (isOpen) {
       setValue(config.defaultValue || '')
       setError(null)
+      setShowSuggestions(true) // Show suggestions when modal opens
+      setSelectedIndex(-1)
       // Focus input after a short delay to ensure modal is fully rendered
       setTimeout(() => {
         inputRef.current?.focus()
