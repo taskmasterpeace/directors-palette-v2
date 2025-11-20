@@ -235,8 +235,7 @@ export function ShotAnimatorView() {
     const results = await generateVideos(
       shotConfigs,
       selectedModel,
-      modelSettings[selectedModel],
-      user.id
+      modelSettings[selectedModel]
     )
 
     // Append new videos to generatedVideos array
@@ -313,8 +312,7 @@ export function ShotAnimatorView() {
     const result = await retrySingleVideo(
       shotConfig,
       selectedModel,
-      modelSettings[selectedModel],
-      user.id
+      modelSettings[selectedModel]
     )
 
     // Update the generatedVideos array with new galleryId if successful
