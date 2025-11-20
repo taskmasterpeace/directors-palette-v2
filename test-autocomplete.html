@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autocomplete Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 50px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .input-wrapper {
+            position: relative;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background: #2a2a2a;
+            color: white;
+        }
+        .dropdown {
+            position: absolute;
+            z-index: 50;
+            width: 100%;
+            margin-top: 4px;
+            background: white;
+            color: black;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            max-height: 240px;
+            overflow: auto;
+        }
+        .dropdown-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .dropdown-item:hover {
+            background: #f0f0f0;
+        }
+        .dropdown-item.selected {
+            background: #8b5cf6;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Autocomplete Test</h1>
+        <p>This tests if the autocomplete dropdown renders correctly.</p>
+
+        <div class="input-wrapper">
+            <input
+                type="text"
+                id="testInput"
+                placeholder="Type @ to see suggestions..."
+                autocomplete="off"
+            />
+            <div class="dropdown" id="dropdown" style="display: none;">
+                <div class="dropdown-item">@hero</div>
+                <div class="dropdown-item">@villain</div>
+                <div class="dropdown-item">@location</div>
+                <div class="dropdown-item">@prop</div>
+                <div class="dropdown-item">@character</div>
+                <div class="dropdown-item">@background</div>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <h3>Debug Info:</h3>
+            <pre id="debug"></pre>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('testInput');
+        const dropdown = document.getElementById('dropdown');
+        const debug = document.getElementById('debug');
+        let showDropdown = false;
+
+        function updateDebug() {
+            debug.textContent = JSON.stringify({
+                value: input.value,
+                showDropdown,
+                dropdownDisplay: dropdown.style.display,
+                dropdownVisible: dropdown.style.display !== 'none'
+            }, null, 2);
+        }
+
+        input.addEventListener('input', (e) => {
+            const value = e.target.value;
+            showDropdown = true;
+            dropdown.style.display = 'block';
+            console.log('Input changed:', value, 'showDropdown:', showDropdown);
+            updateDebug();
+        });
+
+        input.addEventListener('focus', () => {
+            showDropdown = true;
+            dropdown.style.display = 'block';
+            console.log('Input focused, showDropdown:', showDropdown);
+            updateDebug();
+        });
+
+        input.addEventListener('blur', () => {
+            setTimeout(() => {
+                showDropdown = false;
+                dropdown.style.display = 'none';
+                console.log('Input blurred (after delay), showDropdown:', showDropdown);
+                updateDebug();
+            }, 200);
+        });
+
+        // Show dropdown on page load
+        setTimeout(() => {
+            input.focus();
+            updateDebug();
+        }, 500);
+
+        // Prevent blur when clicking dropdown
+        dropdown.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+        });
+
+        // Handle item click
+        dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', () => {
+                input.value = item.textContent;
+                showDropdown = false;
+                dropdown.style.display = 'none';
+                input.focus();
+                updateDebug();
+            });
+        });
+
+        updateDebug();
+    </script>
+</body>
+</html>
