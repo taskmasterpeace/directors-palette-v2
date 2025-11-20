@@ -8,6 +8,7 @@ import React, {
   useEffect,
 } from 'react'
 import { PromptModal, PromptModalConfig } from '@/components/ui/prompt-modal'
+import { useUnifiedGalleryStore } from '@/features/shot-creator/store/unified-gallery-store'
 
 interface PromptContextValue {
   showPrompt: (config: PromptModalConfig) => Promise<string | null>
@@ -92,10 +93,14 @@ export function usePrompt() {
 // Utility hooks
 export function useReferenceNamePrompt() {
   const { showPrompt } = usePrompt()
+  const getAllReferences = useUnifiedGalleryStore(state => state.getAllReferences)
 
   return useCallback(
-    (defaultValue?: string) =>
-      showPrompt({
+    (defaultValue?: string) => {
+      // Get existing references for autocomplete
+      const existingReferences = getAllReferences()
+
+      return showPrompt({
         title: 'Set Reference Name',
         description:
           'Enter a reference name for this image. Use @ prefix for easy identification.',
@@ -103,6 +108,7 @@ export function useReferenceNamePrompt() {
         defaultValue,
         required: true,
         maxLength: 50,
+        suggestions: existingReferences, // ADD AUTOCOMPLETE!
         validation: (value: string) => {
           if (!value.startsWith('@')) {
             return 'Reference name must start with @'
@@ -115,8 +121,9 @@ export function useReferenceNamePrompt() {
           }
           return null
         },
-      }),
-    [showPrompt]
+      })
+    },
+    [showPrompt, getAllReferences]
   )
 }
 
