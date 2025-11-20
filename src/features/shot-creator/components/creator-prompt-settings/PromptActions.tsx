@@ -361,21 +361,21 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                     {showAutocomplete && autocompleteSuggestions.length > 0 && (
                         <div
                             ref={autocompleteRef}
-                            className="absolute z-50 w-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg max-h-60 overflow-auto"
+                            className="absolute z-50 w-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg max-h-60 overflow-auto touch-pan-y"
                         >
                             {autocompleteSuggestions.map((suggestion, index) => (
                                 <div
                                     key={suggestion}
                                     className={cn(
-                                        "px-4 py-2 cursor-pointer transition-colors",
+                                        "px-4 min-h-[48px] flex items-center cursor-pointer transition-colors touch-manipulation active:scale-95",
                                         index === autocompleteSelectedIndex
                                             ? "bg-purple-600 text-white"
-                                            : "hover:bg-slate-700 text-slate-100"
+                                            : "hover:bg-slate-700 active:bg-slate-600 text-slate-100"
                                     )}
                                     onClick={() => selectAutocompleteSuggestion(suggestion)}
-                                    onMouseEnter={() => setAutocompleteSelectedIndex(index)}
+                                    onTouchStart={() => setAutocompleteSelectedIndex(index)}
                                 >
-                                    {suggestion}
+                                    <span className="text-base">{suggestion}</span>
                                 </div>
                             ))}
                         </div>
