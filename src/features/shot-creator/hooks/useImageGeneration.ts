@@ -412,7 +412,7 @@ export function useImageGeneration() {
                     prompt: variationPrompt,
                     referenceImages: inputImages,
                     modelSettings: currentModelSettings,
-                    user_id: user.id,
+                    // user_id removed - now extracted server-side from session cookie
                 }
                 toast({
                     title: isPipeChaining ? `Step ${i + 1}/${totalVariations}` : 'Generating',

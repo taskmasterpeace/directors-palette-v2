@@ -129,7 +129,7 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
         modelSettings,
         referenceImages: finalReferenceImages,
         lastFrameImage: finalLastFrameImage,
-        user_id: userId,
+        // user_id removed - now extracted server-side from session cookie
       }
 
       const response = await fetch('/api/generation/video', {

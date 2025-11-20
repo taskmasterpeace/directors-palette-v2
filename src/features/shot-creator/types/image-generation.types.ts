@@ -159,7 +159,7 @@ export interface ImageGenerationRequest {
   prompt: string
   referenceImages?: string[]
   modelSettings: ImageModelSettings
-  user_id: string
+  // Note: user_id removed - now extracted from session cookie server-side
 }
 
 export interface ImageGenerationResponse {

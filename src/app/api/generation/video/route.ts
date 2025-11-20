@@ -1,21 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Replicate from 'replicate';
-import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../../../../../supabase/database.types';
 import { VideoGenerationService } from '@/features/shot-animator/services/video-generation.service';
 import type { AnimationModel, ModelSettings } from '@/features/shot-animator/types';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
-const supabase = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(request: NextRequest) {
   try {
+    // ✅ SECURITY: Verify authentication first
+    const auth = await getAuthenticatedUser(request);
+    if (auth instanceof NextResponse) return auth; // Return 401 error
+
+    const { user, supabase } = auth;
+
     const {
       model,
       prompt,
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
       modelSettings,
       referenceImages,
       lastFrameImage,
-      user_id,
+      // ✅ REMOVED: user_id from request body (now from authenticated session)
     } = await request.json();
 
     // Validate required fields
@@ -44,13 +45,6 @@ export async function POST(request: NextRequest) {
     if (!image) {
       return NextResponse.json(
         { error: 'Image is required for image-to-video generation' },
-        { status: 400 }
-      );
-    }
-
-    if (!user_id) {
-      return NextResponse.json(
-        { error: 'user_id is required' },
         { status: 400 }
       );
     }
@@ -111,15 +105,16 @@ export async function POST(request: NextRequest) {
       lastFrameImage,
     });
 
-    // Create gallery entry with proper schema
+    // ✅ SECURITY: Create gallery entry with authenticated user's ID
+    // This respects RLS policies since we're using the user's session
     const { data: gallery, error: galleryError } = await supabase
       .from('gallery')
       .insert({
-        user_id,
+        user_id: user.id, // ✅ Use authenticated user
         prediction_id: prediction.id,
         generation_type: 'video',
         status: 'pending',
-        metadata,
+        metadata: metadata as Database['public']['Tables']['gallery']['Insert']['metadata'],
       })
       .select()
       .single();

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Replicate from 'replicate';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -10,6 +11,10 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export async function POST(request: NextRequest) {
   try {
+    // ✅ SECURITY: Verify authentication first
+    const auth = await getAuthenticatedUser(request);
+    if (auth instanceof NextResponse) return auth; // Return 401 error
+
     // Parse the multipart form data
     const formData = await request.formData();
     const file = formData.get('file') as File;
