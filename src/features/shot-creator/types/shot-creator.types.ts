@@ -41,7 +41,9 @@ export interface ShotCreatorSettings {
     aspectRatio: string
     resolution: string
     seed?: number
-    model?: 'nano-banana' | 'gen4-image' | 'gen4-image-turbo' | 'seedream-4' | 'qwen-image' | 'qwen-image-edit'
+    model?: 'nano-banana' | 'nano-banana-pro' | 'gen4-image' | 'gen4-image-turbo' | 'seedream-4' | 'qwen-image' | 'qwen-image-edit'
+    // Nano-Banana-Pro specific settings
+    safetyFilterLevel?: 'block_low_and_above' | 'block_medium_and_above' | 'block_only_high'
     // Seedream-4 specific settings
     maxImages?: number // 1-15 for seedream-4
     customWidth?: number // 1024-4096 when resolution is 'custom'

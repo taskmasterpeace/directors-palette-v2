@@ -213,7 +213,7 @@ const AdvancedSettings = () => {
                     <Label className="text-sm text-slate-300">Safety Filter Level</Label>
                     <Select
                         value={shotCreatorSettings.safetyFilterLevel || 'block_only_high'}
-                        onValueChange={(value) => updateSettings({ safetyFilterLevel: value })}
+                        onValueChange={(value) => updateSettings({ safetyFilterLevel: value as 'block_low_and_above' | 'block_medium_and_above' | 'block_only_high' })}
                     >
                         <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
                             <SelectValue />
