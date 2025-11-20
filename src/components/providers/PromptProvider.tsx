@@ -100,11 +100,6 @@ export function useReferenceNamePrompt() {
       // Get existing references for autocomplete
       const existingReferences = getAllReferences()
 
-      console.log('🔍 Reference autocomplete debug:', {
-        count: existingReferences.length,
-        references: existingReferences
-      })
-
       return showPrompt({
         title: 'Set Reference Name',
         description:

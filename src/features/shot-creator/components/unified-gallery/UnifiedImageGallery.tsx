@@ -126,7 +126,7 @@ export function UnifiedImageGallery({
                             onDelete={() => handleDeleteImage(image.url)}
                             onSendTo={currentTab ? (target) => handleSendTo(image.url, target) : undefined}
                             onSetReference={async () => {
-                                const newRef = await showReferenceNamePrompt()
+                                const newRef = await showReferenceNamePrompt(image.reference)
                                 if (newRef) {
                                     await updateImageReference(image.id, newRef)
                                 }
@@ -182,7 +182,7 @@ export function UnifiedImageGallery({
                                         onDelete={() => handleDeleteImage(image.url)}
                                         onSendTo={currentTab ? (target) => handleSendTo(image.url, target) : undefined}
                                         onSetReference={async () => {
-                                            const newRef = await showReferenceNamePrompt()
+                                            const newRef = await showReferenceNamePrompt(image.reference)
                                             if (newRef) {
                                                 await updateImageReference(image.id, newRef)
                                             }
@@ -221,7 +221,7 @@ export function UnifiedImageGallery({
                     onDeleteImage={handleDeleteImage}
                     onSendTo={currentTab ? (url: string, target: string) => handleSendTo(url, target) : (() => { })}
                     onSetReference={async () => {
-                        const newRef = await showReferenceNamePrompt()
+                        const newRef = await showReferenceNamePrompt(fullscreenImage.reference)
                         if (newRef) {
                             await updateImageReference(fullscreenImage.id, newRef)
                         }

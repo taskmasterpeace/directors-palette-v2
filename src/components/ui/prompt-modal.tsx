@@ -43,22 +43,31 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
   // Filter suggestions based on input
   const filteredSuggestions = React.useMemo(() => {
     if (!config.suggestions || config.suggestions.length === 0) {
-      console.log('❌ No suggestions available')
       return []
     }
 
     // If empty or just "@", show all suggestions
     if (!value || value === '@') {
-      console.log('✅ Showing all suggestions:', config.suggestions)
       return config.suggestions
     }
 
-    // Filter by what user typed
-    const lowerValue = value.toLowerCase()
+    const trimmedValue = value.trim()
+    const lowerValue = trimmedValue.toLowerCase()
+
+    // Check if current value exactly matches an existing suggestion
+    const exactMatch = config.suggestions.some(s =>
+      s.toLowerCase() === lowerValue
+    )
+
+    // If exact match, show all suggestions (user wants to switch)
+    if (exactMatch) {
+      return config.suggestions
+    }
+
+    // Otherwise filter by prefix using startsWith
     const filtered = config.suggestions.filter(s =>
       s.toLowerCase().startsWith(lowerValue)
     )
-    console.log('🔍 Filtered suggestions:', { value, filtered })
     return filtered
   }, [config.suggestions, value])
 
