@@ -431,8 +431,27 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
 
             </div>
 
-            {/* Accordion System for Help, Prompt Library, and Import/Export */}
+            {/* Accordion System for Prompt Library and Help */}
             <Accordion type="single" collapsible className="w-full">
+                {/* Prompt Library Section */}
+                <AccordionItem value="library" className="border-slate-700">
+                    <AccordionTrigger className="text-slate-300 hover:text-white">
+                        <div className="flex items-center gap-2">
+                            <BookOpen className="w-4 h-4" />
+                            Prompt Library
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4">
+                        <div className="h-[400px] overflow-y-auto">
+                            <PromptLibrary
+                                onSelectPrompt={handleSelectPrompt}
+                                showQuickAccess={true}
+                                className="h-full"
+                            />
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+
                 {/* Help Section */}
                 <AccordionItem value="help" className="border-slate-700">
                     <AccordionTrigger className="text-slate-300 hover:text-white">
@@ -478,25 +497,6 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                                 </code>
                                 <div className="text-xs">→ Randomly selects prompts from each category</div>
                             </div>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-
-                {/* Prompt Library Section */}
-                <AccordionItem value="library" className="border-slate-700">
-                    <AccordionTrigger className="text-slate-300 hover:text-white">
-                        <div className="flex items-center gap-2">
-                            <BookOpen className="w-4 h-4" />
-                            Prompt Library
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4">
-                        <div className="h-[400px] overflow-y-auto">
-                            <PromptLibrary
-                                onSelectPrompt={handleSelectPrompt}
-                                showQuickAccess={true}
-                                className="h-full"
-                            />
                         </div>
                     </AccordionContent>
                 </AccordionItem>

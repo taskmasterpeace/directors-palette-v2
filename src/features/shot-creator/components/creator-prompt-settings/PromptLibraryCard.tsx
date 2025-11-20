@@ -20,6 +20,8 @@ import { useState } from "react"
 import { usePromptLibraryManager } from "../../hooks/usePromptLibraryManager"
 import { PromptCard } from '../prompt-library/PromptCard'
 import { CategoryCard } from '../prompt-library/CategoryCard'
+import { EditPromptDialog } from '../prompt-library/dialogs/EditPromptDialog'
+import { SavedPrompt } from "../../store/prompt-library-store"
 
 interface PromptLibraryCardProps {
     onSelectPrompt?: (prompt: string) => void
@@ -30,6 +32,8 @@ interface PromptLibraryCardProps {
 const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess }: PromptLibraryCardProps) => {
     const [activeTab, setActiveTab] = useState('categories')
     const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards')
+    const [isEditPromptOpen, setIsEditPromptOpen] = useState(false)
+    const [editingPrompt, setEditingPrompt] = useState<SavedPrompt | null>(null)
 
     const {
         prompts,
@@ -48,7 +52,22 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
         toggleQuickAccess,
         deletePrompt,
         processPromptReplacements,
+        handleUpdatePrompt,
     } = usePromptLibraryManager(onSelectPrompt)
+
+    // Handle edit prompt
+    const handleEdit = (prompt: SavedPrompt) => {
+        setEditingPrompt(prompt)
+        setIsEditPromptOpen(true)
+    }
+
+    const handleEditSave = async (updatedPrompt: SavedPrompt) => {
+        const success = await handleUpdatePrompt(updatedPrompt)
+        if (success) {
+            setIsEditPromptOpen(false)
+            setEditingPrompt(null)
+        }
+    }
 
 
 
@@ -165,6 +184,7 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                                                     categoryName={category?.name}
                                                     onToggleStar={toggleQuickAccess}
                                                     onDelete={deletePrompt}
+                                                    onEdit={handleEdit}
                                                     onUsePrompt={handleSelectPrompt}
                                                     processPromptReplacements={processPromptReplacements}
                                                 />
@@ -187,6 +207,7 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                                                         categoryName={category?.name}
                                                         onToggleStar={toggleQuickAccess}
                                                         onDelete={deletePrompt}
+                                                        onEdit={handleEdit}
                                                         onUsePrompt={handleSelectPrompt}
                                                         processPromptReplacements={processPromptReplacements}
                                                     />
@@ -248,6 +269,7 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                                                                 categoryName={category?.name}
                                                                 onToggleStar={toggleQuickAccess}
                                                                 onDelete={deletePrompt}
+                                                                onEdit={handleEdit}
                                                                 onUsePrompt={handleSelectPrompt}
                                                                 processPromptReplacements={processPromptReplacements}
                                                             />
@@ -267,6 +289,15 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                     </>
                 )}
             </CardContent>
+
+            {/* Edit Prompt Dialog */}
+            <EditPromptDialog
+                open={isEditPromptOpen}
+                onOpenChange={setIsEditPromptOpen}
+                prompt={editingPrompt}
+                categories={categories}
+                onUpdate={handleEditSave}
+            />
         </Card>
     )
 }
