@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback, useRef, Fragment, useEffect } from 'react'
+import React, { useState, useCallback, useRef, Fragment, useEffect, memo } from 'react'
 import {
   Play,
   Loader2,
@@ -24,11 +24,11 @@ interface CompactVideoCardProps {
   onRetryVideo?: (galleryId: string) => void
 }
 
-export function CompactVideoCard({
+const CompactVideoCardComponent = ({
   videos,
   onDeleteVideo,
   onRetryVideo
-}: CompactVideoCardProps) {
+}: CompactVideoCardProps) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: false,
     align: 'start',
@@ -302,3 +302,21 @@ export function CompactVideoCard({
     </>
   )
 }
+
+// Memoize component - only re-render if videos array changes
+export const CompactVideoCard = memo(CompactVideoCardComponent, (prevProps, nextProps) => {
+  // Compare video arrays by checking gallery IDs and statuses
+  if (prevProps.videos.length !== nextProps.videos.length) return false
+
+  for (let i = 0; i < prevProps.videos.length; i++) {
+    if (
+      prevProps.videos[i].galleryId !== nextProps.videos[i].galleryId ||
+      prevProps.videos[i].status !== nextProps.videos[i].status ||
+      prevProps.videos[i].videoUrl !== nextProps.videos[i].videoUrl
+    ) {
+      return false
+    }
+  }
+
+  return true
+})

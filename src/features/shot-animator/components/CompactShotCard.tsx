@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { memo } from 'react'
 import Image from 'next/image'
 import { Image as ImageIcon, Film, Trash2, Loader2 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
@@ -24,7 +24,7 @@ interface CompactShotCardProps {
   onRetryVideo?: (galleryId: string) => void
 }
 
-export function CompactShotCard({
+const CompactShotCardComponent = ({
   config,
   maxReferenceImages,
   supportsLastFrame,
@@ -33,7 +33,7 @@ export function CompactShotCard({
   onManageReferences,
   onManageLastFrame,
   onRetryVideo
-}: CompactShotCardProps) {
+}: CompactShotCardProps) => {
   const handleToggleSelect = () => {
     onUpdate({ ...config, includeInBatch: !config.includeInBatch })
   }
@@ -210,3 +210,17 @@ export function CompactShotCard({
     </Card>
   )
 }
+
+// Memoize component - only re-render if config changes
+export const CompactShotCard = memo(CompactShotCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.config.id === nextProps.config.id &&
+    prevProps.config.prompt === nextProps.config.prompt &&
+    prevProps.config.includeInBatch === nextProps.config.includeInBatch &&
+    prevProps.config.imageUrl === nextProps.config.imageUrl &&
+    prevProps.config.referenceImages.length === nextProps.config.referenceImages.length &&
+    prevProps.config.generatedVideos.length === nextProps.config.generatedVideos.length &&
+    prevProps.maxReferenceImages === nextProps.maxReferenceImages &&
+    prevProps.supportsLastFrame === nextProps.supportsLastFrame
+  )
+})

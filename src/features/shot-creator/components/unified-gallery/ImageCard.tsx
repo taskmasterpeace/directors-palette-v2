@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import Image from "next/image"
 import type { GalleryImage } from "../../types"
 import { useImageActions } from "../../hooks/useImageActions"
@@ -27,8 +27,9 @@ interface ImageCardProps {
 /**
  * Image card component for gallery display
  * Displays image with overlays, badges, and action menu
+ * Memoized to prevent unnecessary re-renders in large galleries
  */
-export function ImageCard({
+const ImageCardComponent = ({
   image,
   isSelected,
   onSelect,
@@ -96,3 +97,14 @@ export function ImageCard({
     </div>
   )
 }
+
+// Memoize component with custom comparison function
+// Only re-render if image data or selection state changes
+export const ImageCard = memo(ImageCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.image.id === nextProps.image.id &&
+    prevProps.image.url === nextProps.image.url &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.showActions === nextProps.showActions
+  )
+})
