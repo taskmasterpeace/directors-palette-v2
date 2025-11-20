@@ -369,7 +369,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                                     className={cn(
                                         "px-4 min-h-[48px] flex items-center cursor-pointer transition-colors touch-manipulation active:scale-95",
                                         index === autocompleteSelectedIndex
-                                            ? "bg-purple-600 text-white"
+                                            ? "bg-red-600 text-white"
                                             : "hover:bg-slate-700 active:bg-slate-600 text-slate-100"
                                     )}
                                     onClick={() => selectAutocompleteSuggestion(suggestion)}
@@ -414,7 +414,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 <Button
                     onClick={handleGenerate}
                     disabled={!canGenerate || isGenerating}
-                    className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium disabled:opacity-50"
+                    className="flex-1 bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-700 hover:to-blue-700 text-white font-medium disabled:opacity-50"
                 >
                     {isGenerating ? (
                         <>
@@ -453,7 +453,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                             </div>
 
                             <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">
-                                <div className="font-medium text-purple-400">✨ Wild Cards</div>
+                                <div className="font-medium text-red-400">✨ Wild Cards</div>
                                 <div className="text-xs text-slate-400">Use dynamic placeholders for creative variations</div>
                                 <code className="block bg-slate-900 p-2 rounded text-xs text-green-400">
                                     _character_ holding _object_ in _location_

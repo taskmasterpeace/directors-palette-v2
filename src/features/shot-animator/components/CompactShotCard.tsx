@@ -72,7 +72,7 @@ export function CompactShotCard({
 
   return (
     <Card
-      className={`h-full flex flex-col bg-slate-800/50 border-2 transition-all hover:border-slate-600 touch-manipulation ${config.includeInBatch ? 'border-purple-500' : 'border-slate-700'
+      className={`h-full flex flex-col bg-slate-800/50 border-2 transition-all hover:border-slate-600 touch-manipulation ${config.includeInBatch ? 'border-red-500' : 'border-slate-700'
         }`}
     >
       {/* Image with Checkbox Overlay */}
@@ -87,7 +87,7 @@ export function CompactShotCard({
 
         {/* Selection Overlay */}
         {config.includeInBatch && (
-          <div className="absolute inset-0 bg-purple-500/10" />
+          <div className="absolute inset-0 bg-red-500/10" />
         )}
 
         {/* Larger checkbox touch target for mobile */}
@@ -108,7 +108,7 @@ export function CompactShotCard({
         {config.generatedVideos && config.generatedVideos.length > 0 && (
           <div className="absolute top-2 right-2 z-10">
             {config.generatedVideos.some(v => v.status === 'processing') && (
-              <Badge className="bg-purple-600 text-white text-xs flex items-center gap-1">
+              <Badge className="bg-red-600 text-white text-xs flex items-center gap-1">
                 <Loader2 className="w-3 h-3 animate-spin" />
                 Processing
               </Badge>
@@ -150,7 +150,7 @@ export function CompactShotCard({
           value={config.prompt}
           onChange={(e) => onUpdate({ ...config, prompt: e.target.value })}
           placeholder="Describe the animation..."
-          className="bg-slate-700 text-white text-sm sm:text-xs min-h-[120px] sm:min-h-[100px] resize-none touch-manipulation focus:ring-2 focus:ring-purple-500 transition-shadow p-3 sm:p-2"
+          className="bg-slate-700 text-white text-sm sm:text-xs min-h-[120px] sm:min-h-[100px] resize-none touch-manipulation focus:ring-2 focus:ring-red-500 transition-shadow p-3 sm:p-2"
         />
         {/* Action Buttons - Enhanced for mobile touch */}
         <div className="flex w-full items-center gap-2 sm:gap-2">
@@ -161,14 +161,14 @@ export function CompactShotCard({
                 size="sm"
                 variant="ghost"
                 onClick={onManageReferences}
-                className="min-h-[44px] h-11 sm:h-8 px-3 sm:px-2 w-full text-sm sm:text-xs bg-slate-700/50 hover:bg-slate-700 active:bg-slate-600 text-purple-400 border border-purple-500/30 touch-manipulation active:scale-95 transition-transform"
+                className="min-h-[44px] h-11 sm:h-8 px-3 sm:px-2 w-full text-sm sm:text-xs bg-slate-700/50 hover:bg-slate-700 active:bg-slate-600 text-red-400 border border-red-500/30 touch-manipulation active:scale-95 transition-transform"
                 aria-label="Manage reference images"
               >
                 <ImageIcon className="w-4 h-4 sm:w-3 sm:h-3 mr-1" />
                 <span className="hidden sm:inline">Refs</span>
                 <span className="sm:hidden">References</span>
                 {config.referenceImages.length > 0 && (
-                  <Badge className="ml-1 h-5 px-1.5 sm:h-4 sm:px-1 text-xs bg-purple-600">
+                  <Badge className="ml-1 h-5 px-1.5 sm:h-4 sm:px-1 text-xs bg-red-600">
                     {config.referenceImages.length}
                   </Badge>
                 )}
@@ -183,13 +183,13 @@ export function CompactShotCard({
                 size="sm"
                 variant="ghost"
                 onClick={onManageLastFrame}
-                className="min-h-[44px] h-11 sm:h-8 px-3 sm:px-2 w-full text-sm sm:text-xs bg-slate-700/50 hover:bg-slate-700 active:bg-slate-600 text-purple-400 border border-purple-500/30 touch-manipulation active:scale-95 transition-transform"
+                className="min-h-[44px] h-11 sm:h-8 px-3 sm:px-2 w-full text-sm sm:text-xs bg-slate-700/50 hover:bg-slate-700 active:bg-slate-600 text-red-400 border border-red-500/30 touch-manipulation active:scale-95 transition-transform"
                 aria-label="Manage last frame"
               >
                 <Film className="w-4 h-4 sm:w-3 sm:h-3 mr-1" />
                 Last Frame
                 {config.lastFrameImage && (
-                  <Badge className="ml-1 h-5 px-1.5 sm:h-4 sm:px-1 text-xs bg-purple-600">1</Badge>
+                  <Badge className="ml-1 h-5 px-1.5 sm:h-4 sm:px-1 text-xs bg-red-600">1</Badge>
                 )}
               </Button>
             )}

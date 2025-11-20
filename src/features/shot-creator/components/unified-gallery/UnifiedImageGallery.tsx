@@ -155,7 +155,7 @@ export function UnifiedImageGallery({
             <CardContent>
                 {isLoading ? (
                     <div className="text-center py-12">
-                        <div className="w-12 h-12 mx-auto mb-4 border-4 border-slate-600 border-t-purple-500 rounded-full animate-spin" />
+                        <div className="w-12 h-12 mx-auto mb-4 border-4 border-slate-600 border-t-red-500 rounded-full animate-spin" />
                         <p className="text-slate-400">Loading gallery...</p>
                     </div>
                 ) : images.length === 0 ? (

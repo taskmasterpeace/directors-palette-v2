@@ -30,7 +30,7 @@ const enhancedButtonVariants = cva(
       },
       colorScheme: {
         blue: "",
-        purple: "",
+        red: "",
         emerald: "",
         rose: "",
         amber: "",
@@ -46,8 +46,8 @@ const enhancedButtonVariants = cva(
       },
       {
         variant: "neon",
-        colorScheme: "purple",
-        class: "border-purple-400 hover:shadow-purple-400/50 hover:text-purple-300"
+        colorScheme: "red",
+        class: "border-red-400 hover:shadow-red-400/50 hover:text-red-300"
       },
       {
         variant: "neon",
@@ -72,8 +72,8 @@ const enhancedButtonVariants = cva(
       },
       {
         variant: "sleek",
-        colorScheme: "purple",
-        class: "from-purple-600 to-purple-500"
+        colorScheme: "red",
+        class: "from-red-600 to-red-500"
       },
       {
         variant: "sleek",
@@ -98,8 +98,8 @@ const enhancedButtonVariants = cva(
       },
       {
         variant: "spark",
-        colorScheme: "purple",
-        class: "from-purple-600 to-purple-500"
+        colorScheme: "red",
+        class: "from-red-600 to-red-500"
       },
       {
         variant: "spark",

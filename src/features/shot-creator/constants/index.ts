@@ -35,13 +35,13 @@ export const resolutions = [
 // Default categories - matching nano-banana prompts 
 export const DEFAULT_CATEGORIES: PromptCategory[] = [
     { id: 'cinematic', name: 'Cinematic Shots', icon: '🎬', color: 'blue', order: 1, isEditable: false },
-    { id: 'characters', name: 'Character Styles', icon: '👤', color: 'purple', order: 2, isEditable: false },
+    { id: 'characters', name: 'Character Styles', icon: '👤', color: 'red', order: 2, isEditable: false },
     { id: 'lighting', name: 'Lighting Setups', icon: '💡', color: 'yellow', order: 3, isEditable: false },
     { id: 'environments', name: 'Environments', icon: '🏞️', color: 'green', order: 4, isEditable: false },
     { id: 'effects', name: 'Special Effects', icon: '✨', color: 'orange', order: 5, isEditable: false },
     { id: 'moods', name: 'Moods & Atmosphere', icon: '🎭', color: 'indigo', order: 6, isEditable: false },
     { id: 'camera', name: 'Camera Angles', icon: '📷', color: 'pink', order: 7, isEditable: false },
-    { id: 'styles', name: 'Art Styles', icon: '🎨', color: 'purple', order: 8, isEditable: false },
+    { id: 'styles', name: 'Art Styles', icon: '🎨', color: 'red', order: 8, isEditable: false },
     { id: 'custom', name: 'Custom', icon: '📁', color: 'gray', order: 99, isEditable: false }
 ]
 

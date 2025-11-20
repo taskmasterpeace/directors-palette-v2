@@ -286,10 +286,10 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
     }
 
     return (
-        <Card className="bg-slate-900/90 border-purple-500/30 h-fit">
+        <Card className="bg-slate-900/90 border-red-500/30 h-fit">
             <CardHeader className="pb-3">
                 <CardTitle className="text-white text-lg flex items-center gap-2">
-                    <Download className="w-5 h-5 text-purple-400" />
+                    <Download className="w-5 h-5 text-red-400" />
                     Export & Share
                 </CardTitle>
             </CardHeader>
@@ -304,15 +304,15 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
                             updateExportSettings({ format: value })
                         }
                     >
-                        <SelectTrigger className="bg-slate-800 border-purple-500/30 text-white">
+                        <SelectTrigger className="bg-slate-800 border-red-500/30 text-white">
                             <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-purple-500/30">
+                        <SelectContent className="bg-slate-800 border-red-500/30">
                             {EXPORT_FORMATS.map((format) => (
                                 <SelectItem
                                     key={format.value}
                                     value={format.value}
-                                    className="text-white hover:bg-purple-600/30"
+                                    className="text-white hover:bg-red-600/30"
                                 >
                                     <div>
                                         <div className="font-medium">{format.label}</div>
@@ -403,9 +403,9 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
                 )}
 
                 {/* File Size Estimate */}
-                <div className="bg-purple-900/20 rounded-lg p-3 border border-purple-500/20">
+                <div className="bg-red-900/20 rounded-lg p-3 border border-red-500/20">
                     <div className="text-sm text-slate-300 mb-1">Estimated File Size</div>
-                    <div className="text-lg font-medium text-purple-400">
+                    <div className="text-lg font-medium text-red-400">
                         {getEstimatedFileSize()}
                     </div>
                 </div>
@@ -415,7 +415,7 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
                     <Button
                         onClick={exportCanvas}
                         disabled={isExporting}
-                        className="w-full bg-purple-600 hover:bg-purple-700 text-white transition-all"
+                        className="w-full bg-red-600 hover:bg-red-700 text-white transition-all"
                     >
                         <Download className="w-4 h-4 mr-2" />
                         {isExporting ? 'Exporting...' : 'Download Canvas'}
@@ -439,14 +439,14 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
                 </div>
 
                 {/* Send to Other Tabs */}
-                <div className="space-y-3 border-t border-purple-500/30 pt-4">
+                <div className="space-y-3 border-t border-red-500/30 pt-4">
                     <Label className="text-sm font-medium text-slate-300">Send to Tab</Label>
 
                     <div className="grid grid-cols-1 gap-2">
                         <Button
                             size="sm"
                             onClick={() => sendToTab('Shot Creator')}
-                            className="bg-purple-600 hover:bg-purple-700 text-white"
+                            className="bg-red-600 hover:bg-red-700 text-white"
                         >
                             <Sparkles className="w-3 h-3 mr-1" />
                             Shot Creator
@@ -463,9 +463,9 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
                 </div>
 
                 {/* Export Tips */}
-                <div className="bg-purple-900/20 rounded-lg p-3 border border-purple-500/20">
-                    <h4 className="text-xs font-medium text-purple-300 mb-2">Export Tips</h4>
-                    <ul className="text-xs text-purple-200/70 space-y-1">
+                <div className="bg-red-900/20 rounded-lg p-3 border border-red-500/20">
+                    <h4 className="text-xs font-medium text-red-300 mb-2">Export Tips</h4>
+                    <ul className="text-xs text-red-200/70 space-y-1">
                         <li>• PNG: Best for images with transparency</li>
                         <li>• JPEG: Smaller files, good for photos</li>
                         <li>• 2x scale for high resolution displays</li>

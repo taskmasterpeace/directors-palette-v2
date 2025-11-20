@@ -752,7 +752,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-700">
                   {categories.map(category => (
-                    <SelectItem key={category.id} value={category.id} className="text-white hover:bg-purple-600/30">
+                    <SelectItem key={category.id} value={category.id} className="text-white hover:bg-red-600/30">
                       <span className="flex items-center gap-2">
                         <span>{category.icon}</span>
                         <span>{category.name}</span>

@@ -15,7 +15,7 @@ const categoryConfig = {
     'people': { icon: Users, label: 'People', color: 'blue' },
     'places': { icon: MapPin, label: 'Places', color: 'green' },
     'props': { icon: Package, label: 'Props', color: 'orange' },
-    'layouts': { icon: Layout, label: 'Layouts', color: 'purple' }
+    'layouts': { icon: Layout, label: 'Layouts', color: 'red' }
 }
 
 const ShotReferenceLibrary = () => {
@@ -61,14 +61,14 @@ const ShotReferenceLibrary = () => {
                         <TabsList className="bg-slate-800 border border-slate-700 rounded-lg h-9">
                             <TabsTrigger
                                 value="grid"
-                                className="flex items-center gap-2 px-3 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-slate-300"
+                                className="flex items-center gap-2 px-3 data-[state=active]:bg-red-600 data-[state=active]:text-white text-slate-300"
                             >
                                 <Grid3x3 className="w-4 h-4" />
                                 Grid
                             </TabsTrigger>
                             <TabsTrigger
                                 value="list"
-                                className="flex items-center gap-2 px-3 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-slate-300"
+                                className="flex items-center gap-2 px-3 data-[state=active]:bg-red-600 data-[state=active]:text-white text-slate-300"
                             >
                                 <List className="w-4 h-4" />
                                 List
@@ -88,7 +88,7 @@ const ShotReferenceLibrary = () => {
                                 size="sm"
                                 variant={isActive ? "default" : "outline"}
                                 onClick={() => setLibraryCategory(key as LibraryCategory)}
-                                className={`h-8 ${isActive ? 'bg-purple-600 hover:bg-purple-700' : 'border-slate-600 text-slate-300'}`}
+                                className={`h-8 ${isActive ? 'bg-red-600 hover:bg-red-700' : 'border-slate-600 text-slate-300'}`}
                             >
                                 <IconComponent className="w-3 h-3 mr-1" />
                                 {config.label}
@@ -100,7 +100,7 @@ const ShotReferenceLibrary = () => {
                 {/* Library Grid */}
                 {libraryLoading ? (
                     <div className="text-center py-8">
-                        <div className="animate-spin w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+                        <div className="animate-spin w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full mx-auto mb-2"></div>
                         <p className="text-slate-400 text-sm">Loading library...</p>
                     </div>
                 ) : libraryItems.length === 0 ? (
@@ -116,7 +116,7 @@ const ShotReferenceLibrary = () => {
                                     {libraryItems.map((item) => (
                                         <div key={item.id} className="relative group">
                                             <div
-                                                className="rounded-md border border-slate-600 overflow-hidden bg-slate-800 cursor-pointer hover:border-purple-500 transition-colors"
+                                                className="rounded-md border border-slate-600 overflow-hidden bg-slate-800 cursor-pointer hover:border-red-500 transition-colors"
                                                 onClick={() => setFullscreenImage(item)}
                                             >
                                                 <Image
@@ -199,7 +199,7 @@ const ShotReferenceLibrary = () => {
                                     {libraryItems.map((item) => (
                                         <div
                                             key={item.id}
-                                            className="flex items-center gap-3 p-2 rounded-md border border-slate-600 bg-slate-800 hover:border-purple-500 transition-colors group cursor-pointer"
+                                            className="flex items-center gap-3 p-2 rounded-md border border-slate-600 bg-slate-800 hover:border-red-500 transition-colors group cursor-pointer"
                                             onClick={() => setFullscreenImage(item)}
                                         >
                                             <div className="relative w-20 h-20 rounded overflow-hidden bg-slate-900 flex-shrink-0">

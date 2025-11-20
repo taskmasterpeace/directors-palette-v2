@@ -172,7 +172,7 @@ function FullscreenModal({
                                     </div>
                                 ) : fullscreenImage.prompt?.includes('_') ? (
                                     <div className="flex items-center gap-2">
-                                        <span className="text-purple-400">🎲 Wildcards</span>
+                                        <span className="text-red-400">🎲 Wildcards</span>
                                         <span className="text-slate-400">Random variations</span>
                                     </div>
                                 ) : (

@@ -89,7 +89,7 @@ export default function InlineTagEditor({
                     onBlur={handleSave}
                     onKeyDown={handleKeyDown}
                     placeholder={placeholder}
-                    className="h-6 text-xs bg-transparent border-slate-600 focus:border-purple-500 px-2"
+                    className="h-6 text-xs bg-transparent border-slate-600 focus:border-red-500 px-2"
                     onClick={(e) => e.stopPropagation()}
                 />
             </div>

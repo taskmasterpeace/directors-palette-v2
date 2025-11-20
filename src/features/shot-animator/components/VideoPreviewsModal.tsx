@@ -129,14 +129,14 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                             <TabsList className="bg-slate-800 border border-slate-700 rounded-lg h-11 sm:h-9 touch-manipulation">
                                 <TabsTrigger
                                     value="grid"
-                                    className="flex items-center gap-2 px-4 sm:px-3 min-h-[44px] sm:min-h-0 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-slate-300"
+                                    className="flex items-center gap-2 px-4 sm:px-3 min-h-[44px] sm:min-h-0 data-[state=active]:bg-red-600 data-[state=active]:text-white text-slate-300"
                                 >
                                     <Grid3x3 className="w-4 h-4" />
                                     Grid
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="list"
-                                    className="flex items-center gap-2 px-4 sm:px-3 min-h-[44px] sm:min-h-0 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-slate-300"
+                                    className="flex items-center gap-2 px-4 sm:px-3 min-h-[44px] sm:min-h-0 data-[state=active]:bg-red-600 data-[state=active]:text-white text-slate-300"
                                 >
                                     <List className="w-4 h-4" />
                                     List
@@ -147,7 +147,7 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                     <ScrollArea className="h-[60vh] sm:h-[500px] px-2 sm:px-0 sm:pr-4">
                         {isLoading ? (
                             <div className="flex flex-col items-center justify-center h-64 text-slate-500">
-                                <div className="animate-spin w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full mb-4"></div>
+                                <div className="animate-spin w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full mb-4"></div>
                                 <p>Loading videos...</p>
                             </div>
                         ) : videos.length === 0 ? (
@@ -164,7 +164,7 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                                         <div
                                             key={video.id}
                                             className={`relative group rounded-lg overflow-hidden border-2 transition-all touch-manipulation ${isPlaying
-                                                ? 'border-purple-500 ring-2 ring-purple-500/30'
+                                                ? 'border-red-500 ring-2 ring-red-500/30'
                                                 : 'border-slate-700 hover:border-slate-600'
                                                 } ${viewMode === 'list' ? 'flex flex-col sm:flex-row' : ''}`}
                                         >
@@ -183,7 +183,7 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
 
                                                 {/* Overlay */}
                                                 <div
-                                                    className={`absolute inset-0 transition-opacity ${isPlaying ? 'bg-purple-500/10' : 'bg-black/30 group-hover:bg-black/20'}`}
+                                                    className={`absolute inset-0 transition-opacity ${isPlaying ? 'bg-red-500/10' : 'bg-black/30 group-hover:bg-black/20'}`}
                                                     onClick={() => togglePlayPause(video.id)}
                                                 />
 

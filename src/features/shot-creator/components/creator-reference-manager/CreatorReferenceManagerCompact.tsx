@@ -47,7 +47,7 @@ const CreatorReferenceManagerCompact = ({ editingMode, maxImages = 3 }: CreatorR
                             <div
                                 className={`relative aspect-square border border-dashed rounded-md overflow-hidden ${isEmpty
                                     ? 'border-slate-600 bg-slate-800/50 hover:border-slate-500 cursor-pointer'
-                                    : 'border-purple-400 bg-purple-900/20'
+                                    : 'border-red-400 bg-red-900/20'
                                     }`}
                             >
                                 {image ? (

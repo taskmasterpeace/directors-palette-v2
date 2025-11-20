@@ -526,7 +526,7 @@ export function ShotAnimatorView() {
               onClick={handleGenerateAll}
               disabled={isGenerating || !user}
               size="lg"
-              className="bg-purple-600 hover:bg-purple-700 text-white px-6 sm:px-8 w-full sm:w-auto min-h-[48px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-red-600 hover:bg-red-700 text-white px-6 sm:px-8 w-full sm:w-auto min-h-[48px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Play className="w-5 h-5 mr-2" />
               <span className="text-sm sm:text-base">

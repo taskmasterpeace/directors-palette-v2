@@ -33,12 +33,12 @@ function generateIconSVG(size) {
   <!-- Background Gradient -->
   <defs>
     <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#4c1d95;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#dc2626;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#991b1b;stop-opacity:1" />
     </linearGradient>
     <linearGradient id="filmGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#f3e8ff;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#e9d5ff;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#fee2e2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fecaca;stop-opacity:1" />
     </linearGradient>
   </defs>
 
@@ -47,28 +47,28 @@ function generateIconSVG(size) {
 
   <!-- Film strip frame -->
   <rect x="${padding}" y="${filmStripY}" width="${innerSize}" height="${filmStripHeight}"
-        rx="${size * 0.03}" fill="url(#filmGradient)" stroke="#7c3aed" stroke-width="${strokeWidth}"/>
+        rx="${size * 0.03}" fill="url(#filmGradient)" stroke="#dc2626" stroke-width="${strokeWidth}"/>
 
   <!-- Film strip holes (top) -->
-  <circle cx="${padding + holeSize * 1.5}" cy="${filmStripY + holeSpacing * 0.5}" r="${holeSize * 0.6}" fill="#4c1d95"/>
-  <circle cx="${padding + holeSize * 1.5}" cy="${filmStripY + holeSpacing * 1.5}" r="${holeSize * 0.6}" fill="#4c1d95"/>
-  <circle cx="${padding + holeSize * 1.5}" cy="${filmStripY + holeSpacing * 2.5}" r="${holeSize * 0.6}" fill="#4c1d95"/>
-  <circle cx="${padding + holeSize * 1.5}" cy="${filmStripY + holeSpacing * 3.5}" r="${holeSize * 0.6}" fill="#4c1d95"/>
-  <circle cx="${padding + holeSize * 1.5}" cy="${filmStripY + holeSpacing * 4.5}" r="${holeSize * 0.6}" fill="#4c1d95"/>
+  <circle cx="${padding + holeSize * 1.5}" cy="${filmStripY + holeSpacing * 0.5}" r="${holeSize * 0.6}" fill="#991b1b"/>
+  <circle cx="${padding + holeSize * 1.5}" cy="${filmStripY + holeSpacing * 1.5}" r="${holeSize * 0.6}" fill="#991b1b"/>
+  <circle cx="${padding + holeSize * 1.5}" cy="${filmStripY + holeSpacing * 2.5}" r="${holeSize * 0.6}" fill="#991b1b"/>
+  <circle cx="${padding + holeSize * 1.5}" cy="${filmStripY + holeSpacing * 3.5}" r="${holeSize * 0.6}" fill="#991b1b"/>
+  <circle cx="${padding + holeSize * 1.5}" cy="${filmStripY + holeSpacing * 4.5}" r="${holeSize * 0.6}" fill="#991b1b"/>
 
   <!-- Film strip holes (bottom) -->
-  <circle cx="${size - padding - holeSize * 1.5}" cy="${filmStripY + holeSpacing * 0.5}" r="${holeSize * 0.6}" fill="#4c1d95"/>
-  <circle cx="${size - padding - holeSize * 1.5}" cy="${filmStripY + holeSpacing * 1.5}" r="${holeSize * 0.6}" fill="#4c1d95"/>
-  <circle cx="${size - padding - holeSize * 1.5}" cy="${filmStripY + holeSpacing * 2.5}" r="${holeSize * 0.6}" fill="#4c1d95"/>
-  <circle cx="${size - padding - holeSize * 1.5}" cy="${filmStripY + holeSpacing * 3.5}" r="${holeSize * 0.6}" fill="#4c1d95"/>
-  <circle cx="${size - padding - holeSize * 1.5}" cy="${filmStripY + holeSpacing * 4.5}" r="${holeSize * 0.6}" fill="#4c1d95"/>
+  <circle cx="${size - padding - holeSize * 1.5}" cy="${filmStripY + holeSpacing * 0.5}" r="${holeSize * 0.6}" fill="#991b1b"/>
+  <circle cx="${size - padding - holeSize * 1.5}" cy="${filmStripY + holeSpacing * 1.5}" r="${holeSize * 0.6}" fill="#991b1b"/>
+  <circle cx="${size - padding - holeSize * 1.5}" cy="${filmStripY + holeSpacing * 2.5}" r="${holeSize * 0.6}" fill="#991b1b"/>
+  <circle cx="${size - padding - holeSize * 1.5}" cy="${filmStripY + holeSpacing * 3.5}" r="${holeSize * 0.6}" fill="#991b1b"/>
+  <circle cx="${size - padding - holeSize * 1.5}" cy="${filmStripY + holeSpacing * 4.5}" r="${holeSize * 0.6}" fill="#991b1b"/>
 
   <!-- Director's clapperboard icon -->
   <g transform="translate(${size/2 - innerSize*0.25}, ${filmStripY + filmStripHeight*0.25})">
     <rect x="0" y="${innerSize*0.12}" width="${innerSize*0.5}" height="${innerSize*0.38}"
-          rx="${size*0.02}" fill="#1e1b4b" stroke="#7c3aed" stroke-width="${strokeWidth*0.8}"/>
+          rx="${size*0.02}" fill="#1e1b4b" stroke="#dc2626" stroke-width="${strokeWidth*0.8}"/>
     <polygon points="0,${innerSize*0.12} ${innerSize*0.5},${innerSize*0.12} ${innerSize*0.45},0 ${innerSize*0.05},0"
-             fill="#a855f7" stroke="#7c3aed" stroke-width="${strokeWidth*0.8}"/>
+             fill="#ef4444" stroke="#dc2626" stroke-width="${strokeWidth*0.8}"/>
     <line x1="${innerSize*0.1}" y1="0" x2="${innerSize*0.1}" y2="${innerSize*0.12}"
           stroke="#1e1b4b" stroke-width="${strokeWidth*1.2}"/>
     <line x1="${innerSize*0.2}" y1="0" x2="${innerSize*0.2}" y2="${innerSize*0.12}"

@@ -44,13 +44,13 @@ export function ImageCard({
   const [dropdownOpen, setDropdownOpen] = useState(false)
 
   return (
-    <div className={`relative group rounded-lg overflow-hidden bg-slate-800 border transition-all ${isSelected ? 'border-purple-500 border-2' : 'border-slate-700 hover:border-purple-600/50'}`}>
+    <div className={`relative group rounded-lg overflow-hidden bg-slate-800 border transition-all ${isSelected ? 'border-red-500 border-2' : 'border-slate-700 hover:border-red-600/50'}`}>
       {/* Selection Checkbox */}
       <div className={`absolute top-2 left-2 z-10 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
         <Checkbox
           checked={isSelected}
           onCheckedChange={onSelect}
-          className="bg-slate-900/80 border-slate-600 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+          className="bg-slate-900/80 border-slate-600 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
         />
       </div>
 

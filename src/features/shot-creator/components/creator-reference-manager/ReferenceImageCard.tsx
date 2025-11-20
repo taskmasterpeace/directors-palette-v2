@@ -52,7 +52,7 @@ export function ReferenceImageCard({
             <div
                 className={`relative rounded-xl overflow-hidden transition-all ${isEmpty
                     ? "min-h-[240px] md:min-h-[160px] md:aspect-square bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 hover:border-slate-600 cursor-pointer touch-manipulation"
-                    : "border-2 border-purple-500 bg-purple-900/20 shadow-lg shadow-purple-500/20"
+                    : "border-2 border-red-500 bg-red-900/20 shadow-lg shadow-red-500/20"
                     }`}
                 onClick={
                     isEmpty
