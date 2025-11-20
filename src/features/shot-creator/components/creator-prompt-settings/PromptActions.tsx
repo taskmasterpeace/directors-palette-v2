@@ -24,7 +24,9 @@ import { useCallback } from "react"
 import { extractAtTags, urlToFile } from "../../helpers"
 import { ShotCreatorReferenceImage } from "../../types"
 import { useUnifiedGalleryStore } from "../../store/unified-gallery-store"
+import { useLibraryStore } from "../../store/shot-library.store"
 import { cn } from "@/utils/utils"
+import { Category } from "../CategorySelectDialog"
 
 const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextAreaElement | null> }) => {
     const {
@@ -36,6 +38,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     } = useShotCreatorStore()
     const { settings: shotCreatorSettings } = useShotCreatorSettings()
     const { generateImage, isGenerating } = useImageGeneration()
+    const { libraryItems } = useLibraryStore()
 
     // Autocomplete state
     const [showAutocomplete, setShowAutocomplete] = useState(false)
@@ -49,29 +52,63 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         ? shotCreatorPrompt.length > 0 && shotCreatorReferenceImages.length > 0
         : shotCreatorPrompt.length > 0 && shotCreatorReferenceImages.length > 0
 
-    // Get all available reference tags
-    const getAllReferences = useCallback(() => {
-        const images = useUnifiedGalleryStore.getState().images
-        const refs = images
-            .filter(img => img.reference)
-            .map(img => img.reference!)
-        return [...new Set(refs)]
-    }, [])
-
-    // Filter autocomplete suggestions
-    const autocompleteSuggestions = React.useMemo(() => {
-        const allRefs = getAllReferences()
-        if (!autocompleteSearch) {
-            return allRefs
+    // Get references grouped by category from library items
+    const getReferencesGroupedByCategory = useCallback(() => {
+        const grouped: Record<Category, string[]> = {
+            people: [],
+            places: [],
+            props: [],
+            unorganized: []
         }
-        // Add @ to search term for proper comparison since refs include @
+
+        libraryItems.forEach(item => {
+            if (item.referenceTag) {
+                const category = item.category as Category
+                if (!grouped[category].includes(item.referenceTag)) {
+                    grouped[category].push(item.referenceTag)
+                }
+            }
+        })
+
+        return grouped
+    }, [libraryItems])
+
+    // Get flattened list of all references
+    const getAllReferences = useCallback(() => {
+        const grouped = getReferencesGroupedByCategory()
+        return [
+            ...grouped.people,
+            ...grouped.places,
+            ...grouped.props,
+            ...grouped.unorganized
+        ]
+    }, [getReferencesGroupedByCategory])
+
+    // Filter autocomplete suggestions with category grouping
+    const autocompleteSuggestions = React.useMemo(() => {
+        const grouped = getReferencesGroupedByCategory()
         const searchWithAt = autocompleteSearch.startsWith('@')
-            ? autocompleteSearch
-            : '@' + autocompleteSearch
-        return allRefs.filter(ref =>
-            ref.toLowerCase().startsWith(searchWithAt.toLowerCase())
-        )
-    }, [autocompleteSearch, getAllReferences])
+            ? autocompleteSearch.toLowerCase()
+            : '@' + autocompleteSearch.toLowerCase()
+
+        // Filter each category
+        const filtered: Record<Category, string[]> = {
+            people: autocompleteSearch
+                ? grouped.people.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
+                : grouped.people,
+            places: autocompleteSearch
+                ? grouped.places.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
+                : grouped.places,
+            props: autocompleteSearch
+                ? grouped.props.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
+                : grouped.props,
+            unorganized: autocompleteSearch
+                ? grouped.unorganized.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
+                : grouped.unorganized
+        }
+
+        return filtered
+    }, [autocompleteSearch, getReferencesGroupedByCategory])
 
     // Handle autocomplete selection
     const selectAutocompleteSuggestion = useCallback((suggestion: string) => {
@@ -126,30 +163,42 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         }
     }, [shotCreatorPrompt])
 
+    // Flatten suggestions for keyboard navigation
+    const flatSuggestions = React.useMemo(() => {
+        const flat: string[] = []
+        Object.values(autocompleteSuggestions).forEach(categoryRefs => {
+            flat.push(...categoryRefs)
+        })
+        return flat
+    }, [autocompleteSuggestions])
+
+    // Check if we have any suggestions
+    const hasSuggestions = flatSuggestions.length > 0
+
     // Handle keyboard navigation in autocomplete
     const handleAutocompleteKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (!showAutocomplete || autocompleteSuggestions.length === 0) return
+        if (!showAutocomplete || !hasSuggestions) return
 
         if (e.key === 'ArrowDown') {
             e.preventDefault()
             setAutocompleteSelectedIndex(prev =>
-                prev < autocompleteSuggestions.length - 1 ? prev + 1 : 0
+                prev < flatSuggestions.length - 1 ? prev + 1 : 0
             )
         } else if (e.key === 'ArrowUp') {
             e.preventDefault()
             setAutocompleteSelectedIndex(prev =>
-                prev > 0 ? prev - 1 : autocompleteSuggestions.length - 1
+                prev > 0 ? prev - 1 : flatSuggestions.length - 1
             )
         } else if (e.key === 'Enter' || e.key === 'Tab') {
-            if (autocompleteSuggestions[autocompleteSelectedIndex]) {
+            if (flatSuggestions[autocompleteSelectedIndex]) {
                 e.preventDefault()
-                selectAutocompleteSuggestion(autocompleteSuggestions[autocompleteSelectedIndex])
+                selectAutocompleteSuggestion(flatSuggestions[autocompleteSelectedIndex])
             }
         } else if (e.key === 'Escape') {
             e.preventDefault()
             setShowAutocomplete(false)
         }
-    }, [showAutocomplete, autocompleteSuggestions, autocompleteSelectedIndex, selectAutocompleteSuggestion])
+    }, [showAutocomplete, hasSuggestions, flatSuggestions, autocompleteSelectedIndex, selectAutocompleteSuggestion])
 
     // Build model settings from shotCreatorSettings
     const buildModelSettings = useCallback(() => {
@@ -357,27 +406,44 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         }}
                     />
 
-                    {/* Autocomplete Dropdown */}
-                    {showAutocomplete && autocompleteSuggestions.length > 0 && (
+                    {/* Autocomplete Dropdown with Category Groups */}
+                    {showAutocomplete && hasSuggestions && (
                         <div
                             ref={autocompleteRef}
-                            className="absolute z-50 w-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg max-h-60 overflow-auto touch-pan-y"
+                            className="absolute z-50 w-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg max-h-80 overflow-auto touch-pan-y"
                         >
-                            {autocompleteSuggestions.map((suggestion, index) => (
-                                <div
-                                    key={suggestion}
-                                    className={cn(
-                                        "px-4 min-h-[48px] flex items-center cursor-pointer transition-colors touch-manipulation active:scale-95",
-                                        index === autocompleteSelectedIndex
-                                            ? "bg-red-600 text-white"
-                                            : "hover:bg-slate-700 active:bg-slate-600 text-slate-100"
-                                    )}
-                                    onClick={() => selectAutocompleteSuggestion(suggestion)}
-                                    onTouchStart={() => setAutocompleteSelectedIndex(index)}
-                                >
-                                    <span className="text-base">{suggestion}</span>
-                                </div>
-                            ))}
+                            {(['people', 'places', 'props', 'unorganized'] as Category[]).map((category) => {
+                                const categoryRefs = autocompleteSuggestions[category]
+                                if (categoryRefs.length === 0) return null
+
+                                return (
+                                    <div key={category}>
+                                        {/* Category Header */}
+                                        <div className="sticky top-0 bg-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wide">
+                                            {category}
+                                        </div>
+                                        {/* Category Items */}
+                                        {categoryRefs.map((suggestion) => {
+                                            const globalIndex = flatSuggestions.indexOf(suggestion)
+                                            return (
+                                                <div
+                                                    key={suggestion}
+                                                    className={cn(
+                                                        "px-4 min-h-[48px] flex items-center cursor-pointer transition-colors touch-manipulation active:scale-95",
+                                                        globalIndex === autocompleteSelectedIndex
+                                                            ? "bg-red-600 text-white"
+                                                            : "hover:bg-slate-700 active:bg-slate-600 text-slate-100"
+                                                    )}
+                                                    onClick={() => selectAutocompleteSuggestion(suggestion)}
+                                                    onTouchStart={() => setAutocompleteSelectedIndex(globalIndex)}
+                                                >
+                                                    <span className="text-base">{suggestion}</span>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                )
+                            })}
                         </div>
                     )}
                     {shotCreatorPrompt.length > 0 && (
