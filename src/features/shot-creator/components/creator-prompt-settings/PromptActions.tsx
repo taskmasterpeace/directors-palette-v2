@@ -13,7 +13,10 @@ import {
     Sparkles,
     HelpCircle,
     BookOpen,
-    X
+    X,
+    Minimize2,
+    Maximize2,
+    Square
 } from 'lucide-react'
 import { useShotCreatorStore } from "@/features/shot-creator/store/shot-creator.store"
 import { useShotCreatorSettings } from "../../hooks"
@@ -46,6 +49,19 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     const [autocompleteCursorPos, setAutocompleteCursorPos] = useState(0)
     const [autocompleteSelectedIndex, setAutocompleteSelectedIndex] = useState(0)
     const autocompleteRef = useRef<HTMLDivElement>(null)
+
+    // Textarea size state
+    type TextareaSize = 'small' | 'medium' | 'large'
+    const [textareaSize, setTextareaSize] = useState<TextareaSize>('medium')
+
+    // Get textarea height class based on size
+    const getTextareaHeight = (size: TextareaSize) => {
+        switch (size) {
+            case 'small': return 'min-h-[44px]'
+            case 'medium': return 'min-h-[100px]'
+            case 'large': return 'min-h-[240px]'
+        }
+    }
 
     const isEditingMode = shotCreatorSettings.model === 'qwen-image-edit'
     const canGenerate = isEditingMode
@@ -357,14 +373,53 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         {isEditingMode ? 'Edit Instructions' : 'Prompt'}
                     </Label>
                     <div className="flex items-center gap-1.5 flex-wrap">
+                        {/* Size toggle buttons */}
+                        <div className="flex items-center gap-1 bg-slate-800/50 rounded p-0.5">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setTextareaSize('small')}
+                                className={cn(
+                                    "h-7 w-7 p-0 hover:bg-slate-700",
+                                    textareaSize === 'small' ? "bg-slate-700 text-white" : "text-slate-400"
+                                )}
+                                title="Small (1 line)"
+                            >
+                                <Minimize2 className="w-3 h-3" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setTextareaSize('medium')}
+                                className={cn(
+                                    "h-7 w-7 p-0 hover:bg-slate-700",
+                                    textareaSize === 'medium' ? "bg-slate-700 text-white" : "text-slate-400"
+                                )}
+                                title="Medium (2 lines)"
+                            >
+                                <Square className="w-3 h-3" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setTextareaSize('large')}
+                                className={cn(
+                                    "h-7 w-7 p-0 hover:bg-slate-700",
+                                    textareaSize === 'large' ? "bg-slate-700 text-white" : "text-slate-400"
+                                )}
+                                title="Large (5+ lines)"
+                            >
+                                <Maximize2 className="w-3 h-3" />
+                            </Button>
+                        </div>
                         <Badge variant="secondary" className="text-xs whitespace-nowrap hidden sm:inline-flex">
                             @ refs
                         </Badge>
                         <Badge variant="secondary" className="text-xs whitespace-nowrap hidden sm:inline-flex">
                             Ctrl+Enter
                         </Badge>
-                        <span className="text-xs text-slate-400 whitespace-nowrap hidden sm:inline-flex">
-                            {shotCreatorPrompt.length}/1000
+                        <span className="text-xs text-slate-400 whitespace-nowrap">
+                            {shotCreatorPrompt.length} chars
                         </span>
                     </div>
                 </div>
@@ -381,8 +436,11 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                                 ? "Describe how you want to edit the image (e.g., 'change the background to a sunset', 'add more lighting')"
                                 : "Describe your shot... Use @ to reference tagged images"
                         }
-                        className="min-h-[100px] bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 resize-none pr-10"
-                        maxLength={1000}
+                        className={cn(
+                            getTextareaHeight(textareaSize),
+                            "bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 pr-10",
+                            "resize-y sm:resize-y resize-none sm:resize-y" // Allow resize on desktop, disable on mobile
+                        )}
                         onKeyDown={(e) => {
                             // Handle autocomplete navigation first
                             handleAutocompleteKeyDown(e)
