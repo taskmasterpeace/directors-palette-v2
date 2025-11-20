@@ -78,11 +78,14 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         }
 
         libraryItems.forEach(item => {
-            if (item.referenceTag) {
+            if (item.tags && item.tags.length > 0) {
                 const category = item.category as Category
-                if (!grouped[category].includes(item.referenceTag)) {
-                    grouped[category].push(item.referenceTag)
-                }
+                item.tags.forEach(tag => {
+                    const formattedTag = `@${tag}`
+                    if (!grouped[category].includes(formattedTag)) {
+                        grouped[category].push(formattedTag)
+                    }
+                })
             }
         })
 
