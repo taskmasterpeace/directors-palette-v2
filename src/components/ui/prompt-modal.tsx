@@ -46,12 +46,22 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
 
   // Filter suggestions based on input
   const filteredSuggestions = React.useMemo(() => {
+    console.log('🔍 AUTOCOMPLETE DEBUG:', {
+      hasSuggestions: !!config.suggestions,
+      suggestionsLength: config.suggestions?.length || 0,
+      suggestions: config.suggestions,
+      value,
+      showSuggestions,
+    })
+
     if (!config.suggestions || config.suggestions.length === 0) {
+      console.log('❌ NO SUGGESTIONS - returning empty array')
       return []
     }
 
     // If empty or just "@", show all suggestions
     if (!value || value === '@') {
+      console.log('✅ Empty/@ - showing all:', config.suggestions)
       return config.suggestions
     }
 
@@ -65,6 +75,7 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
 
     // If exact match, show all suggestions (user wants to switch)
     if (exactMatch) {
+      console.log('✅ Exact match - showing all:', config.suggestions)
       return config.suggestions
     }
 
@@ -72,8 +83,9 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
     const filtered = config.suggestions.filter(s =>
       s.toLowerCase().startsWith(lowerValue)
     )
+    console.log('🔍 Filtered:', filtered)
     return filtered
-  }, [config.suggestions, value])
+  }, [config.suggestions, value, showSuggestions])
 
   useEffect(() => {
     if (!isOpen) {

@@ -142,6 +142,12 @@ export function useReferenceNamePrompt() {
         ? existingReferences
         : ['@hero', '@villain', '@location', '@prop', '@character', '@background']
 
+      console.log('📝 useReferenceNamePrompt called:', {
+        defaultValue,
+        existingReferences,
+        suggestions,
+      })
+
       return showPrompt({
         title: 'Set Reference Name',
         description:
