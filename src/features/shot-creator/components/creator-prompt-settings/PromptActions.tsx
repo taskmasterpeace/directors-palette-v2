@@ -59,15 +59,19 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     }, [])
 
     // Filter autocomplete suggestions
-    const autocompleteSuggestions = useCallback(() => {
+    const autocompleteSuggestions = React.useMemo(() => {
         const allRefs = getAllReferences()
         if (!autocompleteSearch) {
             return allRefs
         }
+        // Add @ to search term for proper comparison since refs include @
+        const searchWithAt = autocompleteSearch.startsWith('@')
+            ? autocompleteSearch
+            : '@' + autocompleteSearch
         return allRefs.filter(ref =>
-            ref.toLowerCase().startsWith(autocompleteSearch.toLowerCase())
+            ref.toLowerCase().startsWith(searchWithAt.toLowerCase())
         )
-    }, [autocompleteSearch, getAllReferences])()
+    }, [autocompleteSearch, getAllReferences])
 
     // Handle autocomplete selection
     const selectAutocompleteSuggestion = useCallback((suggestion: string) => {
