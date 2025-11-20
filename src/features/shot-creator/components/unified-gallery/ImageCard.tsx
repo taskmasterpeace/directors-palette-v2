@@ -40,7 +40,7 @@ const ImageCardComponent = ({
   onSetReference,
   onAddToLibrary,
   showActions = true
-}: ImageCardProps) {
+}: ImageCardProps) => {
   const { handleCopyPrompt, handleCopyImage } = useImageActions()
   const [dropdownOpen, setDropdownOpen] = useState(false)
 
