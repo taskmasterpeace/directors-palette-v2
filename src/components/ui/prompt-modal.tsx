@@ -40,6 +40,10 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // ✅ Track closing state to prevent double-cancel
+  const isClosingRef = useRef(false)
+  const prevIsOpenRef = useRef(isOpen)
+
   // Filter suggestions based on input
   const filteredSuggestions = React.useMemo(() => {
     if (!config.suggestions || config.suggestions.length === 0) {
@@ -80,9 +84,10 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
     }
   }, [isOpen])
 
-  // Reset state when modal opens/closes
+  // Reset state only when transitioning from closed to open
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !prevIsOpenRef.current) {
+      isClosingRef.current = false
       setValue(config.defaultValue || '')
       setError(null)
       setShowSuggestions(true) // Show suggestions when modal opens
@@ -93,6 +98,7 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
         inputRef.current?.select()
       }, 100)
     }
+    prevIsOpenRef.current = isOpen
   }, [isOpen, config.defaultValue])
 
   // Validate input value
@@ -149,7 +155,14 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
       return
     }
 
+    isClosingRef.current = true
     onConfirm(trimmedValue)
+  }
+
+  // Handle cancellation
+  const handleCancel = () => {
+    isClosingRef.current = true
+    onCancel()
   }
 
   // Handle keyboard events
@@ -186,7 +199,7 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
       handleConfirm()
     } else if (e.key === 'Escape') {
       e.preventDefault()
-      onCancel()
+      handleCancel()
     }
   }
 
@@ -196,7 +209,11 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open && !isClosingRef.current) {
+        onCancel()
+      }
+    }}>
       <DialogContent
         className={cn(
           "sm:max-w-md",
@@ -283,7 +300,7 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
         <DialogFooter className="flex gap-3 sm:gap-3">
           <Button
             variant="outline"
-            onClick={onCancel}
+            onClick={handleCancel}
             className="flex-1 sm:flex-none"
           >
             Cancel
