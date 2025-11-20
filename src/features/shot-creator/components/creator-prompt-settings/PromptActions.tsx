@@ -1,4 +1,4 @@
-import React, { Fragment } from "react"
+import React, { Fragment, useState, useEffect, useRef } from "react"
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -24,6 +24,7 @@ import { useCallback } from "react"
 import { extractAtTags, urlToFile } from "../../helpers"
 import { ShotCreatorReferenceImage } from "../../types"
 import { useUnifiedGalleryStore } from "../../store/unified-gallery-store"
+import { cn } from "@/utils/utils"
 
 const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextAreaElement | null> }) => {
     const {
@@ -36,10 +37,115 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     const { settings: shotCreatorSettings } = useShotCreatorSettings()
     const { generateImage, isGenerating } = useImageGeneration()
 
+    // Autocomplete state
+    const [showAutocomplete, setShowAutocomplete] = useState(false)
+    const [autocompleteSearch, setAutocompleteSearch] = useState('')
+    const [autocompleteCursorPos, setAutocompleteCursorPos] = useState(0)
+    const [autocompleteSelectedIndex, setAutocompleteSelectedIndex] = useState(0)
+    const autocompleteRef = useRef<HTMLDivElement>(null)
+
     const isEditingMode = shotCreatorSettings.model === 'qwen-image-edit'
     const canGenerate = isEditingMode
         ? shotCreatorPrompt.length > 0 && shotCreatorReferenceImages.length > 0
         : shotCreatorPrompt.length > 0 && shotCreatorReferenceImages.length > 0
+
+    // Get all available reference tags
+    const getAllReferences = useCallback(() => {
+        const images = useUnifiedGalleryStore.getState().images
+        const refs = images
+            .filter(img => img.reference)
+            .map(img => img.reference!)
+        return [...new Set(refs)]
+    }, [])
+
+    // Filter autocomplete suggestions
+    const autocompleteSuggestions = useCallback(() => {
+        const allRefs = getAllReferences()
+        if (!autocompleteSearch) {
+            return allRefs
+        }
+        return allRefs.filter(ref =>
+            ref.toLowerCase().startsWith(autocompleteSearch.toLowerCase())
+        )
+    }, [autocompleteSearch, getAllReferences])()
+
+    // Handle autocomplete selection
+    const selectAutocompleteSuggestion = useCallback((suggestion: string) => {
+        const textarea = textareaRef.current
+        if (!textarea) return
+
+        const beforeCursor = shotCreatorPrompt.substring(0, autocompleteCursorPos)
+        const afterCursor = shotCreatorPrompt.substring(autocompleteCursorPos)
+
+        // Find the start of the @ mention
+        const atIndex = beforeCursor.lastIndexOf('@')
+        const before = shotCreatorPrompt.substring(0, atIndex)
+        const newPrompt = before + suggestion + ' ' + afterCursor
+
+        setShotCreatorPrompt(newPrompt)
+        setShowAutocomplete(false)
+        setAutocompleteSearch('')
+
+        // Set cursor position after the inserted tag
+        setTimeout(() => {
+            const newPos = atIndex + suggestion.length + 1
+            textarea.focus()
+            textarea.setSelectionRange(newPos, newPos)
+        }, 0)
+    }, [shotCreatorPrompt, autocompleteCursorPos, textareaRef, setShotCreatorPrompt])
+
+    // Detect @ symbol and show autocomplete
+    const handleTextareaKeyUp = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        const textarea = e.currentTarget
+        const cursorPos = textarea.selectionStart
+        const textBeforeCursor = shotCreatorPrompt.substring(0, cursorPos)
+
+        // Find last @ symbol before cursor
+        const lastAtIndex = textBeforeCursor.lastIndexOf('@')
+
+        if (lastAtIndex !== -1) {
+            // Check if there's a space between @ and cursor (if so, close autocomplete)
+            const textAfterAt = textBeforeCursor.substring(lastAtIndex)
+            if (textAfterAt.includes(' ')) {
+                setShowAutocomplete(false)
+                return
+            }
+
+            // Extract search term (everything after @)
+            const search = textAfterAt.substring(1) // Remove the @ symbol
+            setAutocompleteSearch(search)
+            setAutocompleteCursorPos(cursorPos)
+            setShowAutocomplete(true)
+            setAutocompleteSelectedIndex(0)
+        } else {
+            setShowAutocomplete(false)
+        }
+    }, [shotCreatorPrompt])
+
+    // Handle keyboard navigation in autocomplete
+    const handleAutocompleteKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (!showAutocomplete || autocompleteSuggestions.length === 0) return
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault()
+            setAutocompleteSelectedIndex(prev =>
+                prev < autocompleteSuggestions.length - 1 ? prev + 1 : 0
+            )
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault()
+            setAutocompleteSelectedIndex(prev =>
+                prev > 0 ? prev - 1 : autocompleteSuggestions.length - 1
+            )
+        } else if (e.key === 'Enter' || e.key === 'Tab') {
+            if (autocompleteSuggestions[autocompleteSelectedIndex]) {
+                e.preventDefault()
+                selectAutocompleteSuggestion(autocompleteSuggestions[autocompleteSelectedIndex])
+            }
+        } else if (e.key === 'Escape') {
+            e.preventDefault()
+            setShowAutocomplete(false)
+        }
+    }, [showAutocomplete, autocompleteSuggestions, autocompleteSelectedIndex, selectAutocompleteSuggestion])
 
     // Build model settings from shotCreatorSettings
     const buildModelSettings = useCallback(() => {
@@ -227,6 +333,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         onChange={async (e) => {
                             await handlePromptChange(e.target.value);
                         }}
+                        onKeyUp={handleTextareaKeyUp}
                         placeholder={
                             isEditingMode
                                 ? "Describe how you want to edit the image (e.g., 'change the background to a sunset', 'add more lighting')"
@@ -235,6 +342,9 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         className="min-h-[100px] bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 resize-none pr-10"
                         maxLength={1000}
                         onKeyDown={(e) => {
+                            // Handle autocomplete navigation first
+                            handleAutocompleteKeyDown(e)
+
                             // Ctrl+Enter or Cmd+Enter to generate
                             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && canGenerate && !shotCreatorProcessing && !isGenerating) {
                                 e.preventDefault()
@@ -242,6 +352,30 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                             }
                         }}
                     />
+
+                    {/* Autocomplete Dropdown */}
+                    {showAutocomplete && autocompleteSuggestions.length > 0 && (
+                        <div
+                            ref={autocompleteRef}
+                            className="absolute z-50 w-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg max-h-60 overflow-auto"
+                        >
+                            {autocompleteSuggestions.map((suggestion, index) => (
+                                <div
+                                    key={suggestion}
+                                    className={cn(
+                                        "px-4 py-2 cursor-pointer transition-colors",
+                                        index === autocompleteSelectedIndex
+                                            ? "bg-purple-600 text-white"
+                                            : "hover:bg-slate-700 text-slate-100"
+                                    )}
+                                    onClick={() => selectAutocompleteSuggestion(suggestion)}
+                                    onMouseEnter={() => setAutocompleteSelectedIndex(index)}
+                                >
+                                    {suggestion}
+                                </div>
+                            ))}
+                        </div>
+                    )}
                     {shotCreatorPrompt.length > 0 && (
                         <Button
                             variant="ghost"
