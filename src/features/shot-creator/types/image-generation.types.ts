@@ -8,6 +8,7 @@ import type { ModelId } from '@/config'
 // Available image generation models
 export type ImageModel = Extract<ModelId,
   | 'nano-banana'
+  | 'nano-banana-pro'
   | 'seedream-4'
   | 'gen4-image'
   | 'gen4-image-turbo'
@@ -19,6 +20,13 @@ export type ImageModel = Extract<ModelId,
 export interface NanoBananaSettings {
   aspectRatio?: string
   outputFormat?: 'jpg' | 'png'
+}
+
+export interface NanoBananaProSettings {
+  aspectRatio?: string
+  outputFormat?: 'jpg' | 'png'
+  resolution?: '1K' | '2K' | '4K'
+  safetyFilterLevel?: 'block_low_and_above' | 'block_medium_and_above' | 'block_only_high'
 }
 
 export interface SeedreamSettings {
@@ -61,6 +69,7 @@ export interface QwenImageEditSettings {
 // Union type for all model settings
 export type ImageModelSettings =
   | NanoBananaSettings
+  | NanoBananaProSettings
   | SeedreamSettings
   | Gen4Settings
   | QwenImageSettings
@@ -81,6 +90,15 @@ export interface NanoBananaInput {
   image_input?: string[]
   aspect_ratio?: string
   output_format?: string
+}
+
+export interface NanoBananaProInput {
+  prompt: string
+  image_input?: string[]
+  aspect_ratio?: string
+  output_format?: string
+  resolution?: string
+  safety_filter_level?: string
 }
 
 export interface SeedreamInput {
@@ -129,6 +147,7 @@ export interface QwenImageEditInput {
 // Union type for all Replicate inputs
 export type ReplicateImageInput =
   | NanoBananaInput
+  | NanoBananaProInput
   | SeedreamInput
   | Gen4Input
   | QwenImageInput

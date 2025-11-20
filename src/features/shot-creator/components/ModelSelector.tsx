@@ -15,7 +15,8 @@ import {
   Leaf,
   Info,
   Edit3,
-  Palette
+  Palette,
+  Flame
 } from 'lucide-react'
 import { getAvailableModels, ModelId } from "@/config/index"
 
@@ -50,6 +51,7 @@ export function ModelSelector({
   function getIconComponent(modelId: ModelId) {
     switch (modelId) {
       case 'nano-banana': return Sparkles
+      case 'nano-banana-pro': return Flame
       case 'seedream-4': return Leaf
       case 'gen4-image': return Zap
       case 'gen4-image-turbo': return Zap

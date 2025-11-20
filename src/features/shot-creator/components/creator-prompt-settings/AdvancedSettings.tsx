@@ -3,6 +3,13 @@ import { Label } from "@/components/ui/label"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
 import React, { useCallback, useMemo } from 'react'
 import { useShotCreatorSettings } from "../../hooks"
 import { useShotCreatorStore } from "../../store/shot-creator.store"
@@ -49,6 +56,10 @@ const AdvancedSettings = () => {
     )
     const supportsGoFast = useMemo(() =>
         modelConfig.supportedParameters.includes('goFast'),
+        [modelConfig]
+    )
+    const supportsSafetyFilterLevel = useMemo(() =>
+        modelConfig.supportedParameters.includes('safetyFilterLevel'),
         [modelConfig]
     )
 
@@ -193,6 +204,27 @@ const AdvancedSettings = () => {
                         checked={shotCreatorSettings.goFast !== false}
                         onCheckedChange={(checked) => updateSettings({ goFast: checked })}
                     />
+                </div>
+            )}
+
+            {/* Safety Filter Level - for Nano Banana Pro */}
+            {supportsSafetyFilterLevel && (
+                <div className="space-y-2">
+                    <Label className="text-sm text-slate-300">Safety Filter Level</Label>
+                    <Select
+                        value={shotCreatorSettings.safetyFilterLevel || 'block_only_high'}
+                        onValueChange={(value) => updateSettings({ safetyFilterLevel: value })}
+                    >
+                        <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="block_only_high">Minimal (Block only high)</SelectItem>
+                            <SelectItem value="block_medium_and_above">Moderate (Block medium & above)</SelectItem>
+                            <SelectItem value="block_low_and_above">Strict (Block low & above)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-400">Content safety filtering level</p>
                 </div>
             )}
 

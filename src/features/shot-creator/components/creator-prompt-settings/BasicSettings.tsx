@@ -36,6 +36,14 @@ const BasicSettings = () => {
             }
         }
 
+        // For nano-banana-pro, use nanoBananaProResolution parameter
+        if (selectedModel === 'nano-banana-pro') {
+            const proParam = modelConfig.parameters.resolution
+            if (proParam?.options) {
+                return proParam.options
+            }
+        }
+
         const resolutionParam = modelConfig.parameters.resolution
         if (resolutionParam?.options) {
             return resolutionParam.options

@@ -11,6 +11,7 @@ import type {
   ImageGenerationRequest,
   ImageGenerationResponse,
   NanoBananaSettings,
+  NanoBananaProSettings,
   SeedreamSettings,
   Gen4Settings,
   QwenImageSettings,
@@ -43,6 +44,9 @@ export class ImageGenerationService {
       case 'nano-banana':
         errors.push(...this.validateNanoBanana(input, modelConfig.maxReferenceImages || 10))
         break
+      case 'nano-banana-pro':
+        errors.push(...this.validateNanoBananaPro(input, modelConfig.maxReferenceImages || 14))
+        break
       case 'seedream-4':
         errors.push(...this.validateSeedream(input, modelConfig.maxReferenceImages || 10))
         break
@@ -72,6 +76,19 @@ export class ImageGenerationService {
 
     if (input.referenceImages && input.referenceImages.length > maxRefs) {
       errors.push(`Nano Banana supports maximum ${maxRefs} reference images`)
+    }
+
+    return errors
+  }
+
+  /**
+   * Validate nano-banana-pro specific constraints
+   */
+  private static validateNanoBananaPro(input: ImageGenerationInput, maxRefs: number): string[] {
+    const errors: string[] = []
+
+    if (input.referenceImages && input.referenceImages.length > maxRefs) {
+      errors.push(`Nano Banana Pro supports maximum ${maxRefs} reference images`)
     }
 
     return errors
@@ -206,6 +223,8 @@ export class ImageGenerationService {
     switch (input.model) {
       case 'nano-banana':
         return this.buildNanoBananaInput(input)
+      case 'nano-banana-pro':
+        return this.buildNanoBananaProInput(input)
       case 'seedream-4':
         return this.buildSeedreamInput(input)
       case 'gen4-image':
@@ -232,6 +251,35 @@ export class ImageGenerationService {
 
     if (settings.outputFormat) {
       replicateInput.output_format = settings.outputFormat
+    }
+
+    if (input.referenceImages && input.referenceImages.length > 0) {
+      replicateInput.image_input = input.referenceImages
+    }
+
+    return replicateInput
+  }
+
+  private static buildNanoBananaProInput(input: ImageGenerationInput) {
+    const settings = input.modelSettings as NanoBananaProSettings
+    const replicateInput: Record<string, unknown> = {
+      prompt: input.prompt,
+    }
+
+    if (settings.aspectRatio) {
+      replicateInput.aspect_ratio = settings.aspectRatio
+    }
+
+    if (settings.outputFormat) {
+      replicateInput.output_format = settings.outputFormat
+    }
+
+    if (settings.resolution) {
+      replicateInput.resolution = settings.resolution
+    }
+
+    if (settings.safetyFilterLevel) {
+      replicateInput.safety_filter_level = settings.safetyFilterLevel
     }
 
     if (input.referenceImages && input.referenceImages.length > 0) {

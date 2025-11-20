@@ -19,7 +19,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana' | 'seedream-4' | 'gen4-image' | 'gen4-image-turbo' | 'qwen-image-edit' | 'qwen-image'
+export type ModelId = 'nano-banana' | 'nano-banana-pro' | 'seedream-4' | 'gen4-image' | 'gen4-image-turbo' | 'qwen-image-edit' | 'qwen-image'
 
 export interface ModelParameter {
     id: string
@@ -192,6 +192,30 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         label: 'Negative Prompt',
         type: 'string',
         description: 'Things to avoid in the image'
+    },
+    nanoBananaProResolution: {
+        id: 'resolution',
+        label: 'Resolution',
+        type: 'select',
+        default: '2K',
+        options: [
+            { value: '1K', label: '1K ($0.14)' },
+            { value: '2K', label: '2K ($0.14) - Recommended' },
+            { value: '4K', label: '4K ($0.24) - Premium' }
+        ],
+        description: 'Higher resolution = better quality but increased cost'
+    },
+    safetyFilterLevel: {
+        id: 'safetyFilterLevel',
+        label: 'Safety Filter',
+        type: 'select',
+        default: 'block_only_high',
+        options: [
+            { value: 'block_low_and_above', label: 'Strict (Block low & above)' },
+            { value: 'block_medium_and_above', label: 'Moderate (Block medium & above)' },
+            { value: 'block_only_high', label: 'Minimal (Block only high)' }
+        ],
+        description: 'Content safety filtering level'
     }
 }
 
@@ -214,6 +238,27 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             aspectRatio: MODEL_PARAMETERS.aspectRatio
         },
         maxReferenceImages: 10
+    },
+    'nano-banana-pro': {
+        id: 'nano-banana-pro',
+        name: 'nano-banana-pro',
+        displayName: 'Nano Banana Pro',
+        type: 'generation',
+        icon: '🔥',
+        description: 'SOTA quality with accurate text rendering, 4K support, and advanced editing capabilities',
+        badge: 'Pro',
+        badgeColor: 'bg-purple-600',
+        textColor: 'text-purple-300',
+        endpoint: 'google/nano-banana-pro',
+        costPerImage: 0.14,
+        supportedParameters: ['outputFormat', 'aspectRatio', 'resolution', 'safetyFilterLevel'],
+        parameters: {
+            outputFormat: MODEL_PARAMETERS.outputFormat,
+            aspectRatio: MODEL_PARAMETERS.aspectRatio,
+            resolution: MODEL_PARAMETERS.nanoBananaProResolution,
+            safetyFilterLevel: MODEL_PARAMETERS.safetyFilterLevel
+        },
+        maxReferenceImages: 14
     },
     'seedream-4': {
         id: 'seedream-4',
