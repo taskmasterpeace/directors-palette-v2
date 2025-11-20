@@ -9,6 +9,7 @@ import { SavedPrompt } from '../../store/prompt-library-store'
 interface PromptCardProps {
   prompt: SavedPrompt
   categoryName?: string
+  categoryIcon?: string
   onToggleStar: (id: string) => void
   onDelete: (id: string) => void
   onEdit: (prompt: SavedPrompt) => void
@@ -19,6 +20,7 @@ interface PromptCardProps {
 export function PromptCard({
   prompt,
   categoryName,
+  categoryIcon,
   onToggleStar,
   onDelete,
   onEdit,
@@ -26,91 +28,92 @@ export function PromptCard({
   processPromptReplacements
 }: PromptCardProps) {
   const showPreview = prompt.prompt.includes('@') && processPromptReplacements
+  const hasTagsToShow = prompt.tags.length > 0
 
   return (
-    <Card className="bg-slate-950 border-slate-700 hover:border-slate-600 transition-all shadow-md">
-      <CardContent className="p-3">
-        {/* Header with title and all action buttons */}
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h4 className="font-medium text-white text-sm truncate">{prompt.title}</h4>
-              {prompt.reference && (
-                <Badge variant="outline" className="text-[10px] border-slate-600 text-slate-400 shrink-0">
-                  {prompt.reference}
-                </Badge>
-              )}
-            </div>
-            {categoryName && (
-              <div className="text-[10px] text-slate-500">{categoryName}</div>
+    <Card className="bg-slate-950 border-slate-700 hover:border-slate-600 transition-all shadow-md group">
+      <CardContent className="p-2">
+        {/* Line 1: Category icon + Title + Action buttons */}
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            {categoryIcon && (
+              <span className="text-base shrink-0" title={categoryName}>{categoryIcon}</span>
+            )}
+            <h4 className="font-medium text-white text-xs truncate">{prompt.title}</h4>
+            {prompt.reference && (
+              <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 border-slate-600 text-slate-400 shrink-0">
+                {prompt.reference}
+              </Badge>
             )}
           </div>
 
           {/* Action buttons row */}
-          <div className="flex items-center gap-0.5 shrink-0 ml-2">
+          <div className="flex items-center gap-0.5 shrink-0 ml-1.5">
             <Button
               size="sm"
               variant="ghost"
               onClick={() => onEdit(prompt)}
-              className="h-7 w-7 p-0 hover:bg-slate-800"
+              className="h-6 w-6 p-0 hover:bg-slate-800"
               title="Edit prompt"
             >
-              <Pencil className="w-3.5 h-3.5 text-blue-400" />
+              <Pencil className="w-3 h-3 text-blue-400" />
             </Button>
             <Button
               size="sm"
               variant="ghost"
               onClick={() => onToggleStar(prompt.id)}
-              className="h-7 w-7 p-0 hover:bg-slate-800"
+              className="h-6 w-6 p-0 hover:bg-slate-800"
               title={prompt.isQuickAccess ? "Remove from quick access" : "Add to quick access"}
             >
-              <Star className={`w-3.5 h-3.5 ${prompt.isQuickAccess ? 'fill-yellow-500 text-yellow-500' : 'text-slate-400'}`} />
+              <Star className={`w-3 h-3 ${prompt.isQuickAccess ? 'fill-yellow-500 text-yellow-500' : 'text-slate-400'}`} />
             </Button>
             <Button
               size="sm"
               variant="ghost"
               onClick={() => onUsePrompt(prompt)}
-              className="h-7 w-7 p-0 hover:bg-slate-800"
+              className="h-6 w-6 p-0 hover:bg-slate-800"
               title="Use prompt"
             >
-              <Copy className="w-3.5 h-3.5 text-green-400" />
+              <Copy className="w-3 h-3 text-green-400" />
             </Button>
             <Button
               size="sm"
               variant="ghost"
               onClick={() => onDelete(prompt.id)}
-              className="h-7 w-7 p-0 hover:bg-slate-800"
+              className="h-6 w-6 p-0 hover:bg-slate-800"
               title="Delete prompt"
             >
-              <Trash2 className="w-3.5 h-3.5 text-red-400" />
+              <Trash2 className="w-3 h-3 text-red-400" />
             </Button>
           </div>
         </div>
 
-        {/* Prompt text */}
-        <div className="mb-2">
-          <p className="text-xs text-gray-300 line-clamp-2 leading-relaxed">{prompt.prompt}</p>
-          {showPreview && (
-            <p className="text-[10px] text-blue-400 mt-1 italic line-clamp-1">
-              Preview: {processPromptReplacements(prompt.prompt)}
-            </p>
-          )}
+        {/* Line 2: Prompt text (single line) */}
+        <div className="mb-1">
+          <p className="text-[11px] text-gray-300 line-clamp-1 leading-tight">{prompt.prompt}</p>
         </div>
 
-        {/* Tags */}
-        {prompt.tags.length > 0 && (
-          <div className="flex flex-wrap gap-0.5">
-            {prompt.tags.map((tag, idx) => (
+        {/* Line 3: Tags (show on hover) or Preview */}
+        {showPreview ? (
+          <p className="text-[9px] text-blue-400 italic line-clamp-1">
+            Preview: {processPromptReplacements(prompt.prompt)}
+          </p>
+        ) : hasTagsToShow ? (
+          <div className="flex flex-wrap gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
+            {prompt.tags.slice(0, 3).map((tag, idx) => (
               <Badge
                 key={idx}
                 variant="secondary"
-                className="text-[10px] px-1.5 py-0 h-4 bg-slate-800 text-slate-400"
+                className="text-[9px] px-1 py-0 h-3.5 bg-slate-800 text-slate-400"
               >
-                <Hash className="w-2.5 h-2.5 mr-0.5" />{tag}
+                <Hash className="w-2 h-2 mr-0.5" />{tag}
               </Badge>
             ))}
+            {prompt.tags.length > 3 && (
+              <span className="text-[9px] text-slate-500">+{prompt.tags.length - 3}</span>
+            )}
           </div>
-        )}
+        ) : null}
       </CardContent>
     </Card>
   )

@@ -57,17 +57,38 @@ export const NANO_BANANA_PROMPTS: PromptPreset[] = [
   },
   {
     id: 'cin-005',
-    title: 'Dutch Angle Drama',
-    prompt: 'dutch angle shot, tilted camera, psychological tension, dramatic composition, film noir influence, unsettling perspective',
+    title: 'Canted Angle',
+    prompt: 'canted angle shot, tilted camera 25-45 degrees, dutch tilt, psychological tension, dynamic composition, unsettling perspective, dramatic framing',
     categoryId: 'cinematic',
-    tags: ['dutch', 'angle', 'dramatic']
+    tags: ['canted', 'dutch', 'tilted']
   },
   {
     id: 'cin-006',
-    title: 'Tracking Shot',
-    prompt: 'smooth tracking shot, steadicam movement, following subject, dynamic camera motion, cinematic flow, professional dolly work',
+    title: 'Steadicam Float',
+    prompt: 'smooth steadicam shot, floating camera movement, following subject, dynamic tracking, cinematic flow, professional dolly work, elegant motion',
     categoryId: 'cinematic',
-    tags: ['tracking', 'movement', 'dolly']
+    tags: ['steadicam', 'tracking', 'smooth']
+  },
+  {
+    id: 'cin-007',
+    title: 'Two-Shot',
+    prompt: 'two-shot composition, two subjects in frame, conversation framing, relationship dynamics, balanced composition, dialogue scene',
+    categoryId: 'cinematic',
+    tags: ['two-shot', 'conversation', 'dialogue']
+  },
+  {
+    id: 'cin-008',
+    title: 'Insert Shot',
+    prompt: 'insert shot, detail focus, close-up of object, storytelling detail, narrative emphasis, focused composition',
+    categoryId: 'cinematic',
+    tags: ['insert', 'detail', 'object']
+  },
+  {
+    id: 'cin-009',
+    title: 'Cutaway Shot',
+    prompt: 'cutaway shot, reaction emphasis, environmental context, narrative pacing, supporting detail, atmospheric element',
+    categoryId: 'cinematic',
+    tags: ['cutaway', 'reaction', 'context']
   },
 
   // Character Styles
@@ -205,41 +226,20 @@ export const NANO_BANANA_PROMPTS: PromptPreset[] = [
     tags: ['underwater', 'ocean', 'aquatic']
   },
 
-  // Special Effects
+  // Special Effects (nano-banana optimized)
   {
     id: 'fx-001',
-    title: 'Particle Explosion',
-    prompt: 'particle effects, explosive debris, dynamic destruction, slow motion explosion, cinematic VFX, dramatic impact',
+    title: 'Atmospheric Fog',
+    prompt: 'atmospheric fog effect, misty environment, diffused light, mysterious atmosphere, ethereal mood, cinematic haze',
     categoryId: 'effects',
-    tags: ['explosion', 'particles', 'vfx']
+    tags: ['fog', 'atmosphere', 'mist']
   },
   {
     id: 'fx-002',
-    title: 'Magic Spell Effect',
-    prompt: 'magical energy effect, glowing particles, spell casting, mystical aura, fantasy VFX, ethereal light trails',
+    title: 'Weather Drama',
+    prompt: 'dramatic weather, storm clouds, rain atmosphere, dynamic sky, moody conditions, atmospheric intensity',
     categoryId: 'effects',
-    tags: ['magic', 'spell', 'fantasy']
-  },
-  {
-    id: 'fx-003',
-    title: 'Holographic Display',
-    prompt: 'holographic projection, futuristic interface, sci-fi technology, translucent display, digital effects',
-    categoryId: 'effects',
-    tags: ['hologram', 'scifi', 'tech']
-  },
-  {
-    id: 'fx-004',
-    title: 'Weather Effects',
-    prompt: 'heavy rain effect, lightning strike, storm atmosphere, weather dynamics, atmospheric conditions',
-    categoryId: 'effects',
-    tags: ['weather', 'rain', 'storm']
-  },
-  {
-    id: 'fx-005',
-    title: 'Time Distortion',
-    prompt: 'time manipulation effect, motion trails, temporal distortion, clock elements, surreal time bending',
-    categoryId: 'effects',
-    tags: ['time', 'distortion', 'surreal']
+    tags: ['weather', 'storm', 'dramatic']
   },
 
   // Moods & Atmosphere
@@ -283,37 +283,101 @@ export const NANO_BANANA_PROMPTS: PromptPreset[] = [
   {
     id: 'cam-001',
     title: 'Low Angle Power',
-    prompt: 'low angle shot, looking up, powerful perspective, heroic framing, dramatic sky background, imposing presence',
+    prompt: 'low angle shot, camera looking up at subject, powerful perspective, heroic framing, dramatic sky background, imposing presence',
     categoryId: 'camera',
     tags: ['low', 'angle', 'power']
   },
   {
     id: 'cam-002',
     title: 'High Angle Overview',
-    prompt: 'high angle shot, looking down, bird\'s eye perspective, overview composition, vulnerable subject position',
+    prompt: 'high angle shot, camera looking down, bird\'s eye perspective, overview composition, vulnerable subject position',
     categoryId: 'camera',
     tags: ['high', 'angle', 'overview']
   },
   {
     id: 'cam-003',
     title: 'Over the Shoulder',
-    prompt: 'over the shoulder shot, POV perspective, conversation framing, intimate dialogue, character interaction',
+    prompt: 'over the shoulder shot, foreground character visible, background subject in focus, conversation framing, intimate dialogue, character interaction, depth composition',
     categoryId: 'camera',
-    tags: ['ots', 'pov', 'dialogue']
+    tags: ['ots', 'dialogue', 'depth'],
+    isQuickAccess: true
   },
   {
     id: 'cam-004',
+    title: 'Eye Level Shot',
+    prompt: 'eye level camera angle, neutral perspective, natural viewing height, conversational framing, intimate connection, realistic viewpoint',
+    categoryId: 'camera',
+    tags: ['eye-level', 'neutral', 'natural']
+  },
+  {
+    id: 'cam-005',
+    title: 'Extreme Low Angle',
+    prompt: 'extreme low angle, worm\'s eye view, camera on ground level, monumental scale, dramatic sky emphasis, powerful presence',
+    categoryId: 'camera',
+    tags: ['extreme-low', 'worms-eye', 'dramatic']
+  },
+  {
+    id: 'cam-006',
+    title: 'Extreme High Angle',
+    prompt: 'extreme high angle, god\'s eye view, directly overhead, isolation emphasis, vulnerability, geometric composition',
+    categoryId: 'camera',
+    tags: ['extreme-high', 'overhead', 'isolation']
+  },
+  {
+    id: 'cam-007',
+    title: 'Cowboy Shot',
+    prompt: 'cowboy shot, framing from mid-thigh up, western style composition, character emphasis, action-ready stance, classic medium shot',
+    categoryId: 'camera',
+    tags: ['cowboy', 'mid-shot', 'western']
+  },
+  {
+    id: 'cam-008',
+    title: 'POV Shot',
+    prompt: 'point of view shot, first-person perspective, subjective camera, character viewpoint, immersive framing, what the character sees',
+    categoryId: 'camera',
+    tags: ['pov', 'first-person', 'subjective']
+  },
+  {
+    id: 'cam-009',
+    title: 'Reverse Angle',
+    prompt: 'reverse angle shot, 180-degree shift, conversation continuity, dialogue coverage, opposite perspective, shot-reverse-shot',
+    categoryId: 'camera',
+    tags: ['reverse', 'dialogue', 'continuity']
+  },
+  {
+    id: 'cam-010',
     title: 'Aerial Drone Shot',
-    prompt: 'aerial drone shot, sweeping landscape, bird\'s eye view, cinematic overhead, dynamic height perspective',
+    prompt: 'aerial drone shot, sweeping landscape, bird\'s eye view, cinematic overhead, dynamic height perspective, establishing geography',
     categoryId: 'camera',
     tags: ['aerial', 'drone', 'landscape']
   },
   {
-    id: 'cam-005',
-    title: 'Handheld Documentary',
-    prompt: 'handheld camera style, documentary feel, raw authentic movement, cinema verite, realistic camera shake',
+    id: 'cam-011',
+    title: 'Rack Focus',
+    prompt: 'rack focus technique, focus shift from foreground to background, depth emphasis, attention redirection, storytelling transition',
     categoryId: 'camera',
-    tags: ['handheld', 'documentary', 'authentic']
+    tags: ['rack-focus', 'depth', 'transition']
+  },
+  {
+    id: 'cam-012',
+    title: 'Crash Zoom',
+    prompt: 'crash zoom effect, fast zoom in, dramatic emphasis, tension building, stylized movement, sudden focus change',
+    categoryId: 'camera',
+    tags: ['zoom', 'dramatic', 'emphasis']
+  },
+  {
+    id: 'cam-013',
+    title: 'Whip Pan',
+    prompt: 'whip pan movement, fast horizontal pan, motion blur transition, kinetic energy, dynamic camera swish, rapid direction change',
+    categoryId: 'camera',
+    tags: ['whip-pan', 'motion', 'dynamic']
+  },
+  {
+    id: 'cam-014',
+    title: 'Jib Crane Shot',
+    prompt: 'jib crane movement, vertical camera arc, sweeping motion, establishing scale, dramatic reveal, cinematic elevation change',
+    categoryId: 'camera',
+    tags: ['jib', 'crane', 'vertical']
   },
 
   // Art Styles
