@@ -30,7 +30,7 @@ export interface AuthenticatedContext {
  * }
  */
 export async function getAuthenticatedUser(
-  request: NextRequest
+  _request: NextRequest
 ): Promise<AuthenticatedContext | NextResponse> {
   try {
     const cookieStore = await cookies()

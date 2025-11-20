@@ -24,14 +24,12 @@ interface UseVideoGenerationReturn {
   generateVideos: (
     shots: ShotAnimationConfig[],
     model: AnimationModel,
-    modelSettings: ModelSettings,
-    userId: string
+    modelSettings: ModelSettings
   ) => Promise<GenerationResult[]>
   retrySingleVideo: (
     shot: ShotAnimationConfig,
     model: AnimationModel,
-    modelSettings: ModelSettings,
-    userId: string
+    modelSettings: ModelSettings
   ) => Promise<GenerationResult>
 }
 
@@ -86,8 +84,7 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
   const generateSingleVideo = async (
     shot: ShotAnimationConfig,
     model: AnimationModel,
-    modelSettings: ModelSettings,
-    userId: string
+    modelSettings: ModelSettings
   ): Promise<GenerationResult> => {
     try {
       // Upload main image to Replicate
@@ -166,8 +163,7 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
   const generateVideos = async (
     shots: ShotAnimationConfig[],
     model: AnimationModel,
-    modelSettings: ModelSettings,
-    userId: string
+    modelSettings: ModelSettings
   ): Promise<GenerationResult[]> => {
     setIsGenerating(true)
 
@@ -202,7 +198,7 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
 
       // Generate all videos in parallel
       const results = await Promise.all(
-        selectedShots.map((shot) => generateSingleVideo(shot, model, modelSettings, userId))
+        selectedShots.map((shot) => generateSingleVideo(shot, model, modelSettings))
       )
 
       // Count successes and failures
@@ -242,8 +238,7 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
   const retrySingleVideo = async (
     shot: ShotAnimationConfig,
     model: AnimationModel,
-    modelSettings: ModelSettings,
-    userId: string
+    modelSettings: ModelSettings
   ): Promise<GenerationResult> => {
     setIsGenerating(true)
 
@@ -254,7 +249,7 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
       })
 
       // Generate the video using existing logic
-      const result = await generateSingleVideo(shot, model, modelSettings, userId)
+      const result = await generateSingleVideo(shot, model, modelSettings)
 
       if (result.success) {
         toast({
