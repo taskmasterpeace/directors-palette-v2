@@ -207,7 +207,13 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   },
 
   getAllReferences: () => {
-    const refs = get().images
+    const images = get().images
+    console.log('🔍 getAllReferences called:', {
+      totalImages: images.length,
+      imagesWithReferences: images.filter(img => img.reference).length,
+      sampleImages: images.slice(0, 3).map(img => ({ id: img.id, reference: img.reference }))
+    })
+    const refs = images
       .filter(img => img.reference)
       .map(img => img.reference!)
     return [...new Set(refs)] // Return unique references
