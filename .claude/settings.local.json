@@ -9,7 +9,13 @@
       "Bash(mkdir:*)",
       "Bash(npm run build:*)",
       "Bash(git fetch:*)",
-      "Bash(git pull:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfix: Fix gallery image deletion and improve error handling\n\n- Fix critical bug: GalleryService.deleteImage → deleteItem\n- Make removeImage async and return success/failure status\n- Add proper error notifications for failed deletions\n- Delete associated references before gallery items\n- Show notifications after deletion completes, not before\n\nThis ensures deletion notifications are accurate and users get feedback\nif deletion fails.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(npx eslint:*)",
+      "Bash(git branch:*)"
     ],
     "deny": [],
     "ask": []
