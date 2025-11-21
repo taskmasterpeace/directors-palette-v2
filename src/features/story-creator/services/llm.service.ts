@@ -191,50 +191,59 @@ Return ONLY valid JSON, no markdown.`
 
     /**
      * Generate an image prompt from a scene description
+     * Replaces character/location names INLINE with @tags or descriptions
      */
     static async generateImagePrompt(
         scene: ExtractedScene,
         entities: ExtractedEntities,
+        referenceImages?: Map<string, string>, // tag -> imageUrl (if user has assigned refs)
         style?: string
     ): Promise<{ prompt: string; referenceTags: string[] }> {
-        // Find matching entities for reference tags
         const referenceTags: string[] = []
+        let prompt = scene.visualDescription
 
+        // Replace character names inline
         scene.characters.forEach(charName => {
             const entity = entities.characters.find(c =>
                 c.name.toLowerCase() === charName.toLowerCase()
             )
             if (entity) {
-                referenceTags.push(`@${entity.tag}`)
+                const hasReference = referenceImages?.has(entity.tag)
+                const regex = new RegExp(`\\b${charName}\\b`, 'gi')
+
+                if (hasReference) {
+                    // Has reference image: use @tag
+                    prompt = prompt.replace(regex, `@${entity.tag}`)
+                    referenceTags.push(`@${entity.tag}`)
+                } else {
+                    // No reference: use description inline
+                    prompt = prompt.replace(regex, entity.description || charName)
+                }
             }
         })
 
+        // Replace location name inline
         const locationEntity = entities.locations.find(l =>
             l.name.toLowerCase() === scene.location.toLowerCase()
         )
         if (locationEntity) {
-            referenceTags.push(`@${locationEntity.tag}`)
+            const hasReference = referenceImages?.has(locationEntity.tag)
+            const regex = new RegExp(`\\b${scene.location}\\b`, 'gi')
+
+            if (hasReference) {
+                prompt = prompt.replace(regex, `@${locationEntity.tag}`)
+                referenceTags.push(`@${locationEntity.tag}`)
+            } else {
+                prompt = prompt.replace(regex, locationEntity.description || scene.location)
+            }
         }
 
-        // Build the prompt
-        let prompt = scene.visualDescription
-
-        // Add reference tags
-        if (referenceTags.length > 0) {
-            prompt = `${referenceTags.join(' ')} ${prompt}`
-        }
-
-        // Add camera angle
+        // Add camera angle if present
         if (scene.cameraAngle) {
             prompt = `${prompt}, ${scene.cameraAngle} shot`
         }
 
-        // Add mood
-        if (scene.mood) {
-            prompt = `${prompt}, ${scene.mood} atmosphere`
-        }
-
-        // Add style
+        // Add style if provided
         if (style) {
             prompt = `${prompt}, ${style}`
         }
