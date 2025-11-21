@@ -41,14 +41,14 @@ export class ImageGenerationService {
     // Model-specific validations
     switch (input.model) {
       case 'nano-banana':
-        errors.push(...this.validateNanoBanana(input, modelConfig.maxReferenceImages || 10))
+        errors.push(...this.validateNanoBanana(input, modelConfig?.maxReferenceImages || 10))
         break
       case 'seedream-4':
-        errors.push(...this.validateSeedream(input, modelConfig.maxReferenceImages || 10))
+        errors.push(...this.validateSeedream(input, modelConfig?.maxReferenceImages || 10))
         break
       case 'gen4-image':
       case 'gen4-image-turbo':
-        errors.push(...this.validateGen4(input, modelConfig.maxReferenceImages || 3))
+        errors.push(...this.validateGen4(input, modelConfig?.maxReferenceImages || 3))
         break
       case 'qwen-image':
         errors.push(...this.validateQwenImage(input))

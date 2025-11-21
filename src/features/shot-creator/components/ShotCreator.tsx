@@ -163,7 +163,7 @@ const ShotCreator = () => {
                     <div className="bg-slate-900/30 lg:rounded-lg lg:border border-slate-700/50 p-0 lg:p-6">
                         <div className="mb-4 px-2 pt-4 lg:px-0 lg:pt-0">
                             <h3 className="text-white font-medium">
-                                {isEditingMode ? 'Input Image to Edit' : `Reference Images (Max ${modelConfig.maxReferenceImages || 3})`}
+                                {isEditingMode ? 'Input Image to Edit' : `Reference Images (Max ${modelConfig?.maxReferenceImages || 3})`}
                             </h3>
                             {isEditingMode && (
                                 <p className="text-slate-400 text-sm mt-1">
@@ -173,7 +173,7 @@ const ShotCreator = () => {
                         </div>
                         <CreatorReferenceManager
                             compact={false}
-                            maxImages={isEditingMode ? 1 : (modelConfig.maxReferenceImages || 3)}
+                            maxImages={isEditingMode ? 1 : (modelConfig?.maxReferenceImages || 3)}
                             editingMode={isEditingMode}
                         />
                     </div>
