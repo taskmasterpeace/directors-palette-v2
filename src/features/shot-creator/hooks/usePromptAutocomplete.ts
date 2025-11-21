@@ -3,7 +3,7 @@
  * Handles trigger detection, filtering, keyboard navigation, and insertion
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback } from 'react'
 import { useUnifiedGalleryStore } from '../store/unified-gallery-store'
 import type {
   AutocompleteState,
@@ -26,7 +26,7 @@ export function usePromptAutocomplete() {
   })
 
   // Get all images from store
-  const { images, getAllReferences, getImagesByReferences } = useUnifiedGalleryStore()
+  const { getAllReferences, getImagesByReferences } = useUnifiedGalleryStore()
 
   /**
    * Detect if autocomplete should be triggered

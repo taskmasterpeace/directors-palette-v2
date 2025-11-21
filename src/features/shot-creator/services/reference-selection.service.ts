@@ -160,7 +160,7 @@ export async function getRandomReferences(
     const selected = shuffled.slice(0, Math.min(count, data.length))
 
     // Transform to GeneratedImage format
-    const images: GeneratedImage[] = selected
+    const images = selected
       .map(item => {
         const galleryData = item.gallery as Record<string, unknown> | null
         if (!galleryData) return null
@@ -194,7 +194,7 @@ export async function getRandomReferences(
           }
         }
       })
-      .filter((img): img is GeneratedImage => img !== null)
+      .filter(img => img !== null) as GeneratedImage[]
 
     return images
   } catch (error) {
