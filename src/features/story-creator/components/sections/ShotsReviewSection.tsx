@@ -6,8 +6,11 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
-import { Play, Edit2, Save, X, Plus } from 'lucide-react'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Play, Edit2, Save, X, Plus, Grid3x3, List, Film } from 'lucide-react'
 import type { StoryShot } from '../../types/story.types'
+import PromptTableView from './PromptTableView'
+import { TitleCardService } from '../../services/title-card.service'
 
 interface ShotsReviewSectionProps {
     shots: StoryShot[]
@@ -25,6 +28,7 @@ export default function ShotsReviewSection({
     onGenerateAll,
     isGenerating
 }: ShotsReviewSectionProps) {
+    const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards')
     const [editingId, setEditingId] = useState<string | null>(null)
     const [editPrompt, setEditPrompt] = useState('')
     const [editTags, setEditTags] = useState<string[]>([])
@@ -84,36 +88,62 @@ export default function ShotsReviewSection({
                         Review and edit prompts before generating
                     </p>
                 </div>
-                <Button
-                    onClick={onGenerateAll}
-                    disabled={isGenerating || shots.length === 0}
-                    className="bg-red-600 hover:bg-red-700"
-                >
-                    <Play className="w-4 h-4 mr-2" />
-                    Generate All
-                </Button>
+                <div className="flex items-center gap-3">
+                    {/* View Toggle */}
+                    <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'cards' | 'table')}>
+                        <TabsList className="bg-slate-800 border border-slate-700">
+                            <TabsTrigger
+                                value="cards"
+                                className="flex items-center gap-2 px-3 data-[state=active]:bg-red-600 data-[state=active]:text-white"
+                            >
+                                <Grid3x3 className="w-4 h-4" />
+                                Cards
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="table"
+                                className="flex items-center gap-2 px-3 data-[state=active]:bg-red-600 data-[state=active]:text-white"
+                            >
+                                <List className="w-4 h-4" />
+                                Table
+                            </TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+
+                    <Button
+                        onClick={onGenerateAll}
+                        disabled={isGenerating || shots.length === 0}
+                        className="bg-red-600 hover:bg-red-700"
+                    >
+                        <Play className="w-4 h-4 mr-2" />
+                        Generate All
+                    </Button>
+                </div>
             </div>
 
-            {/* Shots Grid */}
-            <div className="space-y-3">
-                {shots.map((shot) => (
-                    <ShotCard
-                        key={shot.id}
-                        shot={shot}
-                        isEditing={editingId === shot.id}
-                        editPrompt={editPrompt}
-                        editTags={editTags}
-                        newTag={newTag}
-                        onStartEdit={handleStartEdit}
-                        onSaveEdit={handleSaveEdit}
-                        onCancelEdit={handleCancelEdit}
-                        onPromptChange={setEditPrompt}
-                        onAddTag={handleAddTag}
-                        onRemoveTag={handleRemoveTag}
-                        onNewTagChange={setNewTag}
-                    />
-                ))}
-            </div>
+            {/* Content - Conditional Rendering */}
+            {viewMode === 'table' ? (
+                <PromptTableView shots={shots} />
+            ) : (
+                <div className="space-y-3">
+                    {shots.map((shot) => (
+                        <ShotCard
+                            key={shot.id}
+                            shot={shot}
+                            isEditing={editingId === shot.id}
+                            editPrompt={editPrompt}
+                            editTags={editTags}
+                            newTag={newTag}
+                            onStartEdit={handleStartEdit}
+                            onSaveEdit={handleSaveEdit}
+                            onCancelEdit={handleCancelEdit}
+                            onPromptChange={setEditPrompt}
+                            onAddTag={handleAddTag}
+                            onRemoveTag={handleRemoveTag}
+                            onNewTagChange={setNewTag}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     )
 }
@@ -147,26 +177,48 @@ function ShotCard({
     onRemoveTag,
     onNewTagChange
 }: ShotCardProps) {
+    const isTitleCard = TitleCardService.isTitleCard(shot)
+
     return (
-        <Card className="p-4 bg-slate-800 border-slate-700">
+        <Card className={`p-4 ${
+            isTitleCard
+                ? 'bg-slate-800 border-yellow-600/50'
+                : 'bg-slate-800 border-slate-700'
+        }`}>
             <div className="flex gap-4">
                 {/* Sequence Number */}
                 <div className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center">
-                        <span className="text-sm font-semibold text-white">
-                            {shot.sequence_number}
-                        </span>
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        isTitleCard
+                            ? 'bg-yellow-900/30 border border-yellow-600'
+                            : 'bg-slate-700'
+                    }`}>
+                        {isTitleCard ? (
+                            <Film className="w-5 h-5 text-yellow-400" />
+                        ) : (
+                            <span className="text-sm font-semibold text-white">
+                                {shot.sequence_number}
+                            </span>
+                        )}
                     </div>
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 space-y-2">
-                    {/* Chapter Badge */}
-                    {shot.chapter && (
-                        <Badge variant="outline" className="text-xs">
-                            {shot.chapter}
-                        </Badge>
-                    )}
+                    {/* Chapter Badge & Title Card Indicator */}
+                    <div className="flex items-center gap-2">
+                        {isTitleCard && (
+                            <Badge variant="outline" className="text-xs bg-yellow-900/30 border-yellow-600 text-yellow-400">
+                                <Film className="w-3 h-3 mr-1" />
+                                Title Card
+                            </Badge>
+                        )}
+                        {shot.chapter && (
+                            <Badge variant="outline" className="text-xs">
+                                {shot.chapter}
+                            </Badge>
+                        )}
+                    </div>
 
                     {/* Prompt */}
                     {isEditing ? (

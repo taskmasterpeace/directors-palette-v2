@@ -66,6 +66,15 @@ export interface UpdateStoryProjectInput {
 }
 
 /**
+ * Title card configuration
+ */
+export interface TitleCardConfig {
+    chapter_name: string
+    style_description: string
+    generated_automatically: boolean
+}
+
+/**
  * Shot metadata
  */
 export interface ShotMetadata {
@@ -74,6 +83,7 @@ export interface ShotMetadata {
     originalText?: string
     aiGenerated?: boolean
     mergedShots?: string[] // IDs of shots merged with brackets
+    title_card_config?: TitleCardConfig
 }
 
 /**
