@@ -87,7 +87,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   currentPage: 1,
   totalPages: 0,
   totalItems: 0,
-  pageSize: 48,
+  pageSize: 12,
 
   addImage: (imageData) => {
     const newImage: GeneratedImage = {
@@ -182,33 +182,55 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   },
 
   updateImageReference: async (imageId, reference) => {
-    const normalizedRef = reference.startsWith('@') ? reference : `@${reference}`
+    // Handle empty reference (clearing the tag)
+    if (!reference || reference.trim() === '') {
+      // Update in database to clear reference
+      const result = await GalleryService.updateReference(imageId, '')
 
-    // Update database first
-    const result = await GalleryService.updateReference(imageId, normalizedRef)
+      if (!result.success) {
+        console.error('Failed to clear reference in database:', result.error)
+      }
 
-    if (!result.success) {
-      console.error('Failed to update reference in database:', result.error)
+      // Clear from local store AND fullscreen image
+      set((state) => ({
+        images: state.images.map(img =>
+          img.id === imageId
+            ? { ...img, reference: undefined }
+            : img
+        ),
+        fullscreenImage: state.fullscreenImage?.id === imageId
+          ? { ...state.fullscreenImage, reference: undefined }
+          : state.fullscreenImage
+      }))
       return
     }
 
-    // Update local state
+    // Normalize reference (ensure @ prefix)
+    const normalizedReference = reference.startsWith('@') ? reference : `@${reference}`
+
+    // Update in database first
+    const result = await GalleryService.updateReference(imageId, normalizedReference)
+
+    if (!result.success) {
+      console.error('Failed to persist reference to database:', result.error)
+      // Continue with local update anyway
+    }
+
+    // Update in local store AND fullscreen image
     set((state) => ({
       images: state.images.map(img =>
         img.id === imageId
-          ? { ...img, reference: normalizedRef }
+          ? { ...img, reference: normalizedReference }
           : img
       ),
-      // Also update fullscreenImage if it's the same image
       fullscreenImage: state.fullscreenImage?.id === imageId
-        ? { ...state.fullscreenImage, reference: normalizedRef }
+        ? { ...state.fullscreenImage, reference: normalizedReference }
         : state.fullscreenImage
     }))
   },
 
   getAllReferences: () => {
-    const images = get().images
-    const refs = images
+    const refs = get().images
       .filter(img => img.reference)
       .map(img => img.reference!)
     return [...new Set(refs)] // Return unique references

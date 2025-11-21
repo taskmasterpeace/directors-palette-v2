@@ -8,7 +8,6 @@ import React, {
   useEffect,
 } from 'react'
 import { PromptModal, PromptModalConfig } from '@/components/ui/prompt-modal'
-import { useUnifiedGalleryStore } from '@/features/shot-creator/store/unified-gallery-store'
 
 interface PromptContextValue {
   showPrompt: (config: PromptModalConfig) => Promise<string | null>
@@ -30,20 +29,20 @@ export function PromptProvider({ children }: PromptProviderProps) {
     config: { title: '' },
   })
 
+  // Track if we're transitioning to prevent double-open
+  const isTransitioningRef = React.useRef(false)
+
   // ✅ Track hydration to prevent SSR/client mismatch
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // ✅ Track modal transitions to prevent race conditions
-  const isTransitioningRef = React.useRef(false)
-
   const showPrompt = useCallback(
     (config: PromptModalConfig): Promise<string | null> => {
       return new Promise((resolve) => {
         setModalState((prev) => {
-          // Prevent double-opening if already open or transitioning
+          // Prevent opening a new modal if one is already open or transitioning
           if (prev.isOpen || isTransitioningRef.current) {
             resolve(null)
             return prev
@@ -69,12 +68,12 @@ export function PromptProvider({ children }: PromptProviderProps) {
         return { ...prev, isOpen: false, resolve: undefined }
       })
 
-      // Defer resolve to next microtask to prevent race conditions
+      // Defer resolve to next microtask to let React finish rendering
       queueMicrotask(() => {
         if (resolveCallback) {
           resolveCallback(value)
         }
-        // Clear transition flag after delay
+        // Clear transition flag after a delay to prevent immediate re-open
         setTimeout(() => {
           isTransitioningRef.current = false
         }, 100)
@@ -91,12 +90,12 @@ export function PromptProvider({ children }: PromptProviderProps) {
       return { ...prev, isOpen: false, resolve: undefined }
     })
 
-    // Defer resolve to next microtask to prevent race conditions
+    // Defer resolve to next microtask to let React finish rendering
     queueMicrotask(() => {
       if (resolveCallback) {
         resolveCallback(null)
       }
-      // Clear transition flag after delay
+      // Clear transition flag after a delay
       setTimeout(() => {
         isTransitioningRef.current = false
       }, 100)
@@ -130,34 +129,23 @@ export function usePrompt() {
 // Utility hooks
 export function useReferenceNamePrompt() {
   const { showPrompt } = usePrompt()
-  const getAllReferences = useUnifiedGalleryStore(state => state.getAllReferences)
 
   return useCallback(
-    (defaultValue?: string) => {
-      // Get existing references for autocomplete
-      const existingReferences = getAllReferences()
-
-      // ✅ Provide fallback suggestions if no references exist yet
-      const suggestions = existingReferences.length > 0
-        ? existingReferences
-        : ['@hero', '@villain', '@location', '@prop', '@character', '@background']
-
-      console.log('📝 useReferenceNamePrompt called:', {
-        defaultValue,
-        existingReferences,
-        suggestions,
-      })
-
-      return showPrompt({
-        title: 'Set Reference Name',
-        description:
-          'Enter a reference name for this image. Use @ prefix for easy identification.',
+    (defaultValue?: string) =>
+      showPrompt({
+        title: defaultValue ? 'Edit Reference Name' : 'Set Reference Name',
+        description: defaultValue
+          ? 'Update the reference name or clear it to remove the tag.'
+          : 'Enter a reference name for this image. Use @ prefix for easy identification.',
         placeholder: 'e.g., @hero, @villain, @location',
         defaultValue,
-        required: true,
+        required: false, // Allow empty to clear reference
         maxLength: 50,
-        suggestions, // ADD AUTOCOMPLETE with fallback!
         validation: (value: string) => {
+          // Allow empty string to clear reference
+          if (value.trim() === '') {
+            return null
+          }
           if (!value.startsWith('@')) {
             return 'Reference name must start with @'
           }
@@ -169,9 +157,8 @@ export function useReferenceNamePrompt() {
           }
           return null
         },
-      })
-    },
-    [showPrompt, getAllReferences]
+      }),
+    [showPrompt]
   )
 }
 

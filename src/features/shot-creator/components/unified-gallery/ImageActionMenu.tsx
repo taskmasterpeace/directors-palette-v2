@@ -16,18 +16,21 @@ import {
   FileText,
   Film,
   Layout,
-  Sparkles
+  Sparkles,
+  Edit
 } from 'lucide-react'
 
 interface ImageActionMenuProps {
   imageUrl: string
   prompt?: string
+  currentReference?: string
   onCopyPrompt: () => void
   onCopyImage: () => void
   onDownload: () => void
   onDelete: () => void
   onSendTo?: (target: string) => void
   onSetReference?: () => void
+  onEditReference?: () => void
   onAddToLibrary?: () => void
   dropdownOpen: boolean
   onDropdownChange: (open: boolean) => void
@@ -38,12 +41,14 @@ interface ImageActionMenuProps {
  * Provides common actions for gallery images
  */
 export function ImageActionMenu({
+  currentReference,
   onCopyPrompt,
   onCopyImage,
   onDownload,
   onDelete,
   onSendTo,
   onSetReference,
+  onEditReference,
   onAddToLibrary,
   dropdownOpen,
   onDropdownChange
@@ -54,10 +59,10 @@ export function ImageActionMenu({
         <Button
           size="icon"
           variant="secondary"
-          className="h-11 w-11 min-h-[44px] min-w-[44px] p-0 bg-slate-700/90 hover:bg-slate-600 border-slate-600 active:scale-95 transition-transform"
+          className="h-6 w-6 p-0 bg-slate-700/90 hover:bg-slate-600 border-slate-600"
           onClick={(e) => e.stopPropagation()}
         >
-          <MoreVertical className="h-5 w-5 text-white" />
+          <MoreVertical className="h-3 w-3 text-white" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-slate-800 border-slate-700 text-white" align="end">
@@ -85,13 +90,34 @@ export function ImageActionMenu({
 
         <DropdownMenuSeparator className="bg-slate-700" />
 
-        {onSetReference && (
+        {(onSetReference || onEditReference) && (
           <DropdownMenuItem
-            onClick={onSetReference}
-            className="hover:bg-slate-700 cursor-pointer min-h-[44px] py-3 active:bg-slate-600"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              // Close dropdown first, then open modal after a short delay
+              onDropdownChange(false)
+              setTimeout(() => {
+                if (currentReference && onEditReference) {
+                  onEditReference()
+                } else if (onSetReference) {
+                  onSetReference()
+                }
+              }, 50)
+            }}
+            className="hover:bg-slate-700 cursor-pointer"
           >
-            <Tag className="mr-2 h-4 w-4" />
-            Set Reference
+            {currentReference ? (
+              <>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Reference ({currentReference})
+              </>
+            ) : (
+              <>
+                <Tag className="mr-2 h-4 w-4" />
+                Set Reference
+              </>
+            )}
           </DropdownMenuItem>
         )}
 
@@ -99,21 +125,21 @@ export function ImageActionMenu({
           <>
             <DropdownMenuItem
               onClick={() => onSendTo('shot-creator')}
-              className="hover:bg-slate-700 cursor-pointer min-h-[44px] py-3 active:bg-slate-600"
+              className="hover:bg-slate-700 cursor-pointer"
             >
               <Sparkles className="mr-2 h-4 w-4" />
               Send to Shot Creator
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onSendTo('shot-animator')}
-              className="hover:bg-slate-700 cursor-pointer min-h-[44px] py-3 active:bg-slate-600"
+              className="hover:bg-slate-700 cursor-pointer"
             >
               <Film className="mr-2 h-4 w-4" />
               Send to Shot Animator
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onSendTo('layout-annotation')}
-              className="hover:bg-slate-700 cursor-pointer min-h-[44px] py-3 active:bg-slate-600"
+              className="hover:bg-slate-700 cursor-pointer"
             >
               <Layout className="mr-2 h-4 w-4" />
               Send to Layout
@@ -124,7 +150,7 @@ export function ImageActionMenu({
         {onAddToLibrary && (
           <DropdownMenuItem
             onClick={onAddToLibrary}
-            className="hover:bg-slate-700 cursor-pointer min-h-[44px] py-3 active:bg-slate-600"
+            className="hover:bg-slate-700 cursor-pointer"
           >
             <Library className="mr-2 h-4 w-4" />
             Add to Library
@@ -135,7 +161,7 @@ export function ImageActionMenu({
 
         <DropdownMenuItem
           onClick={onDelete}
-          className="hover:bg-red-700 cursor-pointer text-red-400 min-h-[44px] py-3 active:bg-red-800"
+          className="hover:bg-red-700 cursor-pointer text-red-400"
         >
           <Trash2 className="mr-2 h-4 w-4" />
           Delete Image

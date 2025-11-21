@@ -6,7 +6,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Command, CommandList, CommandEmpty, CommandGroup } from '@/components/ui/command'
+import { Command, CommandList, CommandGroup } from '@/components/ui/command'
 import { ReferenceItem } from './ReferenceItem'
 import { CategoryItem } from './CategoryItem'
 import type { AutocompleteOption } from '../../types/autocomplete.types'
@@ -38,17 +38,18 @@ export function PromptAutocomplete({
     }
   }, [selectedIndex])
 
-  if (items.length === 0) {
-    return null
-  }
-
   // Separate categories and references
   const categories = items.filter(item => item.type === 'category')
   const references = items.filter(item => item.type === 'reference')
 
+  // Don't render if no items
+  if (items.length === 0) {
+    return null
+  }
+
   return (
     <div
-      className="absolute z-50 w-80 max-w-[calc(100vw-2rem)] sm:w-80 rounded-md border bg-popover text-popover-foreground shadow-md outline-none"
+      className="fixed z-50 w-80 max-w-[calc(100vw-2rem)] sm:w-80 rounded-md border border-slate-600 bg-slate-800 text-white shadow-xl outline-none"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
@@ -88,13 +89,6 @@ export function PromptAutocomplete({
                 )
               })}
             </CommandGroup>
-          )}
-
-          {/* Empty State */}
-          {items.length === 0 && (
-            <CommandEmpty>
-              No references found. Tag an image first!
-            </CommandEmpty>
           )}
         </CommandList>
       </Command>

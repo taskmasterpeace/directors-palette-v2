@@ -17,8 +17,9 @@ interface FullscreenModalProps {
     onDownloadImage: (url: string) => void
     onDeleteImage: (url: string) => void
     onSendTo: (url: string, target: string) => void
-    onSetReference: () => Promise<void>
+    onSetReference: (id: string, ref: string) => void
     onAddToLibrary?: (url: string) => void
+    showReferenceNamePrompt: (defaultValue?: string) => Promise<string | null>
 }
 
 function FullscreenModal({
@@ -32,7 +33,8 @@ function FullscreenModal({
     onDeleteImage,
     onSendTo,
     onSetReference,
-    onAddToLibrary
+    onAddToLibrary,
+    showReferenceNamePrompt
 }: FullscreenModalProps) {
     const { toast } = useToast()
     const isMobile = useIsMobile()
@@ -172,7 +174,7 @@ function FullscreenModal({
                                     </div>
                                 ) : fullscreenImage.prompt?.includes('_') ? (
                                     <div className="flex items-center gap-2">
-                                        <span className="text-red-400">🎲 Wildcards</span>
+                                        <span className="text-purple-400">🎲 Wildcards</span>
                                         <span className="text-slate-400">Random variations</span>
                                     </div>
                                 ) : (
@@ -340,11 +342,20 @@ function FullscreenModal({
                                     size="sm"
                                     variant="outline"
                                     className="flex-1 text-white border-slate-600"
-                                    onClick={() => onSetReference()}
-                                    title="Set as Reference"
+                                    onClick={async () => {
+                                        const newRef = await showReferenceNamePrompt(fullscreenImage.reference)
+                                        if (newRef !== null) {
+                                            onSetReference(fullscreenImage.id, newRef)
+                                            toast({
+                                                title: newRef ? "Reference Updated" : "Reference Cleared",
+                                                description: newRef ? `Image tagged as ${newRef}` : "Reference tag removed"
+                                            })
+                                        }
+                                    }}
+                                    title={fullscreenImage.reference ? `Edit Reference (${fullscreenImage.reference})` : "Set as Reference"}
                                 >
                                     <Tag className="w-3.5 h-3.5 mr-1" />
-                                    Reference
+                                    {fullscreenImage.reference ? `Edit (${fullscreenImage.reference})` : "Reference"}
                                 </Button>
 
                                 <Button

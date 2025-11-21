@@ -20,6 +20,7 @@ interface ImageCardProps {
   onDelete: () => void
   onSendTo?: (target: string) => void
   onSetReference?: () => void
+  onEditReference?: () => void
   onAddToLibrary?: () => void
   showActions?: boolean
 }
@@ -38,6 +39,7 @@ const ImageCardComponent = ({
   onDelete,
   onSendTo,
   onSetReference,
+  onEditReference,
   onAddToLibrary,
   showActions = true
 }: ImageCardProps) => {
@@ -79,12 +81,14 @@ const ImageCardComponent = ({
           <ImageActionMenu
             imageUrl={image.url}
             prompt={image.prompt}
+            currentReference={image.reference}
             onCopyPrompt={() => handleCopyPrompt(image.prompt)}
             onCopyImage={() => handleCopyImage(image.url)}
             onDownload={onDownload}
             onDelete={onDelete}
             onSendTo={onSendTo}
             onSetReference={onSetReference}
+            onEditReference={onEditReference}
             onAddToLibrary={onAddToLibrary}
             dropdownOpen={dropdownOpen}
             onDropdownChange={setDropdownOpen}

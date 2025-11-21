@@ -383,12 +383,10 @@ export function ExpandedGallery() {
             setFullscreenImage(null)
           }}
           onSendTo={() => {}}
-          onSetReference={async () => {
-            const newRef = await showReferenceNamePrompt()
-            if (newRef && fullscreenImage) {
-              await updateImageReference(fullscreenImage.id, newRef)
-            }
+          onSetReference={(id: string, ref: string) => {
+            void updateImageReference(id, ref)
           }}
+          showReferenceNamePrompt={showReferenceNamePrompt}
         />
       )}
     </div>

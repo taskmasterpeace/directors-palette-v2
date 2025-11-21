@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { ImageIcon } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { useReferenceNamePrompt } from '@/components/providers/PromptProvider'
+import { useToast } from '@/hooks/use-toast'
 import { Pagination } from './Pagination'
 import { useGalleryLogic } from "../../hooks/useGalleryLogic"
 import { ImageCard } from "./ImageCard"
@@ -62,6 +63,7 @@ export function UnifiedImageGallery({
     } = useGalleryLogic(onSendToTab, onUseAsReference, onSendToShotAnimator, onSendToLayoutAnnotation, onSendToLibrary, onImageSelect)
 
     const showReferenceNamePrompt = useReferenceNamePrompt()
+    const { toast } = useToast()
 
     // Keyboard navigation for fullscreen modal
     const navigateToImage = useCallback((direction: 'next' | 'previous') => {
@@ -127,9 +129,19 @@ export function UnifiedImageGallery({
                             onDelete={() => handleDeleteImage(image.url)}
                             onSendTo={currentTab ? (target) => handleSendTo(image.url, target) : undefined}
                             onSetReference={async () => {
-                                const newRef = await showReferenceNamePrompt(image.reference)
+                                const newRef = await showReferenceNamePrompt()
                                 if (newRef) {
                                     await updateImageReference(image.id, newRef)
+                                }
+                            }}
+                            onEditReference={async () => {
+                                const newRef = await showReferenceNamePrompt(image.reference)
+                                if (newRef !== null) {
+                                    await updateImageReference(image.id, newRef)
+                                    toast({
+                                        title: newRef ? "Reference Updated" : "Reference Cleared",
+                                        description: newRef ? `Image tagged as ${newRef}` : "Reference tag removed"
+                                    })
                                 }
                             }}
                             onAddToLibrary={() => onSendToLibrary?.(image.url, image.id)}
@@ -157,7 +169,7 @@ export function UnifiedImageGallery({
             <CardContent>
                 {isLoading ? (
                     <div className="text-center py-12">
-                        <div className="w-12 h-12 mx-auto mb-4 border-4 border-slate-600 border-t-red-500 rounded-full animate-spin" />
+                        <div className="w-12 h-12 mx-auto mb-4 border-4 border-slate-600 border-t-purple-500 rounded-full animate-spin" />
                         <p className="text-slate-400">Loading gallery...</p>
                     </div>
                 ) : images.length === 0 ? (
@@ -184,9 +196,19 @@ export function UnifiedImageGallery({
                                         onDelete={() => handleDeleteImage(image.url)}
                                         onSendTo={currentTab ? (target) => handleSendTo(image.url, target) : undefined}
                                         onSetReference={async () => {
-                                            const newRef = await showReferenceNamePrompt(image.reference)
+                                            const newRef = await showReferenceNamePrompt()
                                             if (newRef) {
                                                 await updateImageReference(image.id, newRef)
+                                            }
+                                        }}
+                                        onEditReference={async () => {
+                                            const newRef = await showReferenceNamePrompt(image.reference)
+                                            if (newRef !== null) {
+                                                await updateImageReference(image.id, newRef)
+                                                toast({
+                                                    title: newRef ? "Reference Updated" : "Reference Cleared",
+                                                    description: newRef ? `Image tagged as ${newRef}` : "Reference tag removed"
+                                                })
                                             }
                                         }}
                                         onAddToLibrary={() => {
@@ -223,12 +245,13 @@ export function UnifiedImageGallery({
                     onDeleteImage={handleDeleteImage}
                     onSendTo={currentTab ? (url: string, target: string) => handleSendTo(url, target) : (() => { })}
                     onSetReference={async () => {
-                        const newRef = await showReferenceNamePrompt(fullscreenImage.reference)
+                        const newRef = await showReferenceNamePrompt()
                         if (newRef) {
                             await updateImageReference(fullscreenImage.id, newRef)
                         }
                     }}
                     onAddToLibrary={onSendToLibrary && fullscreenImage ? () => onSendToLibrary(fullscreenImage.url, fullscreenImage.id) : undefined}
+                    showReferenceNamePrompt={showReferenceNamePrompt}
                 />
             )}
         </Card>

@@ -335,15 +335,17 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
 
         if (isMobile) {
             // Position above textarea on mobile to avoid keyboard
+            // Use viewport coordinates directly (fixed positioning)
             setDropdownPosition({
-                top: Math.max(rect.top + window.scrollY - 310, 10), // 300px height + 10px margin, min 10px from top
-                left: rect.left + window.scrollX
+                top: Math.max(rect.top - 310, 10), // 300px height + 10px margin, min 10px from top
+                left: Math.max(rect.left, 10) // Min 10px from left edge
             })
         } else {
             // Desktop: position below textarea
+            // Use viewport coordinates directly (fixed positioning)
             setDropdownPosition({
-                top: rect.bottom + window.scrollY + 4,
-                left: rect.left + window.scrollX
+                top: rect.bottom + 4,
+                left: rect.left
             })
         }
     }, [textareaRef])
@@ -417,7 +419,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     }, [setShotCreatorPrompt, setShotCreatorReferenceImages, shotCreatorReferenceImages, textareaRef, handleAutocompleteTextChange]);
 
     // Handle autocomplete selection
-    const handleAutocompleteSelect = useCallback((item: AutocompleteOption | null) => {
+    const handleAutocompleteSelect = useCallback(async (item: AutocompleteOption | null) => {
         if (!item || !textareaRef.current) return
 
         const textarea = textareaRef.current
@@ -433,6 +435,9 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         // Close autocomplete
         closeAutocomplete()
 
+        // IMPORTANT: Manually trigger auto-attach logic since setShotCreatorPrompt doesn't trigger onChange
+        await handlePromptChange(newText)
+
         // Set cursor position after state update
         setTimeout(() => {
             if (textareaRef.current) {
@@ -441,7 +446,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 textareaRef.current.focus()
             }
         }, 0)
-    }, [insertAutocompleteItem, closeAutocomplete, shotCreatorPrompt, setShotCreatorPrompt, textareaRef]);
+    }, [insertAutocompleteItem, closeAutocomplete, shotCreatorPrompt, setShotCreatorPrompt, textareaRef, handlePromptChange]);
 
     // Calculate dropdown position when autocomplete opens
     useEffect(() => {
