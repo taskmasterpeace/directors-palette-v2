@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useStoryCreatorStore } from '../../store/story-creator.store'
 import { StoryProjectService } from '../../services/story-project.service'
 import { PromptGeneratorService } from '../../services/prompt-generator.service'
+import { LLMService } from '../../services/llm.service'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { BookOpen, FileText, ListChecks, Activity } from 'lucide-react'
 import StoryInputSection from '../sections/StoryInputSection'
@@ -44,33 +45,77 @@ export default function StoryCreatorDesktop() {
 
             setCurrentProject(project)
 
-            // Extract scenes
-            const scenes = PromptGeneratorService.extractScenes(storyText)
+            let shotInputs: Array<{
+                project_id: string
+                sequence_number: number
+                chapter?: string
+                prompt: string
+                reference_tags: string[]
+                metadata: { originalText: string }
+            }> = []
 
-            // Extract entities
-            const characters = PromptGeneratorService.extractCharacters(storyText)
-            const locations = PromptGeneratorService.extractLocations(storyText)
-            const entities = [
-                ...characters.map(c => ({ type: 'character' as const, ...c })),
-                ...locations.map(l => ({ type: 'location' as const, ...l }))
-            ]
+            // Try LLM extraction first if configured
+            if (LLMService.isConfigured()) {
+                try {
+                    console.log('🤖 Using LLM for scene extraction...')
 
-            // Generate prompts for each scene
-            const shotInputs = scenes.map((scene) => {
-                const { prompt, referenceTags } = PromptGeneratorService.generatePrompt(
-                    scene.text,
-                    entities
-                )
+                    // Extract scenes and entities with AI
+                    const [scenes, entities] = await Promise.all([
+                        LLMService.extractScenes(storyText),
+                        LLMService.extractEntities(storyText)
+                    ])
 
-                return {
-                    project_id: project.id,
-                    sequence_number: scene.sequence,
-                    chapter: scene.chapter,
-                    prompt,
-                    reference_tags: referenceTags,
-                    metadata: { originalText: scene.text }
+                    console.log(`📝 Extracted ${scenes.length} scenes, ${entities.characters.length} characters, ${entities.locations.length} locations`)
+
+                    // Generate prompts for each scene
+                    shotInputs = await Promise.all(scenes.map(async (scene) => {
+                        const { prompt, referenceTags } = await LLMService.generateImagePrompt(
+                            scene,
+                            entities
+                        )
+
+                        return {
+                            project_id: project.id,
+                            sequence_number: scene.sequence,
+                            chapter: scene.chapter,
+                            prompt,
+                            reference_tags: referenceTags,
+                            metadata: { originalText: scene.text }
+                        }
+                    }))
+                } catch (llmError) {
+                    console.warn('LLM extraction failed, falling back to basic extraction:', llmError)
                 }
-            })
+            }
+
+            // Fallback to basic extraction if LLM not configured or failed
+            if (shotInputs.length === 0) {
+                console.log('📝 Using basic text extraction...')
+
+                const scenes = PromptGeneratorService.extractScenes(storyText)
+                const characters = PromptGeneratorService.extractCharacters(storyText)
+                const locations = PromptGeneratorService.extractLocations(storyText)
+                const entities = [
+                    ...characters.map(c => ({ type: 'character' as const, ...c })),
+                    ...locations.map(l => ({ type: 'location' as const, ...l }))
+                ]
+
+                shotInputs = scenes.map((scene) => {
+                    const { prompt, referenceTags } = PromptGeneratorService.generatePrompt(
+                        scene.text,
+                        entities
+                    )
+
+                    return {
+                        project_id: project.id,
+                        sequence_number: scene.sequence,
+                        chapter: scene.chapter,
+                        prompt,
+                        reference_tags: referenceTags,
+                        metadata: { originalText: scene.text }
+                    }
+                })
+            }
 
             // Create shots in DB
             const { data: createdShots, error: shotsError } = await StoryProjectService.createShots(shotInputs)

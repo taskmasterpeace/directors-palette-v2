@@ -15,7 +15,11 @@
       "Bash(git commit:*)",
       "Bash(git checkout:*)",
       "Bash(npx eslint:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(if [ -f \"c:/git/directors-palette-v2/.env.local\" ])",
+      "Bash(then cat \"c:/git/directors-palette-v2/.env.local\")",
+      "Bash(else echo \"NO_FILE\")",
+      "Bash(fi)"
     ],
     "deny": [],
     "ask": []
