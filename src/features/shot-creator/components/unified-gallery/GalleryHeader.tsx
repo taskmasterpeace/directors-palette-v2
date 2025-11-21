@@ -12,6 +12,7 @@ interface GalleryHeaderProps {
   searchQuery: string
   selectedCount: number
   onSearchChange: (query: string) => void
+  onSelectAll: () => void
   onClearSelection: () => void
   onDeleteSelected: () => void
 }
@@ -22,6 +23,7 @@ export function GalleryHeader({
   searchQuery,
   selectedCount,
   onSearchChange,
+  onSelectAll,
   onClearSelection,
   onDeleteSelected
 }: GalleryHeaderProps) {
@@ -57,6 +59,13 @@ export function GalleryHeader({
             />
           </div>
           {/* Selection Actions */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onSelectAll}
+          >
+            Select All
+          </Button>
           {selectedCount > 0 && (
             <>
               <Badge className="bg-blue-600">

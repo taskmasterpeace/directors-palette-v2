@@ -86,6 +86,10 @@ export function useGalleryLogic(
     setSelectedImages([])
   }
 
+  const handleSelectAll = () => {
+    setSelectedImages(paginatedImages.map(img => img.url))
+  }
+
   const handleDeleteSelected = () => {
     selectedImages.forEach(url => removeImage(url))
     setSelectedImages([])
@@ -275,6 +279,7 @@ export function useGalleryLogic(
 
     // Handlers
     handleImageSelect,
+    handleSelectAll,
     handleClearSelection,
     handleDeleteSelected,
     handleCopyImage,

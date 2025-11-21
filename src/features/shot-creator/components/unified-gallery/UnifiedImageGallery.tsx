@@ -54,6 +54,7 @@ export function UnifiedImageGallery({
         handlePageChange,
         setFullscreenImage,
         selectedImages,
+        handleSelectAll,
         handleClearSelection,
         handleDeleteSelected,
         handleImageSelect,
@@ -148,6 +149,7 @@ export function UnifiedImageGallery({
                 searchQuery={filters.searchQuery}
                 onSearchChange={handleSearchChange}
                 selectedCount={selectedImages.length}
+                onSelectAll={handleSelectAll}
                 onClearSelection={handleClearSelection}
                 onDeleteSelected={handleDeleteSelected}
             />
@@ -168,7 +170,7 @@ export function UnifiedImageGallery({
                     </div>
                 ) : (
                     <>
-                        <ScrollArea className="h-[600px]">
+                        <ScrollArea className="h-[calc(100vh-250px)] min-h-[400px]">
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                 {paginatedImages.map((image: GeneratedImage) => (
                                     <ImageCard
