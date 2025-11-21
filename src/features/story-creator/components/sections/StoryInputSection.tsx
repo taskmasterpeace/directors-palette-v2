@@ -5,7 +5,30 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
-import { Sparkles, Loader2 } from 'lucide-react'
+import { Sparkles, Loader2, TestTube2 } from 'lucide-react'
+
+const TEST_STORIES = [
+    {
+        title: "The Chase",
+        text: `Marcus sprinted through the neon-lit streets of downtown, his breath visible in the cold night air. Behind him, the sound of heavy boots echoed off the wet pavement.
+
+He ducked into a narrow alley, pressing his back against the graffiti-covered wall. A trash can clattered somewhere in the darkness.
+
+Sarah waited on the rooftop above, her sniper rifle trained on the alley entrance. She spoke into her earpiece: "I've got eyes on you. Two hostiles approaching from the east."
+
+The rain began to fall harder as Marcus pulled out his pistol. This was it. No more running.`
+    },
+    {
+        title: "Morning Coffee",
+        text: `Elena sat at the corner table of the small cafe, steam rising from her cup. The morning sun streamed through the window, casting long shadows across the wooden floor.
+
+She opened her laptop and began to type. Outside, the city was waking up. A yellow taxi pulled up to the curb. A mother pushed a stroller down the sidewalk.
+
+The barista, a young man with kind eyes, brought her a fresh croissant. She smiled and nodded in thanks.
+
+This was her favorite part of the day - before the meetings, before the calls. Just her, her coffee, and her thoughts.`
+    }
+]
 
 interface StoryInputSectionProps {
     onExtractShots: (title: string, storyText: string) => Promise<void>
@@ -75,25 +98,40 @@ export default function StoryInputSection({
                 </div>
             )}
 
-            {/* Extract Button */}
-            <Button
-                onClick={handleExtract}
-                disabled={!canExtract}
-                className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50"
-                size="lg"
-            >
-                {isExtracting ? (
-                    <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Extracting...
-                    </>
-                ) : (
-                    <>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Extract Shots
-                    </>
-                )}
-            </Button>
+            {/* Action Buttons */}
+            <div className="flex gap-2">
+                <Button
+                    onClick={() => {
+                        const story = TEST_STORIES[Math.floor(Math.random() * TEST_STORIES.length)]
+                        setTitle(story.title)
+                        setStoryText(story.text)
+                    }}
+                    variant="outline"
+                    className="border-slate-600 text-slate-300 hover:bg-slate-800"
+                    disabled={isExtracting}
+                >
+                    <TestTube2 className="w-4 h-4 mr-2" />
+                    Test Story
+                </Button>
+                <Button
+                    onClick={handleExtract}
+                    disabled={!canExtract}
+                    className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                    size="lg"
+                >
+                    {isExtracting ? (
+                        <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Extracting...
+                        </>
+                    ) : (
+                        <>
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            Extract Shots
+                        </>
+                    )}
+                </Button>
+            </div>
         </div>
     )
 }
