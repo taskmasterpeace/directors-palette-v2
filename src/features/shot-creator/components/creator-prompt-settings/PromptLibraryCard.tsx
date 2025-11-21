@@ -14,14 +14,13 @@ import {
     Grid,
     Table,
     Download,
-    Upload,
-    Copy,
-    Hash,
-    Trash2,
-    Star
+    Upload
 } from 'lucide-react'
 import { useState } from "react"
 import { usePromptLibraryManager } from "../../hooks/usePromptLibraryManager"
+import { PromptCard } from '../prompt-library/PromptCard'
+import { CategoryCard } from '../prompt-library/CategoryCard'
+import { EditPromptDialog } from '../prompt-library/dialogs/EditPromptDialog'
 import { SavedPrompt } from "../../store/prompt-library-store"
 
 interface PromptLibraryCardProps {
@@ -33,6 +32,8 @@ interface PromptLibraryCardProps {
 const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess }: PromptLibraryCardProps) => {
     const [activeTab, setActiveTab] = useState('categories')
     const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards')
+    const [isEditPromptOpen, setIsEditPromptOpen] = useState(false)
+    const [editingPrompt, setEditingPrompt] = useState<SavedPrompt | null>(null)
 
     const {
         prompts,
@@ -51,87 +52,24 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
         toggleQuickAccess,
         deletePrompt,
         processPromptReplacements,
+        handleUpdatePrompt,
     } = usePromptLibraryManager(onSelectPrompt)
 
-
-    const renderPromptCard = (prompt: SavedPrompt) => {
-        const category = categories.find(c => c.id === prompt.categoryId)
-
-        return (
-            <Card key={prompt.id} className="bg-slate-950 border-slate-700 hover:border-slate-600 transition-all shadow-md">
-                <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                            <h4 className="font-medium text-white mb-1">{prompt.title}</h4>
-                            {prompt.reference && (
-                                <Badge variant="outline" className="text-xs border-slate-600 text-slate-400 mb-2">
-                                    {prompt.reference}
-                                </Badge>
-                            )}
-                            <div className="flex items-center gap-2 text-xs text-slate-500">
-                                {category && (
-                                    <>
-                                        <span>{category.name}</span>
-                                        <span>·</span>
-                                    </>
-                                )}
-                                <span>{new Date(prompt.metadata.updatedAt).toLocaleDateString()}</span>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => toggleQuickAccess(prompt.id)}
-                                className="h-8 w-8 p-0"
-                            >
-                                <Star className={`w-4 h-4 ${prompt.isQuickAccess ? 'fill-yellow-500 text-yellow-500' : 'text-slate-400'}`} />
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => deletePrompt(prompt.id)}
-                                className="h-8 w-8 p-0"
-                            >
-                                <Trash2 className="w-4 h-4 text-red-400" />
-                            </Button>
-                        </div>
-                    </div>
-
-                    <div className="mb-3">
-                        <p className="text-sm text-gray-300 line-clamp-2">{prompt.prompt}</p>
-                        {prompt.prompt.includes('@') && (
-                            <p className="text-xs text-blue-400 mt-1 italic">
-                                Preview: {processPromptReplacements(prompt.prompt)}
-                            </p>
-                        )}
-                    </div>
-
-                    {prompt.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-3">
-                            {prompt.tags.map((tag, idx) => (
-                                <Badge key={idx} variant="secondary" className="text-xs bg-slate-800 text-slate-400">
-                                    <Hash className="w-3 h-3 mr-1" />
-                                    {tag}
-                                </Badge>
-                            ))}
-                        </div>
-                    )}
-
-                    <div className="flex gap-2">
-                        <Button
-                            size="sm"
-                            onClick={() => handleSelectPrompt(prompt)}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                            <Copy className="w-3 h-3 mr-1" />
-                            Use Prompt
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
-        )
+    // Handle edit prompt
+    const handleEdit = (prompt: SavedPrompt) => {
+        setEditingPrompt(prompt)
+        setIsEditPromptOpen(true)
     }
+
+    const handleEditSave = async (updatedPrompt: SavedPrompt) => {
+        const success = await handleUpdatePrompt(updatedPrompt)
+        if (success) {
+            setIsEditPromptOpen(false)
+            setEditingPrompt(null)
+        }
+    }
+
+
 
     return (
         <Card className="bg-slate-900/90 border-slate-700 flex-1 flex flex-col">
@@ -237,7 +175,22 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                             <TabsContent value="all" className="flex-1 mt-4">
                                 <ScrollArea className="h-[500px]">
                                     <div className="grid gap-3">
-                                        {filteredPrompts.map(renderPromptCard)}
+                                        {filteredPrompts.map(prompt => {
+                                            const category = categories.find(c => c.id === prompt.categoryId)
+                                            return (
+                                                <PromptCard
+                                                    key={prompt.id}
+                                                    prompt={prompt}
+                                                    categoryName={category?.name}
+                                                    categoryIcon={category?.icon}
+                                                    onToggleStar={toggleQuickAccess}
+                                                    onDelete={deletePrompt}
+                                                    onEdit={handleEdit}
+                                                    onUsePrompt={handleSelectPrompt}
+                                                    processPromptReplacements={processPromptReplacements}
+                                                />
+                                            )
+                                        })}
                                     </div>
                                 </ScrollArea>
                             </TabsContent>
@@ -246,7 +199,22 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                                 <TabsContent value="quick" className="flex-1 mt-4">
                                     <ScrollArea className="h-[500px]">
                                         <div className="grid gap-3">
-                                            {quickPrompts.map(renderPromptCard)}
+                                            {quickPrompts.map(prompt => {
+                                                const category = categories.find(c => c.id === prompt.categoryId)
+                                                return (
+                                                    <PromptCard
+                                                        key={prompt.id}
+                                                        prompt={prompt}
+                                                        categoryName={category?.name}
+                                                        categoryIcon={category?.icon}
+                                                        onToggleStar={toggleQuickAccess}
+                                                        onDelete={deletePrompt}
+                                                        onEdit={handleEdit}
+                                                        onUsePrompt={handleSelectPrompt}
+                                                        processPromptReplacements={processPromptReplacements}
+                                                    />
+                                                )
+                                            })}
                                         </div>
                                     </ScrollArea>
                                 </TabsContent>
@@ -258,25 +226,14 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                                         {categories.map(category => {
                                             const promptCount = getPromptsByCategory(category.id).length
                                             return (
-                                                <Card
+                                                <CategoryCard
                                                     key={category.id}
-                                                    onClick={() => {
-                                                        setSelectedCategory(category.id)
-                                                    }}
-                                                    className="bg-slate-950 border-slate-700 cursor-pointer transition-all hover:border-slate-600 hover:bg-slate-900"
-                                                >
-                                                    <CardContent className="p-4">
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-2xl">{category.icon}</span>
-                                                                <div>
-                                                                    <h4 className="font-medium text-white">{category.name}</h4>
-                                                                    <p className="text-sm text-gray-400">{promptCount} prompts</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </CardContent>
-                                                </Card>
+                                                    id={category.id}
+                                                    name={category.name}
+                                                    icon={category.icon}
+                                                    promptCount={promptCount}
+                                                    onClick={setSelectedCategory}
+                                                />
                                             )
                                         })}
                                     </div>
@@ -305,7 +262,22 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                                         <ScrollArea className="h-[450px]">
                                             <div className="grid gap-3">
                                                 {categoryPrompts.length > 0 ? (
-                                                    categoryPrompts.map(renderPromptCard)
+                                                    categoryPrompts.map(prompt => {
+                                                        const category = categories.find(c => c.id === prompt.categoryId)
+                                                        return (
+                                                            <PromptCard
+                                                                key={prompt.id}
+                                                                prompt={prompt}
+                                                                categoryName={category?.name}
+                                                                categoryIcon={category?.icon}
+                                                                onToggleStar={toggleQuickAccess}
+                                                                onDelete={deletePrompt}
+                                                                onEdit={handleEdit}
+                                                                onUsePrompt={handleSelectPrompt}
+                                                                processPromptReplacements={processPromptReplacements}
+                                                            />
+                                                        )
+                                                    })
                                                 ) : (
                                                     <div className="text-center py-8 text-gray-400">
                                                         No prompts in this category yet
@@ -320,6 +292,15 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                     </>
                 )}
             </CardContent>
+
+            {/* Edit Prompt Dialog */}
+            <EditPromptDialog
+                open={isEditPromptOpen}
+                onOpenChange={setIsEditPromptOpen}
+                prompt={editingPrompt}
+                categories={categories}
+                onUpdate={handleEditSave}
+            />
         </Card>
     )
 }

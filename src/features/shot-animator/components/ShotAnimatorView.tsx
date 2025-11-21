@@ -235,8 +235,7 @@ export function ShotAnimatorView() {
     const results = await generateVideos(
       shotConfigs,
       selectedModel,
-      modelSettings[selectedModel],
-      user.id
+      modelSettings[selectedModel]
     )
 
     // Append new videos to generatedVideos array
@@ -313,8 +312,7 @@ export function ShotAnimatorView() {
     const result = await retrySingleVideo(
       shotConfig,
       selectedModel,
-      modelSettings[selectedModel],
-      user.id
+      modelSettings[selectedModel]
     )
 
     // Update the generatedVideos array with new galleryId if successful
@@ -526,7 +524,7 @@ export function ShotAnimatorView() {
               onClick={handleGenerateAll}
               disabled={isGenerating || !user}
               size="lg"
-              className="bg-purple-600 hover:bg-purple-700 text-white px-6 sm:px-8 w-full sm:w-auto min-h-[48px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-red-600 hover:bg-red-700 text-white px-6 sm:px-8 w-full sm:w-auto min-h-[48px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Play className="w-5 h-5 mr-2" />
               <span className="text-sm sm:text-base">

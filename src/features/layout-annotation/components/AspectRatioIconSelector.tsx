@@ -30,7 +30,7 @@ export function AspectRatioIconSelector({ value, onChange, className = '' }: Asp
                 <Button
                     variant="outline"
                     size="sm"
-                    className={`sm:hidden fixed right-4 z-40 bg-purple-700 hover:bg-purple-600 border-purple-500/30 rounded-full p-3 w-12 h-12 shadow-lg touch-manipulation transition-all ${className}`}
+                    className={`sm:hidden fixed right-4 z-40 bg-red-700 hover:bg-red-600 border-red-500/30 rounded-full p-3 w-12 h-12 shadow-lg touch-manipulation transition-all ${className}`}
                     style={{ top: 'calc(env(safe-area-inset-top) + 180px)' }}
                     aria-label={`Change aspect ratio, current: ${value}`}
                 >
@@ -39,27 +39,27 @@ export function AspectRatioIconSelector({ value, onChange, className = '' }: Asp
                 </Button>
             </PopoverTrigger>
             <PopoverContent
-                className="w-56 p-2 bg-slate-800 border-purple-500/30 rounded-lg shadow-xl"
+                className="w-56 p-2 bg-slate-800 border-red-500/30 rounded-lg shadow-xl"
                 align="end"
                 side="bottom"
                 sideOffset={8}
             >
                 <div className="space-y-1">
-                    <div className="px-3 py-2 text-sm font-semibold text-purple-200 border-b border-purple-500/30 mb-2">
+                    <div className="px-3 py-2 text-sm font-semibold text-red-200 border-b border-red-500/30 mb-2">
                         Aspect Ratio
                     </div>
                     {ASPECT_RATIOS.map((ratio) => (
                         <button
                             key={ratio.value}
                             onClick={() => onChange(ratio.value)}
-                            className={`w-full min-h-[44px] px-3 py-2 rounded-md text-white text-left hover:bg-purple-600/30 touch-manipulation transition-colors flex items-center justify-between ${
-                                value === ratio.value ? 'bg-purple-700 font-semibold' : ''
+                            className={`w-full min-h-[44px] px-3 py-2 rounded-md text-white text-left hover:bg-red-600/30 touch-manipulation transition-colors flex items-center justify-between ${
+                                value === ratio.value ? 'bg-red-700 font-semibold' : ''
                             }`}
                             aria-label={ratio.label}
                         >
                             <span>{ratio.label}</span>
                             {value === ratio.value && (
-                                <Check className="w-4 h-4 text-purple-200" />
+                                <Check className="w-4 h-4 text-red-200" />
                             )}
                         </button>
                     ))}

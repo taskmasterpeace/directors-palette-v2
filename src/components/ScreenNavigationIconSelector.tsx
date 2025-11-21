@@ -37,7 +37,7 @@ export function ScreenNavigationIconSelector({ value, onChange }: ScreenNavigati
                 <Button
                     variant="outline"
                     size="sm"
-                    className="sm:hidden fixed right-4 z-50 bg-gradient-to-br from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 border-purple-400/30 rounded-full p-3 w-12 h-12 shadow-xl hover:shadow-2xl hover:scale-110 active:scale-95 touch-manipulation transition-all duration-300 ease-out"
+                    className="sm:hidden fixed right-4 z-50 bg-gradient-to-br from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 border-red-400/30 rounded-full p-3 w-12 h-12 shadow-xl hover:shadow-2xl hover:scale-110 active:scale-95 touch-manipulation transition-all duration-300 ease-out"
                     style={{ top: 'calc(env(safe-area-inset-top) + 120px)' }}
                     aria-label={`Change screen, current: ${currentScreen?.label}`}
                 >
@@ -46,7 +46,7 @@ export function ScreenNavigationIconSelector({ value, onChange }: ScreenNavigati
                 </Button>
             </PopoverTrigger>
             <PopoverContent
-                className="w-64 p-2 bg-slate-900/95 backdrop-blur-md border-purple-500/40 rounded-xl shadow-2xl animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200"
+                className="w-64 p-2 bg-slate-900/95 backdrop-blur-md border-red-500/40 rounded-xl shadow-2xl animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-200"
                 align="end"
                 side="bottom"
                 sideOffset={8}
@@ -58,19 +58,19 @@ export function ScreenNavigationIconSelector({ value, onChange }: ScreenNavigati
                             <button
                                 key={screen.value}
                                 onClick={() => onChange(screen.value)}
-                                className={`w-full min-h-[44px] px-4 py-3 rounded-lg text-white text-left hover:bg-purple-600/40 hover:scale-[1.02] active:scale-95 touch-manipulation transition-all duration-200 ease-out flex items-center justify-between group ${
-                                    value === screen.value ? 'bg-purple-700/60 font-semibold shadow-lg' : ''
+                                className={`w-full min-h-[44px] px-4 py-3 rounded-lg text-white text-left hover:bg-red-600/40 hover:scale-[1.02] active:scale-95 touch-manipulation transition-all duration-200 ease-out flex items-center justify-between group ${
+                                    value === screen.value ? 'bg-red-700/60 font-semibold shadow-lg' : ''
                                 }`}
                                 aria-label={screen.label}
                             >
                                 <div className="flex items-center gap-3">
                                     <IconComponent className={`w-5 h-5 transition-transform duration-200 group-hover:scale-110 ${
-                                        value === screen.value ? 'text-purple-300' : 'text-purple-400'
+                                        value === screen.value ? 'text-red-300' : 'text-red-400'
                                     }`} />
                                     <span className="text-base">{screen.label}</span>
                                 </div>
                                 {value === screen.value && (
-                                    <Check className="w-5 h-5 text-purple-300 animate-in zoom-in-50 duration-200" />
+                                    <Check className="w-5 h-5 text-red-300 animate-in zoom-in-50 duration-200" />
                                 )}
                             </button>
                         )

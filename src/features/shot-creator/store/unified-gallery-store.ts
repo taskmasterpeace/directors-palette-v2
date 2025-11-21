@@ -182,29 +182,33 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   },
 
   updateImageReference: async (imageId, reference) => {
-    // Normalize reference (ensure @ prefix)
-    const normalizedReference = reference.startsWith('@') ? reference : `@${reference}`
+    const normalizedRef = reference.startsWith('@') ? reference : `@${reference}`
 
-    // Update in database first
-    const result = await GalleryService.updateReference(imageId, normalizedReference)
+    // Update database first
+    const result = await GalleryService.updateReference(imageId, normalizedRef)
 
     if (!result.success) {
-      console.error('Failed to persist reference to database:', result.error)
-      // Continue with local update anyway
+      console.error('Failed to update reference in database:', result.error)
+      return
     }
 
-    // Update in local store
+    // Update local state
     set((state) => ({
       images: state.images.map(img =>
         img.id === imageId
-          ? { ...img, reference: normalizedReference }
+          ? { ...img, reference: normalizedRef }
           : img
-      )
+      ),
+      // Also update fullscreenImage if it's the same image
+      fullscreenImage: state.fullscreenImage?.id === imageId
+        ? { ...state.fullscreenImage, reference: normalizedRef }
+        : state.fullscreenImage
     }))
   },
 
   getAllReferences: () => {
-    const refs = get().images
+    const images = get().images
+    const refs = images
       .filter(img => img.reference)
       .map(img => img.reference!)
     return [...new Set(refs)] // Return unique references

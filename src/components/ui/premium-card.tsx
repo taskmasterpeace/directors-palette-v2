@@ -17,7 +17,7 @@ const premiumCardVariants = cva(
       },
       colorScheme: {
         blue: "",
-        purple: "",
+        red: "",
         emerald: "",
         rose: "",
         amber: "",
@@ -34,8 +34,8 @@ const premiumCardVariants = cva(
       },
       {
         variant: "neon",
-        colorScheme: "purple",
-        class: "border-purple-400 hover:shadow-purple-400/25 text-white"
+        colorScheme: "red",
+        class: "border-red-400 hover:shadow-red-400/25 text-white"
       },
       {
         variant: "neon",
@@ -60,8 +60,8 @@ const premiumCardVariants = cva(
       },
       {
         variant: "gradient",
-        colorScheme: "purple",
-        class: "bg-gradient-to-br from-purple-600 to-purple-800"
+        colorScheme: "red",
+        class: "bg-gradient-to-br from-red-600 to-red-800"
       },
       {
         variant: "gradient",

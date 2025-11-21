@@ -127,9 +127,9 @@ export function UnifiedImageGallery({
                             onDelete={() => handleDeleteImage(image.url)}
                             onSendTo={currentTab ? (target) => handleSendTo(image.url, target) : undefined}
                             onSetReference={async () => {
-                                const newRef = await showReferenceNamePrompt()
+                                const newRef = await showReferenceNamePrompt(image.reference)
                                 if (newRef) {
-                                    updateImageReference(image.id, newRef)
+                                    await updateImageReference(image.id, newRef)
                                 }
                             }}
                             onAddToLibrary={() => onSendToLibrary?.(image.url, image.id)}
@@ -157,7 +157,7 @@ export function UnifiedImageGallery({
             <CardContent>
                 {isLoading ? (
                     <div className="text-center py-12">
-                        <div className="w-12 h-12 mx-auto mb-4 border-4 border-slate-600 border-t-purple-500 rounded-full animate-spin" />
+                        <div className="w-12 h-12 mx-auto mb-4 border-4 border-slate-600 border-t-red-500 rounded-full animate-spin" />
                         <p className="text-slate-400">Loading gallery...</p>
                     </div>
                 ) : images.length === 0 ? (
@@ -184,9 +184,9 @@ export function UnifiedImageGallery({
                                         onDelete={() => handleDeleteImage(image.url)}
                                         onSendTo={currentTab ? (target) => handleSendTo(image.url, target) : undefined}
                                         onSetReference={async () => {
-                                            const newRef = await showReferenceNamePrompt()
+                                            const newRef = await showReferenceNamePrompt(image.reference)
                                             if (newRef) {
-                                                updateImageReference(image.id, newRef)
+                                                await updateImageReference(image.id, newRef)
                                             }
                                         }}
                                         onAddToLibrary={() => {
@@ -223,13 +223,12 @@ export function UnifiedImageGallery({
                     onDeleteImage={handleDeleteImage}
                     onSendTo={currentTab ? (url: string, target: string) => handleSendTo(url, target) : (() => { })}
                     onSetReference={async () => {
-                        const newRef = await showReferenceNamePrompt()
+                        const newRef = await showReferenceNamePrompt(fullscreenImage.reference)
                         if (newRef) {
-                            updateImageReference(fullscreenImage.id, newRef)
+                            await updateImageReference(fullscreenImage.id, newRef)
                         }
                     }}
                     onAddToLibrary={onSendToLibrary && fullscreenImage ? () => onSendToLibrary(fullscreenImage.url, fullscreenImage.id) : undefined}
-                    showReferenceNamePrompt={showReferenceNamePrompt}
                 />
             )}
         </Card>

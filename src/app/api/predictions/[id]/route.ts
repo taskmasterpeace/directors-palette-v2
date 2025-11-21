@@ -1,17 +1,21 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import Replicate from 'replicate';
 import { ReplicatePrediction, WebhookService } from '@/features/generation/services/webhook.service';
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  console.log(request)
   try {
+    // ✅ SECURITY: Verify authentication first
+    const auth = await getAuthenticatedUser(request);
+    if (auth instanceof NextResponse) return auth; // Return 401 error
+
     const { id } = await params;
 
     if (!id) {

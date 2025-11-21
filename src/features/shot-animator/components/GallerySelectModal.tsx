@@ -116,7 +116,7 @@ export function GallerySelectModal({
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto justify-between">
             {selectedIds.size > 1 && (
-              <Badge variant="outline" className="border-purple-600 text-purple-400">
+              <Badge variant="outline" className="border-red-600 text-red-400">
                 {selectedIds.size} selected
               </Badge>
             )}
@@ -124,14 +124,14 @@ export function GallerySelectModal({
               <TabsList className="bg-slate-800 border border-slate-700 rounded-lg h-11 sm:h-9 touch-manipulation">
                 <TabsTrigger
                   value="grid"
-                  className="flex items-center gap-2 px-4 sm:px-3 min-h-[44px] sm:min-h-0 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-slate-300"
+                  className="flex items-center gap-2 px-4 sm:px-3 min-h-[44px] sm:min-h-0 data-[state=active]:bg-red-600 data-[state=active]:text-white text-slate-300"
                 >
                   <Grid3x3 className="w-4 h-4" />
                   Grid
                 </TabsTrigger>
                 <TabsTrigger
                   value="list"
-                  className="flex items-center gap-2 px-4 sm:px-3 min-h-[44px] sm:min-h-0 data-[state=active]:bg-purple-600 data-[state=active]:text-white text-slate-300"
+                  className="flex items-center gap-2 px-4 sm:px-3 min-h-[44px] sm:min-h-0 data-[state=active]:bg-red-600 data-[state=active]:text-white text-slate-300"
                 >
                   <List className="w-4 h-4" />
                   List
@@ -157,18 +157,18 @@ export function GallerySelectModal({
                     key={image.id}
                     onClick={() => handleToggleImage(image.id)}
                     className={`relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all touch-manipulation ${isSelected
-                      ? 'border-purple-500 ring-2 ring-purple-500/30'
+                      ? 'border-red-500 ring-2 ring-red-500/30'
                       : 'border-slate-700 hover:border-slate-600'
                       }`}
                   >
                     <div className="relative aspect-square bg-slate-800">
                       <Image src={image.url} alt={image.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 53vw" className="object-cover" />
                       <div
-                        className={`absolute inset-0 transition-opacity ${isSelected ? 'bg-purple-500/20' : 'bg-black/0 group-hover:bg-black/20'
+                        className={`absolute inset-0 transition-opacity ${isSelected ? 'bg-red-500/20' : 'bg-black/0 group-hover:bg-black/20'
                           }`}
                       />
                       {isSelected && (
-                        <div className="absolute top-2 right-2 bg-purple-500 rounded-full p-1.5 sm:p-1">
+                        <div className="absolute top-2 right-2 bg-red-500 rounded-full p-1.5 sm:p-1">
                           <CheckCircle2 className="w-5 h-5 sm:w-4 sm:h-4 text-white" />
                         </div>
                       )}
@@ -192,7 +192,7 @@ export function GallerySelectModal({
                     key={image.id}
                     onClick={() => handleToggleImage(image.id)}
                     className={`flex items-center gap-3 p-3 sm:p-2 rounded-md border-2 cursor-pointer transition-all touch-manipulation ${isSelected
-                      ? 'border-purple-500 bg-slate-800/80'
+                      ? 'border-red-500 bg-slate-800/80'
                       : 'border-slate-700 hover:border-slate-600'
                       }`}
                   >
@@ -235,7 +235,7 @@ export function GallerySelectModal({
           <Button
             onClick={handleConfirm}
             disabled={selectedIds.size === 0}
-            className="bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 min-h-[44px] touch-manipulation w-full sm:w-auto"
+            className="bg-red-600 hover:bg-red-700 disabled:bg-slate-700 min-h-[44px] touch-manipulation w-full sm:w-auto"
           >
             Add {selectedIds.size > 0 ? `${selectedIds.size} ` : ''}
             {selectedIds.size === 1 ? 'Image' : 'Images'}

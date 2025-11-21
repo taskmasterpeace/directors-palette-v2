@@ -39,10 +39,10 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
     return (
         <div className={`flex flex-col h-full ${className}`}>
             {/* Header */}
-            <Card className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 border-purple-500/30 mb-2 sm:mb-4">
+            <Card className="bg-gradient-to-r from-red-900/40 to-indigo-900/40 border-red-500/30 mb-2 sm:mb-4">
                 <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
                     <CardTitle className="text-white flex items-center gap-2 text-base sm:text-lg">
-                        <Layout className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
+                        <Layout className="w-5 h-5 sm:w-6 sm:h-6 text-red-400" />
                         <span className="hidden sm:inline">Layout & Annotation Canvas</span>
                         <span className="sm:hidden">Canvas</span>
                     </CardTitle>
@@ -58,7 +58,7 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
                                     haptics.light()
                                     handleImportClick()
                                 }}
-                                className="flex-1 sm:flex-initial h-10 sm:h-8 min-h-[44px] sm:min-h-0 bg-purple-600 hover:bg-purple-700 text-white transition-all touch-manipulation"
+                                className="flex-1 sm:flex-initial h-10 sm:h-8 min-h-[44px] sm:min-h-0 bg-red-600 hover:bg-red-700 text-white transition-all touch-manipulation"
                             >
                                 <Upload className="w-4 h-4 sm:mr-1" />
                                 <span className="ml-1">Import</span>
@@ -103,7 +103,7 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
                         </div>
 
                         {/* Settings Row */}
-                        <div className="flex items-center gap-2 sm:gap-3 text-sm text-purple-200">
+                        <div className="flex items-center gap-2 sm:gap-3 text-sm text-red-200">
                             {/* Mobile: Icon Button */}
                             <AspectRatioIconSelector
                                 value={canvasState.aspectRatio}
@@ -115,16 +115,16 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
                                 value={canvasState.aspectRatio}
                                 onValueChange={handleAspectRatioChange}
                             >
-                                <SelectTrigger className="bg-slate-800 border-purple-500/30 text-white h-10 sm:h-7 w-full sm:w-28 touch-manipulation hidden sm:flex">
+                                <SelectTrigger className="bg-slate-800 border-red-500/30 text-white h-10 sm:h-7 w-full sm:w-28 touch-manipulation hidden sm:flex">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-purple-500/30">
-                                    <SelectItem value="16:9" className="text-white hover:bg-purple-600/30 min-h-[44px] sm:min-h-0">16:9</SelectItem>
-                                    <SelectItem value="9:16" className="text-white hover:bg-purple-600/30 min-h-[44px] sm:min-h-0">9:16</SelectItem>
-                                    <SelectItem value="1:1" className="text-white hover:bg-purple-600/30 min-h-[44px] sm:min-h-0">1:1</SelectItem>
-                                    <SelectItem value="4:3" className="text-white hover:bg-purple-600/30 min-h-[44px] sm:min-h-0">4:3</SelectItem>
-                                    <SelectItem value="21:9" className="text-white hover:bg-purple-600/30 min-h-[44px] sm:min-h-0">21:9</SelectItem>
-                                    <SelectItem value="custom" className="text-white hover:bg-purple-600/30 min-h-[44px] sm:min-h-0">Custom</SelectItem>
+                                <SelectContent className="bg-slate-800 border-red-500/30">
+                                    <SelectItem value="16:9" className="text-white hover:bg-red-600/30 min-h-[44px] sm:min-h-0">16:9</SelectItem>
+                                    <SelectItem value="9:16" className="text-white hover:bg-red-600/30 min-h-[44px] sm:min-h-0">9:16</SelectItem>
+                                    <SelectItem value="1:1" className="text-white hover:bg-red-600/30 min-h-[44px] sm:min-h-0">1:1</SelectItem>
+                                    <SelectItem value="4:3" className="text-white hover:bg-red-600/30 min-h-[44px] sm:min-h-0">4:3</SelectItem>
+                                    <SelectItem value="21:9" className="text-white hover:bg-red-600/30 min-h-[44px] sm:min-h-0">21:9</SelectItem>
+                                    <SelectItem value="custom" className="text-white hover:bg-red-600/30 min-h-[44px] sm:min-h-0">Custom</SelectItem>
                                 </SelectContent>
                             </Select>
                             <span className="hidden sm:inline">Zoom: {Math.round(canvasState.zoom * 100)}%</span>
@@ -141,7 +141,7 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
                     fixed bottom-0 left-0 right-0 sm:inset-auto
                     max-h-[60vh] sm:max-h-none
                     bg-slate-950/98 sm:bg-transparent
-                    border-t sm:border-t-0 border-purple-500/30
+                    border-t sm:border-t-0 border-red-500/30
                     rounded-t-2xl sm:rounded-none
                     z-40 sm:z-auto
                     transition-all duration-300
@@ -154,7 +154,7 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
                     <Button
                         size="sm"
                         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                        className="fixed sm:absolute left-2 sm:-right-3 top-20 sm:top-4 z-50 bg-purple-700 hover:bg-purple-600 text-white rounded-full p-2 sm:p-1 w-10 h-10 sm:w-6 sm:h-6 transition-all touch-manipulation"
+                        className="fixed sm:absolute left-2 sm:-right-3 top-20 sm:top-4 z-50 bg-red-700 hover:bg-red-600 text-white rounded-full p-2 sm:p-1 w-10 h-10 sm:w-6 sm:h-6 transition-all touch-manipulation"
                         title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                     >
                         {sidebarCollapsed ? (
@@ -165,8 +165,8 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
                     </Button>
 
                     {/* Mobile drag handle */}
-                    <div className="sm:hidden flex justify-center py-2 border-b border-purple-500/20 sticky top-0 bg-slate-950/95 backdrop-blur-sm z-10">
-                        <div className="w-12 h-1 bg-purple-500/50 rounded-full" />
+                    <div className="sm:hidden flex justify-center py-2 border-b border-red-500/20 sticky top-0 bg-slate-950/95 backdrop-blur-sm z-10">
+                        <div className="w-12 h-1 bg-red-500/50 rounded-full" />
                     </div>
 
                     {/* Sidebar Content */}
@@ -213,7 +213,7 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
                     fixed bottom-0 left-0 right-0 sm:inset-auto
                     max-h-[60vh] sm:max-h-none
                     bg-slate-950/98 sm:bg-transparent
-                    border-t sm:border-t-0 border-purple-500/30
+                    border-t sm:border-t-0 border-red-500/30
                     rounded-t-2xl sm:rounded-none
                     z-40 sm:z-auto
                     transition-all duration-300
@@ -226,7 +226,7 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
                     <Button
                         size="sm"
                         onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
-                        className="fixed sm:absolute right-2 sm:-left-3 top-20 sm:top-4 z-50 bg-purple-700 hover:bg-purple-600 text-white rounded-full p-2 sm:p-1 w-10 h-10 sm:w-6 sm:h-6 transition-all touch-manipulation"
+                        className="fixed sm:absolute right-2 sm:-left-3 top-20 sm:top-4 z-50 bg-red-700 hover:bg-red-600 text-white rounded-full p-2 sm:p-1 w-10 h-10 sm:w-6 sm:h-6 transition-all touch-manipulation"
                         title={rightSidebarCollapsed ? 'Expand export panel' : 'Collapse export panel'}
                     >
                         {rightSidebarCollapsed ? (
@@ -237,8 +237,8 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
                     </Button>
 
                     {/* Mobile drag handle */}
-                    <div className="sm:hidden flex justify-center py-2 border-b border-purple-500/20 sticky top-0 bg-slate-950/95 backdrop-blur-sm z-10">
-                        <div className="w-12 h-1 bg-purple-500/50 rounded-full" />
+                    <div className="sm:hidden flex justify-center py-2 border-b border-red-500/20 sticky top-0 bg-slate-950/95 backdrop-blur-sm z-10">
+                        <div className="w-12 h-1 bg-red-500/50 rounded-full" />
                     </div>
 
                     {/* Right Sidebar Content */}

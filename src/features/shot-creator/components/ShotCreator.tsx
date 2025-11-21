@@ -124,7 +124,7 @@ const ShotCreator = () => {
             {/* Mobile-Optimized Header */}
             <div className="flex flex-col space-y-3 lg:flex-row lg:items-center lg:justify-between px-2 lg:px-4 py-3 bg-slate-900/50 border-b border-slate-700 lg:rounded-t-lg">
                 <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-purple-400" />
+                    <Sparkles className="w-5 h-5 text-red-400" />
                     <h2 className="text-lg lg:text-xl font-semibold text-white">Shot Creator</h2>
                 </div>
                 <div className="w-full lg:w-auto">

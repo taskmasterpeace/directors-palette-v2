@@ -39,10 +39,10 @@ export function AnimatorUnifiedGallery({
       <div className="p-4 border-b border-slate-700">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-white font-medium flex items-center gap-2">
-            <Film className="w-4 h-4 text-purple-400" />
+            <Film className="w-4 h-4 text-red-400" />
             Unified Gallery
           </h3>
-          <Badge variant="outline" className="border-purple-600 text-purple-400">
+          <Badge variant="outline" className="border-red-600 text-red-400">
             {completedVideos.length} videos
           </Badge>
         </div>

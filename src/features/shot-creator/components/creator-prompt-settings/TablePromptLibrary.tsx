@@ -46,6 +46,7 @@ import {
 } from 'lucide-react'
 import { SavedPrompt, usePromptLibraryStore } from "../../store/prompt-library-store"
 import { getClient } from "@/lib/db/client"
+import { AddPromptDialog } from '../prompt-library/dialogs/AddPromptDialog'
 
 interface TablePromptLibraryProps {
   onSelectPrompt?: (prompt: string) => void
@@ -67,13 +68,6 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false)
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [showOnlyQuickAccess, setShowOnlyQuickAccess] = useState(false)
-  const [newPrompt, setNewPrompt] = useState({
-    title: '',
-    prompt: '',
-    categoryId: 'custom',
-    tags: '',
-    isQuickAccess: false
-  })
 
   const {
     prompts,
@@ -244,8 +238,8 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
   }
 
   // Handle adding new prompt
-  const handleAddPrompt = async () => {
-    if (!newPrompt.title || !newPrompt.prompt) {
+  const handleAddPrompt = async (promptData: { title: string; prompt: string; categoryId: string; tags: string; isQuickAccess: boolean }) => {
+    if (!promptData.title || !promptData.prompt) {
       toast({
         title: 'Error',
         description: 'Please fill in all required fields',
@@ -256,12 +250,12 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
 
     try {
       await addPrompt({
-        title: newPrompt.title,
-        prompt: newPrompt.prompt,
-        categoryId: newPrompt.categoryId,
-        tags: newPrompt.tags.split(',').map(t => t.trim()).filter(t => t),
-        isQuickAccess: newPrompt.isQuickAccess,
-        reference: `@${newPrompt.title.toLowerCase().replace(/\s+/g, '_')}`,
+        title: promptData.title,
+        prompt: promptData.prompt,
+        categoryId: promptData.categoryId,
+        tags: promptData.tags.split(',').map(t => t.trim()).filter(t => t),
+        isQuickAccess: promptData.isQuickAccess,
+        reference: `@${promptData.title.toLowerCase().replace(/\s+/g, '_')}`,
         metadata: {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
@@ -274,13 +268,6 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
       })
 
       setIsAddPromptOpen(false)
-      setNewPrompt({
-        title: '',
-        prompt: '',
-        categoryId: 'custom',
-        tags: '',
-        isQuickAccess: false
-      })
     } catch (error) {
       console.error('Failed to add prompt:', error)
       toast({
@@ -711,90 +698,12 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
       </Card>
 
       {/* Add Prompt Dialog */}
-      <Dialog open={isAddPromptOpen} onOpenChange={setIsAddPromptOpen}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white">
-          <DialogHeader>
-            <DialogTitle>Add New Prompt</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Create a new prompt and add it to your library
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="title" className="text-sm font-medium">Title</label>
-              <Input
-                id="title"
-                value={newPrompt.title}
-                onChange={(e) => setNewPrompt({ ...newPrompt, title: e.target.value })}
-                className="bg-slate-800 border-slate-700"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <label htmlFor="prompt" className="text-sm font-medium">Prompt</label>
-              <textarea
-                id="prompt"
-                value={newPrompt.prompt}
-                onChange={(e) => setNewPrompt({ ...newPrompt, prompt: e.target.value })}
-                className="min-h-[100px] w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <label htmlFor="category" className="text-sm font-medium">Category</label>
-              <Select
-                value={newPrompt.categoryId}
-                onValueChange={(value) => setNewPrompt({ ...newPrompt, categoryId: value })}
-              >
-                <SelectTrigger className="bg-slate-800 border-slate-700">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  {categories.map(category => (
-                    <SelectItem key={category.id} value={category.id} className="text-white hover:bg-purple-600/30">
-                      <span className="flex items-center gap-2">
-                        <span>{category.icon}</span>
-                        <span>{category.name}</span>
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <label htmlFor="tags" className="text-sm font-medium">Tags (comma separated)</label>
-              <Input
-                id="tags"
-                value={newPrompt.tags}
-                onChange={(e) => setNewPrompt({ ...newPrompt, tags: e.target.value })}
-                placeholder="e.g., hero, dramatic, closeup"
-                className="bg-slate-800 border-slate-700"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="quickAccess"
-                checked={newPrompt.isQuickAccess}
-                onCheckedChange={(checked) => setNewPrompt({ ...newPrompt, isQuickAccess: checked as boolean })}
-                className="border-slate-600"
-              />
-              <label htmlFor="quickAccess" className="text-sm">Add to Quick Access</label>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsAddPromptOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddPrompt} className="bg-blue-600 hover:bg-blue-700">
-              Add Prompt
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AddPromptDialog
+        open={isAddPromptOpen}
+        onOpenChange={setIsAddPromptOpen}
+        categories={categories}
+        onAdd={handleAddPrompt}
+      />
 
       {/* Bulk Delete Confirmation Dialog */}
       <Dialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>

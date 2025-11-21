@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import Image from "next/image"
 import type { GalleryImage } from "../../types"
 import { useImageActions } from "../../hooks/useImageActions"
@@ -27,8 +27,9 @@ interface ImageCardProps {
 /**
  * Image card component for gallery display
  * Displays image with overlays, badges, and action menu
+ * Memoized to prevent unnecessary re-renders in large galleries
  */
-export function ImageCard({
+const ImageCardComponent = ({
   image,
   isSelected,
   onSelect,
@@ -39,18 +40,18 @@ export function ImageCard({
   onSetReference,
   onAddToLibrary,
   showActions = true
-}: ImageCardProps) {
+}: ImageCardProps) => {
   const { handleCopyPrompt, handleCopyImage } = useImageActions()
   const [dropdownOpen, setDropdownOpen] = useState(false)
 
   return (
-    <div className={`relative group rounded-lg overflow-hidden bg-slate-800 border transition-all ${isSelected ? 'border-purple-500 border-2' : 'border-slate-700 hover:border-purple-600/50'}`}>
+    <div className={`relative group rounded-lg overflow-hidden bg-slate-800 border transition-all ${isSelected ? 'border-red-500 border-2' : 'border-slate-700 hover:border-red-600/50'}`}>
       {/* Selection Checkbox */}
       <div className={`absolute top-2 left-2 z-10 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
         <Checkbox
           checked={isSelected}
           onCheckedChange={onSelect}
-          className="bg-slate-900/80 border-slate-600 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+          className="bg-slate-900/80 border-slate-600 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
         />
       </div>
 
@@ -72,9 +73,9 @@ export function ImageCard({
       {/* Reference badge if exists */}
       <ReferenceBadge reference={image.reference || ''} />
 
-      {/* Action menu button */}
+      {/* Action menu button - always visible on mobile, hover on desktop */}
       {showActions && (
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
           <ImageActionMenu
             imageUrl={image.url}
             prompt={image.prompt}
@@ -96,3 +97,14 @@ export function ImageCard({
     </div>
   )
 }
+
+// Memoize component with custom comparison function
+// Only re-render if image data or selection state changes
+export const ImageCard = memo(ImageCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.image.id === nextProps.image.id &&
+    prevProps.image.url === nextProps.image.url &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.showActions === nextProps.showActions
+  )
+})

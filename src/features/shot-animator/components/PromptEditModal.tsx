@@ -75,7 +75,7 @@ export function PromptEditModal({
           </Button>
           <Button
             onClick={handleSave}
-            className="bg-purple-600 hover:bg-purple-700"
+            className="bg-red-600 hover:bg-red-700"
           >
             Save Prompt
           </Button>

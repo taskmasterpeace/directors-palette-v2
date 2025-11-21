@@ -5,6 +5,7 @@ import { useUnifiedGalleryStore } from '../store/unified-gallery-store'
 import type { GalleryImage } from '../types'
 import { useToast } from '@/hooks/use-toast'
 import { clipboardManager } from '@/utils/clipboard-manager'
+import { haptics } from '@/utils/haptics'
 
 export interface ChainData {
   chainId: string
@@ -263,6 +264,27 @@ export function useGalleryLogic(
     storeSetCurrentPage(page)
   }
 
+  const handleUpdateImageReference = async (imageId: string, reference: string) => {
+    try {
+      await updateImageReference(imageId, reference)
+      // Haptic feedback for mobile
+      haptics.success()
+      toast({
+        title: "Reference Updated",
+        description: `Image reference set to ${reference.startsWith('@') ? reference : `@${reference}`}`
+      })
+    } catch (error) {
+      console.error('Failed to update reference:', error)
+      // Error haptic for mobile
+      haptics.error()
+      toast({
+        title: "Update Failed",
+        description: "Could not update image reference",
+        variant: "destructive"
+      })
+    }
+  }
+
   return {
     // Data
     images,
@@ -290,6 +312,6 @@ export function useGalleryLogic(
     handleViewModeChange,
     handlePageChange,
     setFullscreenImage,
-    updateImageReference
+    updateImageReference: handleUpdateImageReference
   }
 }

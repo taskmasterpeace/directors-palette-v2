@@ -37,7 +37,7 @@ Shimmer.displayName = "Shimmer"
 
 // Glow effect component
 interface GlowProps extends React.HTMLAttributes<HTMLDivElement> {
-  color?: 'blue' | 'purple' | 'amber' | 'green' | 'red' | 'pink'
+  color?: 'blue' | 'red' | 'amber' | 'green' | 'pink'
   intensity?: 'low' | 'medium' | 'high'
   pulse?: boolean
 }
@@ -46,10 +46,9 @@ const Glow = React.forwardRef<HTMLDivElement, GlowProps>(
   ({ className, color = 'blue', intensity = 'medium', pulse = false, ...props }, ref) => {
     const glowColors = {
       blue: 'shadow-blue-500',
-      purple: 'shadow-purple-500',
+      red: 'shadow-red-500',
       amber: 'shadow-amber-500',
       green: 'shadow-green-500',
-      red: 'shadow-red-500',
       pink: 'shadow-pink-500'
     }
 

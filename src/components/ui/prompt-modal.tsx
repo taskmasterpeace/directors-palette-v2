@@ -23,6 +23,7 @@ export interface PromptModalConfig {
   required?: boolean
   maxLength?: number
   variant?: 'default' | 'destructive'
+  suggestions?: string[] // NEW: Autocomplete suggestions
 }
 
 interface PromptModalProps {
@@ -35,7 +36,56 @@ interface PromptModalProps {
 export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModalProps) {
   const [value, setValue] = useState(config.defaultValue || '')
   const [error, setError] = useState<string | null>(null)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // ✅ Track closing state to prevent double-cancel
+  const isClosingRef = useRef(false)
+  const prevIsOpenRef = useRef(isOpen)
+
+  // Filter suggestions based on input
+  const filteredSuggestions = React.useMemo(() => {
+    console.log('🔍 AUTOCOMPLETE DEBUG:', {
+      hasSuggestions: !!config.suggestions,
+      suggestionsLength: config.suggestions?.length || 0,
+      suggestions: config.suggestions,
+      value,
+      showSuggestions,
+    })
+
+    if (!config.suggestions || config.suggestions.length === 0) {
+      console.log('❌ NO SUGGESTIONS - returning empty array')
+      return []
+    }
+
+    // If empty or just "@", show all suggestions
+    if (!value || value === '@') {
+      console.log('✅ Empty/@ - showing all:', config.suggestions)
+      return config.suggestions
+    }
+
+    const trimmedValue = value.trim()
+    const lowerValue = trimmedValue.toLowerCase()
+
+    // Check if current value exactly matches an existing suggestion
+    const exactMatch = config.suggestions.some(s =>
+      s.toLowerCase() === lowerValue
+    )
+
+    // If exact match, show all suggestions (user wants to switch)
+    if (exactMatch) {
+      console.log('✅ Exact match - showing all:', config.suggestions)
+      return config.suggestions
+    }
+
+    // Otherwise filter by prefix using startsWith
+    const filtered = config.suggestions.filter(s =>
+      s.toLowerCase().startsWith(lowerValue)
+    )
+    console.log('🔍 Filtered:', filtered)
+    return filtered
+  }, [config.suggestions, value, showSuggestions])
 
   useEffect(() => {
     if (!isOpen) {
@@ -46,17 +96,21 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
     }
   }, [isOpen])
 
-  // Reset state when modal opens/closes
+  // Reset state only when transitioning from closed to open
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !prevIsOpenRef.current) {
+      isClosingRef.current = false
       setValue(config.defaultValue || '')
       setError(null)
+      setShowSuggestions(true) // Show suggestions when modal opens
+      setSelectedIndex(-1)
       // Focus input after a short delay to ensure modal is fully rendered
       setTimeout(() => {
         inputRef.current?.focus()
         inputRef.current?.select()
       }, 100)
     }
+    prevIsOpenRef.current = isOpen
   }, [isOpen, config.defaultValue])
 
   // Validate input value
@@ -85,11 +139,21 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value
     setValue(newValue)
+    setShowSuggestions(true)
+    setSelectedIndex(-1)
 
     // Clear error if user is typing
     if (error) {
       setError(null)
     }
+  }
+
+  // Handle suggestion selection
+  const handleSelectSuggestion = (suggestion: string) => {
+    setValue(suggestion)
+    setShowSuggestions(false)
+    setSelectedIndex(-1)
+    inputRef.current?.focus()
   }
 
   // Handle form submission
@@ -103,17 +167,51 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
       return
     }
 
+    isClosingRef.current = true
     onConfirm(trimmedValue)
+  }
+
+  // Handle cancellation
+  const handleCancel = () => {
+    isClosingRef.current = true
+    onCancel()
   }
 
   // Handle keyboard events
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Handle autocomplete navigation
+    if (showSuggestions && filteredSuggestions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setSelectedIndex(prev =>
+          prev < filteredSuggestions.length - 1 ? prev + 1 : 0
+        )
+        return
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setSelectedIndex(prev =>
+          prev > 0 ? prev - 1 : filteredSuggestions.length - 1
+        )
+        return
+      } else if (e.key === 'Enter' && selectedIndex >= 0) {
+        e.preventDefault()
+        handleSelectSuggestion(filteredSuggestions[selectedIndex])
+        return
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        setShowSuggestions(false)
+        setSelectedIndex(-1)
+        return
+      }
+    }
+
+    // Normal handlers
     if (e.key === 'Enter') {
       e.preventDefault()
       handleConfirm()
     } else if (e.key === 'Escape') {
       e.preventDefault()
-      onCancel()
+      handleCancel()
     }
   }
 
@@ -123,7 +221,11 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open && !isClosingRef.current) {
+        onCancel()
+      }
+    }}>
       <DialogContent
         className={cn(
           "sm:max-w-md",
@@ -151,22 +253,49 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
             <Label htmlFor="prompt-input" className="text-sm font-medium text-slate-700 dark:text-slate-300">
               Enter value:
             </Label>
-            <Input
-              id="prompt-input"
-              ref={inputRef}
-              type="text"
-              value={value}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder={config.placeholder}
-              maxLength={config.maxLength}
-              className={cn(
-                "transition-all duration-200",
-                error && "border-red-300 focus-visible:border-red-500 focus-visible:ring-red-500/20 dark:border-red-700"
+            <div className="relative">
+              <Input
+                id="prompt-input"
+                ref={inputRef}
+                type="text"
+                value={value}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                placeholder={config.placeholder}
+                maxLength={config.maxLength}
+                className={cn(
+                  "transition-all duration-200",
+                  error && "border-red-300 focus-visible:border-red-500 focus-visible:ring-red-500/20 dark:border-red-700"
+                )}
+                aria-invalid={!!error}
+                aria-describedby={error ? "prompt-error" : undefined}
+                autoComplete="off"
+              />
+
+              {/* Autocomplete dropdown */}
+              {showSuggestions && filteredSuggestions.length > 0 && (
+                <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-lg max-h-60 overflow-auto">
+                  {filteredSuggestions.map((suggestion, index) => (
+                    <div
+                      key={suggestion}
+                      className={cn(
+                        "px-4 py-2 cursor-pointer transition-colors",
+                        index === selectedIndex
+                          ? "bg-red-600 text-white"
+                          : "hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100"
+                      )}
+                      onClick={() => handleSelectSuggestion(suggestion)}
+                      onMouseEnter={() => setSelectedIndex(index)}
+                    >
+                      {suggestion}
+                    </div>
+                  ))}
+                </div>
               )}
-              aria-invalid={!!error}
-              aria-describedby={error ? "prompt-error" : undefined}
-            />
+            </div>
+
             {error && (
               <p id="prompt-error" className="text-sm text-red-600 dark:text-red-400" role="alert">
                 {error}
@@ -183,7 +312,7 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
         <DialogFooter className="flex gap-3 sm:gap-3">
           <Button
             variant="outline"
-            onClick={onCancel}
+            onClick={handleCancel}
             className="flex-1 sm:flex-none"
           >
             Cancel
@@ -193,7 +322,7 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
             variant={config.variant === 'destructive' ? 'destructive' : 'default'}
             className={cn(
               "flex-1 sm:flex-none",
-              config.variant !== 'destructive' && "bg-purple-600 hover:bg-purple-700 focus-visible:ring-purple-600/20 dark:bg-purple-700 dark:hover:bg-purple-600"
+              config.variant !== 'destructive' && "bg-red-600 hover:bg-red-700 focus-visible:ring-red-600/20 dark:bg-red-700 dark:hover:bg-red-600"
             )}
           >
             Confirm

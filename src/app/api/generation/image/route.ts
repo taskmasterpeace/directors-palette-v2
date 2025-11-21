@@ -1,28 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Replicate from 'replicate';
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '../../../../../supabase/database.types';
 import { ImageGenerationService } from '@/features/shot-creator/services/image-generation.service';
 import { ImageModel, ImageModelSettings } from "@/features/shot-creator/types/image-generation.types";
+import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import type { Database } from '../../../../../supabase/database.types';
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
-const supabase = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(request: NextRequest) {
   try {
+    // ✅ SECURITY: Verify authentication first
+    const auth = await getAuthenticatedUser(request);
+    if (auth instanceof NextResponse) return auth; // Return 401 error
+
+    const { user, supabase } = auth;
+
     const body = await request.json();
     const {
       model,
       prompt,
       referenceImages,
       modelSettings,
-      user_id,
     } = body;
 
     // Validate required fields
@@ -40,13 +40,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!user_id) {
-      return NextResponse.json(
-        { error: 'user_id is required' },
-        { status: 400 }
-      );
-    }
-
     if (!modelSettings) {
       return NextResponse.json(
         { error: 'Model settings are required' },
@@ -54,13 +47,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate input using service
+    // ✅ SECURITY: Use authenticated user ID (not from request body)
     const validation = ImageGenerationService.validateInput({
       model: model as ImageModel,
       prompt,
       referenceImages,
       modelSettings: modelSettings as ImageModelSettings,
-      userId: user_id,
+      userId: user.id, // ✅ Use authenticated user
     });
 
     if (!validation.valid) {
@@ -76,7 +69,7 @@ export async function POST(request: NextRequest) {
       prompt,
       referenceImages,
       modelSettings: modelSettings as ImageModelSettings,
-      userId: user_id,
+      userId: user.id, // ✅ Use authenticated user
     });
 
     // Get model identifier
@@ -129,7 +122,6 @@ export async function POST(request: NextRequest) {
             error: 'Model not found',
             details: `The model '${replicateModelId}' is not available on Replicate. Please check if the model name is correct or if it has been deprecated.`,
             model: replicateModelId,
-            input: replicateInput
           },
           { status: 404 }
         );
@@ -141,7 +133,6 @@ export async function POST(request: NextRequest) {
             error: 'Model temporarily unavailable',
             details: `The model '${replicateModelId}' is currently experiencing issues (502 Bad Gateway). This could be temporary. Please try again later or contact support if the issue persists.`,
             model: replicateModelId,
-            input: replicateInput,
             suggestions: [
               'Try again in a few minutes',
               'Check if the model name is correct on Replicate',
@@ -159,7 +150,6 @@ export async function POST(request: NextRequest) {
           error: 'Replicate API error',
           details: error.message || 'Unknown error occurred',
           model: replicateModelId,
-          input: replicateInput,
           suggestions: [
             'Check your internet connection',
             'Verify your Replicate API token',
@@ -177,14 +167,15 @@ export async function POST(request: NextRequest) {
       prompt,
       referenceImages,
       modelSettings: modelSettings as ImageModelSettings,
-      userId: user_id,
+      userId: user.id, // ✅ Use authenticated user
     });
 
-    // Create gallery entry with proper schema
+    // ✅ SECURITY: Create gallery entry with authenticated user's ID
+    // This respects RLS policies since we're using the user's session
     const { data: gallery, error: galleryError } = await supabase
       .from('gallery')
       .insert({
-        user_id,
+        user_id: user.id, // ✅ Use authenticated user
         prediction_id: prediction.id,
         generation_type: 'image',
         status: 'pending',

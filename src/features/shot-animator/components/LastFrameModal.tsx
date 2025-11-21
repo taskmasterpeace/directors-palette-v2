@@ -115,7 +115,7 @@ export function LastFrameModal({
           </Button>
           <Button
             onClick={handleSave}
-            className="bg-purple-600 hover:bg-purple-700 min-h-[44px] touch-manipulation w-full sm:w-auto"
+            className="bg-red-600 hover:bg-red-700 min-h-[44px] touch-manipulation w-full sm:w-auto"
           >
             Save Last Frame
           </Button>

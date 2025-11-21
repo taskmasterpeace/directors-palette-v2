@@ -108,7 +108,7 @@ export interface VideoGenerationRequest {
   modelSettings: ModelSettings
   referenceImages?: string[]
   lastFrameImage?: string
-  user_id: string
+  // Note: user_id removed - now extracted from session cookie server-side
 }
 
 export interface VideoGenerationResponse {

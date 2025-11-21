@@ -112,7 +112,7 @@ export function ModelSettingsModal({ settings, onSave }: ModelSettingsModalProps
           <Button variant="outline" onClick={handleCancel} className="bg-slate-800 border-slate-600 min-h-[44px] touch-manipulation w-full sm:w-auto">
             Cancel
           </Button>
-          <Button onClick={handleSave} className="bg-purple-600 hover:bg-purple-700 min-h-[44px] touch-manipulation w-full sm:w-auto">
+          <Button onClick={handleSave} className="bg-red-600 hover:bg-red-700 min-h-[44px] touch-manipulation w-full sm:w-auto">
             Save Settings
           </Button>
         </DialogFooter>

@@ -894,7 +894,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
             size="sm"
             onClick={handleZoomIn}
             disabled={!fabricRef.current}
-            className="bg-purple-700/90 hover:bg-purple-600 rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
+            className="bg-red-700/90 hover:bg-red-600 rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
             aria-label="Zoom in"
           >
             <ZoomIn className="w-5 h-5 text-white" />
@@ -903,7 +903,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
             size="sm"
             onClick={handleFitToScreen}
             disabled={!fabricRef.current}
-            className="bg-purple-700/90 hover:bg-purple-600 rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
+            className="bg-red-700/90 hover:bg-red-600 rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
             aria-label="Fit to screen"
           >
             <Maximize2 className="w-5 h-5 text-white" />
@@ -912,7 +912,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
             size="sm"
             onClick={handleZoomOut}
             disabled={!fabricRef.current}
-            className="bg-purple-700/90 hover:bg-purple-600 rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
+            className="bg-red-700/90 hover:bg-red-600 rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
             aria-label="Zoom out"
           >
             <ZoomOut className="w-5 h-5 text-white" />
@@ -924,7 +924,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
           <Button size="sm" onClick={handleZoomOut} className="bg-slate-700 hover:bg-slate-600 text-white">
             <ZoomOut className="w-4 h-4" />
           </Button>
-          <Button size="sm" onClick={handleFitToScreen} className="bg-purple-600 hover:bg-purple-700 text-white" title="Fit canvas to screen">
+          <Button size="sm" onClick={handleFitToScreen} className="bg-red-600 hover:bg-red-700 text-white" title="Fit canvas to screen">
             <Maximize2 className="w-4 h-4" />
           </Button>
           <Button size="sm" onClick={handleZoomIn} className="bg-slate-700 hover:bg-slate-600 text-white">
@@ -954,7 +954,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
 
           <div className="text-sm text-slate-300 ml-auto">
             {Math.round(scale * 100)}% | Tool: {tool}
-            {autoScale && <span className="text-purple-400 ml-2">(Auto-fit)</span>}
+            {autoScale && <span className="text-red-400 ml-2">(Auto-fit)</span>}
             {selectedObject && <span className="text-green-400 ml-2">| Object selected</span>}
           </div>
         </div>
@@ -962,7 +962,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
         {/* Canvas Container */}
         <div
           ref={containerRef}
-          className="flex-1 bg-slate-900 rounded-lg p-4 relative flex items-center justify-center overflow-auto border-2 border-purple-500/50"
+          className="flex-1 bg-slate-900 rounded-lg p-4 relative flex items-center justify-center overflow-auto border-2 border-red-500/50"
           tabIndex={0}
           style={{
             touchAction: 'none',
@@ -972,7 +972,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
         >
           <canvas
             ref={canvasRef}
-            className="border-4 border-purple-400 shadow-2xl rounded-lg"
+            className="border-4 border-red-400 shadow-2xl rounded-lg"
           />
         </div>
       </CardContent>

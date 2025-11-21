@@ -15,7 +15,8 @@ import {
   Leaf,
   Info,
   Edit3,
-  Palette
+  Palette,
+  Flame
 } from 'lucide-react'
 import { getAvailableModels, ModelId } from "@/config/index"
 
@@ -50,6 +51,7 @@ export function ModelSelector({
   function getIconComponent(modelId: ModelId) {
     switch (modelId) {
       case 'nano-banana': return Sparkles
+      case 'nano-banana-pro': return Flame
       case 'seedream-4': return Leaf
       case 'gen4-image': return Zap
       case 'gen4-image-turbo': return Zap
@@ -111,7 +113,7 @@ export function ModelSelector({
               onClick={() => onModelChange(model.id)}
               className={`h-auto p-4 flex flex-col items-center gap-2 transition-all duration-200 ${
                 isSelected 
-                  ? 'bg-slate-700 border-slate-500 shadow-md ring-2 ring-purple-500/30' 
+                  ? 'bg-slate-700 border-slate-500 shadow-md ring-2 ring-red-500/30' 
                   : 'bg-slate-800/50 border-slate-600 hover:bg-slate-700 hover:border-slate-500'
               }`}
               title={showTooltips ? model.description : undefined}

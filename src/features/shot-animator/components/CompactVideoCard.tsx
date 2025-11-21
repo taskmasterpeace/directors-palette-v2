@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback, useRef, Fragment, useEffect } from 'react'
+import React, { useState, useCallback, useRef, Fragment, useEffect, memo } from 'react'
 import {
   Play,
   Loader2,
@@ -24,11 +24,11 @@ interface CompactVideoCardProps {
   onRetryVideo?: (galleryId: string) => void
 }
 
-export function CompactVideoCard({
+const CompactVideoCardComponent = ({
   videos,
   onDeleteVideo,
   onRetryVideo
-}: CompactVideoCardProps) {
+}: CompactVideoCardProps) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: false,
     align: 'start',
@@ -90,7 +90,7 @@ export function CompactVideoCard({
       case 'processing':
         return (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90">
-            <Loader2 className="h-8 w-8 text-purple-400 animate-spin mb-2" />
+            <Loader2 className="h-8 w-8 text-red-400 animate-spin mb-2" />
             <p className="text-xs text-slate-300">Generating...</p>
           </div>
         )
@@ -112,7 +112,7 @@ export function CompactVideoCard({
                     e.stopPropagation()
                     onRetryVideo(video.galleryId)
                   }}
-                  className="h-11 w-11 min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white touch-manipulation"
+                  className="h-11 w-11 min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white touch-manipulation"
                   title="Retry generation"
                 >
                   <RotateCw className="h-5 w-5 sm:h-4 sm:w-4" />
@@ -170,7 +170,7 @@ export function CompactVideoCard({
   return (
     <>
       <div className="space-y-2">
-        <Badge variant="default" className="text-xs bg-purple-600 mb-2">
+        <Badge variant="default" className="text-xs bg-red-600 mb-2">
           Generated Videos ({visibleVideos.length})
         </Badge>
         <div className="overflow-hidden rounded-xl w-full touch-manipulation" ref={emblaRef}>
@@ -181,7 +181,7 @@ export function CompactVideoCard({
                 className="flex-shrink-0 flex-grow-0 basis-full min-w-0 relative px-1 first:pl-0 last:pr-1"
                 style={{ flex: '0 0 100%' }}
               >
-                <div className="relative rounded-xl overflow-hidden border border-purple-600 w-full group">
+                <div className="relative rounded-xl overflow-hidden border border-red-600 w-full group">
                   {video.videoUrl && video.status === 'completed' ? (
                     <Fragment>
                       {/* Keep all video cards consistent with aspect-video */}
@@ -205,7 +205,7 @@ export function CompactVideoCard({
                             className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-all cursor-pointer touch-manipulation"
                             onClick={() => togglePlayPause(index)}
                           >
-                            <div className="w-20 h-20 sm:w-16 sm:h-16 md:w-16 md:h-16 rounded-full bg-purple-600 flex items-center justify-center hover:scale-110 transition-transform active:scale-95">
+                            <div className="w-20 h-20 sm:w-16 sm:h-16 md:w-16 md:h-16 rounded-full bg-red-600 flex items-center justify-center hover:scale-110 transition-transform active:scale-95">
                               <Play className="h-10 w-10 sm:h-8 sm:w-8 md:h-8 md:w-8 text-white ml-1" fill="white" />
                             </div>
                           </div>
@@ -302,3 +302,21 @@ export function CompactVideoCard({
     </>
   )
 }
+
+// Memoize component - only re-render if videos array changes
+export const CompactVideoCard = memo(CompactVideoCardComponent, (prevProps, nextProps) => {
+  // Compare video arrays by checking gallery IDs and statuses
+  if (prevProps.videos.length !== nextProps.videos.length) return false
+
+  for (let i = 0; i < prevProps.videos.length; i++) {
+    if (
+      prevProps.videos[i].galleryId !== nextProps.videos[i].galleryId ||
+      prevProps.videos[i].status !== nextProps.videos[i].status ||
+      prevProps.videos[i].videoUrl !== nextProps.videos[i].videoUrl
+    ) {
+      return false
+    }
+  }
+
+  return true
+})
