@@ -8,7 +8,6 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip'
 import {
-    Palette,
     Settings,
     ChevronDown,
     ChevronUp,
@@ -31,7 +30,7 @@ const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
     const { settings: shotCreatorSettings } = useShotCreatorSettings()
 
     const modelConfig = getModelConfig((shotCreatorSettings.model || 'seedream-4') as ModelId)
-    const isEditingMode = shotCreatorSettings.model === 'qwen-image-edit'
+    const _isEditingMode = shotCreatorSettings.model === 'qwen-image-edit'
 
     const referenceImagesCount = shotCreatorReferenceImages.length
     const hasNonPipelineImages = shotCreatorReferenceImages.some(img => img.url && !img.url.includes('pipeline'))
