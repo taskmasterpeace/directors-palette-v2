@@ -37,6 +37,9 @@ export default function RootLayout({
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
             <PromptProvider>
               {children}
+              <footer className="fixed bottom-2 right-2 text-xs text-slate-600 z-50">
+                v0.51
+              </footer>
             </PromptProvider>
             <Toaster />
           </ThemeProvider>
