@@ -68,14 +68,24 @@ const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
 
     return (
         <TooltipProvider>
-            <div className="p-4 lg:p-6 space-y-6">
-                {/* Header */}
+            <div className="p-4 lg:p-6 space-y-4">
+                {/* Prompt Input */}
+                <PromptActions textareaRef={textareaRef} />
+
+                {/* Basic Settings */}
+                <BasicSettings />
+
+                {/* Settings Gear Toggle */}
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Palette className="w-5 h-5 text-blue-400" />
-                        <h3 className="text-white font-medium">
-                            {isEditingMode ? 'Edit Instructions' : 'Prompt & Settings'}
-                        </h3>
+                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                        <span>
+                            {referenceImagesCount} ref{referenceImagesCount !== 1 ? 's' : ''} • {modelConfig.name}
+                        </span>
+                        {hasNonPipelineImages && (
+                            <Badge variant="secondary" className="text-xs">
+                                Ready
+                            </Badge>
+                        )}
                     </div>
                     <div className="flex items-center gap-2">
                         <Tooltip>
@@ -84,7 +94,7 @@ const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
                                     variant="ghost"
                                     size="sm"
                                     onClick={copySettings}
-                                    className="text-slate-400 hover:text-white"
+                                    className="text-slate-400 hover:text-white h-8 w-8 p-0"
                                 >
                                     <Copy className="w-4 h-4" />
                                 </Button>
@@ -95,7 +105,7 @@ const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
                             variant="ghost"
                             size="sm"
                             onClick={() => setShowAdvanced(!showAdvanced)}
-                            className="text-slate-400 hover:text-white"
+                            className="text-slate-400 hover:text-white h-8 px-2"
                         >
                             <Settings className="w-4 h-4 mr-1" />
                             {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -103,48 +113,31 @@ const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
                     </div>
                 </div>
 
-                {/* Quick Presets */}
-                {!compact && (
-                    <div className="space-y-2">
-                        <Label className="text-sm text-slate-300">Quick Presets</Label>
-                        <div className="flex flex-wrap gap-2">
-                            {quickPresets.map((preset) => (
-                                <Button
-                                    key={preset.name}
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => insertPreset(preset.prompt)}
-                                    className="text-xs bg-slate-800 border-slate-600 hover:bg-slate-700 text-slate-300"
-                                >
-                                    {preset.name}
-                                </Button>
-                            ))}
-                        </div>
+                {/* Advanced Settings (expanded via gear) */}
+                {showAdvanced && (
+                    <div className="space-y-4 border-t border-slate-700 pt-4">
+                        {/* Quick Presets */}
+                        {!compact && (
+                            <div className="space-y-2">
+                                <Label className="text-sm text-slate-300">Quick Presets</Label>
+                                <div className="flex flex-wrap gap-2">
+                                    {quickPresets.map((preset) => (
+                                        <Button
+                                            key={preset.name}
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => insertPreset(preset.prompt)}
+                                            className="text-xs bg-slate-800 border-slate-600 hover:bg-slate-700 text-slate-300"
+                                        >
+                                            {preset.name}
+                                        </Button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        <AdvancedSettings />
                     </div>
                 )}
-
-                {/* Prompt Input */}
-                <PromptActions textareaRef={textareaRef} />
-
-                {/* Basic Settings */}
-                <BasicSettings />
-
-                {/* Advanced Settings */}
-                {showAdvanced && (
-                    <AdvancedSettings />
-                )}
-
-                {/* Status Info */}
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                    <span>
-                        {referenceImagesCount} reference image{referenceImagesCount !== 1 ? 's' : ''} • {modelConfig.name}
-                    </span>
-                    {hasNonPipelineImages && (
-                        <Badge variant="secondary" className="text-xs">
-                            Ready
-                        </Badge>
-                    )}
-                </div>
             </div>
 
         </TooltipProvider>

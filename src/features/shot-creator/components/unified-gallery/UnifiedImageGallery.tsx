@@ -183,7 +183,7 @@ export function UnifiedImageGallery({
                 ) : (
                     <>
                         <ScrollArea className="h-[calc(100vh-180px)] min-h-[500px]">
-                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                                 {paginatedImages.map((image: GeneratedImage) => (
                                     <ImageCard
                                         key={image.id}

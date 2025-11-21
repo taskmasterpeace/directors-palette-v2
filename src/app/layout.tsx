@@ -37,8 +37,12 @@ export default function RootLayout({
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
             <PromptProvider>
               {children}
-              <footer className="fixed bottom-2 right-2 text-xs text-slate-600 z-50">
-                v0.51
+              <footer className="fixed bottom-2 left-1/2 -translate-x-1/2 text-xs text-slate-600 z-50 text-center">
+                <span>v0.52</span>
+                <span className="mx-2">|</span>
+                <a href="https://machinekinglabs.com" target="_blank" rel="noopener noreferrer" className="hover:text-slate-400 transition-colors">
+                  Designed by Machine King Labs
+                </a>
               </footer>
             </PromptProvider>
             <Toaster />

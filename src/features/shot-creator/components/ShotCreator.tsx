@@ -3,7 +3,6 @@
 import React, { useEffect } from 'react'
 import { useShotCreatorStore } from "../store/shot-creator.store"
 import { useShotCreatorSettings, useGalleryLoader } from "../hooks"
-import { Sparkles } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ModelSelector } from "./ModelSelector"
 import { getModelConfig, ModelId } from "@/config/index"
@@ -121,55 +120,30 @@ const ShotCreator = () => {
 
     return (
         <div className="w-full h-full">
-            {/* Mobile-Optimized Header */}
-            <div className="flex flex-col space-y-3 lg:flex-row lg:items-center lg:justify-between px-2 lg:px-4 py-3 bg-slate-900/50 border-b border-slate-700 lg:rounded-t-lg">
-                <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-red-400" />
-                    <h2 className="text-lg lg:text-xl font-semibold text-white">Shot Creator</h2>
-                </div>
-                <div className="w-full lg:w-auto">
-                    <ModelSelector
-                        selectedModel={shotCreatorSettings.model || 'nano-banana'}
-                        onModelChange={(model: string) => {
-                            const newModel = model as ModelId
-                            const newModelConfig = getModelConfig(newModel)
-
-                            // Get default resolution for the new model
-                            const defaultResolution = newModelConfig.parameters.resolution?.default as string | undefined
-
-                            // Update settings with new model and its default resolution if it supports resolution
-                            const updates: {
-                                model: ModelId
-                                resolution?: string
-                            } = { model: newModel }
-                            if (defaultResolution) {
-                                updates.resolution = defaultResolution
-                            }
-
-                            updateSettings(updates)
-                        }}
-                        compact={true}
-                        showTooltips={false}
-                    />
-                </div>
-            </div>
-
             {/* Full-Width Mobile Layout */}
-            <div className="space-y-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0 pb-4">
+            <div className="space-y-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0 pb-4 pt-2">
 
                 {/* LEFT COLUMN - Reference Images & Prompt */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-4">
                     {/* Reference Images Management / Input Image for Editing */}
-                    <div className="bg-slate-900/30 lg:rounded-lg lg:border border-slate-700/50 p-0 lg:p-6">
-                        <div className="mb-4 px-2 pt-4 lg:px-0 lg:pt-0">
-                            <h3 className="text-white font-medium">
-                                {isEditingMode ? 'Input Image to Edit' : `Reference Images (Max ${modelConfig?.maxReferenceImages || 3})`}
-                            </h3>
-                            {isEditingMode && (
-                                <p className="text-slate-400 text-sm mt-1">
-                                    Upload the image you want to edit with AI instructions
-                                </p>
-                            )}
+                    <div className="bg-slate-900/30 lg:rounded-lg lg:border border-slate-700/50 p-0 lg:p-4">
+                        <div className="flex items-center justify-between mb-3 px-2 pt-3 lg:px-0 lg:pt-0">
+                            <span className="text-sm text-slate-300">
+                                {isEditingMode ? 'Input Image' : `References (Max ${modelConfig?.maxReferenceImages || 3})`}
+                            </span>
+                            <ModelSelector
+                                selectedModel={shotCreatorSettings.model || 'nano-banana'}
+                                onModelChange={(model: string) => {
+                                    const newModel = model as ModelId
+                                    const newModelConfig = getModelConfig(newModel)
+                                    const defaultResolution = newModelConfig.parameters.resolution?.default as string | undefined
+                                    const updates: { model: ModelId; resolution?: string } = { model: newModel }
+                                    if (defaultResolution) updates.resolution = defaultResolution
+                                    updateSettings(updates)
+                                }}
+                                compact={true}
+                                showTooltips={false}
+                            />
                         </div>
                         <CreatorReferenceManager
                             compact={false}

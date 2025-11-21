@@ -75,7 +75,7 @@ export function PromptAutocomplete({
 
           {/* References Section */}
           {references.length > 0 && (
-            <CommandGroup heading="Tagged Images">
+            <CommandGroup heading="References">
               {references.map((item, index) => {
                 const actualIndex = categories.length + index
                 return (

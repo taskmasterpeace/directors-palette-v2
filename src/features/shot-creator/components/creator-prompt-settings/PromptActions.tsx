@@ -541,7 +541,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         placeholder={
                             isEditingMode
                                 ? "Describe how you want to edit the image (e.g., 'change the background to a sunset', 'add more lighting')"
-                                : "Describe your shot... Use @ to reference tagged images"
+                                : "Describe your shot... Use @ to reference images"
                         }
                         className={cn(
                             getTextareaHeight(textareaSize),
