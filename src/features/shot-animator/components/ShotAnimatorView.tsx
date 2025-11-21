@@ -57,7 +57,7 @@ export function ShotAnimatorView() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showOnlySelected, setShowOnlySelected] = useState(false)
 
-  const currentModelConfig = ANIMATION_MODELS[selectedModel]
+  const currentModelConfig = ANIMATION_MODELS[selectedModel] || ANIMATION_MODELS['seedance-lite']
 
   // Filtered shots
   const filteredShots = shotConfigs

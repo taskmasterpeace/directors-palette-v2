@@ -326,7 +326,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
 }
 
 export function getModelConfig(modelId: ModelId): ModelConfig {
-    return MODEL_CONFIGS[modelId]
+    return MODEL_CONFIGS[modelId] || MODEL_CONFIGS['nano-banana']
 }
 
 export function getModelsByType(type: ModelType): ModelConfig[] {
