@@ -1,11 +1,13 @@
 "use client"
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { Film, ImageIcon, Layout, Sparkles } from "lucide-react";
+import { Film, ImageIcon, Layout, Sparkles, BookOpen, Images } from "lucide-react";
 import { useLayoutStore } from "@/store/layout.store";
 import { ShotCreator } from "@/features/shot-creator";
 import { ShotAnimator } from "@/features/shot-animator";
 import { LayoutAnnotation } from "@/features/layout-annotation";
+import { StoryCreator } from "@/features/story-creator";
+import { UnifiedImageGallery } from "@/features/shot-creator/components/unified-gallery/UnifiedImageGallery";
 import { ScreenNavigationIconSelector } from "@/components/ScreenNavigationIconSelector";
 
 export default function Home() {
@@ -35,7 +37,7 @@ export default function Home() {
         {/* Navigation Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 sm:space-y-4">
           {/* Desktop: Original Tab Layout */}
-          <TabsList className="hidden sm:grid grid-cols-3 w-full max-w-none min-h-[48px] h-auto">
+          <TabsList className="hidden sm:grid grid-cols-5 w-full max-w-none min-h-[48px] h-auto">
             {/* shot-creator */}
             <TabsTrigger value="shot-creator" className="flex items-center gap-2 min-h-[44px]">
               <Sparkles className="w-4 h-4" />
@@ -46,10 +48,20 @@ export default function Home() {
               <ImageIcon className="w-4 h-4" />
               <span className="hidden lg:inline">Shot Animator</span>
             </TabsTrigger>
-            {/* layout- annotation */}
+            {/* layout-annotation */}
             <TabsTrigger value="layout-annotation" className="flex items-center gap-2 min-h-[44px]">
               <Layout className="w-4 h-4" />
               <span className="hidden lg:inline">Layout & Annotation</span>
+            </TabsTrigger>
+            {/* story-creator */}
+            <TabsTrigger value="story-creator" className="flex items-center gap-2 min-h-[44px]">
+              <BookOpen className="w-4 h-4" />
+              <span className="hidden lg:inline">Story Creator</span>
+            </TabsTrigger>
+            {/* gallery */}
+            <TabsTrigger value="gallery" className="flex items-center gap-2 min-h-[44px]">
+              <Images className="w-4 h-4" />
+              <span className="hidden lg:inline">Gallery</span>
             </TabsTrigger>
           </TabsList>
 
@@ -66,6 +78,16 @@ export default function Home() {
           {/* Complete Layout & Annotation Editor Tab */}
           <TabsContent value="layout-annotation">
             <LayoutAnnotation />
+          </TabsContent>
+
+          {/* Story Creator Tab - Story to Shots Workflow */}
+          <TabsContent value="story-creator" className="space-y-4">
+            <StoryCreator />
+          </TabsContent>
+
+          {/* Gallery Tab - Unified Image Gallery */}
+          <TabsContent value="gallery" className="space-y-4">
+            <UnifiedImageGallery currentTab="gallery" mode="full" />
           </TabsContent>
         </Tabs>
       </div>

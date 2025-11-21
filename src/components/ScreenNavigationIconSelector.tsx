@@ -1,6 +1,6 @@
 'use client'
 
-import { LayoutGrid, Check, Sparkles, ImageIcon, Layout } from 'lucide-react'
+import { LayoutGrid, Check, Sparkles, ImageIcon, Layout, BookOpen, Images } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
     Popover,
@@ -19,6 +19,8 @@ const SCREEN_OPTIONS: ScreenOption[] = [
     { value: 'shot-creator', label: 'Shot Creator', icon: Sparkles },
     { value: 'shot-animator', label: 'Shot Animator', icon: ImageIcon },
     { value: 'layout-annotation', label: 'Layout & Annotation', icon: Layout },
+    { value: 'story-creator', label: 'Story Creator', icon: BookOpen },
+    { value: 'gallery', label: 'Gallery', icon: Images },
 ]
 
 interface ScreenNavigationIconSelectorProps {

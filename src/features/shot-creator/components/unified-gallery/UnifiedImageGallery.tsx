@@ -14,7 +14,7 @@ import FullscreenModal from "./FullScreenModal"
 import { GeneratedImage } from '../../store/unified-gallery-store'
 
 export interface UnifiedImageGalleryProps {
-    currentTab?: 'shot-creator' | 'shot-animator' | 'layout-annotation'
+    currentTab?: 'shot-creator' | 'shot-animator' | 'layout-annotation' | 'gallery' | 'story-creator'
     mode?: 'minimal' | 'full'
     isLoading?: boolean
     onSendToTab?: (imageUrl: string, targetTab: string) => void
