@@ -39,7 +39,7 @@ interface ExtractedEntities {
 
 export class LLMService {
     private static apiKey = process.env.NEXT_PUBLIC_REQUESTY_API_KEY || ''
-    private static model = 'moonshotai/kimi-k2-instruct' // Can also use 'openai/gpt-4o-mini'
+    private static model = 'openai/gpt-4o-mini'
 
     /**
      * Make a request to the LLM
