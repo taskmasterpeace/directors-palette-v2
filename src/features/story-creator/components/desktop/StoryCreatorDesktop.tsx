@@ -6,8 +6,9 @@ import { StoryProjectService } from '../../services/story-project.service'
 import { PromptGeneratorService } from '../../services/prompt-generator.service'
 import { LLMService } from '../../services/llm.service'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { BookOpen, FileText, ListChecks, Activity } from 'lucide-react'
+import { FileText, ListChecks, Activity, Users } from 'lucide-react'
 import StoryInputSection from '../sections/StoryInputSection'
+import EntitiesSection from '../sections/EntitiesSection'
 import ShotsReviewSection from '../sections/ShotsReviewSection'
 import GenerationQueueSection from '../sections/GenerationQueueSection'
 
@@ -20,10 +21,12 @@ export default function StoryCreatorDesktop() {
         currentProject,
         shots,
         currentQueue,
+        extractedEntities,
         setCurrentProject,
         setShots,
         updateShot,
-        setCurrentQueue
+        setCurrentQueue,
+        setExtractedEntities
     } = useStoryCreatorStore()
 
     const [activeTab, setActiveTab] = useState('input')
@@ -67,6 +70,13 @@ export default function StoryCreatorDesktop() {
 
                     console.log(`📝 Extracted ${scenes.length} scenes, ${entities.characters.length} characters, ${entities.locations.length} locations`)
 
+                    // Store entities in zustand for later use
+                    const extractedEntities = [
+                        ...entities.characters.map(c => ({ type: 'character' as const, ...c })),
+                        ...entities.locations.map(l => ({ type: 'location' as const, ...l }))
+                    ]
+                    setExtractedEntities(extractedEntities)
+
                     // Generate prompts for each scene
                     shotInputs = await Promise.all(scenes.map(async (scene) => {
                         const { prompt, referenceTags } = await LLMService.generateImagePrompt(
@@ -100,6 +110,9 @@ export default function StoryCreatorDesktop() {
                     ...locations.map(l => ({ type: 'location' as const, ...l }))
                 ]
 
+                // Store entities in zustand for later use
+                setExtractedEntities(entities)
+
                 shotInputs = scenes.map((scene) => {
                     const { prompt, referenceTags } = PromptGeneratorService.generatePrompt(
                         scene.text,
@@ -125,7 +138,7 @@ export default function StoryCreatorDesktop() {
             }
 
             setShots(createdShots)
-            setActiveTab('review')
+            setActiveTab('entities')
         } catch (error) {
             console.error('Error extracting shots:', error)
         } finally {
@@ -177,21 +190,6 @@ export default function StoryCreatorDesktop() {
 
     return (
         <div className="h-full flex flex-col">
-            {/* Header */}
-            <div className="border-b border-slate-700 p-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <BookOpen className="w-6 h-6 text-red-500" />
-                        <div>
-                            <h1 className="text-xl font-semibold text-white">Story Creator</h1>
-                            {currentProject && (
-                                <p className="text-sm text-slate-400">{currentProject.title}</p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             {/* Tabbed Content */}
             <div className="flex-1 overflow-hidden">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
@@ -199,6 +197,15 @@ export default function StoryCreatorDesktop() {
                         <TabsTrigger value="input" className="flex items-center gap-2">
                             <FileText className="w-4 h-4" />
                             Story Input
+                        </TabsTrigger>
+                        <TabsTrigger value="entities" className="flex items-center gap-2" disabled={extractedEntities.length === 0}>
+                            <Users className="w-4 h-4" />
+                            Entities
+                            {extractedEntities.length > 0 && (
+                                <span className="ml-1 text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded-full">
+                                    {extractedEntities.length}
+                                </span>
+                            )}
                         </TabsTrigger>
                         <TabsTrigger value="review" className="flex items-center gap-2" disabled={shots.length === 0}>
                             <ListChecks className="w-4 h-4" />
@@ -220,6 +227,13 @@ export default function StoryCreatorDesktop() {
                             <StoryInputSection
                                 onExtractShots={handleExtractShots}
                                 isExtracting={isExtracting}
+                            />
+                        </TabsContent>
+
+                        <TabsContent value="entities" className="mt-0">
+                            <EntitiesSection
+                                entities={extractedEntities}
+                                onContinue={() => setActiveTab('review')}
                             />
                         </TabsContent>
 
