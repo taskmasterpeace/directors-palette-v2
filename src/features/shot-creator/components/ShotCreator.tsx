@@ -70,7 +70,9 @@ const ShotCreator = () => {
     }
 
     const onSendToLayoutAnnotation = (imageUrl: string) => {
-        localStorage.setItem('directors-palette-layout-input', imageUrl)
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('directors-palette-layout-input', imageUrl)
+        }
         setActiveTab('layout-annotation')
         toast({
             title: 'Sent to Layout & Annotation',
