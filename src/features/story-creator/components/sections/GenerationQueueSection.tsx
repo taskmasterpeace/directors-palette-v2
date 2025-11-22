@@ -1,10 +1,13 @@
 'use client'
 
+import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { Pause, Play, CheckCircle2, XCircle, Loader2, Image as ImageIcon } from 'lucide-react'
+import { Pause, Play, CheckCircle2, XCircle, Loader2, Image as ImageIcon, Layers } from 'lucide-react'
+import { useStoryGeneration } from '../../hooks/useStoryGeneration'
+import { getVariationCount } from '../../helpers/bracket-prompt.helper'
 import type { StoryShot, GenerationQueue } from '../../types/story.types'
 
 interface GenerationQueueSectionProps {
@@ -21,6 +24,16 @@ export default function GenerationQueueSection({
     queue,
     onPauseResume
 }: GenerationQueueSectionProps) {
+    const { processQueue, isGenerating } = useStoryGeneration()
+
+    // Auto-start generation when queue becomes active
+    useEffect(() => {
+        if (queue && queue.status === 'pending' && shots.length > 0 && !isGenerating) {
+            const queuedShots = shots.filter(s => queue.shot_ids.includes(s.id))
+            processQueue(queuedShots)
+        }
+    }, [queue, shots, isGenerating, processQueue])
+
     if (!queue) {
         return (
             <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -33,19 +46,38 @@ export default function GenerationQueueSection({
     }
 
     const isPaused = queue.status === 'paused'
-    const isProcessing = queue.status === 'processing'
+    const isProcessing = queue.status === 'processing' || isGenerating
     const isCompleted = queue.status === 'completed'
+
+    // Calculate total images accounting for bracket variations
+    const queuedShots = shots.filter(s => queue.shot_ids.includes(s.id))
+    const totalImages = queuedShots.reduce((total, shot) => {
+        return total + getVariationCount(shot.prompt)
+    }, 0)
+    const hasBrackets = totalImages > queuedShots.length
 
     return (
         <div className="space-y-6">
             {/* Queue Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-lg font-semibold text-white">
-                        Generation Progress
-                    </h3>
+                    <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-white">
+                            Generation Progress
+                        </h3>
+                        {hasBrackets && (
+                            <Badge
+                                variant="outline"
+                                className="text-xs bg-orange-900/30 text-orange-400 border-orange-700"
+                            >
+                                <Layers className="w-3 h-3 mr-1" />
+                                {totalImages} images
+                            </Badge>
+                        )}
+                    </div>
                     <p className="text-sm text-slate-400">
                         {queue.current_shot_index + 1} of {queue.shot_ids.length} shots
+                        {hasBrackets && ` • ${totalImages} total images`}
                     </p>
                 </div>
                 {(isProcessing || isPaused) && (
@@ -144,6 +176,9 @@ interface ShotQueueItemProps {
 }
 
 function ShotQueueItem({ shot, isCurrent, isComplete }: ShotQueueItemProps) {
+    const variationCount = getVariationCount(shot.prompt)
+    const hasBrackets = variationCount > 1
+
     return (
         <Card className={`p-3 ${isCurrent ? 'bg-slate-700 border-slate-600' : 'bg-slate-800 border-slate-700'}`}>
             <div className="flex items-center gap-3">
@@ -160,13 +195,22 @@ function ShotQueueItem({ shot, isCurrent, isComplete }: ShotQueueItemProps) {
 
                 {/* Shot Info */}
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs font-medium text-slate-500">
                             Shot {shot.sequence_number}
                         </span>
                         {shot.chapter && (
                             <Badge variant="outline" className="text-xs">
                                 {shot.chapter}
+                            </Badge>
+                        )}
+                        {hasBrackets && (
+                            <Badge
+                                variant="outline"
+                                className="text-xs bg-orange-900/30 text-orange-400 border-orange-700"
+                            >
+                                <Layers className="w-3 h-3 mr-1" />
+                                {variationCount}
                             </Badge>
                         )}
                     </div>

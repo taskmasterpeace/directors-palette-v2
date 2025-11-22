@@ -74,6 +74,10 @@ export interface ShotMetadata {
     originalText?: string
     aiGenerated?: boolean
     mergedShots?: string[] // IDs of shots merged with brackets
+    generated_at?: string
+    gallery_ids?: string[] // All gallery IDs when bracket variations are used
+    variation_count?: number
+    error?: string
 }
 
 /**

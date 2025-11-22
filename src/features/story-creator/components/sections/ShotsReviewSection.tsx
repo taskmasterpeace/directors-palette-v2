@@ -6,8 +6,20 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
-import { Play, Edit2, Save, X, Plus } from 'lucide-react'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { Play, Edit2, Save, X, Plus, Layers } from 'lucide-react'
 import type { StoryShot } from '../../types/story.types'
+import {
+    hasBracketSyntax,
+    getVariationCount,
+    getPromptVariations,
+    getVariationBadgeText
+} from '../../helpers/bracket-prompt.helper'
 
 interface ShotsReviewSectionProps {
     shots: StoryShot[]
@@ -72,16 +84,53 @@ export default function ShotsReviewSection({
         )
     }
 
+    // Group shots by chapter
+    const shotsByChapter = shots.reduce((acc, shot) => {
+        const chapterName = shot.chapter && shot.chapter !== 'null' ? shot.chapter : 'Uncategorized'
+        if (!acc[chapterName]) {
+            acc[chapterName] = []
+        }
+        acc[chapterName].push(shot)
+        return acc
+    }, {} as Record<string, StoryShot[]>)
+
+    // Sort chapters to ensure "Uncategorized" is last
+    const sortedChapters = Object.keys(shotsByChapter).sort((a, b) => {
+        if (a === 'Uncategorized') return 1
+        if (b === 'Uncategorized') return -1
+        return a.localeCompare(b)
+    })
+
+    // Calculate total images (accounting for bracket variations)
+    const totalImages = shots.reduce((total, shot) => {
+        return total + getVariationCount(shot.prompt)
+    }, 0)
+    const hasBracketShots = totalImages > shots.length
+
     return (
         <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-lg font-semibold text-white">
-                        {shots.length} Shot{shots.length !== 1 ? 's' : ''} Extracted
-                    </h3>
+                    <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-white">
+                            {shots.length} Shot{shots.length !== 1 ? 's' : ''} Extracted
+                        </h3>
+                        {hasBracketShots && (
+                            <Badge
+                                variant="outline"
+                                className="text-xs bg-orange-900/30 text-orange-400 border-orange-700"
+                            >
+                                <Layers className="w-3 h-3 mr-1" />
+                                {totalImages} images
+                            </Badge>
+                        )}
+                    </div>
                     <p className="text-sm text-slate-400">
-                        Review and edit prompts before generating
+                        {hasBracketShots
+                            ? `Review and edit prompts • Bracket syntax will generate ${totalImages} total images`
+                            : 'Review and edit prompts before generating'
+                        }
                     </p>
                 </div>
                 <Button
@@ -90,29 +139,70 @@ export default function ShotsReviewSection({
                     className="bg-red-600 hover:bg-red-700"
                 >
                     <Play className="w-4 h-4 mr-2" />
-                    Generate All
+                    Generate All {hasBracketShots && `(${totalImages})`}
                 </Button>
             </div>
 
-            {/* Shots Grid */}
-            <div className="space-y-3">
-                {shots.map((shot) => (
-                    <ShotCard
-                        key={shot.id}
-                        shot={shot}
-                        isEditing={editingId === shot.id}
-                        editPrompt={editPrompt}
-                        editTags={editTags}
-                        newTag={newTag}
-                        onStartEdit={handleStartEdit}
-                        onSaveEdit={handleSaveEdit}
-                        onCancelEdit={handleCancelEdit}
-                        onPromptChange={setEditPrompt}
-                        onAddTag={handleAddTag}
-                        onRemoveTag={handleRemoveTag}
-                        onNewTagChange={setNewTag}
-                    />
-                ))}
+            {/* Shots Grouped by Chapter */}
+            <div className="space-y-8">
+                {sortedChapters.map((chapterName) => {
+                    const chapterShots = shotsByChapter[chapterName]
+                    const chapterTotalImages = chapterShots.reduce((total, shot) => {
+                        return total + getVariationCount(shot.prompt)
+                    }, 0)
+                    const chapterHasBrackets = chapterTotalImages > chapterShots.length
+
+                    return (
+                        <div key={chapterName} className="space-y-3">
+                            {/* Chapter Header */}
+                            <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 pb-3 mb-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <h4 className="text-xl font-bold text-white">
+                                            {chapterName}
+                                        </h4>
+                                        <Badge
+                                            variant="outline"
+                                            className="text-xs text-slate-400 border-slate-600"
+                                        >
+                                            {chapterShots.length} shot{chapterShots.length !== 1 ? 's' : ''}
+                                        </Badge>
+                                        {chapterHasBrackets && (
+                                            <Badge
+                                                variant="outline"
+                                                className="text-xs bg-orange-900/30 text-orange-400 border-orange-700"
+                                            >
+                                                <Layers className="w-3 h-3 mr-1" />
+                                                {chapterTotalImages} images
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Chapter Shots */}
+                            <div className="space-y-3">
+                                {chapterShots.map((shot) => (
+                                    <ShotCard
+                                        key={shot.id}
+                                        shot={shot}
+                                        isEditing={editingId === shot.id}
+                                        editPrompt={editPrompt}
+                                        editTags={editTags}
+                                        newTag={newTag}
+                                        onStartEdit={handleStartEdit}
+                                        onSaveEdit={handleSaveEdit}
+                                        onCancelEdit={handleCancelEdit}
+                                        onPromptChange={setEditPrompt}
+                                        onAddTag={handleAddTag}
+                                        onRemoveTag={handleRemoveTag}
+                                        onNewTagChange={setNewTag}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )
+                })}
             </div>
         </div>
     )
@@ -147,12 +237,17 @@ function ShotCard({
     onRemoveTag,
     onNewTagChange
 }: ShotCardProps) {
+    const promptToCheck = isEditing ? editPrompt : shot.prompt
+    const hasBrackets = hasBracketSyntax(promptToCheck)
+    const variationCount = getVariationCount(promptToCheck)
+    const variations = hasBrackets ? getPromptVariations(promptToCheck, 5) : []
+
     return (
-        <Card className="p-4 bg-slate-800 border-slate-700">
+        <Card className={`p-4 border-slate-700 ${hasBrackets ? 'bg-slate-800 border-l-4 border-l-orange-500' : 'bg-slate-800'}`}>
             <div className="flex gap-4">
                 {/* Sequence Number */}
                 <div className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${hasBrackets ? 'bg-orange-900/40 border border-orange-700' : 'bg-slate-700'}`}>
                         <span className="text-sm font-semibold text-white">
                             {shot.sequence_number}
                         </span>
@@ -161,13 +256,6 @@ function ShotCard({
 
                 {/* Content */}
                 <div className="flex-1 space-y-2">
-                    {/* Chapter Badge */}
-                    {shot.chapter && shot.chapter !== 'null' && (
-                        <Badge variant="outline" className="text-xs text-blue-400 border-blue-600">
-                            {shot.chapter}
-                        </Badge>
-                    )}
-
                     {/* Prompt */}
                     {isEditing ? (
                         <Textarea
@@ -188,8 +276,8 @@ function ShotCard({
                         </p>
                     )}
 
-                    {/* Reference Tags */}
-                    <div className="flex flex-wrap gap-2">
+                    {/* Reference Tags & Bracket Indicator */}
+                    <div className="flex flex-wrap gap-2 items-center">
                         {(isEditing ? editTags : shot.reference_tags).map((tag) => (
                             <Badge
                                 key={tag}
@@ -224,6 +312,45 @@ function ShotCard({
                                     <Plus className="w-3 h-3" />
                                 </Button>
                             </div>
+                        )}
+
+                        {/* Bracket Variation Badge */}
+                        {hasBrackets && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Badge
+                                            variant="outline"
+                                            className="text-xs bg-orange-900/30 text-orange-400 border-orange-700 cursor-help"
+                                        >
+                                            <Layers className="w-3 h-3 mr-1" />
+                                            {getVariationBadgeText(promptToCheck)}
+                                        </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent
+                                        side="bottom"
+                                        className="bg-slate-800 border-slate-700 max-w-md"
+                                    >
+                                        <div className="space-y-2">
+                                            <p className="text-xs font-semibold text-orange-400">
+                                                Will generate {variationCount} image{variationCount !== 1 ? 's' : ''}:
+                                            </p>
+                                            <div className="space-y-1">
+                                                {variations.map((variation, idx) => (
+                                                    <p key={idx} className="text-xs text-slate-300 leading-relaxed">
+                                                        {idx + 1}. {variation}
+                                                    </p>
+                                                ))}
+                                                {variationCount > 5 && (
+                                                    <p className="text-xs text-slate-500 italic">
+                                                        + {variationCount - 5} more...
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         )}
                     </div>
                 </div>

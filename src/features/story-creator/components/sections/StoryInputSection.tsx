@@ -9,10 +9,10 @@ import { Sparkles, Loader2, TestTube2 } from 'lucide-react'
 
 const TEST_STORIES = [
     {
-        title: "The Chase",
+        title: "The Chase (Bracket Demo)",
         text: `Marcus sprinted through the neon-lit streets of downtown, his breath visible in the cold night air. Behind him, the sound of heavy boots echoed off the wet pavement.
 
-He ducked into a narrow alley, pressing his back against the graffiti-covered wall. A trash can clattered somewhere in the darkness.
+@marcus [ducked into a narrow alley, leaped over a chain-link fence, slid under a parked car] while glancing back at his pursuers.
 
 Sarah waited on the rooftop above, her sniper rifle trained on the alley entrance. She spoke into her earpiece: "I've got eyes on you. Two hostiles approaching from the east."
 
