@@ -76,7 +76,7 @@ export default function StoryCreatorDesktop() {
 
                         return {
                             project_id: project.id,
-                            sequence_number: scene.sequence,
+                            sequence_number: Math.floor(scene.sequence), // Ensure integer for database
                             chapter: scene.chapter,
                             prompt,
                             reference_tags: referenceTags,
@@ -108,7 +108,7 @@ export default function StoryCreatorDesktop() {
 
                     return {
                         project_id: project.id,
-                        sequence_number: scene.sequence,
+                        sequence_number: Math.floor(scene.sequence), // Ensure integer for database
                         chapter: scene.chapter,
                         prompt,
                         reference_tags: referenceTags,

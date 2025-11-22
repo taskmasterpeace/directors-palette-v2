@@ -202,7 +202,7 @@ Return ONLY valid JSON, no markdown.`
         const referenceTags: string[] = []
         let prompt = scene.visualDescription
 
-        // Replace character names inline
+        // Replace character names inline with @tags
         scene.characters.forEach(charName => {
             const entity = entities.characters.find(c =>
                 c.name.toLowerCase() === charName.toLowerCase()
@@ -211,18 +211,17 @@ Return ONLY valid JSON, no markdown.`
                 const hasReference = referenceImages?.has(entity.tag)
                 const regex = new RegExp(`\\b${charName}\\b`, 'gi')
 
+                // ALWAYS use @tag in prompt (cleaner, consistent)
+                prompt = prompt.replace(regex, `@${entity.tag}`)
+
+                // Add to referenceTags array if reference image is assigned
                 if (hasReference) {
-                    // Has reference image: use @tag
-                    prompt = prompt.replace(regex, `@${entity.tag}`)
                     referenceTags.push(`@${entity.tag}`)
-                } else {
-                    // No reference: use description inline
-                    prompt = prompt.replace(regex, entity.description || charName)
                 }
             }
         })
 
-        // Replace location name inline
+        // Replace location name inline with @tag
         const locationEntity = entities.locations.find(l =>
             l.name.toLowerCase() === scene.location.toLowerCase()
         )
@@ -230,11 +229,12 @@ Return ONLY valid JSON, no markdown.`
             const hasReference = referenceImages?.has(locationEntity.tag)
             const regex = new RegExp(`\\b${scene.location}\\b`, 'gi')
 
+            // ALWAYS use @tag in prompt (cleaner, consistent)
+            prompt = prompt.replace(regex, `@${locationEntity.tag}`)
+
+            // Add to referenceTags array if reference image is assigned
             if (hasReference) {
-                prompt = prompt.replace(regex, `@${locationEntity.tag}`)
                 referenceTags.push(`@${locationEntity.tag}`)
-            } else {
-                prompt = prompt.replace(regex, locationEntity.description || scene.location)
             }
         }
 
