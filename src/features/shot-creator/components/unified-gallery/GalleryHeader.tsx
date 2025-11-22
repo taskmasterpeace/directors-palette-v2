@@ -4,17 +4,20 @@ import { CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { ImageIcon, Search, Trash2 } from 'lucide-react'
+import { ImageIcon, Search, Trash2, Grid3x3, Grid2x2 } from 'lucide-react'
+import { GridSize } from '../../store/unified-gallery-store'
 
 interface GalleryHeaderProps {
   totalImages: number
   totalCredits: number
   searchQuery: string
   selectedCount: number
+  gridSize: GridSize
   onSearchChange: (query: string) => void
   onSelectAll: () => void
   onClearSelection: () => void
   onDeleteSelected: () => void
+  onGridSizeChange: (size: GridSize) => void
 }
 
 export function GalleryHeader({
@@ -22,10 +25,12 @@ export function GalleryHeader({
   totalCredits,
   searchQuery,
   selectedCount,
+  gridSize,
   onSearchChange,
   onSelectAll,
   onClearSelection,
-  onDeleteSelected
+  onDeleteSelected,
+  onGridSizeChange
 }: GalleryHeaderProps) {
   return (
     <CardHeader className="pb-4">
@@ -58,6 +63,38 @@ export function GalleryHeader({
               className="pl-9 w-full h-8"
             />
           </div>
+
+          {/* Grid Size Controls */}
+          <div className="flex items-center border border-slate-700 rounded-md overflow-hidden">
+            <Button
+              variant={gridSize === 'small' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => onGridSizeChange('small')}
+              className="rounded-none h-8 px-2"
+              title="Small grid"
+            >
+              <Grid3x3 className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={gridSize === 'medium' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => onGridSizeChange('medium')}
+              className="rounded-none h-8 px-2 border-x border-slate-700"
+              title="Medium grid"
+            >
+              <Grid2x2 className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={gridSize === 'large' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => onGridSizeChange('large')}
+              className="rounded-none h-8 px-2"
+              title="Large grid"
+            >
+              <ImageIcon className="w-4 h-4" />
+            </Button>
+          </div>
+
           {/* Selection Actions */}
           <Button
             variant="outline"

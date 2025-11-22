@@ -70,6 +70,7 @@
     "react-day-picker": "9.8.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.60.0",
+    "react-resizable-panels": "^3.0.6",
     "replicate": "^1.2.0",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.5.5",

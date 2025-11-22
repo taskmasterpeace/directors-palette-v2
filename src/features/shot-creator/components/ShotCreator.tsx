@@ -16,6 +16,11 @@ import CategorySelectionDialog from "./CategorySelectDialog"
 import FullscreenImageModal from "./FullscreenImageModal"
 import { createReference } from "../services/reference-library.service"
 import { useLibraryStore } from "../store/shot-library.store"
+import {
+    ResizablePanelGroup,
+    ResizablePanel,
+    ResizableHandle,
+} from '@/components/ui/resizable'
 
 const ShotCreator = () => {
     const { setActiveTab } = useLayoutStore()
@@ -120,14 +125,13 @@ const ShotCreator = () => {
 
     return (
         <div className="w-full h-full">
-            {/* Full-Width Mobile Layout */}
-            <div className="space-y-4 lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0 pb-4 pt-2">
-
-                {/* LEFT COLUMN - Reference Images & Prompt */}
-                <div className="lg:col-span-2 space-y-4">
-                    {/* Reference Images Management / Input Image for Editing */}
-                    <div className="bg-slate-900/30 lg:rounded-lg lg:border border-slate-700/50 p-0 lg:p-4">
-                        <div className="flex items-center justify-between mb-3 px-2 pt-3 lg:px-0 lg:pt-0">
+            {/* Mobile: Vertical stack, Desktop: Resizable panels */}
+            <div className="pb-4 pt-2">
+                {/* Mobile Layout (< lg) */}
+                <div className="lg:hidden space-y-4">
+                    {/* Reference Images */}
+                    <div className="bg-slate-900/30 p-0">
+                        <div className="flex items-center justify-between mb-3 px-2 pt-3">
                             <span className="text-sm text-slate-300">
                                 {isEditingMode ? 'Input Image' : `References (Max ${modelConfig?.maxReferenceImages || 3})`}
                             </span>
@@ -152,20 +156,17 @@ const ShotCreator = () => {
                         />
                     </div>
 
-                    {/* Prompt & Settings */}
-                    <div className="bg-slate-900/30 lg:rounded-lg lg:border border-slate-700/50">
+                    {/* Prompt */}
+                    <div className="bg-slate-900/30">
                         <CreatorPromptSettings compact={false} />
                     </div>
-                </div>
 
-                {/* RIGHT COLUMN - Generated Images & Library */}
-                <div className="space-y-6">
-                    {/* Single Gallery - Generated Images + Reference Library */}
-                    <div className="bg-slate-900/30 lg:rounded-lg lg:border border-slate-700/50">
+                    {/* Gallery */}
+                    <div className="bg-slate-900/30">
                         <Tabs defaultValue="generated" className="w-full">
                             <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="generated" className="text-xs lg:text-sm">📸 Images</TabsTrigger>
-                                <TabsTrigger value="library" className="text-xs lg:text-sm">📚 Library</TabsTrigger>
+                                <TabsTrigger value="generated" className="text-xs">📸 Images</TabsTrigger>
+                                <TabsTrigger value="library" className="text-xs">📚 Library</TabsTrigger>
                             </TabsList>
                             <TabsContent value="generated">
                                 <UnifiedImageGallery
@@ -198,23 +199,111 @@ const ShotCreator = () => {
                             </TabsContent>
                         </Tabs>
                     </div>
-
-                    {/* Category Selection Dialog */}
-                    <CategorySelectionDialog
-                        open={categoryDialogOpen}
-                        onOpenChange={setCategoryDialogOpen}
-                        onSave={handleCategorySave}
-                        initialTags={[]}
-                        imageUrl={pendingGeneration?.imageUrl}
-                    />
-                    {/* Fullscreen Image Modal */}
-                    <FullscreenImageModal
-                        open={!!fullscreenImage}
-                        onOpenChange={(open) => {
-                            if (!open) setFullscreenImage(null)
-                        }}
-                    />
                 </div>
+
+                {/* Desktop Layout (>= lg) - Resizable */}
+                <div className="hidden lg:block h-[calc(100vh-120px)]">
+                    <ResizablePanelGroup direction="horizontal" className="h-full">
+                        {/* LEFT PANEL - Reference Images & Prompt */}
+                        <ResizablePanel defaultSize={60} minSize={30}>
+                            <div className="h-full pr-3 space-y-4 overflow-y-auto">
+                                {/* Reference Images */}
+                                <div className="bg-slate-900/30 rounded-lg border border-slate-700/50 p-4">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <span className="text-sm text-slate-300">
+                                            {isEditingMode ? 'Input Image' : `References (Max ${modelConfig?.maxReferenceImages || 3})`}
+                                        </span>
+                                        <ModelSelector
+                                            selectedModel={shotCreatorSettings.model || 'nano-banana'}
+                                            onModelChange={(model: string) => {
+                                                const newModel = model as ModelId
+                                                const newModelConfig = getModelConfig(newModel)
+                                                const defaultResolution = newModelConfig.parameters.resolution?.default as string | undefined
+                                                const updates: { model: ModelId; resolution?: string } = { model: newModel }
+                                                if (defaultResolution) updates.resolution = defaultResolution
+                                                updateSettings(updates)
+                                            }}
+                                            compact={true}
+                                            showTooltips={false}
+                                        />
+                                    </div>
+                                    <CreatorReferenceManager
+                                        compact={false}
+                                        maxImages={isEditingMode ? 1 : (modelConfig?.maxReferenceImages || 3)}
+                                        editingMode={isEditingMode}
+                                    />
+                                </div>
+
+                                {/* Prompt & Settings */}
+                                <div className="bg-slate-900/30 rounded-lg border border-slate-700/50">
+                                    <CreatorPromptSettings compact={false} />
+                                </div>
+                            </div>
+                        </ResizablePanel>
+
+                        {/* RESIZE HANDLE */}
+                        <ResizableHandle withHandle />
+
+                        {/* RIGHT PANEL - Generated Images & Library */}
+                        <ResizablePanel defaultSize={40} minSize={25}>
+                            <div className="h-full pl-3">
+                                <div className="bg-slate-900/30 rounded-lg border border-slate-700/50 h-full">
+                                    <Tabs defaultValue="generated" className="w-full h-full flex flex-col">
+                                        <TabsList className="grid w-full grid-cols-2">
+                                            <TabsTrigger value="generated" className="text-sm">📸 Images</TabsTrigger>
+                                            <TabsTrigger value="library" className="text-sm">📚 Library</TabsTrigger>
+                                        </TabsList>
+                                        <TabsContent value="generated" className="flex-1 overflow-hidden">
+                                            <UnifiedImageGallery
+                                                currentTab="shot-creator"
+                                                isLoading={isGalleryLoading}
+                                                onSendToTab={(imageUrl, targetTab) => {
+                                                    if (targetTab === 'shot-editor' && onSendToImageEdit) {
+                                                        onSendToImageEdit(imageUrl)
+                                                    } else if (targetTab === 'layout-annotation' && onSendToLayoutAnnotation) {
+                                                        onSendToLayoutAnnotation(imageUrl)
+                                                    }
+                                                }}
+                                                onSendToLibrary={(imageUrl: string, galleryId: string) => {
+                                                    onSendToReferenceLibrary(imageUrl, galleryId);
+                                                }}
+                                                onSendToShotAnimator={(imageUrl) => {
+                                                    if (onSendToShotAnimator) {
+                                                        onSendToShotAnimator(imageUrl);
+                                                    }
+                                                }}
+                                                onUseAsReference={(imageUrl) => {
+                                                    if (onUseAsReference) {
+                                                        onUseAsReference(imageUrl);
+                                                    }
+                                                }}
+                                            />
+                                        </TabsContent>
+                                        <TabsContent value="library" className="flex-1 overflow-hidden">
+                                            <ShotReferenceLibrary />
+                                        </TabsContent>
+                                    </Tabs>
+                                </div>
+                            </div>
+                        </ResizablePanel>
+                    </ResizablePanelGroup>
+                </div>
+
+                {/* Category Selection Dialog */}
+                <CategorySelectionDialog
+                    open={categoryDialogOpen}
+                    onOpenChange={setCategoryDialogOpen}
+                    onSave={handleCategorySave}
+                    initialTags={[]}
+                    imageUrl={pendingGeneration?.imageUrl}
+                />
+                {/* Fullscreen Image Modal */}
+                <FullscreenImageModal
+                    open={!!fullscreenImage}
+                    onOpenChange={(open) => {
+                        if (!open) setFullscreenImage(null)
+                    }}
+                />
             </div>
         </div>
     )

@@ -40,6 +40,8 @@ export interface GeneratedImage {
   }
 }
 
+export type GridSize = 'small' | 'medium' | 'large'
+
 interface UnifiedGalleryState {
   images: GeneratedImage[]
   recentImages: GeneratedImage[]
@@ -51,6 +53,9 @@ interface UnifiedGalleryState {
   totalPages: number
   totalItems: number
   pageSize: number
+
+  // UI Preferences
+  gridSize: GridSize
 
   // Actions
   addImage: (image: Omit<GeneratedImage, 'id' | 'metadata'> & {
@@ -67,6 +72,7 @@ interface UnifiedGalleryState {
   removeImage: (imageIdOrUrl: string) => Promise<boolean>
   setFullscreenImage: (image: GeneratedImage | null) => void
   updateImageReference: (imageId: string, reference: string) => Promise<void>
+  setGridSize: (size: GridSize) => void
 
   // Filtering
   getAllReferences: () => string[]
@@ -75,6 +81,16 @@ interface UnifiedGalleryState {
   // Utilities
   getTotalImages: () => number
   getTotalCreditsUsed: () => number
+}
+
+// Load grid size preference from localStorage
+const loadGridSizePreference = (): GridSize => {
+  if (typeof window === 'undefined') return 'medium'
+  const saved = localStorage.getItem('gallery-grid-size')
+  if (saved === 'small' || saved === 'medium' || saved === 'large') {
+    return saved
+  }
+  return 'medium'
 }
 
 export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) => ({
@@ -88,6 +104,9 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   totalPages: 0,
   totalItems: 0,
   pageSize: 12,
+
+  // UI Preferences
+  gridSize: loadGridSizePreference(),
 
   addImage: (imageData) => {
     const newImage: GeneratedImage = {
@@ -227,6 +246,14 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
         ? { ...state.fullscreenImage, reference: normalizedReference }
         : state.fullscreenImage
     }))
+  },
+
+  setGridSize: (size) => {
+    set({ gridSize: size })
+    // Persist to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gallery-grid-size', size)
+    }
   },
 
   getAllReferences: () => {

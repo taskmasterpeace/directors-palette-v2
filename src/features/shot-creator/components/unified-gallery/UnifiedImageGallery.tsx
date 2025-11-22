@@ -12,7 +12,7 @@ import { useGalleryLogic } from "../../hooks/useGalleryLogic"
 import { ImageCard } from "./ImageCard"
 import { GalleryHeader } from "./GalleryHeader"
 import FullscreenModal from "./FullScreenModal"
-import { GeneratedImage } from '../../store/unified-gallery-store'
+import { GeneratedImage, useUnifiedGalleryStore, GridSize } from '../../store/unified-gallery-store'
 
 export interface UnifiedImageGalleryProps {
     currentTab?: 'shot-creator' | 'shot-animator' | 'layout-annotation' | 'gallery' | 'story-creator'
@@ -64,6 +64,22 @@ export function UnifiedImageGallery({
 
     const showReferenceNamePrompt = useReferenceNamePrompt()
     const { toast } = useToast()
+
+    // Get grid size from store
+    const gridSize = useUnifiedGalleryStore(state => state.gridSize)
+    const setGridSize = useUnifiedGalleryStore(state => state.setGridSize)
+
+    // Grid size to CSS classes mapping
+    const getGridClasses = (size: GridSize): string => {
+        switch (size) {
+            case 'small':
+                return 'grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10'
+            case 'medium':
+                return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
+            case 'large':
+                return 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+        }
+    }
 
     // Keyboard navigation for fullscreen modal
     const navigateToImage = useCallback((direction: 'next' | 'previous') => {
@@ -161,9 +177,11 @@ export function UnifiedImageGallery({
                 searchQuery={filters.searchQuery}
                 onSearchChange={handleSearchChange}
                 selectedCount={selectedImages.length}
+                gridSize={gridSize}
                 onSelectAll={handleSelectAll}
                 onClearSelection={handleClearSelection}
                 onDeleteSelected={handleDeleteSelected}
+                onGridSizeChange={setGridSize}
             />
 
             <CardContent>
@@ -183,7 +201,7 @@ export function UnifiedImageGallery({
                 ) : (
                     <>
                         <ScrollArea className="h-[calc(100vh-180px)] min-h-[500px]">
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                            <div className={cn("grid gap-4", getGridClasses(gridSize))}>
                                 {paginatedImages.map((image: GeneratedImage) => (
                                     <ImageCard
                                         key={image.id}
