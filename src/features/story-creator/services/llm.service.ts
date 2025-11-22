@@ -118,7 +118,7 @@ Focus on:
             const progressMessage = `Extracting shots from ${segment.chapter || `segment ${i + 1}`} (${i + 1}/${segments.length})`
             onProgress?.({ type: 'extracting', message: progressMessage })
 
-            const userPrompt = `Extract 5-10 visual shots from this chapter. Include establishing shots, character close-ups, inserts, and reactions.
+            const userPrompt = `Extract 8-15 visual shots from this ${segment.chapter ? 'section' : 'chapter'}. Include establishing shots, character close-ups, inserts, and reactions.
 
 \`\`\`
 ${segment.text}
@@ -127,18 +127,18 @@ ${segment.text}
 Return JSON format:
 [
   {
-    "chapter": "${segment.chapter || 'null'}",
+    ${segment.chapter ? `"chapter": "${segment.chapter}",` : '"chapter": null,'}
     "sequence": 1,
     "text": "original text excerpt",
     "visualDescription": "MUST include specific location + what we see + mood",
     "characters": ["Character1", "Character2"],
-    "location": "Specific location name (e.g., Cobb County interrogation room, not just 'room')",
-    "mood": "tense/calm/dramatic/angry/fearful/etc",
+    "location": "Specific location name (e.g., BullPen Battle League venue in Atlanta, not just 'venue')",
+    "mood": "tense/calm/dramatic/angry/fearful/triumphant/etc",
     "cameraAngle": "establishing/wide/medium/close-up/insert/POV/reaction"
   }
 ]
 
-Extract 5-10 shots. Return ONLY valid JSON, no markdown.`
+Extract 8-15 shots with good variety. Return ONLY valid JSON, no markdown.`
 
             try {
                 const response = await this.chat([
@@ -180,15 +180,20 @@ Extract 5-10 shots. Return ONLY valid JSON, no markdown.`
      * Split story into processable segments (by chapter or intelligent chunking)
      */
     private static splitStoryIntoSegments(storyText: string): Array<{ text: string; chapter?: string }> {
-        // Detect chapter markers (Chapter 1, Chapter 2, etc. or Part I, Part II, etc.)
-        const chapterRegex = /^(Chapter|Part|Section)\s+(\d+|[IVXLCDM]+).*$/gim
+        // Detect chapter/section markers - includes plain headers on their own line
+        // Matches: "Chapter 1", "Part I", or standalone headers like "BullPen Beginnings and Reputation"
+        const chapterRegex = /^(?:(Chapter|Part|Section)\s+(\d+|[IVXLCDM]+)[^\n]*|([A-Z][A-Za-z\s,'&-]{10,80}))$/gim
         const chapters: Array<{ text: string; chapter: string }> = []
 
         let match
         const matches: Array<{ index: number; title: string }> = []
 
         while ((match = chapterRegex.exec(storyText)) !== null) {
-            matches.push({ index: match.index, title: match[0].trim() })
+            const title = match[0].trim()
+            // Skip generic single words or very short titles
+            if (title.length >= 10 && !title.match(/^(The|A|An|In|On|At|To|From|For|With|By|Of)\s+\w+$/i)) {
+                matches.push({ index: match.index, title })
+            }
         }
 
         // If we found chapters, split by them

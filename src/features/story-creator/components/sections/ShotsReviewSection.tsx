@@ -162,8 +162,8 @@ function ShotCard({
                 {/* Content */}
                 <div className="flex-1 space-y-2">
                     {/* Chapter Badge */}
-                    {shot.chapter && (
-                        <Badge variant="outline" className="text-xs">
+                    {shot.chapter && shot.chapter !== 'null' && (
+                        <Badge variant="outline" className="text-xs text-blue-400 border-blue-600">
                             {shot.chapter}
                         </Badge>
                     )}
@@ -177,7 +177,15 @@ function ShotCard({
                             rows={3}
                         />
                     ) : (
-                        <p className="text-sm text-slate-300">{shot.prompt}</p>
+                        <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">
+                            {shot.prompt.split(/(@\w+)/).map((part, i) =>
+                                part.startsWith('@') ? (
+                                    <span key={i} className="text-green-400 font-semibold">{part}</span>
+                                ) : (
+                                    part
+                                )
+                            )}
+                        </p>
                     )}
 
                     {/* Reference Tags */}
