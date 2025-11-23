@@ -365,9 +365,50 @@ export function useStoryGeneration() {
         }
     }, [currentQueue, generateShot, setCurrentQueue, toast])
 
+    /**
+     * Check for missing reference images before starting generation
+     * Returns array of tags that are missing references
+     */
+    const checkMissingReferences = useCallback((shots: StoryShot[]) => {
+        const galleryImages = useUnifiedGalleryStore.getState().images
+
+        // Get all reference tags from gallery
+        const assignedTags = new Set(
+            galleryImages
+                .filter(img => img.reference)
+                .map(img => img.reference!.toLowerCase())
+        )
+
+        // Find all @tags used in shot prompts
+        const tagsUsage = new Map<string, number[]>()
+
+        shots.forEach((shot) => {
+            const tagMatches = shot.prompt.match(/@[a-z0-9_]+/gi)
+            if (tagMatches) {
+                tagMatches.forEach((tag) => {
+                    const normalizedTag = tag.toLowerCase()
+                    if (!assignedTags.has(normalizedTag)) {
+                        const shotNumbers = tagsUsage.get(normalizedTag) || []
+                        shotNumbers.push(shot.sequence_number)
+                        tagsUsage.set(normalizedTag, shotNumbers)
+                    }
+                })
+            }
+        })
+
+        // Convert to array and sort by number of shots affected
+        return Array.from(tagsUsage.entries())
+            .map(([tag, shotNumbers]) => ({
+                tag,
+                shotNumbers: shotNumbers.sort((a, b) => a - b)
+            }))
+            .sort((a, b) => b.shotNumbers.length - a.shotNumbers.length)
+    }, [])
+
     return {
         generateShot,
         processQueue,
+        checkMissingReferences,
         progress,
         isGenerating: progress.status === 'processing'
     }

@@ -173,6 +173,24 @@ Extract 8-15 shots with good variety. Return ONLY valid JSON, no markdown.`
         }
 
         console.log(`🎬 Total shots extracted: ${allScenes.length}`)
+
+        // Validation: Ensure reasonable shot count
+        const MIN_SHOTS = 3
+        const MAX_SHOTS = 200
+
+        if (allScenes.length === 0) {
+            throw new Error('No visual scenes extracted from story. Please ensure your story contains descriptive action or scene changes.')
+        }
+
+        if (allScenes.length < MIN_SHOTS) {
+            console.warn(`⚠️  Only ${allScenes.length} shots extracted (minimum recommended: ${MIN_SHOTS})`)
+        }
+
+        if (allScenes.length > MAX_SHOTS) {
+            console.warn(`⚠️  Extracted ${allScenes.length} shots (max ${MAX_SHOTS}). Truncating...`)
+            allScenes.splice(MAX_SHOTS)
+        }
+
         return allScenes
     }
 
@@ -341,6 +359,24 @@ Return ONLY valid JSON, no markdown.`
         )
 
         console.log(`👥 Total unique entities: ${uniqueCharacters.length} characters, ${uniqueLocations.length} locations`)
+
+        // Validation: Ensure at least some entities were extracted
+        const MIN_ENTITIES = 1
+        const MAX_ENTITIES_PER_TYPE = 50
+
+        if (uniqueCharacters.length === 0 && uniqueLocations.length === 0) {
+            throw new Error('No entities extracted from story. Please ensure your story contains named characters or specific locations.')
+        }
+
+        if (uniqueCharacters.length > MAX_ENTITIES_PER_TYPE) {
+            console.warn(`⚠️  Extracted ${uniqueCharacters.length} characters (max ${MAX_ENTITIES_PER_TYPE}). Truncating...`)
+            uniqueCharacters.splice(MAX_ENTITIES_PER_TYPE)
+        }
+
+        if (uniqueLocations.length > MAX_ENTITIES_PER_TYPE) {
+            console.warn(`⚠️  Extracted ${uniqueLocations.length} locations (max ${MAX_ENTITIES_PER_TYPE}). Truncating...`)
+            uniqueLocations.splice(MAX_ENTITIES_PER_TYPE)
+        }
 
         return {
             characters: uniqueCharacters,

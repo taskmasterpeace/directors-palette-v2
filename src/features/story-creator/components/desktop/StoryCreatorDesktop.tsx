@@ -5,12 +5,14 @@ import { useStoryCreatorStore } from '../../store/story-creator.store'
 import { StoryProjectService } from '../../services/story-project.service'
 import { PromptGeneratorService } from '../../services/prompt-generator.service'
 import { LLMService } from '../../services/llm.service'
+import { useStoryGeneration } from '../../hooks/useStoryGeneration'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FileText, ListChecks, Activity, Users } from 'lucide-react'
 import StoryInputSection from '../sections/StoryInputSection'
 import EntitiesSection from '../sections/EntitiesSection'
 import ShotsReviewSection from '../sections/ShotsReviewSection'
 import GenerationQueueSection from '../sections/GenerationQueueSection'
+import { MissingReferencesWarning } from '../MissingReferencesWarning'
 
 /**
  * Story Creator Desktop View
@@ -32,6 +34,10 @@ export default function StoryCreatorDesktop() {
     const [activeTab, setActiveTab] = useState('input')
     const [isExtracting, setIsExtracting] = useState(false)
     const [isGenerating, setIsGenerating] = useState(false)
+    const [showMissingReferencesModal, setShowMissingReferencesModal] = useState(false)
+    const [missingReferences, setMissingReferences] = useState<Array<{ tag: string; shotNumbers: number[] }>>([])
+
+    const { checkMissingReferences } = useStoryGeneration()
 
     const handleExtractShots = async (title: string, storyText: string) => {
         setIsExtracting(true)
@@ -154,6 +160,21 @@ export default function StoryCreatorDesktop() {
     const handleGenerateAll = async () => {
         if (!currentProject || shots.length === 0) return
 
+        // Check for missing references first
+        const missing = checkMissingReferences(shots)
+        if (missing.length > 0) {
+            setMissingReferences(missing)
+            setShowMissingReferencesModal(true)
+            return
+        }
+
+        // No missing references, proceed with generation
+        await proceedWithGeneration()
+    }
+
+    const proceedWithGeneration = async () => {
+        if (!currentProject || shots.length === 0) return
+
         setIsGenerating(true)
         try {
             const shotIds = shots.map(s => s.id)
@@ -173,6 +194,16 @@ export default function StoryCreatorDesktop() {
         } finally {
             setIsGenerating(false)
         }
+    }
+
+    const handleAssignReferences = () => {
+        setShowMissingReferencesModal(false)
+        setActiveTab('entities')
+    }
+
+    const handleContinueAnyway = async () => {
+        setShowMissingReferencesModal(false)
+        await proceedWithGeneration()
     }
 
     const handlePauseResume = async () => {
@@ -256,6 +287,15 @@ export default function StoryCreatorDesktop() {
                     </div>
                 </Tabs>
             </div>
+
+            {/* Missing References Warning Modal */}
+            <MissingReferencesWarning
+                open={showMissingReferencesModal}
+                onOpenChange={setShowMissingReferencesModal}
+                missingReferences={missingReferences}
+                onAssignReferences={handleAssignReferences}
+                onContinueAnyway={handleContinueAnyway}
+            />
         </div>
     )
 }
