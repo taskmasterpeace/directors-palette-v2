@@ -3,15 +3,18 @@
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { User, MapPin, ArrowRight, Image as ImageIcon, Upload } from 'lucide-react'
-import type { ExtractedEntity } from '../../types/story.types'
+import { Badge } from '@/components/ui/badge'
+import { User, MapPin, ArrowRight, Image as ImageIcon, Upload, AlertCircle, CheckCircle2 } from 'lucide-react'
+import type { ExtractedEntity, StoryShot } from '../../types/story.types'
 import { useUnifiedGalleryStore } from '@/features/shot-creator/store/unified-gallery-store'
 import { useMemo, useState } from 'react'
 import { ReferenceSelectionModal } from '../ReferenceSelectionModal'
 import { CharacterReferenceUpload } from '../CharacterReferenceUpload'
+import { EntityCoverageService } from '../../services/entity-coverage.service'
 
 interface EntitiesSectionProps {
     entities: ExtractedEntity[]
+    shots: StoryShot[]
     onContinue: () => void
 }
 
@@ -21,6 +24,7 @@ interface EntitiesSectionProps {
  */
 export default function EntitiesSection({
     entities,
+    shots,
     onContinue
 }: EntitiesSectionProps) {
     const characters = entities.filter(e => e.type === 'character')
@@ -28,6 +32,22 @@ export default function EntitiesSection({
 
     // Get gallery images to find reference assignments
     const galleryImages = useUnifiedGalleryStore(state => state.images)
+
+    // Calculate entity coverage
+    const coverage = useMemo(() =>
+        EntityCoverageService.analyzeEntityCoverage(entities, shots, galleryImages),
+        [entities, shots, galleryImages]
+    )
+
+    const summary = useMemo(() =>
+        EntityCoverageService.getCoverageSummary(coverage),
+        [coverage]
+    )
+
+    // Helper to get coverage for specific entity
+    const getEntityCoverage = (tag: string) => {
+        return coverage.find(c => c.entityTag === tag)
+    }
 
     // Modal state
     const [selectionModal, setSelectionModal] = useState<{
@@ -63,6 +83,36 @@ export default function EntitiesSection({
                     Review extracted entities. These will be used as @tags in image prompts.
                 </p>
             </div>
+
+            {/* Coverage Summary */}
+            {shots.length > 0 && (
+                <Card className="p-4 bg-blue-900/20 border-blue-700">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <div className="text-sm font-medium text-blue-300 mb-1">Entity Coverage</div>
+                            <div className="text-xs text-slate-400">
+                                {summary.usedEntities} of {summary.totalEntities} entities used in shots
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <div className="text-center">
+                                <div className="text-2xl font-bold text-green-400">{summary.usedEntities}</div>
+                                <div className="text-xs text-slate-400">Used</div>
+                            </div>
+                            {summary.unusedEntities > 0 && (
+                                <div className="text-center">
+                                    <div className="text-2xl font-bold text-orange-400">{summary.unusedEntities}</div>
+                                    <div className="text-xs text-slate-400">Unused</div>
+                                </div>
+                            )}
+                            <div className="text-center">
+                                <div className="text-2xl font-bold text-blue-400">{summary.entitiesWithReferences}</div>
+                                <div className="text-xs text-slate-400">Have Refs</div>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            )}
 
             {/* Tabbed View */}
             <Tabs defaultValue="characters" className="w-full">
@@ -126,6 +176,25 @@ export default function EntitiesSection({
                                                         {char.description}
                                                     </p>
                                                 )}
+                                                {/* Coverage Badges */}
+                                                {shots.length > 0 && (() => {
+                                                    const entityCov = getEntityCoverage(char.tag)
+                                                    return entityCov && (
+                                                        <div className="flex gap-2 mb-2">
+                                                            {entityCov.shotCount > 0 ? (
+                                                                <Badge variant="secondary" className="text-xs bg-green-900/50 text-green-400 border-green-700">
+                                                                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                                                                    Used in {entityCov.shotCount} shot{entityCov.shotCount !== 1 ? 's' : ''}
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge variant="secondary" className="text-xs bg-orange-900/50 text-orange-400 border-orange-700">
+                                                                    <AlertCircle className="w-3 h-3 mr-1" />
+                                                                    Not used yet
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    )
+                                                })()}
                                                 {/* Action Buttons */}
                                                 <div className="flex gap-2 mt-2">
                                                     <Button
@@ -205,6 +274,25 @@ export default function EntitiesSection({
                                                         {loc.description}
                                                     </p>
                                                 )}
+                                                {/* Coverage Badges */}
+                                                {shots.length > 0 && (() => {
+                                                    const entityCov = getEntityCoverage(loc.tag)
+                                                    return entityCov && (
+                                                        <div className="flex gap-2 mb-2">
+                                                            {entityCov.shotCount > 0 ? (
+                                                                <Badge variant="secondary" className="text-xs bg-green-900/50 text-green-400 border-green-700">
+                                                                    <CheckCircle2 className="w-3 h-3 mr-1" />
+                                                                    Used in {entityCov.shotCount} shot{entityCov.shotCount !== 1 ? 's' : ''}
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge variant="secondary" className="text-xs bg-orange-900/50 text-orange-400 border-orange-700">
+                                                                    <AlertCircle className="w-3 h-3 mr-1" />
+                                                                    Not used yet
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    )
+                                                })()}
                                                 {/* Action Buttons */}
                                                 <div className="flex gap-2 mt-2">
                                                     <Button

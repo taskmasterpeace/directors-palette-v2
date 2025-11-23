@@ -84,7 +84,6 @@ export class QueueRecoveryService {
     static getRecoveryMessage(checkpoint: QueueCheckpoint): string {
         const completed = checkpoint.currentShotIndex
         const total = checkpoint.totalShots
-        const remaining = total - completed
         const percentage = Math.round((completed / total) * 100)
 
         return `Resume incomplete generation? (${completed}/${total} shots completed, ${percentage}%)`

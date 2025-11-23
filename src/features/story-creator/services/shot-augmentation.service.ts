@@ -45,8 +45,9 @@ const SHOT_TEMPLATES: Record<ShotTemplate['type'], ShotTemplate> = {
 
 /**
  * Emotion brackets for various shot types
+ * Currently unused but kept for future enhancements
  */
-const EMOTION_BRACKETS = {
+const _EMOTION_BRACKETS = {
     positive: '[happy, excited, relieved, triumphant, joyful]',
     negative: '[sad, angry, frustrated, defeated, heartbroken]',
     neutral: '[confused, thoughtful, determined, focused, curious]',
@@ -55,8 +56,9 @@ const EMOTION_BRACKETS = {
 
 /**
  * Action brackets for different contexts
+ * Currently unused but kept for future enhancements
  */
-const ACTION_BRACKETS = {
+const _ACTION_BRACKETS = {
     movement: '[walking, running, climbing, jumping, crawling]',
     combat: '[fighting, dodging, blocking, attacking, defending]',
     investigation: '[searching, examining, discovering, investigating, analyzing]',

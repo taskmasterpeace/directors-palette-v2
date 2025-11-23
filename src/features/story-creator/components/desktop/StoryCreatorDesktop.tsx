@@ -6,6 +6,7 @@ import { StoryProjectService } from '../../services/story-project.service'
 import { PromptGeneratorService } from '../../services/prompt-generator.service'
 import { LLMService } from '../../services/llm.service'
 import { useStoryGeneration } from '../../hooks/useStoryGeneration'
+import { useDraftAutosave, clearDraft, type DraftData } from '../../hooks/useDraftAutosave'
 import { validateBracketSyntax } from '@/features/shot-creator/helpers/prompt-syntax-feedback'
 import { toast } from '@/hooks/use-toast'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -15,6 +16,7 @@ import EntitiesSection from '../sections/EntitiesSection'
 import ShotsReviewSection from '../sections/ShotsReviewSection'
 import GenerationQueueSection from '../sections/GenerationQueueSection'
 import { MissingReferencesWarning } from '../MissingReferencesWarning'
+import { DraftRestorePrompt } from '../DraftRestorePrompt'
 import type { GeneratedShot } from '@/features/story-creator/services/shot-augmentation.service'
 
 /**
@@ -41,6 +43,19 @@ export default function StoryCreatorDesktop() {
     const [missingReferences, setMissingReferences] = useState<Array<{ tag: string; shotNumbers: number[] }>>([])
 
     const { checkMissingReferences } = useStoryGeneration()
+
+    // Auto-save drafts
+    useDraftAutosave(currentProject?.id || null, shots)
+
+    const handleRestoreDraft = (draft: DraftData) => {
+        // Restore shots from draft
+        setShots(draft.shots)
+        toast({
+            title: 'Draft Restored',
+            description: `Restored ${draft.shots.length} shots from your previous session`,
+        })
+        setActiveTab('review')
+    }
 
     const handleExtractShots = async (title: string, storyText: string) => {
         setIsExtracting(true)
@@ -148,6 +163,9 @@ export default function StoryCreatorDesktop() {
 
             setShots(createdShots)
             setActiveTab('entities')
+
+            // Clear any existing draft when starting fresh
+            clearDraft()
         } catch (error) {
             console.error('Error extracting shots:', error)
         } finally {
@@ -291,6 +309,9 @@ export default function StoryCreatorDesktop() {
 
     return (
         <div className="h-full flex flex-col">
+            {/* Draft Restore Prompt */}
+            <DraftRestorePrompt onRestore={handleRestoreDraft} />
+
             {/* Tabbed Content */}
             <div className="flex-1 overflow-hidden">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
@@ -334,6 +355,7 @@ export default function StoryCreatorDesktop() {
                         <TabsContent value="entities" className="mt-0">
                             <EntitiesSection
                                 entities={extractedEntities}
+                                shots={shots}
                                 onContinue={() => setActiveTab('review')}
                             />
                         </TabsContent>

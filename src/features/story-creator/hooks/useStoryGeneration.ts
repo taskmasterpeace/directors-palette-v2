@@ -9,6 +9,7 @@ import { getClient } from '@/lib/db/client'
 import { parseDynamicPrompt } from '@/features/shot-creator/helpers/prompt-syntax-feedback'
 import { parseReferenceTags } from '@/features/shot-creator/helpers/parse-reference-tags'
 import { getRandomFromCategory } from '@/features/shot-creator/services/reference-selection.service'
+import { getVariationCount } from '../helpers/bracket-prompt.helper'
 import { uploadImageToReplicate } from '@/features/shot-creator/helpers/image-resize.helper'
 import { StoryProjectService } from '../services/story-project.service'
 import { QueueRecoveryService } from '../services/queue-recovery.service'
@@ -21,6 +22,8 @@ export interface StoryGenerationProgress {
     totalShots: number
     currentVariation: number
     totalVariations: number
+    imagesGenerated: number
+    totalImages: number
     error?: string
 }
 
@@ -63,7 +66,9 @@ export function useStoryGeneration() {
         currentShotIndex: 0,
         totalShots: 0,
         currentVariation: 0,
-        totalVariations: 0
+        totalVariations: 0,
+        imagesGenerated: 0,
+        totalImages: 0
     })
 
     const { currentQueue, setCurrentQueue, updateShot } = useStoryCreatorStore()
@@ -213,12 +218,19 @@ export function useStoryGeneration() {
             return
         }
 
+        // Calculate total images including all bracket variations
+        const totalImages = shots.reduce((total, shot) => {
+            return total + getVariationCount(shot.prompt)
+        }, 0)
+
         setProgress({
             status: 'processing',
             currentShotIndex: 0,
             totalShots: shots.length,
             currentVariation: 0,
-            totalVariations: 0
+            totalVariations: 0,
+            imagesGenerated: 0,
+            totalImages
         })
 
         try {
@@ -247,8 +259,10 @@ export function useStoryGeneration() {
 
             toast({
                 title: 'Starting Generation',
-                description: `Processing ${shots.length} shots...`,
+                description: `Processing ${shots.length} shots (${totalImages} total images)...`,
             })
+
+            let imagesGeneratedSoFar = 0
 
             // Process each shot
             for (let i = 0; i < shots.length; i++) {
@@ -279,20 +293,29 @@ export function useStoryGeneration() {
                 try {
                     const result = await generateShot(shot, model, modelSettings)
 
-                    // Update queue progress
-                    const progress = ((i + 1) / shots.length) * 100
+                    // Update images generated count
+                    imagesGeneratedSoFar += result.totalVariations
+
+                    // Update queue progress based on images generated, not shots
+                    const progressPercent = (imagesGeneratedSoFar / totalImages) * 100
                     await StoryProjectService.updateQueueProgress(currentQueue.id, {
                         status: 'processing',
-                        progress,
+                        progress: progressPercent,
                         current_shot_index: i + 1
                     })
 
                     setCurrentQueue({
                         ...currentQueue,
                         status: 'processing',
-                        progress,
+                        progress: progressPercent,
                         current_shot_index: i + 1
                     })
+
+                    // Update progress state
+                    setProgress(prev => ({
+                        ...prev,
+                        imagesGenerated: imagesGeneratedSoFar
+                    }))
 
                     // Update checkpoint
                     QueueRecoveryService.updateProgress(currentQueue.id, i + 1)
@@ -300,7 +323,7 @@ export function useStoryGeneration() {
                     if (result.totalVariations > 1) {
                         toast({
                             title: 'Shot Complete',
-                            description: `Generated ${result.totalVariations} variations`,
+                            description: `Generated ${result.totalVariations} variations (${imagesGeneratedSoFar}/${totalImages} total images)`,
                         })
                     }
                 } catch (error) {
@@ -337,7 +360,9 @@ export function useStoryGeneration() {
                 currentShotIndex: shots.length,
                 totalShots: shots.length,
                 currentVariation: 0,
-                totalVariations: 0
+                totalVariations: 0,
+                imagesGenerated: totalImages,
+                totalImages
             })
 
             // Clear checkpoint on successful completion
@@ -345,7 +370,7 @@ export function useStoryGeneration() {
 
             toast({
                 title: 'Generation Complete!',
-                description: `All ${shots.length} shots have been processed. Check the gallery!`,
+                description: `Generated ${totalImages} images from ${shots.length} shots. Check the gallery!`,
             })
         } catch (error) {
             console.error('Queue processing failed:', error)

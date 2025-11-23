@@ -9,6 +9,7 @@ import { BookOpen, FileText, ListChecks, Activity } from 'lucide-react'
 import StoryInputSection from '../sections/StoryInputSection'
 import ShotsReviewSection from '../sections/ShotsReviewSection'
 import GenerationQueueSection from '../sections/GenerationQueueSection'
+import type { GeneratedShot } from '../../services/shot-augmentation.service'
 
 /**
  * Story Creator Mobile View
@@ -94,7 +95,7 @@ export default function StoryCreatorMobile() {
         updateShot(shotId, updates)
     }
 
-    const handleAddShots = async (generatedShots: any[]) => {
+    const handleAddShots = async (generatedShots: GeneratedShot[]) => {
         if (!currentProject) return
 
         try {

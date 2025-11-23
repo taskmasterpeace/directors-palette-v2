@@ -361,7 +361,6 @@ Return ONLY valid JSON, no markdown.`
         console.log(`👥 Total unique entities: ${uniqueCharacters.length} characters, ${uniqueLocations.length} locations`)
 
         // Validation: Ensure at least some entities were extracted
-        const MIN_ENTITIES = 1
         const MAX_ENTITIES_PER_TYPE = 50
 
         if (uniqueCharacters.length === 0 && uniqueLocations.length === 0) {
