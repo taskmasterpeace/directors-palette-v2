@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Pause, Play, CheckCircle2, XCircle, Loader2, Image as ImageIcon, Layers } from 'lucide-react'
 import { useStoryGeneration } from '../../hooks/useStoryGeneration'
 import { getVariationCount } from '../../helpers/bracket-prompt.helper'
+import { QueueRecoveryBanner } from '../QueueRecoveryBanner'
 import type { StoryShot, GenerationQueue } from '../../types/story.types'
 
 interface GenerationQueueSectionProps {
@@ -24,15 +25,42 @@ export default function GenerationQueueSection({
     queue,
     onPauseResume
 }: GenerationQueueSectionProps) {
-    const { processQueue, isGenerating } = useStoryGeneration()
+    const { processQueue, isGenerating, loadCheckpoint, clearCheckpoint, getRecoveryMessage } = useStoryGeneration()
+    const [showRecovery, setShowRecovery] = useState(false)
+    const [recoveryCheckpoint, setRecoveryCheckpoint] = useState<ReturnType<typeof loadCheckpoint>>(null)
 
-    // Auto-start generation when queue becomes active
+    // Check for recoverable checkpoint on mount
     useEffect(() => {
-        if (queue && queue.status === 'pending' && shots.length > 0 && !isGenerating) {
+        const checkpoint = loadCheckpoint()
+        if (checkpoint && queue && checkpoint.queueId === queue.id) {
+            setRecoveryCheckpoint(checkpoint)
+            setShowRecovery(true)
+        }
+    }, [queue, loadCheckpoint])
+
+    const handleResume = () => {
+        if (recoveryCheckpoint && queue) {
+            const queuedShots = shots.filter(s => queue.shot_ids.includes(s.id))
+            // Resume from checkpoint index
+            const resumeShots = queuedShots.slice(recoveryCheckpoint.currentShotIndex)
+            processQueue(resumeShots)
+            setShowRecovery(false)
+        }
+    }
+
+    const handleDismissRecovery = () => {
+        clearCheckpoint()
+        setShowRecovery(false)
+        setRecoveryCheckpoint(null)
+    }
+
+    // Auto-start generation when queue becomes active (if no recovery)
+    useEffect(() => {
+        if (queue && queue.status === 'pending' && shots.length > 0 && !isGenerating && !showRecovery) {
             const queuedShots = shots.filter(s => queue.shot_ids.includes(s.id))
             processQueue(queuedShots)
         }
-    }, [queue, shots, isGenerating, processQueue])
+    }, [queue, shots, isGenerating, processQueue, showRecovery])
 
     if (!queue) {
         return (
@@ -58,6 +86,15 @@ export default function GenerationQueueSection({
 
     return (
         <div className="space-y-6">
+            {/* Recovery Banner */}
+            {showRecovery && recoveryCheckpoint && (
+                <QueueRecoveryBanner
+                    message={getRecoveryMessage(recoveryCheckpoint)}
+                    onResume={handleResume}
+                    onDismiss={handleDismissRecovery}
+                />
+            )}
+
             {/* Queue Header */}
             <div className="flex items-center justify-between">
                 <div>

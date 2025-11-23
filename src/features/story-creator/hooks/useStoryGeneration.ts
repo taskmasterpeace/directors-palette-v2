@@ -11,6 +11,7 @@ import { parseReferenceTags } from '@/features/shot-creator/helpers/parse-refere
 import { getRandomFromCategory } from '@/features/shot-creator/services/reference-selection.service'
 import { uploadImageToReplicate } from '@/features/shot-creator/helpers/image-resize.helper'
 import { StoryProjectService } from '../services/story-project.service'
+import { QueueRecoveryService } from '../services/queue-recovery.service'
 import type { ImageGenerationRequest, ImageModel, ImageModelSettings } from '@/features/shot-creator/types/image-generation.types'
 import type { StoryShot } from '../types/story.types'
 
@@ -235,6 +236,15 @@ export function useStoryGeneration() {
                 current_shot_index: 0
             })
 
+            // Save initial checkpoint
+            QueueRecoveryService.saveCheckpoint({
+                queueId: currentQueue.id,
+                projectId: currentQueue.project_id,
+                currentShotIndex: 0,
+                totalShots: shots.length,
+                shotIds: shots.map(s => s.id)
+            })
+
             toast({
                 title: 'Starting Generation',
                 description: `Processing ${shots.length} shots...`,
@@ -284,6 +294,9 @@ export function useStoryGeneration() {
                         current_shot_index: i + 1
                     })
 
+                    // Update checkpoint
+                    QueueRecoveryService.updateProgress(currentQueue.id, i + 1)
+
                     if (result.totalVariations > 1) {
                         toast({
                             title: 'Shot Complete',
@@ -327,6 +340,9 @@ export function useStoryGeneration() {
                 totalVariations: 0
             })
 
+            // Clear checkpoint on successful completion
+            QueueRecoveryService.clearCheckpoint()
+
             toast({
                 title: 'Generation Complete!',
                 description: `All ${shots.length} shots have been processed. Check the gallery!`,
@@ -357,6 +373,7 @@ export function useStoryGeneration() {
                 error_message: errorMessage
             })
 
+            // Don't clear checkpoint on failure - allow resume
             toast({
                 title: 'Generation Failed',
                 description: errorMessage,
@@ -410,6 +427,10 @@ export function useStoryGeneration() {
         processQueue,
         checkMissingReferences,
         progress,
-        isGenerating: progress.status === 'processing'
+        isGenerating: progress.status === 'processing',
+        // Queue recovery helpers
+        loadCheckpoint: QueueRecoveryService.loadCheckpoint,
+        clearCheckpoint: QueueRecoveryService.clearCheckpoint,
+        getRecoveryMessage: QueueRecoveryService.getRecoveryMessage
     }
 }
