@@ -6,7 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { User, MapPin, ArrowRight, Image as ImageIcon, Upload } from 'lucide-react'
 import type { ExtractedEntity } from '../../types/story.types'
 import { useUnifiedGalleryStore } from '@/features/shot-creator/store/unified-gallery-store'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { ReferenceSelectionModal } from '../ReferenceSelectionModal'
+import { CharacterReferenceUpload } from '../CharacterReferenceUpload'
 
 interface EntitiesSectionProps {
     entities: ExtractedEntity[]
@@ -27,11 +29,30 @@ export default function EntitiesSection({
     // Get gallery images to find reference assignments
     const galleryImages = useUnifiedGalleryStore(state => state.images)
 
+    // Modal state
+    const [selectionModal, setSelectionModal] = useState<{
+        open: boolean
+        entity: ExtractedEntity | null
+    }>({ open: false, entity: null })
+
+    const [uploadModal, setUploadModal] = useState<{
+        open: boolean
+        entity: ExtractedEntity | null
+    }>({ open: false, entity: null })
+
     // Find reference image for each entity by matching @tag
     const findReferenceImage = useMemo(() => (tag: string) => {
         const normalizedTag = tag.startsWith('@') ? tag : `@${tag}`
         return galleryImages.find(img => img.reference === normalizedTag)
     }, [galleryImages])
+
+    const openSelectionModal = (entity: ExtractedEntity) => {
+        setSelectionModal({ open: true, entity })
+    }
+
+    const openUploadModal = (entity: ExtractedEntity) => {
+        setUploadModal({ open: true, entity })
+    }
 
     return (
         <div className="space-y-6">
@@ -111,7 +132,7 @@ export default function EntitiesSection({
                                                         size="sm"
                                                         variant="outline"
                                                         className="text-xs h-7"
-                                                        onClick={() => {/* TODO: Open selection modal */}}
+                                                        onClick={() => openSelectionModal(char)}
                                                     >
                                                         <ImageIcon className="w-3 h-3 mr-1" />
                                                         Select
@@ -120,7 +141,7 @@ export default function EntitiesSection({
                                                         size="sm"
                                                         variant="outline"
                                                         className="text-xs h-7"
-                                                        onClick={() => {/* TODO: Open upload */}}
+                                                        onClick={() => openUploadModal(char)}
                                                     >
                                                         <Upload className="w-3 h-3 mr-1" />
                                                         Upload
@@ -190,7 +211,7 @@ export default function EntitiesSection({
                                                         size="sm"
                                                         variant="outline"
                                                         className="text-xs h-7"
-                                                        onClick={() => {/* TODO: Open selection modal */}}
+                                                        onClick={() => openSelectionModal(loc)}
                                                     >
                                                         <ImageIcon className="w-3 h-3 mr-1" />
                                                         Select
@@ -199,7 +220,7 @@ export default function EntitiesSection({
                                                         size="sm"
                                                         variant="outline"
                                                         className="text-xs h-7"
-                                                        onClick={() => {/* TODO: Open upload */}}
+                                                        onClick={() => openUploadModal(loc)}
                                                     >
                                                         <Upload className="w-3 h-3 mr-1" />
                                                         Upload
@@ -228,6 +249,28 @@ export default function EntitiesSection({
                     </Button>
                 </div>
             </div>
+
+            {/* Selection Modal */}
+            {selectionModal.entity && (
+                <ReferenceSelectionModal
+                    open={selectionModal.open}
+                    onOpenChange={(open) => setSelectionModal({ open, entity: null })}
+                    entityTag={selectionModal.entity.tag}
+                    entityName={selectionModal.entity.name}
+                    entityType={selectionModal.entity.type}
+                />
+            )}
+
+            {/* Upload Modal */}
+            {uploadModal.entity && (
+                <CharacterReferenceUpload
+                    open={uploadModal.open}
+                    onOpenChange={(open) => setUploadModal({ open, entity: null })}
+                    entityTag={uploadModal.entity.tag}
+                    entityName={uploadModal.entity.name}
+                    entityType={uploadModal.entity.type}
+                />
+            )}
         </div>
     )
 }
