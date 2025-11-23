@@ -19,6 +19,7 @@ export default function StoryCreatorMobile() {
         currentProject,
         shots,
         currentQueue,
+        extractedEntities,
         setCurrentProject,
         setShots,
         updateShot,
@@ -91,6 +92,34 @@ export default function StoryCreatorMobile() {
     const handleUpdateShot = async (shotId: string, updates: { prompt?: string; reference_tags?: string[] }) => {
         await StoryProjectService.updateShot(shotId, updates)
         updateShot(shotId, updates)
+    }
+
+    const handleAddShots = async (generatedShots: any[]) => {
+        if (!currentProject) return
+
+        try {
+            const shotInputs = generatedShots.map(gs => ({
+                project_id: currentProject.id,
+                sequence_number: gs.sequenceNumber,
+                chapter: gs.chapter,
+                prompt: gs.prompt,
+                reference_tags: gs.referenceTags,
+                metadata: {
+                    aiGenerated: true,
+                    ...gs.metadata
+                }
+            }))
+
+            const { data: newShots, error } = await StoryProjectService.createShots(shotInputs)
+
+            if (error || !newShots) {
+                throw new Error('Failed to create augmented shots')
+            }
+
+            setShots([...shots, ...newShots])
+        } catch (error) {
+            console.error('Error adding shots:', error)
+        }
     }
 
     const handleGenerateAll = async () => {
@@ -179,7 +208,9 @@ export default function StoryCreatorMobile() {
                         <TabsContent value="review" className="mt-0">
                             <ShotsReviewSection
                                 shots={shots}
+                                entities={extractedEntities}
                                 onUpdateShot={handleUpdateShot}
+                                onAddShots={handleAddShots}
                                 onGenerateAll={handleGenerateAll}
                                 isGenerating={isGenerating}
                             />

@@ -12,18 +12,22 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Play, Edit2, Save, X, Plus, Layers } from 'lucide-react'
-import type { StoryShot } from '../../types/story.types'
+import { Play, Edit2, Save, X, Plus, Layers, Sparkles } from 'lucide-react'
+import type { StoryShot, ExtractedEntity } from '../../types/story.types'
 import {
     hasBracketSyntax,
     getVariationCount,
     getPromptVariations,
     getVariationBadgeText
 } from '../../helpers/bracket-prompt.helper'
+import { ShotAugmentationModal } from '../ShotAugmentationModal'
+import type { GeneratedShot } from '../../services/shot-augmentation.service'
 
 interface ShotsReviewSectionProps {
     shots: StoryShot[]
+    entities: ExtractedEntity[]
     onUpdateShot: (shotId: string, updates: { prompt?: string; reference_tags?: string[] }) => void
+    onAddShots: (shots: GeneratedShot[]) => void
     onGenerateAll: () => void
     isGenerating: boolean
 }
@@ -33,7 +37,9 @@ interface ShotsReviewSectionProps {
  */
 export default function ShotsReviewSection({
     shots,
+    entities,
     onUpdateShot,
+    onAddShots,
     onGenerateAll,
     isGenerating
 }: ShotsReviewSectionProps) {
@@ -41,6 +47,11 @@ export default function ShotsReviewSection({
     const [editPrompt, setEditPrompt] = useState('')
     const [editTags, setEditTags] = useState<string[]>([])
     const [newTag, setNewTag] = useState('')
+    const [showAugmentationModal, setShowAugmentationModal] = useState(false)
+
+    const characters = entities.filter(e => e.type === 'character')
+    const locations = entities.filter(e => e.type === 'location')
+    const nextSequenceNumber = shots.length > 0 ? Math.max(...shots.map(s => s.sequence_number)) + 1 : 1
 
     const handleStartEdit = (shot: StoryShot) => {
         setEditingId(shot.id)
@@ -133,14 +144,25 @@ export default function ShotsReviewSection({
                         }
                     </p>
                 </div>
-                <Button
-                    onClick={onGenerateAll}
-                    disabled={isGenerating || shots.length === 0}
-                    className="bg-red-600 hover:bg-red-700"
-                >
-                    <Play className="w-4 h-4 mr-2" />
-                    Generate All {hasBracketShots && `(${totalImages})`}
-                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        onClick={() => setShowAugmentationModal(true)}
+                        disabled={isGenerating || characters.length === 0 || locations.length === 0}
+                        variant="outline"
+                        className="border-orange-700 text-orange-400 hover:bg-orange-900/20"
+                    >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Add More Shots
+                    </Button>
+                    <Button
+                        onClick={onGenerateAll}
+                        disabled={isGenerating || shots.length === 0}
+                        className="bg-red-600 hover:bg-red-700"
+                    >
+                        <Play className="w-4 h-4 mr-2" />
+                        Generate All {hasBracketShots && `(${totalImages})`}
+                    </Button>
+                </div>
             </div>
 
             {/* Shots Grouped by Chapter */}
@@ -204,6 +226,17 @@ export default function ShotsReviewSection({
                     )
                 })}
             </div>
+
+            {/* Shot Augmentation Modal */}
+            <ShotAugmentationModal
+                open={showAugmentationModal}
+                onOpenChange={setShowAugmentationModal}
+                characters={characters}
+                locations={locations}
+                nextSequenceNumber={nextSequenceNumber}
+                currentChapter={shots[0]?.chapter}
+                onShotsGenerated={onAddShots}
+            />
         </div>
     )
 }

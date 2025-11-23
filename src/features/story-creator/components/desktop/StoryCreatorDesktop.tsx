@@ -6,6 +6,8 @@ import { StoryProjectService } from '../../services/story-project.service'
 import { PromptGeneratorService } from '../../services/prompt-generator.service'
 import { LLMService } from '../../services/llm.service'
 import { useStoryGeneration } from '../../hooks/useStoryGeneration'
+import { validateBracketSyntax } from '@/features/shot-creator/helpers/prompt-syntax-feedback'
+import { toast } from '@/hooks/use-toast'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FileText, ListChecks, Activity, Users } from 'lucide-react'
 import StoryInputSection from '../sections/StoryInputSection'
@@ -13,6 +15,7 @@ import EntitiesSection from '../sections/EntitiesSection'
 import ShotsReviewSection from '../sections/ShotsReviewSection'
 import GenerationQueueSection from '../sections/GenerationQueueSection'
 import { MissingReferencesWarning } from '../MissingReferencesWarning'
+import type { GeneratedShot } from '@/features/story-creator/services/shot-augmentation.service'
 
 /**
  * Story Creator Desktop View
@@ -157,10 +160,77 @@ export default function StoryCreatorDesktop() {
         updateShot(shotId, updates)
     }
 
+    const handleAddShots = async (generatedShots: GeneratedShot[]) => {
+        if (!currentProject) return
+
+        try {
+            // Create shots in database
+            const shotInputs = generatedShots.map(gs => ({
+                project_id: currentProject.id,
+                sequence_number: gs.sequenceNumber,
+                chapter: gs.chapter,
+                prompt: gs.prompt,
+                reference_tags: gs.referenceTags,
+                metadata: {
+                    aiGenerated: true,
+                    ...gs.metadata
+                }
+            }))
+
+            const { data: newShots, error } = await StoryProjectService.createShots(shotInputs)
+
+            if (error || !newShots) {
+                throw new Error('Failed to create augmented shots')
+            }
+
+            // Add to store
+            setShots([...shots, ...newShots])
+
+            toast({
+                title: 'Shots Added',
+                description: `Added ${newShots.length} shots with bracket variations`,
+            })
+        } catch (error) {
+            console.error('Error adding shots:', error)
+            toast({
+                title: 'Failed to Add Shots',
+                description: error instanceof Error ? error.message : 'Unknown error',
+                variant: 'destructive'
+            })
+        }
+    }
+
     const handleGenerateAll = async () => {
         if (!currentProject || shots.length === 0) return
 
-        // Check for missing references first
+        // Validate bracket syntax in all prompts
+        const invalidShots: Array<{ shotNumber: number; error: string; suggestion?: string }> = []
+        shots.forEach((shot) => {
+            const validation = validateBracketSyntax(shot.prompt)
+            if (!validation.isValid) {
+                invalidShots.push({
+                    shotNumber: shot.sequence_number,
+                    error: validation.error || 'Invalid syntax',
+                    suggestion: validation.suggestion
+                })
+            }
+        })
+
+        if (invalidShots.length > 0) {
+            const errorMessages = invalidShots.slice(0, 3).map(s =>
+                `Shot ${s.shotNumber}: ${s.error}`
+            ).join('\n')
+            const additionalCount = invalidShots.length > 3 ? ` (+${invalidShots.length - 3} more)` : ''
+
+            toast({
+                title: 'Invalid Bracket Syntax',
+                description: `${errorMessages}${additionalCount}\n\nPlease fix syntax errors before generating.`,
+                variant: 'destructive'
+            })
+            return
+        }
+
+        // Check for missing references
         const missing = checkMissingReferences(shots)
         if (missing.length > 0) {
             setMissingReferences(missing)
@@ -168,7 +238,7 @@ export default function StoryCreatorDesktop() {
             return
         }
 
-        // No missing references, proceed with generation
+        // All validations passed, proceed with generation
         await proceedWithGeneration()
     }
 
@@ -271,7 +341,9 @@ export default function StoryCreatorDesktop() {
                         <TabsContent value="review" className="mt-0">
                             <ShotsReviewSection
                                 shots={shots}
+                                entities={extractedEntities}
                                 onUpdateShot={handleUpdateShot}
+                                onAddShots={handleAddShots}
                                 onGenerateAll={handleGenerateAll}
                                 isGenerating={isGenerating}
                             />
