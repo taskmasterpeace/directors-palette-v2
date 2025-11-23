@@ -33,6 +33,13 @@ export class GalleryService {
     }
 
     /**
+     * Get total count of images in database for current user
+     */
+    static async getTotalImageCount(): Promise<number> {
+        return UnifiedGalleryService.getTotalImageCount('image')
+    }
+
+    /**
      * Load gallery images with pagination
      */
     static async loadUserGalleryPaginated(

@@ -48,7 +48,7 @@ async function retryWithBackoff<T>(
 export function useGalleryLoader() {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const { loadImagesPaginated, currentPage, pageSize } = useUnifiedGalleryStore()
+    const { loadImagesPaginated, currentPage, pageSize, setTotalDatabaseCount } = useUnifiedGalleryStore()
 
     // Load gallery on mount and subscribe to real-time updates
     useEffect(() => {
@@ -62,12 +62,18 @@ export function useGalleryLoader() {
             setError(null)
 
             try {
-                const { images, total, totalPages } = await retryWithBackoff(() =>
-                    GalleryService.loadUserGalleryPaginated(currentPage, pageSize)
-                )
+                // Fetch total database count and paginated images in parallel
+                const [totalCount, paginatedResult] = await Promise.all([
+                    GalleryService.getTotalImageCount(),
+                    retryWithBackoff(() =>
+                        GalleryService.loadUserGalleryPaginated(currentPage, pageSize)
+                    )
+                ])
 
                 if (!mounted) return
 
+                const { images, total, totalPages } = paginatedResult
+                setTotalDatabaseCount(totalCount)
                 loadImagesPaginated(images, total, totalPages)
 
                 // Set up real-time subscription to gallery changes
@@ -87,11 +93,15 @@ export function useGalleryLoader() {
                                 },
                                 async () => {
                                     try {
-                                        // Reload gallery when changes occur
-                                        const { images: updatedImages, total: updatedTotal, totalPages: updatedTotalPages } =
-                                            await GalleryService.loadUserGalleryPaginated(currentPage, pageSize)
+                                        // Reload gallery and total count when changes occur
+                                        const [updatedTotalCount, paginatedUpdate] = await Promise.all([
+                                            GalleryService.getTotalImageCount(),
+                                            GalleryService.loadUserGalleryPaginated(currentPage, pageSize)
+                                        ])
+
                                         if (mounted) {
-                                            loadImagesPaginated(updatedImages, updatedTotal, updatedTotalPages)
+                                            setTotalDatabaseCount(updatedTotalCount)
+                                            loadImagesPaginated(paginatedUpdate.images, paginatedUpdate.total, paginatedUpdate.totalPages)
                                         }
                                     } catch (realtimeError) {
                                         // Silently handle realtime update errors to prevent UI disruption

@@ -65,9 +65,10 @@ export function UnifiedImageGallery({
     const showReferenceNamePrompt = useReferenceNamePrompt()
     const { toast } = useToast()
 
-    // Get grid size from store
+    // Get grid size and database count from store
     const gridSize = useUnifiedGalleryStore(state => state.gridSize)
     const setGridSize = useUnifiedGalleryStore(state => state.setGridSize)
+    const totalDatabaseCount = useUnifiedGalleryStore(state => state.totalDatabaseCount)
 
     // Grid size to CSS classes mapping
     const getGridClasses = (size: GridSize): string => {
@@ -175,6 +176,7 @@ export function UnifiedImageGallery({
         <Card className={cn("w-full", className)}>
             <GalleryHeader
                 totalImages={totalImages}
+                totalDatabaseCount={totalDatabaseCount}
                 totalCredits={totalCredits}
                 searchQuery={filters.searchQuery}
                 onSearchChange={handleSearchChange}

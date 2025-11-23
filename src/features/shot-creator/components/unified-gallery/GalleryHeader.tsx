@@ -6,9 +6,16 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { ImageIcon, Search, Trash2, Grid3x3, Grid2x2 } from 'lucide-react'
 import { GridSize } from '../../store/unified-gallery-store'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 interface GalleryHeaderProps {
   totalImages: number
+  totalDatabaseCount: number
   totalCredits: number
   searchQuery: string
   selectedCount: number
@@ -22,6 +29,7 @@ interface GalleryHeaderProps {
 
 export function GalleryHeader({
   totalImages,
+  totalDatabaseCount,
   totalCredits,
   searchQuery,
   selectedCount,
@@ -42,9 +50,18 @@ export function GalleryHeader({
             <CardTitle>Unified Gallery</CardTitle>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="outline" className="text-xs">
-              {totalImages} images
-            </Badge>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="text-xs cursor-help">
+                    {totalImages} / {totalDatabaseCount} images
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Showing {totalImages} of {totalDatabaseCount} total images in database</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <Badge variant="outline" className="text-xs">
               {totalCredits} credits
             </Badge>

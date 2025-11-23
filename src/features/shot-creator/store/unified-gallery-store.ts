@@ -53,6 +53,7 @@ interface UnifiedGalleryState {
   totalPages: number
   totalItems: number
   pageSize: number
+  totalDatabaseCount: number
 
   // UI Preferences
   gridSize: GridSize
@@ -69,6 +70,7 @@ interface UnifiedGalleryState {
   loadImages: (images: GeneratedImage[]) => void
   loadImagesPaginated: (images: GeneratedImage[], total: number, totalPages: number) => void
   setCurrentPage: (page: number) => void
+  setTotalDatabaseCount: (count: number) => void
   removeImage: (imageIdOrUrl: string) => Promise<boolean>
   setFullscreenImage: (image: GeneratedImage | null) => void
   updateImageReference: (imageId: string, reference: string) => Promise<void>
@@ -104,6 +106,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   totalPages: 0,
   totalItems: 0,
   pageSize: 12,
+  totalDatabaseCount: 0,
 
   // UI Preferences
   gridSize: loadGridSizePreference(),
@@ -166,6 +169,10 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
 
   setCurrentPage: (page) => {
     set({ currentPage: page })
+  },
+
+  setTotalDatabaseCount: (count) => {
+    set({ totalDatabaseCount: count })
   },
 
   removeImage: async (imageIdOrUrl) => {

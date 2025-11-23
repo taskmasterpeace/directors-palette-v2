@@ -67,6 +67,41 @@ export class GalleryService {
   }
 
   /**
+   * Get total count of gallery items for the current user
+   */
+  static async getTotalImageCount(generationType: GenerationType): Promise<number> {
+    try {
+      const supabase = await getClient()
+      if (!supabase) {
+        throw new Error('Supabase client not available')
+      }
+
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) {
+        console.warn('User not authenticated, cannot count gallery items')
+        return 0
+      }
+
+      const { count, error } = await supabase
+        .from('gallery')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('generation_type', generationType)
+        .not('public_url', 'is', null)
+
+      if (error) {
+        console.error(`Error counting ${generationType} gallery items:`, error)
+        return 0
+      }
+
+      return count || 0
+    } catch (error) {
+      console.error(`Failed to count ${generationType} gallery items:`, error)
+      return 0
+    }
+  }
+
+  /**
    * Load gallery items with pagination
    */
   static async loadUserGalleryPaginated(
