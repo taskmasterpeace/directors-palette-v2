@@ -236,6 +236,12 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
                 baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
                 break
+            case 'nano-banana-pro':
+                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
+                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
+                baseSettings.resolution = shotCreatorSettings.resolution
+                baseSettings.safetyFilterLevel = shotCreatorSettings.safetyFilterLevel || 'block_only_high'
+                break
             case 'seedream-4':
                 baseSettings.size = shotCreatorSettings.resolution
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
