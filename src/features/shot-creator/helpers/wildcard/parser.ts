@@ -185,13 +185,6 @@ export function parseWildCardPrompt(
     const randomPrompt = generateRandomSelection(prompt, wildCardMap)
     const expandedPrompts = [randomPrompt]
 
-    // Calculate total possible combinations for info
-    let totalPossibleCombinations = 1
-    wildCardNames.forEach(name => {
-        const entries = wildCardMap.get(name) || []
-        totalPossibleCombinations *= entries.length
-    })
-
     const crossCombination = wildCardNames.length > 1
 
     // Generate info message

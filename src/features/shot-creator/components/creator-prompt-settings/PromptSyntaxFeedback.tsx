@@ -126,7 +126,7 @@ export function PromptSyntaxFeedback({ prompt, rawPromptMode }: PromptSyntaxFeed
 
         // Regular prompt
         setFeedback(null);
-    }, [prompt, wildcards]);
+    }, [prompt, wildcards, rawPromptMode]);
 
     if (!feedback) return null;
 
