@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e \"\nconst apiKey = ''rqsty-sk-Gdp0Iwf2RV+Oyff3J1EFVUKEb2W4iyRe23xcZeJAfwfiK8sMQaNB9uhZTb5cJzuQohce+4LEU7I+VitsaCCCKyciuBtBAsLVDzt3RwCW3gw='';\n\nconst story = \\`Chapter 1: January Night\n\nThe fluorescent lights in the Cobb County interrogation room cast everything in a sickly green pallor. The man they called Clone sat across from Detective Morrison, his tattooed arms resting on the metal table between them.\n\nMorrison had been at this for nearly thirty minutes already. The detective leaned back, studied Clone''s face.\n\nChapter 2: Three Words\n\nClone shifted in his seat. The room suddenly felt smaller. ''Muscle started eight.'' Three syllables that would echo through battle rap forums for years.\\`;\n\nfetch(''https://router.requesty.ai/v1/chat/completions'', {\n  method: ''POST'',\n  headers: {\n    ''Content-Type'': ''application/json'',\n    ''Authorization'': ''Bearer '' + apiKey\n  },\n  body: JSON.stringify({\n    model: ''openai/gpt-4o-mini'',\n    messages: [\n      {role: ''system'', content: ''Extract visual scenes from story text. Return JSON array with chapter, sequence, visualDescription, characters, location fields.''},\n      {role: ''user'', content: ''Extract 3-5 visual scenes from this story. Return ONLY valid JSON array:\\n\\n'' + story}\n    ],\n    max_tokens: 1000\n  })\n}).then(r => r.json()).then(d => {\n  console.log(''Response:'', d.choices[0].message.content);\n}).catch(console.error);\n\")"
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

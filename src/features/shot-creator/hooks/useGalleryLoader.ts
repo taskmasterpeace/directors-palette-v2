@@ -55,8 +55,12 @@ export function useGalleryLoader() {
     const pageSize = useUnifiedGalleryStore(state => state.pageSize)
     const setTotalDatabaseCount = useUnifiedGalleryStore(state => state.setTotalDatabaseCount)
 
+    // Log when values change
+    console.log(`[useGalleryLoader] Hook state: currentPage=${currentPage}, pageSize=${pageSize}`)
+
     // Load gallery on mount and subscribe to real-time updates
     useEffect(() => {
+        console.log(`[useGalleryLoader] useEffect triggered - currentPage=${currentPage}, pageSize=${pageSize}`)
         let mounted = true
         let subscription: { unsubscribe: () => void } | null = null
 
@@ -140,7 +144,7 @@ export function useGalleryLoader() {
                 subscription.unsubscribe()
             }
         }
-    }, [loadImagesPaginated, currentPage, pageSize])
+    }, [loadImagesPaginated, currentPage, pageSize, setTotalDatabaseCount])
 
     return {
         isLoading,
