@@ -635,7 +635,11 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
 
                 {/* Prompt Syntax Feedback - Shows bracket/wildcard notifications */}
                 <div className="space-y-2">
-                    <PromptSyntaxFeedback prompt={shotCreatorPrompt} model={shotCreatorSettings.model} />
+                    <PromptSyntaxFeedback
+                        prompt={shotCreatorPrompt}
+                        model={shotCreatorSettings.model}
+                        rawPromptMode={shotCreatorSettings.rawPromptMode}
+                    />
 
                     {/* Help Tooltip */}
                     <div className="flex items-center gap-2 text-xs text-slate-400">

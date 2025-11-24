@@ -8,9 +8,10 @@ import { parseDynamicPrompt, validateBracketSyntax } from "../../helpers/prompt-
 interface PromptSyntaxFeedbackProps {
     prompt: string;
     model?: string;
+    rawPromptMode?: boolean;
 }
 
-export function PromptSyntaxFeedback({ prompt }: PromptSyntaxFeedbackProps) {
+export function PromptSyntaxFeedback({ prompt, rawPromptMode }: PromptSyntaxFeedbackProps) {
     const [feedback, setFeedback] = useState<{
         type: 'info' | 'warning' | 'error' | 'success';
         message: string;
@@ -18,6 +19,12 @@ export function PromptSyntaxFeedback({ prompt }: PromptSyntaxFeedbackProps) {
     } | null>(null);
 
     useEffect(() => {
+        // Skip feedback if raw prompt mode is enabled
+        if (rawPromptMode) {
+            setFeedback(null);
+            return;
+        }
+
         if (!prompt || prompt.trim().length === 0) {
             setFeedback(null);
             return;

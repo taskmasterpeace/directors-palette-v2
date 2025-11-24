@@ -42,6 +42,7 @@ export interface ShotCreatorSettings {
     resolution: string
     seed?: number
     model?: 'nano-banana' | 'nano-banana-pro' | 'gen4-image' | 'gen4-image-turbo' | 'seedream-4' | 'qwen-image' | 'qwen-image-edit'
+    rawPromptMode?: boolean // Skip bracket/pipe/wildcard parsing, send prompt as-is
     // Nano-Banana-Pro specific settings
     safetyFilterLevel?: 'block_low_and_above' | 'block_medium_and_above' | 'block_only_high'
     // Seedream-4 specific settings

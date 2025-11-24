@@ -368,10 +368,24 @@ export function useImageGeneration() {
             }
 
             // Expand bracket variations using existing prompt parser
-            const promptResult = parseDynamicPrompt(prompt)
-            const variations = promptResult.expandedPrompts
-            const totalVariations = promptResult.totalCount
-            const isPipeChaining = promptResult.hasPipes
+            // OR bypass parsing if Raw Prompt Mode is enabled
+            let variations: string[]
+            let totalVariations: number
+            let isPipeChaining: boolean
+
+            if (shotCreatorSettings.rawPromptMode) {
+                // Raw mode: send prompt as-is without any processing
+                console.log('🔤 Raw Prompt Mode: Bypassing syntax parsing')
+                variations = [prompt]
+                totalVariations = 1
+                isPipeChaining = false
+            } else {
+                // Normal mode: parse brackets, pipes, and wildcards
+                const promptResult = parseDynamicPrompt(prompt)
+                variations = promptResult.expandedPrompts
+                totalVariations = promptResult.totalCount
+                isPipeChaining = promptResult.hasPipes
+            }
 
             // Upload reference images to Replicate first (convert data URLs / blob URLs to HTTPS URLs)
             let uploadedReferenceImages: string[] = []

@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS: ShotCreatorSettings = {
     model: "nano-banana",
     maxImages: 1,
     sequentialGeneration: false,
+    rawPromptMode: false, // Default: process brackets/pipes/wildcards normally
 };
 export interface ShotCreatorStore {
     // ---- State ----
