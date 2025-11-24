@@ -199,7 +199,7 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
 export function useImageGeneration() {
     const { toast } = useToast()
     const [progress, setProgress] = useState<GenerationProgress>({ status: 'idle' })
-    const { setShotCreatorProcessing } = useShotCreatorStore()
+    const { setShotCreatorProcessing, settings } = useShotCreatorStore()
     const { wildcards, loadWildCards } = useWildCardStore()
     const [activeGalleryId, setActiveGalleryId] = useState<string | null>(null)
 
@@ -380,7 +380,7 @@ export function useImageGeneration() {
             let totalVariations: number
             let isPipeChaining: boolean
 
-            if (shotCreatorSettings.rawPromptMode) {
+            if (settings.rawPromptMode) {
                 // Raw mode: send prompt as-is without any processing
                 console.log('🔤 Raw Prompt Mode: Bypassing syntax parsing')
                 variations = [prompt]
@@ -547,7 +547,7 @@ export function useImageGeneration() {
                 error: errorMessage,
             }
         }
-    }, [toast, setShotCreatorProcessing])
+    }, [toast, setShotCreatorProcessing, settings, wildcards])
 
     const resetProgress = useCallback(() => {
         setProgress({ status: 'idle' })
