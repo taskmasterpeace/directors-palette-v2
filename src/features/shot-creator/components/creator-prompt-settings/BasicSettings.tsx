@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useShotCreatorSettings } from "../../hooks"
 import { aspectRatios, resolutions } from "../../constants"
 import { getModelConfig, ModelId } from '@/config'
@@ -13,13 +13,14 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
-import { ExternalLink } from 'lucide-react'
-import Link from 'next/link'
+import { Plus } from 'lucide-react'
+import { WildCardCreateDialog } from '../wildcard/WildCardCreateDialog'
 
 const BasicSettings = () => {
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
     const selectedModel = shotCreatorSettings.model || 'nano-banana'
     const modelConfig = useMemo(() => getModelConfig(selectedModel as ModelId), [selectedModel])
+    const [wildCardDialogOpen, setWildCardDialogOpen] = useState(false)
 
     // Get model-specific aspect ratios
     const aspectRatioOptions = useMemo(() => {
@@ -187,18 +188,27 @@ const BasicSettings = () => {
                 </div>
             </div>
 
-            {/* Wild Card Manager Link */}
+            {/* Wild Card Creation */}
             <div className="pt-4 border-t border-slate-700">
-                <Link href="/wildcards" target="_blank">
-                    <Button variant="outline" className="w-full" size="sm">
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Manage Wild Cards
-                    </Button>
-                </Link>
+                <Button
+                    variant="outline"
+                    className="w-full"
+                    size="sm"
+                    onClick={() => setWildCardDialogOpen(true)}
+                >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Wild Card
+                </Button>
                 <p className="text-xs text-slate-400 mt-2">
-                    Create and manage _wildcard_ lists for dynamic prompt variations
+                    Upload a text file to create _wildcard_ for random prompt variations
                 </p>
             </div>
+
+            {/* Wild Card Dialog */}
+            <WildCardCreateDialog
+                open={wildCardDialogOpen}
+                onOpenChange={setWildCardDialogOpen}
+            />
         </div>
     )
 }
