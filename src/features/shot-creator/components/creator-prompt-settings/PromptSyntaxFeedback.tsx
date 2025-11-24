@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
 import { parseDynamicPrompt, validateBracketSyntax } from "../../helpers/prompt-syntax-feedback";
+import { useWildCardStore } from "../../store/wildcard.store";
 
 interface PromptSyntaxFeedbackProps {
     prompt: string;
@@ -12,11 +13,17 @@ interface PromptSyntaxFeedbackProps {
 }
 
 export function PromptSyntaxFeedback({ prompt, rawPromptMode }: PromptSyntaxFeedbackProps) {
+    const { wildcards, loadWildCards } = useWildCardStore();
     const [feedback, setFeedback] = useState<{
         type: 'info' | 'warning' | 'error' | 'success';
         message: string;
         details?: string;
     } | null>(null);
+
+    // Load wildcards on mount
+    useEffect(() => {
+        void loadWildCards();
+    }, [loadWildCards]);
 
     useEffect(() => {
         // Skip feedback if raw prompt mode is enabled
@@ -43,13 +50,30 @@ export function PromptSyntaxFeedback({ prompt, rawPromptMode }: PromptSyntaxFeed
         }
 
         // Check for wildcards
-        const wildcardMatches = prompt.match(/_[a-z_]+_/g);
+        const wildcardMatches = prompt.match(/_[a-zA-Z0-9_]+_/g);
         if (wildcardMatches && wildcardMatches.length > 0) {
-            setFeedback({
-                type: 'info',
-                message: `Wild Cards: ${wildcardMatches.join(', ')} will expand randomly`,
-                details: 'Dynamic values for creative variations'
-            });
+            // Parse with actual wildcards to get accurate count
+            const result = parseDynamicPrompt(prompt, {}, wildcards);
+
+            if (result.hasWildCards && result.isValid) {
+                setFeedback({
+                    type: 'success',
+                    message: `Wild Cards: ${result.wildCardNames?.join(', ')} → ${result.totalCount} variations`,
+                    details: result.isCrossCombination ? 'Cross-combination enabled' : undefined
+                });
+            } else if (result.hasWildCards && !result.isValid) {
+                setFeedback({
+                    type: 'warning',
+                    message: result.warnings?.[0] || 'Some wildcards not found',
+                    details: 'Create wildcards in Wild Card Manager'
+                });
+            } else {
+                setFeedback({
+                    type: 'info',
+                    message: `Wild Cards: ${wildcardMatches.join(', ')} detected`,
+                    details: 'Create wildcards to enable expansion'
+                });
+            }
             return;
         }
 
@@ -98,7 +122,7 @@ export function PromptSyntaxFeedback({ prompt, rawPromptMode }: PromptSyntaxFeed
 
         // Regular prompt
         setFeedback(null);
-    }, [prompt]);
+    }, [prompt, wildcards]);
 
     if (!feedback) return null;
 

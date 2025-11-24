@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast'
 import { imageGenerationService } from '../services/image-generation.service'
 import { useShotCreatorStore } from '../store/shot-creator.store'
 import { useUnifiedGalleryStore } from '../store/unified-gallery-store'
+import { useWildCardStore } from '../store/wildcard.store'
 import { getClient, TypedSupabaseClient } from '@/lib/db/client'
 import { parseDynamicPrompt } from '../helpers/prompt-syntax-feedback'
 import { parseReferenceTags } from '../helpers/parse-reference-tags'
@@ -199,7 +200,13 @@ export function useImageGeneration() {
     const { toast } = useToast()
     const [progress, setProgress] = useState<GenerationProgress>({ status: 'idle' })
     const { setShotCreatorProcessing } = useShotCreatorStore()
+    const { wildcards, loadWildCards } = useWildCardStore()
     const [activeGalleryId, setActiveGalleryId] = useState<string | null>(null)
+
+    // Load wildcards on mount
+    useEffect(() => {
+        void loadWildCards()
+    }, [loadWildCards])
 
     // Subscribe to real-time updates for the active gallery entry
     useEffect(() => {
@@ -381,10 +388,19 @@ export function useImageGeneration() {
                 isPipeChaining = false
             } else {
                 // Normal mode: parse brackets, pipes, and wildcards
-                const promptResult = parseDynamicPrompt(prompt)
+                console.log(`🎲 Parsing prompt with ${wildcards.length} available wildcards`)
+                const promptResult = parseDynamicPrompt(prompt, {}, wildcards)
                 variations = promptResult.expandedPrompts
                 totalVariations = promptResult.totalCount
                 isPipeChaining = promptResult.hasPipes
+
+                // Log wildcard usage
+                if (promptResult.hasWildCards) {
+                    console.log(`🎲 Wildcard expansion: ${promptResult.wildCardNames?.join(', ')} → ${totalVariations} variations`)
+                    if (promptResult.warnings && promptResult.warnings.length > 0) {
+                        promptResult.warnings.forEach(warning => console.warn(`⚠️ ${warning}`))
+                    }
+                }
             }
 
             // Upload reference images to Replicate first (convert data URLs / blob URLs to HTTPS URLs)

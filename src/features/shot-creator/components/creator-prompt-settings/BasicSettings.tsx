@@ -12,6 +12,9 @@ import {
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { Button } from '@/components/ui/button'
+import { ExternalLink } from 'lucide-react'
+import Link from 'next/link'
 
 const BasicSettings = () => {
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
@@ -182,6 +185,19 @@ const BasicSettings = () => {
                         onCheckedChange={(value) => updateSettings({ rawPromptMode: value })}
                     />
                 </div>
+            </div>
+
+            {/* Wild Card Manager Link */}
+            <div className="pt-4 border-t border-slate-700">
+                <Link href="/wildcards" target="_blank">
+                    <Button variant="outline" className="w-full" size="sm">
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Manage Wild Cards
+                    </Button>
+                </Link>
+                <p className="text-xs text-slate-400 mt-2">
+                    Create and manage _wildcard_ lists for dynamic prompt variations
+                </p>
             </div>
         </div>
     )
