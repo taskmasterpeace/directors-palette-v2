@@ -101,6 +101,7 @@ function FullscreenModal({
                             className={`object-contain ${isMobile ? 'max-h-full w-auto' : 'w-full max-h-[80vh] rounded-lg'}`}
                             width={1000}
                             height={1000}
+                            quality={100}
                         />
 
                         {/* Previous button */}

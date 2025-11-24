@@ -48,7 +48,12 @@ async function retryWithBackoff<T>(
 export function useGalleryLoader() {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const { loadImagesPaginated, currentPage, pageSize, setTotalDatabaseCount } = useUnifiedGalleryStore()
+
+    // Use direct selectors to ensure reactivity when store values change
+    const loadImagesPaginated = useUnifiedGalleryStore(state => state.loadImagesPaginated)
+    const currentPage = useUnifiedGalleryStore(state => state.currentPage)
+    const pageSize = useUnifiedGalleryStore(state => state.pageSize)
+    const setTotalDatabaseCount = useUnifiedGalleryStore(state => state.setTotalDatabaseCount)
 
     // Load gallery on mount and subscribe to real-time updates
     useEffect(() => {

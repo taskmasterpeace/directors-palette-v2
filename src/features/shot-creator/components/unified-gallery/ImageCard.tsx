@@ -64,6 +64,7 @@ const ImageCardComponent = ({
           alt={image.prompt?.slice(0, 50) || 'Generated image'}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 53vw"
+          quality={100}
           className="object-cover cursor-zoom-in"
           onClick={onZoom}
         />
