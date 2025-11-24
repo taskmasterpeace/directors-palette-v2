@@ -63,6 +63,7 @@ export function useGalleryLoader() {
         const loadGallery = async () => {
             if (!mounted) return
 
+            console.log(`[useGalleryLoader] Loading page ${currentPage} with pageSize ${pageSize}`)
             setIsLoading(true)
             setError(null)
 
@@ -78,6 +79,7 @@ export function useGalleryLoader() {
                 if (!mounted) return
 
                 const { images, total, totalPages } = paginatedResult
+                console.log(`[useGalleryLoader] Loaded ${images.length} images, total: ${total}, totalPages: ${totalPages}, totalCount: ${totalCount}`)
                 setTotalDatabaseCount(totalCount)
                 loadImagesPaginated(images, total, totalPages)
 

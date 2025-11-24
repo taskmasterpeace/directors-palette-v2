@@ -49,9 +49,11 @@ export function ExpandedGallery() {
 
   // Load gallery images
   const loadGallery = useCallback(async (page: number) => {
+    console.log(`[ExpandedGallery] Loading gallery page ${page}`)
     setIsLoading(true)
     try {
       const result = await GalleryService.loadUserGalleryPaginated(page, PAGE_SIZE)
+      console.log(`[ExpandedGallery] Loaded ${result.images.length} images, total: ${result.total}, totalPages: ${result.totalPages}`)
       loadImagesPaginated(result.images, result.total, result.totalPages)
       setTotalPages(result.totalPages)
       setTotalItems(result.total)
@@ -87,6 +89,7 @@ export function ExpandedGallery() {
   })
 
   const handlePageChange = (page: number) => {
+    console.log(`[ExpandedGallery] Page change requested: ${page}, current: ${currentPage}, total: ${totalPages}`)
     setCurrentPage(page)
     setSelectedImages([]) // Clear selection when changing pages
   }
@@ -312,56 +315,66 @@ export function ExpandedGallery() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mb-8">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="min-h-[44px] min-w-[44px]"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-
-                <div className="flex items-center gap-2">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum: number
-                    if (totalPages <= 5) {
-                      pageNum = i + 1
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i
-                    } else {
-                      pageNum = currentPage - 2 + i
-                    }
-
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={currentPage === pageNum ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => handlePageChange(pageNum)}
-                        className={cn(
-                          'min-h-[44px] min-w-[44px]',
-                          currentPage === pageNum && 'bg-red-600 hover:bg-red-700'
-                        )}
-                      >
-                        {pageNum}
-                      </Button>
-                    )
-                  })}
+              <div className="flex flex-col items-center gap-2 mb-8">
+                {/* Page indicator text */}
+                <div className="text-sm text-slate-400">
+                  Page {currentPage} of {totalPages} ({totalItems} total images)
                 </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="min-h-[44px] min-w-[44px]"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+                {/* Pagination buttons */}
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="min-h-[44px] min-w-[44px] hover:bg-red-600 hover:text-white transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  <div className="flex items-center gap-2">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum: number
+                      if (totalPages <= 5) {
+                        pageNum = i + 1
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i
+                      } else {
+                        pageNum = currentPage - 2 + i
+                      }
+
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => handlePageChange(pageNum)}
+                          className={cn(
+                            'min-h-[44px] min-w-[44px] transition-colors',
+                            currentPage === pageNum
+                              ? 'bg-red-600 hover:bg-red-700 text-white'
+                              : 'hover:bg-red-600 hover:text-white'
+                          )}
+                        >
+                          {pageNum}
+                        </Button>
+                      )
+                    })}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="min-h-[44px] min-w-[44px] hover:bg-red-600 hover:text-white transition-colors"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             )}
           </>
