@@ -44,7 +44,41 @@ export function parseWildCardContent(content: string): string[] {
 }
 
 /**
- * Generate all combinations of wild card entries
+ * Generate ONE prompt by randomly selecting from wild card entries
+ * Each wildcard picks ONE random option from its list
+ */
+export function generateRandomSelection(
+    prompt: string,
+    wildCardMap: Map<string, string[]>
+): string {
+    const wildCardNames = extractWildCardNames(prompt)
+
+    if (wildCardNames.length === 0) {
+        return prompt
+    }
+
+    let result = prompt
+
+    // Replace each wildcard with a random selection
+    wildCardNames.forEach(name => {
+        const entries = wildCardMap.get(name) || []
+        if (entries.length === 0) {
+            console.warn(`Wild card '_${name}_' not found or empty`)
+            return
+        }
+
+        // Pick random entry
+        const randomEntry = entries[Math.floor(Math.random() * entries.length)]
+
+        // Replace all instances of this wildcard in the prompt
+        result = result.replace(new RegExp(`_${name}_`, 'g'), randomEntry)
+    })
+
+    return result.trim()
+}
+
+/**
+ * Generate all combinations of wild card entries (LEGACY - for reference)
  * For cross-combination: _character_ (3 entries) × _location_ (4 entries) = 12 combinations
  */
 export function generateCombinations(
@@ -147,23 +181,27 @@ export function parseWildCardPrompt(
         }
     }
 
-    // Generate expanded prompts
-    const expandedPrompts = generateCombinations(prompt, wildCardMap)
-    const totalCombinations = expandedPrompts.length
+    // Generate ONE random prompt by picking random options from each wildcard
+    const randomPrompt = generateRandomSelection(prompt, wildCardMap)
+    const expandedPrompts = [randomPrompt]
+
+    // Calculate total possible combinations for info
+    let totalPossibleCombinations = 1
+    wildCardNames.forEach(name => {
+        const entries = wildCardMap.get(name) || []
+        totalPossibleCombinations *= entries.length
+    })
+
     const crossCombination = wildCardNames.length > 1
 
-    // Generate warnings
+    // Generate info message
     const warnings: string[] = []
+    const wildCardInfo = wildCardNames.map(name => {
+        const entries = wildCardMap.get(name) || []
+        return `${name} (${entries.length} options)`
+    }).join(', ')
 
-    if (totalCombinations > 100) {
-        warnings.push(`⚠️ DANGER: ${totalCombinations} combinations will use significant credits!`)
-    } else if (totalCombinations > 50) {
-        warnings.push(`⚠️ WARNING: ${totalCombinations} combinations detected`)
-    }
-
-    if (crossCombination) {
-        warnings.push(`🔄 Cross-combination: ${wildCardNames.length} wild cards combined`)
-    }
+    warnings.push(`🎲 Random selection from: ${wildCardInfo}`)
 
     return {
         isValid: true,
@@ -171,7 +209,7 @@ export function parseWildCardPrompt(
         originalPrompt: prompt,
         wildCardNames,
         expandedPrompts,
-        totalCombinations,
+        totalCombinations: 1, // Always returns 1 prompt with random selections
         warnings,
         crossCombination
     }

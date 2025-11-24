@@ -52,14 +52,18 @@ export function PromptSyntaxFeedback({ prompt, rawPromptMode }: PromptSyntaxFeed
         // Check for wildcards
         const wildcardMatches = prompt.match(/_[a-zA-Z0-9_]+_/g);
         if (wildcardMatches && wildcardMatches.length > 0) {
-            // Parse with actual wildcards to get accurate count
+            // Parse with actual wildcards to get accurate info
             const result = parseDynamicPrompt(prompt, {}, wildcards);
 
             if (result.hasWildCards && result.isValid) {
+                // Extract option counts from warnings
+                const infoMessage = result.warnings?.find(w => w.includes('Random selection from'));
+                const details = infoMessage?.replace('🎲 Random selection from: ', '') || 'Random selection';
+
                 setFeedback({
                     type: 'success',
-                    message: `Wild Cards: ${result.wildCardNames?.join(', ')} → ${result.totalCount} variations`,
-                    details: result.isCrossCombination ? 'Cross-combination enabled' : undefined
+                    message: `Wild Cards: Will randomly select from options`,
+                    details: details
                 });
             } else if (result.hasWildCards && !result.isValid) {
                 setFeedback({
