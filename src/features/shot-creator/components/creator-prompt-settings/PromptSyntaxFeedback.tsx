@@ -28,9 +28,13 @@ export function PromptSyntaxFeedback({ prompt, rawPromptMode, onToggleRawMode }:
     }, [loadWildCards]);
 
     useEffect(() => {
-        // Skip feedback if raw prompt mode is enabled
+        // Show different feedback if raw prompt mode is enabled
         if (rawPromptMode) {
-            setFeedback(null);
+            setFeedback({
+                type: 'info',
+                message: 'Raw Prompt Mode Active',
+                details: 'Special syntax will be sent as literal text'
+            });
             return;
         }
 
@@ -171,10 +175,10 @@ export function PromptSyntaxFeedback({ prompt, rawPromptMode, onToggleRawMode }:
                 <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onToggleRawMode(true)}
+                    onClick={() => onToggleRawMode(!rawPromptMode)}
                     className="h-6 px-2 text-xs hover:bg-white/10"
                 >
-                    Send as Literal Text
+                    {rawPromptMode ? 'Turn Off Raw Mode' : 'Send as Literal Text'}
                 </Button>
             )}
         </div>
