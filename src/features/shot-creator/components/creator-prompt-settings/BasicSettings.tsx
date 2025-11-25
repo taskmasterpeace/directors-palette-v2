@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { WildCardCreateDialog } from '../wildcard/WildCardCreateDialog'
@@ -171,22 +170,6 @@ const BasicSettings = () => {
                     </div>
                 </div>
             )}
-
-            {/* Raw Prompt Mode Toggle */}
-            <div className="space-y-2 pt-4 border-t border-slate-700">
-                <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                        <Label className="text-sm text-slate-300">Raw Prompt Mode</Label>
-                        <p className="text-xs text-slate-400">
-                            Send prompt as literal text, ignore [brackets], pipes |, and _wildcards_
-                        </p>
-                    </div>
-                    <Switch
-                        checked={shotCreatorSettings.rawPromptMode || false}
-                        onCheckedChange={(value) => updateSettings({ rawPromptMode: value })}
-                    />
-                </div>
-            </div>
 
             {/* Wild Card Creation */}
             <div className="pt-4 border-t border-slate-700">

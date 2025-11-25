@@ -42,7 +42,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         setShotCreatorPrompt,
         setShotCreatorReferenceImages,
     } = useShotCreatorStore()
-    const { settings: shotCreatorSettings } = useShotCreatorSettings()
+    const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
     const { generateImage, isGenerating } = useImageGeneration()
     const { libraryItems } = useLibraryStore()
 
@@ -639,6 +639,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         prompt={shotCreatorPrompt}
                         model={shotCreatorSettings.model}
                         rawPromptMode={shotCreatorSettings.rawPromptMode}
+                        onToggleRawMode={(enabled) => updateSettings({ rawPromptMode: enabled })}
                     />
 
                     {/* Help Tooltip */}

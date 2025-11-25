@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { parseDynamicPrompt, validateBracketSyntax } from "../../helpers/prompt-syntax-feedback";
 import { useWildCardStore } from "../../store/wildcard.store";
 
@@ -10,9 +11,10 @@ interface PromptSyntaxFeedbackProps {
     prompt: string;
     model?: string;
     rawPromptMode?: boolean;
+    onToggleRawMode?: (enabled: boolean) => void;
 }
 
-export function PromptSyntaxFeedback({ prompt, rawPromptMode }: PromptSyntaxFeedbackProps) {
+export function PromptSyntaxFeedback({ prompt, rawPromptMode, onToggleRawMode }: PromptSyntaxFeedbackProps) {
     const { wildcards, loadWildCards } = useWildCardStore();
     const [feedback, setFeedback] = useState<{
         type: 'info' | 'warning' | 'error' | 'success';
@@ -159,9 +161,21 @@ export function PromptSyntaxFeedback({ prompt, rawPromptMode }: PromptSyntaxFeed
     return (
         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-md border text-xs ${getColorClass()}`}>
             {getIcon()}
-            <span className="font-medium">{feedback.message}</span>
-            {feedback.details && (
-                <span className="opacity-75">• {feedback.details}</span>
+            <div className="flex-1">
+                <span className="font-medium">{feedback.message}</span>
+                {feedback.details && (
+                    <span className="opacity-75 ml-1">• {feedback.details}</span>
+                )}
+            </div>
+            {onToggleRawMode && (
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onToggleRawMode(true)}
+                    className="h-6 px-2 text-xs hover:bg-white/10"
+                >
+                    Send as Literal Text
+                </Button>
             )}
         </div>
     );
