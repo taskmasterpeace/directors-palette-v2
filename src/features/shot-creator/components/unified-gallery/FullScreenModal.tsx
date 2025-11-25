@@ -75,11 +75,11 @@ function FullscreenModal({
     return (
         <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-0 md:p-4">
             <div className="relative w-full h-full md:max-w-[90vw] md:h-auto">
-                {/* Close button - always visible */}
+                {/* Close button - always visible, fixed positioning for iOS */}
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute top-2 right-2 md:-top-10 md:right-0 text-white hover:bg-white/20 z-50"
+                    className="fixed top-[calc(env(safe-area-inset-top,0rem)+0.5rem)] right-[calc(env(safe-area-inset-right,0rem)+0.5rem)] md:absolute md:-top-10 md:right-0 text-white hover:bg-white/20 z-50"
                     onClick={onClose}
                 >
                     <X className="h-5 w-5" />

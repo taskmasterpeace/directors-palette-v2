@@ -13,7 +13,7 @@ import { ScreenNavigationIconSelector } from "@/components/ScreenNavigationIconS
 export default function Home() {
   const { activeTab, setActiveTab } = useLayoutStore();
   return (
-    <div className="container mx-auto max-w-none w-[95%] p-6 sm:p-4">
+    <div className="container mx-auto max-w-none w-full sm:w-[95%] p-4 sm:p-6">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
