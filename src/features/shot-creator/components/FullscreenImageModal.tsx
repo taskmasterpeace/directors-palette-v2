@@ -83,7 +83,7 @@ export default function FullscreenImageModal({
                 <Button
                     variant="ghost"
                     size="sm"
-                    className="fixed top-[calc(env(safe-area-inset-top,0rem)+1rem)] right-[calc(env(safe-area-inset-right,0rem)+1rem)] md:absolute md:top-4 md:right-4 text-white hover:bg-white/20 z-20 bg-black/20 backdrop-blur-sm"
+                    className="fixed top-[calc(env(safe-area-inset-top,0rem)+3rem)] right-[calc(env(safe-area-inset-right,0rem)+1rem)] md:absolute md:top-4 md:right-4 text-white hover:bg-white/20 z-20 bg-black/20 backdrop-blur-sm"
                     onClick={() => onOpenChange(false)}
                 >
                     <X className="w-6 h-6" />

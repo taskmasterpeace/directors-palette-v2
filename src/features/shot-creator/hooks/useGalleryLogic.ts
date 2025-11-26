@@ -48,7 +48,6 @@ export function useGalleryLogic(
   const [selectedImages, setSelectedImages] = useState<string[]>([])
   const [filters, setFilters] = useState<GalleryFilters>({
     searchQuery: '',
-    currentPage: storeCurrentPage,
     viewMode: 'grid'
   })
 
@@ -252,15 +251,16 @@ export function useGalleryLogic(
   }
 
   const handleSearchChange = (query: string) => {
-    setFilters(prev => ({ ...prev, searchQuery: query, currentPage: 1 }))
+    setFilters(prev => ({ ...prev, searchQuery: query }))
+    storeSetCurrentPage(1) // Reset to first page when searching
   }
 
   const handleViewModeChange = (mode: ViewMode) => {
-    setFilters(prev => ({ ...prev, viewMode: mode, currentPage: 1 }))
+    setFilters(prev => ({ ...prev, viewMode: mode }))
+    storeSetCurrentPage(1) // Reset to first page when changing view mode
   }
 
   const handlePageChange = (page: number) => {
-    setFilters(prev => ({ ...prev, currentPage: page }))
     storeSetCurrentPage(page)
   }
 

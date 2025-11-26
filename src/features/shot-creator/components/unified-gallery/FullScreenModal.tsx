@@ -79,7 +79,7 @@ function FullscreenModal({
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="fixed top-[calc(env(safe-area-inset-top,0rem)+0.5rem)] right-[calc(env(safe-area-inset-right,0rem)+0.5rem)] md:absolute md:-top-10 md:right-0 text-white hover:bg-white/20 z-50"
+                    className="fixed top-[calc(env(safe-area-inset-top,0rem)+3rem)] right-[calc(env(safe-area-inset-right,0rem)+0.5rem)] md:absolute md:-top-10 md:right-0 text-white hover:bg-white/20 z-50"
                     onClick={onClose}
                 >
                     <X className="h-5 w-5" />

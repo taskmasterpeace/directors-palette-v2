@@ -65,10 +65,11 @@ export function UnifiedImageGallery({
     const showReferenceNamePrompt = useReferenceNamePrompt()
     const { toast } = useToast()
 
-    // Get grid size and database count from store
+    // Get grid size, pagination, and database count from store
     const gridSize = useUnifiedGalleryStore(state => state.gridSize)
     const setGridSize = useUnifiedGalleryStore(state => state.setGridSize)
     const totalDatabaseCount = useUnifiedGalleryStore(state => state.totalDatabaseCount)
+    const currentPage = useUnifiedGalleryStore(state => state.currentPage)
 
     // Grid size to CSS classes mapping
     const getGridClasses = (size: GridSize): string => {
@@ -246,7 +247,7 @@ export function UnifiedImageGallery({
                         </ScrollArea>
 
                         <Pagination
-                            currentPage={filters.currentPage}
+                            currentPage={currentPage}
                             totalPages={totalPages}
                             onPageChange={handlePageChange}
                         />

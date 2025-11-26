@@ -9,9 +9,13 @@ import { LayoutAnnotation } from "@/features/layout-annotation";
 import { StoryCreator } from "@/features/story-creator";
 import { UnifiedImageGallery } from "@/features/shot-creator/components/unified-gallery/UnifiedImageGallery";
 import { ScreenNavigationIconSelector } from "@/components/ScreenNavigationIconSelector";
+import { useGalleryLoader } from "@/features/shot-creator/hooks/useGalleryLoader";
 
 export default function Home() {
   const { activeTab, setActiveTab } = useLayoutStore();
+
+  // Load gallery data for pagination to work in Gallery tab
+  const { isLoading: isGalleryLoading } = useGalleryLoader();
   return (
     <div className="container mx-auto max-w-none w-full sm:w-[95%] p-4 sm:p-6">
       <div className="space-y-6">
