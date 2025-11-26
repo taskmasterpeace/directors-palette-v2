@@ -19,7 +19,6 @@ export type ViewMode = 'grid'
 
 export interface GalleryFilters {
   searchQuery: string
-  currentPage: number
   viewMode: ViewMode
 }
 export function useGalleryLogic(
