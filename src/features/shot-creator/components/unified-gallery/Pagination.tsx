@@ -12,8 +12,8 @@ interface PaginationProps {
 export function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) {
   console.log(`[Pagination] Rendering with currentPage=${currentPage}, totalPages=${totalPages}`)
 
-  if (totalPages <= 1) {
-    console.log(`[Pagination] Hidden because totalPages=${totalPages}`)
+  // Always show pagination info, even on single page
+  if (totalPages <= 0) {
     return null
   }
 

@@ -37,7 +37,7 @@ export const useLibraryStore = create<ShotLibraryStore>()((set, get) => ({
     currentPage: 1,
     totalPages: 0,
     totalItems: 0,
-    pageSize: 12,
+    pageSize: 30,
 
     // ---- Actions ----
     setLibraryCategory: (category: LibraryCategory) => {

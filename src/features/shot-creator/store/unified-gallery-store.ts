@@ -105,7 +105,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   currentPage: 1,
   totalPages: 0,
   totalItems: 0,
-  pageSize: 12,
+  pageSize: 30,
   totalDatabaseCount: 0,
 
   // UI Preferences
