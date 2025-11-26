@@ -255,7 +255,7 @@ const ShotCreator = () => {
                                             <TabsTrigger value="generated" className="text-sm">📸 Images</TabsTrigger>
                                             <TabsTrigger value="library" className="text-sm">📚 Library</TabsTrigger>
                                         </TabsList>
-                                        <TabsContent value="generated" className="flex-1">
+                                        <TabsContent value="generated" className="flex-1 overflow-hidden">
                                             <UnifiedImageGallery
                                                 currentTab="shot-creator"
                                                 isLoading={isGalleryLoading}

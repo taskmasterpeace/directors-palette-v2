@@ -174,7 +174,7 @@ export function UnifiedImageGallery({
     }
 
     return (
-        <Card className={cn("w-full", className)}>
+        <Card className={cn("w-full h-full flex flex-col", className)}>
             <GalleryHeader
                 totalImages={totalImages}
                 totalDatabaseCount={totalDatabaseCount}
@@ -189,7 +189,7 @@ export function UnifiedImageGallery({
                 onGridSizeChange={setGridSize}
             />
 
-            <CardContent>
+            <CardContent className="flex-1 flex flex-col overflow-hidden">
                 {isLoading ? (
                     <div className="text-center py-12">
                         <div className="w-12 h-12 mx-auto mb-4 border-4 border-slate-600 border-t-purple-500 rounded-full animate-spin" />
@@ -205,7 +205,7 @@ export function UnifiedImageGallery({
                     </div>
                 ) : (
                     <>
-                        <ScrollArea className="h-[calc(100vh-180px)] min-h-[500px]">
+                        <ScrollArea className="flex-1">
                             <div className={cn("grid gap-4", getGridClasses(gridSize))}>
                                 {paginatedImages.map((image: GeneratedImage) => (
                                     <ImageCard
