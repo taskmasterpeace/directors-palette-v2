@@ -63,6 +63,7 @@ interface PromptLibraryState {
   // Actions - Data Management
   loadUserPrompts: (userId: string) => Promise<void>
   saveToSettings: (userId: string) => Promise<void>
+  debouncedSaveToSettings: (userId: string) => void
   clearAllPrompts: () => void
   deduplicatePrompts: () => void
 
@@ -72,6 +73,9 @@ interface PromptLibraryState {
   getPromptByReference: (reference: string) => SavedPrompt | undefined
   getAllReferences: () => string[]
 }
+
+// Debounce timer stored outside of Zustand state to avoid re-renders
+let saveTimeout: NodeJS.Timeout | null = null
 
 export const usePromptLibraryStore = create<PromptLibraryState>()((set, get) => ({
       prompts: [],
@@ -95,9 +99,9 @@ export const usePromptLibraryStore = create<PromptLibraryState>()((set, get) => 
           categories: [...state.categories, newCategory]
         }))
 
-        // Save to settings in background
+        // Save to settings in background (debounced)
         getCurrentUserId().then(userId => {
-          if (userId) get().saveToSettings(userId)
+          if (userId) get().debouncedSaveToSettings(userId)
         })
       },
 
@@ -108,9 +112,9 @@ export const usePromptLibraryStore = create<PromptLibraryState>()((set, get) => 
           )
         }))
 
-        // Save to settings in background
+        // Save to settings in background (debounced)
         getCurrentUserId().then(userId => {
-          if (userId) get().saveToSettings(userId)
+          if (userId) get().debouncedSaveToSettings(userId)
         })
       },
 
@@ -126,9 +130,9 @@ export const usePromptLibraryStore = create<PromptLibraryState>()((set, get) => 
           )
         }))
 
-        // Save to settings in background
+        // Save to settings in background (debounced)
         getCurrentUserId().then(userId => {
-          if (userId) get().saveToSettings(userId)
+          if (userId) get().debouncedSaveToSettings(userId)
         })
       },
 
@@ -175,9 +179,7 @@ export const usePromptLibraryStore = create<PromptLibraryState>()((set, get) => 
         })
 
         if (userId !== 'guest') {
-          get().saveToSettings(userId).catch(error => {
-            console.error('Background save failed:', error);
-          })
+          get().debouncedSaveToSettings(userId)
         }
       },
 
@@ -204,9 +206,9 @@ export const usePromptLibraryStore = create<PromptLibraryState>()((set, get) => 
           }
         })
 
-        // Save to settings in background
+        // Save to settings in background (debounced)
         getCurrentUserId().then(userId => {
-          if (userId) get().saveToSettings(userId)
+          if (userId) get().debouncedSaveToSettings(userId)
         })
       },
 
@@ -216,9 +218,9 @@ export const usePromptLibraryStore = create<PromptLibraryState>()((set, get) => 
           quickPrompts: state.quickPrompts.filter(prompt => prompt.id !== id)
         }))
 
-        // Save to settings in background
+        // Save to settings in background (debounced)
         getCurrentUserId().then(userId => {
-          if (userId) get().saveToSettings(userId)
+          if (userId) get().debouncedSaveToSettings(userId)
         })
       },
 
@@ -238,9 +240,9 @@ export const usePromptLibraryStore = create<PromptLibraryState>()((set, get) => 
           }
         })
 
-        // Save to settings in background
+        // Save to settings in background (debounced)
         getCurrentUserId().then(userId => {
-          if (userId) get().saveToSettings(userId)
+          if (userId) get().debouncedSaveToSettings(userId)
         })
       },
 
@@ -305,6 +307,24 @@ export const usePromptLibraryStore = create<PromptLibraryState>()((set, get) => 
           console.warn('Failed to save to settings (will retry later):', error instanceof Error ? error.message : error)
           // Don't throw - just log and continue
         }
+      },
+
+      // Debounced save to prevent excessive Supabase calls
+      debouncedSaveToSettings: (userId) => {
+        // Skip saving if no userId or guest user
+        if (!userId || userId === 'guest') {
+          return
+        }
+
+        // Clear existing timeout
+        if (saveTimeout) {
+          clearTimeout(saveTimeout)
+        }
+
+        // Set new timeout - save after 1 second of inactivity
+        saveTimeout = setTimeout(() => {
+          get().saveToSettings(userId)
+        }, 1000)
       },
 
       clearAllPrompts: () => {
