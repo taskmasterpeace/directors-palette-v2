@@ -15,7 +15,7 @@ export default function Home() {
   const { activeTab, setActiveTab } = useLayoutStore();
 
   // Load gallery data for pagination to work in Gallery tab
-  const { isLoading: isGalleryLoading } = useGalleryLoader();
+  useGalleryLoader();
   return (
     <div className="container mx-auto max-w-none w-full sm:w-[95%] p-4 sm:p-6">
       <div className="space-y-6">

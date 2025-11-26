@@ -40,7 +40,6 @@ export function useGalleryLogic(
     getTotalCreditsUsed,
     updateImageReference,
     totalPages: storeTotalPages,
-    currentPage: storeCurrentPage,
     setCurrentPage: storeSetCurrentPage
   } = useUnifiedGalleryStore()
 
