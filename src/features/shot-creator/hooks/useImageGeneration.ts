@@ -241,6 +241,9 @@ export function useImageGeneration() {
                             setShotCreatorProcessing(false)
                             setActiveGalleryId(null)
 
+                            // Navigate to page 1 to show the new image immediately
+                            useUnifiedGalleryStore.getState().setCurrentPage(1)
+
                             toast({
                                 title: 'Image Ready!',
                                 description: 'Your image has been saved to the gallery.',
