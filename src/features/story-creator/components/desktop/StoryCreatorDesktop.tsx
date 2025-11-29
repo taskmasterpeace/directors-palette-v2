@@ -314,7 +314,11 @@ export default function StoryCreatorDesktop() {
 
             {/* Tabbed Content */}
             <div className="flex-1 overflow-hidden">
-                <Tabs value={internalTab} onValueChange={setInternalTab} className="h-full flex flex-col">
+                <Tabs
+                    value={internalTab}
+                    onValueChange={(value) => setInternalTab(value as 'input' | 'entities' | 'review' | 'queue')}
+                    className="h-full flex flex-col"
+                >
                     <TabsList className="mx-4 mt-4 bg-slate-800 border border-slate-700">
                         <TabsTrigger value="input" className="flex items-center gap-2">
                             <FileText className="w-4 h-4" />
