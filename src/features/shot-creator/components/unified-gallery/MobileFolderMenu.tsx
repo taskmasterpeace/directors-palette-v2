@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import {
   Folder,
   FolderPlus,
-  Image,
+  Image as ImageIcon,
   FolderOpen,
   X,
 } from 'lucide-react'
@@ -78,7 +78,7 @@ export function MobileFolderMenu({
                     : 'hover:bg-accent hover:text-accent-foreground'
                 )}
               >
-                <Image className="h-5 w-5 flex-shrink-0" />
+                <ImageIcon className="h-5 w-5 flex-shrink-0" />
                 <span className="flex-1 text-left font-medium">All Images</span>
                 <Badge
                   variant={isAllImagesActive ? 'secondary' : 'outline'}

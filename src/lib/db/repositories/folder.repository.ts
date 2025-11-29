@@ -86,14 +86,14 @@ export class FolderRepository {
       }
 
       // Transform the data to include image count
-      const foldersWithCount = (folders || []).map((folder: any) => ({
+      const foldersWithCount = (folders || []).map((folder) => ({
         id: folder.id,
         user_id: folder.user_id,
         name: folder.name,
         color: folder.color,
         created_at: folder.created_at,
         updated_at: folder.updated_at,
-        image_count: folder.image_count?.[0]?.count || 0,
+        image_count: (folder.image_count as unknown as Array<{ count: number }>)?.[0]?.count || 0,
       }));
 
       return {

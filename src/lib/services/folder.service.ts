@@ -172,7 +172,7 @@ export class FolderService {
       }
 
       // Prepare update data
-      const updateData: any = {};
+      const updateData: { name?: string; color?: string | null } = {};
       if (input.name !== undefined) {
         updateData.name = input.name.trim();
       }
