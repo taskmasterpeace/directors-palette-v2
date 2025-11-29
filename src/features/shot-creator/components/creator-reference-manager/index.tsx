@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Trash2,
-  Plus,
   X,
 } from 'lucide-react'
 import Image from "next/image"
@@ -73,23 +72,6 @@ export function CreatorReferenceManager({
           )
         })}
       </div>
-
-      {/* Progressive Disclosure Indicator */}
-      {visibleSlots < maxImages && shotCreatorReferenceImages.length >= visibleSlots - 1 && (
-        <div className="text-center py-3 border-t border-slate-700">
-          <div className="text-sm text-slate-400">
-            <Plus className="w-4 h-4 mx-auto mb-1" />
-            <span className="font-medium">
-              {maxImages - visibleSlots} more slots available
-            </span>
-            <br />
-            <span className="text-xs">
-              Fill current slots to expand automatically
-            </span>
-          </div>
-        </div>
-      )}
-
 
       {/* Fullscreen Modal */}
       {fullscreenImage && (

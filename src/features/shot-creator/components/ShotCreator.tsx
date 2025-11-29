@@ -152,7 +152,7 @@ const ShotCreator = () => {
                             />
                         </div>
                         <CreatorReferenceManager
-                            compact={false}
+                            compact={true}
                             maxImages={isEditingMode ? 1 : (modelConfig?.maxReferenceImages || 3)}
                             editingMode={isEditingMode}
                         />
@@ -230,7 +230,7 @@ const ShotCreator = () => {
                                         />
                                     </div>
                                     <CreatorReferenceManager
-                                        compact={false}
+                                        compact={true}
                                         maxImages={isEditingMode ? 1 : (modelConfig?.maxReferenceImages || 3)}
                                         editingMode={isEditingMode}
                                     />
