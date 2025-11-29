@@ -17,6 +17,67 @@ interface DraftRestorePromptProps {
     onRestore: (draft: DraftData) => void
 }
 
+const SHOWN_DRAFTS_KEY = 'story-creator-shown-drafts'
+
+/**
+ * Track which draft prompts have already been shown in this session
+ */
+function hasShownDraftPrompt(timestamp: number): boolean {
+    if (typeof window === 'undefined') return false
+
+    try {
+        const shown = sessionStorage.getItem(SHOWN_DRAFTS_KEY)
+        if (!shown) return false
+
+        const shownTimestamps = JSON.parse(shown) as number[]
+        return shownTimestamps.includes(timestamp)
+    } catch {
+        return false
+    }
+}
+
+/**
+ * Mark a draft prompt as shown for this session
+ */
+function markDraftPromptShown(timestamp: number): void {
+    if (typeof window === 'undefined') return
+
+    try {
+        const shown = sessionStorage.getItem(SHOWN_DRAFTS_KEY)
+        const shownTimestamps = shown ? JSON.parse(shown) as number[] : []
+
+        if (!shownTimestamps.includes(timestamp)) {
+            shownTimestamps.push(timestamp)
+            sessionStorage.setItem(SHOWN_DRAFTS_KEY, JSON.stringify(shownTimestamps))
+        }
+    } catch (error) {
+        console.error('Failed to track shown draft:', error)
+    }
+}
+
+/**
+ * Clear the tracking when a draft is discarded or restored
+ */
+function clearDraftPromptTracking(timestamp: number): void {
+    if (typeof window === 'undefined') return
+
+    try {
+        const shown = sessionStorage.getItem(SHOWN_DRAFTS_KEY)
+        if (!shown) return
+
+        const shownTimestamps = JSON.parse(shown) as number[]
+        const filtered = shownTimestamps.filter(t => t !== timestamp)
+
+        if (filtered.length > 0) {
+            sessionStorage.setItem(SHOWN_DRAFTS_KEY, JSON.stringify(filtered))
+        } else {
+            sessionStorage.removeItem(SHOWN_DRAFTS_KEY)
+        }
+    } catch (error) {
+        console.error('Failed to clear draft tracking:', error)
+    }
+}
+
 /**
  * Prompt to restore a saved draft when the page loads
  */
@@ -28,19 +89,27 @@ export function DraftRestorePrompt({ onRestore }: DraftRestorePromptProps) {
         // Check for saved draft on mount
         const savedDraft = loadDraft()
         if (savedDraft) {
-            setDraft(savedDraft)
-            setOpen(true)
+            // Only show prompt if we haven't shown it for this draft in this session
+            if (!hasShownDraftPrompt(savedDraft.timestamp)) {
+                setDraft(savedDraft)
+                setOpen(true)
+                markDraftPromptShown(savedDraft.timestamp)
+            }
         }
     }, [])
 
     const handleRestore = () => {
         if (draft) {
             onRestore(draft)
+            clearDraftPromptTracking(draft.timestamp)
             setOpen(false)
         }
     }
 
     const handleDiscard = () => {
+        if (draft) {
+            clearDraftPromptTracking(draft.timestamp)
+        }
         clearDraft()
         setOpen(false)
     }

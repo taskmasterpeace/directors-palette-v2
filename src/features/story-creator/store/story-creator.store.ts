@@ -33,6 +33,7 @@ export interface StoryCreatorStore {
     selectedChapter: string | null
     showCompletedOnly: boolean
     groupingSuggestions: ShotGroupingSuggestion[]
+    internalTab: 'input' | 'entities' | 'review' | 'queue'
 
     // ---- Project Actions ----
     setProjects: (projects: StoryProject[]) => void
@@ -67,6 +68,7 @@ export interface StoryCreatorStore {
     setSelectedChapter: (chapter: string | null) => void
     setShowCompletedOnly: (show: boolean) => void
     setGroupingSuggestions: (suggestions: ShotGroupingSuggestion[]) => void
+    setInternalTab: (tab: 'input' | 'entities' | 'review' | 'queue') => void
 
     // ---- Computed Getters ----
     getFilteredShots: () => StoryShot[]
@@ -97,6 +99,7 @@ export const useStoryCreatorStore = create<StoryCreatorStore>()((set, get) => ({
     selectedChapter: null,
     showCompletedOnly: false,
     groupingSuggestions: [],
+    internalTab: 'input',
 
     // ---- Project Actions ----
     setProjects: (projects) => set({ projects }),
@@ -181,6 +184,7 @@ export const useStoryCreatorStore = create<StoryCreatorStore>()((set, get) => ({
     setSelectedChapter: (chapter) => set({ selectedChapter: chapter, currentPage: 1 }),
     setShowCompletedOnly: (show) => set({ showCompletedOnly: show, currentPage: 1 }),
     setGroupingSuggestions: (suggestions) => set({ groupingSuggestions: suggestions }),
+    setInternalTab: (tab) => set({ internalTab: tab }),
 
     // ---- Computed Getters ----
     getFilteredShots: () => {

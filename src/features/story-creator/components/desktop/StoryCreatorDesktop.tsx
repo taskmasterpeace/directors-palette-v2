@@ -29,14 +29,14 @@ export default function StoryCreatorDesktop() {
         shots,
         currentQueue,
         extractedEntities,
+        internalTab,
         setCurrentProject,
         setShots,
         updateShot,
         setCurrentQueue,
-        setExtractedEntities
+        setExtractedEntities,
+        setInternalTab
     } = useStoryCreatorStore()
-
-    const [activeTab, setActiveTab] = useState('input')
     const [isExtracting, setIsExtracting] = useState(false)
     const [isGenerating, setIsGenerating] = useState(false)
     const [showMissingReferencesModal, setShowMissingReferencesModal] = useState(false)
@@ -54,7 +54,7 @@ export default function StoryCreatorDesktop() {
             title: 'Draft Restored',
             description: `Restored ${draft.shots.length} shots from your previous session`,
         })
-        setActiveTab('review')
+        setInternalTab('review')
     }
 
     const handleExtractShots = async (title: string, storyText: string) => {
@@ -162,7 +162,7 @@ export default function StoryCreatorDesktop() {
             }
 
             setShots(createdShots)
-            setActiveTab('entities')
+            setInternalTab('entities')
 
             // Clear any existing draft when starting fresh
             clearDraft()
@@ -276,7 +276,7 @@ export default function StoryCreatorDesktop() {
             }
 
             setCurrentQueue(queue)
-            setActiveTab('queue')
+            setInternalTab('queue')
         } catch (error) {
             console.error('Error creating queue:', error)
         } finally {
@@ -286,7 +286,7 @@ export default function StoryCreatorDesktop() {
 
     const handleAssignReferences = () => {
         setShowMissingReferencesModal(false)
-        setActiveTab('entities')
+        setInternalTab('entities')
     }
 
     const handleContinueAnyway = async () => {
@@ -314,7 +314,7 @@ export default function StoryCreatorDesktop() {
 
             {/* Tabbed Content */}
             <div className="flex-1 overflow-hidden">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+                <Tabs value={internalTab} onValueChange={setInternalTab} className="h-full flex flex-col">
                     <TabsList className="mx-4 mt-4 bg-slate-800 border border-slate-700">
                         <TabsTrigger value="input" className="flex items-center gap-2">
                             <FileText className="w-4 h-4" />
@@ -356,7 +356,7 @@ export default function StoryCreatorDesktop() {
                             <EntitiesSection
                                 entities={extractedEntities}
                                 shots={shots}
-                                onContinue={() => setActiveTab('review')}
+                                onContinue={() => setInternalTab('review')}
                             />
                         </TabsContent>
 
