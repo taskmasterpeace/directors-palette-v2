@@ -14,11 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      folders: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gallery: {
         Row: {
           created_at: string
           error_message: string | null
           file_size: number | null
+          folder_id: string | null
           generation_type: Database["public"]["Enums"]["generation_type"]
           id: string
           metadata: Json | null
@@ -34,6 +62,7 @@ export type Database = {
           created_at?: string
           error_message?: string | null
           file_size?: number | null
+          folder_id?: string | null
           generation_type?: Database["public"]["Enums"]["generation_type"]
           id?: string
           metadata?: Json | null
@@ -49,6 +78,7 @@ export type Database = {
           created_at?: string
           error_message?: string | null
           file_size?: number | null
+          folder_id?: string | null
           generation_type?: Database["public"]["Enums"]["generation_type"]
           id?: string
           metadata?: Json | null

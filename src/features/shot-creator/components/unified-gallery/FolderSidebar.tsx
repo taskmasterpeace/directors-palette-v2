@@ -82,8 +82,8 @@ export function FolderSidebar({
             {/* All Images */}
             <button
               onClick={() => onFolderSelect(null)}
-              onMouseEnter={() => setHoveredFolderId(SPECIAL_FOLDERS.ALL)}
-              onMouseLeave={() => setHoveredFolderId(null)}
+              onMouseEnter={() => _setHoveredFolderId(SPECIAL_FOLDERS.ALL)}
+              onMouseLeave={() => _setHoveredFolderId(null)}
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
                 isAllImagesActive
@@ -109,8 +109,8 @@ export function FolderSidebar({
             {/* Uncategorized */}
             <button
               onClick={() => onFolderSelect(SPECIAL_FOLDERS.UNCATEGORIZED)}
-              onMouseEnter={() => setHoveredFolderId(SPECIAL_FOLDERS.UNCATEGORIZED)}
-              onMouseLeave={() => setHoveredFolderId(null)}
+              onMouseEnter={() => _setHoveredFolderId(SPECIAL_FOLDERS.UNCATEGORIZED)}
+              onMouseLeave={() => _setHoveredFolderId(null)}
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
                 isUncategorizedActive
@@ -151,8 +151,8 @@ export function FolderSidebar({
                   <button
                     key={folder.id}
                     onClick={() => onFolderSelect(folder.id)}
-                    onMouseEnter={() => setHoveredFolderId(folder.id)}
-                    onMouseLeave={() => setHoveredFolderId(null)}
+                    onMouseEnter={() => _setHoveredFolderId(folder.id)}
+                    onMouseLeave={() => _setHoveredFolderId(null)}
                     className={cn(
                       'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
                       isActive
