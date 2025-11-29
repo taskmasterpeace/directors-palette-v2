@@ -433,17 +433,18 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       // Import GalleryService dynamically to avoid circular dependency
       const { GalleryService } = await import('../services/gallery.service')
 
-      // Use getInfinite method (we'll need to add this to the service)
-      // For now, we'll use the existing paginated method with calculated page
+      // Calculate next page to load (pages are 1-indexed)
       const nextPage = Math.floor(state.offset / state.pageSize) + 1
       const result = await GalleryService.loadUserGalleryPaginated(
-        nextPage + 1, // Load next page
+        nextPage,
         state.pageSize,
         state.currentFolderId
       )
 
       if (result.images.length > 0) {
-        const hasMore = result.images.length === state.pageSize
+        // Check if there are more images by comparing total loaded vs total in database
+        const newOffset = state.offset + result.images.length
+        const hasMore = newOffset < state.totalDatabaseCount
         get().appendImages(result.images, hasMore)
       } else {
         set({ hasMore: false, isLoadingMore: false })
