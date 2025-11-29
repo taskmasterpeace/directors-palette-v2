@@ -45,8 +45,11 @@ export class GalleryRepository {
       let query = this.client.from('gallery').select('*');
 
       Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          if (Array.isArray(value)) {
+        if (value !== undefined) {
+          if (value === null) {
+            // Explicitly filter for null values (e.g., uncategorized folder)
+            query = query.is(key, null);
+          } else if (Array.isArray(value)) {
             query = query.in(key, value);
           } else {
             query = query.eq(key, value);
@@ -92,8 +95,11 @@ export class GalleryRepository {
       // Build count query
       let countQuery = this.client.from('gallery').select('*', { count: 'exact', head: true });
       Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          if (Array.isArray(value)) {
+        if (value !== undefined) {
+          if (value === null) {
+            // Explicitly filter for null values (e.g., uncategorized folder)
+            countQuery = countQuery.is(key, null);
+          } else if (Array.isArray(value)) {
             countQuery = countQuery.in(key, value);
           } else {
             countQuery = countQuery.eq(key, value);
@@ -104,8 +110,11 @@ export class GalleryRepository {
       // Build data query
       let dataQuery = this.client.from('gallery').select('*');
       Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          if (Array.isArray(value)) {
+        if (value !== undefined) {
+          if (value === null) {
+            // Explicitly filter for null values (e.g., uncategorized folder)
+            dataQuery = dataQuery.is(key, null);
+          } else if (Array.isArray(value)) {
             dataQuery = dataQuery.in(key, value);
           } else {
             dataQuery = dataQuery.eq(key, value);
@@ -255,6 +264,68 @@ export class GalleryRepository {
       return {
         data: null,
         error: DatabaseErrorHandler.handle(error).message,
+      };
+    }
+  }
+
+  async getInfinite(
+    filters: GalleryFilters = {},
+    options: {
+      offset: number;
+      limit: number;
+      orderBy?: string;
+      ascending?: boolean;
+    }
+  ): Promise<RepositoryListResult<GalleryRow> & { hasMore: boolean }> {
+    try {
+      const { offset, limit, orderBy = 'created_at', ascending = false } = options;
+
+      // Fetch limit + 1 to check if there are more
+      const from = offset;
+      const to = from + limit; // fetch one extra
+
+      // Build query with filters
+      let query = this.client.from('gallery').select('*');
+
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined) {
+          if (value === null) {
+            query = query.is(key, null);
+          } else if (Array.isArray(value)) {
+            query = query.in(key, value);
+          } else {
+            query = query.eq(key, value);
+          }
+        }
+      });
+
+      // Apply ordering and range
+      query = query.order(orderBy, { ascending }).range(from, to);
+
+      const { data: galleries, error } = await query;
+
+      if (error) {
+        return {
+          data: [],
+          error: DatabaseErrorHandler.handle(error).message,
+          hasMore: false,
+        };
+      }
+
+      // Check if there are more items
+      const hasMore = (galleries || []).length > limit;
+      const data = hasMore ? galleries.slice(0, limit) : galleries || [];
+
+      return {
+        data,
+        error: null,
+        hasMore,
+      };
+    } catch (error) {
+      return {
+        data: [],
+        error: DatabaseErrorHandler.handle(error).message,
+        hasMore: false,
       };
     }
   }

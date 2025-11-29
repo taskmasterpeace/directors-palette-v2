@@ -102,12 +102,13 @@ export class GalleryService {
   }
 
   /**
-   * Load gallery items with pagination
+   * Load gallery items with pagination and optional folder filtering
    */
   static async loadUserGalleryPaginated(
     generationType: GenerationType,
     page: number,
     pageSize: number,
+    folderId?: string | null,
     options?: {
       includeProcessing?: boolean
     }
@@ -134,6 +135,12 @@ export class GalleryService {
       const filters: Record<string, unknown> = {
         user_id: user.id,
         generation_type: generationType,
+      }
+
+      // Add folder filter if provided
+      // Note: folderId can be null for uncategorized, string for specific folder, or undefined for all
+      if (folderId !== undefined) {
+        filters.folder_id = folderId
       }
 
       // If not including processing, filter by public_url not null

@@ -6,6 +6,7 @@ import type { GalleryImage } from '../types'
 import { useToast } from '@/hooks/use-toast'
 import { clipboardManager } from '@/utils/clipboard-manager'
 import { haptics } from '@/utils/haptics'
+import { BulkDownloadService, DownloadProgress } from '../services/bulk-download.service'
 
 export interface ChainData {
   chainId: string
@@ -48,6 +49,8 @@ export function useGalleryLogic(
     searchQuery: '',
     viewMode: 'grid'
   })
+  const [downloadModalOpen, setDownloadModalOpen] = useState(false)
+  const [downloadProgress, setDownloadProgress] = useState<DownloadProgress | null>(null)
 
   // Filter logic (no local pagination)
   const filteredImages = useMemo(() => {
@@ -283,6 +286,31 @@ export function useGalleryLogic(
     }
   }
 
+  const handleBulkDownload = async () => {
+    if (selectedImages.length === 0) return
+
+    setDownloadModalOpen(true)
+
+    const imagesToDownload = images
+      .filter(img => selectedImages.includes(img.url))
+      .map(img => ({ url: img.url, id: img.id }))
+
+    try {
+      await BulkDownloadService.downloadAsZip(
+        imagesToDownload,
+        undefined, // use default name
+        (progress) => setDownloadProgress(progress)
+      )
+    } catch (error) {
+      console.error('Bulk download failed:', error)
+      toast({
+        title: 'Download Failed',
+        description: error instanceof Error ? error.message : 'Failed to download images',
+        variant: 'destructive'
+      })
+    }
+  }
+
   return {
     // Data
     images,
@@ -310,6 +338,12 @@ export function useGalleryLogic(
     handleViewModeChange,
     handlePageChange,
     setFullscreenImage,
-    updateImageReference: handleUpdateImageReference
+    updateImageReference: handleUpdateImageReference,
+
+    // Bulk Download
+    downloadModalOpen,
+    downloadProgress,
+    handleBulkDownload,
+    setDownloadModalOpen
   }
 }

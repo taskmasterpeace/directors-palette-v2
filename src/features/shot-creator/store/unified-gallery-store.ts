@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { GalleryService } from '../services/gallery.service'
+import { FolderService } from '@/lib/services/folder.service'
+import type { FolderWithCount, CreateFolderInput, UpdateFolderInput } from '../types/folder.types'
 
 export interface GeneratedImage {
   id: string
@@ -10,6 +12,8 @@ export interface GeneratedImage {
   editInstructions?: string // For edited images, store the instructions used
   model: string
   reference?: string // NEW: @reference tag for easier referencing (e.g. "@hero", "@villain")
+  folderId?: string | null // NEW: Folder organization
+  folderName?: string // NEW: Folder name for display
   settings: {
     aspectRatio: string
     resolution: string
@@ -55,8 +59,18 @@ interface UnifiedGalleryState {
   pageSize: number
   totalDatabaseCount: number
 
+  // Infinite scroll state
+  offset: number
+  hasMore: boolean
+  isLoadingMore: boolean
+
   // UI Preferences
   gridSize: GridSize
+
+  // Folder state
+  folders: FolderWithCount[]
+  currentFolderId: string | null // null = all images, 'uncategorized' = uncategorized
+  isFoldersLoading: boolean
 
   // Actions
   addImage: (image: Omit<GeneratedImage, 'id' | 'metadata'> & {
@@ -75,6 +89,20 @@ interface UnifiedGalleryState {
   setFullscreenImage: (image: GeneratedImage | null) => void
   updateImageReference: (imageId: string, reference: string) => Promise<void>
   setGridSize: (size: GridSize) => void
+
+  // Infinite scroll actions
+  appendImages: (images: GeneratedImage[], hasMore: boolean) => void
+  loadMoreImages: () => Promise<void>
+  resetInfiniteScroll: () => void
+
+  // Folder actions
+  loadFolders: () => Promise<void>
+  createFolder: (input: CreateFolderInput) => Promise<{ success: boolean; error?: string }>
+  updateFolder: (id: string, input: UpdateFolderInput) => Promise<{ success: boolean; error?: string }>
+  deleteFolder: (id: string) => Promise<{ success: boolean; error?: string }>
+  setCurrentFolder: (folderId: string | null) => void
+  moveImagesToFolder: (imageIds: string[], folderId: string | null) => Promise<{ success: boolean; error?: string }>
+  getUncategorizedCount: () => number
 
   // Filtering
   getAllReferences: () => string[]
@@ -108,8 +136,18 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   pageSize: 30,
   totalDatabaseCount: 0,
 
+  // Infinite scroll state
+  offset: 0,
+  hasMore: true,
+  isLoadingMore: false,
+
   // UI Preferences
   gridSize: loadGridSizePreference(),
+
+  // Folder state
+  folders: [],
+  currentFolderId: null,
+  isFoldersLoading: false,
 
   addImage: (imageData) => {
     const newImage: GeneratedImage = {
@@ -286,11 +324,143 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
     })
   },
 
+  // Folder actions
+  loadFolders: async () => {
+    set({ isFoldersLoading: true })
+    try {
+      const folders = await FolderService.getUserFolders()
+      set({ folders, isFoldersLoading: false })
+    } catch (error) {
+      console.error('Failed to load folders:', error)
+      set({ isFoldersLoading: false })
+    }
+  },
+
+  createFolder: async (input) => {
+    const result = await FolderService.createFolder(input)
+    if (result.error || !result.data) {
+      return { success: false, error: result.error || 'Failed to create folder' }
+    }
+
+    // Reload folders to get updated counts
+    await get().loadFolders()
+    return { success: true }
+  },
+
+  updateFolder: async (id, input) => {
+    const result = await FolderService.updateFolder(id, input)
+    if (result.error) {
+      return { success: false, error: result.error }
+    }
+
+    // Reload folders to get updated data
+    await get().loadFolders()
+    return { success: true }
+  },
+
+  deleteFolder: async (id) => {
+    const result = await FolderService.deleteFolder(id)
+    if (result.error) {
+      return { success: false, error: result.error }
+    }
+
+    // If currently viewing the deleted folder, switch to all images
+    const currentFolderId = get().currentFolderId
+    if (currentFolderId === id) {
+      set({ currentFolderId: null })
+    }
+
+    // Reload folders
+    await get().loadFolders()
+    return { success: true }
+  },
+
+  setCurrentFolder: (folderId) => {
+    // Reset infinite scroll when changing folders
+    get().resetInfiniteScroll()
+    set({ currentFolderId: folderId, currentPage: 1 })
+  },
+
+  moveImagesToFolder: async (imageIds, folderId) => {
+    const result = await FolderService.bulkMoveToFolder(imageIds, folderId)
+    if (result.error) {
+      return { success: false, error: result.error }
+    }
+
+    // Update images in store
+    set((state) => ({
+      images: state.images.map((img) =>
+        imageIds.includes(img.id)
+          ? { ...img, folderId, folderName: folderId ? state.folders.find(f => f.id === folderId)?.name : undefined }
+          : img
+      ),
+    }))
+
+    // Reload folders to update counts
+    await get().loadFolders()
+    return { success: true }
+  },
+
+  getUncategorizedCount: () => {
+    return get().images.filter((img) => !img.folderId).length
+  },
+
   getTotalImages: () => {
     return get().images.length
   },
 
   getTotalCreditsUsed: () => {
     return get().images.reduce((total, img) => total + img.metadata.creditsUsed, 0)
+  },
+
+  // Infinite scroll actions
+  appendImages: (newImages, hasMore) => {
+    set((state) => ({
+      images: [...state.images, ...newImages],
+      offset: state.offset + newImages.length,
+      hasMore,
+      isLoadingMore: false
+    }))
+  },
+
+  loadMoreImages: async () => {
+    const state = get()
+    if (state.isLoadingMore || !state.hasMore) return
+
+    set({ isLoadingMore: true })
+
+    try {
+      // Import GalleryService dynamically to avoid circular dependency
+      const { GalleryService } = await import('../services/gallery.service')
+
+      // Use getInfinite method (we'll need to add this to the service)
+      // For now, we'll use the existing paginated method with calculated page
+      const nextPage = Math.floor(state.offset / state.pageSize) + 1
+      const result = await GalleryService.loadUserGalleryPaginated(
+        nextPage + 1, // Load next page
+        state.pageSize,
+        state.currentFolderId
+      )
+
+      if (result.images.length > 0) {
+        const hasMore = result.images.length === state.pageSize
+        get().appendImages(result.images, hasMore)
+      } else {
+        set({ hasMore: false, isLoadingMore: false })
+      }
+    } catch (error) {
+      console.error('Failed to load more images:', error)
+      set({ isLoadingMore: false })
+    }
+  },
+
+  resetInfiniteScroll: () => {
+    set({
+      images: [],
+      offset: 0,
+      hasMore: true,
+      isLoadingMore: false,
+      currentPage: 1
+    })
   }
 }))

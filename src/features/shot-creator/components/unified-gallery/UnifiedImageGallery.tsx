@@ -1,17 +1,22 @@
 'use client'
 
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ImageIcon } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { useReferenceNamePrompt } from '@/components/providers/PromptProvider'
 import { useToast } from '@/hooks/use-toast'
-import { Pagination } from './Pagination'
+import { LoadMoreButton } from './LoadMoreButton'
 import { useGalleryLogic } from "../../hooks/useGalleryLogic"
 import { ImageCard } from "./ImageCard"
 import { GalleryHeader } from "./GalleryHeader"
 import FullscreenModal from "./FullScreenModal"
+import { FolderSidebar } from "./FolderSidebar"
+import { MobileFolderMenu } from "./MobileFolderMenu"
+import { FolderManagerModal } from "./FolderManagerModal"
+import { BulkDownloadModal } from "./BulkDownloadModal"
+import { useFolderManager } from "../../hooks/useFolderManager"
 import { GeneratedImage, useUnifiedGalleryStore, GridSize } from '../../store/unified-gallery-store'
 
 export interface UnifiedImageGalleryProps {
@@ -42,7 +47,6 @@ export function UnifiedImageGallery({
     const {
         images,
         paginatedImages,
-        totalPages,
         filters,
         fullscreenImage,
         totalImages,
@@ -52,14 +56,17 @@ export function UnifiedImageGallery({
         handleDeleteImage,
         handleSendTo,
         handleSearchChange,
-        handlePageChange,
         setFullscreenImage,
         selectedImages,
         handleSelectAll,
         handleClearSelection,
         handleDeleteSelected,
         handleImageSelect,
-        updateImageReference
+        updateImageReference,
+        downloadModalOpen,
+        downloadProgress,
+        handleBulkDownload,
+        setDownloadModalOpen
     } = useGalleryLogic(onSendToTab, onUseAsReference, onSendToShotAnimator, onSendToLayoutAnnotation, onSendToLibrary, onImageSelect)
 
     const showReferenceNamePrompt = useReferenceNamePrompt()
@@ -69,7 +76,42 @@ export function UnifiedImageGallery({
     const gridSize = useUnifiedGalleryStore(state => state.gridSize)
     const setGridSize = useUnifiedGalleryStore(state => state.setGridSize)
     const totalDatabaseCount = useUnifiedGalleryStore(state => state.totalDatabaseCount)
-    const currentPage = useUnifiedGalleryStore(state => state.currentPage)
+
+    // Get infinite scroll state from store
+    const hasMore = useUnifiedGalleryStore(state => state.hasMore)
+    const isLoadingMore = useUnifiedGalleryStore(state => state.isLoadingMore)
+    const loadMoreImages = useUnifiedGalleryStore(state => state.loadMoreImages)
+
+    // Folder state from store
+    const folders = useUnifiedGalleryStore(state => state.folders)
+    const currentFolderId = useUnifiedGalleryStore(state => state.currentFolderId)
+    const isFoldersLoading = useUnifiedGalleryStore(state => state.isFoldersLoading)
+    const setCurrentFolder = useUnifiedGalleryStore(state => state.setCurrentFolder)
+    const getUncategorizedCount = useUnifiedGalleryStore(state => state.getUncategorizedCount)
+
+    // Folder manager hook
+    const {
+        modalMode,
+        selectedFolder,
+        openCreateModal,
+        closeModal,
+        handleCreateFolder,
+        handleUpdateFolder,
+        handleDeleteFolder,
+        handleMoveImages,
+    } = useFolderManager()
+
+    // Local UI state
+    const [isMobileFolderMenuOpen, setIsMobileFolderMenuOpen] = useState(false)
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+
+    // Get uncategorized count
+    const uncategorizedCount = getUncategorizedCount()
+
+    // Handle moving single image to folder
+    const handleMoveToFolder = async (imageId: string, folderId: string | null) => {
+        await handleMoveImages([imageId], folderId)
+    }
 
     // Grid size to CSS classes mapping
     const getGridClasses = (size: GridSize): string => {
@@ -165,6 +207,9 @@ export function UnifiedImageGallery({
                                 }
                             }}
                             onAddToLibrary={() => onSendToLibrary?.(image.url, image.id)}
+                            onMoveToFolder={(folderId) => handleMoveToFolder(image.id, folderId)}
+                            currentFolderId={image.folderId}
+                            folders={folders}
                             showActions={true}
                         />
                     ))}
@@ -173,21 +218,71 @@ export function UnifiedImageGallery({
         )
     }
 
+    // Get current folder name for display
+    const currentFolderName = currentFolderId
+        ? folders.find(f => f.id === currentFolderId)?.name || 'Uncategorized'
+        : undefined
+
     return (
-        <Card className={cn("w-full h-full flex flex-col", className)}>
-            <GalleryHeader
-                totalImages={totalImages}
-                totalDatabaseCount={totalDatabaseCount}
-                totalCredits={totalCredits}
-                searchQuery={filters.searchQuery}
-                onSearchChange={handleSearchChange}
-                selectedCount={selectedImages.length}
-                gridSize={gridSize}
-                onSelectAll={handleSelectAll}
-                onClearSelection={handleClearSelection}
-                onDeleteSelected={handleDeleteSelected}
-                onGridSizeChange={setGridSize}
+        <>
+            {/* Mobile Folder Menu */}
+            <MobileFolderMenu
+                open={isMobileFolderMenuOpen}
+                folders={folders}
+                currentFolderId={currentFolderId}
+                uncategorizedCount={uncategorizedCount}
+                totalImages={totalDatabaseCount}
+                isLoading={isFoldersLoading}
+                onOpenChange={setIsMobileFolderMenuOpen}
+                onFolderSelect={setCurrentFolder}
+                onCreateFolder={openCreateModal}
             />
+
+            {/* Folder Manager Modal */}
+            <FolderManagerModal
+                mode={modalMode}
+                folder={selectedFolder}
+                onClose={closeModal}
+                onCreate={handleCreateFolder}
+                onUpdate={handleUpdateFolder}
+                onDelete={handleDeleteFolder}
+            />
+
+            {/* Main Gallery Layout */}
+            <div className="flex h-full w-full">
+                {/* Desktop Folder Sidebar */}
+                <div className="hidden md:block">
+                    <FolderSidebar
+                        folders={folders}
+                        currentFolderId={currentFolderId}
+                        uncategorizedCount={uncategorizedCount}
+                        totalImages={totalDatabaseCount}
+                        isLoading={isFoldersLoading}
+                        onFolderSelect={setCurrentFolder}
+                        onCreateFolder={openCreateModal}
+                        collapsed={isSidebarCollapsed}
+                        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                    />
+                </div>
+
+                {/* Gallery Content */}
+                <Card className={cn("flex-1 h-full flex flex-col", className)}>
+                    <GalleryHeader
+                        totalImages={totalImages}
+                        totalDatabaseCount={totalDatabaseCount}
+                        totalCredits={totalCredits}
+                        searchQuery={filters.searchQuery}
+                        currentFolderName={currentFolderName}
+                        onSearchChange={handleSearchChange}
+                        selectedCount={selectedImages.length}
+                        gridSize={gridSize}
+                        onSelectAll={handleSelectAll}
+                        onClearSelection={handleClearSelection}
+                        onDeleteSelected={handleDeleteSelected}
+                        onGridSizeChange={setGridSize}
+                        onOpenMobileMenu={() => setIsMobileFolderMenuOpen(true)}
+                        onBulkDownload={handleBulkDownload}
+                    />
 
             <CardContent className="flex-1 flex flex-col overflow-hidden">
                 {isLoading ? (
@@ -240,43 +335,68 @@ export function UnifiedImageGallery({
                                                 onSendToLibrary(image.url, image.id)
                                             }
                                         }}
+                                        onMoveToFolder={(folderId) => handleMoveToFolder(image.id, folderId)}
+                                        currentFolderId={image.folderId}
+                                        folders={folders}
                                         showActions={true}
                                     />
                                 ))}
                             </div>
                         </ScrollArea>
 
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={handlePageChange}
-                        />
+                        {hasMore && (
+                            <div className="flex justify-center py-8">
+                                <LoadMoreButton
+                                    onClick={() => loadMoreImages()}
+                                    loading={isLoadingMore}
+                                    hasMore={hasMore}
+                                />
+                            </div>
+                        )}
+
+                        {!hasMore && images.length > 0 && (
+                            <div className="text-center py-8 text-muted-foreground">
+                                All images loaded ({images.length} total)
+                            </div>
+                        )}
                     </>
                 )}
             </CardContent>
 
-            {/* Fullscreen Image Modal */}
-            {fullscreenImage && (
-                <FullscreenModal
-                    fullscreenImage={fullscreenImage}
-                    images={images}
-                    setFullscreenImage={setFullscreenImage}
-                    onClose={() => setFullscreenImage(null)}
-                    onNavigate={(direction: 'next' | 'previous') => navigateToImage(direction)}
-                    onCopyImage={handleCopyImage}
-                    onDownloadImage={handleDownloadImage}
-                    onDeleteImage={handleDeleteImage}
-                    onSendTo={currentTab ? (url: string, target: string) => handleSendTo(url, target) : (() => { })}
-                    onSetReference={async () => {
-                        const newRef = await showReferenceNamePrompt()
-                        if (newRef) {
-                            await updateImageReference(fullscreenImage.id, newRef)
-                        }
-                    }}
-                    onAddToLibrary={onSendToLibrary && fullscreenImage ? () => onSendToLibrary(fullscreenImage.url, fullscreenImage.id) : undefined}
-                    showReferenceNamePrompt={showReferenceNamePrompt}
-                />
-            )}
-        </Card>
+                    {/* Fullscreen Image Modal */}
+                    {fullscreenImage && (
+                        <FullscreenModal
+                            fullscreenImage={fullscreenImage}
+                            images={images}
+                            setFullscreenImage={setFullscreenImage}
+                            onClose={() => setFullscreenImage(null)}
+                            onNavigate={(direction: 'next' | 'previous') => navigateToImage(direction)}
+                            onCopyImage={handleCopyImage}
+                            onDownloadImage={handleDownloadImage}
+                            onDeleteImage={handleDeleteImage}
+                            onSendTo={currentTab ? (url: string, target: string) => handleSendTo(url, target) : (() => { })}
+                            onSetReference={async () => {
+                                const newRef = await showReferenceNamePrompt()
+                                if (newRef) {
+                                    await updateImageReference(fullscreenImage.id, newRef)
+                                }
+                            }}
+                            onAddToLibrary={onSendToLibrary && fullscreenImage ? () => onSendToLibrary(fullscreenImage.url, fullscreenImage.id) : undefined}
+                            showReferenceNamePrompt={showReferenceNamePrompt}
+                        />
+                    )}
+
+                    {/* Bulk Download Modal */}
+                    <BulkDownloadModal
+                        open={downloadModalOpen}
+                        onOpenChange={setDownloadModalOpen}
+                        imageCount={selectedImages.length}
+                        current={downloadProgress?.current || 0}
+                        status={downloadProgress?.status || 'downloading'}
+                        error={downloadProgress?.error}
+                    />
+                </Card>
+            </div>
+        </>
     )
 }

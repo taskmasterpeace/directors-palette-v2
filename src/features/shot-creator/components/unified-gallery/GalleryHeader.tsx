@@ -4,7 +4,7 @@ import { CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { ImageIcon, Search, Trash2, Grid3x3, Grid2x2 } from 'lucide-react'
+import { ImageIcon, Search, Trash2, Grid3x3, Grid2x2, Menu, FolderInput, Download } from 'lucide-react'
 import { GridSize } from '../../store/unified-gallery-store'
 import {
   Tooltip,
@@ -20,11 +20,15 @@ interface GalleryHeaderProps {
   searchQuery: string
   selectedCount: number
   gridSize: GridSize
+  currentFolderName?: string
   onSearchChange: (query: string) => void
   onSelectAll: () => void
   onClearSelection: () => void
   onDeleteSelected: () => void
   onGridSizeChange: (size: GridSize) => void
+  onOpenMobileMenu?: () => void
+  onBulkMoveToFolder?: () => void
+  onBulkDownload?: () => void
 }
 
 export function GalleryHeader({
@@ -34,11 +38,15 @@ export function GalleryHeader({
   searchQuery,
   selectedCount,
   gridSize,
+  currentFolderName,
   onSearchChange,
   onSelectAll,
   onClearSelection,
   onDeleteSelected,
-  onGridSizeChange
+  onGridSizeChange,
+  onOpenMobileMenu,
+  onBulkMoveToFolder,
+  onBulkDownload
 }: GalleryHeaderProps) {
   return (
     <CardHeader className="pb-4">
@@ -46,8 +54,29 @@ export function GalleryHeader({
         {/* Top row with title and stats */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-2">
+            {/* Mobile hamburger menu button */}
+            {onOpenMobileMenu && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden min-h-[44px] min-w-[44px]"
+                onClick={onOpenMobileMenu}
+                aria-label="Open folder menu"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            )}
             <ImageIcon className="w-5 h-5 text-blue-400" />
-            <CardTitle>Unified Gallery</CardTitle>
+            <CardTitle className="text-base sm:text-lg">
+              {/* Show folder name on mobile if selected, full title on desktop */}
+              <span className="hidden md:inline">Unified Gallery</span>
+              <span className="md:hidden">
+                {currentFolderName ? currentFolderName : 'Unified Gallery'}
+              </span>
+              {currentFolderName && (
+                <span className="hidden md:inline text-muted-foreground"> / {currentFolderName}</span>
+              )}
+            </CardTitle>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <TooltipProvider>
@@ -132,6 +161,26 @@ export function GalleryHeader({
               >
                 Clear
               </Button>
+              {onBulkMoveToFolder && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onBulkMoveToFolder}
+                >
+                  <FolderInput className="w-4 h-4 mr-2" />
+                  Move to Folder
+                </Button>
+              )}
+              {onBulkDownload && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onBulkDownload}
+                >
+                  <Download className="h-4 w-4" />
+                  <span className="hidden sm:inline ml-2">Download</span>
+                </Button>
+              )}
               <Button
                 variant="destructive"
                 size="sm"

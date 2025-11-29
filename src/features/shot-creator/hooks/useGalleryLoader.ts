@@ -51,32 +51,37 @@ export function useGalleryLoader() {
 
     // Use direct selectors to ensure reactivity when store values change
     const loadImagesPaginated = useUnifiedGalleryStore(state => state.loadImagesPaginated)
+    const loadFolders = useUnifiedGalleryStore(state => state.loadFolders)
     const currentPage = useUnifiedGalleryStore(state => state.currentPage)
     const pageSize = useUnifiedGalleryStore(state => state.pageSize)
+    const currentFolderId = useUnifiedGalleryStore(state => state.currentFolderId)
     const setTotalDatabaseCount = useUnifiedGalleryStore(state => state.setTotalDatabaseCount)
 
     // Log when values change
-    console.log(`[useGalleryLoader] Hook state: currentPage=${currentPage}, pageSize=${pageSize}`)
+    console.log(`[useGalleryLoader] Hook state: currentPage=${currentPage}, pageSize=${pageSize}, folderId=${currentFolderId}`)
 
     // Load gallery on mount and subscribe to real-time updates
     useEffect(() => {
-        console.log(`[useGalleryLoader] useEffect triggered - currentPage=${currentPage}, pageSize=${pageSize}`)
+        console.log(`[useGalleryLoader] useEffect triggered - currentPage=${currentPage}, pageSize=${pageSize}, folderId=${currentFolderId}`)
         let mounted = true
         let subscription: { unsubscribe: () => void } | null = null
 
         const loadGallery = async () => {
             if (!mounted) return
 
-            console.log(`[useGalleryLoader] Loading page ${currentPage} with pageSize ${pageSize}`)
+            console.log(`[useGalleryLoader] Loading page ${currentPage} with pageSize ${pageSize} for folder ${currentFolderId}`)
             setIsLoading(true)
             setError(null)
 
             try {
+                // Load folders first
+                await loadFolders()
+
                 // Fetch total database count and paginated images in parallel
                 const [totalCount, paginatedResult] = await Promise.all([
                     GalleryService.getTotalImageCount(),
                     retryWithBackoff(() =>
-                        GalleryService.loadUserGalleryPaginated(currentPage, pageSize)
+                        GalleryService.loadUserGalleryPaginated(currentPage, pageSize, currentFolderId)
                     )
                 ])
 
@@ -107,12 +112,14 @@ export function useGalleryLoader() {
                                         // Reload gallery and total count when changes occur
                                         const [updatedTotalCount, paginatedUpdate] = await Promise.all([
                                             GalleryService.getTotalImageCount(),
-                                            GalleryService.loadUserGalleryPaginated(currentPage, pageSize)
+                                            GalleryService.loadUserGalleryPaginated(currentPage, pageSize, currentFolderId)
                                         ])
 
                                         if (mounted) {
                                             setTotalDatabaseCount(updatedTotalCount)
                                             loadImagesPaginated(paginatedUpdate.images, paginatedUpdate.total, paginatedUpdate.totalPages)
+                                            // Reload folders to update counts
+                                            await loadFolders()
                                         }
                                     } catch (realtimeError) {
                                         // Silently handle realtime update errors to prevent UI disruption
@@ -144,7 +151,7 @@ export function useGalleryLoader() {
                 subscription.unsubscribe()
             }
         }
-    }, [loadImagesPaginated, currentPage, pageSize, setTotalDatabaseCount])
+    }, [loadImagesPaginated, loadFolders, currentPage, pageSize, currentFolderId, setTotalDatabaseCount])
 
     return {
         isLoading,

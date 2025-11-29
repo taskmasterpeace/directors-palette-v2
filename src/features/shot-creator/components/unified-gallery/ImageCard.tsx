@@ -2,16 +2,18 @@
 
 import { useState, memo } from 'react'
 import Image from "next/image"
-import type { GalleryImage } from "../../types"
+import type { GeneratedImage } from "../../store/unified-gallery-store"
+import type { FolderWithCount } from "../../types/folder.types"
 import { useImageActions } from "../../hooks/useImageActions"
 import { ImageActionMenu } from "./ImageActionMenu"
 import { ModelBadge } from "./ModelBadge"
 import { ReferenceBadge } from "./ReferenceBadge"
 import { PromptTooltip } from "./PromptTooltip"
+import { MetadataBar } from "./MetadataBar"
 import { Checkbox } from "@/components/ui/checkbox"
 
 interface ImageCardProps {
-  image: GalleryImage
+  image: GeneratedImage
   isSelected: boolean
   onSelect: () => void
   onZoom: () => void
@@ -22,6 +24,9 @@ interface ImageCardProps {
   onSetReference?: () => void
   onEditReference?: () => void
   onAddToLibrary?: () => void
+  onMoveToFolder?: (folderId: string | null) => void
+  currentFolderId?: string | null
+  folders?: FolderWithCount[]
   showActions?: boolean
 }
 
@@ -41,6 +46,9 @@ const ImageCardComponent = ({
   onSetReference,
   onEditReference,
   onAddToLibrary,
+  onMoveToFolder,
+  currentFolderId,
+  folders = [],
   showActions = true
 }: ImageCardProps) => {
   const { handleCopyPrompt, handleCopyImage } = useImageActions()
@@ -83,6 +91,8 @@ const ImageCardComponent = ({
             imageUrl={image.url}
             prompt={image.prompt}
             currentReference={image.reference}
+            currentFolderId={currentFolderId}
+            folders={folders}
             onCopyPrompt={() => handleCopyPrompt(image.prompt)}
             onCopyImage={() => handleCopyImage(image.url)}
             onDownload={onDownload}
@@ -91,11 +101,18 @@ const ImageCardComponent = ({
             onSetReference={onSetReference}
             onEditReference={onEditReference}
             onAddToLibrary={onAddToLibrary}
+            onMoveToFolder={onMoveToFolder}
             dropdownOpen={dropdownOpen}
             onDropdownChange={setDropdownOpen}
           />
         </div>
       )}
+
+      {/* Metadata bar - always visible */}
+      <MetadataBar
+        aspectRatio={image.settings.aspectRatio || image.settings.aspect_ratio || '16:9'}
+        resolution={image.settings.resolution || '1024x1024'}
+      />
 
       {/* Hover tooltip with prompt */}
       <PromptTooltip prompt={image.prompt} />

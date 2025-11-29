@@ -40,14 +40,15 @@ export class GalleryService {
     }
 
     /**
-     * Load gallery images with pagination
+     * Load gallery images with pagination and optional folder filtering
      */
     static async loadUserGalleryPaginated(
         page: number,
-        pageSize: number
+        pageSize: number,
+        folderId?: string | null
     ): Promise<{ images: GeneratedImage[]; total: number; totalPages: number }> {
         try {
-            const result = await UnifiedGalleryService.loadUserGalleryPaginated('image', page, pageSize)
+            const result = await UnifiedGalleryService.loadUserGalleryPaginated('image', page, pageSize, folderId)
 
             // Transform database records to GeneratedImage format
             const images: GeneratedImage[] = result.items.map(item => this.transformToGeneratedImage(item))
@@ -109,6 +110,10 @@ export class GalleryService {
         // Extract reference from metadata if it exists
         const reference = (metadata as { reference?: string }).reference || undefined
 
+        // Extract folder info (from database row, not metadata)
+        const folderId = (item as GalleryRow & { folder_id?: string | null }).folder_id || undefined
+        const folderName = undefined // We don't have folder name in the row, will be populated by store if needed
+
         return {
             id: item.id,
             url: item.public_url || '',
@@ -116,6 +121,8 @@ export class GalleryService {
             source: 'shot-creator' as const,
             model,
             reference,
+            folderId,
+            folderName,
             settings: {
                 aspectRatio,
                 resolution,

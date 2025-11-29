@@ -5,6 +5,9 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
   MoreVertical,
@@ -17,13 +20,18 @@ import {
   Film,
   Layout,
   Sparkles,
-  Edit
+  Edit,
+  FolderInput,
+  Check
 } from 'lucide-react'
+import type { FolderWithCount } from '../../types/folder.types'
 
 interface ImageActionMenuProps {
   imageUrl: string
   prompt?: string
   currentReference?: string
+  currentFolderId?: string | null
+  folders?: FolderWithCount[]
   onCopyPrompt: () => void
   onCopyImage: () => void
   onDownload: () => void
@@ -32,6 +40,7 @@ interface ImageActionMenuProps {
   onSetReference?: () => void
   onEditReference?: () => void
   onAddToLibrary?: () => void
+  onMoveToFolder?: (folderId: string | null) => void
   dropdownOpen: boolean
   onDropdownChange: (open: boolean) => void
 }
@@ -42,6 +51,8 @@ interface ImageActionMenuProps {
  */
 export function ImageActionMenu({
   currentReference,
+  currentFolderId,
+  folders = [],
   onCopyPrompt,
   onCopyImage,
   onDownload,
@@ -50,6 +61,7 @@ export function ImageActionMenu({
   onSetReference,
   onEditReference,
   onAddToLibrary,
+  onMoveToFolder,
   dropdownOpen,
   onDropdownChange
 }: ImageActionMenuProps) {
@@ -155,6 +167,54 @@ export function ImageActionMenu({
             <Library className="mr-2 h-4 w-4" />
             Add to Library
           </DropdownMenuItem>
+        )}
+
+        {onMoveToFolder && folders.length > 0 && (
+          <>
+            <DropdownMenuSeparator className="bg-slate-700" />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="hover:bg-slate-700 cursor-pointer">
+                <FolderInput className="mr-2 h-4 w-4" />
+                Move to Folder
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="bg-slate-800 border-slate-700 text-white">
+                {/* Uncategorized option */}
+                <DropdownMenuItem
+                  onClick={() => onMoveToFolder(null)}
+                  className="hover:bg-slate-700 cursor-pointer"
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span>Uncategorized</span>
+                    {currentFolderId === null && <Check className="h-4 w-4 ml-2" />}
+                  </div>
+                </DropdownMenuItem>
+
+                {folders.length > 0 && <DropdownMenuSeparator className="bg-slate-700" />}
+
+                {/* User folders */}
+                {folders.map((folder) => (
+                  <DropdownMenuItem
+                    key={folder.id}
+                    onClick={() => onMoveToFolder(folder.id)}
+                    className="hover:bg-slate-700 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-2">
+                        {folder.color && (
+                          <div
+                            className="h-3 w-3 rounded-full border border-slate-600"
+                            style={{ backgroundColor: folder.color }}
+                          />
+                        )}
+                        <span>{folder.name}</span>
+                      </div>
+                      {currentFolderId === folder.id && <Check className="h-4 w-4 ml-2" />}
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          </>
         )}
 
         <DropdownMenuSeparator className="bg-slate-700" />
