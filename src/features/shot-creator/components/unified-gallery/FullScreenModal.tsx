@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
-import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3 } from 'lucide-react'
+import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, ImagePlus } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 import { GeneratedImage } from "../../store/unified-gallery-store"
 import { useIsMobile } from '@/hooks/useMediaQuery'
@@ -20,6 +20,7 @@ interface FullscreenModalProps {
     onSetReference: (id: string, ref: string) => void
     onAddToLibrary?: (url: string) => void
     onExtractFrames?: () => void
+    onExtractFramesToGallery?: () => void
     showReferenceNamePrompt: (defaultValue?: string) => Promise<string | null>
 }
 
@@ -36,6 +37,7 @@ function FullscreenModal({
     onSetReference,
     onAddToLibrary,
     onExtractFrames,
+    onExtractFramesToGallery,
     showReferenceNamePrompt
 }: FullscreenModalProps) {
     const { toast } = useToast()
@@ -398,18 +400,34 @@ function FullscreenModal({
                                 </Button>
                             </div>
 
-                            {/* Extract Frames */}
+                            {/* Extract Frames - Desktop: Download option */}
                             {onExtractFrames && (
-                                <div className="flex gap-2">
+                                <div className="hidden md:flex gap-2">
                                     <Button
                                         size="sm"
                                         variant="outline"
                                         className="w-full text-white border-slate-600"
                                         onClick={onExtractFrames}
-                                        title="Extract Frames"
+                                        title="Extract Frames (Download)"
                                     >
                                         <Grid3x3 className="w-3.5 h-3.5 mr-1" />
-                                        Extract Frames
+                                        Extract (Download)
+                                    </Button>
+                                </div>
+                            )}
+
+                            {/* Extract Frames - Both: Add to Gallery option */}
+                            {onExtractFramesToGallery && (
+                                <div className="flex gap-2">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="w-full text-white border-slate-600"
+                                        onClick={onExtractFramesToGallery}
+                                        title="Extract Frames to Gallery"
+                                    >
+                                        <ImagePlus className="w-3.5 h-3.5 mr-1" />
+                                        Extract to Gallery
                                     </Button>
                                 </div>
                             )}

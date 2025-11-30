@@ -167,6 +167,79 @@ export function UnifiedImageGallery({
         }
     }, [toast])
 
+    // Handle extracting frames and saving to gallery
+    const handleExtractFramesToGallery = useCallback(async (imageUrl: string, parentImageId?: string) => {
+        toast({
+            title: "Extracting Frames",
+            description: "Analyzing image and saving to gallery..."
+        })
+
+        try {
+            const result = await autoExtractFrames(imageUrl, '16:9')
+
+            if (!result.success) {
+                toast({
+                    title: "Detection Failed",
+                    description: "Could not detect grid separators. Use Layout tab for manual extraction.",
+                    variant: "destructive"
+                })
+                return
+            }
+
+            if (result.confidence === 'low') {
+                toast({
+                    title: "Low Confidence",
+                    description: "Grid detection uncertain. Consider using Layout tab for manual adjustment.",
+                    variant: "destructive"
+                })
+                return
+            }
+
+            // Save each frame to the gallery via API
+            let savedCount = 0
+            for (const frame of result.frames) {
+                try {
+                    const response = await fetch('/api/gallery/save-frame', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            imageData: frame.dataUrl,
+                            metadata: {
+                                parentId: parentImageId,
+                                row: frame.row,
+                                col: frame.col,
+                                aspectRatio: '16:9',
+                                width: 1920,
+                                height: 1080
+                            }
+                        })
+                    })
+
+                    if (response.ok) {
+                        savedCount++
+                    }
+                } catch (err) {
+                    console.error('Failed to save frame:', err)
+                }
+            }
+
+            toast({
+                title: "Frames Saved to Gallery",
+                description: `Successfully saved ${savedCount} of ${result.frames.length} frames`
+            })
+
+            // Trigger a gallery refresh
+            window.location.reload()
+        } catch (error) {
+            console.error('Frame extraction error:', error)
+            toast({
+                title: "Extraction Failed",
+                description: "An error occurred during frame extraction.",
+                variant: "destructive"
+            })
+        }
+    }, [toast])
+
     // Grid size to CSS classes mapping
     const getGridClasses = (size: GridSize): string => {
         switch (size) {
@@ -263,6 +336,7 @@ export function UnifiedImageGallery({
                             onAddToLibrary={() => onSendToLibrary?.(image.url, image.id)}
                             onMoveToFolder={(folderId) => handleMoveToFolder(image.id, folderId)}
                             onExtractFrames={() => handleExtractFrames(image.url)}
+                            onExtractFramesToGallery={() => handleExtractFramesToGallery(image.url, image.id)}
                             currentFolderId={image.folderId}
                             folders={folders}
                             showActions={true}
@@ -392,6 +466,7 @@ export function UnifiedImageGallery({
                                         }}
                                         onMoveToFolder={(folderId) => handleMoveToFolder(image.id, folderId)}
                                         onExtractFrames={() => handleExtractFrames(image.url)}
+                                        onExtractFramesToGallery={() => handleExtractFramesToGallery(image.url, image.id)}
                                         currentFolderId={image.folderId}
                                         folders={folders}
                                         showActions={true}
@@ -439,6 +514,7 @@ export function UnifiedImageGallery({
                             }}
                             onAddToLibrary={onSendToLibrary && fullscreenImage ? () => onSendToLibrary(fullscreenImage.url, fullscreenImage.id) : undefined}
                             onExtractFrames={() => handleExtractFrames(fullscreenImage.url)}
+                            onExtractFramesToGallery={() => handleExtractFramesToGallery(fullscreenImage.url, fullscreenImage.id)}
                             showReferenceNamePrompt={showReferenceNamePrompt}
                         />
                     )}

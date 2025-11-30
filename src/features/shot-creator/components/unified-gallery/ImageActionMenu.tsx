@@ -23,7 +23,8 @@ import {
   Edit,
   FolderInput,
   Check,
-  Grid3x3
+  Grid3x3,
+  ImagePlus
 } from 'lucide-react'
 import type { FolderWithCount } from '../../types/folder.types'
 
@@ -41,6 +42,7 @@ interface ImageActionMenuProps {
   onSetReference?: () => void
   onEditReference?: () => void
   onExtractFrames?: () => void
+  onExtractFramesToGallery?: () => void
   onAddToLibrary?: () => void
   onMoveToFolder?: (folderId: string | null) => void
   dropdownOpen: boolean
@@ -63,6 +65,7 @@ export function ImageActionMenu({
   onSetReference,
   onEditReference,
   onExtractFrames,
+  onExtractFramesToGallery,
   onAddToLibrary,
   onMoveToFolder,
   dropdownOpen,
@@ -162,16 +165,31 @@ export function ImageActionMenu({
           </>
         )}
 
+        {/* Extract Frames - Desktop: Download option */}
         {onExtractFrames && (
           <DropdownMenuItem
             onClick={() => {
               onExtractFrames()
               onDropdownChange(false)
             }}
-            className="hover:bg-slate-700 cursor-pointer"
+            className="hover:bg-slate-700 cursor-pointer hidden md:flex"
           >
             <Grid3x3 className="mr-2 h-4 w-4" />
-            Extract Frames
+            Extract Frames (Download)
+          </DropdownMenuItem>
+        )}
+
+        {/* Extract Frames - Both: Add to Gallery option */}
+        {onExtractFramesToGallery && (
+          <DropdownMenuItem
+            onClick={() => {
+              onExtractFramesToGallery()
+              onDropdownChange(false)
+            }}
+            className="hover:bg-slate-700 cursor-pointer"
+          >
+            <ImagePlus className="mr-2 h-4 w-4" />
+            Extract Frames to Gallery
           </DropdownMenuItem>
         )}
 
