@@ -96,6 +96,7 @@ interface UnifiedGalleryState {
   appendImages: (images: GeneratedImage[], hasMore: boolean) => void
   loadMoreImages: () => Promise<void>
   resetInfiniteScroll: () => void
+  refreshGallery: () => Promise<void>
 
   // Folder actions
   loadFolders: () => Promise<void>
@@ -481,5 +482,33 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       isLoadingMore: false,
       currentPage: 1
     })
+  },
+
+  refreshGallery: async () => {
+    const state = get()
+
+    try {
+      // Import GalleryService dynamically to avoid circular dependency
+      const { GalleryService } = await import('../services/gallery.service')
+
+      // Fetch fresh data for the current page/folder
+      const result = await GalleryService.loadUserGalleryPaginated(
+        1, // Always load first page on refresh
+        state.pageSize,
+        state.currentFolderId
+      )
+
+      // Update store with fresh data
+      set({
+        images: result.images,
+        totalItems: result.total,
+        totalPages: result.totalPages,
+        offset: result.images.length,
+        hasMore: result.images.length < result.total,
+        currentPage: 1
+      })
+    } catch (error) {
+      console.error('Failed to refresh gallery:', error)
+    }
   }
 }))

@@ -223,13 +223,27 @@ export function UnifiedImageGallery({
                 }
             }
 
-            toast({
-                title: "Frames Saved to Gallery",
-                description: `Successfully saved ${savedCount} of ${result.frames.length} frames`
-            })
+            if (savedCount > 0) {
+                toast({
+                    title: "Frames Saved to Gallery",
+                    description: `Successfully saved ${savedCount} of ${result.frames.length} frames. Refreshing...`
+                })
 
-            // Trigger a gallery refresh
-            window.location.reload()
+                // Give the toast a moment to show, then refresh to show new images
+                setTimeout(async () => {
+                    await useUnifiedGalleryStore.getState().refreshGallery()
+                    toast({
+                        title: "Gallery Updated",
+                        description: `${savedCount} new frames are now in your gallery`
+                    })
+                }, 1000)
+            } else {
+                toast({
+                    title: "Save Failed",
+                    description: "Could not save frames to gallery. Please try again.",
+                    variant: "destructive"
+                })
+            }
         } catch (error) {
             console.error('Frame extraction error:', error)
             toast({
