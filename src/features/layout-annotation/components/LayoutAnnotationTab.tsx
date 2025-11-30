@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useRef } from 'react'
+import React, { useRef, useState, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Layout, PanelLeft, PanelLeftClose, PanelRightClose, RotateCcw, Save, Upload } from "lucide-react"
+import { Layout, PanelLeft, PanelLeftClose, PanelRightClose, RotateCcw, Save, Upload, Maximize, Minimize2, Grid3x3 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { haptics } from "@/utils/haptics"
@@ -18,6 +18,8 @@ import { FabricCanvas, FabricCanvasRef } from "./canvas-board"
 import { CanvasSettings, CanvasToolbar } from "./canvas-settings"
 import { CanvasExporter } from "./canvas-export"
 import { AspectRatioIconSelector } from "./AspectRatioIconSelector"
+import { FrameExtractor } from "./frame-extractor"
+import type { FrameExtractionResult } from "../types/frame-extractor.types"
 
 interface LayoutAnnotationTabProps {
     className?: string
@@ -28,13 +30,74 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
     const { toast } = useToast()
     const canvasRef = useRef<FabricCanvasRef | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const frameExtractorInputRef = useRef<HTMLInputElement>(null)
+
+    // Frame Extractor state
+    const [frameExtractorOpen, setFrameExtractorOpen] = useState(false)
+    const [frameExtractorImage, setFrameExtractorImage] = useState<string | null>(null)
 
     // Custom hooks for business logic
-    const { sidebarCollapsed, setSidebarCollapsed, rightSidebarCollapsed, setRightSidebarCollapsed } = useLayoutAnnotationStore()
+    const { sidebarCollapsed, setSidebarCollapsed, rightSidebarCollapsed, setRightSidebarCollapsed, imageImportMode, setImageImportMode } = useLayoutAnnotationStore()
     const { canvasState, handleAspectRatioChange, updateCanvasState, updateDrawingProperties, updateCanvasSettings } = useCanvasSettings()
     const { handleUndo, handleClearCanvas, handleSaveCanvas } = useCanvasOperations({ canvasRef })
     const { handleImportClick, handleFileUpload } = useImageImport({ fileInputRef })
     useIncomingImageSync({ canvasRef })
+
+    // Frame Extractor handlers
+    const handleOpenFrameExtractor = useCallback(() => {
+        const node = frameExtractorInputRef.current
+        if (!node) return
+        if (typeof node.showPicker === 'function') {
+            node.showPicker()
+        } else {
+            node.click()
+        }
+    }, [])
+
+    const handleFrameExtractorFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+
+        const url = URL.createObjectURL(file)
+        setFrameExtractorImage(url)
+        setFrameExtractorOpen(true)
+        event.target.value = ''
+    }, [])
+
+    const handleFrameExtractorClose = useCallback(() => {
+        if (frameExtractorImage) {
+            URL.revokeObjectURL(frameExtractorImage)
+        }
+        setFrameExtractorImage(null)
+        setFrameExtractorOpen(false)
+    }, [frameExtractorImage])
+
+    const handleFramesExtracted = useCallback(async (frames: FrameExtractionResult[]) => {
+        // Check if frames have dataUrl (download mode) or were saved to gallery
+        const isDownloadMode = frames.length > 0 && frames[0].dataUrl
+
+        if (isDownloadMode) {
+            // Download mode: save frames as individual files
+            for (const frame of frames) {
+                const link = document.createElement('a')
+                link.href = frame.dataUrl
+                link.download = `frame_r${frame.row + 1}_c${frame.col + 1}.png`
+                link.click()
+            }
+            toast({
+                title: 'Frames Downloaded',
+                description: `Successfully downloaded ${frames.length} frames`
+            })
+        } else {
+            // Gallery mode: frames were already saved via API
+            toast({
+                title: 'Frames Saved to Gallery',
+                description: `Successfully saved ${frames.length} frames to your gallery`
+            })
+        }
+
+        handleFrameExtractorClose()
+    }, [toast, handleFrameExtractorClose])
 
     return (
         <div className={`flex flex-col h-full ${className}`}>
@@ -62,6 +125,25 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
                             >
                                 <Upload className="w-4 h-4 sm:mr-1" />
                                 <span className="ml-1">Import</span>
+                            </Button>
+
+                            <Button
+                                size="sm"
+                                type="button"
+                                onClick={() => {
+                                    haptics.light()
+                                    setImageImportMode(imageImportMode === 'fit' ? 'fill' : 'fit')
+                                }}
+                                variant="outline"
+                                className="h-10 sm:h-8 min-h-[44px] sm:min-h-0 border-red-500/30 text-red-200 hover:bg-red-600/20 touch-manipulation"
+                                title={imageImportMode === 'fit' ? 'Switch to Fill mode' : 'Switch to Fit mode'}
+                            >
+                                {imageImportMode === 'fit' ? (
+                                    <Minimize2 className="w-4 h-4" />
+                                ) : (
+                                    <Maximize className="w-4 h-4" />
+                                )}
+                                <span className="ml-1 hidden sm:inline">{imageImportMode === 'fit' ? 'Fit' : 'Fill'}</span>
                             </Button>
 
                             <Button
@@ -99,6 +181,19 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
                                 className="flex-1 sm:flex-initial h-10 sm:h-8 min-h-[44px] sm:min-h-0 touch-manipulation"
                             >
                                 <span>Clear</span>
+                            </Button>
+
+                            <Button
+                                size="sm"
+                                type="button"
+                                onClick={() => {
+                                    haptics.light()
+                                    handleOpenFrameExtractor()
+                                }}
+                                className="flex-1 sm:flex-initial h-10 sm:h-8 min-h-[44px] sm:min-h-0 bg-cyan-600 hover:bg-cyan-700 text-white transition-all touch-manipulation"
+                            >
+                                <Grid3x3 className="w-4 h-4 sm:mr-1" />
+                                <span className="ml-1">Extract</span>
                             </Button>
                         </div>
 
@@ -198,6 +293,7 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
                         backgroundColor={canvasState.backgroundColor}
                         canvasWidth={canvasState.canvasWidth}
                         canvasHeight={canvasState.canvasHeight}
+                        imageImportMode={imageImportMode}
                         onToolChange={(tool) => updateCanvasState({ tool })}
                         onObjectsChange={(count) => {
                             // Update the status display to show object count
@@ -264,6 +360,22 @@ function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabPro
                 onChange={handleFileUpload}
                 className="hidden"
             />
+
+            <input
+                ref={frameExtractorInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFrameExtractorFileSelect}
+                className="hidden"
+            />
+
+            {frameExtractorOpen && frameExtractorImage && (
+                <FrameExtractor
+                    imageUrl={frameExtractorImage}
+                    onClose={handleFrameExtractorClose}
+                    onExtract={handleFramesExtracted}
+                />
+            )}
         </div>
     )
 }

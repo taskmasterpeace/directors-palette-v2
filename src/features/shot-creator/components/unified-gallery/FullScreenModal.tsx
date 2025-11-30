@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
-import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info } from 'lucide-react'
+import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3 } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 import { GeneratedImage } from "../../store/unified-gallery-store"
 import { useIsMobile } from '@/hooks/useMediaQuery'
@@ -19,6 +19,7 @@ interface FullscreenModalProps {
     onSendTo: (url: string, target: string) => void
     onSetReference: (id: string, ref: string) => void
     onAddToLibrary?: (url: string) => void
+    onExtractFrames?: () => void
     showReferenceNamePrompt: (defaultValue?: string) => Promise<string | null>
 }
 
@@ -34,6 +35,7 @@ function FullscreenModal({
     onSendTo,
     onSetReference,
     onAddToLibrary,
+    onExtractFrames,
     showReferenceNamePrompt
 }: FullscreenModalProps) {
     const { toast } = useToast()
@@ -395,6 +397,22 @@ function FullscreenModal({
                                     Layout
                                 </Button>
                             </div>
+
+                            {/* Extract Frames */}
+                            {onExtractFrames && (
+                                <div className="flex gap-2">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="w-full text-white border-slate-600"
+                                        onClick={onExtractFrames}
+                                        title="Extract Frames"
+                                    >
+                                        <Grid3x3 className="w-3.5 h-3.5 mr-1" />
+                                        Extract Frames
+                                    </Button>
+                                </div>
+                            )}
 
                             {/* Library and delete */}
                             <div className="flex gap-2">

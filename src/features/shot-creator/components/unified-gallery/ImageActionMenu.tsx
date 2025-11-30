@@ -22,7 +22,8 @@ import {
   Sparkles,
   Edit,
   FolderInput,
-  Check
+  Check,
+  Grid3x3
 } from 'lucide-react'
 import type { FolderWithCount } from '../../types/folder.types'
 
@@ -39,6 +40,7 @@ interface ImageActionMenuProps {
   onSendTo?: (target: string) => void
   onSetReference?: () => void
   onEditReference?: () => void
+  onExtractFrames?: () => void
   onAddToLibrary?: () => void
   onMoveToFolder?: (folderId: string | null) => void
   dropdownOpen: boolean
@@ -60,6 +62,7 @@ export function ImageActionMenu({
   onSendTo,
   onSetReference,
   onEditReference,
+  onExtractFrames,
   onAddToLibrary,
   onMoveToFolder,
   dropdownOpen,
@@ -157,6 +160,19 @@ export function ImageActionMenu({
               Send to Layout
             </DropdownMenuItem>
           </>
+        )}
+
+        {onExtractFrames && (
+          <DropdownMenuItem
+            onClick={() => {
+              onExtractFrames()
+              onDropdownChange(false)
+            }}
+            className="hover:bg-slate-700 cursor-pointer"
+          >
+            <Grid3x3 className="mr-2 h-4 w-4" />
+            Extract Frames
+          </DropdownMenuItem>
         )}
 
         {onAddToLibrary && (

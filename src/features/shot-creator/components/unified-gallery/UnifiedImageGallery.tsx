@@ -7,6 +7,7 @@ import { ImageIcon } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { useReferenceNamePrompt } from '@/components/providers/PromptProvider'
 import { useToast } from '@/hooks/use-toast'
+import { autoExtractFrames } from '@/features/layout-annotation/services/grid-detector'
 import { LoadMoreButton } from './LoadMoreButton'
 import { useGalleryLogic } from "../../hooks/useGalleryLogic"
 import { ImageCard } from "./ImageCard"
@@ -113,6 +114,56 @@ export function UnifiedImageGallery({
         await handleMoveImages([imageId], folderId)
     }
 
+    // Handle extracting frames from a composite image
+    const handleExtractFrames = useCallback(async (imageUrl: string) => {
+        toast({
+            title: "Extracting Frames",
+            description: "Analyzing image for 3×3 grid..."
+        })
+
+        try {
+            const result = await autoExtractFrames(imageUrl, '16:9')
+
+            if (!result.success) {
+                toast({
+                    title: "Detection Failed",
+                    description: "Could not detect grid separators. Use Layout tab for manual extraction.",
+                    variant: "destructive"
+                })
+                return
+            }
+
+            if (result.confidence === 'low') {
+                toast({
+                    title: "Low Confidence",
+                    description: "Grid detection uncertain. Consider using Layout tab for manual adjustment.",
+                    variant: "destructive"
+                })
+                return
+            }
+
+            // Download the extracted frames
+            result.frames.forEach((frame, index) => {
+                const link = document.createElement('a')
+                link.href = frame.dataUrl
+                link.download = `frame_${index + 1}_r${frame.row + 1}_c${frame.col + 1}.png`
+                link.click()
+            })
+
+            toast({
+                title: "Frames Extracted",
+                description: `Successfully extracted ${result.frames.length} frames (gutter: ${result.detectedGutter}px)`
+            })
+        } catch (error) {
+            console.error('Frame extraction error:', error)
+            toast({
+                title: "Extraction Failed",
+                description: "An error occurred during frame extraction.",
+                variant: "destructive"
+            })
+        }
+    }, [toast])
+
     // Grid size to CSS classes mapping
     const getGridClasses = (size: GridSize): string => {
         switch (size) {
@@ -208,6 +259,7 @@ export function UnifiedImageGallery({
                             }}
                             onAddToLibrary={() => onSendToLibrary?.(image.url, image.id)}
                             onMoveToFolder={(folderId) => handleMoveToFolder(image.id, folderId)}
+                            onExtractFrames={() => handleExtractFrames(image.url)}
                             currentFolderId={image.folderId}
                             folders={folders}
                             showActions={true}
@@ -336,6 +388,7 @@ export function UnifiedImageGallery({
                                             }
                                         }}
                                         onMoveToFolder={(folderId) => handleMoveToFolder(image.id, folderId)}
+                                        onExtractFrames={() => handleExtractFrames(image.url)}
                                         currentFolderId={image.folderId}
                                         folders={folders}
                                         showActions={true}
@@ -382,6 +435,7 @@ export function UnifiedImageGallery({
                                 }
                             }}
                             onAddToLibrary={onSendToLibrary && fullscreenImage ? () => onSendToLibrary(fullscreenImage.url, fullscreenImage.id) : undefined}
+                            onExtractFrames={() => handleExtractFrames(fullscreenImage.url)}
                             showReferenceNamePrompt={showReferenceNamePrompt}
                         />
                     )}

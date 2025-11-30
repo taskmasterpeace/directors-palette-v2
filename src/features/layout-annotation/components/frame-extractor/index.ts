@@ -1,0 +1,1 @@
+export { FrameExtractor } from './FrameExtractor'
