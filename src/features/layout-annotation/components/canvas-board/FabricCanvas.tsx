@@ -24,6 +24,8 @@ import {
 import * as fabric from 'fabric'
 import { clipboardManager } from '@/utils/clipboard-manager'
 
+type ImageImportMode = 'fit' | 'fill'
+
 interface FabricCanvasProps {
   tool: 'select' | 'brush' | 'rectangle' | 'circle' | 'line' | 'arrow' | 'text' | 'eraser' | 'crop'
   brushSize: number
@@ -34,6 +36,7 @@ interface FabricCanvasProps {
   onToolChange?: (tool: 'select' | 'brush' | 'rectangle' | 'circle' | 'line' | 'arrow' | 'text' | 'eraser' | 'crop') => void
   canvasWidth?: number
   canvasHeight?: number
+  imageImportMode?: ImageImportMode
 }
 
 export interface FabricCanvasRef {
@@ -54,7 +57,8 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
     onObjectsChange,
     onToolChange,
     canvasWidth = 1200,
-    canvasHeight = 675
+    canvasHeight = 675,
+    imageImportMode = 'fit'
   } = props
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -429,20 +433,29 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
           const tempCtx = tempCanvas.getContext('2d');
           if (!tempCtx) return;
 
-          tempCanvas.width = width;
-          tempCanvas.height = height;
+          // Get zoom level for coordinate transformation
+          const zoom = canvas.getZoom();
 
-          // Draw only the selected crop area
+          // Set destination canvas to match the zoomed source dimensions
+          // This ensures 1:1 pixel mapping without distortion
+          const sourceWidth = width * zoom;
+          const sourceHeight = height * zoom;
+
+          tempCanvas.width = sourceWidth;
+          tempCanvas.height = sourceHeight;
+
+          // Draw the selected crop area from the zoomed canvas
+          // Source and destination now use consistent coordinate systems
           tempCtx.drawImage(
             canvas.lowerCanvasEl,
-            left * canvas.getZoom(),
-            top * canvas.getZoom(),
-            width * canvas.getZoom(),
-            height * canvas.getZoom(),
-            0,
-            0,
-            width,
-            height
+            left * zoom,      // source x (zoomed pixel space)
+            top * zoom,       // source y (zoomed pixel space)
+            sourceWidth,      // source width (zoomed)
+            sourceHeight,     // source height (zoomed)
+            0,                // dest x
+            0,                // dest y
+            sourceWidth,      // dest width (matches source for 1:1 copy)
+            sourceHeight      // dest height (matches source for 1:1 copy)
           );
 
           const croppedDataUrl = tempCanvas.toDataURL('image/png');
@@ -558,20 +571,36 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
         return
       }
 
-      const maxWidth = canvas.width! * 0.8
-      const maxHeight = canvas.height! * 0.8
+      let scale: number
+      let left: number
+      let top: number
 
-      const scale = Math.min(
-        maxWidth / img.width!,
-        maxHeight / img.height!,
-        1
-      )
+      if (imageImportMode === 'fill') {
+        // Fill mode: scale image to cover entire canvas (may crop edges)
+        scale = Math.max(
+          canvas.width! / img.width!,
+          canvas.height! / img.height!
+        )
+        img.scale(scale)
+        // Center the image (parts may extend beyond canvas)
+        left = (canvas.width! - img.getScaledWidth()) / 2
+        top = (canvas.height! - img.getScaledHeight()) / 2
+      } else {
+        // Fit mode: scale to fit within 80% of canvas with margins
+        const maxWidth = canvas.width! * 0.8
+        const maxHeight = canvas.height! * 0.8
 
-      img.scale(scale)
-      img.set({
-        left: (canvas.width! - img.getScaledWidth()) / 2,
-        top: (canvas.height! - img.getScaledHeight()) / 2
-      })
+        scale = Math.min(
+          maxWidth / img.width!,
+          maxHeight / img.height!,
+          1
+        )
+        img.scale(scale)
+        left = (canvas.width! - img.getScaledWidth()) / 2
+        top = (canvas.height! - img.getScaledHeight()) / 2
+      }
+
+      img.set({ left, top })
 
       canvas.add(img)
       canvas.setActiveObject(img)
@@ -580,7 +609,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
     }).catch((error) => {
       console.error('Failed to load image:', error)
     })
-  }, [])
+  }, [imageImportMode])
 
   // Handle paste from clipboard
   const handlePaste = useCallback(async (e: ClipboardEvent) => {
