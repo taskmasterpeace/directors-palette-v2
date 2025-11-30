@@ -2,13 +2,30 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
+  // Skip authentication for test routes (no Supabase needed)
+  if (request.nextUrl.pathname.startsWith('/test-')) {
+    return NextResponse.next({ request });
+  }
+
+  // Skip authentication for webhook endpoints
+  if (request.nextUrl.pathname.startsWith('/api/webhooks/')) {
+    return NextResponse.next({ request });
+  }
+
+  // Check if Supabase credentials are available
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    // Allow access without auth if credentials are missing (dev mode)
+    console.warn('Supabase credentials missing - skipping auth middleware');
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
@@ -28,11 +45,6 @@ export async function middleware(request: NextRequest) {
       },
     }
   );
-
-  // Skip authentication for webhook endpoints
-  if (request.nextUrl.pathname.startsWith('/api/webhooks/')) {
-    return supabaseResponse;
-  }
 
   // IMPORTANT: DO NOT REMOVE auth.getUser()
   // Do not run code between createServerClient and supabase.auth.getUser()

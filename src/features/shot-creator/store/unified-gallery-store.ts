@@ -66,6 +66,7 @@ interface UnifiedGalleryState {
 
   // UI Preferences
   gridSize: GridSize
+  isSidebarCollapsed: boolean
 
   // Folder state
   folders: FolderWithCount[]
@@ -89,6 +90,7 @@ interface UnifiedGalleryState {
   setFullscreenImage: (image: GeneratedImage | null) => void
   updateImageReference: (imageId: string, reference: string) => Promise<void>
   setGridSize: (size: GridSize) => void
+  setIsSidebarCollapsed: (collapsed: boolean) => void
 
   // Infinite scroll actions
   appendImages: (images: GeneratedImage[], hasMore: boolean) => void
@@ -123,6 +125,13 @@ const loadGridSizePreference = (): GridSize => {
   return 'medium'
 }
 
+// Load sidebar collapsed preference from localStorage
+const loadSidebarCollapsedPreference = (): boolean => {
+  if (typeof window === 'undefined') return false
+  const saved = localStorage.getItem('gallery-sidebar-collapsed')
+  return saved === 'true'
+}
+
 export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) => ({
   images: [],
   recentImages: [],
@@ -143,6 +152,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
 
   // UI Preferences
   gridSize: loadGridSizePreference(),
+  isSidebarCollapsed: loadSidebarCollapsedPreference(),
 
   // Folder state
   folders: [],
@@ -298,6 +308,14 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
     // Persist to localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('gallery-grid-size', size)
+    }
+  },
+
+  setIsSidebarCollapsed: (collapsed) => {
+    set({ isSidebarCollapsed: collapsed })
+    // Persist to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gallery-sidebar-collapsed', String(collapsed))
     }
   },
 

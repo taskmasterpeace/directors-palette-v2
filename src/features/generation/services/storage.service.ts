@@ -1,11 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const STORAGE_BUCKET = 'directors-palette';
+
+// Lazy-load Supabase client to avoid build-time errors when env vars aren't available
+let _supabase: SupabaseClient | null = null;
+function getSupabase(): SupabaseClient {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 /**
  * Storage Service
@@ -105,7 +112,7 @@ export class StorageService {
     // Storage path: generations/{user_id}/{prediction_id}.{ext}
     const storagePath = `generations/${userId}/${predictionId}.${fileExtension}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await getSupabase().storage
       .from(STORAGE_BUCKET)
       .upload(storagePath, buffer, {
         contentType: mimeType,
@@ -119,7 +126,7 @@ export class StorageService {
     // Get public URL
     const {
       data: { publicUrl },
-    } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(storagePath);
+    } = getSupabase().storage.from(STORAGE_BUCKET).getPublicUrl(storagePath);
 
     return {
       publicUrl,

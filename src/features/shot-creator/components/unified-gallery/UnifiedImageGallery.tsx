@@ -104,7 +104,10 @@ export function UnifiedImageGallery({
 
     // Local UI state
     const [isMobileFolderMenuOpen, setIsMobileFolderMenuOpen] = useState(false)
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+
+    // Sidebar collapsed state from store (persisted)
+    const isSidebarCollapsed = useUnifiedGalleryStore(state => state.isSidebarCollapsed)
+    const setIsSidebarCollapsed = useUnifiedGalleryStore(state => state.setIsSidebarCollapsed)
 
     // Get uncategorized count
     const uncategorizedCount = getUncategorizedCount()

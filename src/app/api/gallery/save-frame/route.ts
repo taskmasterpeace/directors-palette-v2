@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 const STORAGE_BUCKET = 'directors-palette'
+
+// Create Supabase client on demand to avoid build-time errors
+function getSupabaseClient(): SupabaseClient {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 interface SaveFrameRequest {
   imageData: string // base64 data URL
@@ -32,6 +35,7 @@ export async function POST(request: NextRequest) {
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
 
+    const supabase = getSupabaseClient()
     const body: SaveFrameRequest = await request.json()
     const { imageData, metadata } = body
 

@@ -1,11 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { StorageService } from './storage.service';
 import type { Database } from '../../../../supabase/database.types';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy-load Supabase client to avoid build-time errors when env vars aren't available
+let _supabase: SupabaseClient | null = null;
+function getSupabase(): SupabaseClient {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabase;
+}
 
 // Replicate Prediction Types
 export interface ReplicatePredictionInput {
@@ -55,7 +62,7 @@ export class WebhookService {
     const { id, output, status, error, input } = prediction;
 
     // Find the gallery entry by prediction_id
-    const { data: galleryEntry, error: findError } = await supabase
+    const { data: galleryEntry, error: findError } = await getSupabase()
       .from('gallery')
       .select('*')
       .eq('prediction_id', id)
@@ -161,7 +168,7 @@ export class WebhookService {
     const currentMetadata = (galleryEntry.metadata as Record<string, unknown>) || {};
 
     // Update gallery record with success data
-    const { error: updateError } = await supabase
+    const { error: updateError } = await getSupabase()
       .from('gallery')
       .update({
         status: 'completed' as GalleryStatus,
@@ -193,7 +200,7 @@ export class WebhookService {
   ): Promise<void> {
     const currentMetadata = (galleryEntry.metadata as Record<string, unknown>) || {};
 
-    await supabase
+    await getSupabase()
       .from('gallery')
       .update({
         status: 'failed' as GalleryStatus,
@@ -221,6 +228,6 @@ export class WebhookService {
       updateData.error_message = errorMessage;
     }
 
-    await supabase.from('gallery').update(updateData).eq('prediction_id', predictionId);
+    await getSupabase().from('gallery').update(updateData).eq('prediction_id', predictionId);
   }
 }
