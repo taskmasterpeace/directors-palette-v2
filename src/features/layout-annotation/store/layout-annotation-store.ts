@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import { CanvasState } from "../types"
 import { INITIAL_CANVAS_STATE } from "../constants"
 
+export type ImageImportMode = 'fit' | 'fill'
+
 interface LayoutAnnotationState {
   isLoading: boolean
   canvasState: CanvasState
@@ -10,6 +12,7 @@ interface LayoutAnnotationState {
   initialImage: string | null
   sidebarCollapsed: boolean
   rightSidebarCollapsed: boolean
+  imageImportMode: ImageImportMode
 
   setError: (error: string) => void
   setCanvasState: (updater: CanvasState | ((prev: CanvasState) => CanvasState)) => void
@@ -17,6 +20,7 @@ interface LayoutAnnotationState {
   setInitialImage: (initialImage: string | null) => void
   setSidebarCollapsed: (sidebarCollapsed: boolean) => void
   setRightSidebarCollapsed: (rightSidebarCollapsed: boolean) => void
+  setImageImportMode: (mode: ImageImportMode) => void
 }
 
 export const useLayoutAnnotationStore = create<LayoutAnnotationState>()((set) => ({
@@ -27,6 +31,7 @@ export const useLayoutAnnotationStore = create<LayoutAnnotationState>()((set) =>
   initialImage: null,
   sidebarCollapsed: false,
   rightSidebarCollapsed: false,
+  imageImportMode: 'fit' as ImageImportMode,
 
   setError: (error: string) => set({ error }),
 
@@ -51,4 +56,5 @@ export const useLayoutAnnotationStore = create<LayoutAnnotationState>()((set) =>
     set({ rightSidebarCollapsed }),
 
   setInitialImage: (initialImage: string | null) => set({ initialImage }),
+  setImageImportMode: (imageImportMode: ImageImportMode) => set({ imageImportMode }),
 }))
