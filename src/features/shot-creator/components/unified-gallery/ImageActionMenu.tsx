@@ -86,100 +86,204 @@ export function ImageActionMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-slate-800 border-slate-700 text-white" align="end">
-        {/* Copy Submenu */}
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger className="hover:bg-slate-700 cursor-pointer">
-            <Copy className="mr-2 h-4 w-4" />
-            Copy
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="bg-slate-800 border-slate-700 text-white">
-            <DropdownMenuItem
-              onClick={onCopyImage}
-              className="hover:bg-slate-700 cursor-pointer"
-            >
-              <ImageIcon className="mr-2 h-4 w-4" />
-              Image
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={onCopyPrompt}
-              className="hover:bg-slate-700 cursor-pointer"
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Prompt
-            </DropdownMenuItem>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
+        {/* === MOBILE: Flat menu items === */}
+        <div className="md:hidden">
+          <DropdownMenuItem
+            onClick={onCopyImage}
+            className="hover:bg-slate-700 cursor-pointer"
+          >
+            <ImageIcon className="mr-2 h-4 w-4" />
+            Copy Image
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={onCopyPrompt}
+            className="hover:bg-slate-700 cursor-pointer"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Copy Prompt
+          </DropdownMenuItem>
 
-        {/* Send to Submenu */}
-        {onSendTo && (
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="hover:bg-slate-700 cursor-pointer">
-              <Send className="mr-2 h-4 w-4" />
-              Send to
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="bg-slate-800 border-slate-700 text-white">
+          {onSendTo && (
+            <>
+              <DropdownMenuSeparator className="bg-slate-700" />
               <DropdownMenuItem
                 onClick={() => onSendTo('shot-creator')}
                 className="hover:bg-slate-700 cursor-pointer"
               >
                 <Sparkles className="mr-2 h-4 w-4" />
-                Shot Creator
+                Send to Shot Creator
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onSendTo('shot-animator')}
                 className="hover:bg-slate-700 cursor-pointer"
               >
                 <Film className="mr-2 h-4 w-4" />
-                Shot Animator
+                Send to Shot Animator
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onSendTo('layout-annotation')}
                 className="hover:bg-slate-700 cursor-pointer"
               >
                 <Layout className="mr-2 h-4 w-4" />
-                Layout
+                Send to Layout
+              </DropdownMenuItem>
+            </>
+          )}
+
+          {onExtractFramesToGallery && (
+            <>
+              <DropdownMenuSeparator className="bg-slate-700" />
+              <DropdownMenuItem
+                onClick={() => {
+                  onExtractFramesToGallery()
+                  onDropdownChange(false)
+                }}
+                className="hover:bg-slate-700 cursor-pointer"
+              >
+                <ImagePlus className="mr-2 h-4 w-4" />
+                Extract Frames to Gallery
+              </DropdownMenuItem>
+            </>
+          )}
+
+          {/* Move to Folder - Mobile: flat list */}
+          {onMoveToFolder && folders.length > 0 && (
+            <>
+              <DropdownMenuSeparator className="bg-slate-700" />
+              <DropdownMenuItem
+                onClick={() => onMoveToFolder(null)}
+                className="hover:bg-slate-700 cursor-pointer"
+              >
+                <FolderInput className="mr-2 h-4 w-4" />
+                <div className="flex items-center justify-between flex-1">
+                  <span>Uncategorized</span>
+                  {currentFolderId === null && <Check className="h-4 w-4 ml-2" />}
+                </div>
+              </DropdownMenuItem>
+              {folders.map((folder) => (
+                <DropdownMenuItem
+                  key={folder.id}
+                  onClick={() => onMoveToFolder(folder.id)}
+                  className="hover:bg-slate-700 cursor-pointer"
+                >
+                  <div className="w-4 mr-2" /> {/* Spacer to align with icon */}
+                  <div className="flex items-center justify-between flex-1">
+                    <div className="flex items-center gap-2">
+                      {folder.color && (
+                        <div
+                          className="h-3 w-3 rounded-full border border-slate-600"
+                          style={{ backgroundColor: folder.color }}
+                        />
+                      )}
+                      <span>{folder.name}</span>
+                    </div>
+                    {currentFolderId === folder.id && <Check className="h-4 w-4 ml-2" />}
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </>
+          )}
+
+          <DropdownMenuSeparator className="bg-slate-700" />
+        </div>
+
+        {/* === DESKTOP: Nested submenus === */}
+        <div className="hidden md:block">
+          {/* Copy Submenu */}
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className="hover:bg-slate-700 cursor-pointer">
+              <Copy className="mr-2 h-4 w-4" />
+              Copy
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="bg-slate-800 border-slate-700 text-white">
+              <DropdownMenuItem
+                onClick={onCopyImage}
+                className="hover:bg-slate-700 cursor-pointer"
+              >
+                <ImageIcon className="mr-2 h-4 w-4" />
+                Image
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={onCopyPrompt}
+                className="hover:bg-slate-700 cursor-pointer"
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                Prompt
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
-        )}
 
-        {/* Extract Frames Submenu */}
-        {(onExtractFrames || onExtractFramesToGallery) && (
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="hover:bg-slate-700 cursor-pointer">
-              <Grid3x3 className="mr-2 h-4 w-4" />
-              Extract Frames
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="bg-slate-800 border-slate-700 text-white">
-              {onExtractFrames && (
+          {/* Send to Submenu */}
+          {onSendTo && (
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="hover:bg-slate-700 cursor-pointer">
+                <Send className="mr-2 h-4 w-4" />
+                Send to
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="bg-slate-800 border-slate-700 text-white">
                 <DropdownMenuItem
-                  onClick={() => {
-                    onExtractFrames()
-                    onDropdownChange(false)
-                  }}
-                  className="hover:bg-slate-700 cursor-pointer hidden md:flex"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Download
-                </DropdownMenuItem>
-              )}
-              {onExtractFramesToGallery && (
-                <DropdownMenuItem
-                  onClick={() => {
-                    onExtractFramesToGallery()
-                    onDropdownChange(false)
-                  }}
+                  onClick={() => onSendTo('shot-creator')}
                   className="hover:bg-slate-700 cursor-pointer"
                 >
-                  <ImagePlus className="mr-2 h-4 w-4" />
-                  To Gallery
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Shot Creator
                 </DropdownMenuItem>
-              )}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-        )}
+                <DropdownMenuItem
+                  onClick={() => onSendTo('shot-animator')}
+                  className="hover:bg-slate-700 cursor-pointer"
+                >
+                  <Film className="mr-2 h-4 w-4" />
+                  Shot Animator
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onSendTo('layout-annotation')}
+                  className="hover:bg-slate-700 cursor-pointer"
+                >
+                  <Layout className="mr-2 h-4 w-4" />
+                  Layout
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          )}
 
-        <DropdownMenuSeparator className="bg-slate-700" />
+          {/* Extract Frames Submenu */}
+          {(onExtractFrames || onExtractFramesToGallery) && (
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="hover:bg-slate-700 cursor-pointer">
+                <Grid3x3 className="mr-2 h-4 w-4" />
+                Extract Frames
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="bg-slate-800 border-slate-700 text-white">
+                {onExtractFrames && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      onExtractFrames()
+                      onDropdownChange(false)
+                    }}
+                    className="hover:bg-slate-700 cursor-pointer"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download
+                  </DropdownMenuItem>
+                )}
+                {onExtractFramesToGallery && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      onExtractFramesToGallery()
+                      onDropdownChange(false)
+                    }}
+                    className="hover:bg-slate-700 cursor-pointer"
+                  >
+                    <ImagePlus className="mr-2 h-4 w-4" />
+                    To Gallery
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          )}
+
+          <DropdownMenuSeparator className="bg-slate-700" />
+        </div>
 
         {/* Download - standalone */}
         <DropdownMenuItem
@@ -232,49 +336,51 @@ export function ImageActionMenu({
           </DropdownMenuItem>
         )}
 
-        {/* Move to Folder Submenu */}
-        {onMoveToFolder && folders.length > 0 && (
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="hover:bg-slate-700 cursor-pointer">
-              <FolderInput className="mr-2 h-4 w-4" />
-              Move to Folder
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="bg-slate-800 border-slate-700 text-white">
-              <DropdownMenuItem
-                onClick={() => onMoveToFolder(null)}
-                className="hover:bg-slate-700 cursor-pointer"
-              >
-                <div className="flex items-center justify-between w-full">
-                  <span>Uncategorized</span>
-                  {currentFolderId === null && <Check className="h-4 w-4 ml-2" />}
-                </div>
-              </DropdownMenuItem>
-
-              {folders.length > 0 && <DropdownMenuSeparator className="bg-slate-700" />}
-
-              {folders.map((folder) => (
+        {/* Move to Folder Submenu - Desktop only (mobile has flat list above) */}
+        <div className="hidden md:block">
+          {onMoveToFolder && folders.length > 0 && (
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="hover:bg-slate-700 cursor-pointer">
+                <FolderInput className="mr-2 h-4 w-4" />
+                Move to Folder
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="bg-slate-800 border-slate-700 text-white">
                 <DropdownMenuItem
-                  key={folder.id}
-                  onClick={() => onMoveToFolder(folder.id)}
+                  onClick={() => onMoveToFolder(null)}
                   className="hover:bg-slate-700 cursor-pointer"
                 >
                   <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-2">
-                      {folder.color && (
-                        <div
-                          className="h-3 w-3 rounded-full border border-slate-600"
-                          style={{ backgroundColor: folder.color }}
-                        />
-                      )}
-                      <span>{folder.name}</span>
-                    </div>
-                    {currentFolderId === folder.id && <Check className="h-4 w-4 ml-2" />}
+                    <span>Uncategorized</span>
+                    {currentFolderId === null && <Check className="h-4 w-4 ml-2" />}
                   </div>
                 </DropdownMenuItem>
-              ))}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-        )}
+
+                {folders.length > 0 && <DropdownMenuSeparator className="bg-slate-700" />}
+
+                {folders.map((folder) => (
+                  <DropdownMenuItem
+                    key={folder.id}
+                    onClick={() => onMoveToFolder(folder.id)}
+                    className="hover:bg-slate-700 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-2">
+                        {folder.color && (
+                          <div
+                            className="h-3 w-3 rounded-full border border-slate-600"
+                            style={{ backgroundColor: folder.color }}
+                          />
+                        )}
+                        <span>{folder.name}</span>
+                      </div>
+                      {currentFolderId === folder.id && <Check className="h-4 w-4 ml-2" />}
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          )}
+        </div>
 
         <DropdownMenuSeparator className="bg-slate-700" />
 
