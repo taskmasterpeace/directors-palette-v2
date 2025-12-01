@@ -114,23 +114,9 @@ interface UnifiedGalleryState {
   // Utilities
   getTotalImages: () => number
   getTotalCreditsUsed: () => number
-}
 
-// Load grid size preference from localStorage
-const loadGridSizePreference = (): GridSize => {
-  if (typeof window === 'undefined') return 'medium'
-  const saved = localStorage.getItem('gallery-grid-size')
-  if (saved === 'small' || saved === 'medium' || saved === 'large') {
-    return saved
-  }
-  return 'medium'
-}
-
-// Load sidebar collapsed preference from localStorage
-const loadSidebarCollapsedPreference = (): boolean => {
-  if (typeof window === 'undefined') return false
-  const saved = localStorage.getItem('gallery-sidebar-collapsed')
-  return saved === 'true'
+  // Hydration (for SSR compatibility)
+  hydrateFromStorage: () => void
 }
 
 export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) => ({
@@ -151,9 +137,9 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   hasMore: true,
   isLoadingMore: false,
 
-  // UI Preferences
-  gridSize: loadGridSizePreference(),
-  isSidebarCollapsed: loadSidebarCollapsedPreference(),
+  // UI Preferences - use defaults for SSR, hydrate from localStorage after mount
+  gridSize: 'medium',
+  isSidebarCollapsed: false,
 
   // Folder state
   folders: [],
@@ -510,5 +496,20 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
     } catch (error) {
       console.error('Failed to refresh gallery:', error)
     }
+  },
+
+  // Hydrate UI preferences from localStorage (call after mount to avoid SSR mismatch)
+  hydrateFromStorage: () => {
+    if (typeof window === 'undefined') return
+
+    const savedGridSize = localStorage.getItem('gallery-grid-size')
+    const savedSidebarCollapsed = localStorage.getItem('gallery-sidebar-collapsed')
+
+    set({
+      gridSize: (savedGridSize === 'small' || savedGridSize === 'medium' || savedGridSize === 'large')
+        ? savedGridSize
+        : 'medium',
+      isSidebarCollapsed: savedSidebarCollapsed === 'true'
+    })
   }
 }))

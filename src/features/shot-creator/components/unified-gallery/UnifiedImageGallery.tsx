@@ -109,6 +109,11 @@ export function UnifiedImageGallery({
     const isSidebarCollapsed = useUnifiedGalleryStore(state => state.isSidebarCollapsed)
     const setIsSidebarCollapsed = useUnifiedGalleryStore(state => state.setIsSidebarCollapsed)
 
+    // Hydrate UI preferences from localStorage after mount (SSR compatibility)
+    useEffect(() => {
+        useUnifiedGalleryStore.getState().hydrateFromStorage()
+    }, [])
+
     // Get uncategorized count
     const uncategorizedCount = getUncategorizedCount()
 
