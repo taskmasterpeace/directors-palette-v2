@@ -77,6 +77,8 @@ export function UnifiedImageGallery({
     const gridSize = useUnifiedGalleryStore(state => state.gridSize)
     const setGridSize = useUnifiedGalleryStore(state => state.setGridSize)
     const totalDatabaseCount = useUnifiedGalleryStore(state => state.totalDatabaseCount)
+    const useNativeAspectRatio = useUnifiedGalleryStore(state => state.useNativeAspectRatio)
+    const setUseNativeAspectRatio = useUnifiedGalleryStore(state => state.setUseNativeAspectRatio)
 
     // Get infinite scroll state from store
     const hasMore = useUnifiedGalleryStore(state => state.hasMore)
@@ -359,6 +361,7 @@ export function UnifiedImageGallery({
                             currentFolderId={image.folderId}
                             folders={folders}
                             showActions={true}
+                            useNativeAspectRatio={useNativeAspectRatio}
                         />
                     ))}
                 </div>
@@ -424,10 +427,12 @@ export function UnifiedImageGallery({
                         onSearchChange={handleSearchChange}
                         selectedCount={selectedImages.length}
                         gridSize={gridSize}
+                        useNativeAspectRatio={useNativeAspectRatio}
                         onSelectAll={handleSelectAll}
                         onClearSelection={handleClearSelection}
                         onDeleteSelected={handleDeleteSelected}
                         onGridSizeChange={setGridSize}
+                        onAspectRatioChange={setUseNativeAspectRatio}
                         onOpenMobileMenu={() => setIsMobileFolderMenuOpen(true)}
                         onBulkDownload={handleBulkDownload}
                     />
@@ -489,6 +494,7 @@ export function UnifiedImageGallery({
                                         currentFolderId={image.folderId}
                                         folders={folders}
                                         showActions={true}
+                                        useNativeAspectRatio={useNativeAspectRatio}
                                     />
                                 ))}
                             </div>

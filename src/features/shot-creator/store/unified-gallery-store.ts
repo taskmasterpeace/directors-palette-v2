@@ -67,6 +67,7 @@ interface UnifiedGalleryState {
   // UI Preferences
   gridSize: GridSize
   isSidebarCollapsed: boolean
+  useNativeAspectRatio: boolean
 
   // Folder state
   folders: FolderWithCount[]
@@ -91,6 +92,7 @@ interface UnifiedGalleryState {
   updateImageReference: (imageId: string, reference: string) => Promise<void>
   setGridSize: (size: GridSize) => void
   setIsSidebarCollapsed: (collapsed: boolean) => void
+  setUseNativeAspectRatio: (value: boolean) => void
 
   // Infinite scroll actions
   appendImages: (images: GeneratedImage[], hasMore: boolean) => void
@@ -129,7 +131,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   currentPage: 1,
   totalPages: 0,
   totalItems: 0,
-  pageSize: 30,
+  pageSize: 50,
   totalDatabaseCount: 0,
 
   // Infinite scroll state
@@ -140,6 +142,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   // UI Preferences - use defaults for SSR, hydrate from localStorage after mount
   gridSize: 'medium',
   isSidebarCollapsed: false,
+  useNativeAspectRatio: false,
 
   // Folder state
   folders: [],
@@ -303,6 +306,14 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
     // Persist to localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('gallery-sidebar-collapsed', String(collapsed))
+    }
+  },
+
+  setUseNativeAspectRatio: (value) => {
+    set({ useNativeAspectRatio: value })
+    // Persist to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gallery-native-aspect-ratio', String(value))
     }
   },
 
@@ -504,12 +515,14 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
 
     const savedGridSize = localStorage.getItem('gallery-grid-size')
     const savedSidebarCollapsed = localStorage.getItem('gallery-sidebar-collapsed')
+    const savedNativeAspectRatio = localStorage.getItem('gallery-native-aspect-ratio')
 
     set({
       gridSize: (savedGridSize === 'small' || savedGridSize === 'medium' || savedGridSize === 'large')
         ? savedGridSize
         : 'medium',
-      isSidebarCollapsed: savedSidebarCollapsed === 'true'
+      isSidebarCollapsed: savedSidebarCollapsed === 'true',
+      useNativeAspectRatio: savedNativeAspectRatio === 'true'
     })
   }
 }))

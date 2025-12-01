@@ -4,7 +4,8 @@ import { CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { ImageIcon, Search, Trash2, Grid3x3, Grid2x2, Menu, FolderInput, Download } from 'lucide-react'
+import { ImageIcon, Search, Trash2, Grid3x3, Grid2x2, Menu, FolderInput, Download, Square, RectangleHorizontal } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
 import { GridSize } from '../../store/unified-gallery-store'
 import {
   Tooltip,
@@ -21,11 +22,13 @@ interface GalleryHeaderProps {
   selectedCount: number
   gridSize: GridSize
   currentFolderName?: string
+  useNativeAspectRatio: boolean
   onSearchChange: (query: string) => void
   onSelectAll: () => void
   onClearSelection: () => void
   onDeleteSelected: () => void
   onGridSizeChange: (size: GridSize) => void
+  onAspectRatioChange: (useNative: boolean) => void
   onOpenMobileMenu?: () => void
   onBulkMoveToFolder?: () => void
   onBulkDownload?: () => void
@@ -39,11 +42,13 @@ export function GalleryHeader({
   selectedCount,
   gridSize,
   currentFolderName,
+  useNativeAspectRatio,
   onSearchChange,
   onSelectAll,
   onClearSelection,
   onDeleteSelected,
   onGridSizeChange,
+  onAspectRatioChange,
   onOpenMobileMenu,
   onBulkMoveToFolder,
   onBulkDownload
@@ -88,6 +93,25 @@ export function GalleryHeader({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Showing {totalImages} of {totalDatabaseCount} total images in database</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            {/* Aspect Ratio Toggle */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-slate-700 bg-slate-800/50">
+                    <Square className="w-3 h-3 text-slate-400" />
+                    <Switch
+                      checked={useNativeAspectRatio}
+                      onCheckedChange={onAspectRatioChange}
+                      className="scale-75 data-[state=checked]:bg-blue-600"
+                    />
+                    <RectangleHorizontal className="w-3 h-3 text-slate-400" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{useNativeAspectRatio ? 'Native aspect ratio' : 'Square (1:1) preview'}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

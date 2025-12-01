@@ -11,6 +11,7 @@ import { ReferenceBadge } from "./ReferenceBadge"
 import { PromptTooltip } from "./PromptTooltip"
 import { MetadataBar } from "./MetadataBar"
 import { Checkbox } from "@/components/ui/checkbox"
+import { cn } from "@/utils/utils"
 
 interface ImageCardProps {
   image: GeneratedImage
@@ -30,6 +31,7 @@ interface ImageCardProps {
   currentFolderId?: string | null
   folders?: FolderWithCount[]
   showActions?: boolean
+  useNativeAspectRatio?: boolean
 }
 
 /**
@@ -53,7 +55,8 @@ const ImageCardComponent = ({
   onExtractFramesToGallery,
   currentFolderId,
   folders = [],
-  showActions = true
+  showActions = true,
+  useNativeAspectRatio = false
 }: ImageCardProps) => {
   const { handleCopyPrompt, handleCopyImage } = useImageActions()
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -69,15 +72,21 @@ const ImageCardComponent = ({
         />
       </div>
 
-      {/* Main image - show in native aspect ratio */}
-      <div className="w-full aspect-square relative">
+      {/* Main image - toggle between square and native aspect ratio */}
+      <div className={cn(
+        "w-full relative",
+        useNativeAspectRatio ? "aspect-video" : "aspect-square"
+      )}>
         <Image
           src={image.url}
           alt={image.prompt?.slice(0, 50) || 'Generated image'}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 53vw"
           quality={100}
-          className="object-cover cursor-zoom-in"
+          className={cn(
+            "cursor-zoom-in",
+            useNativeAspectRatio ? "object-contain" : "object-cover"
+          )}
           onClick={onZoom}
         />
       </div>
@@ -133,6 +142,7 @@ export const ImageCard = memo(ImageCardComponent, (prevProps, nextProps) => {
     prevProps.image.id === nextProps.image.id &&
     prevProps.image.url === nextProps.image.url &&
     prevProps.isSelected === nextProps.isSelected &&
-    prevProps.showActions === nextProps.showActions
+    prevProps.showActions === nextProps.showActions &&
+    prevProps.useNativeAspectRatio === nextProps.useNativeAspectRatio
   )
 })
