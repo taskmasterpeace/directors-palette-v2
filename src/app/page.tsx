@@ -1,7 +1,8 @@
 "use client"
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { Film, ImageIcon, Layout, Sparkles, BookOpen, Images } from "lucide-react";
+import { ImageIcon, Layout, Sparkles, BookOpen, Images } from "lucide-react";
+import Image from "next/image";
 import { useLayoutStore } from "@/store/layout.store";
 import { ShotCreator } from "@/features/shot-creator";
 import { ShotAnimator } from "@/features/shot-animator";
@@ -22,12 +23,18 @@ export default function Home() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2">
-              <Film className="w-6 h-6 sm:w-8 sm:h-8 text-red-500" />
-              <span className="hidden sm:inline">Post Production Studio</span>
-              <span className="sm:hidden">Post Production</span>
+              <Image
+                src="/favicon.ico"
+                alt="Directors Palette"
+                width={32}
+                height={32}
+                className="w-6 h-6 sm:w-8 sm:h-8"
+              />
+              <span className="hidden sm:inline">Directors Palette</span>
+              <span className="sm:hidden">Directors Palette</span>
             </h1>
             <p className="text-slate-400 mt-1 text-sm sm:text-base">
-              Advanced image generation with Director`s Palette integration
+              AI-powered visual storytelling and image generation
             </p>
           </div>
         </div>
