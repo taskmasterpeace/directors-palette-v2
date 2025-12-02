@@ -262,16 +262,17 @@ export function UnifiedImageGallery({
     }, [toast])
 
     // Grid size to CSS classes mapping
+    // Mobile: small=3cols, medium=2cols, large=1col for clear differentiation
     const getGridClasses = (size: GridSize): string => {
         switch (size) {
             case 'small':
                 return 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8'
             case 'medium':
-                return 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+                return 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
             case 'large':
                 return 'grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
             default:
-                return 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+                return 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
         }
     }
 
@@ -362,6 +363,7 @@ export function UnifiedImageGallery({
                             folders={folders}
                             showActions={true}
                             useNativeAspectRatio={useNativeAspectRatio}
+                            gridSize={gridSize}
                         />
                     ))}
                 </div>
@@ -495,6 +497,7 @@ export function UnifiedImageGallery({
                                         folders={folders}
                                         showActions={true}
                                         useNativeAspectRatio={useNativeAspectRatio}
+                                        gridSize={gridSize}
                                     />
                                 ))}
                             </div>

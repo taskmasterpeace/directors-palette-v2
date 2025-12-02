@@ -12,6 +12,7 @@ import { PromptTooltip } from "./PromptTooltip"
 import { MetadataBar } from "./MetadataBar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/utils/utils"
+import type { GridSize } from "../../store/unified-gallery-store"
 
 interface ImageCardProps {
   image: GeneratedImage
@@ -32,6 +33,7 @@ interface ImageCardProps {
   folders?: FolderWithCount[]
   showActions?: boolean
   useNativeAspectRatio?: boolean
+  gridSize?: GridSize
 }
 
 /**
@@ -56,7 +58,8 @@ const ImageCardComponent = ({
   currentFolderId,
   folders = [],
   showActions = true,
-  useNativeAspectRatio = false
+  useNativeAspectRatio = false,
+  gridSize = 'medium'
 }: ImageCardProps) => {
   const { handleCopyPrompt, handleCopyImage } = useImageActions()
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -123,10 +126,11 @@ const ImageCardComponent = ({
         </div>
       )}
 
-      {/* Metadata bar - always visible */}
+      {/* Metadata bar - hidden on small grid size on mobile */}
       <MetadataBar
         aspectRatio={image.settings.aspectRatio || image.settings.aspect_ratio || '16:9'}
         resolution={image.settings.resolution || '1024x1024'}
+        gridSize={gridSize}
       />
 
       {/* Hover tooltip with prompt */}
@@ -143,6 +147,7 @@ export const ImageCard = memo(ImageCardComponent, (prevProps, nextProps) => {
     prevProps.image.url === nextProps.image.url &&
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.showActions === nextProps.showActions &&
-    prevProps.useNativeAspectRatio === nextProps.useNativeAspectRatio
+    prevProps.useNativeAspectRatio === nextProps.useNativeAspectRatio &&
+    prevProps.gridSize === nextProps.gridSize
   )
 })
