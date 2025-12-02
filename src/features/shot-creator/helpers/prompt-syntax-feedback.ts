@@ -25,12 +25,19 @@ export interface DynamicPromptConfig {
     maxOptions: number
     maxPreview: number
     trimWhitespace: boolean
+    // Granular syntax disabling
+    disablePipeSyntax?: boolean    // Treat | as literal text
+    disableBracketSyntax?: boolean // Treat [...] as literal text
+    disableWildcardSyntax?: boolean // Treat _word_ as literal text
 }
 
 const DEFAULT_CONFIG: DynamicPromptConfig = {
     maxOptions: 10,        // Maximum bracket/pipe options allowed
     maxPreview: 5,         // Maximum prompts to show in preview
-    trimWhitespace: true   // Clean up spacing
+    trimWhitespace: true,  // Clean up spacing
+    disablePipeSyntax: false,
+    disableBracketSyntax: false,
+    disableWildcardSyntax: false
 }
 
 /**
@@ -107,32 +114,35 @@ export function parseDynamicPrompt(
 ): DynamicPromptResult {
     const finalConfig = { ...DEFAULT_CONFIG, ...config }
 
-    // First check for wild cards
-    const wildCardResult = parseWildCardPrompt(prompt, userWildCards)
+    // First check for wild cards (unless disabled)
+    if (!finalConfig.disableWildcardSyntax) {
+        const wildCardResult = parseWildCardPrompt(prompt, userWildCards)
 
-    if (wildCardResult.hasWildCards) {
-        return {
-            isValid: wildCardResult.isValid,
-            hasBrackets: false,
-            hasPipes: false,
-            hasWildCards: true,
-            expandedPrompts: wildCardResult.expandedPrompts,
-            originalPrompt: prompt,
-            wildCardNames: wildCardResult.wildCardNames,
-            previewCount: Math.min(wildCardResult.expandedPrompts.length, finalConfig.maxPreview),
-            totalCount: wildCardResult.totalCombinations,
-            warnings: wildCardResult.warnings,
-            isCrossCombination: wildCardResult.crossCombination
+        if (wildCardResult.hasWildCards) {
+            return {
+                isValid: wildCardResult.isValid,
+                hasBrackets: false,
+                hasPipes: false,
+                hasWildCards: true,
+                expandedPrompts: wildCardResult.expandedPrompts,
+                originalPrompt: prompt,
+                wildCardNames: wildCardResult.wildCardNames,
+                previewCount: Math.min(wildCardResult.expandedPrompts.length, finalConfig.maxPreview),
+                totalCount: wildCardResult.totalCombinations,
+                warnings: wildCardResult.warnings,
+                isCrossCombination: wildCardResult.crossCombination
+            }
         }
     }
 
     // Check if prompt contains pipe character (higher priority than brackets)
-    if (prompt.includes('|')) {
+    // Skip if pipe syntax is disabled
+    if (prompt.includes('|') && !finalConfig.disablePipeSyntax) {
         return parsePipePrompt(prompt, finalConfig)
     }
 
-    // Check if prompt contains brackets
-    const bracketMatch = prompt.match(/\[([^\[\]]+)\]/)
+    // Check if prompt contains brackets (skip if bracket syntax is disabled)
+    const bracketMatch = finalConfig.disableBracketSyntax ? null : prompt.match(/\[([^\[\]]+)\]/)
 
     if (!bracketMatch) {
         return {

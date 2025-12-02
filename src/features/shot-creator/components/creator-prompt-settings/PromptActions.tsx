@@ -639,7 +639,13 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         prompt={shotCreatorPrompt}
                         model={shotCreatorSettings.model}
                         rawPromptMode={shotCreatorSettings.rawPromptMode}
+                        disablePipeSyntax={shotCreatorSettings.disablePipeSyntax}
+                        disableBracketSyntax={shotCreatorSettings.disableBracketSyntax}
+                        disableWildcardSyntax={shotCreatorSettings.disableWildcardSyntax}
                         onToggleRawMode={(enabled) => updateSettings({ rawPromptMode: enabled })}
+                        onTogglePipeSyntax={(disabled) => updateSettings({ disablePipeSyntax: disabled })}
+                        onToggleBracketSyntax={(disabled) => updateSettings({ disableBracketSyntax: disabled })}
+                        onToggleWildcardSyntax={(disabled) => updateSettings({ disableWildcardSyntax: disabled })}
                     />
 
                     {/* Help Tooltip */}

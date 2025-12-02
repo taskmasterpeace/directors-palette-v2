@@ -390,9 +390,13 @@ export function useImageGeneration() {
                 totalVariations = 1
                 isPipeChaining = false
             } else {
-                // Normal mode: parse brackets, pipes, and wildcards
+                // Normal mode: parse brackets, pipes, and wildcards (respecting granular disable settings)
                 console.log(`🎲 Parsing prompt with ${wildcards.length} available wildcards`)
-                const promptResult = parseDynamicPrompt(prompt, {}, wildcards)
+                const promptResult = parseDynamicPrompt(prompt, {
+                    disablePipeSyntax: settings.disablePipeSyntax,
+                    disableBracketSyntax: settings.disableBracketSyntax,
+                    disableWildcardSyntax: settings.disableWildcardSyntax
+                }, wildcards)
                 variations = promptResult.expandedPrompts
                 totalVariations = promptResult.totalCount
                 isPipeChaining = promptResult.hasPipes
