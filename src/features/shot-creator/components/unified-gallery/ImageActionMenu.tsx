@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -29,6 +32,7 @@ import {
   ImageIcon
 } from 'lucide-react'
 import type { FolderWithCount } from '../../types/folder.types'
+import { MobileImageActionSheet } from './MobileImageActionSheet'
 
 interface ImageActionMenuProps {
   imageUrl: string
@@ -54,6 +58,8 @@ interface ImageActionMenuProps {
 /**
  * Reusable image action menu component
  * Provides common actions for gallery images
+ * Mobile: Uses bottom sheet with drill-down navigation
+ * Desktop: Uses dropdown with nested submenus
  */
 export function ImageActionMenu({
   currentReference,
@@ -73,122 +79,56 @@ export function ImageActionMenu({
   dropdownOpen,
   onDropdownChange
 }: ImageActionMenuProps) {
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false)
+
   return (
-    <DropdownMenu open={dropdownOpen} onOpenChange={onDropdownChange}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          size="icon"
-          variant="secondary"
-          className="h-6 w-6 p-0 bg-slate-700/90 hover:bg-slate-600 border-slate-600"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <MoreVertical className="h-3 w-3 text-white" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="bg-slate-800 border-slate-700 text-white" align="end">
-        {/* === MOBILE: Flat menu items === */}
-        <div className="md:hidden">
-          <DropdownMenuItem
-            onClick={onCopyImage}
-            className="hover:bg-slate-700 cursor-pointer"
+    <>
+      {/* Mobile: Button that opens bottom sheet */}
+      <Button
+        size="icon"
+        variant="secondary"
+        className="md:hidden h-6 w-6 p-0 bg-slate-700/90 hover:bg-slate-600 border-slate-600"
+        onClick={(e) => {
+          e.stopPropagation()
+          setMobileSheetOpen(true)
+        }}
+      >
+        <MoreVertical className="h-3 w-3 text-white" />
+      </Button>
+
+      {/* Mobile Sheet */}
+      <MobileImageActionSheet
+        open={mobileSheetOpen}
+        onOpenChange={setMobileSheetOpen}
+        currentReference={currentReference}
+        currentFolderId={currentFolderId}
+        folders={folders}
+        onCopyPrompt={onCopyPrompt}
+        onCopyImage={onCopyImage}
+        onDownload={onDownload}
+        onDelete={onDelete}
+        onSendTo={onSendTo}
+        onSetReference={onSetReference}
+        onEditReference={onEditReference}
+        onExtractFrames={onExtractFrames}
+        onExtractFramesToGallery={onExtractFramesToGallery}
+        onAddToLibrary={onAddToLibrary}
+        onMoveToFolder={onMoveToFolder}
+      />
+
+      {/* Desktop: Dropdown with nested submenus */}
+      <DropdownMenu open={dropdownOpen} onOpenChange={onDropdownChange}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            size="icon"
+            variant="secondary"
+            className="hidden md:flex h-6 w-6 p-0 bg-slate-700/90 hover:bg-slate-600 border-slate-600"
+            onClick={(e) => e.stopPropagation()}
           >
-            <ImageIcon className="mr-2 h-4 w-4" />
-            Copy Image
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={onCopyPrompt}
-            className="hover:bg-slate-700 cursor-pointer"
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Copy Prompt
-          </DropdownMenuItem>
-
-          {onSendTo && (
-            <>
-              <DropdownMenuSeparator className="bg-slate-700" />
-              <DropdownMenuItem
-                onClick={() => onSendTo('shot-creator')}
-                className="hover:bg-slate-700 cursor-pointer"
-              >
-                <Sparkles className="mr-2 h-4 w-4" />
-                Send to Shot Creator
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onSendTo('shot-animator')}
-                className="hover:bg-slate-700 cursor-pointer"
-              >
-                <Film className="mr-2 h-4 w-4" />
-                Send to Shot Animator
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onSendTo('layout-annotation')}
-                className="hover:bg-slate-700 cursor-pointer"
-              >
-                <Layout className="mr-2 h-4 w-4" />
-                Send to Layout
-              </DropdownMenuItem>
-            </>
-          )}
-
-          {onExtractFramesToGallery && (
-            <>
-              <DropdownMenuSeparator className="bg-slate-700" />
-              <DropdownMenuItem
-                onClick={() => {
-                  onExtractFramesToGallery()
-                  onDropdownChange(false)
-                }}
-                className="hover:bg-slate-700 cursor-pointer"
-              >
-                <ImagePlus className="mr-2 h-4 w-4" />
-                Extract Frames to Gallery
-              </DropdownMenuItem>
-            </>
-          )}
-
-          {/* Move to Folder - Mobile: flat list */}
-          {onMoveToFolder && folders.length > 0 && (
-            <>
-              <DropdownMenuSeparator className="bg-slate-700" />
-              <DropdownMenuItem
-                onClick={() => onMoveToFolder(null)}
-                className="hover:bg-slate-700 cursor-pointer"
-              >
-                <FolderInput className="mr-2 h-4 w-4" />
-                <div className="flex items-center justify-between flex-1">
-                  <span>Uncategorized</span>
-                  {currentFolderId === null && <Check className="h-4 w-4 ml-2" />}
-                </div>
-              </DropdownMenuItem>
-              {folders.map((folder) => (
-                <DropdownMenuItem
-                  key={folder.id}
-                  onClick={() => onMoveToFolder(folder.id)}
-                  className="hover:bg-slate-700 cursor-pointer"
-                >
-                  <div className="w-4 mr-2" /> {/* Spacer to align with icon */}
-                  <div className="flex items-center justify-between flex-1">
-                    <div className="flex items-center gap-2">
-                      {folder.color && (
-                        <div
-                          className="h-3 w-3 rounded-full border border-slate-600"
-                          style={{ backgroundColor: folder.color }}
-                        />
-                      )}
-                      <span>{folder.name}</span>
-                    </div>
-                    {currentFolderId === folder.id && <Check className="h-4 w-4 ml-2" />}
-                  </div>
-                </DropdownMenuItem>
-              ))}
-            </>
-          )}
-
-          <DropdownMenuSeparator className="bg-slate-700" />
-        </div>
-
-        {/* === DESKTOP: Nested submenus === */}
-        <div className="hidden md:block">
+            <MoreVertical className="h-3 w-3 text-white" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="bg-slate-800 border-slate-700 text-white" align="end">
           {/* Copy Submenu */}
           <DropdownMenuSub>
             <DropdownMenuSubTrigger className="hover:bg-slate-700 cursor-pointer">
@@ -283,62 +223,60 @@ export function ImageActionMenu({
           )}
 
           <DropdownMenuSeparator className="bg-slate-700" />
-        </div>
 
-        {/* Download - standalone */}
-        <DropdownMenuItem
-          onClick={onDownload}
-          className="hover:bg-slate-700 cursor-pointer"
-        >
-          <Download className="mr-2 h-4 w-4" />
-          Download
-        </DropdownMenuItem>
-
-        {/* Set/Edit Reference - standalone */}
-        {(onSetReference || onEditReference) && (
+          {/* Download */}
           <DropdownMenuItem
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              onDropdownChange(false)
-              setTimeout(() => {
-                if (currentReference && onEditReference) {
-                  onEditReference()
-                } else if (onSetReference) {
-                  onSetReference()
-                }
-              }, 50)
-            }}
+            onClick={onDownload}
             className="hover:bg-slate-700 cursor-pointer"
           >
-            {currentReference ? (
-              <>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Reference ({currentReference})
-              </>
-            ) : (
-              <>
-                <Tag className="mr-2 h-4 w-4" />
-                Set Reference
-              </>
-            )}
+            <Download className="mr-2 h-4 w-4" />
+            Download
           </DropdownMenuItem>
-        )}
 
-        {/* Add to Library - standalone */}
-        {onAddToLibrary && (
-          <DropdownMenuItem
-            onClick={onAddToLibrary}
-            className="hover:bg-slate-700 cursor-pointer"
-          >
-            <Library className="mr-2 h-4 w-4" />
-            Add to Library
-          </DropdownMenuItem>
-        )}
+          {/* Set/Edit Reference */}
+          {(onSetReference || onEditReference) && (
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onDropdownChange(false)
+                setTimeout(() => {
+                  if (currentReference && onEditReference) {
+                    onEditReference()
+                  } else if (onSetReference) {
+                    onSetReference()
+                  }
+                }, 50)
+              }}
+              className="hover:bg-slate-700 cursor-pointer"
+            >
+              {currentReference ? (
+                <>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Reference ({currentReference})
+                </>
+              ) : (
+                <>
+                  <Tag className="mr-2 h-4 w-4" />
+                  Set Reference
+                </>
+              )}
+            </DropdownMenuItem>
+          )}
 
-        {/* Move to Folder Submenu - Desktop only (mobile has flat list above) */}
-        <div className="hidden md:block">
-          {onMoveToFolder && folders.length > 0 && (
+          {/* Add to Library */}
+          {onAddToLibrary && (
+            <DropdownMenuItem
+              onClick={onAddToLibrary}
+              className="hover:bg-slate-700 cursor-pointer"
+            >
+              <Library className="mr-2 h-4 w-4" />
+              Add to Library
+            </DropdownMenuItem>
+          )}
+
+          {/* Move to Folder Submenu */}
+          {onMoveToFolder && (
             <DropdownMenuSub>
               <DropdownMenuSubTrigger className="hover:bg-slate-700 cursor-pointer">
                 <FolderInput className="mr-2 h-4 w-4" />
@@ -377,21 +315,28 @@ export function ImageActionMenu({
                     </div>
                   </DropdownMenuItem>
                 ))}
+
+                {folders.length === 0 && (
+                  <div className="px-2 py-1.5 text-sm text-slate-400">
+                    No folders created
+                  </div>
+                )}
               </DropdownMenuSubContent>
             </DropdownMenuSub>
           )}
-        </div>
 
-        <DropdownMenuSeparator className="bg-slate-700" />
+          <DropdownMenuSeparator className="bg-slate-700" />
 
-        <DropdownMenuItem
-          onClick={onDelete}
-          className="hover:bg-red-700 cursor-pointer text-red-400"
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete Image
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          {/* Delete */}
+          <DropdownMenuItem
+            onClick={onDelete}
+            className="hover:bg-red-700 cursor-pointer text-red-400"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete Image
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   )
 }
