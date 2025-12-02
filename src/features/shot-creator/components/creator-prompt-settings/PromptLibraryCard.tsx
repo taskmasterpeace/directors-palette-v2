@@ -72,23 +72,23 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
 
 
     return (
-        <Card className="bg-slate-900/90 border-slate-700 flex-1 flex flex-col">
+        <Card className="bg-background/90 border-border flex-1 flex flex-col">
             <CardHeader className="pb-3">
                 <CardTitle className="text-white flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <BookOpen className="w-5 h-5 text-blue-400" />
+                        <BookOpen className="w-5 h-5 text-accent" />
                         <Badge variant="outline" className="text-xs">
                             {prompts.length} prompts
                         </Badge>
                     </div>
                     <div className="flex items-center gap-3">
                         {/* View Mode Toggle */}
-                        <div className="flex rounded-lg border border-slate-700 bg-slate-800 p-1">
+                        <div className="flex rounded-lg border border-border bg-card p-1">
                             <Button
                                 size="sm"
                                 variant={viewMode === 'cards' ? 'default' : 'ghost'}
                                 onClick={() => setViewMode('cards')}
-                                className={`h-7 px-2 ${viewMode === 'cards' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                                className={`h-7 px-2 ${viewMode === 'cards' ? 'bg-accent text-white' : 'text-muted-foreground hover:text-white'}`}
                             >
                                 <Grid className="w-4 h-4" />
                             </Button>
@@ -96,19 +96,19 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                                 size="sm"
                                 variant={viewMode === 'table' ? 'default' : 'ghost'}
                                 onClick={() => setViewMode('table')}
-                                className={`h-7 px-2 ${viewMode === 'table' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                                className={`h-7 px-2 ${viewMode === 'table' ? 'bg-accent text-white' : 'text-muted-foreground hover:text-white'}`}
                             >
                                 <Table className="w-4 h-4" />
                             </Button>
                         </div>
 
-                        <div className="h-6 w-px bg-slate-700" />
+                        <div className="h-6 w-px bg-secondary" />
 
                         <Button
                             size="sm"
                             onClick={() => handleExportPrompts()}
                             variant="outline"
-                            className="border-slate-600 hover:bg-slate-800"
+                            className="border-border hover:bg-card"
                         >
                             <Download className="w-4 h-4 mr-1" />
                             Export
@@ -118,7 +118,7 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                             size="sm"
                             onClick={() => document.getElementById('import-prompts')?.click()}
                             variant="outline"
-                            className="border-slate-600 hover:bg-slate-800"
+                            className="border-border hover:bg-card"
                         >
                             <Upload className="w-4 h-4 mr-1" />
                             Import
@@ -135,7 +135,7 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                         <Button
                             size="sm"
                             onClick={() => setIsAddPromptOpen?.(true)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                            className="bg-accent hover:bg-accent/90 text-white"
                         >
                             <Plus className="w-4 h-4 mr-1" />
                             Add
@@ -161,12 +161,12 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                                 placeholder="Search prompts..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 bg-slate-800 border-slate-700 text-white placeholder-gray-400"
+                                className="pl-10 bg-card border-border text-white placeholder-gray-400"
                             />
                         </div>
 
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-                            <TabsList className="bg-slate-800 border-slate-700">
+                            <TabsList className="bg-card border-border">
                                 <TabsTrigger value="all">All Prompts</TabsTrigger>
                                 {showQuickAccess && <TabsTrigger value="quick">Quick Access</TabsTrigger>}
                                 <TabsTrigger value="categories">Categories</TabsTrigger>
@@ -245,7 +245,7 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => setSelectedCategory(null)}
-                                                    className="text-slate-400 hover:text-white"
+                                                    className="text-muted-foreground hover:text-white"
                                                 >
                                                     ← Back to Categories
                                                 </Button>

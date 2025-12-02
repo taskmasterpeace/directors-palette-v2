@@ -30,22 +30,22 @@ export function PromptAccordion({
           <AccordionItem
             key={category.id}
             value={category.id}
-            className="bg-slate-900 border-slate-700 rounded-lg overflow-hidden"
+            className="bg-background border-border rounded-lg overflow-hidden"
           >
-            <AccordionTrigger className="px-4 hover:bg-slate-800 sticky top-0 z-10 bg-slate-900 border-b border-slate-700">
+            <AccordionTrigger className="px-4 hover:bg-card sticky top-0 z-10 bg-background border-b border-border">
               <div className="flex items-center justify-between w-full pr-4">
                 <div className="flex items-center gap-3">
                   <span className="text-xl">{category.icon}</span>
                   <div className="text-left">
                     <h3 className="font-medium text-white">{category.name}</h3>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-muted-foreground">
                       {promptCount} {promptCount === 1 ? 'prompt' : 'prompts'}
                     </p>
                   </div>
                 </div>
                 <Badge
                   variant="secondary"
-                  className="bg-slate-800 text-slate-300 min-w-[40px] justify-center"
+                  className="bg-card text-foreground min-w-[40px] justify-center"
                 >
                   {promptCount}
                 </Badge>
@@ -65,7 +65,7 @@ export function PromptAccordion({
                     />
                   ))
                 ) : (
-                  <div className="text-center py-8 text-slate-400">
+                  <div className="text-center py-8 text-muted-foreground">
                     No prompts in this category yet
                   </div>
                 )}

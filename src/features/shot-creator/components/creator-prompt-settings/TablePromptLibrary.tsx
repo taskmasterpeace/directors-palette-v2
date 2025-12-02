@@ -343,16 +343,16 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
 
   return (
     <div className={`flex flex-col h-full ${className}`}>
-      <Card className="bg-slate-900/90 border-slate-700 flex-1 flex flex-col">
+      <Card className="bg-background/90 border-border flex-1 flex flex-col">
         <CardHeader className="pb-3">
           <CardTitle className="text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-blue-400" />
+              <BookOpen className="w-5 h-5 text-accent" />
               <Badge variant="outline" className="text-xs">
                 {filteredPrompts.length} prompts
               </Badge>
               {selectedPrompts.size > 0 && (
-                <Badge variant="secondary" className="text-xs bg-blue-600">
+                <Badge variant="secondary" className="text-xs bg-accent">
                   {selectedPrompts.size} selected
                 </Badge>
               )}
@@ -360,7 +360,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
             <Button
               size="sm"
               onClick={() => setIsAddPromptOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-accent hover:bg-accent/90 text-white"
             >
               <Plus className="w-4 h-4 mr-1" />
               Add Prompt
@@ -377,16 +377,16 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                 placeholder="Search prompts..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-slate-800 border-slate-700 text-white placeholder-gray-400"
+                className="pl-10 bg-card border-border text-white placeholder-gray-400"
               />
             </div>
 
             <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger className="w-48 bg-slate-800 border-slate-700">
+              <SelectTrigger className="w-48 bg-card border-border">
                 <Filter className="w-4 h-4 mr-2" />
                 <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
+              <SelectContent className="bg-card border-border">
                 <SelectItem value="all" className="text-white">All Categories</SelectItem>
                 {categories.map(category => (
                   <SelectItem key={category.id} value={category.id} className="text-white">
@@ -414,7 +414,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
 
           {/* Bulk Operations Toolbar */}
           {selectedPrompts.size > 0 && (
-            <div className="flex items-center gap-2 mb-4 p-3 bg-slate-800 rounded-lg border border-slate-700">
+            <div className="flex items-center gap-2 mb-4 p-3 bg-card rounded-lg border border-border">
               <span className="text-sm text-white">
                 {selectedPrompts.size} prompt{selectedPrompts.size !== 1 ? 's' : ''} selected:
               </span>
@@ -423,17 +423,17 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                 size="sm"
                 variant="outline"
                 onClick={handleBulkToggleQuickAccess}
-                className="text-white border-slate-600"
+                className="text-white border-border"
               >
                 <Star className="w-4 h-4 mr-1" />
                 Toggle Quick Access
               </Button>
 
               <Select onValueChange={handleBulkCategoryChange}>
-                <SelectTrigger className="w-40 bg-slate-700 border-slate-600">
+                <SelectTrigger className="w-40 bg-secondary border-border">
                   <SelectValue placeholder="Move to..." />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
+                <SelectContent className="bg-card border-border">
                   {categories.map(category => (
                     <SelectItem key={category.id} value={category.id} className="text-white">
                       <span className="flex items-center gap-2">
@@ -466,15 +466,15 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
           )}
 
           {/* Table */}
-          <div className="rounded-md border border-slate-700 bg-slate-800/50 flex-1 overflow-x-auto overflow-y-auto">
+          <div className="rounded-md border border-border bg-card/50 flex-1 overflow-x-auto overflow-y-auto">
             <Table className="w-full min-w-[1200px]">
               <TableHeader>
-                <TableRow className="border-slate-700 hover:bg-slate-700/50">
+                <TableRow className="border-border hover:bg-secondary/50">
                   <TableHead className="w-12">
                     <Checkbox
                       checked={selectedPrompts.size === filteredPrompts.length && filteredPrompts.length > 0}
                       onCheckedChange={handleSelectAll}
-                      className="border-slate-600"
+                      className="border-border"
                     />
                   </TableHead>
                   <TableHead className="text-white w-[15%]">Title</TableHead>
@@ -494,13 +494,13 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                   return (
                     <TableRow
                       key={prompt.id}
-                      className={`border-slate-700 hover:bg-slate-700/30 ${isSelected ? 'bg-slate-700/50' : ''}`}
+                      className={`border-border hover:bg-secondary/30 ${isSelected ? 'bg-secondary/50' : ''}`}
                     >
                       <TableCell>
                         <Checkbox
                           checked={isSelected}
                           onCheckedChange={(checked) => handleSelectPrompt(prompt.id, checked as boolean)}
-                          className="border-slate-600"
+                          className="border-border"
                         />
                       </TableCell>
 
@@ -510,7 +510,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                             <Input
                               value={editingCell.value}
                               onChange={(e) => setEditingCell({ ...editingCell, value: e.target.value })}
-                              className="h-8 bg-slate-700 border-slate-600 text-white"
+                              className="h-8 bg-secondary border-border text-white"
                               autoFocus
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') handleEditSave()
@@ -518,12 +518,12 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                               }}
                             />
                             <Button size="sm" variant="ghost" onClick={handleEditSave} className="h-6 w-6 p-0">
-                              <Check className="w-3 h-3 text-green-400" />
+                              <Check className="w-3 h-3 text-emerald-400" />
                             </Button>
                           </div>
                         ) : (
                           <div
-                            className="cursor-pointer hover:bg-slate-600/50 p-1 rounded"
+                            className="cursor-pointer hover:bg-muted/50 p-1 rounded"
                             onClick={() => handleEditStart(prompt.id, 'title', prompt.title)}
                             title="Click to edit"
                           >
@@ -540,7 +540,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                             <Input
                               value={editingCell.value}
                               onChange={(e) => setEditingCell({ ...editingCell, value: e.target.value })}
-                              className="h-8 bg-slate-700 border-slate-600 text-white"
+                              className="h-8 bg-secondary border-border text-white"
                               autoFocus
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') handleEditSave()
@@ -548,12 +548,12 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                               }}
                             />
                             <Button size="sm" variant="ghost" onClick={handleEditSave} className="h-6 w-6 p-0">
-                              <Check className="w-3 h-3 text-green-400" />
+                              <Check className="w-3 h-3 text-emerald-400" />
                             </Button>
                           </div>
                         ) : (
                           <div
-                            className="cursor-pointer hover:bg-slate-600/50 p-1 rounded"
+                            className="cursor-pointer hover:bg-muted/50 p-1 rounded"
                             onClick={() => handleEditStart(prompt.id, 'prompt', prompt.prompt)}
                             title={prompt.prompt}
                           >
@@ -563,7 +563,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                               </span>
                             </div>
                             {prompt.prompt.includes('@') && (
-                              <div className="text-xs text-blue-400 mt-1 italic">
+                              <div className="text-xs text-accent mt-1 italic">
                                 Contains @ placeholders
                               </div>
                             )}
@@ -574,7 +574,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                       <TableCell>
                         <Badge
                           variant="outline"
-                          className="text-xs border-slate-600 text-slate-300"
+                          className="text-xs border-border text-foreground"
                         >
                           <span className="mr-1">{categoryInfo.icon}</span>
                           {categoryInfo.name}
@@ -587,7 +587,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                             <Input
                               value={editingCell.value}
                               onChange={(e) => setEditingCell({ ...editingCell, value: e.target.value })}
-                              className="h-8 bg-slate-700 border-slate-600 text-white"
+                              className="h-8 bg-secondary border-border text-white"
                               autoFocus
                               placeholder="tag1, tag2, tag3"
                               onKeyDown={(e) => {
@@ -596,36 +596,36 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                               }}
                             />
                             <Button size="sm" variant="ghost" onClick={handleEditSave} className="h-6 w-6 p-0">
-                              <Check className="w-3 h-3 text-green-400" />
+                              <Check className="w-3 h-3 text-emerald-400" />
                             </Button>
                           </div>
                         ) : (
                           <div
-                            className="cursor-pointer hover:bg-slate-600/50 p-1 rounded"
+                            className="cursor-pointer hover:bg-muted/50 p-1 rounded"
                             onClick={() => handleEditStart(prompt.id, 'tags', prompt.tags.join(', '))}
                             title="Click to edit tags"
                           >
                             {prompt.tags.length > 0 ? (
                               <div className="flex flex-wrap gap-1">
                                 {prompt.tags.slice(0, 2).map((tag, idx) => (
-                                  <Badge key={idx} variant="secondary" className="text-xs bg-slate-700 text-slate-400">
+                                  <Badge key={idx} variant="secondary" className="text-xs bg-secondary text-muted-foreground">
                                     <Hash className="w-2 h-2 mr-1" />
                                     {tag}
                                   </Badge>
                                 ))}
                                 {prompt.tags.length > 2 && (
-                                  <span className="text-xs text-slate-500">+{prompt.tags.length - 2}</span>
+                                  <span className="text-xs text-muted-foreground">+{prompt.tags.length - 2}</span>
                                 )}
                               </div>
                             ) : (
-                              <span className="text-slate-500 text-xs">No tags</span>
+                              <span className="text-muted-foreground text-xs">No tags</span>
                             )}
                           </div>
                         )}
                       </TableCell>
 
                       <TableCell className="text-center">
-                        <span className="text-sm text-slate-400">{prompt.usage.count}</span>
+                        <span className="text-sm text-muted-foreground">{prompt.usage.count}</span>
                       </TableCell>
 
                       <TableCell className="text-center">
@@ -649,7 +649,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                             size="sm"
                             variant="ghost"
                             onClick={() => handleSelectPromptForUse(prompt)}
-                            className="h-7 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                            className="h-7 px-2 text-xs bg-accent hover:bg-accent/90 text-white"
                           >
                             <Copy className="w-3 h-3 mr-1" />
                             Use
@@ -658,7 +658,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                             size="sm"
                             variant="ghost"
                             onClick={() => deletePrompt(prompt.id)}
-                            className="h-7 w-7 p-0 text-red-400 hover:text-red-300"
+                            className="h-7 w-7 p-0 text-primary hover:text-primary"
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>
@@ -683,7 +683,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                         setFilterCategory('all')
                         setShowOnlyQuickAccess(false)
                       }}
-                      className="mt-2 text-blue-400"
+                      className="mt-2 text-accent"
                     >
                       Clear filters
                     </Button>
@@ -707,7 +707,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
 
       {/* Bulk Delete Confirmation Dialog */}
       <Dialog open={isBulkDeleteOpen} onOpenChange={setIsBulkDeleteOpen}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white">
+        <DialogContent className="bg-background border-border text-white">
           <DialogHeader>
             <DialogTitle>Delete Selected Prompts</DialogTitle>
             <DialogDescription className="text-gray-400">

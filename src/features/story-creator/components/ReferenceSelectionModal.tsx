@@ -75,15 +75,15 @@ export function ReferenceSelectionModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl max-h-[90vh] bg-slate-900 border-slate-700">
+            <DialogContent className="max-w-4xl max-h-[90vh] bg-background border-border">
                 <DialogHeader>
                     <DialogTitle className="text-white flex items-center gap-2">
                         <ImageIcon className="w-5 h-5" />
                         Select Reference Image for {entityName}
                     </DialogTitle>
-                    <DialogDescription className="text-slate-400">
+                    <DialogDescription className="text-muted-foreground">
                         Choose an image from your gallery to use as a reference for{' '}
-                        <code className="text-xs bg-slate-800 px-2 py-0.5 rounded text-green-400">
+                        <code className="text-xs bg-card px-2 py-0.5 rounded text-emerald-400">
                             @{entityTag}
                         </code>
                     </DialogDescription>
@@ -91,12 +91,12 @@ export function ReferenceSelectionModal({
 
                 <div className="flex flex-col gap-4">
                     {/* Gallery Grid */}
-                    <ScrollArea className="h-[50vh] rounded-lg border border-slate-700">
+                    <ScrollArea className="h-[50vh] rounded-lg border border-border">
                         {availableImages.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-12 text-center">
-                                <ImageIcon className="w-12 h-12 text-slate-600 mb-3" />
-                                <p className="text-slate-400">No images in gallery</p>
-                                <p className="text-sm text-slate-500 mt-1">
+                                <ImageIcon className="w-12 h-12 text-muted-foreground mb-3" />
+                                <p className="text-muted-foreground">No images in gallery</p>
+                                <p className="text-sm text-muted-foreground mt-1">
                                     Generate some images first in Shot Creator
                                 </p>
                             </div>
@@ -108,7 +108,7 @@ export function ReferenceSelectionModal({
                                         className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer transition-all ${
                                             selectedImageId === image.id
                                                 ? 'ring-4 ring-blue-500 scale-95'
-                                                : 'hover:ring-2 hover:ring-slate-500'
+                                                : 'hover:ring-2 hover:ring-ring'
                                         }`}
                                         onClick={() => setSelectedImageId(image.id)}
                                     >
@@ -121,15 +121,15 @@ export function ReferenceSelectionModal({
                                         {image.reference && (
                                             <Badge
                                                 variant="secondary"
-                                                className="absolute top-1 right-1 text-xs bg-slate-900/90"
+                                                className="absolute top-1 right-1 text-xs bg-background/90"
                                             >
                                                 {image.reference}
                                             </Badge>
                                         )}
                                         {/* Selection indicator */}
                                         {selectedImageId === image.id && (
-                                            <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
-                                                <div className="bg-blue-500 rounded-full p-2">
+                                            <div className="absolute inset-0 bg-accent/20 flex items-center justify-center">
+                                                <div className="bg-accent rounded-full p-2">
                                                     <svg
                                                         className="w-6 h-6 text-white"
                                                         fill="none"
@@ -153,7 +153,7 @@ export function ReferenceSelectionModal({
                     </ScrollArea>
 
                     {/* Action Buttons */}
-                    <div className="flex justify-between items-center pt-2 border-t border-slate-700">
+                    <div className="flex justify-between items-center pt-2 border-t border-border">
                         <Button
                             variant="outline"
                             onClick={() => {
@@ -167,7 +167,7 @@ export function ReferenceSelectionModal({
                         <Button
                             onClick={handleAssign}
                             disabled={!selectedImageId || isAssigning}
-                            className="bg-blue-600 hover:bg-blue-700"
+                            className="bg-accent hover:bg-accent/90"
                         >
                             {isAssigning ? 'Assigning...' : 'Assign Reference'}
                         </Button>

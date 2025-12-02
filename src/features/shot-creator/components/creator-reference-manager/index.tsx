@@ -108,12 +108,12 @@ export function CreatorReferenceManager({
                     Reference Image
                   </p>
                   {fullscreenImage.detectedAspectRatio && (
-                    <p className="text-slate-300 text-xs mt-1">
+                    <p className="text-foreground text-xs mt-1">
                       Aspect Ratio: {fullscreenImage.detectedAspectRatio}
                     </p>
                   )}
                   {fullscreenImage.tags && fullscreenImage.tags.length > 0 && (
-                    <p className="text-slate-300 text-xs mt-1">
+                    <p className="text-foreground text-xs mt-1">
                       Tags: {fullscreenImage.tags.join(', ')}
                     </p>
                   )}

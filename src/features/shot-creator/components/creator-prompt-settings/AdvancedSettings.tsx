@@ -70,11 +70,11 @@ const AdvancedSettings = () => {
     )
 
     return (
-        <div className="space-y-4 border-t border-slate-700 pt-4">
+        <div className="space-y-4 border-t border-border pt-4">
             {/* Seed - for models that support it */}
             {supportsSeed && (
                 <div className="space-y-2">
-                    <Label className="text-sm text-slate-300">Seed (Optional)</Label>
+                    <Label className="text-sm text-foreground">Seed (Optional)</Label>
                     <div className="flex gap-2">
                         <Input
                             type="number"
@@ -83,7 +83,7 @@ const AdvancedSettings = () => {
                                 seed: e.target.value ? parseInt(e.target.value) : undefined
                             })}
                             placeholder="Random"
-                            className="bg-slate-800 border-slate-600 text-white"
+                            className="bg-card border-border text-white"
                         />
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -91,7 +91,7 @@ const AdvancedSettings = () => {
                                     variant="outline"
                                     size="sm"
                                     onClick={generateRandomSeed}
-                                    className="bg-slate-800 border-slate-600 hover:bg-slate-700"
+                                    className="bg-card border-border hover:bg-secondary"
                                 >
                                     <Shuffle className="w-4 h-4" />
                                 </Button>
@@ -106,8 +106,8 @@ const AdvancedSettings = () => {
             {supportsMaxImages && (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <Label className="text-sm text-slate-300">Number of Images</Label>
-                        <span className="text-sm text-slate-400">{shotCreatorSettings.maxImages || 1}</span>
+                        <Label className="text-sm text-foreground">Number of Images</Label>
+                        <span className="text-sm text-muted-foreground">{shotCreatorSettings.maxImages || 1}</span>
                     </div>
                     <Slider
                         value={[shotCreatorSettings.maxImages || 1]}
@@ -117,7 +117,7 @@ const AdvancedSettings = () => {
                         step={1}
                         className="w-full"
                     />
-                    <p className="text-xs text-slate-400">Generate 1-15 images in one request</p>
+                    <p className="text-xs text-muted-foreground">Generate 1-15 images in one request</p>
                 </div>
             )}
 
@@ -125,8 +125,8 @@ const AdvancedSettings = () => {
             {supportsSequentialGeneration && (
                 <div className="flex items-center justify-between space-y-2">
                     <div className="space-y-1">
-                        <Label className="text-sm text-slate-300">Sequential Generation</Label>
-                        <p className="text-xs text-slate-400">Generate related image variations for storytelling</p>
+                        <Label className="text-sm text-foreground">Sequential Generation</Label>
+                        <p className="text-xs text-muted-foreground">Generate related image variations for storytelling</p>
                     </div>
                     <Switch
                         checked={shotCreatorSettings.sequentialGeneration || false}
@@ -141,8 +141,8 @@ const AdvancedSettings = () => {
                     {supportsQwenGuidance && (
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                                <Label className="text-sm text-slate-300">Guidance</Label>
-                                <span className="text-sm text-slate-400">{shotCreatorSettings.guidance || 3}</span>
+                                <Label className="text-sm text-foreground">Guidance</Label>
+                                <span className="text-sm text-muted-foreground">{shotCreatorSettings.guidance || 3}</span>
                             </div>
                             <Slider
                                 value={[shotCreatorSettings.guidance || 3]}
@@ -152,14 +152,14 @@ const AdvancedSettings = () => {
                                 step={0.5}
                                 className="w-full"
                             />
-                            <p className="text-xs text-slate-400">Lower = more realistic (0-10)</p>
+                            <p className="text-xs text-muted-foreground">Lower = more realistic (0-10)</p>
                         </div>
                     )}
                     {supportsQwenSteps && (
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                                <Label className="text-sm text-slate-300">Inference Steps</Label>
-                                <span className="text-sm text-slate-400">{shotCreatorSettings.num_inference_steps || 30}</span>
+                                <Label className="text-sm text-foreground">Inference Steps</Label>
+                                <span className="text-sm text-muted-foreground">{shotCreatorSettings.num_inference_steps || 30}</span>
                             </div>
                             <Slider
                                 value={[shotCreatorSettings.num_inference_steps || 30]}
@@ -169,7 +169,7 @@ const AdvancedSettings = () => {
                                 step={1}
                                 className="w-full"
                             />
-                            <p className="text-xs text-slate-400">More steps = higher quality (10-50)</p>
+                            <p className="text-xs text-muted-foreground">More steps = higher quality (10-50)</p>
                         </div>
                     )}
                 </div>
@@ -179,8 +179,8 @@ const AdvancedSettings = () => {
             {supportsOutputQuality && (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <Label className="text-sm text-slate-300">Output Quality</Label>
-                        <span className="text-sm text-slate-400">{shotCreatorSettings.outputQuality || 95}%</span>
+                        <Label className="text-sm text-foreground">Output Quality</Label>
+                        <span className="text-sm text-muted-foreground">{shotCreatorSettings.outputQuality || 95}%</span>
                     </div>
                     <Slider
                         value={[shotCreatorSettings.outputQuality || 95]}
@@ -197,8 +197,8 @@ const AdvancedSettings = () => {
             {supportsGoFast && (
                 <div className="flex items-center justify-between space-y-2">
                     <div className="space-y-1">
-                        <Label className="text-sm text-slate-300">Fast Mode</Label>
-                        <p className="text-xs text-slate-400">Enable optimizations for faster generation</p>
+                        <Label className="text-sm text-foreground">Fast Mode</Label>
+                        <p className="text-xs text-muted-foreground">Enable optimizations for faster generation</p>
                     </div>
                     <Switch
                         checked={shotCreatorSettings.goFast !== false}
@@ -210,12 +210,12 @@ const AdvancedSettings = () => {
             {/* Safety Filter Level - for Nano Banana Pro */}
             {supportsSafetyFilterLevel && (
                 <div className="space-y-2">
-                    <Label className="text-sm text-slate-300">Safety Filter Level</Label>
+                    <Label className="text-sm text-foreground">Safety Filter Level</Label>
                     <Select
                         value={shotCreatorSettings.safetyFilterLevel || 'block_only_high'}
                         onValueChange={(value) => updateSettings({ safetyFilterLevel: value as 'block_low_and_above' | 'block_medium_and_above' | 'block_only_high' })}
                     >
-                        <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
+                        <SelectTrigger className="bg-card border-border text-white">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -224,7 +224,7 @@ const AdvancedSettings = () => {
                             <SelectItem value="block_low_and_above">Strict (Block low & above)</SelectItem>
                         </SelectContent>
                     </Select>
-                    <p className="text-xs text-slate-400">Content safety filtering level</p>
+                    <p className="text-xs text-muted-foreground">Content safety filtering level</p>
                 </div>
             )}
 
@@ -232,8 +232,8 @@ const AdvancedSettings = () => {
             {isQwenImageWithImg2Img && (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <Label className="text-sm text-slate-300">Img2Img Strength</Label>
-                        <span className="text-sm text-slate-400">{shotCreatorSettings.strength || 0.7}</span>
+                        <Label className="text-sm text-foreground">Img2Img Strength</Label>
+                        <span className="text-sm text-muted-foreground">{shotCreatorSettings.strength || 0.7}</span>
                     </div>
                     <Slider
                         value={[shotCreatorSettings.strength || 0.7]}
@@ -243,7 +243,7 @@ const AdvancedSettings = () => {
                         step={0.1}
                         className="w-full"
                     />
-                    <p className="text-xs text-slate-400">Higher = more creative changes (0.1-1.0)</p>
+                    <p className="text-xs text-muted-foreground">Higher = more creative changes (0.1-1.0)</p>
                 </div>
             )}
         </div>

@@ -14,7 +14,7 @@ export function CategoryCard({ id, name, icon, promptCount, onClick }: CategoryC
   return (
     <Card
       onClick={() => onClick(id)}
-      className="bg-slate-950 border-slate-700 cursor-pointer transition-all hover:border-slate-600 hover:bg-slate-900"
+      className="bg-background border-border cursor-pointer transition-all hover:border-border hover:bg-background"
     >
       <CardContent className="p-4">
         <div className="flex items-center justify-between">

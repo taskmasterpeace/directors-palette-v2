@@ -69,7 +69,7 @@ export function FullscreenVideoModal({
         variant="ghost"
         size="icon"
         onClick={onClose}
-        className="absolute top-4 right-4 z-50 h-10 w-10 rounded-full bg-slate-800/80 hover:bg-slate-700 text-white"
+        className="absolute top-4 right-4 z-50 h-10 w-10 rounded-full bg-card/80 hover:bg-secondary text-white"
       >
         <X className="h-6 w-6" />
       </Button>
@@ -79,7 +79,7 @@ export function FullscreenVideoModal({
         variant="ghost"
         size="icon"
         onClick={() => handleDownload(videoUrl, 'fullscreen')}
-        className="absolute top-4 right-16 z-50 h-10 w-10 rounded-full bg-slate-800/80 hover:bg-slate-700 text-white"
+        className="absolute top-4 right-16 z-50 h-10 w-10 rounded-full bg-card/80 hover:bg-secondary text-white"
       >
         <Download className="h-5 w-5" />
       </Button>

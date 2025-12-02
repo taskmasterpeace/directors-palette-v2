@@ -80,7 +80,7 @@ export default function InlineTagEditor({
     if (isEditing) {
         return (
             <div className={cn("flex items-center gap-2", className)}>
-                <Tag className="w-3 h-3 text-slate-400" />
+                <Tag className="w-3 h-3 text-muted-foreground" />
                 <Input
                     ref={inputRef}
                     type="text"
@@ -89,7 +89,7 @@ export default function InlineTagEditor({
                     onBlur={handleSave}
                     onKeyDown={handleKeyDown}
                     placeholder={placeholder}
-                    className="h-6 text-xs bg-transparent border-slate-600 focus:border-red-500 px-2"
+                    className="h-6 text-xs bg-transparent border-border focus:border-primary px-2"
                     onClick={(e) => e.stopPropagation()}
                 />
             </div>
@@ -99,7 +99,7 @@ export default function InlineTagEditor({
     return (
         <div
             className={cn(
-                "flex items-center gap-1 cursor-pointer hover:bg-slate-700/50 px-2 py-1 rounded transition-colors",
+                "flex items-center gap-1 cursor-pointer hover:bg-secondary/50 px-2 py-1 rounded transition-colors",
                 className
             )}
             onClick={(e) => {
@@ -108,7 +108,7 @@ export default function InlineTagEditor({
             }}
         >
             <Tag className="w-3 h-3" />
-            <span className={cn("text-xs", initialTags.length === 0 && "text-slate-400")}>
+            <span className={cn("text-xs", initialTags.length === 0 && "text-muted-foreground")}>
                 {initialTags.length > 0 ? initialTags.map(tag => `@${tag}`).join(', ') : placeholder}
             </span>
         </div>

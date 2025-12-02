@@ -33,7 +33,7 @@ export default function Home() {
               <span className="hidden sm:inline">Directors Palette</span>
               <span className="sm:hidden">Directors Palette</span>
             </h1>
-            <p className="text-slate-400 mt-1 text-sm sm:text-base">
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
               AI-powered visual storytelling and image generation
             </p>
           </div>

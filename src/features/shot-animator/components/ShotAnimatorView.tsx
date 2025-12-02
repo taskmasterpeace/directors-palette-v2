@@ -361,9 +361,9 @@ export function ShotAnimatorView() {
   const currentLastFrameConfig = shotConfigs.find((c) => c.id === lastFrameEditState.configId)
 
   return (
-    <div className="w-full h-full flex flex-col bg-slate-950">
+    <div className="w-full h-full flex flex-col bg-background">
       {/* Top Toolbar */}
-      <div className="border-b border-slate-700 bg-slate-900/50">
+      <div className="border-b border-border bg-background/50">
         {/* Model Selection & Settings */}
         <div className="px-2 sm:px-4 py-2 flex flex-col gap-3">
           {/* Model Selection */}
@@ -390,12 +390,12 @@ export function ShotAnimatorView() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             {/* Search - Full width on mobile, auto on desktop */}
             <div className="relative w-full sm:w-auto order-1">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <Input
                 placeholder="Search images..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 h-10 sm:h-8 w-full sm:w-48 bg-slate-800 border-slate-600 text-white text-sm touch-manipulation"
+                className="pl-8 h-10 sm:h-8 w-full sm:w-48 bg-card border-border text-white text-sm touch-manipulation"
               />
             </div>
 
@@ -407,7 +407,7 @@ export function ShotAnimatorView() {
                   type="button"
                   size="sm"
                   variant="outline"
-                  className="h-10 sm:h-8 w-full sm:w-auto min-h-[44px] sm:min-h-0 border-slate-600 text-white hover:bg-slate-800 touch-manipulation justify-center"
+                  className="h-10 sm:h-8 w-full sm:w-auto min-h-[44px] sm:min-h-0 border-border text-white hover:bg-card touch-manipulation justify-center"
                   onClick={() => document.getElementById("file-upload-toolbar")?.click()}
                 >
                   <Upload className="w-4 h-4 sm:mr-1" />
@@ -427,7 +427,7 @@ export function ShotAnimatorView() {
               <Button
                 onClick={() => setIsVideoModalOpen(true)}
                 size="sm"
-                className="h-10 sm:h-8 w-full sm:w-auto min-h-[44px] sm:min-h-0 bg-slate-700 hover:bg-slate-600 touch-manipulation justify-center"
+                className="h-10 sm:h-8 w-full sm:w-auto min-h-[44px] sm:min-h-0 bg-secondary hover:bg-muted touch-manipulation justify-center"
               >
                 <VideoIcon className="w-4 h-4 sm:mr-1" />
                 <span className="hidden sm:inline ml-1">Video</span>
@@ -437,7 +437,7 @@ export function ShotAnimatorView() {
               <Button
                 onClick={() => setIsGalleryModalOpen(true)}
                 size="sm"
-                className="h-10 sm:h-8 w-full sm:w-auto min-h-[44px] sm:min-h-0 bg-slate-700 hover:bg-slate-600 touch-manipulation justify-center"
+                className="h-10 sm:h-8 w-full sm:w-auto min-h-[44px] sm:min-h-0 bg-secondary hover:bg-muted touch-manipulation justify-center"
               >
                 <ImageIcon className="w-4 h-4 sm:mr-1" />
                 <span className="hidden sm:inline ml-1">Gallery</span>
@@ -452,13 +452,13 @@ export function ShotAnimatorView() {
         </div>
 
         {/* Selection Controls */}
-        <div className="px-2 sm:px-4 py-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 border-t border-slate-700/50">
+        <div className="px-2 sm:px-4 py-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 border-t border-border/50">
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleDeselectAll}
-              className="h-8 sm:h-7 text-xs text-slate-400 hover:text-white min-h-[44px] sm:min-h-0 touch-manipulation"
+              className="h-8 sm:h-7 text-xs text-muted-foreground hover:text-white min-h-[44px] sm:min-h-0 touch-manipulation"
             >
               Deselect All
             </Button>
@@ -469,7 +469,7 @@ export function ShotAnimatorView() {
                 onCheckedChange={(checked) => setShowOnlySelected(checked as boolean)}
                 className="min-h-[20px] min-w-[20px]"
               />
-              <Label htmlFor="show-selected" className="text-xs text-slate-400 cursor-pointer whitespace-nowrap">
+              <Label htmlFor="show-selected" className="text-xs text-muted-foreground cursor-pointer whitespace-nowrap">
                 Show only selected
               </Label>
             </div>
@@ -483,7 +483,7 @@ export function ShotAnimatorView() {
         <div className="overflow-hidden">
           <ScrollArea className="h-full">
             {filteredShots.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-96 text-slate-500">
+              <div className="flex flex-col items-center justify-center h-96 text-muted-foreground">
                 <ImageIcon className="w-16 h-16 mb-4" />
                 <p>No images to display</p>
                 <p className="text-sm mt-2">Upload images or add from gallery to get started</p>
@@ -518,13 +518,13 @@ export function ShotAnimatorView() {
 
       {/* Bottom Generate Bar */}
       {selectedCount > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-300 p-3 sm:p-4 safe-bottom z-50">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border p-3 sm:p-4 safe-bottom z-50">
           <div className="max-w-7xl mx-auto flex items-center justify-center">
             <Button
               onClick={handleGenerateAll}
               disabled={isGenerating || !user}
               size="lg"
-              className="bg-red-600 hover:bg-red-700 text-white px-6 sm:px-8 w-full sm:w-auto min-h-[48px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-primary hover:bg-primary/90 text-white px-6 sm:px-8 w-full sm:w-auto min-h-[48px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Play className="w-5 h-5 mr-2" />
               <span className="text-sm sm:text-base">

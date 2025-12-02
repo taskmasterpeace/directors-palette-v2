@@ -87,7 +87,7 @@ export function ImageActionMenu({
       <Button
         size="icon"
         variant="secondary"
-        className="md:hidden h-6 w-6 p-0 bg-slate-700/90 hover:bg-slate-600 border-slate-600"
+        className="md:hidden h-6 w-6 p-0 bg-secondary/90 hover:bg-muted border-border"
         onClick={(e) => {
           e.stopPropagation()
           setMobileSheetOpen(true)
@@ -122,30 +122,30 @@ export function ImageActionMenu({
           <Button
             size="icon"
             variant="secondary"
-            className="hidden md:flex h-6 w-6 p-0 bg-slate-700/90 hover:bg-slate-600 border-slate-600"
+            className="hidden md:flex h-6 w-6 p-0 bg-secondary/90 hover:bg-muted border-border"
             onClick={(e) => e.stopPropagation()}
           >
             <MoreVertical className="h-3 w-3 text-white" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="bg-slate-800 border-slate-700 text-white" align="end">
+        <DropdownMenuContent className="bg-card border-border text-white" align="end">
           {/* Copy Submenu */}
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="hover:bg-slate-700 cursor-pointer">
+            <DropdownMenuSubTrigger className="hover:bg-secondary cursor-pointer">
               <Copy className="mr-2 h-4 w-4" />
               Copy
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="bg-slate-800 border-slate-700 text-white">
+            <DropdownMenuSubContent className="bg-card border-border text-white">
               <DropdownMenuItem
                 onClick={onCopyImage}
-                className="hover:bg-slate-700 cursor-pointer"
+                className="hover:bg-secondary cursor-pointer"
               >
                 <ImageIcon className="mr-2 h-4 w-4" />
                 Image
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={onCopyPrompt}
-                className="hover:bg-slate-700 cursor-pointer"
+                className="hover:bg-secondary cursor-pointer"
               >
                 <FileText className="mr-2 h-4 w-4" />
                 Prompt
@@ -156,28 +156,28 @@ export function ImageActionMenu({
           {/* Send to Submenu */}
           {onSendTo && (
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="hover:bg-slate-700 cursor-pointer">
+              <DropdownMenuSubTrigger className="hover:bg-secondary cursor-pointer">
                 <Send className="mr-2 h-4 w-4" />
                 Send to
               </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="bg-slate-800 border-slate-700 text-white">
+              <DropdownMenuSubContent className="bg-card border-border text-white">
                 <DropdownMenuItem
                   onClick={() => onSendTo('shot-creator')}
-                  className="hover:bg-slate-700 cursor-pointer"
+                  className="hover:bg-secondary cursor-pointer"
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
                   Shot Creator
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onSendTo('shot-animator')}
-                  className="hover:bg-slate-700 cursor-pointer"
+                  className="hover:bg-secondary cursor-pointer"
                 >
                   <Film className="mr-2 h-4 w-4" />
                   Shot Animator
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onSendTo('layout-annotation')}
-                  className="hover:bg-slate-700 cursor-pointer"
+                  className="hover:bg-secondary cursor-pointer"
                 >
                   <Layout className="mr-2 h-4 w-4" />
                   Layout
@@ -189,18 +189,18 @@ export function ImageActionMenu({
           {/* Extract Frames Submenu */}
           {(onExtractFrames || onExtractFramesToGallery) && (
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="hover:bg-slate-700 cursor-pointer">
+              <DropdownMenuSubTrigger className="hover:bg-secondary cursor-pointer">
                 <Grid3x3 className="mr-2 h-4 w-4" />
                 Extract Frames
               </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="bg-slate-800 border-slate-700 text-white">
+              <DropdownMenuSubContent className="bg-card border-border text-white">
                 {onExtractFrames && (
                   <DropdownMenuItem
                     onClick={() => {
                       onExtractFrames()
                       onDropdownChange(false)
                     }}
-                    className="hover:bg-slate-700 cursor-pointer"
+                    className="hover:bg-secondary cursor-pointer"
                   >
                     <Download className="mr-2 h-4 w-4" />
                     Download
@@ -212,7 +212,7 @@ export function ImageActionMenu({
                       onExtractFramesToGallery()
                       onDropdownChange(false)
                     }}
-                    className="hover:bg-slate-700 cursor-pointer"
+                    className="hover:bg-secondary cursor-pointer"
                   >
                     <ImagePlus className="mr-2 h-4 w-4" />
                     To Gallery
@@ -222,12 +222,12 @@ export function ImageActionMenu({
             </DropdownMenuSub>
           )}
 
-          <DropdownMenuSeparator className="bg-slate-700" />
+          <DropdownMenuSeparator className="bg-secondary" />
 
           {/* Download */}
           <DropdownMenuItem
             onClick={onDownload}
-            className="hover:bg-slate-700 cursor-pointer"
+            className="hover:bg-secondary cursor-pointer"
           >
             <Download className="mr-2 h-4 w-4" />
             Download
@@ -248,7 +248,7 @@ export function ImageActionMenu({
                   }
                 }, 50)
               }}
-              className="hover:bg-slate-700 cursor-pointer"
+              className="hover:bg-secondary cursor-pointer"
             >
               {currentReference ? (
                 <>
@@ -268,7 +268,7 @@ export function ImageActionMenu({
           {onAddToLibrary && (
             <DropdownMenuItem
               onClick={onAddToLibrary}
-              className="hover:bg-slate-700 cursor-pointer"
+              className="hover:bg-secondary cursor-pointer"
             >
               <Library className="mr-2 h-4 w-4" />
               Add to Library
@@ -278,14 +278,14 @@ export function ImageActionMenu({
           {/* Move to Folder Submenu */}
           {onMoveToFolder && (
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="hover:bg-slate-700 cursor-pointer">
+              <DropdownMenuSubTrigger className="hover:bg-secondary cursor-pointer">
                 <FolderInput className="mr-2 h-4 w-4" />
                 Move to Folder
               </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="bg-slate-800 border-slate-700 text-white">
+              <DropdownMenuSubContent className="bg-card border-border text-white">
                 <DropdownMenuItem
                   onClick={() => onMoveToFolder(null)}
-                  className="hover:bg-slate-700 cursor-pointer"
+                  className="hover:bg-secondary cursor-pointer"
                 >
                   <div className="flex items-center justify-between w-full">
                     <span>Uncategorized</span>
@@ -293,19 +293,19 @@ export function ImageActionMenu({
                   </div>
                 </DropdownMenuItem>
 
-                {folders.length > 0 && <DropdownMenuSeparator className="bg-slate-700" />}
+                {folders.length > 0 && <DropdownMenuSeparator className="bg-secondary" />}
 
                 {folders.map((folder) => (
                   <DropdownMenuItem
                     key={folder.id}
                     onClick={() => onMoveToFolder(folder.id)}
-                    className="hover:bg-slate-700 cursor-pointer"
+                    className="hover:bg-secondary cursor-pointer"
                   >
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-2">
                         {folder.color && (
                           <div
-                            className="h-3 w-3 rounded-full border border-slate-600"
+                            className="h-3 w-3 rounded-full border border-border"
                             style={{ backgroundColor: folder.color }}
                           />
                         )}
@@ -317,7 +317,7 @@ export function ImageActionMenu({
                 ))}
 
                 {folders.length === 0 && (
-                  <div className="px-2 py-1.5 text-sm text-slate-400">
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
                     No folders created
                   </div>
                 )}
@@ -325,12 +325,12 @@ export function ImageActionMenu({
             </DropdownMenuSub>
           )}
 
-          <DropdownMenuSeparator className="bg-slate-700" />
+          <DropdownMenuSeparator className="bg-secondary" />
 
           {/* Delete */}
           <DropdownMenuItem
             onClick={onDelete}
-            className="hover:bg-red-700 cursor-pointer text-red-400"
+            className="hover:bg-primary/90 cursor-pointer text-primary"
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Delete Image

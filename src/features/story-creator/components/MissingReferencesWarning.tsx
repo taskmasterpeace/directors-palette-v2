@@ -33,21 +33,21 @@ export function MissingReferencesWarning({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl bg-slate-900 border-orange-700">
+            <DialogContent className="max-w-2xl bg-background border-orange-700">
                 <DialogHeader>
                     <DialogTitle className="text-white flex items-center gap-2">
                         <AlertTriangle className="w-5 h-5 text-orange-500" />
                         Missing Reference Images
                     </DialogTitle>
-                    <DialogDescription className="text-slate-400">
+                    <DialogDescription className="text-muted-foreground">
                         Some shots reference entities without assigned reference images.
                         Images may lack character consistency.
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4 max-h-[400px] overflow-y-auto">
-                    <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-                        <div className="text-sm text-slate-300 mb-3">
+                    <div className="bg-card rounded-lg p-4 border border-border">
+                        <div className="text-sm text-foreground mb-3">
                             <strong>{missingReferences.length}</strong> {missingReferences.length === 1 ? 'tag' : 'tags'} missing references in{' '}
                             <strong>{totalAffectedShots}</strong> {totalAffectedShots === 1 ? 'shot' : 'shots'}
                         </div>
@@ -55,14 +55,14 @@ export function MissingReferencesWarning({
                         {missingReferences.map((ref) => (
                             <div key={ref.tag} className="mb-3 last:mb-0">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <code className="text-sm bg-slate-900 px-2 py-1 rounded text-orange-400">
+                                    <code className="text-sm bg-background px-2 py-1 rounded text-orange-400">
                                         {ref.tag}
                                     </code>
                                     <Badge variant="secondary" className="text-xs">
                                         {ref.shotNumbers.length} {ref.shotNumbers.length === 1 ? 'shot' : 'shots'}
                                     </Badge>
                                 </div>
-                                <div className="text-xs text-slate-500 pl-2">
+                                <div className="text-xs text-muted-foreground pl-2">
                                     Used in shots: {ref.shotNumbers.join(', ')}
                                 </div>
                             </div>
@@ -71,7 +71,7 @@ export function MissingReferencesWarning({
 
                     <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4">
                         <h4 className="text-sm font-medium text-blue-300 mb-2">💡 What are reference images?</h4>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-muted-foreground">
                             Reference images help maintain visual consistency across shots.
                             When you assign a reference to a character or location tag,
                             the AI uses that image to generate similar-looking results.
@@ -90,7 +90,7 @@ export function MissingReferencesWarning({
                     </Button>
                     <Button
                         onClick={onContinueAnyway}
-                        className="flex-1 bg-orange-600 hover:bg-orange-700"
+                        className="flex-1 bg-primary hover:bg-primary/90"
                     >
                         <Play className="w-4 h-4 mr-2" />
                         Continue Anyway

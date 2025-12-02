@@ -201,31 +201,31 @@ export function ExpandedGallery() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700">
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <Link href="/">
-                <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white">
                   <Home className="h-5 w-5" />
                 </Button>
               </Link>
               <h1 className="text-2xl font-bold text-white">Image Gallery</h1>
-              <Badge variant="outline" className="text-slate-300">
+              <Badge variant="outline" className="text-foreground">
                 {totalItems} {totalItems === 1 ? 'image' : 'images'}
               </Badge>
             </div>
 
             {selectedImages.length > 0 && (
               <div className="flex items-center gap-2">
-                <Badge variant="default" className="bg-red-600">
+                <Badge variant="default" className="bg-primary">
                   {selectedImages.length} selected
                 </Badge>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleClearSelection}
-                  className="text-slate-400 hover:text-white"
+                  className="text-muted-foreground hover:text-white"
                 >
                   <X className="h-4 w-4 mr-1" />
                   Clear
@@ -245,26 +245,26 @@ export function ExpandedGallery() {
           {/* Filter tabs and search */}
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
             <Tabs value={filterTab} onValueChange={(v) => setFilterTab(v as FilterTab)}>
-              <TabsList className="bg-slate-800">
-                <TabsTrigger value="all" className="data-[state=active]:bg-red-600">
+              <TabsList className="bg-card">
+                <TabsTrigger value="all" className="data-[state=active]:bg-primary">
                   All
                 </TabsTrigger>
-                <TabsTrigger value="tagged" className="data-[state=active]:bg-red-600">
+                <TabsTrigger value="tagged" className="data-[state=active]:bg-primary">
                   Tagged
                 </TabsTrigger>
-                <TabsTrigger value="untagged" className="data-[state=active]:bg-red-600">
+                <TabsTrigger value="untagged" className="data-[state=active]:bg-primary">
                   Untagged
                 </TabsTrigger>
               </TabsList>
             </Tabs>
 
             <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search images..."
-                className="pl-9 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+                className="pl-9 bg-card border-border text-white placeholder:text-muted-foreground"
               />
             </div>
           </div>
@@ -275,14 +275,14 @@ export function ExpandedGallery() {
       <div className="container mx-auto px-4 py-6">
         {isLoading ? (
           <div className="text-center py-24">
-            <Loader2 className="w-12 h-12 mx-auto mb-4 text-red-500 animate-spin" />
-            <p className="text-slate-400">Loading gallery...</p>
+            <Loader2 className="w-12 h-12 mx-auto mb-4 text-primary animate-spin" />
+            <p className="text-muted-foreground">Loading gallery...</p>
           </div>
         ) : filteredImages.length === 0 ? (
           <div className="text-center py-24">
-            <ImageIcon className="w-16 h-16 mx-auto mb-4 text-slate-600" />
-            <p className="text-xl text-slate-400 mb-2">No images found</p>
-            <p className="text-sm text-slate-500">
+            <ImageIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+            <p className="text-xl text-muted-foreground mb-2">No images found</p>
+            <p className="text-sm text-muted-foreground">
               {searchQuery || filterTab !== 'all'
                 ? 'Try adjusting your filters or search query'
                 : 'Start creating images in Shot Creator'}
@@ -317,7 +317,7 @@ export function ExpandedGallery() {
             {totalPages > 1 && (
               <div className="flex flex-col items-center gap-2 mb-8">
                 {/* Page indicator text */}
-                <div className="text-sm text-slate-400">
+                <div className="text-sm text-muted-foreground">
                   Page {currentPage} of {totalPages} ({totalItems} total images)
                 </div>
 
@@ -328,7 +328,7 @@ export function ExpandedGallery() {
                     size="sm"
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="min-h-[44px] min-w-[44px] hover:bg-red-600 hover:text-white transition-colors"
+                    className="min-h-[44px] min-w-[44px] hover:bg-primary hover:text-white transition-colors"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
@@ -355,8 +355,8 @@ export function ExpandedGallery() {
                           className={cn(
                             'min-h-[44px] min-w-[44px] transition-colors',
                             currentPage === pageNum
-                              ? 'bg-red-600 hover:bg-red-700 text-white'
-                              : 'hover:bg-red-600 hover:text-white'
+                              ? 'bg-primary hover:bg-primary/90 text-white'
+                              : 'hover:bg-primary hover:text-white'
                           )}
                         >
                           {pageNum}
@@ -370,7 +370,7 @@ export function ExpandedGallery() {
                     size="sm"
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="min-h-[44px] min-w-[44px] hover:bg-red-600 hover:text-white transition-colors"
+                    className="min-h-[44px] min-w-[44px] hover:bg-primary hover:text-white transition-colors"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>

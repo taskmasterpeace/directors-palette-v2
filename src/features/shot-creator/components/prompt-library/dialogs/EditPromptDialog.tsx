@@ -33,7 +33,7 @@ export function EditPromptDialog({ open, onOpenChange, prompt, categories, onUpd
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-900 border-slate-700 text-white" aria-describedby="edit-prompt-description">
+      <DialogContent className="bg-background border-border text-white" aria-describedby="edit-prompt-description">
         <DialogHeader>
           <DialogTitle>Edit Prompt</DialogTitle>
           <DialogDescription id="edit-prompt-description" className="text-gray-400">Update your prompt details</DialogDescription>
@@ -41,19 +41,19 @@ export function EditPromptDialog({ open, onOpenChange, prompt, categories, onUpd
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="edit-title">Title</Label>
-            <Input id="edit-title" value={editingPrompt.title} onChange={(e) => setEditingPrompt({ ...editingPrompt, title: e.target.value })} className="bg-slate-800 border-slate-700" />
+            <Input id="edit-title" value={editingPrompt.title} onChange={(e) => setEditingPrompt({ ...editingPrompt, title: e.target.value })} className="bg-card border-border" />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="edit-prompt">Prompt</Label>
-            <textarea id="edit-prompt" value={editingPrompt.prompt} onChange={(e) => setEditingPrompt({ ...editingPrompt, prompt: e.target.value })} className="min-h-[100px] w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm" />
+            <textarea id="edit-prompt" value={editingPrompt.prompt} onChange={(e) => setEditingPrompt({ ...editingPrompt, prompt: e.target.value })} className="min-h-[100px] w-full rounded-md border border-border bg-card px-3 py-2 text-sm" />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="edit-category">Category</Label>
             <Select value={editingPrompt.categoryId} onValueChange={(value) => setEditingPrompt({ ...editingPrompt, categoryId: value })}>
-              <SelectTrigger className="bg-slate-800 border-slate-700"><SelectValue /></SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
+              <SelectTrigger className="bg-card border-border"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-card border-border">
                 {categories.map(category => (
-                  <SelectItem key={category.id} value={category.id} className="text-white hover:bg-red-600/30">
+                  <SelectItem key={category.id} value={category.id} className="text-white hover:bg-primary/30">
                     <span className="flex items-center gap-2"><span>{category.icon}</span><span>{category.name}</span></span>
                   </SelectItem>
                 ))}
@@ -63,7 +63,7 @@ export function EditPromptDialog({ open, onOpenChange, prompt, categories, onUpd
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSubmit} className="bg-red-600 hover:bg-red-700">Save Changes</Button>
+          <Button onClick={handleSubmit} className="bg-primary hover:bg-primary/90">Save Changes</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -46,7 +46,7 @@ const Glow = React.forwardRef<HTMLDivElement, GlowProps>(
   ({ className, color = 'blue', intensity = 'medium', pulse = false, ...props }, ref) => {
     const glowColors = {
       blue: 'shadow-blue-500',
-      red: 'shadow-red-500',
+      red: 'shadow-primary',
       amber: 'shadow-amber-500',
       green: 'shadow-green-500',
       pink: 'shadow-pink-500'

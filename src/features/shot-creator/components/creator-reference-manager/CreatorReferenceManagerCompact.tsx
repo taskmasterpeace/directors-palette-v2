@@ -30,7 +30,7 @@ const CreatorReferenceManagerCompact = ({ editingMode, maxImages = 3 }: CreatorR
                     size="sm"
                     variant="outline"
                     onClick={(e) => handlePasteImage(e)}
-                    className="h-7 px-2 border-slate-600 hover:border-slate-500"
+                    className="h-7 px-2 border-border hover:border-border"
                 >
                     <Clipboard className="h-3 w-3 mr-1" />
                     Paste
@@ -46,8 +46,8 @@ const CreatorReferenceManagerCompact = ({ editingMode, maxImages = 3 }: CreatorR
                         <div key={index} className="flex-1">
                             <div
                                 className={`relative aspect-square border border-dashed rounded-md overflow-hidden ${isEmpty
-                                    ? 'border-slate-600 bg-slate-800/50 hover:border-slate-500 cursor-pointer'
-                                    : 'border-red-400 bg-red-900/20'
+                                    ? 'border-border bg-card/50 hover:border-border cursor-pointer'
+                                    : 'border-primary bg-primary/15'
                                     }`}
                             >
                                 {image ? (
@@ -84,7 +84,7 @@ const CreatorReferenceManagerCompact = ({ editingMode, maxImages = 3 }: CreatorR
                                             input.click()
                                         }}
                                     >
-                                        <Plus className="h-4 w-4 text-slate-500" />
+                                        <Plus className="h-4 w-4 text-muted-foreground" />
                                     </div>
                                 )}
                             </div>

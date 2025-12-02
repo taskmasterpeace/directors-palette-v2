@@ -71,7 +71,7 @@ export function GalleryHeader({
                 <Menu className="h-5 w-5" />
               </Button>
             )}
-            <ImageIcon className="w-5 h-5 text-blue-400" />
+            <ImageIcon className="w-5 h-5 text-accent" />
             <CardTitle className="text-base sm:text-lg">
               {/* Show folder name on mobile if selected, full title on desktop */}
               <span className="hidden md:inline">Unified Gallery</span>
@@ -100,14 +100,14 @@ export function GalleryHeader({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-slate-700 bg-slate-800/50">
-                    <Square className="w-3 h-3 text-slate-400" />
+                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-border bg-card/50">
+                    <Square className="w-3 h-3 text-muted-foreground" />
                     <Switch
                       checked={useNativeAspectRatio}
                       onCheckedChange={onAspectRatioChange}
-                      className="scale-75 data-[state=checked]:bg-blue-600"
+                      className="scale-75 data-[state=checked]:bg-accent"
                     />
-                    <RectangleHorizontal className="w-3 h-3 text-slate-400" />
+                    <RectangleHorizontal className="w-3 h-3 text-muted-foreground" />
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -135,7 +135,7 @@ export function GalleryHeader({
           </div>
 
           {/* Grid Size Controls */}
-          <div className="flex items-center border border-slate-700 rounded-md overflow-hidden">
+          <div className="flex items-center border border-border rounded-md overflow-hidden">
             <Button
               variant={gridSize === 'small' ? 'secondary' : 'ghost'}
               size="sm"
@@ -149,7 +149,7 @@ export function GalleryHeader({
               variant={gridSize === 'medium' ? 'secondary' : 'ghost'}
               size="sm"
               onClick={() => onGridSizeChange('medium')}
-              className="rounded-none h-8 px-2 border-x border-slate-700"
+              className="rounded-none h-8 px-2 border-x border-border"
               title="Medium grid"
             >
               <Grid2x2 className="w-4 h-4" />
@@ -175,7 +175,7 @@ export function GalleryHeader({
           </Button>
           {selectedCount > 0 && (
             <>
-              <Badge className="bg-blue-600">
+              <Badge className="bg-accent">
                 {selectedCount} selected
               </Badge>
               <Button

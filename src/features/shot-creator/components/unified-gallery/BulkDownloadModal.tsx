@@ -67,11 +67,11 @@ export function BulkDownloadModal({
   const getIcon = () => {
     switch (status) {
       case 'complete':
-        return <CheckCircle2 className="w-12 h-12 text-green-500" />
+        return <CheckCircle2 className="w-12 h-12 text-emerald-500" />
       case 'error':
-        return <XCircle className="w-12 h-12 text-red-500" />
+        return <XCircle className="w-12 h-12 text-primary" />
       default:
-        return <Download className="w-12 h-12 text-blue-500 animate-pulse" />
+        return <Download className="w-12 h-12 text-accent animate-pulse" />
     }
   }
 
@@ -97,7 +97,7 @@ export function BulkDownloadModal({
           {(status === 'downloading' || status === 'zipping') && (
             <div className="w-full space-y-2">
               <Progress value={progress} className="w-full" />
-              <p className="text-xs text-slate-500 text-center">
+              <p className="text-xs text-muted-foreground text-center">
                 {Math.round(progress)}%
               </p>
             </div>
@@ -105,15 +105,15 @@ export function BulkDownloadModal({
 
           {/* Success message */}
           {status === 'complete' && (
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground">
               Successfully downloaded {imageCount} image{imageCount !== 1 ? 's' : ''}
             </p>
           )}
 
           {/* Error details */}
           {status === 'error' && error && (
-            <div className="w-full p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-md">
-              <p className="text-sm text-red-800 dark:text-red-400">{error}</p>
+            <div className="w-full p-3 bg-destructive/10 dark:bg-primary/10 border border-destructive/30 dark:border-primary/30 rounded-md">
+              <p className="text-sm text-destructive dark:text-primary">{error}</p>
             </div>
           )}
         </div>

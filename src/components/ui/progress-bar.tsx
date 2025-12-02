@@ -52,12 +52,12 @@ export function ProgressBar({
 
   return (
     <div className={cn("w-full space-y-2", className)}>
-      <div className="relative w-full bg-slate-700 rounded-full h-3 overflow-hidden">
+      <div className="relative w-full bg-secondary rounded-full h-3 overflow-hidden">
         <div
           className={cn(
             "h-full transition-all duration-100 ease-linear rounded-full",
             isComplete
-              ? "bg-green-500"
+              ? "bg-emerald-500"
               : "bg-gradient-to-r from-amber-500 to-orange-500"
           )}
           style={{
@@ -78,7 +78,7 @@ export function ProgressBar({
       </div>
 
       {showPercentage && (
-        <div className="flex justify-between items-center text-xs text-slate-400">
+        <div className="flex justify-between items-center text-xs text-muted-foreground">
           <span>
             {isComplete ? '✅ Complete!' : 'Generating story breakdown...'}
           </span>

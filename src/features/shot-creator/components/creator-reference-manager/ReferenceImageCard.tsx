@@ -51,8 +51,8 @@ export function ReferenceImageCard({
             {/* Upload / Preview Box */}
             <div
                 className={`relative rounded-xl overflow-hidden transition-all ${isEmpty
-                    ? "min-h-[240px] md:min-h-[160px] md:aspect-square bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 hover:border-slate-600 cursor-pointer touch-manipulation"
-                    : "border-2 border-red-500 bg-red-900/20 shadow-lg shadow-red-500/20"
+                    ? "min-h-[240px] md:min-h-[160px] md:aspect-square bg-gradient-to-br from-card to-background border border-border hover:border-border cursor-pointer touch-manipulation"
+                    : "border-2 border-primary bg-primary/15 shadow-lg shadow-primary/20"
                     }`}
                 onClick={
                     isEmpty
@@ -108,11 +108,11 @@ export function ReferenceImageCard({
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-center p-8">
-                            <Upload className="h-12 w-12 md:h-8 md:w-8 text-slate-500 mx-auto mb-3 md:mb-2" />
-                            <p className="text-sm md:text-xs text-slate-400 font-medium">
+                            <Upload className="h-12 w-12 md:h-8 md:w-8 text-muted-foreground mx-auto mb-3 md:mb-2" />
+                            <p className="text-sm md:text-xs text-muted-foreground font-medium">
                                 Tap to add Reference {index + 1}
                             </p>
-                            <p className="text-xs text-slate-500 mt-1 md:hidden">or use buttons below</p>
+                            <p className="text-xs text-muted-foreground mt-1 md:hidden">or use buttons below</p>
                         </div>
                     </div>
                 )}
@@ -123,7 +123,7 @@ export function ReferenceImageCard({
                 <Button
                     size="lg"
                     variant="outline"
-                    className="h-16 md:h-8 md:flex-1 border-slate-600 hover:border-slate-500 bg-slate-800/50 hover:bg-slate-800 flex items-center justify-center"
+                    className="h-16 md:h-8 md:flex-1 border-border hover:border-border bg-card/50 hover:bg-card flex items-center justify-center"
                     onClick={handlePasteImage}
                 >
                     <Clipboard className="h-6 w-6 md:h-4 md:w-4" />
@@ -133,7 +133,7 @@ export function ReferenceImageCard({
                     <Button
                         size="lg"
                         variant="outline"
-                        className="h-16 md:h-8 md:flex-1 border-slate-600 hover:border-slate-500 bg-slate-800/50 hover:bg-slate-800 flex items-center justify-center"
+                        className="h-16 md:h-8 md:flex-1 border-border hover:border-border bg-card/50 hover:bg-card flex items-center justify-center"
                         onClick={handleCameraCapture}
                     >
                         <Camera className="h-6 w-6 md:h-4 md:w-4" />
@@ -143,7 +143,7 @@ export function ReferenceImageCard({
                 <Button
                     size="lg"
                     variant="outline"
-                    className="h-16 md:h-8 md:flex-1 border-slate-600 hover:border-slate-500 bg-slate-800/50 hover:bg-slate-800 flex items-center justify-center"
+                    className="h-16 md:h-8 md:flex-1 border-border hover:border-border bg-card/50 hover:bg-card flex items-center justify-center"
                     onClick={() => {
                         const input = document.createElement("input")
                         input.type = "file"
@@ -165,7 +165,7 @@ export function ReferenceImageCard({
             {/* Tags section */}
             {image && (
                 <div className="space-y-1">
-                    <Label className="text-xs text-slate-400">Tags</Label>
+                    <Label className="text-xs text-muted-foreground">Tags</Label>
                     {editingTagsId === image.id ? (
                         <InlineTagEditor
                             initialTags={image.tags}
@@ -190,7 +190,7 @@ export function ReferenceImageCard({
                                         ))}
                                     </div>
                                 ) : (
-                                    <span className="text-xs text-slate-500">No tags</span>
+                                    <span className="text-xs text-muted-foreground">No tags</span>
                                 )}
                             </div>
                             <Button

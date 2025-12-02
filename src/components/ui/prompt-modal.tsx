@@ -147,7 +147,7 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
       <DialogContent
         className={cn(
           "sm:max-w-md",
-          config.variant === 'destructive' && "border-red-200 dark:border-red-900"
+          config.variant === 'destructive' && "border-destructive/30 dark:border-primary/30"
         )}
         onClick={handleContentClick}
         showCloseButton={false}
@@ -155,12 +155,12 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
         <DialogHeader className="space-y-3">
           <DialogTitle className={cn(
             "text-lg font-semibold",
-            config.variant === 'destructive' ? "text-red-600 dark:text-red-400" : "text-slate-900 dark:text-slate-100"
+            config.variant === 'destructive' ? "text-primary dark:text-primary" : "text-foreground dark:text-foreground"
           )}>
             {config.title}
           </DialogTitle>
           {config.description && (
-            <DialogDescription className="text-slate-600 dark:text-slate-400">
+            <DialogDescription className="text-muted-foreground dark:text-muted-foreground">
               {config.description}
             </DialogDescription>
           )}
@@ -168,7 +168,7 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="prompt-input" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <Label htmlFor="prompt-input" className="text-sm font-medium text-muted-foreground dark:text-foreground">
               Enter value:
             </Label>
             <Input
@@ -182,18 +182,18 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
               maxLength={config.maxLength}
               className={cn(
                 "transition-all duration-200",
-                error && "border-red-300 focus-visible:border-red-500 focus-visible:ring-red-500/20 dark:border-red-700"
+                error && "border-destructive/50 focus-visible:border-primary focus-visible:ring-ring/20 dark:border-primary/50"
               )}
               aria-invalid={!!error}
               aria-describedby={error ? "prompt-error" : undefined}
             />
             {error && (
-              <p id="prompt-error" className="text-sm text-red-600 dark:text-red-400" role="alert">
+              <p id="prompt-error" className="text-sm text-primary dark:text-primary" role="alert">
                 {error}
               </p>
             )}
             {config.maxLength && (
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                 {value.length} / {config.maxLength} characters
               </p>
             )}

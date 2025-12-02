@@ -141,7 +141,7 @@ function FullscreenModal({
                     {/* Details Panel - Desktop: sidebar, Mobile: conditional overlay */}
                     {(!isMobile || showDetails) && (
                         <div className={`
-                            bg-slate-900/95 overflow-y-auto
+                            bg-background/95 overflow-y-auto
                             ${isMobile
                                 ? 'absolute inset-x-0 bottom-0 top-auto max-h-[70vh] rounded-t-2xl pb-20 pt-6 px-6'
                                 : 'p-6 w-96 rounded-lg max-h-[80vh]'
@@ -151,41 +151,41 @@ function FullscreenModal({
 
                         {/* Prompt */}
                         <div className="mb-4">
-                            <h4 className="text-slate-400 text-xs uppercase mb-2">Prompt</h4>
+                            <h4 className="text-muted-foreground text-xs uppercase mb-2">Prompt</h4>
                             <p className="text-white text-sm leading-relaxed">{fullscreenImage.prompt}</p>
                         </div>
 
                         {/* Model */}
                         {fullscreenImage?.model && (
                             <div className="mb-4">
-                                <h4 className="text-slate-400 text-xs uppercase mb-2">Model</h4>
+                                <h4 className="text-muted-foreground text-xs uppercase mb-2">Model</h4>
                                 <p className="text-white text-sm">{fullscreenImage.model}</p>
                             </div>
                         )}
 
                         {/* Generation Method */}
                         <div className="mb-4">
-                            <h4 className="text-slate-400 text-xs uppercase mb-2">Generation Method</h4>
+                            <h4 className="text-muted-foreground text-xs uppercase mb-2">Generation Method</h4>
                             <div className="text-white text-sm">
                                 {fullscreenImage?.prompt?.includes('|') ? (
                                     <div className="flex items-center gap-2">
                                         <span className="text-orange-400">🔥 Pipeline</span>
-                                        <span className="text-slate-400">Multi-step generation</span>
+                                        <span className="text-muted-foreground">Multi-step generation</span>
                                     </div>
                                 ) : fullscreenImage.prompt?.includes('[') && fullscreenImage.prompt?.includes(']') ? (
                                     <div className="flex items-center gap-2">
-                                        <span className="text-blue-400">📝 Brackets</span>
-                                        <span className="text-slate-400">Option selection</span>
+                                        <span className="text-accent">📝 Brackets</span>
+                                        <span className="text-muted-foreground">Option selection</span>
                                     </div>
                                 ) : fullscreenImage.prompt?.includes('_') ? (
                                     <div className="flex items-center gap-2">
                                         <span className="text-purple-400">🎲 Wildcards</span>
-                                        <span className="text-slate-400">Random variations</span>
+                                        <span className="text-muted-foreground">Random variations</span>
                                     </div>
                                 ) : (
                                     <div className="flex items-center gap-2">
-                                        <span className="text-green-400">✨ Standard</span>
-                                        <span className="text-slate-400">Direct prompt</span>
+                                        <span className="text-emerald-400">✨ Standard</span>
+                                        <span className="text-muted-foreground">Direct prompt</span>
                                     </div>
                                 )}
                             </div>
@@ -193,13 +193,13 @@ function FullscreenModal({
 
                         {/* Source */}
                         <div className="mb-4">
-                            <h4 className="text-slate-400 text-xs uppercase mb-2">Generated From</h4>
+                            <h4 className="text-muted-foreground text-xs uppercase mb-2">Generated From</h4>
                             <p className="text-white text-sm capitalize">{fullscreenImage?.source?.replace('-', ' ')}</p>
                         </div>
 
                         {/* Resolution */}
                         <div className="mb-4">
-                            <h4 className="text-slate-400 text-xs uppercase mb-2">Resolution</h4>
+                            <h4 className="text-muted-foreground text-xs uppercase mb-2">Resolution</h4>
                             <p className="text-white text-sm">
                                 {fullscreenImage.width && fullscreenImage.height
                                     ? `${fullscreenImage.width} × ${fullscreenImage.height}`
@@ -251,7 +251,7 @@ function FullscreenModal({
 
                         {/* Timestamp */}
                         <div className="mb-4">
-                            <h4 className="text-slate-400 text-xs uppercase mb-2">Created</h4>
+                            <h4 className="text-muted-foreground text-xs uppercase mb-2">Created</h4>
                             <p className="text-white text-sm">
                                 {new Date(fullscreenImage.createdAt || Date.now()).toLocaleString()}
                             </p>
@@ -264,7 +264,7 @@ function FullscreenModal({
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="flex-1 text-white border-slate-600"
+                                    className="flex-1 text-white border-border"
                                     onClick={() => onCopyImage(fullscreenImage.url)}
                                     title="Copy to Clipboard"
                                 >
@@ -275,7 +275,7 @@ function FullscreenModal({
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="flex-1 text-white border-slate-600"
+                                    className="flex-1 text-white border-border"
                                     onClick={() => onDownloadImage(fullscreenImage.url)}
                                     title="Download Image"
                                 >
@@ -289,7 +289,7 @@ function FullscreenModal({
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="flex-1 text-white border-slate-600"
+                                    className="flex-1 text-white border-border"
                                     onClick={async () => {
                                         if (fullscreenImage.prompt) {
                                             try {
@@ -317,7 +317,7 @@ function FullscreenModal({
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="flex-1 text-white border-slate-600"
+                                    className="flex-1 text-white border-border"
                                     onClick={async () => {
                                         try {
                                             await clipboardManager.writeText(fullscreenImage.url)
@@ -346,7 +346,7 @@ function FullscreenModal({
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="flex-1 text-white border-slate-600"
+                                    className="flex-1 text-white border-border"
                                     onClick={async () => {
                                         const newRef = await showReferenceNamePrompt(fullscreenImage.reference)
                                         if (newRef !== null) {
@@ -366,7 +366,7 @@ function FullscreenModal({
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="flex-1 text-white border-slate-600"
+                                    className="flex-1 text-white border-border"
                                     onClick={() => onSendTo(fullscreenImage?.url, 'shot-creator')}
                                     title="Send to Shot Creator"
                                 >
@@ -380,7 +380,7 @@ function FullscreenModal({
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="flex-1 text-white border-slate-600"
+                                    className="flex-1 text-white border-border"
                                     onClick={() => onSendTo(fullscreenImage?.url, 'shot-animator')}
                                     title="Send to Shot Animator"
                                 >
@@ -391,7 +391,7 @@ function FullscreenModal({
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="flex-1 text-white border-slate-600"
+                                    className="flex-1 text-white border-border"
                                     onClick={() => onSendTo(fullscreenImage.url, 'layout-annotation')}
                                     title="Send to Layout"
                                 >
@@ -406,7 +406,7 @@ function FullscreenModal({
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        className="w-full text-white border-slate-600"
+                                        className="w-full text-white border-border"
                                         onClick={onExtractFrames}
                                         title="Extract Frames (Download)"
                                     >
@@ -422,7 +422,7 @@ function FullscreenModal({
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        className="w-full text-white border-slate-600"
+                                        className="w-full text-white border-border"
                                         onClick={onExtractFramesToGallery}
                                         title="Extract Frames to Gallery"
                                     >
@@ -437,7 +437,7 @@ function FullscreenModal({
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="flex-1 text-white border-slate-600"
+                                    className="flex-1 text-white border-border"
                                     onClick={() => {
                                         onAddToLibrary?.(fullscreenImage.url)
                                         toast({
@@ -517,7 +517,7 @@ function FullscreenModal({
                     {/* Mobile details close button - prominent and easy to tap */}
                     {isMobile && showDetails && (
                         <div className="absolute bottom-0 left-0 right-0 pb-safe">
-                            <div className="bg-slate-900/95 border-t border-slate-700 p-3">
+                            <div className="bg-background/95 border-t border-border p-3">
                                 <Button
                                     variant="default"
                                     size="lg"

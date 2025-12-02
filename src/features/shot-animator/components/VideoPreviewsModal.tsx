@@ -111,12 +111,12 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
     return (
         <>
             <Dialog open={isOpen} onOpenChange={onClose}>
-                <DialogContent className="w-full max-w-6xl bg-slate-900 border-slate-700 text-white safe-bottom">
+                <DialogContent className="w-full max-w-6xl bg-background border-border text-white safe-bottom">
                     <DialogHeader>
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-3">
                             <div>
                                 <DialogTitle>Video Gallery</DialogTitle>
-                                <DialogDescription className="text-slate-400">
+                                <DialogDescription className="text-muted-foreground">
                                     Explore your AI-generated videos and find inspiration for your next creation.
                                 </DialogDescription>
                             </div>
@@ -126,17 +126,17 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                     {/* View Mode Toggle */}
                     <div className="my-2 flex justify-end px-4 sm:px-0 sm:pr-4">
                         <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'grid' | 'list')}>
-                            <TabsList className="bg-slate-800 border border-slate-700 rounded-lg h-11 sm:h-9 touch-manipulation">
+                            <TabsList className="bg-card border border-border rounded-lg h-11 sm:h-9 touch-manipulation">
                                 <TabsTrigger
                                     value="grid"
-                                    className="flex items-center gap-2 px-4 sm:px-3 min-h-[44px] sm:min-h-0 data-[state=active]:bg-red-600 data-[state=active]:text-white text-slate-300"
+                                    className="flex items-center gap-2 px-4 sm:px-3 min-h-[44px] sm:min-h-0 data-[state=active]:bg-primary data-[state=active]:text-white text-foreground"
                                 >
                                     <Grid3x3 className="w-4 h-4" />
                                     Grid
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="list"
-                                    className="flex items-center gap-2 px-4 sm:px-3 min-h-[44px] sm:min-h-0 data-[state=active]:bg-red-600 data-[state=active]:text-white text-slate-300"
+                                    className="flex items-center gap-2 px-4 sm:px-3 min-h-[44px] sm:min-h-0 data-[state=active]:bg-primary data-[state=active]:text-white text-foreground"
                                 >
                                     <List className="w-4 h-4" />
                                     List
@@ -146,12 +146,12 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                     </div>
                     <ScrollArea className="h-[60vh] sm:h-[500px] px-2 sm:px-0 sm:pr-4">
                         {isLoading ? (
-                            <div className="flex flex-col items-center justify-center h-64 text-slate-500">
-                                <div className="animate-spin w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full mb-4"></div>
+                            <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                                <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mb-4"></div>
                                 <p>Loading videos...</p>
                             </div>
                         ) : videos.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-64 text-slate-500">
+                            <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
                                 <Play className="w-16 h-16 mb-4" />
                                 <p>No videos in gallery</p>
                                 <p className="text-sm mt-2">Generate some videos to see them here</p>
@@ -164,12 +164,12 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                                         <div
                                             key={video.id}
                                             className={`relative group rounded-lg overflow-hidden border-2 transition-all touch-manipulation ${isPlaying
-                                                ? 'border-red-500 ring-2 ring-red-500/30'
-                                                : 'border-slate-700 hover:border-slate-600'
+                                                ? 'border-primary ring-2 ring-ring/30'
+                                                : 'border-border hover:border-border'
                                                 } ${viewMode === 'list' ? 'flex flex-col sm:flex-row' : ''}`}
                                         >
                                             {/* Video Preview */}
-                                            <div className={`relative bg-slate-800 rounded-lg overflow-hidden ${viewMode === 'grid' ? 'aspect-video' : 'w-full sm:w-64 aspect-video sm:h-36'}`}>
+                                            <div className={`relative bg-card rounded-lg overflow-hidden ${viewMode === 'grid' ? 'aspect-video' : 'w-full sm:w-64 aspect-video sm:h-36'}`}>
                                                 <video
                                                     ref={(el) => {
                                                         videoRefs.current[video.id] = el
@@ -183,7 +183,7 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
 
                                                 {/* Overlay */}
                                                 <div
-                                                    className={`absolute inset-0 transition-opacity ${isPlaying ? 'bg-red-500/10' : 'bg-black/30 group-hover:bg-black/20'}`}
+                                                    className={`absolute inset-0 transition-opacity ${isPlaying ? 'bg-primary/10' : 'bg-black/30 group-hover:bg-black/20'}`}
                                                     onClick={() => togglePlayPause(video.id)}
                                                 />
 
@@ -237,12 +237,12 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                                             </div>
 
                                             {/* Video Info */}
-                                            <div className={`bg-slate-800/90 ${viewMode === 'grid' ? 'p-3 sm:p-2' : 'flex-1 p-4 flex flex-col justify-center'}`}>
-                                                <p className={`text-slate-300 ${viewMode === 'grid' ? 'text-sm sm:text-xs truncate' : 'text-sm font-medium mb-1'}`}>
+                                            <div className={`bg-card/90 ${viewMode === 'grid' ? 'p-3 sm:p-2' : 'flex-1 p-4 flex flex-col justify-center'}`}>
+                                                <p className={`text-foreground ${viewMode === 'grid' ? 'text-sm sm:text-xs truncate' : 'text-sm font-medium mb-1'}`}>
                                                     {video.shotName}
                                                 </p>
                                                 {viewMode === 'list' && (
-                                                    <p className="text-xs text-slate-500">
+                                                    <p className="text-xs text-muted-foreground">
                                                         {new Date(video.createdAt).toLocaleDateString()}
                                                     </p>
                                                 )}
@@ -269,7 +269,7 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                         <Button
                             variant="outline"
                             onClick={handleCancel}
-                            className="bg-slate-800 border-slate-600 min-h-[44px] touch-manipulation w-full sm:w-auto"
+                            className="bg-card border-border min-h-[44px] touch-manipulation w-full sm:w-auto"
                         >
                             Cancel
                         </Button>

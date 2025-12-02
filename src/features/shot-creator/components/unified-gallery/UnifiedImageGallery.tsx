@@ -440,14 +440,14 @@ export function UnifiedImageGallery({
             <CardContent className="flex-1 flex flex-col overflow-hidden">
                 {isLoading ? (
                     <div className="text-center py-12">
-                        <div className="w-12 h-12 mx-auto mb-4 border-4 border-slate-600 border-t-purple-500 rounded-full animate-spin" />
-                        <p className="text-slate-400">Loading gallery...</p>
+                        <div className="w-12 h-12 mx-auto mb-4 border-4 border-border border-t-purple-500 rounded-full animate-spin" />
+                        <p className="text-muted-foreground">Loading gallery...</p>
                     </div>
                 ) : images.length === 0 ? (
                     <div className="text-center py-12">
-                        <ImageIcon className="w-12 h-12 mx-auto mb-4 text-slate-600" />
-                        <p className="text-slate-400">No images generated yet</p>
-                        <p className="text-sm text-slate-500 mt-2">
+                        <ImageIcon className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                        <p className="text-muted-foreground">No images generated yet</p>
+                        <p className="text-sm text-muted-foreground mt-2">
                             Start creating images in Shot Creator or Shot Editor
                         </p>
                     </div>

@@ -87,8 +87,8 @@ export default function ShotsReviewSection({
     if (shots.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-                <p className="text-slate-400">No shots extracted yet.</p>
-                <p className="text-sm text-slate-500 mt-2">
+                <p className="text-muted-foreground">No shots extracted yet.</p>
+                <p className="text-sm text-muted-foreground mt-2">
                     Use the Story Input tab to extract shots from your story.
                 </p>
             </div>
@@ -137,7 +137,7 @@ export default function ShotsReviewSection({
                             </Badge>
                         )}
                     </div>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-muted-foreground">
                         {hasBracketShots
                             ? `Review and edit prompts • Bracket syntax will generate ${totalImages} total images`
                             : 'Review and edit prompts before generating'
@@ -157,7 +157,7 @@ export default function ShotsReviewSection({
                     <Button
                         onClick={onGenerateAll}
                         disabled={isGenerating || shots.length === 0}
-                        className="bg-red-600 hover:bg-red-700"
+                        className="bg-primary hover:bg-primary/90"
                     >
                         <Play className="w-4 h-4 mr-2" />
                         Generate All {hasBracketShots && `(${totalImages})`}
@@ -177,7 +177,7 @@ export default function ShotsReviewSection({
                     return (
                         <div key={chapterName} className="space-y-3">
                             {/* Chapter Header */}
-                            <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 pb-3 mb-4">
+                            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border pb-3 mb-4">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <h4 className="text-xl font-bold text-white">
@@ -185,7 +185,7 @@ export default function ShotsReviewSection({
                                         </h4>
                                         <Badge
                                             variant="outline"
-                                            className="text-xs text-slate-400 border-slate-600"
+                                            className="text-xs text-muted-foreground border-border"
                                         >
                                             {chapterShots.length} shot{chapterShots.length !== 1 ? 's' : ''}
                                         </Badge>
@@ -276,11 +276,11 @@ function ShotCard({
     const variations = hasBrackets ? getPromptVariations(promptToCheck, 5) : []
 
     return (
-        <Card className={`p-4 border-slate-700 ${hasBrackets ? 'bg-slate-800 border-l-4 border-l-orange-500' : 'bg-slate-800'}`}>
+        <Card className={`p-4 border-border ${hasBrackets ? 'bg-card border-l-4 border-l-orange-500' : 'bg-card'}`}>
             <div className="flex gap-4">
                 {/* Sequence Number */}
                 <div className="flex-shrink-0">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${hasBrackets ? 'bg-orange-900/40 border border-orange-700' : 'bg-slate-700'}`}>
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${hasBrackets ? 'bg-orange-900/40 border border-orange-700' : 'bg-secondary'}`}>
                         <span className="text-sm font-semibold text-white">
                             {shot.sequence_number}
                         </span>
@@ -294,14 +294,14 @@ function ShotCard({
                         <Textarea
                             value={editPrompt}
                             onChange={(e) => onPromptChange(e.target.value)}
-                            className="bg-slate-900 border-slate-600 text-white text-sm"
+                            className="bg-background border-border text-white text-sm"
                             rows={3}
                         />
                     ) : (
-                        <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">
+                        <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                             {shot.prompt.split(/(@\w+)/).map((part, i) =>
                                 part.startsWith('@') ? (
-                                    <span key={i} className="text-green-400 font-semibold">{part}</span>
+                                    <span key={i} className="text-emerald-400 font-semibold">{part}</span>
                                 ) : (
                                     part
                                 )
@@ -315,13 +315,13 @@ function ShotCard({
                             <Badge
                                 key={tag}
                                 variant="secondary"
-                                className="text-xs bg-red-900/30 text-red-400 border-red-800"
+                                className="text-xs bg-primary/20 text-primary border-primary/30"
                             >
                                 {tag}
                                 {isEditing && (
                                     <button
                                         onClick={() => onRemoveTag(tag)}
-                                        className="ml-1 hover:text-red-300"
+                                        className="ml-1 hover:text-primary"
                                     >
                                         <X className="w-3 h-3" />
                                     </button>
@@ -335,7 +335,7 @@ function ShotCard({
                                     onChange={(e) => onNewTagChange(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && onAddTag()}
                                     placeholder="@tag"
-                                    className="h-6 w-20 text-xs bg-slate-900 border-slate-600"
+                                    className="h-6 w-20 text-xs bg-background border-border"
                                 />
                                 <Button
                                     size="sm"
@@ -362,7 +362,7 @@ function ShotCard({
                                     </TooltipTrigger>
                                     <TooltipContent
                                         side="bottom"
-                                        className="bg-slate-800 border-slate-700 max-w-md"
+                                        className="bg-card border-border max-w-md"
                                     >
                                         <div className="space-y-2">
                                             <p className="text-xs font-semibold text-orange-400">
@@ -370,12 +370,12 @@ function ShotCard({
                                             </p>
                                             <div className="space-y-1">
                                                 {variations.map((variation, idx) => (
-                                                    <p key={idx} className="text-xs text-slate-300 leading-relaxed">
+                                                    <p key={idx} className="text-xs text-foreground leading-relaxed">
                                                         {idx + 1}. {variation}
                                                     </p>
                                                 ))}
                                                 {variationCount > 5 && (
-                                                    <p className="text-xs text-slate-500 italic">
+                                                    <p className="text-xs text-muted-foreground italic">
                                                         + {variationCount - 5} more...
                                                     </p>
                                                 )}
@@ -395,7 +395,7 @@ function ShotCard({
                             <Button
                                 size="sm"
                                 onClick={() => onSaveEdit(shot.id)}
-                                className="bg-green-600 hover:bg-green-700"
+                                className="bg-emerald-600 hover:bg-emerald-700"
                             >
                                 <Save className="w-4 h-4" />
                             </Button>

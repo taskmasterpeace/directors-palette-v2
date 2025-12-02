@@ -56,10 +56,10 @@ export function LastFrameModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-2xl bg-slate-900 border-slate-700 text-white safe-bottom">
+      <DialogContent className="w-full max-w-2xl bg-background border-border text-white safe-bottom">
         <DialogHeader>
           <DialogTitle>Last Frame Image</DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-muted-foreground">
             {imageName}
           </DialogDescription>
         </DialogHeader>
@@ -67,7 +67,7 @@ export function LastFrameModal({
         <div className="space-y-4 py-4 px-4 sm:px-6 max-h-[60vh] sm:max-h-none overflow-y-auto">
           <div className="space-y-2">
             <Label className="text-white">Last Frame Image (Optional)</Label>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-muted-foreground">
               Specify the ending frame for the animation
             </p>
           </div>
@@ -80,26 +80,26 @@ export function LastFrameModal({
                   src={image}
                   alt="Last frame"
                   fill
-                  className="object-cover rounded border border-slate-600"
+                  className="object-cover rounded border border-border"
                 />
                 <button
                   onClick={handleRemove}
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-2.5 sm:p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center touch-manipulation"
+                  className="absolute -top-2 -right-2 bg-primary text-white rounded-full p-2.5 sm:p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center touch-manipulation"
                   aria-label="Remove image"
                 >
                   <X className="w-5 h-5 sm:w-4 sm:h-4" />
                 </button>
               </div>
             ) : (
-              <label className="w-full max-w-sm aspect-square sm:w-64 sm:h-64 border-2 border-dashed border-slate-600 rounded flex flex-col items-center justify-center cursor-pointer hover:border-slate-500 transition-colors touch-manipulation">
+              <label className="w-full max-w-sm aspect-square sm:w-64 sm:h-64 border-2 border-dashed border-border rounded flex flex-col items-center justify-center cursor-pointer hover:border-border transition-colors touch-manipulation">
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleFileUpload}
                   className="hidden"
                 />
-                <Upload className="w-16 h-16 sm:w-12 sm:h-12 text-slate-500 mb-4" />
-                <span className="text-base sm:text-sm text-slate-400">Upload Last Frame</span>
+                <Upload className="w-16 h-16 sm:w-12 sm:h-12 text-muted-foreground mb-4" />
+                <span className="text-base sm:text-sm text-muted-foreground">Upload Last Frame</span>
               </label>
             )}
           </div>
@@ -109,13 +109,13 @@ export function LastFrameModal({
           <Button
             variant="outline"
             onClick={onClose}
-            className="bg-slate-800 border-slate-600 min-h-[44px] touch-manipulation w-full sm:w-auto"
+            className="bg-card border-border min-h-[44px] touch-manipulation w-full sm:w-auto"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
-            className="bg-red-600 hover:bg-red-700 min-h-[44px] touch-manipulation w-full sm:w-auto"
+            className="bg-primary hover:bg-primary/90 min-h-[44px] touch-manipulation w-full sm:w-auto"
           >
             Save Last Frame
           </Button>

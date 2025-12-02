@@ -15,7 +15,7 @@ const enhancedButtonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         // New premium variants
-        premium: "bg-gradient-to-r from-slate-800 to-slate-700 text-white shadow-lg hover:shadow-xl hover:shadow-slate-500/25 hover:scale-105 transition-all duration-300 border border-slate-600",
+        premium: "bg-gradient-to-r from-card to-secondary text-white shadow-lg hover:shadow-xl hover:shadow-primary/25 hover:scale-105 transition-all duration-300 border border-border",
         glass: "bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/15 hover:border-white/30 shadow-lg hover:shadow-xl transition-all duration-300",
         neon: "bg-transparent border-2 text-white hover:shadow-lg transition-all duration-300 relative overflow-hidden",
         sleek: "bg-gradient-to-r text-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 border-0",
@@ -47,7 +47,7 @@ const enhancedButtonVariants = cva(
       {
         variant: "neon",
         colorScheme: "red",
-        class: "border-red-400 hover:shadow-red-400/50 hover:text-red-300"
+        class: "border-primary hover:shadow-primary/50 hover:text-primary"
       },
       {
         variant: "neon",
@@ -73,7 +73,7 @@ const enhancedButtonVariants = cva(
       {
         variant: "sleek",
         colorScheme: "red",
-        class: "from-red-600 to-red-500"
+        class: "from-primary to-primary/80"
       },
       {
         variant: "sleek",
@@ -99,7 +99,7 @@ const enhancedButtonVariants = cva(
       {
         variant: "spark",
         colorScheme: "red",
-        class: "from-red-600 to-red-500"
+        class: "from-primary to-primary/80"
       },
       {
         variant: "spark",

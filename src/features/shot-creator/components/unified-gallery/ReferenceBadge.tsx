@@ -15,7 +15,7 @@ export function ReferenceBadge({ reference }: ReferenceBadgeProps) {
 
   return (
     <div className="absolute top-2 right-2 pointer-events-none">
-      <Badge className="bg-green-600 text-white px-2 py-1 text-xs">
+      <Badge className="bg-emerald-600 text-white px-2 py-1 text-xs">
         <Tag className="w-3 h-3 mr-1" />
         {reference}
       </Badge>

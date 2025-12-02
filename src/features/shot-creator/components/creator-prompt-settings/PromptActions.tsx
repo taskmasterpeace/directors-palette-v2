@@ -482,19 +482,19 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         <Fragment>
             <div className="space-y-2">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <Label className="text-sm text-slate-300">
+                    <Label className="text-sm text-foreground">
                         {isEditingMode ? 'Edit Instructions' : 'Prompt'}
                     </Label>
                     <div className="flex items-center gap-1.5 flex-wrap">
                         {/* Size toggle buttons */}
-                        <div className="flex items-center gap-1 bg-slate-800/50 rounded p-0.5">
+                        <div className="flex items-center gap-1 bg-card/50 rounded p-0.5">
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setTextareaSize('small')}
                                 className={cn(
-                                    "h-7 w-7 p-0 hover:bg-slate-700",
-                                    textareaSize === 'small' ? "bg-slate-700 text-white" : "text-slate-400"
+                                    "h-7 w-7 p-0 hover:bg-secondary",
+                                    textareaSize === 'small' ? "bg-secondary text-white" : "text-muted-foreground"
                                 )}
                                 title="Small (1 line)"
                             >
@@ -505,8 +505,8 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                                 size="sm"
                                 onClick={() => setTextareaSize('medium')}
                                 className={cn(
-                                    "h-7 w-7 p-0 hover:bg-slate-700",
-                                    textareaSize === 'medium' ? "bg-slate-700 text-white" : "text-slate-400"
+                                    "h-7 w-7 p-0 hover:bg-secondary",
+                                    textareaSize === 'medium' ? "bg-secondary text-white" : "text-muted-foreground"
                                 )}
                                 title="Medium (2 lines)"
                             >
@@ -517,8 +517,8 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                                 size="sm"
                                 onClick={() => setTextareaSize('large')}
                                 className={cn(
-                                    "h-7 w-7 p-0 hover:bg-slate-700",
-                                    textareaSize === 'large' ? "bg-slate-700 text-white" : "text-slate-400"
+                                    "h-7 w-7 p-0 hover:bg-secondary",
+                                    textareaSize === 'large' ? "bg-secondary text-white" : "text-muted-foreground"
                                 )}
                                 title="Large (5+ lines)"
                             >
@@ -531,7 +531,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         <Badge variant="secondary" className="text-xs whitespace-nowrap hidden sm:inline-flex">
                             Ctrl+Enter
                         </Badge>
-                        <span className="text-xs text-slate-400 whitespace-nowrap">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
                             {shotCreatorPrompt.length} chars
                         </span>
                     </div>
@@ -551,7 +551,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         }
                         className={cn(
                             getTextareaHeight(textareaSize),
-                            "bg-slate-800 border-slate-600 text-white placeholder:text-slate-400 pr-10",
+                            "bg-card border-border text-white placeholder:text-muted-foreground pr-10",
                             "resize-y sm:resize-y resize-none sm:resize-y" // Allow resize on desktop, disable on mobile
                         )}
                         onKeyDown={(e) => {
@@ -570,7 +570,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                     {showAutocomplete && hasSuggestions && (
                         <div
                             ref={autocompleteRef}
-                            className="absolute z-50 w-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-lg max-h-80 overflow-auto touch-pan-y"
+                            className="absolute z-50 w-full mt-1 bg-card border border-border rounded-md shadow-lg max-h-80 overflow-auto touch-pan-y"
                         >
                             {(['people', 'places', 'props', 'unorganized'] as Category[]).map((category) => {
                                 const categoryRefs = autocompleteSuggestions[category]
@@ -579,7 +579,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                                 return (
                                     <div key={category}>
                                         {/* Category Header */}
-                                        <div className="sticky top-0 bg-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wide">
+                                        <div className="sticky top-0 bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground uppercase tracking-wide">
                                             {category}
                                         </div>
                                         {/* Category Items */}
@@ -591,8 +591,8 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                                                     className={cn(
                                                         "px-4 min-h-[48px] flex items-center cursor-pointer transition-colors touch-manipulation active:scale-95",
                                                         globalIndex === autocompleteSelectedIndex
-                                                            ? "bg-red-600 text-white"
-                                                            : "hover:bg-slate-700 active:bg-slate-600 text-slate-100"
+                                                            ? "bg-primary text-white"
+                                                            : "hover:bg-secondary active:bg-muted text-foreground"
                                                     )}
                                                     onClick={() => selectAutocompleteSuggestion(suggestion)}
                                                     onTouchStart={() => selectAutocompleteIndex(globalIndex)}
@@ -610,7 +610,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-white hover:bg-slate-700"
+                            className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-white hover:bg-secondary"
                             onClick={() => {
                                 setShotCreatorPrompt('')
                                 textareaRef.current?.focus()
@@ -649,7 +649,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                     />
 
                     {/* Help Tooltip */}
-                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <HelpCircle className="w-3 h-3" />
                         <span>Use [option1, option2] for variations, _wildcard_ for dynamic content, or | for chaining</span>
                     </div>
@@ -662,7 +662,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 <Button
                     onClick={handleGenerate}
                     disabled={!canGenerate || isGenerating}
-                    className="flex-1 bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-700 hover:to-blue-700 text-white font-medium disabled:opacity-50"
+                    className="flex-1 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-medium disabled:opacity-50"
                 >
                     {isGenerating ? (
                         <>
@@ -682,8 +682,8 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             {/* Accordion System for Prompt Library and Help */}
             <Accordion type="single" collapsible className="w-full">
                 {/* Prompt Library Section */}
-                <AccordionItem value="library" className="border-slate-700">
-                    <AccordionTrigger className="text-slate-300 hover:text-white">
+                <AccordionItem value="library" className="border-border">
+                    <AccordionTrigger className="text-foreground hover:text-white">
                         <div className="flex items-center gap-2">
                             <BookOpen className="w-4 h-4" />
                             Prompt Library
@@ -701,46 +701,46 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 </AccordionItem>
 
                 {/* Help Section */}
-                <AccordionItem value="help" className="border-slate-700">
-                    <AccordionTrigger className="text-slate-300 hover:text-white">
+                <AccordionItem value="help" className="border-border">
+                    <AccordionTrigger className="text-foreground hover:text-white">
                         <div className="flex items-center gap-2">
                             <HelpCircle className="w-4 h-4" />
                             Prompting Language Guide
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
-                        <div className="space-y-3 text-sm text-slate-300">
-                            <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">
-                                <div className="font-medium text-blue-400">🎯 Bracket Variations</div>
-                                <div className="text-xs text-slate-400">Generate multiple images with one prompt</div>
-                                <code className="block bg-slate-900 p-2 rounded text-xs text-green-400">
+                        <div className="space-y-3 text-sm text-foreground">
+                            <div className="bg-card/50 rounded-lg p-3 space-y-2">
+                                <div className="font-medium text-accent">🎯 Bracket Variations</div>
+                                <div className="text-xs text-muted-foreground">Generate multiple images with one prompt</div>
+                                <code className="block bg-background p-2 rounded text-xs text-emerald-400">
                                     A cat in [a garden, a car, space] looking happy
                                 </code>
                                 <div className="text-xs">→ Creates 3 images with different locations</div>
                             </div>
 
-                            <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">
-                                <div className="font-medium text-red-400">✨ Wild Cards</div>
-                                <div className="text-xs text-slate-400">Use dynamic placeholders for creative variations</div>
-                                <code className="block bg-slate-900 p-2 rounded text-xs text-green-400">
+                            <div className="bg-card/50 rounded-lg p-3 space-y-2">
+                                <div className="font-medium text-primary">✨ Wild Cards</div>
+                                <div className="text-xs text-muted-foreground">Use dynamic placeholders for creative variations</div>
+                                <code className="block bg-background p-2 rounded text-xs text-emerald-400">
                                     _character_ holding _object_ in _location_
                                 </code>
                                 <div className="text-xs">→ Randomly selects from your wild card libraries</div>
                             </div>
 
-                            <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">
+                            <div className="bg-card/50 rounded-lg p-3 space-y-2">
                                 <div className="font-medium text-orange-400">🔗 Chain Prompting</div>
-                                <div className="text-xs text-slate-400">Build complex images step by step</div>
-                                <code className="block bg-slate-900 p-2 rounded text-xs text-green-400">
+                                <div className="text-xs text-muted-foreground">Build complex images step by step</div>
+                                <code className="block bg-background p-2 rounded text-xs text-emerald-400">
                                     sunset landscape | add flying birds | dramatic lighting
                                 </code>
                                 <div className="text-xs">→ Each step refines the previous result</div>
                             </div>
 
-                            <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">
-                                <div className="font-medium text-cyan-400">@ References</div>
-                                <div className="text-xs text-slate-400">Pull from Prompt Library categories</div>
-                                <code className="block bg-slate-900 p-2 rounded text-xs text-green-400">
+                            <div className="bg-card/50 rounded-lg p-3 space-y-2">
+                                <div className="font-medium text-accent">@ References</div>
+                                <div className="text-xs text-muted-foreground">Pull from Prompt Library categories</div>
+                                <code className="block bg-background p-2 rounded text-xs text-emerald-400">
                                     @cinematic shot with @lighting and @mood
                                 </code>
                                 <div className="text-xs">→ Randomly selects prompts from each category</div>

@@ -132,9 +132,9 @@ const ShotCreator = () => {
                 {/* Mobile Layout (< lg) */}
                 <div className="lg:hidden space-y-4">
                     {/* Reference Images */}
-                    <div className="bg-slate-900/30 p-0">
+                    <div className="bg-background/30 p-0">
                         <div className="flex items-center justify-between mb-3 px-2 pt-3">
-                            <span className="text-sm text-slate-300">
+                            <span className="text-sm text-foreground">
                                 {isEditingMode ? 'Input Image' : `References (Max ${modelConfig?.maxReferenceImages || 3})`}
                             </span>
                             <ModelSelector
@@ -159,12 +159,12 @@ const ShotCreator = () => {
                     </div>
 
                     {/* Prompt */}
-                    <div className="bg-slate-900/30">
+                    <div className="bg-background/30">
                         <CreatorPromptSettings compact={false} />
                     </div>
 
                     {/* Gallery */}
-                    <div className="bg-slate-900/30">
+                    <div className="bg-background/30">
                         <Tabs defaultValue="generated" className="w-full">
                             <TabsList className="grid w-full grid-cols-2">
                                 <TabsTrigger value="generated" className="text-xs">📸 Images</TabsTrigger>
@@ -210,9 +210,9 @@ const ShotCreator = () => {
                         <ResizablePanel defaultSize={60} minSize={30}>
                             <div className="h-full pr-3 space-y-4 overflow-y-auto">
                                 {/* Reference Images */}
-                                <div className="bg-slate-900/30 rounded-lg border border-slate-700/50 p-4">
+                                <div className="bg-background/30 rounded-lg border border-border/50 p-4">
                                     <div className="flex items-center justify-between mb-3">
-                                        <span className="text-sm text-slate-300">
+                                        <span className="text-sm text-foreground">
                                             {isEditingMode ? 'Input Image' : `References (Max ${modelConfig?.maxReferenceImages || 3})`}
                                         </span>
                                         <ModelSelector
@@ -237,7 +237,7 @@ const ShotCreator = () => {
                                 </div>
 
                                 {/* Prompt & Settings */}
-                                <div className="bg-slate-900/30 rounded-lg border border-slate-700/50">
+                                <div className="bg-background/30 rounded-lg border border-border/50">
                                     <CreatorPromptSettings compact={false} />
                                 </div>
                             </div>
@@ -249,7 +249,7 @@ const ShotCreator = () => {
                         {/* RIGHT PANEL - Generated Images & Library */}
                         <ResizablePanel defaultSize={40} minSize={25}>
                             <div className="h-full pl-3">
-                                <div className="bg-slate-900/30 rounded-lg border border-slate-700/50 h-full">
+                                <div className="bg-background/30 rounded-lg border border-border/50 h-full">
                                     <Tabs defaultValue="generated" className="w-full h-full flex flex-col">
                                         <TabsList className="grid w-full grid-cols-2">
                                             <TabsTrigger value="generated" className="text-sm">📸 Images</TabsTrigger>

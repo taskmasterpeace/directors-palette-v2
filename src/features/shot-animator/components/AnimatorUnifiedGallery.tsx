@@ -34,19 +34,19 @@ export function AnimatorUnifiedGallery({
   const completedVideos = videos.filter(v => v.status === 'completed')
 
   return (
-    <div className="h-full flex flex-col bg-slate-900/30 border-l border-slate-700">
+    <div className="h-full flex flex-col bg-background/30 border-l border-border">
       {/* Header */}
-      <div className="p-4 border-b border-slate-700">
+      <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-white font-medium flex items-center gap-2">
-            <Film className="w-4 h-4 text-red-400" />
+            <Film className="w-4 h-4 text-primary" />
             Unified Gallery
           </h3>
-          <Badge variant="outline" className="border-red-600 text-red-400">
+          <Badge variant="outline" className="border-primary text-primary">
             {completedVideos.length} videos
           </Badge>
         </div>
-        <p className="text-xs text-slate-400">All generated videos</p>
+        <p className="text-xs text-muted-foreground">All generated videos</p>
       </div>
 
       {/* Videos Grid - 2 Columns */}
@@ -57,10 +57,10 @@ export function AnimatorUnifiedGallery({
               {completedVideos.map((video) => (
                 <div
                   key={video.id}
-                  className="bg-slate-800/50 border border-slate-700 rounded-lg overflow-hidden hover:border-slate-600 transition-colors"
+                  className="bg-card/50 border border-border rounded-lg overflow-hidden hover:border-border transition-colors"
                 >
                   {/* Thumbnail/Video Preview */}
-                  <div className="relative aspect-video bg-slate-900">
+                  <div className="relative aspect-video bg-background">
                       <video
                         src={video.videoUrl}
                         controls
@@ -71,7 +71,7 @@ export function AnimatorUnifiedGallery({
                   {/* Info & Actions */}
                   <div className="p-2">
                     <p className="text-xs text-white truncate mb-1">{video.shotName}</p>
-                    <p className="text-xs text-slate-500 mb-2">{video.model}</p>
+                    <p className="text-xs text-muted-foreground mb-2">{video.model}</p>
 
                     {/* Action Buttons */}
                     <div className="grid grid-cols-4 gap-1">
@@ -81,7 +81,7 @@ export function AnimatorUnifiedGallery({
                           size="icon"
                           variant="ghost"
                           onClick={() => onDownload(video.videoUrl)}
-                          className="h-7 w-full text-green-400 hover:text-green-300 hover:bg-green-950/30"
+                          className="h-7 w-full text-emerald-400 hover:text-green-300 hover:bg-green-950/30"
                           title="Download"
                         >
                           <Download className="w-3.5 h-3.5" />
@@ -93,7 +93,7 @@ export function AnimatorUnifiedGallery({
                         size="icon"
                         variant="ghost"
                         onClick={() => setFullscreenVideo(video)}
-                        className="h-7 w-full text-blue-400 hover:text-blue-300 hover:bg-blue-950/30"
+                        className="h-7 w-full text-accent hover:text-blue-300 hover:bg-blue-950/30"
                         title="Fullscreen"
                       >
                         <Maximize2 className="w-3.5 h-3.5" />
@@ -105,7 +105,7 @@ export function AnimatorUnifiedGallery({
                           size="icon"
                           variant="ghost"
                           onClick={() => onDelete(video.id)}
-                          className="h-7 w-full text-red-400 hover:text-red-300 hover:bg-red-950/30"
+                          className="h-7 w-full text-primary hover:text-primary hover:bg-primary/10"
                           title="Delete"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -117,7 +117,7 @@ export function AnimatorUnifiedGallery({
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <Film className="w-12 h-12 mb-3" />
               <p className="text-sm">No videos generated yet</p>
               <p className="text-xs mt-1">Generated videos will appear here</p>
@@ -128,7 +128,7 @@ export function AnimatorUnifiedGallery({
 
       {/* Fullscreen Video Modal */}
       <Dialog open={!!fullscreenVideo} onOpenChange={() => setFullscreenVideo(null)}>
-        <DialogContent className="max-w-7xl w-[95vw] h-[95vh] bg-black/95 border-slate-700 p-0">
+        <DialogContent className="max-w-7xl w-[95vw] h-[95vh] bg-black/95 border-border p-0">
           <DialogHeader className="sr-only">
             <DialogTitle>{fullscreenVideo?.shotName || 'Video Player'}</DialogTitle>
           </DialogHeader>
@@ -137,7 +137,7 @@ export function AnimatorUnifiedGallery({
               {/* Video Info */}
               <div className="absolute top-4 left-4 z-10 bg-black/50 backdrop-blur-sm rounded-lg px-4 py-2">
                 <p className="text-white font-medium">{fullscreenVideo.shotName}</p>
-                <p className="text-slate-300 text-sm">{fullscreenVideo.model}</p>
+                <p className="text-foreground text-sm">{fullscreenVideo.model}</p>
               </div>
 
               {/* Video Player */}
@@ -155,7 +155,7 @@ export function AnimatorUnifiedGallery({
                 {onDownload && (
                   <Button
                     onClick={() => onDownload(fullscreenVideo.videoUrl)}
-                    className="bg-green-600 hover:bg-green-700"
+                    className="bg-emerald-600 hover:bg-emerald-700"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download
@@ -167,7 +167,7 @@ export function AnimatorUnifiedGallery({
                       onDelete(fullscreenVideo.id)
                       setFullscreenVideo(null)
                     }}
-                    className="bg-red-600 hover:bg-red-700"
+                    className="bg-primary hover:bg-primary/90"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete

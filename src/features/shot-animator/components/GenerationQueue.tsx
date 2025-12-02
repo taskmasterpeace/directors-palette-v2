@@ -39,31 +39,31 @@ function QueueItem({ item, onRetry, onDownload }: QueueItemProps) {
   const getStatusIcon = () => {
     switch (item.status) {
       case 'queued':
-        return <Clock className="w-4 h-4 text-slate-400" />
+        return <Clock className="w-4 h-4 text-muted-foreground" />
       case 'processing':
-        return <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+        return <Loader2 className="w-4 h-4 text-accent animate-spin" />
       case 'completed':
-        return <CheckCircle2 className="w-4 h-4 text-green-400" />
+        return <CheckCircle2 className="w-4 h-4 text-emerald-400" />
       case 'failed':
-        return <XCircle className="w-4 h-4 text-red-400" />
+        return <XCircle className="w-4 h-4 text-primary" />
     }
   }
 
   const getStatusBadge = () => {
     switch (item.status) {
       case 'queued':
-        return <Badge variant="outline" className="border-slate-600 text-slate-400">Queued</Badge>
+        return <Badge variant="outline" className="border-border text-muted-foreground">Queued</Badge>
       case 'processing':
-        return <Badge variant="outline" className="border-blue-600 text-blue-400">Processing</Badge>
+        return <Badge variant="outline" className="border-blue-600 text-accent">Processing</Badge>
       case 'completed':
-        return <Badge variant="outline" className="border-green-600 text-green-400">Completed</Badge>
+        return <Badge variant="outline" className="border-green-600 text-emerald-400">Completed</Badge>
       case 'failed':
-        return <Badge variant="outline" className="border-red-600 text-red-400">Failed</Badge>
+        return <Badge variant="outline" className="border-primary text-primary">Failed</Badge>
     }
   }
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700">
+    <Card className="bg-card/50 border-border">
       <CardContent className="p-4">
         <div className="flex items-center gap-4">
           {/* Status Icon */}
@@ -80,7 +80,7 @@ function QueueItem({ item, onRetry, onDownload }: QueueItemProps) {
               {getStatusBadge()}
             </div>
 
-            <p className="text-sm text-slate-400 truncate mb-2">
+            <p className="text-sm text-muted-foreground truncate mb-2">
               {item.model === 'seedance-lite' ? 'Seedance Lite' : 'Seedance Pro'} •{' '}
               {item.modelSettings.resolution} • {item.modelSettings.duration}s
             </p>
@@ -89,13 +89,13 @@ function QueueItem({ item, onRetry, onDownload }: QueueItemProps) {
             {item.status === 'processing' && item.progress !== undefined && (
               <div className="space-y-1">
                 <Progress value={item.progress} className="h-2" />
-                <p className="text-xs text-slate-500">{item.progress}%</p>
+                <p className="text-xs text-muted-foreground">{item.progress}%</p>
               </div>
             )}
 
             {/* Error Message */}
             {item.status === 'failed' && item.error && (
-              <p className="text-sm text-red-400 mt-2">{item.error}</p>
+              <p className="text-sm text-primary mt-2">{item.error}</p>
             )}
           </div>
 
@@ -105,7 +105,7 @@ function QueueItem({ item, onRetry, onDownload }: QueueItemProps) {
               <Button
                 size="sm"
                 onClick={() => onDownload(item.videoUrl!)}
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-emerald-600 hover:bg-emerald-700"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download
@@ -117,7 +117,7 @@ function QueueItem({ item, onRetry, onDownload }: QueueItemProps) {
                 size="sm"
                 variant="outline"
                 onClick={() => onRetry(item.id)}
-                className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                className="border-border text-foreground hover:bg-secondary"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Retry

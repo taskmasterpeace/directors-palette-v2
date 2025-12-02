@@ -98,7 +98,7 @@ export function MobileImageActionSheet({
       <SheetContent side="bottom" className="h-auto max-h-[80vh] p-0">
         <div className="flex flex-col">
           {/* Header */}
-          <SheetHeader className="p-4 border-b border-slate-700">
+          <SheetHeader className="p-4 border-b border-border">
             <div className="flex items-center gap-3">
               {currentView !== 'main' && (
                 <Button
@@ -148,7 +148,7 @@ export function MobileImageActionSheet({
                     />
                   )}
 
-                  <div className="h-px bg-slate-700 my-2" />
+                  <div className="h-px bg-secondary my-2" />
 
                   {/* Download */}
                   <MenuButton
@@ -194,7 +194,7 @@ export function MobileImageActionSheet({
                     />
                   )}
 
-                  <div className="h-px bg-slate-700 my-2" />
+                  <div className="h-px bg-secondary my-2" />
 
                   {/* Delete */}
                   <MenuButton
@@ -273,7 +273,7 @@ export function MobileImageActionSheet({
                     onClick={() => handleAction(() => onMoveToFolder(null))}
                   />
 
-                  {folders.length > 0 && <div className="h-px bg-slate-700 my-2" />}
+                  {folders.length > 0 && <div className="h-px bg-secondary my-2" />}
 
                   {folders.map((folder) => (
                     <MenuButton
@@ -281,7 +281,7 @@ export function MobileImageActionSheet({
                       icon={
                         folder.color ? (
                           <div
-                            className="h-5 w-5 rounded-full border border-slate-600"
+                            className="h-5 w-5 rounded-full border border-border"
                             style={{ backgroundColor: folder.color }}
                           />
                         ) : (
@@ -295,7 +295,7 @@ export function MobileImageActionSheet({
                   ))}
 
                   {folders.length === 0 && (
-                    <div className="px-4 py-3 text-sm text-slate-400 text-center">
+                    <div className="px-4 py-3 text-sm text-muted-foreground text-center">
                       No folders created yet
                     </div>
                   )}
@@ -326,15 +326,15 @@ function MenuButton({ icon, label, hasSubmenu, destructive, isSelected, onClick 
       className={cn(
         'w-full flex items-center gap-3 px-4 py-3 rounded-md text-sm transition-colors min-h-[48px]',
         destructive
-          ? 'text-red-400 hover:bg-red-900/30'
-          : 'text-white hover:bg-slate-700'
+          ? 'text-primary hover:bg-primary/20'
+          : 'text-white hover:bg-secondary'
       )}
     >
       <span className="flex-shrink-0">{icon}</span>
       <span className="flex-1 text-left font-medium">{label}</span>
       {isSelected && <Check className="h-4 w-4 flex-shrink-0" />}
       {hasSubmenu && !isSelected && (
-        <ArrowLeft className="h-4 w-4 flex-shrink-0 rotate-180 text-slate-400" />
+        <ArrowLeft className="h-4 w-4 flex-shrink-0 rotate-180 text-muted-foreground" />
       )}
     </button>
   )

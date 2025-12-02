@@ -41,10 +41,10 @@ export function PromptEditModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-slate-900 border-slate-700 text-white">
+      <DialogContent className="max-w-2xl bg-background border-border text-white">
         <DialogHeader>
           <DialogTitle>Edit Animation Prompt</DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-muted-foreground">
             {imageName}
           </DialogDescription>
         </DialogHeader>
@@ -56,10 +56,10 @@ export function PromptEditModal({
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Describe the animation for this shot... e.g., 'A slow cinematic pan across the scene with warm lighting'"
-              className="bg-slate-800 border-slate-600 text-white min-h-[150px]"
+              className="bg-card border-border text-white min-h-[150px]"
               autoFocus
             />
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Tip: Be descriptive about camera movement, lighting, and mood
             </p>
           </div>
@@ -69,13 +69,13 @@ export function PromptEditModal({
           <Button
             variant="outline"
             onClick={onClose}
-            className="bg-slate-800 border-slate-600"
+            className="bg-card border-border"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
-            className="bg-red-600 hover:bg-red-700"
+            className="bg-primary hover:bg-primary/90"
           >
             Save Prompt
           </Button>

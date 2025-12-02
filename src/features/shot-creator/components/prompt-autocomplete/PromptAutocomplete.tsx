@@ -49,7 +49,7 @@ export function PromptAutocomplete({
 
   return (
     <div
-      className="fixed z-50 w-80 max-w-[calc(100vw-2rem)] sm:w-80 rounded-md border border-slate-600 bg-slate-800 text-white shadow-xl outline-none"
+      className="fixed z-50 w-80 max-w-[calc(100vw-2rem)] sm:w-80 rounded-md border border-border bg-card text-white shadow-xl outline-none"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,

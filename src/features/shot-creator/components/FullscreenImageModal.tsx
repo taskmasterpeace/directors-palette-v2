@@ -75,7 +75,7 @@ export default function FullscreenImageModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[98vw] max-h-[98vh] p-0 bg-slate-900 border-slate-600 overflow-hidden">
+            <DialogContent className="max-w-[98vw] max-h-[98vh] p-0 bg-background border-border overflow-hidden">
                 {/* Hidden title for accessibility */}
                 <DialogTitle className="sr-only">Image Preview</DialogTitle>
 
@@ -113,7 +113,7 @@ export default function FullscreenImageModal({
                                     size="sm"
                                     variant="secondary"
                                     onClick={handleCopyUrl}
-                                    className="bg-slate-800/70 hover:bg-slate-700 text-white border-slate-600 backdrop-blur-sm"
+                                    className="bg-card/70 hover:bg-secondary text-white border-border backdrop-blur-sm"
                                 >
                                     <Copy className="w-4 h-4 mr-1" />
                                 </Button>
@@ -121,7 +121,7 @@ export default function FullscreenImageModal({
                                     size="sm"
                                     variant="secondary"
                                     onClick={handleDownload}
-                                    className="bg-slate-800/70 hover:bg-slate-700 text-white border-slate-600 backdrop-blur-sm"
+                                    className="bg-card/70 hover:bg-secondary text-white border-border backdrop-blur-sm"
                                 >
                                     <Download className="w-4 h-4 mr-1" />
                                 </Button>
@@ -130,24 +130,24 @@ export default function FullscreenImageModal({
                     )}
 
                     {/* Information panel - minimal height */}
-                    <div className="flex-shrink-0 bg-slate-800/90 backdrop-blur-sm border-t border-slate-600">
+                    <div className="flex-shrink-0 bg-card/90 backdrop-blur-sm border-t border-border">
                         <div className="p-3 space-y-3">
 
                             {/* Tags section */}
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2">
-                                    <Tag className="w-4 h-4 text-slate-400" />
-                                    <span className="text-sm font-medium text-slate-300">Tags</span>
+                                    <Tag className="w-4 h-4 text-muted-foreground" />
+                                    <span className="text-sm font-medium text-foreground">Tags</span>
                                 </div>
                                 <div className="flex gap-2 flex-wrap ml-6">
                                     {fullscreenImage.tags && fullscreenImage.tags.length > 0 ? (
                                         fullscreenImage.tags.map(tag => (
-                                            <Badge key={tag} variant="secondary" className="bg-blue-600/80 hover:bg-blue-600 text-white transition-colors">
+                                            <Badge key={tag} variant="secondary" className="bg-accent/80 hover:bg-accent text-white transition-colors">
                                                 {tag}
                                             </Badge>
                                         ))
                                     ) : (
-                                        <span className="text-sm text-slate-400">No tags assigned</span>
+                                        <span className="text-sm text-muted-foreground">No tags assigned</span>
                                     )}
                                 </div>
                             </div>
@@ -158,14 +158,14 @@ export default function FullscreenImageModal({
                                 <div className="lg:col-span-1 space-y-1">
                                     <div className="flex justify-between items-center gap-4">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm font-medium text-slate-300">Category:</span>
-                                            <Badge variant="outline" className="text-slate-200 border-slate-500 bg-slate-700/50">
+                                            <span className="text-sm font-medium text-foreground">Category:</span>
+                                            <Badge variant="outline" className="text-foreground border-border bg-secondary/50">
                                                 {fullscreenImage.category}
                                             </Badge>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm font-medium text-slate-300">Source:</span>
-                                            <Badge variant="outline" className="text-slate-200 border-slate-500 bg-slate-700/50">
+                                            <span className="text-sm font-medium text-foreground">Source:</span>
+                                            <Badge variant="outline" className="text-foreground border-border bg-secondary/50">
                                                 {fullscreenImage.source}
                                             </Badge>
                                         </div>
@@ -175,10 +175,10 @@ export default function FullscreenImageModal({
 
                             {/* Prompt section */}
                             {fullscreenImage.prompt && (
-                                <div className="border-t border-slate-600 pt-4">
+                                <div className="border-t border-border pt-4">
                                     <div className="space-y-2">
-                                        <span className="text-sm font-medium text-slate-300">Generation Prompt</span>
-                                        <p className="text-sm text-slate-200 leading-relaxed bg-slate-700/30 rounded-lg p-3 border border-slate-600">
+                                        <span className="text-sm font-medium text-foreground">Generation Prompt</span>
+                                        <p className="text-sm text-foreground leading-relaxed bg-secondary/30 rounded-lg p-3 border border-border">
                                             {fullscreenImage.prompt}
                                         </p>
                                     </div>

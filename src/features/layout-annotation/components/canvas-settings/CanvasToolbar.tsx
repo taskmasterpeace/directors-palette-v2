@@ -64,17 +64,17 @@ export function CanvasToolbar({
     const isShapeTool = ['rectangle', 'circle'].includes(canvasState.tool)
 
     return (
-        <Card className="bg-slate-800/50 border-slate-600">
+        <Card className="bg-card/50 border-border">
             <CardHeader className="pb-3">
                 <CardTitle className="text-white text-lg flex items-center gap-2">
-                    <Palette className="w-5 h-5 text-green-400" />
+                    <Palette className="w-5 h-5 text-emerald-400" />
                     Drawing Tools
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
                 {/* Tool Selection */}
                 <div className="space-y-2">
-                    <Label className="text-sm font-medium text-slate-300">Tools</Label>
+                    <Label className="text-sm font-medium text-foreground">Tools</Label>
                     <div className="grid grid-cols-2 gap-1">
                         {tools.map((tool) => {
                             const IconComponent = tool.icon
@@ -94,8 +94,8 @@ export function CanvasToolbar({
                                         px-3 py-2
                                         touch-manipulation
                                         ${isActive
-                                        ? 'bg-green-600 hover:bg-green-700 text-white'
-                                        : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                        : 'bg-secondary hover:bg-muted text-foreground'
                                         }`}
                                 >
                                     <IconComponent className="w-5 h-5" />
@@ -108,20 +108,20 @@ export function CanvasToolbar({
 
                 {/* Color Selection - Simplified */}
                 <div className="space-y-2">
-                    <Label className="text-sm font-medium text-slate-300">Color</Label>
+                    <Label className="text-sm font-medium text-foreground">Color</Label>
                     <div className="flex items-center gap-2 sm:gap-2">
                         <input
                             type="color"
                             value={canvasState.color}
                             onChange={(e) => handleColorChange(e.target.value)}
-                            className="w-14 sm:w-12 h-12 sm:h-10 rounded border-2 border-slate-600 cursor-pointer bg-slate-700 touch-manipulation flex-shrink-0"
+                            className="w-14 sm:w-12 h-12 sm:h-10 rounded border-2 border-border cursor-pointer bg-secondary touch-manipulation flex-shrink-0"
                             aria-label="Select color"
                         />
                         <Input
                             type="text"
                             value={canvasState.color}
                             onChange={(e) => handleColorChange(e.target.value)}
-                            className="flex-1 bg-slate-700 border-slate-600 text-white text-sm min-h-[44px] h-12 sm:h-10 font-mono touch-manipulation"
+                            className="flex-1 bg-secondary border-border text-white text-sm min-h-[44px] h-12 sm:h-10 font-mono touch-manipulation"
                             placeholder="#FF0000"
                             aria-label="Color hex code"
                         />
@@ -132,14 +132,14 @@ export function CanvasToolbar({
                 {isShapeTool && (
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <Label className="text-sm font-medium text-slate-300">Fill Shape</Label>
+                            <Label className="text-sm font-medium text-foreground">Fill Shape</Label>
                             <Switch
                                 checked={fillMode}
                                 onCheckedChange={handleFillModeChange}
-                                className="data-[state=checked]:bg-green-600"
+                                className="data-[state=checked]:bg-emerald-600"
                             />
                         </div>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-muted-foreground">
                             {fillMode ? 'Shape will be filled' : 'Shape will be hollow'}
                         </p>
                     </div>
@@ -148,7 +148,7 @@ export function CanvasToolbar({
                 {/* Brush Size - Only show for brush, line, arrow, eraser tools */}
                 {!isShapeTool && canvasState.tool !== 'select' && canvasState.tool !== 'text' && (
                     <div className="space-y-2">
-                        <Label className="text-sm font-medium text-slate-300">
+                        <Label className="text-sm font-medium text-foreground">
                             Brush Size: {canvasState.brushSize}px
                         </Label>
                         <Slider
@@ -159,7 +159,7 @@ export function CanvasToolbar({
                             step={1}
                             className="w-full"
                         />
-                        <div className="flex justify-between text-xs text-slate-400">
+                        <div className="flex justify-between text-xs text-muted-foreground">
                             <span>1px</span>
                             <span>50px</span>
                         </div>
@@ -168,7 +168,7 @@ export function CanvasToolbar({
 
                 {/* Opacity */}
                 <div className="space-y-2">
-                    <Label className="text-sm font-medium text-slate-300">
+                    <Label className="text-sm font-medium text-foreground">
                         Opacity: {Math.round(canvasState.opacity * 100)}%
                     </Label>
                     <Slider
@@ -179,7 +179,7 @@ export function CanvasToolbar({
                         step={5}
                         className="w-full"
                     />
-                    <div className="flex justify-between text-xs text-slate-400">
+                    <div className="flex justify-between text-xs text-muted-foreground">
                         <span>10%</span>
                         <span>100%</span>
                     </div>
@@ -187,25 +187,25 @@ export function CanvasToolbar({
 
                 {/* Text Properties (only show when text tool is selected) */}
                 {canvasState.tool === 'text' && (
-                    <div className="space-y-3 border-t border-slate-600 pt-3">
-                        <Label className="text-sm font-medium text-slate-300">Text Properties</Label>
+                    <div className="space-y-3 border-t border-border pt-3">
+                        <Label className="text-sm font-medium text-foreground">Text Properties</Label>
 
                         {/* Font Family */}
                         <div className="space-y-2">
-                            <Label className="text-xs text-slate-400">Font Family</Label>
+                            <Label className="text-xs text-muted-foreground">Font Family</Label>
                             <Select
                                 value={canvasState.fontFamily}
                                 onValueChange={(value) => onPropertiesChange({ fontFamily: value })}
                             >
-                                <SelectTrigger className="bg-slate-700 border-slate-600 text-white h-8 text-sm">
+                                <SelectTrigger className="bg-secondary border-border text-white h-8 text-sm">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-slate-700 border-slate-600">
+                                <SelectContent className="bg-secondary border-border">
                                     {FONT_FAMILIES.map((font) => (
                                         <SelectItem
                                             key={font}
                                             value={font}
-                                            className="text-white hover:bg-slate-600"
+                                            className="text-white hover:bg-muted"
                                             style={{ fontFamily: font }}
                                         >
                                             {font}
@@ -217,7 +217,7 @@ export function CanvasToolbar({
 
                         {/* Font Size */}
                         <div className="space-y-2">
-                            <Label className="text-xs text-slate-400">
+                            <Label className="text-xs text-muted-foreground">
                                 Font Size: {canvasState.fontSize}px
                             </Label>
                             <Slider
@@ -228,7 +228,7 @@ export function CanvasToolbar({
                                 step={1}
                                 className="w-full"
                             />
-                            <div className="flex justify-between text-xs text-slate-400">
+                            <div className="flex justify-between text-xs text-muted-foreground">
                                 <span>8px</span>
                                 <span>72px</span>
                             </div>

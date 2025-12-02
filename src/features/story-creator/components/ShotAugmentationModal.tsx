@@ -94,13 +94,13 @@ export function ShotAugmentationModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl bg-slate-900 border-slate-700 max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-3xl bg-background border-border max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="text-white flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-orange-500" />
                         Generate Additional Shots
                     </DialogTitle>
-                    <DialogDescription className="text-slate-400">
+                    <DialogDescription className="text-muted-foreground">
                         Create more shots with bracket variations for bulk image generation
                     </DialogDescription>
                 </DialogHeader>
@@ -117,8 +117,8 @@ export function ShotAugmentationModal({
                                     key={char.tag}
                                     className={`flex items-center space-x-2 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                                         selectedCharacters.includes(char.tag)
-                                            ? 'border-green-500 bg-green-900/20'
-                                            : 'border-slate-700 hover:border-slate-600'
+                                            ? 'border-emerald-500 bg-green-900/20'
+                                            : 'border-border hover:border-border'
                                     }`}
                                     onClick={() => handleCharacterToggle(char.tag)}
                                 >
@@ -128,7 +128,7 @@ export function ShotAugmentationModal({
                                     />
                                     <div className="flex-1 min-w-0">
                                         <div className="text-sm text-white font-medium">{char.name}</div>
-                                        <code className="text-xs text-green-400">@{char.tag}</code>
+                                        <code className="text-xs text-emerald-400">@{char.tag}</code>
                                     </div>
                                 </div>
                             ))}
@@ -146,8 +146,8 @@ export function ShotAugmentationModal({
                                     key={loc.tag}
                                     className={`flex items-center space-x-2 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                                         selectedLocations.includes(loc.tag)
-                                            ? 'border-blue-500 bg-blue-900/20'
-                                            : 'border-slate-700 hover:border-slate-600'
+                                            ? 'border-accent bg-blue-900/20'
+                                            : 'border-border hover:border-border'
                                     }`}
                                     onClick={() => handleLocationToggle(loc.tag)}
                                 >
@@ -157,7 +157,7 @@ export function ShotAugmentationModal({
                                     />
                                     <div className="flex-1 min-w-0">
                                         <div className="text-sm text-white font-medium">{loc.name}</div>
-                                        <code className="text-xs text-blue-400">@{loc.tag}</code>
+                                        <code className="text-xs text-accent">@{loc.tag}</code>
                                     </div>
                                 </div>
                             ))}
@@ -176,7 +176,7 @@ export function ShotAugmentationModal({
                                     className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                                         selectedShotTypes.includes(st.type)
                                             ? 'border-orange-500 bg-orange-900/20'
-                                            : 'border-slate-700 hover:border-slate-600'
+                                            : 'border-border hover:border-border'
                                     }`}
                                     onClick={() => handleShotTypeToggle(st.type)}
                                 >
@@ -187,7 +187,7 @@ export function ShotAugmentationModal({
                                         />
                                         <div>
                                             <div className="text-sm text-white font-medium capitalize">{st.type}</div>
-                                            <div className="text-xs text-slate-400">{st.description}</div>
+                                            <div className="text-xs text-muted-foreground">{st.description}</div>
                                         </div>
                                     </div>
                                     <Badge variant="secondary" className="text-xs">
@@ -212,7 +212,7 @@ export function ShotAugmentationModal({
                             step={1}
                             className="w-full"
                         />
-                        <div className="flex justify-between text-xs text-slate-500 mt-1">
+                        <div className="flex justify-between text-xs text-muted-foreground mt-1">
                             <span>1 shot</span>
                             <span>20 shots</span>
                         </div>
@@ -230,7 +230,7 @@ export function ShotAugmentationModal({
                                     variant={mood === m ? 'default' : 'outline'}
                                     size="sm"
                                     onClick={() => setMood(m)}
-                                    className={mood === m ? 'bg-orange-600' : ''}
+                                    className={mood === m ? 'bg-primary' : ''}
                                 >
                                     {m}
                                 </Button>
@@ -244,13 +244,13 @@ export function ShotAugmentationModal({
                             <div className="flex items-center justify-between">
                                 <div>
                                     <div className="text-sm text-blue-300 font-medium">Estimated Output</div>
-                                    <div className="text-xs text-slate-400 mt-1">
+                                    <div className="text-xs text-muted-foreground mt-1">
                                         {shotCount} shots with bracket variations
                                     </div>
                                 </div>
                                 <div className="text-right">
                                     <div className="text-2xl font-bold text-blue-300">{estimatedImages}</div>
-                                    <div className="text-xs text-slate-400">total images</div>
+                                    <div className="text-xs text-muted-foreground">total images</div>
                                 </div>
                             </div>
                         </div>
@@ -267,7 +267,7 @@ export function ShotAugmentationModal({
                     <Button
                         onClick={handleGenerate}
                         disabled={!canGenerate}
-                        className="bg-orange-600 hover:bg-orange-700"
+                        className="bg-primary hover:bg-primary/90"
                     >
                         <Plus className="w-4 h-4 mr-2" />
                         Generate {shotCount} Shots

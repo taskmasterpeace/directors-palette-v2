@@ -20,7 +20,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
   return (
     <div className="flex flex-col items-center gap-2 mt-4 py-3">
       {/* Page indicator text */}
-      <div className="text-sm text-slate-400">
+      <div className="text-sm text-muted-foreground">
         Page {currentPage} of {totalPages}
       </div>
 
@@ -52,7 +52,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
                   key={page}
                   variant={page === currentPage ? "default" : "outline"}
                   size="sm"
-                  className={`min-h-[44px] min-w-[44px] ${page === currentPage ? 'bg-red-600 hover:bg-red-700' : ''}`}
+                  className={`min-h-[44px] min-w-[44px] ${page === currentPage ? 'bg-primary hover:bg-primary/90' : ''}`}
                   onClick={() => {
                     console.log(`[Pagination] Page ${page} clicked`)
                     onPageChange(page)
@@ -66,7 +66,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
             // Show ellipsis for gaps
             if (page === currentPage - 2 || page === currentPage + 2) {
               return (
-                <span key={page} className="px-2 text-slate-500">
+                <span key={page} className="px-2 text-muted-foreground">
                   ...
                 </span>
               )

@@ -89,18 +89,18 @@ const CompactVideoCardComponent = ({
     switch (video.status) {
       case 'processing':
         return (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90">
-            <Loader2 className="h-8 w-8 text-red-400 animate-spin mb-2" />
-            <p className="text-xs text-slate-300">Generating...</p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/90">
+            <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
+            <p className="text-xs text-foreground">Generating...</p>
           </div>
         )
       case 'failed':
         return (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/90 group">
-            <AlertCircle className="h-8 w-8 text-red-400 mb-2" />
-            <p className="text-xs text-red-300">Failed</p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-primary/20 group">
+            <AlertCircle className="h-8 w-8 text-primary mb-2" />
+            <p className="text-xs text-primary">Failed</p>
             {video.error && (
-              <p className="text-xs text-red-400 mt-1 px-2 text-center">{video.error}</p>
+              <p className="text-xs text-primary mt-1 px-2 text-center">{video.error}</p>
             )}
             {/* Retry button overlay for failed videos - larger on mobile */}
             {onRetryVideo && (
@@ -112,7 +112,7 @@ const CompactVideoCardComponent = ({
                     e.stopPropagation()
                     onRetryVideo(video.galleryId)
                   }}
-                  className="h-11 w-11 min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white touch-manipulation"
+                  className="h-11 w-11 min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0 bg-primary hover:bg-primary/90 active:bg-primary/80 text-white touch-manipulation"
                   title="Retry generation"
                 >
                   <RotateCw className="h-5 w-5 sm:h-4 sm:w-4" />
@@ -123,9 +123,9 @@ const CompactVideoCardComponent = ({
         )
       case 'pending':
         return (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/50">
-            <Loader2 className="h-8 w-8 text-slate-500 animate-pulse mb-2" />
-            <p className="text-xs text-slate-400">Waiting...</p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50">
+            <Loader2 className="h-8 w-8 text-muted-foreground animate-pulse mb-2" />
+            <p className="text-xs text-muted-foreground">Waiting...</p>
           </div>
         )
       default:
@@ -170,7 +170,7 @@ const CompactVideoCardComponent = ({
   return (
     <>
       <div className="space-y-2">
-        <Badge variant="default" className="text-xs bg-red-600 mb-2">
+        <Badge variant="default" className="text-xs bg-primary mb-2">
           Generated Videos ({visibleVideos.length})
         </Badge>
         <div className="overflow-hidden rounded-xl w-full touch-manipulation" ref={emblaRef}>
@@ -181,7 +181,7 @@ const CompactVideoCardComponent = ({
                 className="flex-shrink-0 flex-grow-0 basis-full min-w-0 relative px-1 first:pl-0 last:pr-1"
                 style={{ flex: '0 0 100%' }}
               >
-                <div className="relative rounded-xl overflow-hidden border border-red-600 w-full group">
+                <div className="relative rounded-xl overflow-hidden border border-primary w-full group">
                   {video.videoUrl && video.status === 'completed' ? (
                     <Fragment>
                       {/* Keep all video cards consistent with aspect-video */}
@@ -205,7 +205,7 @@ const CompactVideoCardComponent = ({
                             className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-all cursor-pointer touch-manipulation"
                             onClick={() => togglePlayPause(index)}
                           >
-                            <div className="w-20 h-20 sm:w-16 sm:h-16 md:w-16 md:h-16 rounded-full bg-red-600 flex items-center justify-center hover:scale-110 transition-transform active:scale-95">
+                            <div className="w-20 h-20 sm:w-16 sm:h-16 md:w-16 md:h-16 rounded-full bg-primary flex items-center justify-center hover:scale-110 transition-transform active:scale-95">
                               <Play className="h-10 w-10 sm:h-8 sm:w-8 md:h-8 md:w-8 text-white ml-1" fill="white" />
                             </div>
                           </div>
@@ -240,7 +240,7 @@ const CompactVideoCardComponent = ({
                                   e.stopPropagation()
                                   onDeleteVideo(video.galleryId)
                                 }}
-                                className="h-11 w-11 min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0 md:h-8 md:w-8 text-red-400 hover:bg-red-500/20 active:bg-red-500/30 touch-manipulation"
+                                className="h-11 w-11 min-h-[44px] min-w-[44px] sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0 md:h-8 md:w-8 text-primary hover:bg-primary/20 active:bg-primary/30 touch-manipulation"
                                 title="Delete"
                               >
                                 <Trash2 className="h-5 w-5 sm:h-4 sm:w-4 md:h-4 md:w-4" />
@@ -251,7 +251,7 @@ const CompactVideoCardComponent = ({
                       </div>
                     </Fragment>
                   ) : (
-                    <div className="relative w-full aspect-video bg-slate-900 rounded-xl">
+                    <div className="relative w-full aspect-video bg-background rounded-xl">
                       {getStatusDisplay(video)}
                     </div>
                   )}
@@ -268,12 +268,12 @@ const CompactVideoCardComponent = ({
                 size="icon"
                 onClick={scrollPrev}
                 disabled={!canScrollPrev}
-                className="h-11 w-11 min-h-[44px] min-w-[44px] sm:h-6 sm:w-6 sm:min-h-0 sm:min-w-0 md:h-6 md:w-6 rounded-full bg-slate-700 hover:bg-slate-600 active:bg-slate-500 disabled:opacity-30 text-white touch-manipulation"
+                className="h-11 w-11 min-h-[44px] min-w-[44px] sm:h-6 sm:w-6 sm:min-h-0 sm:min-w-0 md:h-6 md:w-6 rounded-full bg-secondary hover:bg-muted active:bg-muted disabled:opacity-30 text-white touch-manipulation"
                 title="Previous video"
               >
                 <ChevronLeft className="h-6 w-6 sm:h-4 sm:w-4 md:h-4 md:w-4" />
               </Button>
-              <span className="text-sm sm:text-xs text-slate-400 min-w-[60px] sm:min-w-[40px] text-center font-medium">
+              <span className="text-sm sm:text-xs text-muted-foreground min-w-[60px] sm:min-w-[40px] text-center font-medium">
                 {selectedIndex + 1}/{visibleVideos.length}
               </span>
               <Button
@@ -281,7 +281,7 @@ const CompactVideoCardComponent = ({
                 size="icon"
                 onClick={scrollNext}
                 disabled={!canScrollNext}
-                className="h-11 w-11 min-h-[44px] min-w-[44px] sm:h-6 sm:w-6 sm:min-h-0 sm:min-w-0 md:h-6 md:w-6 rounded-full bg-slate-700 hover:bg-slate-600 active:bg-slate-500 disabled:opacity-30 text-white touch-manipulation"
+                className="h-11 w-11 min-h-[44px] min-w-[44px] sm:h-6 sm:w-6 sm:min-h-0 sm:min-w-0 md:h-6 md:w-6 rounded-full bg-secondary hover:bg-muted active:bg-muted disabled:opacity-30 text-white touch-manipulation"
                 title="Next video"
               >
                 <ChevronRight className="h-6 w-6 sm:h-4 sm:w-4 md:h-4 md:w-4" />

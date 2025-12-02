@@ -65,8 +65,8 @@ export default function GenerationQueueSection({
     if (!queue) {
         return (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-                <p className="text-slate-400">No active generation queue.</p>
-                <p className="text-sm text-slate-500 mt-2">
+                <p className="text-muted-foreground">No active generation queue.</p>
+                <p className="text-sm text-muted-foreground mt-2">
                     Click Generate All in the Shots Review tab to start.
                 </p>
             </div>
@@ -112,7 +112,7 @@ export default function GenerationQueueSection({
                             </Badge>
                         )}
                     </div>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-muted-foreground">
                         {queue.current_shot_index + 1} of {queue.shot_ids.length} shots
                         {hasBrackets && ` • ${totalImages} total images`}
                     </p>
@@ -139,14 +139,14 @@ export default function GenerationQueueSection({
             </div>
 
             {/* Overall Progress */}
-            <div className="space-y-2 p-4 bg-slate-800 rounded-lg border border-slate-700">
+            <div className="space-y-2 p-4 bg-card rounded-lg border border-border">
                 <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-300">Overall Progress</span>
-                    <span className="text-slate-400">{Math.round(queue.progress)}%</span>
+                    <span className="text-foreground">Overall Progress</span>
+                    <span className="text-muted-foreground">{Math.round(queue.progress)}%</span>
                 </div>
                 <Progress value={queue.progress} className="h-2" />
                 {queue.error_message && (
-                    <p className="text-xs text-red-400 mt-2">{queue.error_message}</p>
+                    <p className="text-xs text-primary mt-2">{queue.error_message}</p>
                 )}
             </div>
 
@@ -187,11 +187,11 @@ interface QueueStatusBadgeProps {
 
 function QueueStatusBadge({ status }: QueueStatusBadgeProps) {
     const variants: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
-        pending: { color: 'bg-slate-700 text-slate-300', icon: <Loader2 className="w-3 h-3" />, label: 'Pending' },
-        processing: { color: 'bg-blue-900/30 text-blue-400 border-blue-800', icon: <Loader2 className="w-3 h-3 animate-spin" />, label: 'Processing' },
+        pending: { color: 'bg-secondary text-foreground', icon: <Loader2 className="w-3 h-3" />, label: 'Pending' },
+        processing: { color: 'bg-blue-900/30 text-accent border-blue-800', icon: <Loader2 className="w-3 h-3 animate-spin" />, label: 'Processing' },
         paused: { color: 'bg-yellow-900/30 text-yellow-400 border-yellow-800', icon: <Pause className="w-3 h-3" />, label: 'Paused' },
-        completed: { color: 'bg-green-900/30 text-green-400 border-green-800', icon: <CheckCircle2 className="w-3 h-3" />, label: 'Completed' },
-        failed: { color: 'bg-red-900/30 text-red-400 border-red-800', icon: <XCircle className="w-3 h-3" />, label: 'Failed' }
+        completed: { color: 'bg-green-900/30 text-emerald-400 border-green-800', icon: <CheckCircle2 className="w-3 h-3" />, label: 'Completed' },
+        failed: { color: 'bg-primary/20 text-primary border-primary/30', icon: <XCircle className="w-3 h-3" />, label: 'Failed' }
     }
 
     const variant = variants[status] || variants.pending
@@ -217,23 +217,23 @@ function ShotQueueItem({ shot, isCurrent, isComplete }: ShotQueueItemProps) {
     const hasBrackets = variationCount > 1
 
     return (
-        <Card className={`p-3 ${isCurrent ? 'bg-slate-700 border-slate-600' : 'bg-slate-800 border-slate-700'}`}>
+        <Card className={`p-3 ${isCurrent ? 'bg-secondary border-border' : 'bg-card border-border'}`}>
             <div className="flex items-center gap-3">
                 {/* Status Icon */}
                 <div className="flex-shrink-0">
                     {isComplete ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                     ) : isCurrent ? (
-                        <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                        <Loader2 className="w-5 h-5 text-accent animate-spin" />
                     ) : (
-                        <div className="w-5 h-5 rounded-full border-2 border-slate-600" />
+                        <div className="w-5 h-5 rounded-full border-2 border-border" />
                     )}
                 </div>
 
                 {/* Shot Info */}
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-medium text-slate-500">
+                        <span className="text-xs font-medium text-muted-foreground">
                             Shot {shot.sequence_number}
                         </span>
                         {shot.chapter && (
@@ -251,7 +251,7 @@ function ShotQueueItem({ shot, isCurrent, isComplete }: ShotQueueItemProps) {
                             </Badge>
                         )}
                     </div>
-                    <p className="text-sm text-slate-300 truncate mt-1">
+                    <p className="text-sm text-foreground truncate mt-1">
                         {shot.prompt}
                     </p>
                 </div>
@@ -259,8 +259,8 @@ function ShotQueueItem({ shot, isCurrent, isComplete }: ShotQueueItemProps) {
                 {/* Thumbnail Preview */}
                 {isComplete && shot.gallery_id && (
                     <div className="flex-shrink-0">
-                        <div className="w-12 h-12 rounded bg-slate-700 flex items-center justify-center">
-                            <ImageIcon className="w-6 h-6 text-slate-500" />
+                        <div className="w-12 h-12 rounded bg-secondary flex items-center justify-center">
+                            <ImageIcon className="w-6 h-6 text-muted-foreground" />
                         </div>
                     </div>
                 )}
@@ -280,10 +280,10 @@ interface ShotStatusBadgeProps {
 
 function ShotStatusBadge({ status }: ShotStatusBadgeProps) {
     const variants: Record<string, { color: string; label: string }> = {
-        completed: { color: 'bg-green-900/30 text-green-400', label: 'Done' },
-        failed: { color: 'bg-red-900/30 text-red-400', label: 'Failed' },
-        generating: { color: 'bg-blue-900/30 text-blue-400', label: 'Generating' },
-        ready: { color: 'bg-slate-700 text-slate-400', label: 'Ready' }
+        completed: { color: 'bg-green-900/30 text-emerald-400', label: 'Done' },
+        failed: { color: 'bg-primary/20 text-primary', label: 'Failed' },
+        generating: { color: 'bg-blue-900/30 text-accent', label: 'Generating' },
+        ready: { color: 'bg-secondary text-muted-foreground', label: 'Ready' }
     }
 
     const variant = variants[status] || variants.ready

@@ -32,7 +32,7 @@ export function VideoGallery() {
 
   if (error) {
     return (
-      <div className="p-4 text-red-500">
+      <div className="p-4 text-primary">
         <p>Error: {error}</p>
         <Button onClick={refreshVideos} className="mt-2">
           Try Again
@@ -77,7 +77,7 @@ export function VideoGallery() {
                   <span className="ml-2">Processing...</span>
                 </div>
               ) : video.status === 'failed' ? (
-                <div className="absolute inset-0 flex items-center justify-center text-red-500">
+                <div className="absolute inset-0 flex items-center justify-center text-primary">
                   <span>Failed to generate</span>
                 </div>
               ) : (

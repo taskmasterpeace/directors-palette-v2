@@ -94,10 +94,10 @@ export function WildCardCreateDialog({ open, onOpenChange }: WildCardCreateDialo
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-lg">
+            <DialogContent className="bg-card border-border text-white max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Create Wild Card</DialogTitle>
-                    <DialogDescription className="text-slate-400">
+                    <DialogDescription className="text-muted-foreground">
                         Upload a text file with one prompt per line
                     </DialogDescription>
                 </DialogHeader>
@@ -110,10 +110,10 @@ export function WildCardCreateDialog({ open, onOpenChange }: WildCardCreateDialo
                             placeholder="e.g., black_girl_hairstyles (no spaces!)"
                             value={formData.name}
                             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                            className="bg-slate-900 border-slate-600 font-mono"
+                            className="bg-background border-border font-mono"
                         />
-                        <p className="text-xs text-slate-500">
-                            Use in prompts as: <span className="font-mono text-blue-400">_{formData.name || 'name'}_</span>
+                        <p className="text-xs text-muted-foreground">
+                            Use in prompts as: <span className="font-mono text-accent">_{formData.name || 'name'}_</span>
                         </p>
                     </div>
 
@@ -125,7 +125,7 @@ export function WildCardCreateDialog({ open, onOpenChange }: WildCardCreateDialo
                                 type="file"
                                 accept=".txt"
                                 onChange={handleFileUpload}
-                                className="bg-slate-900 border-slate-600 flex-1"
+                                className="bg-background border-border flex-1"
                             />
                             <Button variant="outline" size="icon" asChild>
                                 <label className="cursor-pointer">
@@ -134,11 +134,11 @@ export function WildCardCreateDialog({ open, onOpenChange }: WildCardCreateDialo
                             </Button>
                         </div>
                         {formData.content && (
-                            <p className="text-xs text-green-400">
+                            <p className="text-xs text-emerald-400">
                                 ✓ Found {getLineCount()} prompts
                             </p>
                         )}
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                             One prompt per line. Each line will be randomly selected.
                         </p>
                     </div>
@@ -151,7 +151,7 @@ export function WildCardCreateDialog({ open, onOpenChange }: WildCardCreateDialo
                     <Button
                         onClick={handleSubmit}
                         disabled={!formData.name || !formData.content || isSubmitting}
-                        className="bg-gradient-to-r from-red-600 to-blue-600 hover:from-red-700 hover:to-blue-700"
+                        className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
                     >
                         {isSubmitting ? 'Creating...' : 'Create Wild Card'}
                     </Button>

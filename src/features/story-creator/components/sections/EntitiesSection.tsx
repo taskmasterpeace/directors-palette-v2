@@ -79,7 +79,7 @@ export default function EntitiesSection({
             {/* Header */}
             <div>
                 <h2 className="text-2xl font-bold text-white mb-2">Characters & Locations</h2>
-                <p className="text-slate-400">
+                <p className="text-muted-foreground">
                     Review extracted entities. These will be used as @tags in image prompts.
                 </p>
             </div>
@@ -90,24 +90,24 @@ export default function EntitiesSection({
                     <div className="flex items-center justify-between">
                         <div>
                             <div className="text-sm font-medium text-blue-300 mb-1">Entity Coverage</div>
-                            <div className="text-xs text-slate-400">
+                            <div className="text-xs text-muted-foreground">
                                 {summary.usedEntities} of {summary.totalEntities} entities used in shots
                             </div>
                         </div>
                         <div className="flex gap-4">
                             <div className="text-center">
-                                <div className="text-2xl font-bold text-green-400">{summary.usedEntities}</div>
-                                <div className="text-xs text-slate-400">Used</div>
+                                <div className="text-2xl font-bold text-emerald-400">{summary.usedEntities}</div>
+                                <div className="text-xs text-muted-foreground">Used</div>
                             </div>
                             {summary.unusedEntities > 0 && (
                                 <div className="text-center">
                                     <div className="text-2xl font-bold text-orange-400">{summary.unusedEntities}</div>
-                                    <div className="text-xs text-slate-400">Unused</div>
+                                    <div className="text-xs text-muted-foreground">Unused</div>
                                 </div>
                             )}
                             <div className="text-center">
-                                <div className="text-2xl font-bold text-blue-400">{summary.entitiesWithReferences}</div>
-                                <div className="text-xs text-slate-400">Have Refs</div>
+                                <div className="text-2xl font-bold text-accent">{summary.entitiesWithReferences}</div>
+                                <div className="text-xs text-muted-foreground">Have Refs</div>
                             </div>
                         </div>
                     </div>
@@ -116,7 +116,7 @@ export default function EntitiesSection({
 
             {/* Tabbed View */}
             <Tabs defaultValue="characters" className="w-full">
-                <TabsList className="bg-slate-800 border border-slate-700">
+                <TabsList className="bg-card border border-border">
                     <TabsTrigger value="characters" className="flex items-center gap-2">
                         <User className="w-4 h-4" />
                         Characters ({characters.length})
@@ -130,11 +130,11 @@ export default function EntitiesSection({
                 {/* Characters Tab */}
                 <TabsContent value="characters" className="mt-4 space-y-3">
                     {characters.length === 0 ? (
-                        <Card className="p-8 bg-slate-900/50 border-slate-700">
+                        <Card className="p-8 bg-background/50 border-border">
                             <div className="flex flex-col items-center justify-center text-center">
-                                <User className="w-12 h-12 text-slate-600 mb-3" />
-                                <p className="text-slate-400 font-medium mb-1">No characters detected</p>
-                                <p className="text-xs text-slate-500">
+                                <User className="w-12 h-12 text-muted-foreground mb-3" />
+                                <p className="text-muted-foreground font-medium mb-1">No characters detected</p>
+                                <p className="text-xs text-muted-foreground">
                                     Your story might not have named characters
                                 </p>
                             </div>
@@ -144,12 +144,12 @@ export default function EntitiesSection({
                             {characters.map((char) => {
                                 const referenceImage = findReferenceImage(char.tag)
                                 return (
-                                    <Card key={char.tag} className="p-4 bg-slate-800 border-slate-700">
+                                    <Card key={char.tag} className="p-4 bg-card border-border">
                                         <div className="flex items-start gap-3">
                                             {/* Reference Image Thumbnail */}
                                             <div className="flex-shrink-0">
                                                 {referenceImage ? (
-                                                    <div className="w-16 h-16 rounded-lg overflow-hidden border-2 border-green-500/50">
+                                                    <div className="w-16 h-16 rounded-lg overflow-hidden border-2 border-emerald-500/50">
                                                         <img
                                                             src={referenceImage.url}
                                                             alt={char.name}
@@ -157,8 +157,8 @@ export default function EntitiesSection({
                                                         />
                                                     </div>
                                                 ) : (
-                                                    <div className="w-16 h-16 rounded-lg bg-slate-900 border-2 border-slate-700 flex items-center justify-center">
-                                                        <User className="w-6 h-6 text-slate-600" />
+                                                    <div className="w-16 h-16 rounded-lg bg-background border-2 border-border flex items-center justify-center">
+                                                        <User className="w-6 h-6 text-muted-foreground" />
                                                     </div>
                                                 )}
                                             </div>
@@ -167,12 +167,12 @@ export default function EntitiesSection({
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <span className="font-medium text-white">{char.name}</span>
-                                                    <code className="text-xs bg-slate-900 px-2 py-0.5 rounded text-green-400">
+                                                    <code className="text-xs bg-background px-2 py-0.5 rounded text-emerald-400">
                                                         @{char.tag}
                                                     </code>
                                                 </div>
                                                 {char.description && (
-                                                    <p className="text-sm text-slate-400 line-clamp-2 mb-2">
+                                                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                                                         {char.description}
                                                     </p>
                                                 )}
@@ -182,7 +182,7 @@ export default function EntitiesSection({
                                                     return entityCov && (
                                                         <div className="flex gap-2 mb-2">
                                                             {entityCov.shotCount > 0 ? (
-                                                                <Badge variant="secondary" className="text-xs bg-green-900/50 text-green-400 border-green-700">
+                                                                <Badge variant="secondary" className="text-xs bg-green-900/50 text-emerald-400 border-green-700">
                                                                     <CheckCircle2 className="w-3 h-3 mr-1" />
                                                                     Used in {entityCov.shotCount} shot{entityCov.shotCount !== 1 ? 's' : ''}
                                                                 </Badge>
@@ -228,11 +228,11 @@ export default function EntitiesSection({
                 {/* Locations Tab */}
                 <TabsContent value="locations" className="mt-4 space-y-3">
                     {locations.length === 0 ? (
-                        <Card className="p-8 bg-slate-900/50 border-slate-700">
+                        <Card className="p-8 bg-background/50 border-border">
                             <div className="flex flex-col items-center justify-center text-center">
-                                <MapPin className="w-12 h-12 text-slate-600 mb-3" />
-                                <p className="text-slate-400 font-medium mb-1">No locations detected</p>
-                                <p className="text-xs text-slate-500">
+                                <MapPin className="w-12 h-12 text-muted-foreground mb-3" />
+                                <p className="text-muted-foreground font-medium mb-1">No locations detected</p>
+                                <p className="text-xs text-muted-foreground">
                                     Try adding location descriptions to your story
                                 </p>
                             </div>
@@ -242,12 +242,12 @@ export default function EntitiesSection({
                             {locations.map((loc) => {
                                 const referenceImage = findReferenceImage(loc.tag)
                                 return (
-                                    <Card key={loc.tag} className="p-4 bg-slate-800 border-slate-700">
+                                    <Card key={loc.tag} className="p-4 bg-card border-border">
                                         <div className="flex items-start gap-3">
                                             {/* Reference Image Thumbnail */}
                                             <div className="flex-shrink-0">
                                                 {referenceImage ? (
-                                                    <div className="w-16 h-16 rounded-lg overflow-hidden border-2 border-blue-500/50">
+                                                    <div className="w-16 h-16 rounded-lg overflow-hidden border-2 border-accent/50">
                                                         <img
                                                             src={referenceImage.url}
                                                             alt={loc.name}
@@ -255,8 +255,8 @@ export default function EntitiesSection({
                                                         />
                                                     </div>
                                                 ) : (
-                                                    <div className="w-16 h-16 rounded-lg bg-slate-900 border-2 border-slate-700 flex items-center justify-center">
-                                                        <MapPin className="w-6 h-6 text-slate-600" />
+                                                    <div className="w-16 h-16 rounded-lg bg-background border-2 border-border flex items-center justify-center">
+                                                        <MapPin className="w-6 h-6 text-muted-foreground" />
                                                     </div>
                                                 )}
                                             </div>
@@ -265,12 +265,12 @@ export default function EntitiesSection({
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <span className="font-medium text-white">{loc.name}</span>
-                                                    <code className="text-xs bg-slate-900 px-2 py-0.5 rounded text-blue-400">
+                                                    <code className="text-xs bg-background px-2 py-0.5 rounded text-accent">
                                                         @{loc.tag}
                                                     </code>
                                                 </div>
                                                 {loc.description && (
-                                                    <p className="text-sm text-slate-400 line-clamp-2 mb-2">
+                                                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                                                         {loc.description}
                                                     </p>
                                                 )}
@@ -280,7 +280,7 @@ export default function EntitiesSection({
                                                     return entityCov && (
                                                         <div className="flex gap-2 mb-2">
                                                             {entityCov.shotCount > 0 ? (
-                                                                <Badge variant="secondary" className="text-xs bg-green-900/50 text-green-400 border-green-700">
+                                                                <Badge variant="secondary" className="text-xs bg-green-900/50 text-emerald-400 border-green-700">
                                                                     <CheckCircle2 className="w-3 h-3 mr-1" />
                                                                     Used in {entityCov.shotCount} shot{entityCov.shotCount !== 1 ? 's' : ''}
                                                                 </Badge>
@@ -325,12 +325,12 @@ export default function EntitiesSection({
             </Tabs>
 
             {/* Action Buttons */}
-            <div className="pt-4 border-t border-slate-700">
+            <div className="pt-4 border-t border-border">
                 <div className="flex justify-end">
                     <Button
                         onClick={onContinue}
                         size="lg"
-                        className="bg-red-600 hover:bg-red-700"
+                        className="bg-primary hover:bg-primary/90"
                     >
                         Continue to Shots Review
                         <ArrowRight className="w-4 h-4 ml-2" />

@@ -35,15 +35,15 @@ export function PromptLibraryMobile({ onSelectPrompt, showQuickAccess: _showQuic
   }
 
   return (
-    <div className="flex flex-col h-full bg-slate-950">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-slate-900 border-b border-slate-700 p-4 space-y-3">
+      <div className="sticky top-0 z-20 bg-background border-b border-border p-4 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white">Prompt Library</h2>
           <Button
             size="lg"
             onClick={() => setIsAddSheetOpen(true)}
-            className="bg-red-600 hover:bg-red-700 text-white h-12 min-h-[48px] px-4"
+            className="bg-primary hover:bg-primary/90 text-white h-12 min-h-[48px] px-4"
           >
             <Plus className="w-5 h-5 mr-2" />
             Add
@@ -52,12 +52,12 @@ export function PromptLibraryMobile({ onSelectPrompt, showQuickAccess: _showQuic
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
           <Input
             placeholder="Search prompts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-11 bg-slate-800 border-slate-700 text-white h-12 min-h-[48px]"
+            className="pl-11 bg-card border-border text-white h-12 min-h-[48px]"
           />
         </div>
       </div>
@@ -89,10 +89,10 @@ export function PromptLibraryMobile({ onSelectPrompt, showQuickAccess: _showQuic
 
       {/* Add Prompt Sheet */}
       <Sheet open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen}>
-        <SheetContent side="bottom" className="bg-slate-900 border-slate-700 text-white h-[90vh]">
+        <SheetContent side="bottom" className="bg-background border-border text-white h-[90vh]">
           <SheetHeader>
             <SheetTitle className="text-white">Add New Prompt</SheetTitle>
-            <SheetDescription className="text-slate-400">
+            <SheetDescription className="text-muted-foreground">
               Create a new prompt for your library
             </SheetDescription>
           </SheetHeader>

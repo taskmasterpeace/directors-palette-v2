@@ -31,7 +31,7 @@ export function PromptCard({
   const hasTagsToShow = prompt.tags.length > 0
 
   return (
-    <Card className="bg-slate-950 border-slate-700 hover:border-slate-600 transition-all shadow-md group">
+    <Card className="bg-background border-border hover:border-border transition-all shadow-md group">
       <CardContent className="p-2">
         {/* Line 1: Category icon + Title + Action buttons */}
         <div className="flex items-center justify-between mb-1">
@@ -41,7 +41,7 @@ export function PromptCard({
             )}
             <h4 className="font-medium text-white text-xs truncate">{prompt.title}</h4>
             {prompt.reference && (
-              <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 border-slate-600 text-slate-400 shrink-0">
+              <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 border-border text-muted-foreground shrink-0">
                 {prompt.reference}
               </Badge>
             )}
@@ -53,37 +53,37 @@ export function PromptCard({
               size="sm"
               variant="ghost"
               onClick={() => onEdit(prompt)}
-              className="h-6 w-6 p-0 hover:bg-slate-800"
+              className="h-6 w-6 p-0 hover:bg-card"
               title="Edit prompt"
             >
-              <Pencil className="w-3 h-3 text-blue-400" />
+              <Pencil className="w-3 h-3 text-accent" />
             </Button>
             <Button
               size="sm"
               variant="ghost"
               onClick={() => onToggleStar(prompt.id)}
-              className="h-6 w-6 p-0 hover:bg-slate-800"
+              className="h-6 w-6 p-0 hover:bg-card"
               title={prompt.isQuickAccess ? "Remove from quick access" : "Add to quick access"}
             >
-              <Star className={`w-3 h-3 ${prompt.isQuickAccess ? 'fill-yellow-500 text-yellow-500' : 'text-slate-400'}`} />
+              <Star className={`w-3 h-3 ${prompt.isQuickAccess ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`} />
             </Button>
             <Button
               size="sm"
               variant="ghost"
               onClick={() => onUsePrompt(prompt)}
-              className="h-6 w-6 p-0 hover:bg-slate-800"
+              className="h-6 w-6 p-0 hover:bg-card"
               title="Use prompt"
             >
-              <Copy className="w-3 h-3 text-green-400" />
+              <Copy className="w-3 h-3 text-emerald-400" />
             </Button>
             <Button
               size="sm"
               variant="ghost"
               onClick={() => onDelete(prompt.id)}
-              className="h-6 w-6 p-0 hover:bg-slate-800"
+              className="h-6 w-6 p-0 hover:bg-card"
               title="Delete prompt"
             >
-              <Trash2 className="w-3 h-3 text-red-400" />
+              <Trash2 className="w-3 h-3 text-primary" />
             </Button>
           </div>
         </div>
@@ -95,7 +95,7 @@ export function PromptCard({
 
         {/* Line 3: Tags (show on hover) or Preview */}
         {showPreview ? (
-          <p className="text-[9px] text-blue-400 italic line-clamp-1">
+          <p className="text-[9px] text-accent italic line-clamp-1">
             Preview: {processPromptReplacements(prompt.prompt)}
           </p>
         ) : hasTagsToShow ? (
@@ -104,13 +104,13 @@ export function PromptCard({
               <Badge
                 key={idx}
                 variant="secondary"
-                className="text-[9px] px-1 py-0 h-3.5 bg-slate-800 text-slate-400"
+                className="text-[9px] px-1 py-0 h-3.5 bg-card text-muted-foreground"
               >
                 <Hash className="w-2 h-2 mr-0.5" />{tag}
               </Badge>
             ))}
             {prompt.tags.length > 3 && (
-              <span className="text-[9px] text-slate-500">+{prompt.tags.length - 3}</span>
+              <span className="text-[9px] text-muted-foreground">+{prompt.tags.length - 3}</span>
             )}
           </div>
         ) : null}

@@ -319,7 +319,7 @@ export default function StoryCreatorDesktop() {
                     onValueChange={(value) => setInternalTab(value as 'input' | 'entities' | 'review' | 'queue')}
                     className="h-full flex flex-col"
                 >
-                    <TabsList className="mx-4 mt-4 bg-slate-800 border border-slate-700">
+                    <TabsList className="mx-4 mt-4 bg-card border border-border">
                         <TabsTrigger value="input" className="flex items-center gap-2">
                             <FileText className="w-4 h-4" />
                             Story Input
@@ -328,7 +328,7 @@ export default function StoryCreatorDesktop() {
                             <Users className="w-4 h-4" />
                             Entities
                             {extractedEntities.length > 0 && (
-                                <span className="ml-1 text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded-full">
+                                <span className="ml-1 text-xs bg-accent text-white px-1.5 py-0.5 rounded-full">
                                     {extractedEntities.length}
                                 </span>
                             )}
@@ -337,7 +337,7 @@ export default function StoryCreatorDesktop() {
                             <ListChecks className="w-4 h-4" />
                             Shots Review
                             {shots.length > 0 && (
-                                <span className="ml-1 text-xs bg-red-600 text-white px-1.5 py-0.5 rounded-full">
+                                <span className="ml-1 text-xs bg-primary text-white px-1.5 py-0.5 rounded-full">
                                     {shots.length}
                                 </span>
                             )}

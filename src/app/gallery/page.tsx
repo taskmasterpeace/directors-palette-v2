@@ -2,7 +2,7 @@ import { UnifiedImageGallery } from '@/features/shot-creator/components/unified-
 
 export default function GalleryPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-b from-background via-card to-background">
       <UnifiedImageGallery />
     </div>
   )

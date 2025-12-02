@@ -915,7 +915,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
   }))
 
   return (
-    <Card className="bg-slate-800/50 border-slate-600 h-full flex flex-col">
+    <Card className="bg-card/50 border-border h-full flex flex-col">
       <CardContent className="p-4 flex-1 flex flex-col relative">
         {/* Mobile: Floating Zoom Controls */}
         <div className="sm:hidden fixed left-4 z-30 flex flex-col gap-2" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 80px)' }}>
@@ -923,7 +923,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
             size="sm"
             onClick={handleZoomIn}
             disabled={!fabricRef.current}
-            className="bg-red-700/90 hover:bg-red-600 rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
+            className="bg-primary/90 hover:bg-primary rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
             aria-label="Zoom in"
           >
             <ZoomIn className="w-5 h-5 text-white" />
@@ -932,7 +932,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
             size="sm"
             onClick={handleFitToScreen}
             disabled={!fabricRef.current}
-            className="bg-red-700/90 hover:bg-red-600 rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
+            className="bg-primary/90 hover:bg-primary rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
             aria-label="Fit to screen"
           >
             <Maximize2 className="w-5 h-5 text-white" />
@@ -941,7 +941,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
             size="sm"
             onClick={handleZoomOut}
             disabled={!fabricRef.current}
-            className="bg-red-700/90 hover:bg-red-600 rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
+            className="bg-primary/90 hover:bg-primary rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
             aria-label="Zoom out"
           >
             <ZoomOut className="w-5 h-5 text-white" />
@@ -950,48 +950,48 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
 
         {/* Desktop: Existing Top Controls */}
         <div className="hidden sm:flex items-center gap-2 mb-4">
-          <Button size="sm" onClick={handleZoomOut} className="bg-slate-700 hover:bg-slate-600 text-white">
+          <Button size="sm" onClick={handleZoomOut} className="bg-secondary hover:bg-muted text-white">
             <ZoomOut className="w-4 h-4" />
           </Button>
-          <Button size="sm" onClick={handleFitToScreen} className="bg-red-600 hover:bg-red-700 text-white" title="Fit canvas to screen">
+          <Button size="sm" onClick={handleFitToScreen} className="bg-primary hover:bg-primary/90 text-white" title="Fit canvas to screen">
             <Maximize2 className="w-4 h-4" />
           </Button>
-          <Button size="sm" onClick={handleZoomIn} className="bg-slate-700 hover:bg-slate-600 text-white">
+          <Button size="sm" onClick={handleZoomIn} className="bg-secondary hover:bg-muted text-white">
             <ZoomIn className="w-4 h-4" />
           </Button>
 
           {selectedObject && (
             <>
-              <div className="h-6 w-px bg-slate-600 mx-2" />
-              <Button size="sm" onClick={() => rotateSelected(45)} className="bg-slate-700 hover:bg-slate-600 text-white" title="Rotate 45°">
+              <div className="h-6 w-px bg-muted mx-2" />
+              <Button size="sm" onClick={() => rotateSelected(45)} className="bg-secondary hover:bg-muted text-white" title="Rotate 45°">
                 <RotateCw className="w-4 h-4" />
               </Button>
-              <Button size="sm" onClick={() => flipSelected('horizontal')} className="bg-slate-700 hover:bg-slate-600 text-white" title="Flip horizontal">
+              <Button size="sm" onClick={() => flipSelected('horizontal')} className="bg-secondary hover:bg-muted text-white" title="Flip horizontal">
                 <FlipHorizontal className="w-4 h-4" />
               </Button>
-              <Button size="sm" onClick={() => flipSelected('vertical')} className="bg-slate-700 hover:bg-slate-600 text-white" title="Flip vertical">
+              <Button size="sm" onClick={() => flipSelected('vertical')} className="bg-secondary hover:bg-muted text-white" title="Flip vertical">
                 <FlipVertical className="w-4 h-4" />
               </Button>
-              <Button size="sm" onClick={toggleLockSelected} className="bg-slate-700 hover:bg-slate-600 text-white" title="Lock/Unlock">
+              <Button size="sm" onClick={toggleLockSelected} className="bg-secondary hover:bg-muted text-white" title="Lock/Unlock">
                 {selectedObject?.lockMovementX ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
               </Button>
-              <Button size="sm" onClick={deleteSelected} className="bg-red-600 hover:bg-red-700 text-white" title="Delete selected">
+              <Button size="sm" onClick={deleteSelected} className="bg-primary hover:bg-primary/90 text-white" title="Delete selected">
                 <Trash2 className="w-4 h-4" />
               </Button>
             </>
           )}
 
-          <div className="text-sm text-slate-300 ml-auto">
+          <div className="text-sm text-foreground ml-auto">
             {Math.round(scale * 100)}% | Tool: {tool}
-            {autoScale && <span className="text-red-400 ml-2">(Auto-fit)</span>}
-            {selectedObject && <span className="text-green-400 ml-2">| Object selected</span>}
+            {autoScale && <span className="text-primary ml-2">(Auto-fit)</span>}
+            {selectedObject && <span className="text-emerald-400 ml-2">| Object selected</span>}
           </div>
         </div>
 
         {/* Canvas Container */}
         <div
           ref={containerRef}
-          className="flex-1 bg-slate-900 rounded-lg p-4 relative flex items-center justify-center overflow-auto border-2 border-red-500/50"
+          className="flex-1 bg-background rounded-lg p-4 relative flex items-center justify-center overflow-auto border-2 border-primary/50"
           tabIndex={0}
           style={{
             touchAction: 'none',
@@ -1001,7 +1001,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
         >
           <canvas
             ref={canvasRef}
-            className="border-4 border-red-400 shadow-2xl rounded-lg"
+            className="border-4 border-primary shadow-2xl rounded-lg"
           />
         </div>
       </CardContent>

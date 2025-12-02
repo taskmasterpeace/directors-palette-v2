@@ -187,15 +187,15 @@ export function CharacterReferenceUpload({
 
     return (
         <Dialog open={open} onOpenChange={handleCancel}>
-            <DialogContent className="max-w-md bg-slate-900 border-slate-700">
+            <DialogContent className="max-w-md bg-background border-border">
                 <DialogHeader>
                     <DialogTitle className="text-white flex items-center gap-2">
                         <Upload className="w-5 h-5" />
                         Upload Reference for {entityName}
                     </DialogTitle>
-                    <DialogDescription className="text-slate-400">
+                    <DialogDescription className="text-muted-foreground">
                         Upload an image that will be automatically tagged as{' '}
-                        <code className="text-xs bg-slate-800 px-2 py-0.5 rounded text-green-400">
+                        <code className="text-xs bg-card px-2 py-0.5 rounded text-emerald-400">
                             @{entityTag}
                         </code>
                     </DialogDescription>
@@ -214,7 +214,7 @@ export function CharacterReferenceUpload({
                     {/* Preview or Upload Area */}
                     {previewUrl ? (
                         <div className="space-y-3">
-                            <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-slate-700">
+                            <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-border">
                                 <img
                                     src={previewUrl}
                                     alt="Preview"
@@ -232,17 +232,17 @@ export function CharacterReferenceUpload({
                         </div>
                     ) : (
                         <div
-                            className="border-2 border-dashed border-slate-700 rounded-lg p-8 text-center cursor-pointer hover:border-slate-600 transition-colors"
+                            className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-border transition-colors"
                             onClick={() => fileInputRef.current?.click()}
                         >
-                            <Upload className="w-12 h-12 mx-auto mb-3 text-slate-600" />
-                            <p className="text-slate-400 mb-1">Click to select an image</p>
-                            <p className="text-xs text-slate-500">PNG, JPG, WEBP up to 10MB</p>
+                            <Upload className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                            <p className="text-muted-foreground mb-1">Click to select an image</p>
+                            <p className="text-xs text-muted-foreground">PNG, JPG, WEBP up to 10MB</p>
                         </div>
                     )}
 
                     {/* Action Buttons */}
-                    <div className="flex justify-between items-center pt-2 border-t border-slate-700">
+                    <div className="flex justify-between items-center pt-2 border-t border-border">
                         <Button variant="outline" onClick={handleCancel} disabled={isUploading}>
                             <X className="w-4 h-4 mr-2" />
                             Cancel
@@ -250,7 +250,7 @@ export function CharacterReferenceUpload({
                         <Button
                             onClick={handleUpload}
                             disabled={!selectedFile || isUploading}
-                            className="bg-green-600 hover:bg-green-700"
+                            className="bg-emerald-600 hover:bg-emerald-700"
                         >
                             {isUploading ? (
                                 <>

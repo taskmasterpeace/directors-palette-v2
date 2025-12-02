@@ -35,7 +35,7 @@ const premiumCardVariants = cva(
       {
         variant: "neon",
         colorScheme: "red",
-        class: "border-red-400 hover:shadow-red-400/25 text-white"
+        class: "border-primary hover:shadow-primary/25 text-white"
       },
       {
         variant: "neon",
@@ -61,7 +61,7 @@ const premiumCardVariants = cva(
       {
         variant: "gradient",
         colorScheme: "red",
-        class: "bg-gradient-to-br from-red-600 to-red-800"
+        class: "bg-gradient-to-br from-primary to-primary/70"
       },
       {
         variant: "gradient",
@@ -81,7 +81,7 @@ const premiumCardVariants = cva(
       {
         variant: "gradient",
         colorScheme: "slate",
-        class: "bg-gradient-to-br from-slate-600 to-slate-800"
+        class: "bg-gradient-to-br from-muted to-card"
       }
     ],
     defaultVariants: {

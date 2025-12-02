@@ -66,7 +66,7 @@ export function ModelSelector({
   if (compact) {
     return (
       <Select value={selectedModel} onValueChange={onModelChange}>
-        <SelectTrigger className="w-full bg-slate-800 border-slate-600 text-white">
+        <SelectTrigger className="w-full bg-card border-border text-white">
           <SelectValue>
             <div className="flex items-center gap-2">
               <span className="text-lg">{currentModel.icon}</span>
@@ -97,7 +97,7 @@ export function ModelSelector({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Info className="w-4 h-4 text-slate-400" />
+        <Info className="w-4 h-4 text-muted-foreground" />
         <span className="text-sm font-medium text-white">Model Selection</span>
       </div>
       
@@ -113,8 +113,8 @@ export function ModelSelector({
               onClick={() => onModelChange(model.id)}
               className={`h-auto p-4 flex flex-col items-center gap-2 transition-all duration-200 ${
                 isSelected 
-                  ? 'bg-slate-700 border-slate-500 shadow-md ring-2 ring-red-500/30' 
-                  : 'bg-slate-800/50 border-slate-600 hover:bg-slate-700 hover:border-slate-500'
+                  ? 'bg-secondary border-border shadow-md ring-2 ring-ring/30' 
+                  : 'bg-card/50 border-border hover:bg-secondary hover:border-border'
               }`}
               title={showTooltips ? model.description : undefined}
             >
@@ -136,7 +136,7 @@ export function ModelSelector({
               
               {/* Description for selected */}
               {isSelected && showTooltips && (
-                <p className="text-xs text-slate-300 text-center mt-1">
+                <p className="text-xs text-foreground text-center mt-1">
                   {model.description}
                 </p>
               )}

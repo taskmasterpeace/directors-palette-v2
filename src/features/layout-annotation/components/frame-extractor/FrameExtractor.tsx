@@ -434,7 +434,7 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
         {imageLoaded ? (
           <canvas
             ref={canvasRef}
-            className="border border-slate-600 cursor-crosshair"
+            className="border border-border cursor-crosshair"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -446,19 +446,19 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
       </div>
 
       {/* Controls sidebar */}
-      <div className="w-80 bg-slate-900 border-l border-slate-700 overflow-y-auto">
-        <Card className="bg-slate-800/50 border-slate-600 m-4">
+      <div className="w-80 bg-background border-l border-border overflow-y-auto">
+        <Card className="bg-card/50 border-border m-4">
           <CardHeader className="pb-3">
             <CardTitle className="text-white text-lg flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <Grid3x3 className="w-5 h-5 text-cyan-400" />
+                <Grid3x3 className="w-5 h-5 text-accent" />
                 Frame Extractor
               </span>
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={onClose}
-                className="text-slate-400 hover:text-white"
+                className="text-muted-foreground hover:text-white"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -468,11 +468,11 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
           <CardContent className="space-y-4">
             {/* Grid Configuration */}
             <div className="space-y-3">
-              <Label className="text-sm font-medium text-slate-300">Grid Layout</Label>
+              <Label className="text-sm font-medium text-foreground">Grid Layout</Label>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label className="text-xs text-slate-400">Rows: {gridConfig.rows}</Label>
+                  <Label className="text-xs text-muted-foreground">Rows: {gridConfig.rows}</Label>
                   <Slider
                     value={[gridConfig.rows]}
                     onValueChange={([v]) => setGridConfig(prev => ({ ...prev, rows: v }))}
@@ -482,7 +482,7 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
                   />
                 </div>
                 <div>
-                  <Label className="text-xs text-slate-400">Cols: {gridConfig.cols}</Label>
+                  <Label className="text-xs text-muted-foreground">Cols: {gridConfig.cols}</Label>
                   <Slider
                     value={[gridConfig.cols]}
                     onValueChange={([v]) => setGridConfig(prev => ({ ...prev, cols: v }))}
@@ -495,7 +495,7 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label className="text-xs text-slate-400">Offset X: {gridConfig.offsetX}px</Label>
+                  <Label className="text-xs text-muted-foreground">Offset X: {gridConfig.offsetX}px</Label>
                   <Slider
                     value={[gridConfig.offsetX]}
                     onValueChange={([v]) => setGridConfig(prev => ({ ...prev, offsetX: v }))}
@@ -505,7 +505,7 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
                   />
                 </div>
                 <div>
-                  <Label className="text-xs text-slate-400">Offset Y: {gridConfig.offsetY}px</Label>
+                  <Label className="text-xs text-muted-foreground">Offset Y: {gridConfig.offsetY}px</Label>
                   <Slider
                     value={[gridConfig.offsetY]}
                     onValueChange={([v]) => setGridConfig(prev => ({ ...prev, offsetY: v }))}
@@ -518,7 +518,7 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label className="text-xs text-slate-400">Gutter X: {gridConfig.gutterX}px</Label>
+                  <Label className="text-xs text-muted-foreground">Gutter X: {gridConfig.gutterX}px</Label>
                   <Slider
                     value={[gridConfig.gutterX]}
                     onValueChange={([v]) => setGridConfig(prev => ({ ...prev, gutterX: v }))}
@@ -528,7 +528,7 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
                   />
                 </div>
                 <div>
-                  <Label className="text-xs text-slate-400">Gutter Y: {gridConfig.gutterY}px</Label>
+                  <Label className="text-xs text-muted-foreground">Gutter Y: {gridConfig.gutterY}px</Label>
                   <Slider
                     value={[gridConfig.gutterY]}
                     onValueChange={([v]) => setGridConfig(prev => ({ ...prev, gutterY: v }))}
@@ -542,7 +542,7 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
 
             {/* Trim / Edge Inset */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-300">Edge Trim: {trim}px</Label>
+              <Label className="text-sm font-medium text-foreground">Edge Trim: {trim}px</Label>
               <Slider
                 value={[trim]}
                 onValueChange={([v]) => setTrim(v)}
@@ -550,20 +550,20 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
                 max={20}
                 step={1}
               />
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-foreground">
                 Inset crop from edges to remove black lines
               </p>
             </div>
 
             {/* Aspect Ratio */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-300">Output Aspect Ratio</Label>
+              <Label className="text-sm font-medium text-foreground">Output Aspect Ratio</Label>
               <div className="flex gap-2">
                 <Button
                   size="sm"
                   variant={aspectRatio === '16:9' ? 'default' : 'outline'}
                   onClick={() => setAspectRatio('16:9')}
-                  className={aspectRatio === '16:9' ? 'bg-cyan-600' : ''}
+                  className={aspectRatio === '16:9' ? 'bg-accent' : ''}
                 >
                   16:9
                 </Button>
@@ -571,19 +571,19 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
                   size="sm"
                   variant={aspectRatio === '9:16' ? 'default' : 'outline'}
                   onClick={() => setAspectRatio('9:16')}
-                  className={aspectRatio === '9:16' ? 'bg-cyan-600' : ''}
+                  className={aspectRatio === '9:16' ? 'bg-accent' : ''}
                 >
                   9:16
                 </Button>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-foreground">
                 Output: {targetPreset.width} x {targetPreset.height}px
               </p>
             </div>
 
             {/* Cell previews */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-300">
+              <Label className="text-sm font-medium text-foreground">
                 Frames ({cells.length})
               </Label>
               <div className="grid grid-cols-3 gap-2">
@@ -591,9 +591,9 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
                   <button
                     key={index}
                     onClick={() => setSelectedCellIndex(index)}
-                    className={`aspect-video bg-slate-700 rounded border-2 flex items-center justify-center text-sm font-bold transition-colors ${selectedCellIndex === index
-                        ? 'border-green-500 text-green-500'
-                        : 'border-slate-600 text-slate-400 hover:border-cyan-500'
+                    className={`aspect-video bg-secondary rounded border-2 flex items-center justify-center text-sm font-bold transition-colors ${selectedCellIndex === index
+                        ? 'border-emerald-500 text-emerald-500'
+                        : 'border-border text-muted-foreground hover:border-accent'
                       }`}
                   >
                     {index + 1}
@@ -604,7 +604,7 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
 
             {/* Selected cell navigation */}
             {selectedCellIndex !== null && (
-              <div className="flex items-center justify-between p-2 bg-slate-700 rounded">
+              <div className="flex items-center justify-between p-2 bg-secondary rounded">
                 <Button
                   size="sm"
                   variant="ghost"
@@ -630,7 +630,7 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
             {/* Corner Magnifier */}
             {selectedCellIndex !== null && (
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                <Label className="text-sm font-medium text-foreground flex items-center gap-2">
                   <ZoomIn className="w-4 h-4" />
                   Corner Preview (4x)
                 </Label>
@@ -639,15 +639,15 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
                     <div key={label} className="relative">
                       <canvas
                         ref={el => { cornerCanvasRefs.current[i] = el }}
-                        className="w-full aspect-square bg-slate-800 rounded border border-slate-600"
+                        className="w-full aspect-square bg-card rounded border border-border"
                       />
-                      <span className="absolute bottom-1 right-1 text-xs text-slate-400 bg-slate-900/80 px-1 rounded">
+                      <span className="absolute bottom-1 right-1 text-xs text-muted-foreground bg-background/80 px-1 rounded">
                         {label}
                       </span>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-muted-foreground">
                   Green lines show trim boundary
                 </p>
               </div>
@@ -656,7 +656,7 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
             {/* Export buttons */}
             <div className="space-y-2">
               <Button
-                className="w-full bg-green-600 hover:bg-green-700"
+                className="w-full bg-emerald-600 hover:bg-emerald-700"
                 onClick={handleSaveToGallery}
                 disabled={isExtracting || cells.length === 0}
               >

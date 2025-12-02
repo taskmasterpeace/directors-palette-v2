@@ -163,13 +163,13 @@ export default function StoryCreatorMobile() {
     return (
         <div className="flex flex-col h-full">
             {/* Header - Sticky */}
-            <div className="sticky top-0 z-10 bg-slate-900 border-b border-slate-700 p-3">
+            <div className="sticky top-0 z-10 bg-background border-b border-border p-3">
                 <div className="flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-red-500" />
+                    <BookOpen className="w-5 h-5 text-primary" />
                     <div className="flex-1 min-w-0">
                         <h1 className="text-base font-semibold text-white">Story Creator</h1>
                         {currentProject && (
-                            <p className="text-xs text-slate-400 truncate">{currentProject.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">{currentProject.title}</p>
                         )}
                     </div>
                 </div>
@@ -178,7 +178,7 @@ export default function StoryCreatorMobile() {
             {/* Tabbed Content */}
             <div className="flex-1 overflow-hidden">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-                    <TabsList className="mx-3 mt-3 bg-slate-800 border border-slate-700 grid grid-cols-3 h-auto">
+                    <TabsList className="mx-3 mt-3 bg-card border border-border grid grid-cols-3 h-auto">
                         <TabsTrigger value="input" className="flex flex-col items-center gap-1 py-2 text-xs">
                             <FileText className="w-4 h-4" />
                             <span>Input</span>
@@ -187,7 +187,7 @@ export default function StoryCreatorMobile() {
                             <ListChecks className="w-4 h-4" />
                             <span>Review</span>
                             {shots.length > 0 && (
-                                <span className="absolute -top-1 -right-1 text-xs bg-red-600 text-white px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                                <span className="absolute -top-1 -right-1 text-xs bg-primary text-white px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
                                     {shots.length}
                                 </span>
                             )}

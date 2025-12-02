@@ -126,30 +126,30 @@ export function DraftRestorePrompt({ onRestore }: DraftRestorePromptProps) {
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogContent className="bg-slate-900 border-slate-700">
+            <DialogContent className="bg-background border-border">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-white">
-                        <Clock className="w-5 h-5 text-blue-400" />
+                        <Clock className="w-5 h-5 text-accent" />
                         Restore Previous Draft?
                     </DialogTitle>
-                    <DialogDescription className="text-slate-400">
+                    <DialogDescription className="text-muted-foreground">
                         We found an unsaved draft from {timeAgo} with {draft.shots.length} shot
                         {draft.shots.length !== 1 ? 's' : ''}.
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="py-4 space-y-2">
-                    <div className="bg-slate-800 rounded-lg p-3 border border-slate-700">
-                        <div className="text-xs text-slate-400 mb-1">Project ID</div>
-                        <div className="text-sm font-mono text-slate-300">{draft.projectId}</div>
+                    <div className="bg-card rounded-lg p-3 border border-border">
+                        <div className="text-xs text-muted-foreground mb-1">Project ID</div>
+                        <div className="text-sm font-mono text-foreground">{draft.projectId}</div>
                     </div>
-                    <div className="bg-slate-800 rounded-lg p-3 border border-slate-700">
-                        <div className="text-xs text-slate-400 mb-1">Shots</div>
-                        <div className="text-sm text-slate-300">{draft.shots.length} shots</div>
+                    <div className="bg-card rounded-lg p-3 border border-border">
+                        <div className="text-xs text-muted-foreground mb-1">Shots</div>
+                        <div className="text-sm text-foreground">{draft.shots.length} shots</div>
                     </div>
-                    <div className="bg-slate-800 rounded-lg p-3 border border-slate-700">
-                        <div className="text-xs text-slate-400 mb-1">Last Saved</div>
-                        <div className="text-sm text-slate-300">
+                    <div className="bg-card rounded-lg p-3 border border-border">
+                        <div className="text-xs text-muted-foreground mb-1">Last Saved</div>
+                        <div className="text-sm text-foreground">
                             {new Date(draft.timestamp).toLocaleString()}
                         </div>
                     </div>
@@ -159,14 +159,14 @@ export function DraftRestorePrompt({ onRestore }: DraftRestorePromptProps) {
                     <Button
                         variant="outline"
                         onClick={handleDiscard}
-                        className="border-slate-600 text-slate-300"
+                        className="border-border text-foreground"
                     >
                         <Trash2 className="w-4 h-4 mr-2" />
                         Discard Draft
                     </Button>
                     <Button
                         onClick={handleRestore}
-                        className="bg-blue-600 hover:bg-blue-700"
+                        className="bg-accent hover:bg-accent/90"
                     >
                         Restore Draft
                     </Button>

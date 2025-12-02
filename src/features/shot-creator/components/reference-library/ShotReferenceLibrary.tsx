@@ -49,7 +49,7 @@ const ShotReferenceLibrary = () => {
     }
 
     return (
-        <Card className="bg-slate-900 border-slate-700">
+        <Card className="bg-background border-border">
             <CardHeader className="pb-0">
                 <CardTitle className="text-white flex items-center justify-between">
                     <span>Reference Library</span>
@@ -58,17 +58,17 @@ const ShotReferenceLibrary = () => {
             <CardContent>
                 <div className="my-2 flex justify-end">
                     <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'grid' | 'list')}>
-                        <TabsList className="bg-slate-800 border border-slate-700 rounded-lg h-9">
+                        <TabsList className="bg-card border border-border rounded-lg h-9">
                             <TabsTrigger
                                 value="grid"
-                                className="flex items-center gap-2 px-3 data-[state=active]:bg-red-600 data-[state=active]:text-white text-slate-300"
+                                className="flex items-center gap-2 px-3 data-[state=active]:bg-primary data-[state=active]:text-white text-foreground"
                             >
                                 <Grid3x3 className="w-4 h-4" />
                                 Grid
                             </TabsTrigger>
                             <TabsTrigger
                                 value="list"
-                                className="flex items-center gap-2 px-3 data-[state=active]:bg-red-600 data-[state=active]:text-white text-slate-300"
+                                className="flex items-center gap-2 px-3 data-[state=active]:bg-primary data-[state=active]:text-white text-foreground"
                             >
                                 <List className="w-4 h-4" />
                                 List
@@ -88,7 +88,7 @@ const ShotReferenceLibrary = () => {
                                 size="sm"
                                 variant={isActive ? "default" : "outline"}
                                 onClick={() => setLibraryCategory(key as LibraryCategory)}
-                                className={`h-8 ${isActive ? 'bg-red-600 hover:bg-red-700' : 'border-slate-600 text-slate-300'}`}
+                                className={`h-8 ${isActive ? 'bg-primary hover:bg-primary/90' : 'border-border text-foreground'}`}
                             >
                                 <IconComponent className="w-3 h-3 mr-1" />
                                 {config.label}
@@ -100,13 +100,13 @@ const ShotReferenceLibrary = () => {
                 {/* Library Grid */}
                 {libraryLoading ? (
                     <div className="text-center py-8">
-                        <div className="animate-spin w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full mx-auto mb-2"></div>
-                        <p className="text-slate-400 text-sm">Loading library...</p>
+                        <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                        <p className="text-muted-foreground text-sm">Loading library...</p>
                     </div>
                 ) : libraryItems.length === 0 ? (
                     <div className="text-center py-8">
-                        <ImageIcon className="w-12 h-12 text-slate-500 mx-auto mb-2" />
-                        <p className="text-slate-400 text-sm">Library is empty</p>
+                        <ImageIcon className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-muted-foreground text-sm">Library is empty</p>
                     </div>
                 ) : (
                     <Fragment>
@@ -116,23 +116,23 @@ const ShotReferenceLibrary = () => {
                                     {libraryItems.map((item) => (
                                         <div key={item.id} className="relative group">
                                             <div
-                                                className="rounded-md border border-slate-600 overflow-hidden bg-slate-800 cursor-pointer hover:border-red-500 transition-colors"
+                                                className="rounded-md border border-border overflow-hidden bg-card cursor-pointer hover:border-primary transition-colors"
                                                 onClick={() => setFullscreenImage(item)}
                                             >
                                                 <Image
                                                     src={item.preview || item.imageData}
                                                     alt={item.prompt || 'Library image'}
-                                                    className="w-full h-32 object-cover rounded-md bg-slate-900"
+                                                    className="w-full h-32 object-cover rounded-md bg-background"
                                                     width={200}
                                                     height={200}
                                                 />
 
                                                 {/* Category icon */}
                                                 <div className="absolute bottom-1 right-1 bg-black/80 rounded p-1">
-                                                    {item.category === 'people' && <Users className="w-3 h-3 text-blue-400" />}
-                                                    {item.category === 'places' && <MapPin className="w-3 h-3 text-green-400" />}
+                                                    {item.category === 'people' && <Users className="w-3 h-3 text-accent" />}
+                                                    {item.category === 'places' && <MapPin className="w-3 h-3 text-emerald-400" />}
                                                     {item.category === 'props' && <Package className="w-3 h-3 text-orange-400" />}
-                                                    {(!item.category || item.category === 'unorganized') && <ImageIcon className="w-3 h-3 text-slate-400" />}
+                                                    {(!item.category || item.category === 'unorganized') && <ImageIcon className="w-3 h-3 text-muted-foreground" />}
                                                 </div>
 
                                                 {/* Hover overlay */}
@@ -154,7 +154,7 @@ const ShotReferenceLibrary = () => {
                                                             <Button
                                                                 size="sm"
                                                                 variant="ghost"
-                                                                className="h-8 w-8 p-0 text-white hover:bg-blue-500 bg-blue-600/80"
+                                                                className="h-8 w-8 p-0 text-white hover:bg-accent bg-accent/80"
                                                                 onClick={(e) => e.stopPropagation()}
                                                                 title="Edit Category"
                                                             >
@@ -180,7 +180,7 @@ const ShotReferenceLibrary = () => {
                                                     <Button
                                                         size="sm"
                                                         variant="ghost"
-                                                        className="h-8 w-8 p-0 text-white hover:bg-red-500 bg-red-600/80"
+                                                        className="h-8 w-8 p-0 text-white hover:bg-primary bg-primary/80"
                                                         onClick={(e) => {
                                                             e.stopPropagation()
                                                             onDeleteItem(item.id)
@@ -199,10 +199,10 @@ const ShotReferenceLibrary = () => {
                                     {libraryItems.map((item) => (
                                         <div
                                             key={item.id}
-                                            className="flex items-center gap-3 p-2 rounded-md border border-slate-600 bg-slate-800 hover:border-red-500 transition-colors group cursor-pointer"
+                                            className="flex items-center gap-3 p-2 rounded-md border border-border bg-card hover:border-primary transition-colors group cursor-pointer"
                                             onClick={() => setFullscreenImage(item)}
                                         >
-                                            <div className="relative w-20 h-20 rounded overflow-hidden bg-slate-900 flex-shrink-0">
+                                            <div className="relative w-20 h-20 rounded overflow-hidden bg-background flex-shrink-0">
                                                 <Image
                                                     src={item.preview || item.imageData}
                                                     alt={item.prompt || 'Library image'}
@@ -212,8 +212,8 @@ const ShotReferenceLibrary = () => {
                                                 />
                                             </div>
                                             <div className="flex-1">
-                                                <p className="text-sm text-slate-200">{item.prompt || 'Untitled'}</p>
-                                                <p className="text-xs text-slate-500 capitalize">{item.category || 'unorganized'}</p>
+                                                <p className="text-sm text-foreground">{item.prompt || 'Untitled'}</p>
+                                                <p className="text-xs text-muted-foreground capitalize">{item.category || 'unorganized'}</p>
                                             </div>
 
                                             {/* Actions (show on hover or always visible on large screens) */}
@@ -235,7 +235,7 @@ const ShotReferenceLibrary = () => {
                                                         <Button
                                                             size="sm"
                                                             variant="ghost"
-                                                            className="h-8 w-8 p-0 text-white hover:bg-blue-500 bg-blue-600/80"
+                                                            className="h-8 w-8 p-0 text-white hover:bg-accent bg-accent/80"
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
                                                             <Edit3 className="w-4 h-4" />
@@ -260,7 +260,7 @@ const ShotReferenceLibrary = () => {
                                                 <Button
                                                     size="sm"
                                                     variant="ghost"
-                                                    className="h-8 w-8 p-0 text-white hover:bg-red-500 bg-red-600/80"
+                                                    className="h-8 w-8 p-0 text-white hover:bg-primary bg-primary/80"
                                                     onClick={(e) => {
                                                         e.stopPropagation()
                                                         onDeleteItem(item.id)

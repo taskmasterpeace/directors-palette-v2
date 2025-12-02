@@ -76,7 +76,7 @@ const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
 
                 {/* Settings Gear Toggle */}
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <span>
                             {referenceImagesCount} ref{referenceImagesCount !== 1 ? 's' : ''} • {modelConfig.name}
                         </span>
@@ -93,7 +93,7 @@ const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
                                     variant="ghost"
                                     size="sm"
                                     onClick={copySettings}
-                                    className="text-slate-400 hover:text-white h-8 w-8 p-0"
+                                    className="text-muted-foreground hover:text-white h-8 w-8 p-0"
                                 >
                                     <Copy className="w-4 h-4" />
                                 </Button>
@@ -104,7 +104,7 @@ const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
                             variant="ghost"
                             size="sm"
                             onClick={() => setShowAdvanced(!showAdvanced)}
-                            className="text-slate-400 hover:text-white h-8 px-2"
+                            className="text-muted-foreground hover:text-white h-8 px-2"
                         >
                             <Settings className="w-4 h-4 mr-1" />
                             {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -114,11 +114,11 @@ const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
 
                 {/* Advanced Settings (expanded via gear) */}
                 {showAdvanced && (
-                    <div className="space-y-4 border-t border-slate-700 pt-4">
+                    <div className="space-y-4 border-t border-border pt-4">
                         {/* Quick Presets */}
                         {!compact && (
                             <div className="space-y-2">
-                                <Label className="text-sm text-slate-300">Quick Presets</Label>
+                                <Label className="text-sm text-foreground">Quick Presets</Label>
                                 <div className="flex flex-wrap gap-2">
                                     {quickPresets.map((preset) => (
                                         <Button
@@ -126,7 +126,7 @@ const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
                                             variant="outline"
                                             size="sm"
                                             onClick={() => insertPreset(preset.prompt)}
-                                            className="text-xs bg-slate-800 border-slate-600 hover:bg-slate-700 text-slate-300"
+                                            className="text-xs bg-card border-border hover:bg-secondary text-foreground"
                                         >
                                             {preset.name}
                                         </Button>

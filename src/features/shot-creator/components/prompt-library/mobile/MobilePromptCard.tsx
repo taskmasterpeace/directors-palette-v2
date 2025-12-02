@@ -26,23 +26,23 @@ export function MobilePromptCard({
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
-    <Card className="bg-slate-900 border-slate-700 overflow-hidden">
+    <Card className="bg-background border-border overflow-hidden">
       <CardContent className="p-0">
         {/* Main content - tappable area */}
         <div
-          className="p-4 cursor-pointer active:bg-slate-800 transition-colors"
+          className="p-4 cursor-pointer active:bg-card transition-colors"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           <div className="flex items-start justify-between mb-2">
             <div className="flex-1 min-w-0">
               <h4 className="font-medium text-white truncate mb-1">{prompt.title}</h4>
               {prompt.reference && (
-                <Badge variant="outline" className="text-xs border-slate-600 text-slate-400 mb-2">
+                <Badge variant="outline" className="text-xs border-border text-muted-foreground mb-2">
                   {prompt.reference}
                 </Badge>
               )}
               {categoryName && (
-                <p className="text-xs text-slate-500">{categoryName}</p>
+                <p className="text-xs text-muted-foreground">{categoryName}</p>
               )}
             </div>
             <div className="flex items-center gap-1 ml-2">
@@ -57,14 +57,14 @@ export function MobilePromptCard({
               >
                 <Star className={cn(
                   "w-5 h-5",
-                  prompt.isQuickAccess ? 'fill-yellow-500 text-yellow-500' : 'text-slate-400'
+                  prompt.isQuickAccess ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'
                 )} />
               </Button>
             </div>
           </div>
 
           <p className={cn(
-            "text-sm text-slate-300 mb-3",
+            "text-sm text-foreground mb-3",
             !isExpanded && "line-clamp-2"
           )}>
             {prompt.prompt}
@@ -73,11 +73,11 @@ export function MobilePromptCard({
 
         {/* Expanded content */}
         {isExpanded && (
-          <div className="px-4 pb-4 border-t border-slate-700 pt-4 bg-slate-800/50">
+          <div className="px-4 pb-4 border-t border-border pt-4 bg-card/50">
             {prompt.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-3">
                 {prompt.tags.map((tag, idx) => (
-                  <Badge key={idx} variant="secondary" className="text-xs bg-slate-700 text-slate-300">
+                  <Badge key={idx} variant="secondary" className="text-xs bg-secondary text-foreground">
                     <Hash className="w-3 h-3" />
                     {tag}
                   </Badge>
@@ -89,7 +89,7 @@ export function MobilePromptCard({
               <Button
                 size="lg"
                 onClick={() => onUsePrompt(prompt)}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white h-12 min-h-[48px]"
+                className="flex-1 bg-primary hover:bg-primary/90 text-white h-12 min-h-[48px]"
               >
                 Use Prompt
               </Button>

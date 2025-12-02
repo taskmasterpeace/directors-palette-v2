@@ -62,27 +62,27 @@ export function ModelSettingsModal({ settings, onSave }: ModelSettingsModalProps
         <Button
           variant="ghost"
           size="sm"
-          className="h-10 sm:h-8 w-full sm:w-auto min-h-[44px] sm:min-h-0 text-slate-400 hover:text-white hover:bg-slate-800 touch-manipulation justify-center"
+          className="h-10 sm:h-8 w-full sm:w-auto min-h-[44px] sm:min-h-0 text-muted-foreground hover:text-white hover:bg-card touch-manipulation justify-center"
         >
           <Settings className="w-4 h-4 sm:mr-1" />
           <span className="hidden sm:inline ml-1">Settings</span>
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="w-full max-w-2xl bg-slate-900 border-slate-700 text-white safe-bottom">
+      <DialogContent className="w-full max-w-2xl bg-background border-border text-white safe-bottom">
         <DialogHeader>
           <DialogTitle>Model Settings</DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-muted-foreground">
             Configure settings for each animation model
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AnimationModel)}>
-          <TabsList className="grid w-full grid-cols-2 bg-slate-800 h-11 sm:h-10 touch-manipulation">
-            <TabsTrigger value="seedance-lite" className="data-[state=active]:bg-slate-700 min-h-[44px] sm:min-h-0">
+          <TabsList className="grid w-full grid-cols-2 bg-card h-11 sm:h-10 touch-manipulation">
+            <TabsTrigger value="seedance-lite" className="data-[state=active]:bg-secondary min-h-[44px] sm:min-h-0">
               Seedance Lite
             </TabsTrigger>
-            <TabsTrigger value="seedance-pro" className="data-[state=active]:bg-slate-700 min-h-[44px] sm:min-h-0">
+            <TabsTrigger value="seedance-pro" className="data-[state=active]:bg-secondary min-h-[44px] sm:min-h-0">
               Seedance Pro
             </TabsTrigger>
           </TabsList>
@@ -109,10 +109,10 @@ export function ModelSettingsModal({ settings, onSave }: ModelSettingsModalProps
         </Tabs>
 
         <DialogFooter className="gap-2 px-4 sm:px-6">
-          <Button variant="outline" onClick={handleCancel} className="bg-slate-800 border-slate-600 min-h-[44px] touch-manipulation w-full sm:w-auto">
+          <Button variant="outline" onClick={handleCancel} className="bg-card border-border min-h-[44px] touch-manipulation w-full sm:w-auto">
             Cancel
           </Button>
-          <Button onClick={handleSave} className="bg-red-600 hover:bg-red-700 min-h-[44px] touch-manipulation w-full sm:w-auto">
+          <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 min-h-[44px] touch-manipulation w-full sm:w-auto">
             Save Settings
           </Button>
         </DialogFooter>
@@ -131,12 +131,12 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
   const modelConfig = ANIMATION_MODELS[model]
 
   return (
-    <div className="space-y-6 p-4 sm:p-4 overflow-y-auto bg-slate-800/50 rounded-lg border border-slate-700">
+    <div className="space-y-6 p-4 sm:p-4 overflow-y-auto bg-card/50 rounded-lg border border-border">
       {/* Duration Slider */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-white">Duration</Label>
-          <span className="text-sm text-slate-400">{settings.duration} sec</span>
+          <span className="text-sm text-muted-foreground">{settings.duration} sec</span>
         </div>
         <Slider
           value={[settings.duration]}
@@ -146,7 +146,7 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
           step={1}
           className="w-full"
         />
-        <div className="flex justify-between text-xs text-slate-500">
+        <div className="flex justify-between text-xs text-muted-foreground">
           <span>{DURATION_CONSTRAINTS.min} sec</span>
           <span>{DURATION_CONSTRAINTS.max} sec</span>
         </div>
@@ -163,7 +163,7 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
           {RESOLUTIONS.map((res) => (
             <div key={res} className="flex items-center space-x-2 touch-manipulation min-h-[44px] sm:min-h-0">
               <RadioGroupItem value={res} id={`${model}-${res}`} className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0" />
-              <Label htmlFor={`${model}-${res}`} className="cursor-pointer text-slate-300">
+              <Label htmlFor={`${model}-${res}`} className="cursor-pointer text-foreground">
                 {res}
               </Label>
             </div>
@@ -184,7 +184,7 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
               <RadioGroupItem value={ratio.value} id={`${model}-${ratio.value}`} className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0" />
               <Label
                 htmlFor={`${model}-${ratio.value}`}
-                className="cursor-pointer text-slate-300 text-sm"
+                className="cursor-pointer text-foreground text-sm"
               >
                 {ratio.label}
               </Label>
@@ -196,7 +196,7 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
       {/* FPS */}
       <div className="space-y-2">
         <Label className="text-white">FPS</Label>
-        <div className="text-slate-400 text-sm">24 (fixed)</div>
+        <div className="text-muted-foreground text-sm">24 (fixed)</div>
       </div>
 
       {/* Camera Options */}
@@ -211,7 +211,7 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
           />
           <Label
             htmlFor={`${model}-camera-fixed`}
-            className="text-slate-300 cursor-pointer"
+            className="text-foreground cursor-pointer"
           >
             Fix Camera Position
           </Label>
@@ -222,15 +222,15 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
       <div className="space-y-3">
         <Label className="text-white">Advanced</Label>
         <div className="space-y-2">
-          <Label className="text-sm text-slate-400">Seed (optional)</Label>
+          <Label className="text-sm text-muted-foreground">Seed (optional)</Label>
           <Input
             type="number"
             value={settings.seed || ''}
             onChange={(e) => onUpdate({ seed: e.target.value ? parseInt(e.target.value) : undefined })}
             placeholder="Leave empty for random generation"
-            className="bg-slate-900 border-slate-600 text-white min-h-[44px] text-base sm:text-sm"
+            className="bg-background border-border text-white min-h-[44px] text-base sm:text-sm"
           />
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             💡 Leave empty for random generation
           </p>
         </div>
@@ -249,8 +249,8 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
       )}
 
       {/* Model info */}
-      <div className="bg-slate-700/30 rounded p-3">
-        <p className="text-xs text-slate-400">
+      <div className="bg-secondary/30 rounded p-3">
+        <p className="text-xs text-muted-foreground">
           ℹ️ {modelConfig.description}
         </p>
       </div>

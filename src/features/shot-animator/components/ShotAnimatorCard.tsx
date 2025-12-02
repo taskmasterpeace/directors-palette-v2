@@ -81,12 +81,12 @@ export function ShotAnimatorCard({
   }
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700 hover:border-slate-600 transition-colors">
+    <Card className="bg-card/50 border-border hover:border-border transition-colors">
       <CardContent className="p-4">
         <div className="flex gap-4">
           {/* Thumbnail */}
           <div className="flex-shrink-0">
-            <div className="relative w-32 h-32 bg-slate-900 rounded-lg overflow-hidden">
+            <div className="relative w-32 h-32 bg-background rounded-lg overflow-hidden">
               <Image
                 src={config.imageUrl}
                 alt={config.imageName}
@@ -94,7 +94,7 @@ export function ShotAnimatorCard({
                 className="object-cover"
               />
             </div>
-            <p className="text-xs text-slate-400 mt-1 truncate w-32">{config.imageName}</p>
+            <p className="text-xs text-muted-foreground mt-1 truncate w-32">{config.imageName}</p>
           </div>
 
           {/* Configuration */}
@@ -106,7 +106,7 @@ export function ShotAnimatorCard({
                 value={config.prompt}
                 onChange={(e) => handlePromptChange(e.target.value)}
                 placeholder="Describe the animation for this shot..."
-                className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 min-h-[80px]"
+                className="bg-background border-border text-white placeholder:text-muted-foreground min-h-[80px]"
               />
             </div>
 
@@ -123,11 +123,11 @@ export function ShotAnimatorCard({
                         src={imgUrl}
                         alt={`Reference ${index + 1}`}
                         fill
-                        className="object-cover rounded border border-slate-600"
+                        className="object-cover rounded border border-border"
                       />
                       <button
                         onClick={() => handleRemoveReferenceImage(index)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute -top-2 -right-2 bg-primary text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -135,14 +135,14 @@ export function ShotAnimatorCard({
                   ))}
 
                   {config.referenceImages.length < maxReferenceImages && (
-                    <label className="w-16 h-16 border-2 border-dashed border-slate-600 rounded flex items-center justify-center cursor-pointer hover:border-slate-500 transition-colors">
+                    <label className="w-16 h-16 border-2 border-dashed border-border rounded flex items-center justify-center cursor-pointer hover:border-border transition-colors">
                       <input
                         type="file"
                         accept="image/*"
                         onChange={(e) => handleFileUpload(e, 'reference')}
                         className="hidden"
                       />
-                      <Upload className="w-6 h-6 text-slate-500" />
+                      <Upload className="w-6 h-6 text-muted-foreground" />
                     </label>
                   )}
                 </div>
@@ -159,24 +159,24 @@ export function ShotAnimatorCard({
                       src={config.lastFrameImage}
                       alt="Last frame"
                       fill
-                      className="object-cover rounded border border-slate-600"
+                      className="object-cover rounded border border-border"
                     />
                     <button
                       onClick={handleRemoveLastFrameImage}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-2 -right-2 bg-primary text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </div>
                 ) : (
-                  <label className="w-24 h-24 border-2 border-dashed border-slate-600 rounded flex items-center justify-center cursor-pointer hover:border-slate-500 transition-colors">
+                  <label className="w-24 h-24 border-2 border-dashed border-border rounded flex items-center justify-center cursor-pointer hover:border-border transition-colors">
                     <input
                       type="file"
                       accept="image/*"
                       onChange={(e) => handleFileUpload(e, 'lastFrame')}
                       className="hidden"
                     />
-                    <ImageIcon className="w-8 h-8 text-slate-500" />
+                    <ImageIcon className="w-8 h-8 text-muted-foreground" />
                   </label>
                 )}
               </div>
@@ -193,7 +193,7 @@ export function ShotAnimatorCard({
             )}
 
             {/* Actions */}
-            <div className="flex items-center justify-between pt-2 border-t border-slate-700">
+            <div className="flex items-center justify-between pt-2 border-t border-border">
               <div className="flex items-center gap-2">
                 <Checkbox
                   id={`include-${config.id}`}
@@ -208,7 +208,7 @@ export function ShotAnimatorCard({
                 variant="ghost"
                 size="sm"
                 onClick={onRemove}
-                className="text-red-400 hover:text-red-300 hover:bg-red-950/30"
+                className="text-primary hover:text-primary hover:bg-primary/10"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Remove

@@ -130,39 +130,39 @@ export default function StoryInputSection({
         <div className="space-y-6">
             {/* Title Input */}
             <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium text-foreground">
                     Project Title
                 </label>
                 <Input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Enter your story project title..."
-                    className="bg-slate-800 border-slate-700 text-white"
+                    className="bg-card border-border text-white"
                     disabled={isExtracting}
                 />
             </div>
 
             {/* Story Text Input */}
             <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium text-foreground">
                     Story Text
                 </label>
                 <Textarea
                     value={storyText}
                     onChange={(e) => setStoryText(e.target.value)}
                     placeholder="Paste your story text here... The AI will extract visual scenes and create shot prompts."
-                    className="bg-slate-800 border-slate-700 text-white min-h-[300px] resize-y"
+                    className="bg-card border-border text-white min-h-[300px] resize-y"
                     disabled={isExtracting}
                 />
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                     {storyText.length} characters
                 </p>
             </div>
 
             {/* Extraction Progress */}
             {isExtracting && (
-                <div className="space-y-2 p-4 bg-slate-800 rounded-lg border border-slate-700">
-                    <div className="flex items-center gap-2 text-sm text-slate-300">
+                <div className="space-y-2 p-4 bg-card rounded-lg border border-border">
+                    <div className="flex items-center gap-2 text-sm text-foreground">
                         <Loader2 className="w-4 h-4 animate-spin" />
                         <span>Extracting shots from your story...</span>
                     </div>
@@ -179,7 +179,7 @@ export default function StoryInputSection({
                         setStoryText(story.text)
                     }}
                     variant="outline"
-                    className="border-slate-600 text-slate-300 hover:bg-slate-800"
+                    className="border-border text-foreground hover:bg-card"
                     disabled={isExtracting}
                 >
                     <TestTube2 className="w-4 h-4 mr-2" />
@@ -188,7 +188,7 @@ export default function StoryInputSection({
                 <Button
                     onClick={handleExtract}
                     disabled={!canExtract}
-                    className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                    className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-50"
                     size="lg"
                 >
                     {isExtracting ? (

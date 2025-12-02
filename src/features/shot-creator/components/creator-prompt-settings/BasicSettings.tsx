@@ -81,12 +81,12 @@ const BasicSettings = () => {
                 {/* Aspect Ratio */}
                 {supportsAspectRatio && (
                     <div className="space-y-2">
-                        <Label className="text-sm text-slate-300">Aspect Ratio</Label>
+                        <Label className="text-sm text-foreground">Aspect Ratio</Label>
                         <Select
                             value={shotCreatorSettings.aspectRatio}
                             onValueChange={(value) => updateSettings({ aspectRatio: value })}
                         >
-                            <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
+                            <SelectTrigger className="bg-card border-border text-white">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -103,12 +103,12 @@ const BasicSettings = () => {
                 {/* Resolution */}
                 {supportsResolution && (
                     <div className="space-y-2">
-                        <Label className="text-sm text-slate-300">Resolution</Label>
+                        <Label className="text-sm text-foreground">Resolution</Label>
                         <Select
                             value={shotCreatorSettings.resolution}
                             onValueChange={(value) => updateSettings({ resolution: value })}
                         >
-                            <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
+                            <SelectTrigger className="bg-card border-border text-white">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -125,12 +125,12 @@ const BasicSettings = () => {
                 {/* Output Format */}
                 {supportsOutputFormat && (
                     <div className="space-y-2">
-                        <Label className="text-sm text-slate-300">Output Format</Label>
+                        <Label className="text-sm text-foreground">Output Format</Label>
                         <Select
                             value={shotCreatorSettings.outputFormat || 'webp'}
                             onValueChange={(value) => updateSettings({ outputFormat: value })}
                         >
-                            <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
+                            <SelectTrigger className="bg-card border-border text-white">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -147,32 +147,32 @@ const BasicSettings = () => {
             {supportsCustomDimensions && (
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <Label className="text-sm text-slate-300">Width (px)</Label>
+                        <Label className="text-sm text-foreground">Width (px)</Label>
                         <Input
                             type="number"
                             min="1024"
                             max="4096"
                             value={shotCreatorSettings.customWidth || 2048}
                             onChange={(e) => updateSettings({ customWidth: parseInt(e.target.value) })}
-                            className="bg-slate-800 border-slate-600 text-white"
+                            className="bg-card border-border text-white"
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label className="text-sm text-slate-300">Height (px)</Label>
+                        <Label className="text-sm text-foreground">Height (px)</Label>
                         <Input
                             type="number"
                             min="1024"
                             max="4096"
                             value={shotCreatorSettings.customHeight || 2048}
                             onChange={(e) => updateSettings({ customHeight: parseInt(e.target.value) })}
-                            className="bg-slate-800 border-slate-600 text-white"
+                            className="bg-card border-border text-white"
                         />
                     </div>
                 </div>
             )}
 
             {/* Wild Card Creation */}
-            <div className="pt-4 border-t border-slate-700">
+            <div className="pt-4 border-t border-border">
                 <Button
                     variant="outline"
                     className="w-full"
@@ -182,7 +182,7 @@ const BasicSettings = () => {
                     <Plus className="w-4 h-4 mr-2" />
                     Create Wild Card
                 </Button>
-                <p className="text-xs text-slate-400 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                     Upload a text file to create _wildcard_ for random prompt variations
                 </p>
             </div>

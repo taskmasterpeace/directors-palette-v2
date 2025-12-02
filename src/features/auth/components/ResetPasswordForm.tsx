@@ -55,7 +55,7 @@ export function ResetPasswordForm() {
           placeholder="••••••••"
         />
         {errors.password && (
-          <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+          <p className="text-primary text-sm mt-1">{errors.password.message}</p>
         )}
         {!errors.password && (
           <p className="text-xs text-gray-500 mt-1">
@@ -77,12 +77,12 @@ export function ResetPasswordForm() {
           placeholder="••••••••"
         />
         {errors.confirmPassword && (
-          <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>
+          <p className="text-primary text-sm mt-1">{errors.confirmPassword.message}</p>
         )}
       </div>
 
       {error && (
-        <div className="text-red-500 text-sm p-3 bg-red-50 rounded-lg">
+        <div className="text-primary text-sm p-3 bg-destructive/10 rounded-lg">
           {error}
         </div>
       )}
@@ -90,7 +90,7 @@ export function ResetPasswordForm() {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="w-full bg-accent text-white py-2 px-4 rounded-lg hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {isLoading ? 'Updating...' : 'Reset Password'}
       </button>

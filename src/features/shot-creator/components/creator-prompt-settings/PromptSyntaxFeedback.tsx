@@ -212,16 +212,16 @@ export function PromptSyntaxFeedback({
     };
 
     const getColorClass = () => {
-        if (!feedback) return 'text-slate-400 bg-slate-950/50 border-slate-700';
+        if (!feedback) return 'text-muted-foreground bg-background/50 border-border';
         switch (feedback.type) {
             case 'success':
-                return 'text-green-400 bg-green-950/50 border-green-800';
+                return 'text-emerald-400 bg-green-950/50 border-green-800';
             case 'warning':
                 return 'text-yellow-400 bg-yellow-950/50 border-yellow-800';
             case 'error':
-                return 'text-red-400 bg-red-950/50 border-red-800';
+                return 'text-primary bg-primary/15/50 border-primary/30';
             case 'info':
-                return 'text-blue-400 bg-blue-950/50 border-blue-800';
+                return 'text-accent bg-blue-950/50 border-blue-800';
         }
     };
 
@@ -290,13 +290,13 @@ export function PromptSyntaxFeedback({
 
             {/* Disabled syntax badges (when not showing feedback for that syntax) */}
             {disabledBadges.length > 0 && !rawPromptMode && (
-                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <span>Disabled:</span>
                     {disabledBadges.map(badge => (
                         <Badge
                             key={badge.label}
                             variant="outline"
-                            className="h-5 px-1.5 text-xs bg-slate-800/50 border-slate-700 hover:bg-slate-700 cursor-pointer"
+                            className="h-5 px-1.5 text-xs bg-card/50 border-border hover:bg-secondary cursor-pointer"
                             onClick={badge.toggle}
                         >
                             {badge.label}

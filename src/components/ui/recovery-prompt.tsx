@@ -21,7 +21,7 @@ export function RecoveryPrompt({ onRecover, onDiscard, timestamp, steps }: Recov
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-slate-300">
+        <p className="text-sm text-foreground">
           A previous generation was interrupted at {timeAgo}. 
           {steps.length > 0 && ` Completed steps: ${steps.join(', ')}.`}
         </p>
@@ -36,7 +36,7 @@ export function RecoveryPrompt({ onRecover, onDiscard, timestamp, steps }: Recov
           <Button
             onClick={onDiscard}
             variant="outline"
-            className="border-slate-600"
+            className="border-border"
           >
             <X className="h-4 w-4 mr-2" />
             Start Fresh

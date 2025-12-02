@@ -39,7 +39,7 @@ export function SignInForm() {
           placeholder="your@email.com"
         />
         {errors.email && (
-          <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+          <p className="text-primary text-sm mt-1">{errors.email.message}</p>
         )}
       </div>
 
@@ -64,12 +64,12 @@ export function SignInForm() {
           placeholder="••••••••"
         />
         {errors.password && (
-          <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+          <p className="text-primary text-sm mt-1">{errors.password.message}</p>
         )}
       </div>
 
       {error && (
-        <div className="text-red-500 text-sm p-3 bg-red-50 rounded-lg">
+        <div className="text-primary text-sm p-3 bg-destructive/10 rounded-lg">
           {error}
         </div>
       )}
@@ -77,7 +77,7 @@ export function SignInForm() {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="w-full bg-accent text-white py-2 px-4 rounded-lg hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {isLoading ? 'Signing in...' : 'Sign In'}
       </button>
