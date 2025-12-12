@@ -95,8 +95,6 @@ export class ShotCreatorSettingsService {
       resolution: "2K",
       seed: undefined,
       model: "nano-banana",
-      maxImages: 1,
-      sequentialGeneration: false,
     };
   }
 }

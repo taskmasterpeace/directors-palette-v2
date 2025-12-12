@@ -173,7 +173,7 @@ export function WildCardManager() {
                         setIsEditing(false);
                         setDialogOpen(true);
                     }}
-                    className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                     <Plus className="w-4 h-4 mr-2" />
                     Create Wild Card
@@ -346,7 +346,7 @@ export function WildCardManager() {
                         </Button>
                         <Button
                             onClick={handleSubmit}
-                            className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground"
                         >
                             {isEditing ? 'Update' : 'Create'} Wild Card
                         </Button>

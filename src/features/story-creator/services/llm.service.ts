@@ -1,9 +1,7 @@
 /**
  * LLM Service for Story Creator
- * Uses Requesty.ai API for intelligent story analysis
+ * Uses server-side API route to proxy LLM requests (keeps API key secure)
  */
-
-const REQUESTY_API_URL = 'https://router.requesty.ai/v1/chat/completions'
 
 interface LLMResponse {
     choices: Array<{
@@ -40,22 +38,16 @@ interface ExtractedEntities {
 type ProgressCallback = (update: { type: string; message: string }) => void
 
 export class LLMService {
-    private static apiKey = process.env.NEXT_PUBLIC_REQUESTY_API_KEY || ''
     private static model = 'openai/gpt-4o-mini'
 
     /**
-     * Make a request to the LLM
+     * Make a request to the LLM via secure server-side API route
      */
     private static async chat(messages: Array<{ role: string; content: string }>): Promise<string> {
-        if (!this.apiKey) {
-            throw new Error('NEXT_PUBLIC_REQUESTY_API_KEY not configured')
-        }
-
-        const response = await fetch(REQUESTY_API_URL, {
+        const response = await fetch('/api/story-creator/llm-chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${this.apiKey}`
             },
             body: JSON.stringify({
                 model: this.model,
@@ -66,8 +58,8 @@ export class LLMService {
         })
 
         if (!response.ok) {
-            const error = await response.text()
-            throw new Error(`LLM API error: ${response.status} - ${error}`)
+            const error = await response.json().catch(() => ({ error: 'Unknown error' }))
+            throw new Error(`LLM API error: ${response.status} - ${error.error || error.details || 'Unknown error'}`)
         }
 
         const data: LLMResponse = await response.json()
@@ -449,9 +441,11 @@ Return ONLY valid JSON, no markdown.`
     }
 
     /**
-     * Check if LLM service is configured
+     * Check if LLM service is configured (always true since API key is server-side)
      */
     static isConfigured(): boolean {
-        return !!this.apiKey
+        // API key is now server-side, assume configured
+        // Server will return error if not configured
+        return true
     }
 }

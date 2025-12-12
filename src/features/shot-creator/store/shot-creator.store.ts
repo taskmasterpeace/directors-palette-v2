@@ -9,8 +9,6 @@ export const DEFAULT_SETTINGS: ShotCreatorSettings = {
     resolution: "2K",
     seed: undefined,
     model: "nano-banana",
-    maxImages: 1,
-    sequentialGeneration: false,
     rawPromptMode: false, // Default: process brackets/pipes/wildcards normally
 };
 export interface ShotCreatorStore {

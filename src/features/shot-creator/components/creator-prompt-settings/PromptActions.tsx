@@ -19,9 +19,12 @@ import {
     Square
 } from 'lucide-react'
 import { useShotCreatorStore } from "@/features/shot-creator/store/shot-creator.store"
+import { getModelConfig } from "@/config"
 import { useShotCreatorSettings } from "../../hooks"
 import { useImageGeneration } from "../../hooks/useImageGeneration"
 import { PromptSyntaxFeedback } from "./PromptSyntaxFeedback"
+import { parseDynamicPrompt } from "../../helpers/prompt-syntax-feedback"
+import { useWildCardStore } from "../../store/wildcard.store"
 import { PromptLibrary } from "./PromptLibrary"
 import { PromptAutocomplete } from "../prompt-autocomplete"
 import { usePromptAutocomplete } from "../../hooks/usePromptAutocomplete"
@@ -45,6 +48,34 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
     const { generateImage, isGenerating } = useImageGeneration()
     const { libraryItems } = useLibraryStore()
+    const { wildcards } = useWildCardStore()
+
+    // Calculate generation cost
+    const generationCost = React.useMemo(() => {
+        const model = shotCreatorSettings.model || 'nano-banana'
+        const modelConfig = getModelConfig(model)
+        const costPerImage = modelConfig.costPerImage
+
+        // Parse the prompt to get image count
+        const parsedPrompt = parseDynamicPrompt(shotCreatorPrompt, {
+            disablePipeSyntax: shotCreatorSettings.disablePipeSyntax,
+            disableBracketSyntax: shotCreatorSettings.disableBracketSyntax,
+            disableWildcardSyntax: shotCreatorSettings.disableWildcardSyntax
+        }, wildcards)
+
+        const imageCount = parsedPrompt.totalCount || 1
+        const totalCost = imageCount * costPerImage
+
+        // Convert dollar cost to points (1 point = $0.01)
+        const pointsCost = Math.ceil(totalCost * 100)
+
+        return {
+            imageCount,
+            totalCost,
+            pointsCost,
+            costPerImage
+        }
+    }, [shotCreatorPrompt, shotCreatorSettings, wildcards])
 
     // Autocomplete state
     const [showAutocomplete, setShowAutocomplete] = useState(false)
@@ -81,10 +112,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     } = autocomplete
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
 
-    const isEditingMode = shotCreatorSettings.model === 'qwen-image-edit'
-    const canGenerate = isEditingMode
-        ? shotCreatorPrompt.length > 0 && shotCreatorReferenceImages.length > 0
-        : shotCreatorPrompt.length > 0 && shotCreatorReferenceImages.length > 0
+    const canGenerate = shotCreatorPrompt.length > 0 && shotCreatorReferenceImages.length > 0
 
     // Get references grouped by category from library items
     const getReferencesGroupedByCategory = useCallback(() => {
@@ -242,60 +270,11 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 baseSettings.resolution = shotCreatorSettings.resolution
                 baseSettings.safetyFilterLevel = shotCreatorSettings.safetyFilterLevel || 'block_only_high'
                 break
-            case 'seedream-4':
-                baseSettings.size = shotCreatorSettings.resolution
-                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
-                if (shotCreatorSettings.resolution === 'custom') {
-                    baseSettings.width = shotCreatorSettings.customWidth
-                    baseSettings.height = shotCreatorSettings.customHeight
-                }
-                baseSettings.sequentialImageGeneration = shotCreatorSettings.sequentialGeneration ? 'auto' : 'disabled'
-                baseSettings.maxImages = shotCreatorSettings.maxImages || 1
-                break
-            case 'gen4-image':
-            case 'gen4-image-turbo':
-                baseSettings.aspectRatio = shotCreatorSettings.gen4AspectRatio || shotCreatorSettings.aspectRatio
-                baseSettings.resolution = shotCreatorSettings.resolution
-                if (shotCreatorSettings.seed !== undefined) {
-                    baseSettings.seed = shotCreatorSettings.seed
-                }
-                break
-            case 'qwen-image':
-                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
-                if (shotCreatorSettings.seed !== undefined) baseSettings.seed = shotCreatorSettings.seed
-                if (shotCreatorSettings.guidance !== undefined) baseSettings.guidance = shotCreatorSettings.guidance
-                if (shotCreatorSettings.num_inference_steps !== undefined) {
-                    baseSettings.numInferenceSteps = shotCreatorSettings.num_inference_steps
-                }
-                if (shotCreatorSettings.goFast !== undefined) baseSettings.goFast = shotCreatorSettings.goFast
-
-                // For Qwen Image, use first reference image as img2img input if available
-                if (shotCreatorReferenceImages.length > 0) {
-                    const img2imgImage = shotCreatorReferenceImages[0]?.url || shotCreatorReferenceImages[0]?.preview
-                    if (img2imgImage) {
-                        baseSettings.image = img2imgImage
-                        // Set strength for img2img (optional, defaults to moderate modification)
-                        if (shotCreatorSettings.strength !== undefined) {
-                            baseSettings.strength = shotCreatorSettings.strength
-                        }
-                    }
-                }
-                break
-            case 'qwen-image-edit':
-                // For editing mode, first reference image is the image to edit
-                const editImage = shotCreatorReferenceImages[0]?.url || shotCreatorReferenceImages[0]?.preview
-                baseSettings.image = editImage
-                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
-                if (shotCreatorSettings.seed !== undefined) baseSettings.seed = shotCreatorSettings.seed
-                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'webp'
-                baseSettings.outputQuality = shotCreatorSettings.outputQuality || 95
-                baseSettings.goFast = shotCreatorSettings.goFast !== undefined ? shotCreatorSettings.goFast : true
-                break
         }
 
         console.log('✅ Built model settings:', JSON.stringify(baseSettings, null, 2))
         return baseSettings
-    }, [shotCreatorSettings, shotCreatorReferenceImages])
+    }, [shotCreatorSettings])
 
     // Handle generation
     const handleGenerate = useCallback(async () => {
@@ -310,14 +289,11 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             // Build model-specific settings
             const modelSettings = buildModelSettings()
 
-            // For Qwen Image, don't pass reference images since we use img2img via modelSettings
-            const finalReferenceUrls = model === 'qwen-image' ? [] : referenceUrls
-
             // Call the generation API
             await generateImage(
                 model,
                 shotCreatorPrompt,
-                finalReferenceUrls,
+                referenceUrls,
                 modelSettings
             )
         }
@@ -483,7 +459,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             <div className="space-y-2">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <Label className="text-sm text-foreground">
-                        {isEditingMode ? 'Edit Instructions' : 'Prompt'}
+                        Prompt
                     </Label>
                     <div className="flex items-center gap-1.5 flex-wrap">
                         {/* Size toggle buttons */}
@@ -544,11 +520,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                             await handlePromptChange(e.target.value);
                         }}
                         onKeyUp={handleTextareaKeyUp}
-                        placeholder={
-                            isEditingMode
-                                ? "Describe how you want to edit the image (e.g., 'change the background to a sunset', 'add more lighting')"
-                                : "Describe your shot... Use @ to reference images"
-                        }
+                        placeholder="Describe your shot... Use @ to reference images"
                         className={cn(
                             getTextareaHeight(textareaSize),
                             "bg-card border-border text-white placeholder:text-muted-foreground pr-10",
@@ -658,24 +630,43 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
 
             {/* Action Buttons - Moved to top for better UX */}
             <div className="flex flex-col sm:flex-row gap-3">
-                {/* Generate Button */}
-                <Button
-                    onClick={handleGenerate}
-                    disabled={!canGenerate || isGenerating}
-                    className="flex-1 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-medium disabled:opacity-50"
-                >
-                    {isGenerating ? (
-                        <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                            Generating...
-                        </>
-                    ) : (
-                        <>
-                            <Sparkles className="w-4 h-4 mr-2" />
-                            {isEditingMode ? 'Edit Image' : 'Generate'}
-                        </>
+                {/* Generate Button with Cost Preview */}
+                <div className="flex-1 flex flex-col gap-1">
+                    <Button
+                        onClick={handleGenerate}
+                        disabled={!canGenerate || isGenerating}
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium disabled:opacity-50"
+                    >
+                        {isGenerating ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                                Generating...
+                            </>
+                        ) : (
+                            <>
+                                <Sparkles className="w-4 h-4 mr-2" />
+                                Generate
+                                {generationCost.imageCount > 1 && (
+                                    <span className="ml-1">({generationCost.imageCount})</span>
+                                )}
+                            </>
+                        )}
+                    </Button>
+                    {/* Cost Preview */}
+                    {canGenerate && !isGenerating && (
+                        <div className="text-xs text-center text-muted-foreground">
+                            {generationCost.imageCount > 1 ? (
+                                <span>
+                                    {generationCost.imageCount} images × {generationCost.pointsCost / generationCost.imageCount} pts = <span className="text-primary font-medium">{generationCost.pointsCost} pts</span>
+                                </span>
+                            ) : (
+                                <span>
+                                    Cost: <span className="text-primary font-medium">{generationCost.pointsCost} pts</span>
+                                </span>
+                            )}
+                        </div>
                     )}
-                </Button>
+                </div>
 
             </div>
 

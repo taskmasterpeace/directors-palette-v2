@@ -22,10 +22,17 @@ export interface WildCardParseResult {
 }
 /**
  * Parse wild card references in a prompt
- * Example: "A _character_ in _location_" → finds ['character', 'location']
+ * Syntax: _name_ where name can contain letters, numbers, and underscores
+ * Example: "A _black_girl_hairstyles_ in _location_" → finds ['black_girl_hairstyles', 'location']
+ *
+ * The regex matches from a word-boundary underscore to the last possible underscore,
+ * preventing partial matches like _girl_ inside _black_girl_hairstyles_
  */
 export function extractWildCardNames(prompt: string): string[] {
-    const matches = prompt.match(/_([a-zA-Z0-9_]+)_/g)
+    // Use word boundary to ensure we match complete wildcard tokens
+    // (?<![a-zA-Z0-9]) ensures underscore is not preceded by alphanumeric
+    // (?![a-zA-Z0-9]) ensures final underscore is not followed by alphanumeric
+    const matches = prompt.match(/(?<![a-zA-Z0-9])_([a-zA-Z0-9_]+)_(?![a-zA-Z0-9])/g)
     if (!matches) return []
 
     return matches.map(match => match.slice(1, -1)) // Remove underscores

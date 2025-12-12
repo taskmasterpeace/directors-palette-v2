@@ -29,7 +29,8 @@ import {
   Grid3x3,
   ImagePlus,
   Send,
-  ImageIcon
+  ImageIcon,
+  Eraser,
 } from 'lucide-react'
 import type { FolderWithCount } from '../../types/folder.types'
 import { MobileImageActionSheet } from './MobileImageActionSheet'
@@ -51,6 +52,8 @@ interface ImageActionMenuProps {
   onExtractFramesToGallery?: () => void
   onAddToLibrary?: () => void
   onMoveToFolder?: (folderId: string | null) => void
+  onRemoveBackground?: () => void
+  isRemovingBackground?: boolean
   dropdownOpen: boolean
   onDropdownChange: (open: boolean) => void
 }
@@ -76,6 +79,8 @@ export function ImageActionMenu({
   onExtractFramesToGallery,
   onAddToLibrary,
   onMoveToFolder,
+  onRemoveBackground,
+  isRemovingBackground,
   dropdownOpen,
   onDropdownChange
 }: ImageActionMenuProps) {
@@ -114,6 +119,8 @@ export function ImageActionMenu({
         onExtractFramesToGallery={onExtractFramesToGallery}
         onAddToLibrary={onAddToLibrary}
         onMoveToFolder={onMoveToFolder}
+        onRemoveBackground={onRemoveBackground}
+        isRemovingBackground={isRemovingBackground}
       />
 
       {/* Desktop: Dropdown with nested submenus */}
@@ -232,6 +239,27 @@ export function ImageActionMenu({
             <Download className="mr-2 h-4 w-4" />
             Download
           </DropdownMenuItem>
+
+          {/* Remove Background */}
+          {onRemoveBackground && (
+            <DropdownMenuItem
+              onClick={onRemoveBackground}
+              disabled={isRemovingBackground}
+              className="hover:bg-secondary cursor-pointer"
+            >
+              {isRemovingBackground ? (
+                <>
+                  <div className="mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                <>
+                  <Eraser className="mr-2 h-4 w-4" />
+                  Remove Background (3 pts)
+                </>
+              )}
+            </DropdownMenuItem>
+          )}
 
           {/* Set/Edit Reference */}
           {(onSetReference || onEditReference) && (

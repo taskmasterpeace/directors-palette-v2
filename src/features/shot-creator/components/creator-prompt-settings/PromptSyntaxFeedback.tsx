@@ -189,13 +189,13 @@ export function PromptSyntaxFeedback({
         setFeedback(null);
     }, [prompt, wildcards, rawPromptMode, disablePipeSyntax, disableBracketSyntax, disableWildcardSyntax]);
 
-    // Show disabled syntax badges if any are disabled
-    const disabledBadges = [];
-    if (disablePipeSyntax) disabledBadges.push({ label: 'Pipes |', toggle: () => onTogglePipeSyntax?.(false) });
-    if (disableBracketSyntax) disabledBadges.push({ label: 'Brackets []', toggle: () => onToggleBracketSyntax?.(false) });
-    if (disableWildcardSyntax) disabledBadges.push({ label: 'Wildcards _', toggle: () => onToggleWildcardSyntax?.(false) });
+    // Check if any syntax is disabled (for displaying disabled state)
+    const hasAnyDisabled = disablePipeSyntax || disableBracketSyntax || disableWildcardSyntax;
 
-    if (!feedback && disabledBadges.length === 0) return null;
+    // Show toggle bar when there's a prompt with potential syntax or any toggle is disabled
+    const showToggleBar = prompt && prompt.trim().length > 0;
+
+    if (!feedback && !showToggleBar) return null;
 
     const getIcon = () => {
         if (!feedback) return null;
@@ -288,21 +288,58 @@ export function PromptSyntaxFeedback({
                 </div>
             )}
 
-            {/* Disabled syntax badges (when not showing feedback for that syntax) */}
-            {disabledBadges.length > 0 && !rawPromptMode && (
+            {/* Always-visible syntax toggle bar - shows when there's a prompt */}
+            {showToggleBar && !rawPromptMode && (
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <span>Disabled:</span>
-                    {disabledBadges.map(badge => (
-                        <Badge
-                            key={badge.label}
-                            variant="outline"
-                            className="h-5 px-1.5 text-xs bg-card/50 border-border hover:bg-secondary cursor-pointer"
-                            onClick={badge.toggle}
-                        >
-                            {badge.label}
-                            <X className="h-3 w-3 ml-1" />
-                        </Badge>
-                    ))}
+                    {hasAnyDisabled && <span>Syntax:</span>}
+                    {/* Pipe toggle */}
+                    <button
+                        onClick={() => onTogglePipeSyntax?.(!disablePipeSyntax)}
+                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all cursor-pointer ${
+                            disablePipeSyntax
+                                ? 'border-border bg-card/30 opacity-50 hover:opacity-75'
+                                : 'border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20'
+                        }`}
+                        title={disablePipeSyntax
+                            ? 'Pipe syntax disabled - Click to enable. Use prompt1 | prompt2 for sequential chain generation'
+                            : 'Pipe syntax enabled - Click to disable. Currently: prompt1 | prompt2 creates a chain'
+                        }
+                    >
+                        <span className="font-mono font-bold">|</span>
+                        <X className={`h-2.5 w-2.5 ${disablePipeSyntax ? 'block' : 'hidden'}`} />
+                    </button>
+                    {/* Bracket toggle */}
+                    <button
+                        onClick={() => onToggleBracketSyntax?.(!disableBracketSyntax)}
+                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all cursor-pointer ${
+                            disableBracketSyntax
+                                ? 'border-border bg-card/30 opacity-50 hover:opacity-75'
+                                : 'border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'
+                        }`}
+                        title={disableBracketSyntax
+                            ? 'Bracket syntax disabled - Click to enable. Use [a, b, c] for multiple variations'
+                            : 'Bracket syntax enabled - Click to disable. Currently: [a, b, c] creates 3 images'
+                        }
+                    >
+                        <span className="font-mono font-bold">[ ]</span>
+                        <X className={`h-2.5 w-2.5 ${disableBracketSyntax ? 'block' : 'hidden'}`} />
+                    </button>
+                    {/* Wildcard toggle */}
+                    <button
+                        onClick={() => onToggleWildcardSyntax?.(!disableWildcardSyntax)}
+                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all cursor-pointer ${
+                            disableWildcardSyntax
+                                ? 'border-border bg-card/30 opacity-50 hover:opacity-75'
+                                : 'border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20'
+                        }`}
+                        title={disableWildcardSyntax
+                            ? 'Wildcard syntax disabled - Click to enable. Use _name_ for random picks from your lists'
+                            : 'Wildcard syntax enabled - Click to disable. Currently: _name_ pulls from your wildcard lists'
+                        }
+                    >
+                        <span className="font-mono font-bold">_</span>
+                        <X className={`h-2.5 w-2.5 ${disableWildcardSyntax ? 'block' : 'hidden'}`} />
+                    </button>
                 </div>
             )}
         </div>

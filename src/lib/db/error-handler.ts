@@ -8,6 +8,9 @@ export interface DatabaseError {
 
 export class DatabaseErrorHandler {
   static handle(error: PostgrestError | Error | unknown): DatabaseError {
+    // Always log the raw error for debugging
+    console.error('[DatabaseErrorHandler] Raw error:', error);
+
     if (error instanceof Error) {
       return {
         message: error.message,
@@ -18,6 +21,9 @@ export class DatabaseErrorHandler {
     if (this.isPostgrestError(error)) {
       return this.handlePostgrestError(error);
     }
+
+    // Log unknown error types with more detail
+    console.error('[DatabaseErrorHandler] Unknown error type:', typeof error, JSON.stringify(error, null, 2));
 
     return {
       message: 'An unexpected database error occurred',

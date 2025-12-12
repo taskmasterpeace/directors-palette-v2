@@ -29,6 +29,8 @@ interface ImageCardProps {
   onMoveToFolder?: (folderId: string | null) => void
   onExtractFrames?: () => void
   onExtractFramesToGallery?: () => void
+  onRemoveBackground?: () => void
+  isRemovingBackground?: boolean
   currentFolderId?: string | null
   folders?: FolderWithCount[]
   showActions?: boolean
@@ -55,6 +57,8 @@ const ImageCardComponent = ({
   onMoveToFolder,
   onExtractFrames,
   onExtractFramesToGallery,
+  onRemoveBackground,
+  isRemovingBackground,
   currentFolderId,
   folders = [],
   showActions = true,
@@ -120,6 +124,8 @@ const ImageCardComponent = ({
             onMoveToFolder={onMoveToFolder}
             onExtractFrames={onExtractFrames}
             onExtractFramesToGallery={onExtractFramesToGallery}
+            onRemoveBackground={onRemoveBackground}
+            isRemovingBackground={isRemovingBackground}
             dropdownOpen={dropdownOpen}
             onDropdownChange={setDropdownOpen}
           />

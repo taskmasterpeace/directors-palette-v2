@@ -6,6 +6,7 @@ import { imageGenerationService } from '../services/image-generation.service'
 import { useShotCreatorStore } from '../store/shot-creator.store'
 import { useUnifiedGalleryStore } from '../store/unified-gallery-store'
 import { useWildCardStore } from '../store/wildcard.store'
+import { useCreditsStore } from '@/features/credits/store/credits.store'
 import { getClient, TypedSupabaseClient } from '@/lib/db/client'
 import { parseDynamicPrompt } from '../helpers/prompt-syntax-feedback'
 import { parseReferenceTags } from '../helpers/parse-reference-tags'
@@ -13,6 +14,7 @@ import { getRandomFromCategory } from '../services/reference-selection.service'
 import { uploadImageToReplicate } from '../helpers/image-resize.helper'
 import { ImageGenerationRequest, ImageModel, ImageModelSettings } from "../types/image-generation.types"
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import { useCustomStylesStore } from '../store/custom-styles.store'
 
 export interface GenerationProgress {
     status: 'idle' | 'starting' | 'processing' | 'waiting' | 'succeeded' | 'failed'
@@ -201,6 +203,7 @@ export function useImageGeneration() {
     const [progress, setProgress] = useState<GenerationProgress>({ status: 'idle' })
     const { setShotCreatorProcessing, settings } = useShotCreatorStore()
     const { wildcards, loadWildCards } = useWildCardStore()
+    const { fetchBalance } = useCreditsStore()
     const [activeGalleryId, setActiveGalleryId] = useState<string | null>(null)
 
     // Load wildcards on mount
@@ -369,12 +372,39 @@ export function useImageGeneration() {
             ]
 
             // Remove duplicates
-            const uniqueReferenceImages = [...new Set(allReferenceImages)]
+            let uniqueReferenceImages = [...new Set(allReferenceImages)]
 
             // Log summary
             if (parsedRefs.allReferences.length > 0) {
                 console.log(`📊 Total references processed: ${parsedRefs.allReferences.length}`)
                 console.log(`🖼️ Total images attached: ${uniqueReferenceImages.length}`)
+            }
+
+            // ✅ STYLE INJECTION: Check for selected style (preset or custom)
+            let promptWithStyle = prompt
+            const selectedStyleId = settings.selectedStyle
+            if (selectedStyleId) {
+                // Use custom styles store to find both preset and custom styles
+                const selectedStyle = useCustomStylesStore.getState().getStyleById(selectedStyleId)
+                if (selectedStyle) {
+                    // Inject style prompt at the end of user's prompt
+                    promptWithStyle = `${prompt}, ${selectedStyle.stylePrompt}`
+
+                    // Auto-attach style reference image
+                    const styleImageUrl = selectedStyle.imagePath
+                    // Handle data URLs (custom styles), full URLs, and local paths (presets)
+                    if (typeof window !== 'undefined') {
+                        const fullStyleUrl = styleImageUrl.startsWith('data:') || styleImageUrl.startsWith('http')
+                            ? styleImageUrl
+                            : `${window.location.origin}${styleImageUrl}`
+                        uniqueReferenceImages = [fullStyleUrl, ...uniqueReferenceImages]
+                    }
+
+                    const isCustom = 'isCustom' in selectedStyle && selectedStyle.isCustom
+                    console.log(`🎨 Style applied: ${selectedStyle.name}${isCustom ? ' (custom)' : ''}`)
+                    console.log(`📝 Style prompt injected: "${selectedStyle.stylePrompt}"`)
+                    console.log(`🖼️ Style reference added: ${styleImageUrl.startsWith('data:') ? '[data URL]' : styleImageUrl}`)
+                }
             }
 
             // Expand bracket variations using existing prompt parser
@@ -386,13 +416,13 @@ export function useImageGeneration() {
             if (settings.rawPromptMode) {
                 // Raw mode: send prompt as-is without any processing
                 console.log('🔤 Raw Prompt Mode: Bypassing syntax parsing')
-                variations = [prompt]
+                variations = [promptWithStyle]
                 totalVariations = 1
                 isPipeChaining = false
             } else {
                 // Normal mode: parse brackets, pipes, and wildcards (respecting granular disable settings)
                 console.log(`🎲 Parsing prompt with ${wildcards.length} available wildcards`)
-                const promptResult = parseDynamicPrompt(prompt, {
+                const promptResult = parseDynamicPrompt(promptWithStyle, {
                     disablePipeSyntax: settings.disablePipeSyntax,
                     disableBracketSyntax: settings.disableBracketSyntax,
                     disableWildcardSyntax: settings.disableWildcardSyntax
@@ -453,27 +483,23 @@ export function useImageGeneration() {
                 const isFirstStep = i === 0
                 const isLastStep = i === variations.length - 1
                 // Use uploaded HTTPS URLs instead of original data URLs
+                // For pipe chaining: first step uses user refs, subsequent steps use generated image from prior step
                 const inputImages = isPipeChaining
                     ? (isFirstStep ? (uploadedReferenceImages.length > 0 ? uploadedReferenceImages : undefined) : previousImageUrl ? [previousImageUrl] : undefined)
                     : (uploadedReferenceImages.length > 0 ? uploadedReferenceImages : undefined)
 
-                // Update model settings for img2img if we have an input image from previous step
-                let currentModelSettings: ImageModelSettings = { ...modelSettings }
-                if (isPipeChaining && previousImageUrl && !isFirstStep) {
-                    if (model === 'qwen-image') {
-                        currentModelSettings = {
-                            ...currentModelSettings,
-                            image: previousImageUrl,
-                            // Set strength for img2img transformation (adjustable)
-                            strength: (currentModelSettings as { strength?: number }).strength ?? 0.75
-                        }
-                    } else if (model === 'qwen-image-edit') {
-                        currentModelSettings = {
-                            ...currentModelSettings,
-                            image: previousImageUrl
-                        }
-                    }
+                // Debug logging for pipe chaining
+                if (isPipeChaining) {
+                    console.log(`[Pipe Chain] Step ${i + 1}/${variations.length}:`, {
+                        isFirstStep,
+                        previousImageUrl: previousImageUrl || '(none)',
+                        inputImages: inputImages?.length ? `${inputImages.length} image(s)` : '(none)',
+                        prompt: variationPrompt.slice(0, 50)
+                    })
                 }
+
+                // Use current model settings (pipe chaining doesn't use img2img for Nano Banana models)
+                const currentModelSettings: ImageModelSettings = { ...modelSettings }
                 const request: ImageGenerationRequest = {
                     model,
                     prompt: variationPrompt,
@@ -497,6 +523,7 @@ export function useImageGeneration() {
                     try {
                         const imageUrl = await waitForImageCompletion(supabase, response.galleryId)
                         previousImageUrl = imageUrl
+                        console.log(`[Pipe Chain] Step ${i + 1} completed. Setting previousImageUrl to:`, imageUrl)
                         toast({
                             title: `Step ${i + 1}/${totalVariations} Complete`,
                             description: isLastStep ? 'All images saved to gallery!' : 'Moving to next step...',
@@ -529,6 +556,9 @@ export function useImageGeneration() {
                     : 'Your image will appear in the gallery when ready.',
             })
 
+            // Refresh credits balance to show deduction
+            void fetchBalance(true)
+
             return {
                 success: true,
                 predictionId: results[results.length - 1].predictionId,
@@ -537,24 +567,39 @@ export function useImageGeneration() {
             }
         } catch (error) {
             console.error('Image generation failed:', error)
+
+            // Check if this is an insufficient credits error
+            const isCreditsError = error && typeof error === 'object' && 'isInsufficientCredits' in error
             const errorMessage = error instanceof Error ? error.message : 'Failed to generate image'
 
             setProgress({ status: 'failed', error: errorMessage })
             setShotCreatorProcessing(false)
             setActiveGalleryId(null)
 
-            toast({
-                title: 'Generation Failed',
-                description: errorMessage,
-                variant: 'destructive',
-            })
+            if (isCreditsError) {
+                // Open the purchase dialog automatically
+                useCreditsStore.getState().openPurchaseDialog()
+
+                toast({
+                    title: 'Not Enough Points',
+                    description: 'Get more points to continue creating.',
+                    variant: 'destructive',
+                })
+            } else {
+                toast({
+                    title: 'Generation Failed',
+                    description: errorMessage,
+                    variant: 'destructive',
+                })
+            }
 
             return {
                 success: false,
                 error: errorMessage,
+                isCreditsError,
             }
         }
-    }, [toast, setShotCreatorProcessing, settings, wildcards])
+    }, [toast, setShotCreatorProcessing, settings, wildcards, fetchBalance])
 
     const resetProgress = useCallback(() => {
         setProgress({ status: 'idle' })

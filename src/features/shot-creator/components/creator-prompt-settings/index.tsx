@@ -29,8 +29,7 @@ const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
     const { shotCreatorPrompt, setShotCreatorPrompt, shotCreatorReferenceImages } = useShotCreatorStore()
     const { settings: shotCreatorSettings } = useShotCreatorSettings()
 
-    const modelConfig = getModelConfig((shotCreatorSettings.model || 'seedream-4') as ModelId)
-    const _isEditingMode = shotCreatorSettings.model === 'qwen-image-edit'
+    const modelConfig = getModelConfig((shotCreatorSettings.model || 'nano-banana') as ModelId)
 
     const referenceImagesCount = shotCreatorReferenceImages.length
     const hasNonPipelineImages = shotCreatorReferenceImages.some(img => img.url && !img.url.includes('pipeline'))

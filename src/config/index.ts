@@ -19,7 +19,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana' | 'nano-banana-pro' | 'seedream-4' | 'gen4-image' | 'gen4-image-turbo' | 'qwen-image-edit' | 'qwen-image'
+export type ModelId = 'nano-banana' | 'nano-banana-pro'
 
 export interface ModelParameter {
     id: string
@@ -226,7 +226,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         displayName: 'Nano Banana',
         type: 'generation',
         icon: '🍌',
-        description: 'Fast generation, good for quick iterations. Limited parameter control.',
+        description: 'Fast generation, good for quick iterations. Great value.',
         badge: 'Fast',
         badgeColor: 'bg-yellow-600',
         textColor: 'text-yellow-300',
@@ -247,8 +247,8 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         icon: '🔥',
         description: 'SOTA quality with accurate text rendering, 4K support, and advanced editing capabilities',
         badge: 'Pro',
-        badgeColor: 'bg-purple-600',
-        textColor: 'text-purple-300',
+        badgeColor: 'bg-amber-600',
+        textColor: 'text-amber-300',
         endpoint: 'google/nano-banana-pro',
         costPerImage: 0.14,
         supportedParameters: ['outputFormat', 'aspectRatio', 'resolution', 'safetyFilterLevel'],
@@ -259,114 +259,6 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             safetyFilterLevel: MODEL_PARAMETERS.safetyFilterLevel
         },
         maxReferenceImages: 14
-    },
-    'seedream-4': {
-        id: 'seedream-4',
-        name: 'seedream-4',
-        displayName: 'Seedream-4',
-        type: 'generation',
-        icon: '🌱',
-        description: 'High quality 2K/4K, supports multi-image generation (1-15)',
-        badge: '2K/4K',
-        badgeColor: 'bg-emerald-600',
-        textColor: 'text-green-300',
-        endpoint: 'bytedance/seedream-4',
-        costPerImage: 0.09,
-        supportedParameters: ['aspectRatio', 'seedreamResolution', 'maxImages', 'customWidth', 'customHeight', 'sequentialGeneration'],
-        parameters: {
-            aspectRatio: MODEL_PARAMETERS.aspectRatio,
-            resolution: MODEL_PARAMETERS.seedreamResolution,
-            maxImages: MODEL_PARAMETERS.maxImages,
-            customWidth: MODEL_PARAMETERS.customWidth,
-            customHeight: MODEL_PARAMETERS.customHeight,
-            sequentialGeneration: MODEL_PARAMETERS.sequentialGeneration
-        },
-        maxReferenceImages: 10
-    },
-    'gen4-image': {
-        id: 'gen4-image',
-        name: 'gen4-image',
-        displayName: 'Gen4 Image',
-        type: 'generation',
-        icon: '⚡',
-        description: 'Balanced quality and speed with full parameter control',
-        badge: 'Balanced',
-        badgeColor: 'bg-accent',
-        textColor: 'text-blue-300',
-        endpoint: 'runwayml/gen4-image',
-        costPerImage: 0.075,
-        supportedParameters: ['gen4AspectRatio', 'resolution', 'seed'],
-        parameters: {
-            aspectRatio: MODEL_PARAMETERS.gen4AspectRatio,
-            resolution: MODEL_PARAMETERS.resolution,
-            seed: MODEL_PARAMETERS.seed
-        },
-        maxReferenceImages: 3
-    },
-    'gen4-image-turbo': {
-        id: 'gen4-image-turbo',
-        name: 'gen4-image-turbo',
-        displayName: 'Gen4 Turbo',
-        type: 'generation',
-        icon: '💨',
-        description: 'Fastest generation with good quality (2.5x faster than Gen4)',
-        badge: 'Turbo',
-        badgeColor: 'bg-primary',
-        textColor: 'text-primary',
-        endpoint: 'runwayml/gen4-image-turbo',
-        costPerImage: 0.03,
-        supportedParameters: ['gen4AspectRatio', 'resolution', 'seed'],
-        parameters: {
-            aspectRatio: MODEL_PARAMETERS.gen4AspectRatio,
-            resolution: MODEL_PARAMETERS.resolution,
-            seed: MODEL_PARAMETERS.seed
-        },
-        maxReferenceImages: 3
-    },
-    'qwen-image-edit': {
-        id: 'qwen-image-edit',
-        name: 'qwen-image-edit',
-        displayName: 'Qwen Edit',
-        type: 'editing',
-        icon: '✏️',
-        description: 'Precise image editing with text instructions (20B parameter model)',
-        badge: 'Edit',
-        badgeColor: 'bg-accent',
-        textColor: 'text-indigo-300',
-        endpoint: 'qwen/qwen-image-edit',
-        costPerImage: 0.03,
-        supportedParameters: ['seed', 'aspectRatio', 'outputFormat', 'outputQuality', 'goFast'],
-        parameters: {
-            seed: MODEL_PARAMETERS.seed,
-            aspectRatio: MODEL_PARAMETERS.aspectRatio,
-            outputFormat: MODEL_PARAMETERS.outputFormat,
-            outputQuality: MODEL_PARAMETERS.outputQuality,
-            goFast: MODEL_PARAMETERS.goFast
-        },
-        maxReferenceImages: 1,
-        requiresInputImage: true
-    },
-    'qwen-image': {
-        id: 'qwen-image',
-        name: 'qwen-image',
-        displayName: 'Qwen Image',
-        type: 'generation',
-        icon: '🎨',
-        description: 'Advanced text rendering & complex image generation with exceptional detail',
-        badge: 'Text+',
-        badgeColor: 'bg-primary',
-        textColor: 'text-orange-300',
-        endpoint: 'qwen/qwen-image',
-        costPerImage: 0.04,
-        supportedParameters: ['seed', 'aspectRatio', 'qwenGuidance', 'qwenSteps', 'negativePrompt'],
-        parameters: {
-            seed: MODEL_PARAMETERS.seed,
-            aspectRatio: MODEL_PARAMETERS.aspectRatio,
-            guidance: MODEL_PARAMETERS.qwenGuidance,
-            num_inference_steps: MODEL_PARAMETERS.qwenSteps,
-            negative_prompt: MODEL_PARAMETERS.negativePrompt
-        },
-        maxReferenceImages: 0
     }
 }
 

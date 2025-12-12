@@ -106,6 +106,54 @@ export function UnifiedImageGallery({
 
     // Local UI state
     const [isMobileFolderMenuOpen, setIsMobileFolderMenuOpen] = useState(false)
+    const [removingBackgroundId, setRemovingBackgroundId] = useState<string | null>(null)
+
+    // Handle background removal
+    const handleRemoveBackground = useCallback(async (image: GeneratedImage) => {
+        if (removingBackgroundId) return // Prevent multiple concurrent removals
+
+        setRemovingBackgroundId(image.id)
+        toast({
+            title: "Removing Background",
+            description: "Processing image... (3 pts)"
+        })
+
+        try {
+            const response = await fetch('/api/tools/remove-background', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    imageUrl: image.url,
+                    galleryId: image.id
+                })
+            })
+
+            const result = await response.json()
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to remove background')
+            }
+
+            toast({
+                title: "Background Removed!",
+                description: "New image saved to gallery. Refreshing..."
+            })
+
+            // Refresh gallery to show the new image
+            setTimeout(async () => {
+                await useUnifiedGalleryStore.getState().refreshGallery()
+            }, 500)
+        } catch (error) {
+            console.error('Background removal error:', error)
+            toast({
+                title: "Remove Background Failed",
+                description: error instanceof Error ? error.message : "An error occurred",
+                variant: "destructive"
+            })
+        } finally {
+            setRemovingBackgroundId(null)
+        }
+    }, [removingBackgroundId, toast])
 
     // Sidebar collapsed state from store (persisted)
     const isSidebarCollapsed = useUnifiedGalleryStore(state => state.isSidebarCollapsed)
@@ -359,6 +407,8 @@ export function UnifiedImageGallery({
                             onMoveToFolder={(folderId) => handleMoveToFolder(image.id, folderId)}
                             onExtractFrames={() => handleExtractFrames(image.url)}
                             onExtractFramesToGallery={() => handleExtractFramesToGallery(image.url, image.id)}
+                            onRemoveBackground={() => handleRemoveBackground(image)}
+                            isRemovingBackground={removingBackgroundId === image.id}
                             currentFolderId={image.folderId}
                             folders={folders}
                             showActions={true}
@@ -493,6 +543,8 @@ export function UnifiedImageGallery({
                                         onMoveToFolder={(folderId) => handleMoveToFolder(image.id, folderId)}
                                         onExtractFrames={() => handleExtractFrames(image.url)}
                                         onExtractFramesToGallery={() => handleExtractFramesToGallery(image.url, image.id)}
+                                        onRemoveBackground={() => handleRemoveBackground(image)}
+                                        isRemovingBackground={removingBackgroundId === image.id}
                                         currentFolderId={image.folderId}
                                         folders={folders}
                                         showActions={true}
@@ -543,6 +595,8 @@ export function UnifiedImageGallery({
                             onAddToLibrary={onSendToLibrary && fullscreenImage ? () => onSendToLibrary(fullscreenImage.url, fullscreenImage.id) : undefined}
                             onExtractFrames={() => handleExtractFrames(fullscreenImage.url)}
                             onExtractFramesToGallery={() => handleExtractFramesToGallery(fullscreenImage.url, fullscreenImage.id)}
+                            onRemoveBackground={() => handleRemoveBackground(fullscreenImage)}
+                            isRemovingBackground={removingBackgroundId === fullscreenImage.id}
                             showReferenceNamePrompt={showReferenceNamePrompt}
                         />
                     )}

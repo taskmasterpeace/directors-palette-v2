@@ -22,6 +22,7 @@ import {
   Send,
   ImageIcon,
   Copy,
+  Eraser,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import type { FolderWithCount } from '../../types/folder.types'
@@ -45,6 +46,8 @@ interface MobileImageActionSheetProps {
   onExtractFramesToGallery?: () => void
   onAddToLibrary?: () => void
   onMoveToFolder?: (folderId: string | null) => void
+  onRemoveBackground?: () => void
+  isRemovingBackground?: boolean
 }
 
 export function MobileImageActionSheet({
@@ -64,6 +67,8 @@ export function MobileImageActionSheet({
   onExtractFramesToGallery,
   onAddToLibrary,
   onMoveToFolder,
+  onRemoveBackground,
+  isRemovingBackground,
 }: MobileImageActionSheetProps) {
   const [currentView, setCurrentView] = useState<MenuView>('main')
 
@@ -156,6 +161,24 @@ export function MobileImageActionSheet({
                     label="Download"
                     onClick={() => handleAction(onDownload)}
                   />
+
+                  {/* Remove Background */}
+                  {onRemoveBackground && (
+                    <MenuButton
+                      icon={isRemovingBackground ? (
+                        <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Eraser className="h-5 w-5" />
+                      )}
+                      label={isRemovingBackground ? "Removing..." : "Remove Background (3 pts)"}
+                      onClick={() => {
+                        if (!isRemovingBackground) {
+                          onRemoveBackground()
+                          handleClose()
+                        }
+                      }}
+                    />
+                  )}
 
                   {/* Set/Edit Reference */}
                   {(onSetReference || onEditReference) && (

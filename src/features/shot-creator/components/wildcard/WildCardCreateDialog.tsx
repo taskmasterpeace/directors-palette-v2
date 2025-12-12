@@ -141,6 +141,9 @@ export function WildCardCreateDialog({ open, onOpenChange }: WildCardCreateDialo
                         <p className="text-xs text-muted-foreground">
                             One prompt per line. Each line will be randomly selected.
                         </p>
+                        <p className="text-xs text-primary/80 mt-2">
+                            Want AI to help generate entries? Visit the <span className="font-medium">Wildcards tab</span> for assisted creation.
+                        </p>
                     </div>
                 </div>
 
@@ -151,7 +154,7 @@ export function WildCardCreateDialog({ open, onOpenChange }: WildCardCreateDialo
                     <Button
                         onClick={handleSubmit}
                         disabled={!formData.name || !formData.content || isSubmitting}
-                        className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
                         {isSubmitting ? 'Creating...' : 'Create Wild Card'}
                     </Button>

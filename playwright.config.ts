@@ -1,10 +1,14 @@
 import { defineConfig, devices } from '@playwright/test'
+import * as path from 'path'
 
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
   testDir: './tests',
+
+  /* Global setup runs once before all tests - handles authentication */
+  globalSetup: require.resolve('./tests/global-setup'),
 
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -42,29 +46,53 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
+    // Setup project - runs global-setup.ts (not a test project)
+    { name: 'setup', testMatch: /global-setup\.ts/ },
+
+    // Authenticated tests (use saved auth state)
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: './tests/.auth/user.json',
+      },
+      dependencies: ['setup'],
     },
 
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: {
+        ...devices['Desktop Firefox'],
+        storageState: './tests/.auth/user.json',
+      },
+      dependencies: ['setup'],
     },
 
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: {
+        ...devices['Desktop Safari'],
+        storageState: './tests/.auth/user.json',
+      },
+      dependencies: ['setup'],
     },
 
     /* Test against mobile viewports. */
     {
       name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
+      use: {
+        ...devices['Pixel 5'],
+        storageState: './tests/.auth/user.json',
+      },
+      dependencies: ['setup'],
     },
     {
       name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
+      use: {
+        ...devices['iPhone 12'],
+        storageState: './tests/.auth/user.json',
+      },
+      dependencies: ['setup'],
     },
 
     /* Test against branded browsers. */

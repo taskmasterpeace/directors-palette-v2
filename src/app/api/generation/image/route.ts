@@ -3,6 +3,8 @@ import Replicate from 'replicate';
 import { ImageGenerationService } from '@/features/shot-creator/services/image-generation.service';
 import { ImageModel, ImageModelSettings } from "@/features/shot-creator/types/image-generation.types";
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { creditsService } from '@/features/credits';
+import { isAdminEmail } from '@/features/admin/types/admin.types';
 import type { Database } from '../../../../../supabase/database.types';
 
 const replicate = new Replicate({
@@ -47,6 +49,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // ✅ CREDITS: Check if user has sufficient credits (admins bypass)
+    const userIsAdmin = isAdminEmail(user.email)
+    if (!userIsAdmin) {
+      const creditCheck = await creditsService.hasSufficientCredits(user.id, model, 'image')
+      if (!creditCheck.sufficient) {
+        return NextResponse.json(
+          {
+            error: 'Insufficient credits',
+            details: `You need ${creditCheck.required} points but only have ${creditCheck.balance} points.`,
+            required: creditCheck.required,
+            balance: creditCheck.balance,
+          },
+          { status: 402 } // Payment Required
+        );
+      }
+    }
+
     // ✅ SECURITY: Use authenticated user ID (not from request body)
     const validation = ImageGenerationService.validateInput({
       model: model as ImageModel,
@@ -77,26 +96,36 @@ export async function POST(request: NextRequest) {
     console.log('Using model:', replicateModelId);
     console.log('Input data:', JSON.stringify(replicateInput, null, 2));
 
-    // Create Replicate prediction with webhook
-    const webhookUrl = `${process.env.WEBHOOK_URL}/api/webhooks/replicate`;
-    console.log('Webhook URL:', webhookUrl);
+    // Create Replicate prediction with webhook (if configured)
+    const webhookUrl = process.env.WEBHOOK_URL
+      ? `${process.env.WEBHOOK_URL}/api/webhooks/replicate`
+      : null;
+    console.log('Webhook URL:', webhookUrl || '(none - will poll for results)');
 
     let prediction;
     try {
       console.log('Creating prediction with model:', replicateModelId);
-      console.log('Input payload:', JSON.stringify({
-        model: replicateModelId,
-        input: replicateInput,
-        webhook: webhookUrl,
-        webhook_events_filter: ['completed'],
-      }, null, 2));
 
-      prediction = await replicate.predictions.create({
+      // Build prediction options - webhook is optional for local development
+      const predictionOptions: {
+        model: string;
+        input: typeof replicateInput;
+        webhook?: string;
+        webhook_events_filter?: ('start' | 'output' | 'logs' | 'completed')[];
+      } = {
         model: replicateModelId,
         input: replicateInput,
-        webhook: webhookUrl,
-        webhook_events_filter: ['completed'],
-      });
+      };
+
+      // Only add webhook if URL is configured (production)
+      if (webhookUrl) {
+        predictionOptions.webhook = webhookUrl;
+        predictionOptions.webhook_events_filter = ['completed'] as const;
+      }
+
+      console.log('Input payload:', JSON.stringify(predictionOptions, null, 2));
+
+      prediction = await replicate.predictions.create(predictionOptions);
 
       console.log('Prediction created successfully:', prediction.id);
     } catch (replicateError: unknown) {
@@ -190,6 +219,83 @@ export async function POST(request: NextRequest) {
         { error: 'Failed to create gallery entry' },
         { status: 500 }
       );
+    }
+
+    // ✅ CREDITS: Deduct credits after successful prediction creation (admins bypass)
+    if (!userIsAdmin) {
+      const deductResult = await creditsService.deductCredits(user.id, model, {
+        generationType: 'image',
+        predictionId: prediction.id,
+        description: `Image generation (${model})`,
+      })
+      if (!deductResult.success) {
+        console.error('Failed to deduct credits:', deductResult.error)
+        // Note: We don't fail the request here since the prediction was already created
+        // The user will still see the image, but this should be monitored
+      } else {
+        console.log(`Deducted credits for user ${user.id}. New balance: ${deductResult.newBalance}`)
+      }
+    }
+
+    // If no webhook, poll for results (for local development)
+    if (!webhookUrl) {
+      console.log('No webhook - polling for results...');
+      try {
+        // Wait for prediction to complete (up to 5 minutes)
+        const completedPrediction = await replicate.wait(prediction, {
+          interval: 1000, // Check every second
+        });
+
+        console.log('Prediction completed:', completedPrediction.status);
+
+        if (completedPrediction.status === 'succeeded' && completedPrediction.output) {
+          // Get the image URL (output can be string or array)
+          const imageUrl = Array.isArray(completedPrediction.output)
+            ? completedPrediction.output[0]
+            : completedPrediction.output;
+
+          console.log('Image URL:', imageUrl);
+
+          // Update gallery entry with completed status and image URL
+          // Use public_url to match webhook handler and waitForImageCompletion
+          const { error: updateError } = await supabase
+            .from('gallery')
+            .update({
+              status: 'completed',
+              public_url: imageUrl,
+            })
+            .eq('id', gallery.id);
+
+          if (updateError) {
+            console.error('Failed to update gallery:', updateError);
+          } else {
+            console.log('Gallery updated successfully');
+          }
+
+          return NextResponse.json({
+            predictionId: prediction.id,
+            galleryId: gallery.id,
+            status: 'completed',
+            imageUrl: imageUrl,
+          });
+        } else if (completedPrediction.status === 'failed') {
+          // Update gallery with failed status
+          await supabase
+            .from('gallery')
+            .update({ status: 'failed' })
+            .eq('id', gallery.id);
+
+          return NextResponse.json({
+            predictionId: prediction.id,
+            galleryId: gallery.id,
+            status: 'failed',
+            error: completedPrediction.error,
+          });
+        }
+      } catch (pollError) {
+        console.error('Polling error:', pollError);
+        // Return pending status if polling fails
+      }
     }
 
     return NextResponse.json({

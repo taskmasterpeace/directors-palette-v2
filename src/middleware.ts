@@ -12,6 +12,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
+  // Skip authentication for API routes (they handle their own auth if needed)
+  if (request.nextUrl.pathname.startsWith('/api/')) {
+    return NextResponse.next({ request });
+  }
+
   // Check if Supabase credentials are available
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     // Allow access without auth if credentials are missing (dev mode)
@@ -52,15 +57,15 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes - redirect to signin if not authenticated
-  if (!user && !request.nextUrl.pathname.startsWith('/auth')) {
+  // Protected routes - redirect to landing page if not authenticated
+  if (!user && !request.nextUrl.pathname.startsWith('/auth') && !request.nextUrl.pathname.startsWith('/landing')) {
     const url = request.nextUrl.clone();
-    url.pathname = '/auth/signin';
+    url.pathname = '/landing';
     return NextResponse.redirect(url);
   }
 
-  // Redirect to home if authenticated and trying to access auth pages
-  if (user && request.nextUrl.pathname.startsWith('/auth/signin')) {
+  // Redirect to home if authenticated and trying to access auth or landing pages
+  if (user && (request.nextUrl.pathname.startsWith('/auth/signin') || request.nextUrl.pathname.startsWith('/landing'))) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);

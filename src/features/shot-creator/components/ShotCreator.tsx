@@ -41,7 +41,6 @@ const ShotCreator = () => {
     // Load gallery from Supabase on mount
     const { isLoading: isGalleryLoading } = useGalleryLoader()
 
-    const isEditingMode = shotCreatorSettings.model === 'qwen-image-edit'
     const modelConfig = getModelConfig((shotCreatorSettings.model || 'nano-banana') as ModelId)
 
     // Fix resolution mismatch on initial render
@@ -135,7 +134,7 @@ const ShotCreator = () => {
                     <div className="bg-background/30 p-0">
                         <div className="flex items-center justify-between mb-3 px-2 pt-3">
                             <span className="text-sm text-foreground">
-                                {isEditingMode ? 'Input Image' : `References (Max ${modelConfig?.maxReferenceImages || 3})`}
+                                References (Max {modelConfig?.maxReferenceImages || 3})
                             </span>
                             <ModelSelector
                                 selectedModel={shotCreatorSettings.model || 'nano-banana'}
@@ -153,8 +152,7 @@ const ShotCreator = () => {
                         </div>
                         <CreatorReferenceManager
                             compact={true}
-                            maxImages={isEditingMode ? 1 : (modelConfig?.maxReferenceImages || 3)}
-                            editingMode={isEditingMode}
+                            maxImages={modelConfig?.maxReferenceImages || 3}
                         />
                     </div>
 
@@ -213,7 +211,7 @@ const ShotCreator = () => {
                                 <div className="bg-background/30 rounded-lg border border-border/50 p-4">
                                     <div className="flex items-center justify-between mb-3">
                                         <span className="text-sm text-foreground">
-                                            {isEditingMode ? 'Input Image' : `References (Max ${modelConfig?.maxReferenceImages || 3})`}
+                                            References (Max {modelConfig?.maxReferenceImages || 3})
                                         </span>
                                         <ModelSelector
                                             selectedModel={shotCreatorSettings.model || 'nano-banana'}
@@ -231,8 +229,7 @@ const ShotCreator = () => {
                                     </div>
                                     <CreatorReferenceManager
                                         compact={true}
-                                        maxImages={isEditingMode ? 1 : (modelConfig?.maxReferenceImages || 3)}
-                                        editingMode={isEditingMode}
+                                        maxImages={modelConfig?.maxReferenceImages || 3}
                                     />
                                 </div>
 

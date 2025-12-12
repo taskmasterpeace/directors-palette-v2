@@ -10,10 +10,10 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { WildCardCreateDialog } from '../wildcard/WildCardCreateDialog'
+import StyleSelector from './StyleSelector'
 
 const BasicSettings = () => {
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
@@ -32,15 +32,7 @@ const BasicSettings = () => {
 
     // Get model-specific resolution options
     const resolutionOptions = useMemo(() => {
-        // For seedream-4, use seedreamResolution parameter
-        if (selectedModel === 'seedream-4') {
-            const seedreamParam = modelConfig.parameters.resolution
-            if (seedreamParam?.options) {
-                return seedreamParam.options
-            }
-        }
-
-        // For nano-banana-pro, use nanoBananaProResolution parameter
+        // For nano-banana-pro, use resolution parameter
         if (selectedModel === 'nano-banana-pro') {
             const proParam = modelConfig.parameters.resolution
             if (proParam?.options) {
@@ -57,18 +49,12 @@ const BasicSettings = () => {
 
     // Check if model supports each parameter
     const supportsAspectRatio = useMemo(() =>
-        modelConfig.supportedParameters.includes('aspectRatio') ||
-        modelConfig.supportedParameters.includes('gen4AspectRatio'),
+        modelConfig.supportedParameters.includes('aspectRatio'),
         [modelConfig]
     )
     const supportsResolution = useMemo(() =>
-        modelConfig.supportedParameters.includes('resolution') ||
-        modelConfig.supportedParameters.includes('seedreamResolution'),
+        modelConfig.supportedParameters.includes('resolution'),
         [modelConfig]
-    )
-    const supportsCustomDimensions = useMemo(() =>
-        selectedModel === 'seedream-4' && shotCreatorSettings.resolution === 'custom',
-        [selectedModel, shotCreatorSettings.resolution]
     )
     const supportsOutputFormat = useMemo(() =>
         modelConfig.supportedParameters.includes('outputFormat'),
@@ -77,6 +63,9 @@ const BasicSettings = () => {
 
     return (
         <div className="space-y-4">
+            {/* Style Selector - full width at top */}
+            <StyleSelector />
+
             <div className="grid grid-cols-2 gap-4">
                 {/* Aspect Ratio */}
                 {supportsAspectRatio && (
@@ -142,34 +131,6 @@ const BasicSettings = () => {
                     </div>
                 )}
             </div>
-
-            {/* Custom Dimensions for Seedream-4 */}
-            {supportsCustomDimensions && (
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label className="text-sm text-foreground">Width (px)</Label>
-                        <Input
-                            type="number"
-                            min="1024"
-                            max="4096"
-                            value={shotCreatorSettings.customWidth || 2048}
-                            onChange={(e) => updateSettings({ customWidth: parseInt(e.target.value) })}
-                            className="bg-card border-border text-white"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label className="text-sm text-foreground">Height (px)</Label>
-                        <Input
-                            type="number"
-                            min="1024"
-                            max="4096"
-                            value={shotCreatorSettings.customHeight || 2048}
-                            onChange={(e) => updateSettings({ customHeight: parseInt(e.target.value) })}
-                            className="bg-card border-border text-white"
-                        />
-                    </div>
-                </div>
-            )}
 
             {/* Wild Card Creation */}
             <div className="pt-4 border-t border-border">
