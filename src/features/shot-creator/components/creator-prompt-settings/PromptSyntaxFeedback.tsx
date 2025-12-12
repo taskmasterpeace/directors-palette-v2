@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 
 import { AlertCircle, CheckCircle, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { parseDynamicPrompt, validateBracketSyntax } from "../../helpers/prompt-syntax-feedback";
 import { useWildCardStore } from "../../store/wildcard.store";
 
