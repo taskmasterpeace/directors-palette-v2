@@ -428,20 +428,20 @@ export default function LandingPage() {
                         </div>
                     </div>
 
-                    {/* Storyboard Preview */}
+                    {/* 9-Shot Cinematic Preview */}
                     <div className="max-w-4xl mx-auto">
-                        <div className="relative rounded-xl overflow-hidden border border-border shadow-xl">
+                        <div className="relative rounded-xl overflow-hidden border border-amber-500/30 shadow-xl shadow-amber-500/10">
                             <Image
-                                src="/landing/storyboard-preview.png"
-                                alt="Storyboard Preview - Complete Shot Sequence"
+                                src="/landing/9-shot-cinematic.png"
+                                alt="9-Shot Cinematic Grid - From wide shots to close-ups"
                                 width={1600}
-                                height={900}
+                                height={1600}
                                 className="w-full h-auto"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
                             <div className="absolute bottom-4 left-4 right-4 text-center">
                                 <span className="text-sm text-muted-foreground bg-background/80 px-4 py-2 rounded-full">
-                                    Complete storyboard with consistent characters across all shots
+                                    9-Shot Cinematic Grid: Wide shots → Medium shots → Close-ups
                                 </span>
                             </div>
                         </div>

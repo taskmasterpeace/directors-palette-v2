@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
-import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, ImagePlus, Eraser } from 'lucide-react'
+import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, ImagePlus, Eraser, Clapperboard } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 import { GeneratedImage } from "../../store/unified-gallery-store"
 import { useIsMobile } from '@/hooks/useMediaQuery'
@@ -23,6 +23,8 @@ interface FullscreenModalProps {
     onExtractFramesToGallery?: () => void
     onRemoveBackground?: () => void
     isRemovingBackground?: boolean
+    onGenerateCinematicGrid?: () => void
+    isGeneratingCinematic?: boolean
     showReferenceNamePrompt: (defaultValue?: string) => Promise<string | null>
 }
 
@@ -42,6 +44,8 @@ function FullscreenModal({
     onExtractFramesToGallery,
     onRemoveBackground,
     isRemovingBackground,
+    onGenerateCinematicGrid,
+    isGeneratingCinematic,
     showReferenceNamePrompt
 }: FullscreenModalProps) {
     const { toast } = useToast()
@@ -432,6 +436,32 @@ function FullscreenModal({
                                     >
                                         <ImagePlus className="w-3.5 h-3.5 mr-1" />
                                         Extract to Gallery
+                                    </Button>
+                                </div>
+                            )}
+
+                            {/* Generate 9-Shot Cinematic */}
+                            {onGenerateCinematicGrid && (
+                                <div className="flex gap-2">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="w-full text-white border-border"
+                                        onClick={onGenerateCinematicGrid}
+                                        disabled={isGeneratingCinematic}
+                                        title="Generate 9-Shot Cinematic Grid"
+                                    >
+                                        {isGeneratingCinematic ? (
+                                            <>
+                                                <div className="w-3.5 h-3.5 mr-1 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                Generating...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Clapperboard className="w-3.5 h-3.5 mr-1" />
+                                                9-Shot Cinematic
+                                            </>
+                                        )}
                                     </Button>
                                 </div>
                             )}

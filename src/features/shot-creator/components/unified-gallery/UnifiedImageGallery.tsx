@@ -107,6 +107,7 @@ export function UnifiedImageGallery({
     // Local UI state
     const [isMobileFolderMenuOpen, setIsMobileFolderMenuOpen] = useState(false)
     const [removingBackgroundId, setRemovingBackgroundId] = useState<string | null>(null)
+    const [generatingCinematicId, setGeneratingCinematicId] = useState<string | null>(null)
 
     // Handle background removal
     const handleRemoveBackground = useCallback(async (image: GeneratedImage) => {
@@ -154,6 +155,73 @@ export function UnifiedImageGallery({
             setRemovingBackgroundId(null)
         }
     }, [removingBackgroundId, toast])
+
+    // Handle 9-Shot Cinematic Grid generation
+    const handleGenerateCinematicGrid = useCallback(async (image: GeneratedImage) => {
+        if (generatingCinematicId) return // Prevent multiple concurrent generations
+
+        setGeneratingCinematicId(image.id)
+        toast({
+            title: "Generating 9-Shot Cinematic",
+            description: "Creating cinematic grid... This may take a moment."
+        })
+
+        try {
+            // Build the 9-shot cinematic prompt
+            const cinematicPrompt = `9-shot visual breakdown, cinematic contact sheet:
+
+Top row - WIDE SHOTS establishing environment/scale:
+Bird's Eye aerial view | Wide Establishing shot | Wide Master full body
+
+Middle row - MEDIUM SHOTS for context/relationship:
+Medium Full cowboy shot | Medium waist up | Medium Close upper body
+
+Bottom row - CLOSE-UPS for detail/emotion:
+Close-up face focus | Extreme Close-up detailed | Macro detail shot
+
+One unified 3x3 grid image with consistent style matching the reference image.`
+
+            const response = await fetch('/api/generation/image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'gpt-image-1', // Use GPT Image for best results
+                    prompt: cinematicPrompt,
+                    referenceImages: [{ url: image.url, weight: 0.8 }],
+                    modelSettings: {
+                        aspectRatio: '1:1', // Square for 3x3 grid
+                        resolution: '2K',
+                        quality: 'high'
+                    }
+                })
+            })
+
+            const result = await response.json()
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to generate cinematic grid')
+            }
+
+            toast({
+                title: "9-Shot Cinematic Generated!",
+                description: "Grid saved to gallery. Use 'Extract to Gallery' to split into individual shots."
+            })
+
+            // Refresh gallery to show the new image
+            setTimeout(async () => {
+                await useUnifiedGalleryStore.getState().refreshGallery()
+            }, 1000)
+        } catch (error) {
+            console.error('Cinematic grid generation error:', error)
+            toast({
+                title: "Generation Failed",
+                description: error instanceof Error ? error.message : "An error occurred",
+                variant: "destructive"
+            })
+        } finally {
+            setGeneratingCinematicId(null)
+        }
+    }, [generatingCinematicId, toast])
 
     // Sidebar collapsed state from store (persisted)
     const isSidebarCollapsed = useUnifiedGalleryStore(state => state.isSidebarCollapsed)
@@ -597,6 +665,8 @@ export function UnifiedImageGallery({
                             onExtractFramesToGallery={() => handleExtractFramesToGallery(fullscreenImage.url, fullscreenImage.id)}
                             onRemoveBackground={() => handleRemoveBackground(fullscreenImage)}
                             isRemovingBackground={removingBackgroundId === fullscreenImage.id}
+                            onGenerateCinematicGrid={() => handleGenerateCinematicGrid(fullscreenImage)}
+                            isGeneratingCinematic={generatingCinematicId === fullscreenImage.id}
                             showReferenceNamePrompt={showReferenceNamePrompt}
                         />
                     )}

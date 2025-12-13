@@ -28,6 +28,7 @@ export interface ShotCreatorStore {
         galleryId?: string
     } | null;
     generatedShotIds: Set<string>;
+    useNativeAspectRatio: boolean;
 
     // ---- Actions ----
     setSettings: (updater: ShotCreatorSettings | ((prev: ShotCreatorSettings) => ShotCreatorSettings)) => void
@@ -47,6 +48,7 @@ export interface ShotCreatorStore {
 
     // full screen
     setFullscreenImage: (image: LibraryImageReference | null) => void;
+    setUseNativeAspectRatio: (value: boolean) => void;
     resetStore: () => void;
 
     // functions
@@ -65,6 +67,7 @@ export const useShotCreatorStore = create<ShotCreatorStore>()((set) => ({
     pendingGeneration: null,
     generatedShotIds: new Set(),
     settings: DEFAULT_SETTINGS,
+    useNativeAspectRatio: false,
     // ---- Actions ----
     setSettings: (updater) => set((state) => ({
         settings: typeof updater === 'function' ? updater(state.settings) : updater
@@ -78,6 +81,7 @@ export const useShotCreatorStore = create<ShotCreatorStore>()((set) => ({
     setShotCreatorGenerations: (generations) => set({ shotCreatorGenerations: generations }),
     setShotCreatorProcessing: (processing) => set({ shotCreatorProcessing: processing }),
     setFullscreenImage: (image) => set({ fullscreenImage: image }),
+    setUseNativeAspectRatio: (value) => set({ useNativeAspectRatio: value }),
     setCategoryDialogOpen: (open) => set({ categoryDialogOpen: open }),
     setPendingGeneration: (generation) => set({ pendingGeneration: generation }),
     resetStore: () =>

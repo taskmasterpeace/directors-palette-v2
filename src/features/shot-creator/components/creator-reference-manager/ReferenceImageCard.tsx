@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import InlineTagEditor from "./InlineTagEditor"
 import { Capacitor } from '@capacitor/core'
+import { cn } from "@/utils/utils"
 
 // ImageData type can be extended
 export interface ShotImage {
@@ -29,6 +30,7 @@ interface ReferenceImageCardProps {
     handleCameraCapture?: () => void
     removeShotCreatorImage: (id: string) => void
     setFullscreenImage: (img: ShotImage) => void
+    useNativeAspectRatio?: boolean
 }
 
 export function ReferenceImageCard({
@@ -43,7 +45,8 @@ export function ReferenceImageCard({
     handlePasteImage,
     handleCameraCapture,
     removeShotCreatorImage,
-    setFullscreenImage
+    setFullscreenImage,
+    useNativeAspectRatio = false
 }: ReferenceImageCardProps) {
     const isNative = Capacitor.isNativePlatform()
     return (
@@ -73,13 +76,19 @@ export function ReferenceImageCard({
             >
                 {image ? (
                     <>
-                        <div className="w-full aspect-square relative">
+                        <div className={cn(
+                            "w-full relative",
+                            useNativeAspectRatio ? "aspect-video" : "aspect-square"
+                        )}>
                             <Image
                                 src={image.preview}
                                 alt={`Reference ${index + 1}`}
                                 fill
                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 53vw"
-                                className="w-full h-full object-cover cursor-pointer"
+                                className={cn(
+                                    "w-full h-full cursor-pointer",
+                                    useNativeAspectRatio ? "object-contain" : "object-cover"
+                                )}
                                 onClick={() => setFullscreenImage(image)}
                             />
                         </div>

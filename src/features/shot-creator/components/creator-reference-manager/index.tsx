@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import {
   Trash2,
   X,
+  RectangleHorizontal,
+  Square,
 } from 'lucide-react'
 import Image from "next/image"
 import CreatorReferenceManagerCompact from "./CreatorReferenceManagerCompact"
@@ -23,7 +25,7 @@ export function CreatorReferenceManager({
   maxImages = 3,
   editingMode = false
 }: CreatorReferenceManagerProps) {
-  const { shotCreatorReferenceImages, setShotCreatorReferenceImages } = useShotCreatorStore()
+  const { shotCreatorReferenceImages, setShotCreatorReferenceImages, useNativeAspectRatio, setUseNativeAspectRatio } = useShotCreatorStore()
   const [editingTagsId, setEditingTagsId] = useState<string | null>(null)
 
   const {
@@ -47,6 +49,31 @@ export function CreatorReferenceManager({
 
   return (
     <div className="space-y-6">
+      {/* Aspect Ratio Toggle */}
+      {shotCreatorReferenceImages.length > 0 && (
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => setUseNativeAspectRatio(!useNativeAspectRatio)}
+            title={useNativeAspectRatio ? "Switch to square crop" : "Switch to native aspect ratio"}
+          >
+            {useNativeAspectRatio ? (
+              <>
+                <Square className="w-4 h-4 mr-1" />
+                <span className="text-xs">Square</span>
+              </>
+            ) : (
+              <>
+                <RectangleHorizontal className="w-4 h-4 mr-1" />
+                <span className="text-xs">Native</span>
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
       {/* Mobile-First Reference Image Layout */}
       <div className="space-y-8 md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
         {Array.from({ length: visibleSlots }, (_, index) => index).map((index) => {
@@ -68,6 +95,7 @@ export function CreatorReferenceManager({
               handleCameraCapture={handleCameraCapture}
               removeShotCreatorImage={removeShotCreatorImage}
               setFullscreenImage={setFullscreenImage}
+              useNativeAspectRatio={useNativeAspectRatio}
             />
           )
         })}
