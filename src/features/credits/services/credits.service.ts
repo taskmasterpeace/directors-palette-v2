@@ -3,7 +3,7 @@
  * Handles all credit-related operations: balance checks, deductions, additions
  */
 
-import { getClient } from '@/lib/db/client'
+import { getClient, getAPIClient } from '@/lib/db/client'
 import type {
     UserCredits,
     CreditTransaction,
@@ -14,9 +14,17 @@ import type {
 } from '../types/credits.types'
 
 // Helper to get an untyped client for credits tables (not in main DB types yet)
+// Uses anon key - respects RLS (for user-facing operations)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getCreditsClient(): Promise<any> {
     return await getClient()
+}
+
+// Helper to get admin client for server-side operations that need to bypass RLS
+// Uses service role key - bypasses RLS (for webhooks, admin operations)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getAdminCreditsClient(): Promise<any> {
+    return await getAPIClient()
 }
 
 // Re-export DEFAULT_PRICING for use in this service
@@ -256,6 +264,7 @@ class CreditsService {
 
     /**
      * Add credits to user account (for purchases, bonuses, etc.)
+     * Uses anon key - for user-initiated operations
      */
     async addCredits(
         userId: string,
@@ -313,6 +322,107 @@ class CreditsService {
         if (txError) {
             console.error('Error creating transaction:', txError)
         }
+
+        return {
+            success: true,
+            transaction: transaction as CreditTransaction,
+            newBalance
+        }
+    }
+
+    /**
+     * Add credits using admin/service role (bypasses RLS)
+     * Used by webhooks and server-side operations
+     */
+    async addCreditsAdmin(
+        userId: string,
+        amount: number,
+        options: {
+            type?: TransactionType
+            description?: string
+            metadata?: Record<string, unknown>
+        } = {}
+    ): Promise<{ success: boolean; transaction?: CreditTransaction; error?: string; newBalance?: number }> {
+        const { type = 'purchase', description, metadata = {} } = options
+        const supabase = await getAdminCreditsClient()
+
+        // Get current balance (or create if doesn't exist)
+        const { data: existingBalance, error: fetchError } = await supabase
+            .from('user_credits')
+            .select('*')
+            .eq('user_id', userId)
+            .single()
+
+        let balance: UserCredits
+
+        if (fetchError && fetchError.code === 'PGRST116') {
+            // No record exists, create one
+            const { data: newRecord, error: insertError } = await supabase
+                .from('user_credits')
+                .insert({
+                    user_id: userId,
+                    balance: 0,
+                    lifetime_purchased: 0,
+                    lifetime_used: 0
+                })
+                .select()
+                .single()
+
+            if (insertError) {
+                console.error('Error creating user credits record (admin):', insertError)
+                return { success: false, error: 'Failed to create user credits record' }
+            }
+
+            balance = newRecord as UserCredits
+            console.log(`Created new credits record for user ${userId}`)
+        } else if (fetchError) {
+            console.error('Error fetching user credits (admin):', fetchError)
+            return { success: false, error: 'Unable to fetch user balance' }
+        } else {
+            balance = existingBalance as UserCredits
+        }
+
+        const newBalance = balance.balance + amount
+        const isPurchase = type === 'purchase'
+
+        // Update balance
+        const updateData: Partial<UserCredits> = { balance: newBalance }
+        if (isPurchase) {
+            updateData.lifetime_purchased = (balance.lifetime_purchased || 0) + amount
+        }
+
+        const { error: updateError } = await supabase
+            .from('user_credits')
+            .update(updateData)
+            .eq('user_id', userId)
+
+        if (updateError) {
+            console.error('Error updating balance (admin):', updateError)
+            return { success: false, error: 'Failed to update balance' }
+        }
+
+        // Create transaction record
+        const transactionData = {
+            user_id: userId,
+            type,
+            amount,
+            balance_after: newBalance,
+            description: description || `${type} - ${amount} credits`,
+            metadata
+        }
+
+        const { data: transaction, error: txError } = await supabase
+            .from('credit_transactions')
+            .insert(transactionData)
+            .select()
+            .single()
+
+        if (txError) {
+            console.error('Error creating transaction (admin):', txError)
+            // Balance was already updated, so still return success
+        }
+
+        console.log(`✅ Admin: Added ${amount} credits to user ${userId}. New balance: ${newBalance}`)
 
         return {
             success: true,

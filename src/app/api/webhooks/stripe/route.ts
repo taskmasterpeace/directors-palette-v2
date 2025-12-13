@@ -275,10 +275,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, eventId
 
     console.log(`[handleCheckoutCompleted] Processing purchase: ${credits} credits for user ${userId} (${session.metadata?.user_email})`)
 
-    // Add credits to user account
-    console.log('[handleCheckoutCompleted] Calling creditsService.addCredits...')
+    // Add credits to user account using admin method (bypasses RLS)
+    console.log('[handleCheckoutCompleted] Calling creditsService.addCreditsAdmin...')
     try {
-        const result = await creditsService.addCredits(userId, credits, {
+        const result = await creditsService.addCreditsAdmin(userId, credits, {
             type: 'purchase',
             description: `${packageName || 'Credit package'} purchase`,
             metadata: {
@@ -293,7 +293,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, eventId
             }
         })
 
-        console.log('[handleCheckoutCompleted] creditsService.addCredits result:', JSON.stringify(result))
+        console.log('[handleCheckoutCompleted] creditsService.addCreditsAdmin result:', JSON.stringify(result))
 
         if (result.success) {
             console.log(`[handleCheckoutCompleted] ✅ Successfully added ${credits} credits to user ${userId}. New balance: ${result.newBalance}`)
