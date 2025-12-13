@@ -11,6 +11,12 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { Coins, Plus, Loader2, Sparkles, Zap, Star, Crown, Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/utils/utils'
 
@@ -148,24 +154,33 @@ export function CreditsDisplay() {
     return (
         <>
             <Dialog open={showPurchaseDialog} onOpenChange={handleCloseStore}>
-                <DialogTrigger asChild>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 border-amber-500/30 hover:border-amber-500/50 hover:bg-amber-500/10"
-                        onClick={handleOpenStore}
-                    >
-                        <Sparkles className="w-4 h-4 text-amber-500" />
-                        <span className="font-mono text-amber-500 font-bold">
-                            {loading ? (
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                            ) : (
-                                `${formatTokens(tokens)} tokens`
-                            )}
-                        </span>
-                        <Plus className="w-3 h-3 text-zinc-500" />
-                    </Button>
-                </DialogTrigger>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <DialogTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2 border-amber-500/30 hover:border-amber-500/50 hover:bg-amber-500/10"
+                                    onClick={handleOpenStore}
+                                >
+                                    <Sparkles className="w-4 h-4 text-amber-500" />
+                                    <span className="font-mono text-amber-500 font-bold">
+                                        {loading ? (
+                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                        ) : (
+                                            `${formatTokens(tokens)} tokens`
+                                        )}
+                                    </span>
+                                    <Plus className="w-3 h-3 text-zinc-500" />
+                                </Button>
+                            </DialogTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="bg-zinc-900 border-zinc-700">
+                            <p className="font-mono">{tokens.toLocaleString()} tokens exactly</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
                 <DialogContent className="bg-zinc-900 border-zinc-800 max-w-4xl p-0">
                     {/* Compact Header */}
                     <div className="p-5 pb-4 border-b border-zinc-800">
