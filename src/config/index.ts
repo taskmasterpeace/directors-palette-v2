@@ -199,9 +199,9 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         type: 'select',
         default: '2K',
         options: [
-            { value: '1K', label: '1K ($0.14)' },
-            { value: '2K', label: '2K ($0.14) - Recommended' },
-            { value: '4K', label: '4K ($0.24) - Premium' }
+            { value: '1K', label: '1K (20 tokens)' },
+            { value: '2K', label: '2K (20 tokens) - Recommended' },
+            { value: '4K', label: '4K (35 tokens) - Premium' }
         ],
         description: 'Higher resolution = better quality but increased cost'
     },
@@ -231,7 +231,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         badgeColor: 'bg-yellow-600',
         textColor: 'text-yellow-300',
         endpoint: 'google/nano-banana',
-        costPerImage: 0.039,
+        costPerImage: 0.06, // Price we charge users (6 pts = $0.06)
         supportedParameters: ['outputFormat', 'aspectRatio'],
         parameters: {
             outputFormat: MODEL_PARAMETERS.outputFormat,
@@ -250,7 +250,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         badgeColor: 'bg-amber-600',
         textColor: 'text-amber-300',
         endpoint: 'google/nano-banana-pro',
-        costPerImage: 0.14,
+        costPerImage: 0.20, // Price we charge users (20 pts = $0.20)
         supportedParameters: ['outputFormat', 'aspectRatio', 'resolution', 'safetyFilterLevel'],
         parameters: {
             outputFormat: MODEL_PARAMETERS.outputFormat,

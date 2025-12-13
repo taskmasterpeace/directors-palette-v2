@@ -145,7 +145,7 @@ export function ContactSheetModal({
                     </DialogTitle>
                     <DialogDescription>
                         Generate a single 3x3 grid with 9 camera angles, then auto-slice into cells
-                        <Badge variant="outline" className="ml-2 text-[10px]">Cost: ~$0.14</Badge>
+                        <Badge variant="outline" className="ml-2 text-[10px]">Cost: ~20 tokens</Badge>
                     </DialogDescription>
                 </DialogHeader>
 

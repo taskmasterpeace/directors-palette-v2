@@ -66,13 +66,13 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         const imageCount = parsedPrompt.totalCount || 1
         const totalCost = imageCount * costPerImage
 
-        // Convert dollar cost to points (1 point = $0.01)
-        const pointsCost = Math.ceil(totalCost * 100)
+        // Convert dollar cost to tokens (1 token = $0.01)
+        const tokenCost = Math.ceil(totalCost * 100)
 
         return {
             imageCount,
             totalCost,
-            pointsCost,
+            tokenCost,
             costPerImage
         }
     }, [shotCreatorPrompt, shotCreatorSettings, wildcards])
@@ -657,11 +657,11 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         <div className="text-xs text-center text-muted-foreground">
                             {generationCost.imageCount > 1 ? (
                                 <span>
-                                    {generationCost.imageCount} images × {generationCost.pointsCost / generationCost.imageCount} pts = <span className="text-primary font-medium">{generationCost.pointsCost} pts</span>
+                                    {generationCost.imageCount} images × {generationCost.tokenCost / generationCost.imageCount} tokens = <span className="text-primary font-medium">{generationCost.tokenCost} tokens</span>
                                 </span>
                             ) : (
                                 <span>
-                                    Cost: <span className="text-primary font-medium">{generationCost.pointsCost} pts</span>
+                                    Cost: <span className="text-primary font-medium">{generationCost.tokenCost} tokens</span>
                                 </span>
                             )}
                         </div>

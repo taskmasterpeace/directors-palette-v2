@@ -67,9 +67,9 @@ export async function POST(request: NextRequest) {
         const totalCredits = pkg.credits + pkg.bonus_credits
 
         // Determine the app URL for redirects
+        // IMPORTANT: Set NEXT_PUBLIC_APP_URL in Vercel to your production domain
         const appUrl = process.env.NEXT_PUBLIC_APP_URL ||
-                      process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
-                      'http://localhost:3000'
+                      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
         // Create Stripe Checkout Session
         const session = await stripe.checkout.sessions.create({

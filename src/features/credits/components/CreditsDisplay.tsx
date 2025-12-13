@@ -25,17 +25,17 @@ interface CreditPackage {
     savings_percent: number
 }
 
-// Convert cents to points (1 cent = 1 point, but we display it abstractly)
-function centsToPoints(cents: number): number {
-    return cents // 1:1 mapping, just called "points" instead of cents
+// Convert cents to tokens (1 cent = 1 token, but we display it abstractly)
+function centsToTokens(cents: number): number {
+    return cents // 1:1 mapping, just called "tokens" instead of cents
 }
 
-// Format points for display
-function formatPoints(points: number): string {
-    if (points >= 1000) {
-        return `${(points / 1000).toFixed(1)}K`
+// Format tokens for display
+function formatTokens(tokens: number): string {
+    if (tokens >= 1000) {
+        return `${(tokens / 1000).toFixed(1)}K`
     }
-    return points.toLocaleString()
+    return tokens.toLocaleString()
 }
 
 // Get tier icon based on package index
@@ -63,9 +63,9 @@ function getTierColors(index: number, isPopular: boolean) {
     return colors[index] || colors[0]
 }
 
-// Estimate images from points (20 pts per image avg)
-function estimateImages(points: number): number {
-    return Math.floor(points / 20)
+// Estimate images from tokens (20 tokens per image avg)
+function estimateImages(tokens: number): number {
+    return Math.floor(tokens / 20)
 }
 
 export function CreditsDisplay() {
@@ -143,7 +143,7 @@ export function CreditsDisplay() {
         }
     }
 
-    const points = centsToPoints(balance)
+    const tokens = centsToTokens(balance)
 
     return (
         <>
@@ -160,7 +160,7 @@ export function CreditsDisplay() {
                             {loading ? (
                                 <Loader2 className="w-3 h-3 animate-spin" />
                             ) : (
-                                `${formatPoints(points)} pts`
+                                `${formatTokens(tokens)} tokens`
                             )}
                         </span>
                         <Plus className="w-3 h-3 text-zinc-500" />
@@ -176,7 +176,7 @@ export function CreditsDisplay() {
                                 </div>
                                 <div>
                                     <DialogHeader>
-                                        <DialogTitle className="text-xl font-bold text-white">Points Store</DialogTitle>
+                                        <DialogTitle className="text-xl font-bold text-white">Token Store</DialogTitle>
                                     </DialogHeader>
                                     <p className="text-sm text-zinc-500">Power your creative workflow</p>
                                 </div>
@@ -184,8 +184,8 @@ export function CreditsDisplay() {
                             <div className="text-right">
                                 <div className="text-xs text-zinc-500">Your Balance</div>
                                 <div className="text-2xl font-bold font-mono text-amber-400">
-                                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : formatPoints(points)}
-                                    <span className="text-sm text-zinc-500 ml-1">pts</span>
+                                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : formatTokens(tokens)}
+                                    <span className="text-sm text-zinc-500 ml-1">tokens</span>
                                 </div>
                             </div>
                         </div>
@@ -240,12 +240,12 @@ export function CreditsDisplay() {
                                                 {pkg.formatted_price}
                                             </div>
 
-                                            {/* Points */}
+                                            {/* Tokens */}
                                             <div className="flex items-baseline gap-1 mb-3">
                                                 <span className="text-xl font-bold font-mono text-amber-400">
-                                                    {formatPoints(pkg.total_credits)}
+                                                    {formatTokens(pkg.total_credits)}
                                                 </span>
-                                                <span className="text-xs text-zinc-500">pts</span>
+                                                <span className="text-xs text-zinc-500">tokens</span>
                                                 {pkg.savings_percent > 0 && (
                                                     <Badge className={cn("ml-2 text-[10px] py-0", colors.badge)}>
                                                         +{pkg.savings_percent}%
@@ -269,7 +269,7 @@ export function CreditsDisplay() {
                                                 {isPurchasing ? (
                                                     <Loader2 className="w-4 h-4 animate-spin" />
                                                 ) : (
-                                                    "Get Points"
+                                                    "Get Tokens"
                                                 )}
                                             </Button>
                                         </div>
@@ -282,7 +282,7 @@ export function CreditsDisplay() {
                         <div className="flex items-center justify-center gap-6 mt-4 pt-3 border-t border-zinc-800 text-[11px] text-zinc-500">
                             <span>Secure checkout</span>
                             <span>•</span>
-                            <span>Points never expire</span>
+                            <span>Tokens never expire</span>
                             <span>•</span>
                             <span>Instant delivery</span>
                         </div>

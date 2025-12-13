@@ -138,6 +138,31 @@ export class AuthService {
   }
 
   /**
+   * Sign in with Google OAuth
+   */
+  static async signInWithGoogle(): Promise<{
+    error: AuthError | null;
+  }> {
+    try {
+      const supabase = await this.supabase();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) {
+        return { error: { message: error.message } };
+      }
+
+      return { error: null };
+    } catch {
+      return { error: { message: 'An unexpected error occurred' } };
+    }
+  }
+
+  /**
    * Request password reset email
    */
   static async requestPasswordReset(email: string): Promise<{

@@ -186,10 +186,10 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
         setSelectedShots(new Set(filteredPrompts.slice(0, count).map(p => p.sequence)))
     }
 
-    // Calculate estimated cost
+    // Calculate estimated cost in tokens (20 tokens per image for Nano Banana Pro)
     const estimatedCost = useMemo(() => {
-        const perImageCost = 0.14 // Approximate cost per image
-        return (selectedShots.size * perImageCost).toFixed(2)
+        const perImageTokens = 20 // Tokens per image (Nano Banana Pro)
+        return selectedShots.size * perImageTokens
     }, [selectedShots.size])
 
     useEffect(() => {
@@ -472,7 +472,7 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                 </Button>
                 <div className="flex-1" />
                 <Badge variant={selectedShots.size > 20 ? "destructive" : "outline"} className="text-xs">
-                    {selectedShots.size} selected ~ ${estimatedCost}
+                    {selectedShots.size} selected ~ {estimatedCost} tokens
                 </Badge>
             </div>
 
@@ -585,7 +585,7 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                         ) : (
                             <>
                                 <Play className="w-4 h-4 mr-2" />
-                                Generate {selectedShots.size} Selected Shots (~${estimatedCost})
+                                Generate {selectedShots.size} Selected Shots (~{estimatedCost} tokens)
                             </>
                         )}
                     </Button>
