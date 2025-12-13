@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Trash2,
@@ -11,9 +11,6 @@ import {
   Copy,
   Film,
   Layout,
-  Grid3x3,
-  Clapperboard,
-  Eraser,
 } from 'lucide-react'
 import Image from "next/image"
 import CreatorReferenceManagerCompact from "./CreatorReferenceManagerCompact"
@@ -27,12 +24,14 @@ interface CreatorReferenceManagerProps {
   compact?: boolean
   maxImages?: number
   editingMode?: boolean
+  modelSelector?: ReactNode
 }
 
 export function CreatorReferenceManager({
   compact = false,
   maxImages = 3,
-  editingMode = false
+  editingMode = false,
+  modelSelector
 }: CreatorReferenceManagerProps) {
   const { shotCreatorReferenceImages, setShotCreatorReferenceImages, useNativeAspectRatio, setUseNativeAspectRatio, onSendToShotAnimator } = useShotCreatorStore()
   const [editingTagsId, setEditingTagsId] = useState<string | null>(null)
@@ -109,7 +108,7 @@ export function CreatorReferenceManager({
     return (
       <CreatorReferenceManagerCompact
         maxImages={maxImages}
-        editingMode={editingMode}
+        modelSelector={modelSelector}
       />
     )
   }

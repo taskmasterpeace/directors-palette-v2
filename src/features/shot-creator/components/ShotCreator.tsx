@@ -132,27 +132,24 @@ const ShotCreator = () => {
                 <div className="lg:hidden space-y-4">
                     {/* Reference Images */}
                     <div className="bg-background/30 p-0">
-                        <div className="flex items-center justify-between mb-3 px-2 pt-3">
-                            <span className="text-sm text-foreground">
-                                References (Max {modelConfig?.maxReferenceImages || 3})
-                            </span>
-                            <ModelSelector
-                                selectedModel={shotCreatorSettings.model || 'nano-banana'}
-                                onModelChange={(model: string) => {
-                                    const newModel = model as ModelId
-                                    const newModelConfig = getModelConfig(newModel)
-                                    const defaultResolution = newModelConfig.parameters.resolution?.default as string | undefined
-                                    const updates: { model: ModelId; resolution?: string } = { model: newModel }
-                                    if (defaultResolution) updates.resolution = defaultResolution
-                                    updateSettings(updates)
-                                }}
-                                compact={true}
-                                showTooltips={false}
-                            />
-                        </div>
                         <CreatorReferenceManager
                             compact={true}
                             maxImages={modelConfig?.maxReferenceImages || 3}
+                            modelSelector={
+                                <ModelSelector
+                                    selectedModel={shotCreatorSettings.model || 'nano-banana'}
+                                    onModelChange={(model: string) => {
+                                        const newModel = model as ModelId
+                                        const newModelConfig = getModelConfig(newModel)
+                                        const defaultResolution = newModelConfig.parameters.resolution?.default as string | undefined
+                                        const updates: { model: ModelId; resolution?: string } = { model: newModel }
+                                        if (defaultResolution) updates.resolution = defaultResolution
+                                        updateSettings(updates)
+                                    }}
+                                    compact={true}
+                                    showTooltips={false}
+                                />
+                            }
                         />
                     </div>
 
@@ -209,27 +206,24 @@ const ShotCreator = () => {
                             <div className="h-full pr-3 space-y-4 overflow-y-auto">
                                 {/* Reference Images */}
                                 <div className="bg-background/30 rounded-lg border border-border/50 p-4">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <span className="text-sm text-foreground">
-                                            References (Max {modelConfig?.maxReferenceImages || 3})
-                                        </span>
-                                        <ModelSelector
-                                            selectedModel={shotCreatorSettings.model || 'nano-banana'}
-                                            onModelChange={(model: string) => {
-                                                const newModel = model as ModelId
-                                                const newModelConfig = getModelConfig(newModel)
-                                                const defaultResolution = newModelConfig.parameters.resolution?.default as string | undefined
-                                                const updates: { model: ModelId; resolution?: string } = { model: newModel }
-                                                if (defaultResolution) updates.resolution = defaultResolution
-                                                updateSettings(updates)
-                                            }}
-                                            compact={true}
-                                            showTooltips={false}
-                                        />
-                                    </div>
                                     <CreatorReferenceManager
                                         compact={true}
                                         maxImages={modelConfig?.maxReferenceImages || 3}
+                                        modelSelector={
+                                            <ModelSelector
+                                                selectedModel={shotCreatorSettings.model || 'nano-banana'}
+                                                onModelChange={(model: string) => {
+                                                    const newModel = model as ModelId
+                                                    const newModelConfig = getModelConfig(newModel)
+                                                    const defaultResolution = newModelConfig.parameters.resolution?.default as string | undefined
+                                                    const updates: { model: ModelId; resolution?: string } = { model: newModel }
+                                                    if (defaultResolution) updates.resolution = defaultResolution
+                                                    updateSettings(updates)
+                                                }}
+                                                compact={true}
+                                                showTooltips={false}
+                                            />
+                                        }
                                     />
                                 </div>
 

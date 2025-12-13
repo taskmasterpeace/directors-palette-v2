@@ -1,5 +1,4 @@
-import React from 'react'
-import { Label } from '@/components/ui/label'
+import React, { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Clipboard, Plus, Trash2 } from 'lucide-react'
 import Image from 'next/image'
@@ -9,9 +8,10 @@ import { useReferenceImageManager } from "../../hooks/useReferenceImageManager"
 interface CreatorReferenceManagerCompactProps {
     editingMode?: boolean
     maxImages?: number
+    modelSelector?: ReactNode
 }
 
-const CreatorReferenceManagerCompact = ({ editingMode, maxImages = 3 }: CreatorReferenceManagerCompactProps) => {
+const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: CreatorReferenceManagerCompactProps) => {
     const { shotCreatorReferenceImages } = useShotCreatorStore()
 
     const {
@@ -22,10 +22,9 @@ const CreatorReferenceManagerCompact = ({ editingMode, maxImages = 3 }: CreatorR
     } = useReferenceImageManager(maxImages)
     return (
         <div className="space-y-2">
-            <div className="flex items-center justify-between">
-                <Label className="text-white text-sm">
-                    {editingMode ? 'Input Image' : 'Reference Images'} ({shotCreatorReferenceImages.length}/{maxImages})
-                </Label>
+            {/* Model selector and Paste on same row */}
+            <div className="flex items-center justify-between gap-2">
+                {modelSelector}
                 <Button
                     size="sm"
                     variant="outline"
