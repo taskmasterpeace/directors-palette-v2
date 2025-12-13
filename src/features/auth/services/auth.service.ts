@@ -148,7 +148,8 @@ export class AuthService {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          // Must redirect to /auth/callback to exchange the code for a session
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 

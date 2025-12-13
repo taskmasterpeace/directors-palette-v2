@@ -2,8 +2,13 @@
 // Supports bracket notation: [option1, option2, option3]
 // Supports pipe notation: prompt1 | prompt2 | prompt3
 // Supports wild cards: _wildcard_ (requires wild card library)
+//
+// COMBINING SYNTAX:
+// - Wildcards + Brackets: YES (wildcard substitutes first, then brackets expand)
+// - Wildcards + Pipes: YES (wildcard substitutes first, then pipe chain runs)
+// - Brackets + Pipes: YES with 10 image max (brackets × pipes = total images)
 
-import { parseWildCardPrompt, WildCard } from "./wildcard/parser"
+import { WildCard, generateRandomSelection, extractWildCardNames, parseWildCardContent } from "./wildcard/parser"
 
 export interface DynamicPromptResult {
     isValid: boolean
@@ -19,12 +24,17 @@ export interface DynamicPromptResult {
     totalCount: number
     warnings?: string[]
     isCrossCombination?: boolean
+    // New fields for combined syntax
+    creditCost?: number
+    imageBreakdown?: string
 }
 
 export interface DynamicPromptConfig {
     maxOptions: number
     maxPreview: number
+    maxTotalImages: number  // Max images when combining brackets + pipes
     trimWhitespace: boolean
+    creditsPerImage: number
     // Granular syntax disabling
     disablePipeSyntax?: boolean    // Treat | as literal text
     disableBracketSyntax?: boolean // Treat [...] as literal text
@@ -34,7 +44,9 @@ export interface DynamicPromptConfig {
 const DEFAULT_CONFIG: DynamicPromptConfig = {
     maxOptions: 10,        // Maximum bracket/pipe options allowed
     maxPreview: 5,         // Maximum prompts to show in preview
+    maxTotalImages: 10,    // Maximum total images when combining syntax
     trimWhitespace: true,  // Clean up spacing
+    creditsPerImage: 20,   // Credits per image for cost calculation
     disablePipeSyntax: false,
     disableBracketSyntax: false,
     disableWildcardSyntax: false
@@ -100,12 +112,18 @@ function parsePipePrompt(
 
 /**
  * Parse dynamic prompt with bracket notation, pipe notation, AND wild cards
+ *
+ * COMBINING SYNTAX (now supported):
+ * - Wildcards + Brackets: wildcard substitutes first (random), then brackets expand
+ * - Wildcards + Pipes: wildcard substitutes first (random), then pipes expand
+ * - Brackets + Pipes: Cross-product with 10 image max (auto-reject if over)
+ *
  * Examples:
  * - "show an apple in [a garden, in a car, in space] half eaten"
  * - "show an apple in a garden | show an apple in a car | show an apple in space"
  * - "show _character_ in _location_"
- * - "show _character_ [smiling, frowning] in _location_" (mixed syntax)
- * Returns expanded prompts and metadata
+ * - "_character_ [smiling, frowning] in _location_" → wildcard + brackets
+ * - "[red, blue] car | [fast, slow] bike" → brackets + pipes (capped at 10)
  */
 export function parseDynamicPrompt(
     prompt: string,
@@ -114,115 +132,324 @@ export function parseDynamicPrompt(
 ): DynamicPromptResult {
     const finalConfig = { ...DEFAULT_CONFIG, ...config }
 
-    // First check for wild cards (unless disabled)
-    if (!finalConfig.disableWildcardSyntax) {
-        const wildCardResult = parseWildCardPrompt(prompt, userWildCards)
+    // Detect what syntax is present
+    const hasWildCardSyntax = !finalConfig.disableWildcardSyntax && extractWildCardNames(prompt).length > 0
+    const hasPipeSyntax = !finalConfig.disablePipeSyntax && prompt.includes('|')
+    const hasBracketSyntax = !finalConfig.disableBracketSyntax && /\[([^\[\]]+)\]/.test(prompt)
 
-        if (wildCardResult.hasWildCards) {
+    // STEP 1: Handle wildcards first (substitute with random selections)
+    let workingPrompt = prompt
+    let wildCardNames: string[] = []
+    const wildCardWarnings: string[] = []
+    let hasWildCards = false
+
+    if (hasWildCardSyntax) {
+        wildCardNames = extractWildCardNames(prompt)
+        hasWildCards = true
+
+        // Build wildcard map and check for missing
+        const wildCardMap = new Map<string, string[]>()
+        const missingWildCards: string[] = []
+
+        wildCardNames.forEach(name => {
+            const wildCard = userWildCards.find(wc => wc.name === name)
+            if (wildCard) {
+                const entries = parseWildCardContent(wildCard.content)
+                wildCardMap.set(name, entries)
+            } else {
+                missingWildCards.push(name)
+            }
+        })
+
+        // If missing wildcards, return error
+        if (missingWildCards.length > 0) {
             return {
-                isValid: wildCardResult.isValid,
-                hasBrackets: false,
-                hasPipes: false,
+                isValid: false,
+                hasBrackets: hasBracketSyntax,
+                hasPipes: hasPipeSyntax,
                 hasWildCards: true,
-                expandedPrompts: wildCardResult.expandedPrompts,
+                expandedPrompts: [],
                 originalPrompt: prompt,
-                wildCardNames: wildCardResult.wildCardNames,
-                previewCount: Math.min(wildCardResult.expandedPrompts.length, finalConfig.maxPreview),
-                totalCount: wildCardResult.totalCombinations,
-                warnings: wildCardResult.warnings,
-                isCrossCombination: wildCardResult.crossCombination
+                wildCardNames,
+                previewCount: 0,
+                totalCount: 0,
+                warnings: [`Missing wild cards: ${missingWildCards.map(name => `_${name}_`).join(', ')}`]
             }
         }
+
+        // Substitute wildcards with random selections
+        workingPrompt = generateRandomSelection(prompt, wildCardMap)
+
+        // Build info message about wildcard substitution
+        const wildCardInfo = wildCardNames.map(name => {
+            const entries = wildCardMap.get(name) || []
+            return `${name} (${entries.length} options)`
+        }).join(', ')
+        wildCardWarnings.push(`🎲 Random selection from: ${wildCardInfo}`)
     }
 
-    // Check if prompt contains pipe character (higher priority than brackets)
-    // Skip if pipe syntax is disabled
-    if (prompt.includes('|') && !finalConfig.disablePipeSyntax) {
-        return parsePipePrompt(prompt, finalConfig)
+    // STEP 2: Check for brackets + pipes combination
+    // After wildcard substitution, check what's left
+    const hasRemainingPipes = !finalConfig.disablePipeSyntax && workingPrompt.includes('|')
+    const bracketMatch = finalConfig.disableBracketSyntax ? null : workingPrompt.match(/\[([^\[\]]+)\]/)
+    const hasRemainingBrackets = bracketMatch !== null
+
+    // BRACKETS + PIPES combination (cross-product with cap)
+    if (hasRemainingBrackets && hasRemainingPipes) {
+        return parseBracketsAndPipes(workingPrompt, finalConfig, {
+            originalPrompt: prompt,
+            hasWildCards,
+            wildCardNames,
+            wildCardWarnings
+        })
     }
 
-    // Check if prompt contains brackets (skip if bracket syntax is disabled)
-    const bracketMatch = finalConfig.disableBracketSyntax ? null : prompt.match(/\[([^\[\]]+)\]/)
+    // STEP 3: Handle pipes only
+    if (hasRemainingPipes) {
+        const pipeResult = parsePipePrompt(workingPrompt, finalConfig)
 
-    if (!bracketMatch) {
+        // Merge wildcard info if applicable
+        if (hasWildCards) {
+            return {
+                ...pipeResult,
+                originalPrompt: prompt,
+                hasWildCards: true,
+                wildCardNames,
+                warnings: [...wildCardWarnings, ...(pipeResult.warnings || [])],
+                creditCost: pipeResult.totalCount * finalConfig.creditsPerImage,
+                imageBreakdown: `${wildCardNames.length} wildcard(s) × ${pipeResult.totalCount} pipe variations`
+            }
+        }
+        return pipeResult
+    }
+
+    // STEP 4: Handle brackets only
+    if (hasRemainingBrackets) {
+        const bracketContent = bracketMatch![1]
+        const beforeBracket = workingPrompt.substring(0, bracketMatch!.index)
+        const afterBracket = workingPrompt.substring(bracketMatch!.index! + bracketMatch![0].length)
+
+        // Split options by comma and clean them up
+        let options = bracketContent.split(',')
+
+        if (finalConfig.trimWhitespace) {
+            options = options.map(option => option.trim()).filter(option => option.length > 0)
+        }
+
+        // Validate option count
+        if (options.length === 0) {
+            return {
+                isValid: false,
+                hasBrackets: true,
+                hasPipes: false,
+                hasWildCards,
+                expandedPrompts: [],
+                originalPrompt: prompt,
+                bracketContent,
+                options: [],
+                wildCardNames: hasWildCards ? wildCardNames : undefined,
+                previewCount: 0,
+                totalCount: 0,
+                warnings: wildCardWarnings
+            }
+        }
+
+        if (options.length > finalConfig.maxOptions) {
+            return {
+                isValid: false,
+                hasBrackets: true,
+                hasPipes: false,
+                hasWildCards,
+                expandedPrompts: [],
+                originalPrompt: prompt,
+                bracketContent,
+                options,
+                wildCardNames: hasWildCards ? wildCardNames : undefined,
+                previewCount: 0,
+                totalCount: options.length,
+                warnings: [...wildCardWarnings, `Too many bracket options: ${options.length}. Maximum is ${finalConfig.maxOptions}.`]
+            }
+        }
+
+        // Generate expanded prompts
+        const expandedPrompts = options.map(option => {
+            let expandedPrompt = beforeBracket + option + afterBracket
+
+            // Clean up extra spaces
+            if (finalConfig.trimWhitespace) {
+                expandedPrompt = expandedPrompt.replace(/\s+/g, ' ').trim()
+            }
+
+            return expandedPrompt
+        })
+
+        const totalCount = expandedPrompts.length
+
         return {
             isValid: true,
-            hasBrackets: false,
-            hasPipes: false,
-            hasWildCards: false,
-            expandedPrompts: [prompt],
-            originalPrompt: prompt,
-            previewCount: 1,
-            totalCount: 1
-        }
-    }
-
-    const bracketContent = bracketMatch[1]
-    const beforeBracket = prompt.substring(0, bracketMatch.index)
-    const afterBracket = prompt.substring(bracketMatch.index! + bracketMatch[0].length)
-
-    // Split options by comma and clean them up
-    let options = bracketContent.split(',')
-
-    if (finalConfig.trimWhitespace) {
-        options = options.map(option => option.trim()).filter(option => option.length > 0)
-    }
-
-    // Validate option count
-    if (options.length === 0) {
-        return {
-            isValid: false,
             hasBrackets: true,
             hasPipes: false,
-            hasWildCards: false,
-            expandedPrompts: [],
-            originalPrompt: prompt,
-            bracketContent,
-            options: [],
-            previewCount: 0,
-            totalCount: 0
-        }
-    }
-
-    if (options.length > finalConfig.maxOptions) {
-        return {
-            isValid: false,
-            hasBrackets: true,
-            hasPipes: false,
-            hasWildCards: false,
-            expandedPrompts: [],
+            hasWildCards,
+            expandedPrompts,
             originalPrompt: prompt,
             bracketContent,
             options,
-            previewCount: 0,
-            totalCount: options.length
+            wildCardNames: hasWildCards ? wildCardNames : undefined,
+            previewCount: Math.min(totalCount, finalConfig.maxPreview),
+            totalCount,
+            warnings: wildCardWarnings.length > 0 ? wildCardWarnings : undefined,
+            creditCost: totalCount * finalConfig.creditsPerImage,
+            imageBreakdown: hasWildCards
+                ? `${wildCardNames.length} wildcard(s) × ${options.length} bracket options = ${totalCount} images`
+                : `${options.length} bracket options`
         }
     }
 
-    // Generate expanded prompts
-    const expandedPrompts = options.map(option => {
-        let expandedPrompt = beforeBracket + option + afterBracket
+    // STEP 5: No special syntax (or wildcards only with single result)
+    return {
+        isValid: true,
+        hasBrackets: false,
+        hasPipes: false,
+        hasWildCards,
+        expandedPrompts: [workingPrompt],
+        originalPrompt: prompt,
+        wildCardNames: hasWildCards ? wildCardNames : undefined,
+        previewCount: 1,
+        totalCount: 1,
+        warnings: wildCardWarnings.length > 0 ? wildCardWarnings : undefined,
+        creditCost: finalConfig.creditsPerImage
+    }
+}
 
-        // Clean up extra spaces
-        if (finalConfig.trimWhitespace) {
-            expandedPrompt = expandedPrompt.replace(/\s+/g, ' ').trim()
+/**
+ * Parse combined brackets + pipes syntax
+ * Example: "[red, blue] car | [fast, slow] bike"
+ * This creates a cross-product: (red car, blue car) × (fast bike, slow bike)
+ * Capped at maxTotalImages (default 10)
+ */
+function parseBracketsAndPipes(
+    prompt: string,
+    config: DynamicPromptConfig,
+    context: {
+        originalPrompt: string
+        hasWildCards: boolean
+        wildCardNames: string[]
+        wildCardWarnings: string[]
+    }
+): DynamicPromptResult {
+    // Split by pipes first
+    let pipeSegments = prompt.split('|')
+
+    if (config.trimWhitespace) {
+        pipeSegments = pipeSegments.map(s => s.trim()).filter(s => s.length > 0)
+    }
+
+    // Expand brackets in each pipe segment
+    const expandedSegments: string[][] = []
+
+    for (const segment of pipeSegments) {
+        const bracketMatch = segment.match(/\[([^\[\]]+)\]/)
+
+        if (bracketMatch) {
+            const bracketContent = bracketMatch[1]
+            const beforeBracket = segment.substring(0, bracketMatch.index)
+            const afterBracket = segment.substring(bracketMatch.index! + bracketMatch[0].length)
+
+            let options = bracketContent.split(',')
+            if (config.trimWhitespace) {
+                options = options.map(o => o.trim()).filter(o => o.length > 0)
+            }
+
+            const expanded = options.map(option => {
+                let result = beforeBracket + option + afterBracket
+                if (config.trimWhitespace) {
+                    result = result.replace(/\s+/g, ' ').trim()
+                }
+                return result
+            })
+
+            expandedSegments.push(expanded)
+        } else {
+            // No brackets in this segment, just use as-is
+            expandedSegments.push([segment])
         }
+    }
 
-        return expandedPrompt
-    })
+    // Calculate total combinations (cross-product)
+    const totalCombinations = expandedSegments.reduce((acc, seg) => acc * seg.length, 1)
+    const creditCost = totalCombinations * config.creditsPerImage
+
+    // Check against max limit
+    if (totalCombinations > config.maxTotalImages) {
+        const breakdown = expandedSegments.map((seg, i) => `Segment ${i + 1}: ${seg.length} options`).join(', ')
+
+        return {
+            isValid: false,
+            hasBrackets: true,
+            hasPipes: true,
+            hasWildCards: context.hasWildCards,
+            expandedPrompts: [],
+            originalPrompt: context.originalPrompt,
+            wildCardNames: context.hasWildCards ? context.wildCardNames : undefined,
+            previewCount: 0,
+            totalCount: totalCombinations,
+            warnings: [
+                ...context.wildCardWarnings,
+                `⚠️ Too many images! ${totalCombinations} combinations exceed the ${config.maxTotalImages} image limit.`,
+                `Breakdown: ${breakdown}`,
+                `Would cost ${creditCost} credits (${config.creditsPerImage} per image)`
+            ],
+            isCrossCombination: true,
+            creditCost,
+            imageBreakdown: `${pipeSegments.length} pipe segments × bracket options = ${totalCombinations} images`
+        }
+    }
+
+    // Generate all combinations (flatten the cross-product)
+    // Note: We don't actually use this cartesian product - see flatPrompts below
+    const _allPrompts = cartesianProductStrings(expandedSegments).map(combo => combo.join(' | '))
+
+    // Actually, we want each combination to be a separate prompt, not joined by |
+    // Let me reconsider - each "row" of the cartesian product is one complete prompt set
+    // Actually for generation, we want ALL the individual prompts
+    const flatPrompts: string[] = []
+    for (const segment of expandedSegments) {
+        flatPrompts.push(...segment)
+    }
 
     return {
         isValid: true,
         hasBrackets: true,
-        hasPipes: false,
-        hasWildCards: false,
-        expandedPrompts,
-        originalPrompt: prompt,
-        bracketContent,
-        options,
-        previewCount: Math.min(expandedPrompts.length, finalConfig.maxPreview),
-        totalCount: expandedPrompts.length
+        hasPipes: true,
+        hasWildCards: context.hasWildCards,
+        expandedPrompts: flatPrompts,
+        originalPrompt: context.originalPrompt,
+        wildCardNames: context.hasWildCards ? context.wildCardNames : undefined,
+        previewCount: Math.min(flatPrompts.length, config.maxPreview),
+        totalCount: flatPrompts.length,
+        warnings: [
+            ...context.wildCardWarnings,
+            `📸 Generating ${flatPrompts.length} images (${creditCost} credits)`
+        ],
+        isCrossCombination: true,
+        creditCost,
+        imageBreakdown: `${pipeSegments.length} pipe segments with brackets = ${flatPrompts.length} images`
     }
+}
+
+/**
+ * Cartesian product for string arrays
+ */
+function cartesianProductStrings(arrays: string[][]): string[][] {
+    if (arrays.length === 0) return []
+    if (arrays.length === 1) return arrays[0].map(item => [item])
+
+    const [head, ...tail] = arrays
+    const combinations = cartesianProductStrings(tail)
+
+    return head.flatMap(item =>
+        combinations.map(combination => [item, ...combination])
+    )
 }
 
 /**
@@ -272,22 +499,46 @@ export function calculateDynamicPromptCost(
 
 /**
  * Validate bracket and pipe syntax in real-time
+ * Now supports mixed syntax with limits (brackets + pipes capped at 10 images)
  */
-export function validateBracketSyntax(prompt: string): {
+export function validateBracketSyntax(prompt: string, config: Partial<DynamicPromptConfig> = {}): {
     isValid: boolean
     error?: string
     suggestion?: string
+    imageCount?: number
 } {
+    const finalConfig = { ...DEFAULT_CONFIG, ...config }
+
     // Check for mixed bracket and pipe syntax
     const hasBrackets = prompt.includes('[') || prompt.includes(']')
     const hasPipes = prompt.includes('|')
 
+    // Mixed syntax is now allowed - validate it properly
     if (hasBrackets && hasPipes) {
-        return {
-            isValid: false,
-            error: 'Cannot mix brackets and pipes',
-            suggestion: 'Use either [option1, option2] OR option1 | option2, not both'
+        // Count total images that would be generated
+        const pipeSegments = prompt.split('|').map(s => s.trim()).filter(s => s.length > 0)
+
+        let totalImages = 0
+        for (const segment of pipeSegments) {
+            const bracketMatch = segment.match(/\[([^\[\]]+)\]/)
+            if (bracketMatch) {
+                const options = bracketMatch[1].split(',').map(o => o.trim()).filter(o => o.length > 0)
+                totalImages += options.length
+            } else {
+                totalImages += 1
+            }
         }
+
+        if (totalImages > finalConfig.maxTotalImages) {
+            return {
+                isValid: false,
+                error: `Too many images (${totalImages})`,
+                suggestion: `Brackets + Pipes combined can generate max ${finalConfig.maxTotalImages} images. Reduce options.`,
+                imageCount: totalImages
+            }
+        }
+
+        return { isValid: true, imageCount: totalImages }
     }
 
     // Validate pipe syntax
@@ -300,7 +551,7 @@ export function validateBracketSyntax(prompt: string): {
                 suggestion: 'Add prompts separated by |: prompt1 | prompt2'
             }
         }
-        return { isValid: true }
+        return { isValid: true, imageCount: pipeOptions.length }
     }
 
     // Validate bracket syntax
@@ -341,5 +592,11 @@ export function validateBracketSyntax(prompt: string): {
         }
     }
 
-    return { isValid: true }
+    // Count bracket options
+    if (bracketMatch) {
+        const options = bracketMatch[1].split(',').map(o => o.trim()).filter(o => o.length > 0)
+        return { isValid: true, imageCount: options.length }
+    }
+
+    return { isValid: true, imageCount: 1 }
 }

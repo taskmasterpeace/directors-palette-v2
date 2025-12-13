@@ -1,6 +1,7 @@
 /**
  * Credits API Endpoint
  * Handles credit balance, transactions, and deductions
+ * Includes IP-based abuse prevention for new user free credits
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -9,15 +10,49 @@ import { creditsService } from '@/features/credits/services/credits.service'
 import type { GenerationType } from '@/features/credits/types/credits.types'
 
 /**
+ * Extract client IP from Next.js request headers
+ * Handles various proxy headers (Vercel, Cloudflare, etc.)
+ */
+function getClientIP(request: NextRequest): string {
+    // Vercel/Cloudflare headers
+    const forwardedFor = request.headers.get('x-forwarded-for')
+    if (forwardedFor) {
+        // x-forwarded-for can contain multiple IPs, first is client
+        return forwardedFor.split(',')[0].trim()
+    }
+
+    // Cloudflare specific
+    const cfConnectingIP = request.headers.get('cf-connecting-ip')
+    if (cfConnectingIP) return cfConnectingIP
+
+    // Standard real-ip header
+    const realIP = request.headers.get('x-real-ip')
+    if (realIP) return realIP
+
+    // Fallback (may be local in development)
+    return request.headers.get('x-client-ip') || 'unknown'
+}
+
+/**
  * GET /api/credits
  * Get user's credit balance and info
+ * Uses IP-based abuse prevention for new users
  */
 export async function GET(request: NextRequest) {
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
 
     try {
-        const balance = await creditsService.getBalance(auth.user.id)
+        // Get client IP and user agent for abuse prevention
+        const clientIP = getClientIP(request)
+        const userAgent = request.headers.get('user-agent') || undefined
+
+        // Use abuse-aware balance check (will grant reduced credits if IP is suspicious)
+        const balance = await creditsService.getBalanceWithAbuseCheck(
+            auth.user.id,
+            clientIP,
+            userAgent
+        )
 
         if (!balance) {
             return NextResponse.json({ error: 'Failed to fetch balance' }, { status: 500 })

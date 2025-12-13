@@ -63,9 +63,9 @@ export default function LandingPage() {
                                     <ArrowRight className="w-5 h-5 ml-2" />
                                 </Button>
                             </Link>
-                            <Link href="#features">
+                            <Link href="/auth/signin">
                                 <Button size="lg" variant="outline" className="border-amber-500/50 text-amber-500 hover:bg-amber-500/10 text-lg px-8">
-                                    See Features
+                                    Log In
                                 </Button>
                             </Link>
                         </div>
@@ -76,6 +76,93 @@ export default function LandingPage() {
                             <span>3 free generations to start</span>
                             <span className="mx-2">•</span>
                             <span>No credit card required</span>
+                        </div>
+                    </div>
+
+                    {/* Hero App Screenshot */}
+                    <div className="mt-16 max-w-5xl mx-auto">
+                        <div className="relative rounded-xl overflow-hidden border border-amber-500/30 shadow-2xl shadow-amber-500/10">
+                            <Image
+                                src="/landing/app-results-1.png"
+                                alt="Directors Palette - AI Generated Storyboard"
+                                width={1920}
+                                height={1080}
+                                className="w-full h-auto"
+                                priority
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Style Showcase Section */}
+            <section className="py-16 bg-gradient-to-b from-background to-card/50">
+                <div className="container mx-auto px-4">
+                    <div className="text-center mb-12">
+                        <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">
+                            Any Style You Can Imagine
+                        </h3>
+                        <p className="text-muted-foreground max-w-xl mx-auto">
+                            From claymation to comic books, create consistent characters in any visual style.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+                        <div className="group relative rounded-lg overflow-hidden border border-border hover:border-amber-500/50 transition-all">
+                            <Image
+                                src="/storyboard-assets/styles/claymation.png"
+                                alt="Claymation Style"
+                                width={400}
+                                height={400}
+                                className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 p-3">
+                                <span className="text-white font-medium text-sm">Claymation</span>
+                            </div>
+                        </div>
+
+                        <div className="group relative rounded-lg overflow-hidden border border-border hover:border-amber-500/50 transition-all">
+                            <Image
+                                src="/storyboard-assets/styles/muppet.webp"
+                                alt="Muppet Style"
+                                width={400}
+                                height={400}
+                                className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 p-3">
+                                <span className="text-white font-medium text-sm">Muppet</span>
+                            </div>
+                        </div>
+
+                        <div className="group relative rounded-lg overflow-hidden border border-border hover:border-amber-500/50 transition-all">
+                            <Image
+                                src="/storyboard-assets/styles/comic.webp"
+                                alt="Comic Book Style"
+                                width={400}
+                                height={400}
+                                className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 p-3">
+                                <span className="text-white font-medium text-sm">Comic Book</span>
+                            </div>
+                        </div>
+
+                        <div className="group relative rounded-lg overflow-hidden border border-border hover:border-amber-500/50 transition-all">
+                            <Image
+                                src="/storyboard-assets/styles/action-figure.webp"
+                                alt="Action Figure Style"
+                                width={400}
+                                height={400}
+                                className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 p-3">
+                                <span className="text-white font-medium text-sm">Action Figure</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -262,28 +349,35 @@ export default function LandingPage() {
                         </div>
                     </div>
 
-                    {/* Power combo example */}
+                    {/* Mix and Match */}
                     <div className="mt-12 max-w-3xl mx-auto">
-                        <div className="bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-green-500/10 border border-amber-500/30 rounded-xl p-6">
-                            <h5 className="text-sm font-semibold text-amber-500 uppercase tracking-wider mb-3">Combine Them All</h5>
-                            <div className="bg-background/80 rounded-lg p-4 font-mono text-sm overflow-x-auto">
+                        <div className="bg-gradient-to-r from-amber-500/10 to-purple-500/10 border border-amber-500/30 rounded-xl p-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-amber-500/20 to-purple-500/20 flex items-center justify-center">
+                                    <Sparkles className="w-5 h-5 text-amber-400" />
+                                </div>
+                                <h4 className="text-lg font-semibold text-white">Mix and Match</h4>
+                            </div>
+                            <p className="text-muted-foreground text-sm mb-4">
+                                Combine wildcards with brackets or pipes. Up to 10 images per generation.
+                            </p>
+                            <div className="bg-background/50 rounded-lg p-4 font-mono text-sm">
                                 <span className="text-green-400">_character_</span>
                                 <span className="text-muted-foreground"> in a </span>
                                 <span className="text-blue-400">[</span>
                                 <span className="text-amber-400">forest</span>
                                 <span className="text-muted-foreground">, </span>
                                 <span className="text-amber-400">city</span>
+                                <span className="text-muted-foreground">, </span>
+                                <span className="text-amber-400">desert</span>
                                 <span className="text-blue-400">]</span>
-                                <span className="text-purple-400"> | </span>
-                                <span className="text-muted-foreground">running </span>
-                                <span className="text-purple-400"> | </span>
-                                <span className="text-muted-foreground">exhausted, catching breath</span>
                             </div>
-                            <p className="text-sm text-muted-foreground mt-3">
-                                This generates 2 character variations × 3 chain steps = 6 connected images telling a story
+                            <p className="text-xs text-muted-foreground mt-3">
+                                Wildcards substitute first, then brackets expand → Random character in 3 locations = 3 images
                             </p>
                         </div>
                     </div>
+
                 </div>
             </section>
 
@@ -299,7 +393,7 @@ export default function LandingPage() {
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                    <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto mb-16">
                         {/* Step 1 */}
                         <div className="text-center">
                             <div className="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-500 flex items-center justify-center mx-auto mb-4">
@@ -333,6 +427,25 @@ export default function LandingPage() {
                             </p>
                         </div>
                     </div>
+
+                    {/* Storyboard Preview */}
+                    <div className="max-w-4xl mx-auto">
+                        <div className="relative rounded-xl overflow-hidden border border-border shadow-xl">
+                            <Image
+                                src="/landing/storyboard-preview.png"
+                                alt="Storyboard Preview - Complete Shot Sequence"
+                                width={1600}
+                                height={900}
+                                className="w-full h-auto"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
+                            <div className="absolute bottom-4 left-4 right-4 text-center">
+                                <span className="text-sm text-muted-foreground bg-background/80 px-4 py-2 rounded-full">
+                                    Complete storyboard with consistent characters across all shots
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -348,38 +461,45 @@ export default function LandingPage() {
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
                         <Card className="bg-card border-border">
                             <CardContent className="p-6 text-center">
                                 <h4 className="text-lg font-semibold text-white mb-1">Starter</h4>
-                                <div className="text-3xl font-bold text-amber-500 mb-2">$5</div>
-                                <p className="text-muted-foreground text-sm">500 points</p>
-                                <p className="text-xs text-muted-foreground mt-1">~83 images</p>
+                                <div className="text-3xl font-bold text-amber-500 mb-2">$5.99</div>
+                                <p className="text-muted-foreground text-sm">500 credits</p>
+                                <p className="text-xs text-muted-foreground mt-1">~25 images</p>
                             </CardContent>
                         </Card>
 
                         <Card className="bg-card border-amber-500/50 border-2 relative">
                             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                                 <span className="bg-amber-500 text-black text-xs font-bold px-3 py-1 rounded-full">
-                                    Most Popular
+                                    Popular
                                 </span>
                             </div>
                             <CardContent className="p-6 text-center">
                                 <h4 className="text-lg font-semibold text-white mb-1">Creator</h4>
-                                <div className="text-3xl font-bold text-amber-500 mb-2">$10</div>
-                                <p className="text-muted-foreground text-sm">1,200 points</p>
-                                <p className="text-xs text-muted-foreground mt-1">~200 images</p>
-                                <span className="inline-block mt-2 text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded">+200 bonus</span>
+                                <div className="text-3xl font-bold text-amber-500 mb-2">$11.99</div>
+                                <p className="text-muted-foreground text-sm">1,000 credits</p>
+                                <p className="text-xs text-muted-foreground mt-1">~50 images</p>
                             </CardContent>
                         </Card>
 
                         <Card className="bg-card border-border">
                             <CardContent className="p-6 text-center">
                                 <h4 className="text-lg font-semibold text-white mb-1">Pro</h4>
-                                <div className="text-3xl font-bold text-amber-500 mb-2">$20</div>
-                                <p className="text-muted-foreground text-sm">2,750 points</p>
-                                <p className="text-xs text-muted-foreground mt-1">~458 images</p>
-                                <span className="inline-block mt-2 text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded">+750 bonus</span>
+                                <div className="text-3xl font-bold text-amber-500 mb-2">$23.99</div>
+                                <p className="text-muted-foreground text-sm">2,000 credits</p>
+                                <p className="text-xs text-muted-foreground mt-1">~100 images</p>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="bg-card border-border">
+                            <CardContent className="p-6 text-center">
+                                <h4 className="text-lg font-semibold text-white mb-1">Studio</h4>
+                                <div className="text-3xl font-bold text-amber-500 mb-2">$47.99</div>
+                                <p className="text-muted-foreground text-sm">4,000 credits</p>
+                                <p className="text-xs text-muted-foreground mt-1">~200 images</p>
                             </CardContent>
                         </Card>
                     </div>
@@ -404,35 +524,8 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer className="py-8 border-t border-border">
-                <div className="container mx-auto px-4">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-2">
-                            <Image
-                                src="/favicon.ico"
-                                alt="Directors Palette"
-                                width={24}
-                                height={24}
-                            />
-                            <span className="text-sm text-muted-foreground">
-                                Directors Palette by{" "}
-                                <a
-                                    href="https://machinekinglabs.com"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-amber-500 hover:text-amber-400 transition-colors"
-                                >
-                                    Machine King Labs
-                                </a>
-                            </span>
-                        </div>
-                        <div className="text-sm text-muted-foreground italic">
-                            &ldquo;With AI anything is possible&rdquo;
-                        </div>
-                    </div>
-                </div>
-            </footer>
+            {/* Spacer for global footer */}
+            <div className="h-16" />
         </div>
     )
 }

@@ -1,6 +1,7 @@
 /**
  * Credits Service
  * Handles all credit-related operations: balance checks, deductions, additions
+ * Includes abuse prevention for free credits
  */
 
 import { getClient, getAPIClient } from '@/lib/db/client'
@@ -37,6 +38,16 @@ const FALLBACK_PRICING: Record<GenerationType, { cost_cents: number; price_cents
 
 // Initial credits for new users (3 image generations = 3 x 20 cents = 60 cents)
 const INITIAL_CREDITS_FOR_NEW_USERS = 60
+
+// Reduced credits for suspicious signups (detected same IP)
+const REDUCED_CREDITS_FOR_SUSPICIOUS = 0  // Give nothing if IP already used
+
+export interface AbuseCheckResult {
+    isSuspicious: boolean
+    existingUsers: number
+    recommendation: 'allow_full_credits' | 'allow_reduced_credits' | 'deny_free_credits'
+    creditsToGrant: number
+}
 
 class CreditsService {
     /**
@@ -494,6 +505,228 @@ class CreditsService {
         }
 
         return data as ModelPricing[]
+    }
+
+    // ============================================================================
+    // ABUSE PREVENTION METHODS
+    // ============================================================================
+
+    /**
+     * Check if an IP address has already been used for free credits
+     * Uses service role to bypass RLS on abuse tracking tables
+     */
+    async checkIPForAbuse(ipAddress: string): Promise<AbuseCheckResult> {
+        const supabase = await getAdminCreditsClient()
+
+        try {
+            // Call the database function
+            const { data, error } = await supabase.rpc('check_ip_abuse', {
+                p_ip_address: ipAddress
+            })
+
+            if (error) {
+                console.warn('Abuse check failed, allowing credits:', error.message)
+                // If the function doesn't exist yet, allow full credits
+                return {
+                    isSuspicious: false,
+                    existingUsers: 0,
+                    recommendation: 'allow_full_credits',
+                    creditsToGrant: INITIAL_CREDITS_FOR_NEW_USERS
+                }
+            }
+
+            if (!data || data.length === 0) {
+                return {
+                    isSuspicious: false,
+                    existingUsers: 0,
+                    recommendation: 'allow_full_credits',
+                    creditsToGrant: INITIAL_CREDITS_FOR_NEW_USERS
+                }
+            }
+
+            const result = data[0]
+            let creditsToGrant = INITIAL_CREDITS_FOR_NEW_USERS
+
+            if (result.recommendation === 'deny_free_credits') {
+                creditsToGrant = REDUCED_CREDITS_FOR_SUSPICIOUS
+            } else if (result.recommendation === 'allow_reduced_credits') {
+                // Second account from same IP - no free credits
+                creditsToGrant = REDUCED_CREDITS_FOR_SUSPICIOUS
+            }
+
+            return {
+                isSuspicious: result.is_suspicious,
+                existingUsers: result.existing_users,
+                recommendation: result.recommendation,
+                creditsToGrant
+            }
+        } catch (err) {
+            console.error('Error checking IP for abuse:', err)
+            // On error, allow full credits (fail open)
+            return {
+                isSuspicious: false,
+                existingUsers: 0,
+                recommendation: 'allow_full_credits',
+                creditsToGrant: INITIAL_CREDITS_FOR_NEW_USERS
+            }
+        }
+    }
+
+    /**
+     * Record a signup IP and potentially flag for abuse
+     * Called after granting free credits to a new user
+     */
+    async recordSignupIP(
+        userId: string,
+        ipAddress: string,
+        userAgent?: string,
+        creditsGranted: number = INITIAL_CREDITS_FOR_NEW_USERS
+    ): Promise<{ success: boolean; flagged: boolean }> {
+        const supabase = await getAdminCreditsClient()
+
+        try {
+            const { data, error } = await supabase.rpc('record_signup_ip', {
+                p_user_id: userId,
+                p_ip_address: ipAddress,
+                p_user_agent: userAgent || null,
+                p_credits_granted: creditsGranted
+            })
+
+            if (error) {
+                console.warn('Failed to record signup IP:', error.message)
+                return { success: false, flagged: false }
+            }
+
+            const result = data as { recorded: boolean; is_suspicious: boolean }
+            console.log(`📍 Recorded signup IP for user ${userId}: ${ipAddress} (flagged: ${result?.is_suspicious || false})`)
+
+            return {
+                success: result?.recorded || true,
+                flagged: result?.is_suspicious || false
+            }
+        } catch (err) {
+            console.error('Error recording signup IP:', err)
+            return { success: false, flagged: false }
+        }
+    }
+
+    /**
+     * Get user's credit balance with IP-based abuse prevention
+     * Creates record if doesn't exist (new user), but checks IP first
+     */
+    async getBalanceWithAbuseCheck(
+        userId: string,
+        ipAddress?: string,
+        userAgent?: string
+    ): Promise<UserCredits | null> {
+        const supabase = await getCreditsClient()
+
+        // Try to get existing record
+        const { data, error } = await supabase
+            .from('user_credits')
+            .select('*')
+            .eq('user_id', userId)
+            .single()
+
+        if (error && error.code !== 'PGRST116') {
+            console.error('Error fetching user credits:', error)
+            return null
+        }
+
+        // If record exists, return it (no free credits check needed)
+        if (data) {
+            return data as UserCredits
+        }
+
+        // New user - check for abuse before granting credits
+        let creditsToGrant = INITIAL_CREDITS_FOR_NEW_USERS
+        let abuseCheck: AbuseCheckResult | null = null
+
+        if (ipAddress) {
+            abuseCheck = await this.checkIPForAbuse(ipAddress)
+            creditsToGrant = abuseCheck.creditsToGrant
+
+            if (abuseCheck.isSuspicious) {
+                console.warn(`⚠️ Suspicious signup detected for user ${userId} from IP ${ipAddress}`)
+                console.warn(`   Previous users from this IP: ${abuseCheck.existingUsers}`)
+                console.warn(`   Recommendation: ${abuseCheck.recommendation}`)
+                console.warn(`   Credits granted: ${creditsToGrant} (instead of ${INITIAL_CREDITS_FOR_NEW_USERS})`)
+            }
+        }
+
+        // Create new user credits record
+        const { data: newRecord, error: insertError } = await supabase
+            .from('user_credits')
+            .insert({
+                user_id: userId,
+                balance: creditsToGrant,
+                lifetime_purchased: 0,
+                lifetime_used: 0
+            })
+            .select()
+            .single()
+
+        if (insertError) {
+            console.error('Error creating user credits record:', insertError)
+            return null
+        }
+
+        // Record the signup IP for future abuse detection
+        if (ipAddress) {
+            await this.recordSignupIP(userId, ipAddress, userAgent, creditsToGrant)
+        }
+
+        if (creditsToGrant > 0) {
+            console.log(`🎁 New user ${userId} received ${creditsToGrant} free credits (${creditsToGrant / 20} generations)`)
+        } else {
+            console.log(`🚫 New user ${userId} received 0 free credits (abuse prevention)`)
+        }
+
+        return newRecord as UserCredits
+    }
+
+    /**
+     * Get abuse summary for admin dashboard
+     */
+    async getAbuseSummary(): Promise<{
+        totalFlags: number
+        unresolvedFlags: number
+        criticalFlags: number
+        flaggedIPs: number
+        recentFlags: unknown[]
+    } | null> {
+        const supabase = await getAdminCreditsClient()
+
+        try {
+            const { data, error } = await supabase.rpc('get_abuse_summary')
+
+            if (error) {
+                console.error('Error fetching abuse summary:', error)
+                return null
+            }
+
+            if (!data || data.length === 0) {
+                return {
+                    totalFlags: 0,
+                    unresolvedFlags: 0,
+                    criticalFlags: 0,
+                    flaggedIPs: 0,
+                    recentFlags: []
+                }
+            }
+
+            const result = data[0]
+            return {
+                totalFlags: result.total_flags || 0,
+                unresolvedFlags: result.unresolved_flags || 0,
+                criticalFlags: result.critical_flags || 0,
+                flaggedIPs: result.flagged_ips || 0,
+                recentFlags: result.recent_flags || []
+            }
+        } catch (err) {
+            console.error('Error fetching abuse summary:', err)
+            return null
+        }
     }
 }
 
