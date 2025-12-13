@@ -148,11 +148,14 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+        // Get raw body as text - critical for signature verification
         const body = await request.text()
         const signature = request.headers.get('stripe-signature')
 
         console.log('[Stripe Webhook] Body length:', body.length)
-        console.log('[Stripe Webhook] Signature:', signature?.substring(0, 50))
+        console.log('[Stripe Webhook] Body first 100 chars:', body.substring(0, 100))
+        console.log('[Stripe Webhook] Signature:', signature?.substring(0, 80))
+        console.log('[Stripe Webhook] Using secret:', webhookSecret.substring(0, 20) + '...')
 
         if (!signature) {
             return NextResponse.json(
