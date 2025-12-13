@@ -8,7 +8,6 @@ import { useImageActions } from "../../hooks/useImageActions"
 import { ImageActionMenu } from "./ImageActionMenu"
 import { ModelBadge } from "./ModelBadge"
 import { ReferenceBadge } from "./ReferenceBadge"
-import { PromptTooltip } from "./PromptTooltip"
 import { MetadataBar } from "./MetadataBar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/utils/utils"
@@ -132,15 +131,12 @@ const ImageCardComponent = ({
         </div>
       )}
 
-      {/* Metadata bar - hidden on small grid size on mobile */}
+      {/* Metadata bar - shows aspect ratio & resolution on hover */}
       <MetadataBar
         aspectRatio={image.settings.aspectRatio || image.settings.aspect_ratio || '16:9'}
         resolution={image.settings.resolution || '1024x1024'}
         gridSize={gridSize}
       />
-
-      {/* Hover tooltip with prompt */}
-      <PromptTooltip prompt={image.prompt} />
     </div>
   )
 }

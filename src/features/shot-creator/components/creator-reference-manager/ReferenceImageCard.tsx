@@ -15,6 +15,17 @@ export interface ShotImage {
     id: string
     preview: string
     tags: string[]
+    detectedAspectRatio?: string // e.g., "16:9", "4:3", "1:1"
+}
+
+// Helper to convert aspect ratio string to CSS aspect-ratio value
+function getAspectRatioStyle(aspectRatio?: string): React.CSSProperties | undefined {
+    if (!aspectRatio) return undefined
+    const [w, h] = aspectRatio.split(':').map(Number)
+    if (w && h) {
+        return { aspectRatio: `${w} / ${h}` }
+    }
+    return undefined
 }
 
 interface ReferenceImageCardProps {
@@ -76,10 +87,13 @@ export function ReferenceImageCard({
             >
                 {image ? (
                     <>
-                        <div className={cn(
-                            "w-full relative",
-                            useNativeAspectRatio ? "aspect-video" : "aspect-square"
-                        )}>
+                        <div
+                            className={cn(
+                                "w-full relative",
+                                !useNativeAspectRatio && "aspect-square"
+                            )}
+                            style={useNativeAspectRatio ? getAspectRatioStyle(image.detectedAspectRatio) || { aspectRatio: '16 / 9' } : undefined}
+                        >
                             <Image
                                 src={image.preview}
                                 alt={`Reference ${index + 1}`}
@@ -87,7 +101,7 @@ export function ReferenceImageCard({
                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 53vw"
                                 className={cn(
                                     "w-full h-full cursor-pointer",
-                                    useNativeAspectRatio ? "object-contain" : "object-cover"
+                                    useNativeAspectRatio ? "object-contain bg-black/20" : "object-cover"
                                 )}
                                 onClick={() => setFullscreenImage(image)}
                             />

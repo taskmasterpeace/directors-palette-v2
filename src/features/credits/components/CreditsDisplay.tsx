@@ -176,7 +176,7 @@ export function CreditsDisplay() {
                                 </Button>
                             </DialogTrigger>
                         </TooltipTrigger>
-                        <TooltipContent side="bottom" className="bg-zinc-900 border-zinc-700">
+                        <TooltipContent side="bottom" className="bg-zinc-900 border-zinc-700 text-white">
                             <p className="font-mono">{tokens.toLocaleString()} tokens exactly</p>
                         </TooltipContent>
                     </Tooltip>
