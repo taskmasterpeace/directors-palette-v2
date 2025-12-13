@@ -16,7 +16,7 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
 
     const {
         visibleSlots,
-        handleShotCreatorImageUpload,
+        handleMultipleImageUpload,
         handlePasteImage,
         removeShotCreatorImage
     } = useReferenceImageManager(maxImages)
@@ -74,10 +74,11 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
                                             const input = document.createElement('input')
                                             input.type = 'file'
                                             input.accept = 'image/*'
+                                            input.multiple = true
                                             input.onchange = (e) => {
                                                 const files = (e.target as HTMLInputElement).files
-                                                if (files?.[0]) {
-                                                    handleShotCreatorImageUpload(files[0])
+                                                if (files && files.length > 0) {
+                                                    handleMultipleImageUpload(files)
                                                 }
                                             }
                                             input.click()

@@ -227,11 +227,33 @@ export function useReferenceImageManager(maxImages: number = 3) {
         toast({ title: "Reference Removed", description: "Reference image removed" })
     }
 
+    // Multi-file upload (for mobile selecting multiple from library)
+    const handleMultipleImageUpload = async (files: FileList | null) => {
+        if (!files || files.length === 0) return
+
+        const fileArray = Array.from(files)
+        const remainingSlots = maxImages - shotCreatorReferenceImages.length
+        const filesToUpload = fileArray.slice(0, remainingSlots)
+
+        if (filesToUpload.length < fileArray.length) {
+            toast({
+                title: "Some Images Skipped",
+                description: `Only ${remainingSlots} slot(s) available. ${fileArray.length - filesToUpload.length} image(s) skipped.`
+            })
+        }
+
+        // Upload all files
+        for (const file of filesToUpload) {
+            await handleShotCreatorImageUpload(file)
+        }
+    }
+
     return {
         visibleSlots,
         fullscreenImage,
         setFullscreenImage,
         handleShotCreatorImageUpload,
+        handleMultipleImageUpload,
         handlePasteImage,
         handleCameraCapture,
         removeShotCreatorImage

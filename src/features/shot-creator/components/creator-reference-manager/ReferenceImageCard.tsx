@@ -37,6 +37,7 @@ interface ReferenceImageCardProps {
     shotCreatorReferenceImages: ShotImage[]
     setShotCreatorReferenceImages: React.Dispatch<React.SetStateAction<ShotImage[]>>
     handleShotCreatorImageUpload: (file: File) => void
+    handleMultipleImageUpload?: (files: FileList | null) => void
     handlePasteImage: (e: React.MouseEvent<HTMLButtonElement>) => void
     handleCameraCapture?: () => void
     removeShotCreatorImage: (id: string) => void
@@ -53,6 +54,7 @@ export function ReferenceImageCard({
     shotCreatorReferenceImages,
     setShotCreatorReferenceImages,
     handleShotCreatorImageUpload,
+    handleMultipleImageUpload,
     handlePasteImage,
     handleCameraCapture,
     removeShotCreatorImage,
@@ -74,10 +76,15 @@ export function ReferenceImageCard({
                             const input = document.createElement("input")
                             input.type = "file"
                             input.accept = "image/*"
+                            input.multiple = true
                             input.onchange = (e) => {
                                 const files = (e.target as HTMLInputElement).files
-                                if (files?.[0]) {
-                                    handleShotCreatorImageUpload(files[0])
+                                if (files && files.length > 0) {
+                                    if (handleMultipleImageUpload) {
+                                        handleMultipleImageUpload(files)
+                                    } else if (files[0]) {
+                                        handleShotCreatorImageUpload(files[0])
+                                    }
                                 }
                             }
                             input.click()
@@ -171,10 +178,15 @@ export function ReferenceImageCard({
                         const input = document.createElement("input")
                         input.type = "file"
                         input.accept = "image/*"
+                        input.multiple = true
                         input.onchange = (e) => {
                             const files = (e.target as HTMLInputElement).files
-                            if (files?.[0]) {
-                                handleShotCreatorImageUpload(files[0])
+                            if (files && files.length > 0) {
+                                if (handleMultipleImageUpload) {
+                                    handleMultipleImageUpload(files)
+                                } else if (files[0]) {
+                                    handleShotCreatorImageUpload(files[0])
+                                }
                             }
                         }
                         input.click()

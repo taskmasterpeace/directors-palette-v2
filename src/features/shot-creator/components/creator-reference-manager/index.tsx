@@ -23,14 +23,12 @@ import { clipboardManager } from '@/utils/clipboard-manager'
 interface CreatorReferenceManagerProps {
   compact?: boolean
   maxImages?: number
-  editingMode?: boolean
   modelSelector?: ReactNode
 }
 
 export function CreatorReferenceManager({
   compact = false,
   maxImages = 3,
-  editingMode = false,
   modelSelector
 }: CreatorReferenceManagerProps) {
   const { shotCreatorReferenceImages, setShotCreatorReferenceImages, useNativeAspectRatio, setUseNativeAspectRatio, onSendToShotAnimator } = useShotCreatorStore()
@@ -42,6 +40,7 @@ export function CreatorReferenceManager({
     fullscreenImage,
     setFullscreenImage,
     handleShotCreatorImageUpload,
+    handleMultipleImageUpload,
     handlePasteImage,
     handleCameraCapture,
     removeShotCreatorImage
@@ -157,6 +156,7 @@ export function CreatorReferenceManager({
               shotCreatorReferenceImages={shotCreatorReferenceImages}
               setShotCreatorReferenceImages={setShotCreatorReferenceImages}
               handleShotCreatorImageUpload={handleShotCreatorImageUpload}
+              handleMultipleImageUpload={handleMultipleImageUpload}
               handlePasteImage={handlePasteImage}
               handleCameraCapture={handleCameraCapture}
               removeShotCreatorImage={removeShotCreatorImage}
