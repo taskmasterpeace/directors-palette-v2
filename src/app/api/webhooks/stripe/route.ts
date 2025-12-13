@@ -19,15 +19,15 @@ async function getWebhookClient(): Promise<any> {
     return await getAPIClient()
 }
 
-// Initialize Stripe
-const stripe = process.env.STRIPE_SECRET_KEY
-    ? new Stripe(process.env.STRIPE_SECRET_KEY)
-    : null
+// Initialize Stripe lazily inside handler to ensure fresh env vars
+function getStripe(): Stripe | null {
+    const key = process.env.STRIPE_SECRET_KEY
+    return key ? new Stripe(key) : null
+}
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
-
-// DEBUG: Log webhook secret status (remove after debugging)
-console.log('[Stripe Webhook] Secret configured:', webhookSecret ? `yes (${webhookSecret.substring(0, 10)}...)` : 'NO - MISSING!')
+function getWebhookSecret(): string | undefined {
+    return process.env.STRIPE_WEBHOOK_SECRET
+}
 
 /**
  * Check if event was already processed (idempotency)
@@ -130,8 +130,17 @@ async function queueForRetry(
  * Handle Stripe webhook events
  */
 export async function POST(request: NextRequest) {
+    // Read env vars fresh on each request (critical for serverless)
+    const stripe = getStripe()
+    const webhookSecret = getWebhookSecret()
+
+    // DEBUG: Log what we're reading
+    console.log('[Stripe Webhook] Request received')
+    console.log('[Stripe Webhook] Stripe configured:', !!stripe)
+    console.log('[Stripe Webhook] Secret configured:', webhookSecret ? `yes (${webhookSecret.substring(0, 15)}...)` : 'NO - MISSING!')
+
     if (!stripe || !webhookSecret) {
-        console.error('Stripe not configured for webhooks')
+        console.error('[Stripe Webhook] Missing configuration - stripe:', !!stripe, 'secret:', !!webhookSecret)
         return NextResponse.json(
             { error: 'Webhook not configured' },
             { status: 503 }
@@ -141,6 +150,9 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.text()
         const signature = request.headers.get('stripe-signature')
+
+        console.log('[Stripe Webhook] Body length:', body.length)
+        console.log('[Stripe Webhook] Signature:', signature?.substring(0, 50))
 
         if (!signature) {
             return NextResponse.json(
@@ -152,12 +164,7 @@ export async function POST(request: NextRequest) {
         // Verify webhook signature
         let event: Stripe.Event
         try {
-            // DEBUG logging
-            console.log('[Stripe Webhook] Verifying signature...')
-            console.log('[Stripe Webhook] Secret starts with:', webhookSecret?.substring(0, 15))
-            console.log('[Stripe Webhook] Signature header:', signature?.substring(0, 50))
-
-            event = stripe.webhooks.constructEvent(body, signature, webhookSecret!)
+            event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
         } catch (err) {
             console.error('Webhook signature verification failed:', err)
             console.error('[Stripe Webhook] Full error:', JSON.stringify(err, null, 2))
