@@ -30,18 +30,23 @@ function getWebhookSecret(): string | undefined {
 }
 
 /**
- * Check if event was already processed (idempotency)
+ * Check if event was already successfully processed (idempotency)
+ * Only skip if status is 'processed', not 'retrying' or 'failed'
  */
 async function isEventProcessed(eventId: string): Promise<boolean> {
     try {
         const supabase = await getWebhookClient()
         const { data } = await supabase
             .from('webhook_events')
-            .select('id')
+            .select('id, status')
             .eq('event_id', eventId)
             .single()
 
-        return !!data
+        // Only skip if successfully processed, allow retrying failed events
+        if (data && data.status === 'processed') {
+            return true
+        }
+        return false
     } catch {
         // If table doesn't exist or query fails, proceed (better to double-process than miss)
         return false
