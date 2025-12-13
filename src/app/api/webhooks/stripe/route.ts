@@ -173,6 +173,7 @@ export async function POST(request: NextRequest) {
         let event: Stripe.Event
         try {
             event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
+            console.log('[Stripe Webhook] ✅ Signature verified! Event:', event.id, 'Type:', event.type)
         } catch (err) {
             console.error('Webhook signature verification failed:', err)
             console.error('[Stripe Webhook] Full error:', JSON.stringify(err, null, 2))
@@ -183,17 +184,24 @@ export async function POST(request: NextRequest) {
         }
 
         // IDEMPOTENCY CHECK: Skip if already processed
+        console.log('[Stripe Webhook] Checking idempotency for event:', event.id)
         if (await isEventProcessed(event.id)) {
             console.log(`Webhook ${event.id} already processed, skipping`)
             return NextResponse.json({ received: true, skipped: true })
         }
+        console.log('[Stripe Webhook] Event not yet processed, continuing...')
 
         // Handle the event
         try {
+            console.log('[Stripe Webhook] Handling event type:', event.type)
             switch (event.type) {
                 case 'checkout.session.completed': {
+                    console.log('[Stripe Webhook] Processing checkout.session.completed...')
                     const session = event.data.object as Stripe.Checkout.Session
+                    console.log('[Stripe Webhook] Session ID:', session.id)
+                    console.log('[Stripe Webhook] Metadata:', JSON.stringify(session.metadata))
                     await handleCheckoutCompleted(session, event.id)
+                    console.log('[Stripe Webhook] ✅ handleCheckoutCompleted finished successfully')
                     break
                 }
 
@@ -247,44 +255,54 @@ export async function POST(request: NextRequest) {
  * Handle successful checkout completion
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session, eventId: string) {
+    console.log('[handleCheckoutCompleted] Starting...')
     const userId = session.metadata?.user_id
     const credits = parseInt(session.metadata?.credits || '0')
     const packageId = session.metadata?.package_id
     const packageName = session.metadata?.package_name
 
+    console.log('[handleCheckoutCompleted] Parsed metadata:', { userId, credits, packageId, packageName })
+
     if (!userId) {
-        console.error('Missing user_id in checkout session metadata:', session.id)
+        console.error('[handleCheckoutCompleted] Missing user_id in checkout session metadata:', session.id)
         throw new Error('Missing user_id in checkout metadata')
     }
 
     if (credits <= 0) {
-        console.error('Invalid credits amount in checkout session:', session.id)
+        console.error('[handleCheckoutCompleted] Invalid credits amount in checkout session:', session.id)
         throw new Error('Invalid credits amount')
     }
 
-    console.log(`Processing purchase: ${credits} credits for user ${userId} (${session.metadata?.user_email})`)
+    console.log(`[handleCheckoutCompleted] Processing purchase: ${credits} credits for user ${userId} (${session.metadata?.user_email})`)
 
     // Add credits to user account
-    const result = await creditsService.addCredits(userId, credits, {
-        type: 'purchase',
-        description: `${packageName || 'Credit package'} purchase`,
-        metadata: {
-            stripe_session_id: session.id,
-            stripe_event_id: eventId,
-            stripe_payment_intent: session.payment_intent,
-            package_id: packageId,
-            package_name: packageName,
-            amount_paid_cents: session.amount_total,
-            currency: session.currency,
-            customer_email: session.customer_email,
-        }
-    })
+    console.log('[handleCheckoutCompleted] Calling creditsService.addCredits...')
+    try {
+        const result = await creditsService.addCredits(userId, credits, {
+            type: 'purchase',
+            description: `${packageName || 'Credit package'} purchase`,
+            metadata: {
+                stripe_session_id: session.id,
+                stripe_event_id: eventId,
+                stripe_payment_intent: session.payment_intent,
+                package_id: packageId,
+                package_name: packageName,
+                amount_paid_cents: session.amount_total,
+                currency: session.currency,
+                customer_email: session.customer_email,
+            }
+        })
 
-    if (result.success) {
-        console.log(`Successfully added ${credits} credits to user ${userId}. New balance: ${result.newBalance}`)
-    } else {
-        console.error(`Failed to add credits for user ${userId}:`, result.error)
-        // Throw to trigger retry queue
-        throw new Error(result.error || 'Failed to add credits')
+        console.log('[handleCheckoutCompleted] creditsService.addCredits result:', JSON.stringify(result))
+
+        if (result.success) {
+            console.log(`[handleCheckoutCompleted] ✅ Successfully added ${credits} credits to user ${userId}. New balance: ${result.newBalance}`)
+        } else {
+            console.error(`[handleCheckoutCompleted] ❌ Failed to add credits for user ${userId}:`, result.error)
+            throw new Error(result.error || 'Failed to add credits')
+        }
+    } catch (error) {
+        console.error('[handleCheckoutCompleted] ❌ Exception in addCredits:', error)
+        throw error
     }
 }
