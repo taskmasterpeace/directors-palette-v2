@@ -26,6 +26,9 @@ const stripe = process.env.STRIPE_SECRET_KEY
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
+// DEBUG: Log webhook secret status (remove after debugging)
+console.log('[Stripe Webhook] Secret configured:', webhookSecret ? `yes (${webhookSecret.substring(0, 10)}...)` : 'NO - MISSING!')
+
 /**
  * Check if event was already processed (idempotency)
  */
@@ -149,9 +152,15 @@ export async function POST(request: NextRequest) {
         // Verify webhook signature
         let event: Stripe.Event
         try {
-            event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
+            // DEBUG logging
+            console.log('[Stripe Webhook] Verifying signature...')
+            console.log('[Stripe Webhook] Secret starts with:', webhookSecret?.substring(0, 15))
+            console.log('[Stripe Webhook] Signature header:', signature?.substring(0, 50))
+
+            event = stripe.webhooks.constructEvent(body, signature, webhookSecret!)
         } catch (err) {
             console.error('Webhook signature verification failed:', err)
+            console.error('[Stripe Webhook] Full error:', JSON.stringify(err, null, 2))
             return NextResponse.json(
                 { error: 'Invalid signature' },
                 { status: 400 }
