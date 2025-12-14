@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { useShotCreatorStore } from "../store"
 import Image from "next/image"
 import { clipboardManager } from '@/utils/clipboard-manager'
+import { useToast } from '@/hooks/use-toast'
 
 interface FullscreenImageModalProps {
     open: boolean
@@ -18,6 +19,7 @@ export default function FullscreenImageModal({
     onOpenChange,
 }: FullscreenImageModalProps) {
     const { fullscreenImage } = useShotCreatorStore()
+    const { toast } = useToast()
 
     if (!fullscreenImage) return null
 
@@ -44,32 +46,28 @@ export default function FullscreenImageModal({
             URL.revokeObjectURL(blobUrl)
         } catch (error) {
             console.error('Failed to download image:', error)
-            alert('Could not download image. Please try again.')
+            toast({
+                title: 'Download failed',
+                description: 'Could not download image. Please try again.',
+                variant: 'destructive'
+            })
         }
     }
 
     const handleCopyUrl = async () => {
         try {
             await clipboardManager.writeText(fullscreenImage.imageData)
-            // Fallback for older browsers if needed
-            const textArea = document.createElement('textarea')
-            textArea.value = fullscreenImage.imageData
-            textArea.style.position = 'fixed'
-            textArea.style.left = '-999999px'
-            textArea.style.top = '-999999px'
-            document.body.appendChild(textArea)
-            textArea.focus()
-            textArea.select()
-
-            try {
-                document.execCommand('copy')
-            } finally {
-                document.body.removeChild(textArea)
-            }
+            toast({
+                title: 'Copied',
+                description: 'Image URL copied to clipboard'
+            })
         } catch (error) {
             console.error('Failed to copy:', error)
-            // Show user feedback
-            alert('Could not copy to clipboard. Please manually copy the fullscreenImage URL.')
+            toast({
+                title: 'Copy failed',
+                description: 'Could not copy to clipboard. Please try again.',
+                variant: 'destructive'
+            })
         }
     }
 

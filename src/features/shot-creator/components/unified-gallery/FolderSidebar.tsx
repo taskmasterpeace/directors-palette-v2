@@ -5,12 +5,21 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   Folder,
   FolderPlus,
   ChevronLeft,
   ChevronRight,
   Image as ImageIcon,
   FolderOpen,
+  MoreVertical,
+  Pencil,
+  Trash2,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import type { FolderWithCount } from '../../types/folder.types'
@@ -24,6 +33,8 @@ interface FolderSidebarProps {
   isLoading?: boolean
   onFolderSelect: (folderId: string | null) => void
   onCreateFolder: () => void
+  onEditFolder?: (folder: FolderWithCount) => void
+  onDeleteFolder?: (folder: FolderWithCount) => void
   collapsed?: boolean
   onToggleCollapse?: () => void
 }
@@ -36,6 +47,8 @@ export function FolderSidebar({
   isLoading = false,
   onFolderSelect,
   onCreateFolder,
+  onEditFolder,
+  onDeleteFolder,
   collapsed = false,
   onToggleCollapse,
 }: FolderSidebarProps) {
@@ -148,43 +161,80 @@ export function FolderSidebar({
                 const isActive = currentFolderId === folder.id
 
                 return (
-                  <button
+                  <div
                     key={folder.id}
-                    onClick={() => onFolderSelect(folder.id)}
+                    className="group relative flex items-center"
                     onMouseEnter={() => _setHoveredFolderId(folder.id)}
                     onMouseLeave={() => _setHoveredFolderId(null)}
-                    className={cn(
-                      'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
-                      isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'hover:bg-accent hover:text-accent-foreground'
-                    )}
-                    title={collapsed ? folder.name : undefined}
                   >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      {folder.color ? (
-                        <div
-                          className="h-4 w-4 rounded-full flex-shrink-0 border border-border"
-                          style={{ backgroundColor: folder.color }}
-                        />
-                      ) : (
-                        <Folder className="h-4 w-4 flex-shrink-0" />
+                    <button
+                      onClick={() => onFolderSelect(folder.id)}
+                      className={cn(
+                        'flex-1 flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
+                        isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : 'hover:bg-accent hover:text-accent-foreground'
                       )}
+                      title={collapsed ? folder.name : undefined}
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {folder.color ? (
+                          <div
+                            className="h-4 w-4 rounded-full flex-shrink-0 border border-border"
+                            style={{ backgroundColor: folder.color }}
+                          />
+                        ) : (
+                          <Folder className="h-4 w-4 flex-shrink-0" />
+                        )}
+                        {!collapsed && (
+                          <span className="flex-1 text-left truncate">
+                            {folder.name}
+                          </span>
+                        )}
+                      </div>
                       {!collapsed && (
-                        <span className="flex-1 text-left truncate">
-                          {folder.name}
-                        </span>
+                        <Badge
+                          variant={isActive ? 'secondary' : 'outline'}
+                          className="ml-auto mr-1"
+                        >
+                          {folder.imageCount}
+                        </Badge>
                       )}
-                    </div>
-                    {!collapsed && (
-                      <Badge
-                        variant={isActive ? 'secondary' : 'outline'}
-                        className="ml-auto"
-                      >
-                        {folder.imageCount}
-                      </Badge>
+                    </button>
+
+                    {/* Dropdown menu for edit/delete - only show when expanded */}
+                    {!collapsed && (onEditFolder || onDeleteFolder) && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {onEditFolder && (
+                            <DropdownMenuItem onClick={() => onEditFolder(folder)}>
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Rename
+                            </DropdownMenuItem>
+                          )}
+                          {onDeleteFolder && (
+                            <DropdownMenuItem
+                              onClick={() => onDeleteFolder(folder)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
-                  </button>
+                  </div>
                 )
               })
             )}

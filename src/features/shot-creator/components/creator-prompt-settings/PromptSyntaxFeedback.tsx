@@ -303,6 +303,8 @@ export function PromptSyntaxFeedback({
                             ? 'Pipe syntax disabled - Click to enable. Use prompt1 | prompt2 for sequential chain generation'
                             : 'Pipe syntax enabled - Click to disable. Currently: prompt1 | prompt2 creates a chain'
                         }
+                        aria-label={disablePipeSyntax ? 'Enable pipe syntax for chain prompts' : 'Disable pipe syntax'}
+                        aria-pressed={!disablePipeSyntax}
                     >
                         <span className="font-mono font-bold">|</span>
                         <X className={`h-2.5 w-2.5 ${disablePipeSyntax ? 'block' : 'hidden'}`} />
@@ -319,6 +321,8 @@ export function PromptSyntaxFeedback({
                             ? 'Bracket syntax disabled - Click to enable. Use [a, b, c] for multiple variations'
                             : 'Bracket syntax enabled - Click to disable. Currently: [a, b, c] creates 3 images'
                         }
+                        aria-label={disableBracketSyntax ? 'Enable bracket syntax for variations' : 'Disable bracket syntax'}
+                        aria-pressed={!disableBracketSyntax}
                     >
                         <span className="font-mono font-bold">[ ]</span>
                         <X className={`h-2.5 w-2.5 ${disableBracketSyntax ? 'block' : 'hidden'}`} />
@@ -335,6 +339,8 @@ export function PromptSyntaxFeedback({
                             ? 'Wildcard syntax disabled - Click to enable. Use _name_ for random picks from your lists'
                             : 'Wildcard syntax enabled - Click to disable. Currently: _name_ pulls from your wildcard lists'
                         }
+                        aria-label={disableWildcardSyntax ? 'Enable wildcard syntax for random selection' : 'Disable wildcard syntax'}
+                        aria-pressed={!disableWildcardSyntax}
                     >
                         <span className="font-mono font-bold">_</span>
                         <X className={`h-2.5 w-2.5 ${disableWildcardSyntax ? 'block' : 'hidden'}`} />

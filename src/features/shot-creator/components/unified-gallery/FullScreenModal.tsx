@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, ImagePlus, Eraser, Clapperboard } from 'lucide-react'
@@ -52,6 +52,28 @@ function FullscreenModal({
     const isMobile = useIsMobile()
     const [showDetails, setShowDetails] = useState(false)
 
+    // Keyboard navigation
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!fullscreenImage) return
+
+            switch (e.key) {
+                case 'Escape':
+                    onClose()
+                    break
+                case 'ArrowLeft':
+                    onNavigate('previous')
+                    break
+                case 'ArrowRight':
+                    onNavigate('next')
+                    break
+            }
+        }
+
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [fullscreenImage, onClose, onNavigate])
+
     // Mobile-native download: Use Share API if available, fallback to standard download
     const handleMobileDownload = async (imageUrl: string) => {
         if (isMobile && navigator.share) {
@@ -93,6 +115,7 @@ function FullscreenModal({
                     size="icon"
                     className="fixed top-[calc(env(safe-area-inset-top,0rem)+3rem)] right-[calc(env(safe-area-inset-right,0rem)+0.5rem)] md:absolute md:-top-10 md:right-0 text-white hover:bg-white/20 z-50"
                     onClick={onClose}
+                    aria-label="Close image preview (Escape)"
                 >
                     <X className="h-5 w-5" />
                 </Button>
@@ -124,6 +147,8 @@ function FullscreenModal({
                                     size="icon"
                                     className="absolute left-4 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/70"
                                     onClick={() => onNavigate('previous')}
+                                    aria-label="Previous image (Left Arrow)"
+                                    title="Previous image (←)"
                                 >
                                     <ChevronLeft className="h-6 w-6" />
                                 </Button>
@@ -134,6 +159,8 @@ function FullscreenModal({
                                     size="icon"
                                     className="absolute right-4 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/70"
                                     onClick={() => onNavigate('next')}
+                                    aria-label="Next image (Right Arrow)"
+                                    title="Next image (→)"
                                 >
                                     <ChevronRight className="h-6 w-6" />
                                 </Button>
@@ -256,6 +283,16 @@ function FullscreenModal({
                                     })()}
                             </p>
                         </div>
+
+                        {/* Aspect Ratio */}
+                        {(fullscreenImage.settings?.aspectRatio || fullscreenImage.settings?.aspect_ratio) && (
+                            <div className="mb-4">
+                                <h4 className="text-muted-foreground text-xs uppercase mb-2">Aspect Ratio</h4>
+                                <p className="text-white text-sm">
+                                    {fullscreenImage.settings?.aspectRatio || fullscreenImage.settings?.aspect_ratio}
+                                </p>
+                            </div>
+                        )}
 
                         {/* Timestamp */}
                         <div className="mb-4">
@@ -516,6 +553,8 @@ function FullscreenModal({
                                     variant="destructive"
                                     className="flex-1"
                                     onClick={() => {
+                                        if (!confirm('Delete this image? This cannot be undone.')) return
+
                                         const currentIndex = images.findIndex(img => img.url === fullscreenImage.url)
 
                                         // Delete the image from the gallery
@@ -541,6 +580,7 @@ function FullscreenModal({
                                         }
                                     }}
                                     title="Delete Image"
+                                    aria-label="Delete this image permanently"
                                 >
                                     <Trash2 className="w-3.5 h-3.5 mr-1" />
                                     Delete

@@ -50,8 +50,19 @@ export class GalleryService {
         try {
             const result = await UnifiedGalleryService.loadUserGalleryPaginated('image', page, pageSize, folderId)
 
+            // Filter out items with invalid URLs (null, empty, or not starting with http)
+            const validItems = result.items.filter(item => {
+                const url = item.public_url
+                return url && typeof url === 'string' && url.startsWith('http')
+            })
+
+            // Log if we filtered any bad entries
+            if (validItems.length < result.items.length) {
+                console.warn(`[GalleryService] Filtered out ${result.items.length - validItems.length} items with invalid URLs`)
+            }
+
             // Transform database records to GeneratedImage format
-            const images: GeneratedImage[] = result.items.map(item => this.transformToGeneratedImage(item))
+            const images: GeneratedImage[] = validItems.map(item => this.transformToGeneratedImage(item))
 
             return {
                 images,

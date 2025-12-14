@@ -2,7 +2,7 @@
  * Hook to load gallery images from Supabase with real-time updates
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { GalleryService } from '../services/gallery.service'
 import { useUnifiedGalleryStore } from '../store/unified-gallery-store'
 import { getClient } from '@/lib/db/client'
@@ -49,6 +49,9 @@ export function useGalleryLoader() {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
+    // Ref to prevent concurrent loads (React Strict Mode calls useEffect twice)
+    const isLoadingRef = useRef(false)
+
     // Use direct selectors to ensure reactivity when store values change
     const loadImagesPaginated = useUnifiedGalleryStore(state => state.loadImagesPaginated)
     const loadFolders = useUnifiedGalleryStore(state => state.loadFolders)
@@ -57,19 +60,16 @@ export function useGalleryLoader() {
     const currentFolderId = useUnifiedGalleryStore(state => state.currentFolderId)
     const setTotalDatabaseCount = useUnifiedGalleryStore(state => state.setTotalDatabaseCount)
 
-    // Log when values change
-    console.log(`[useGalleryLoader] Hook state: currentPage=${currentPage}, pageSize=${pageSize}, folderId=${currentFolderId}`)
-
     // Load gallery on mount and subscribe to real-time updates
     useEffect(() => {
-        console.log(`[useGalleryLoader] useEffect triggered - currentPage=${currentPage}, pageSize=${pageSize}, folderId=${currentFolderId}`)
         let mounted = true
         let subscription: { unsubscribe: () => void } | null = null
 
         const loadGallery = async () => {
-            if (!mounted) return
+            // Prevent concurrent loads (React Strict Mode double-invokes effects)
+            if (!mounted || isLoadingRef.current) return
+            isLoadingRef.current = true
 
-            console.log(`[useGalleryLoader] Loading page ${currentPage} with pageSize ${pageSize} for folder ${currentFolderId}`)
             setIsLoading(true)
             setError(null)
 
@@ -137,6 +137,7 @@ export function useGalleryLoader() {
                 setError(errorMessage)
                 console.error('Gallery loading error:', err)
             } finally {
+                isLoadingRef.current = false
                 if (mounted) {
                     setIsLoading(false)
                 }
@@ -147,6 +148,7 @@ export function useGalleryLoader() {
 
         return () => {
             mounted = false
+            isLoadingRef.current = false
             if (subscription) {
                 subscription.unsubscribe()
             }

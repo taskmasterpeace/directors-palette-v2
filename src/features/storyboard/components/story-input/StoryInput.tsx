@@ -98,6 +98,7 @@ Marcus walked into the courtroom, his footsteps echoing against the marble floor
                         onChange={(e) => setStoryText(e.target.value)}
                         className="min-h-[300px] font-mono text-sm"
                         disabled={isExtracting}
+                        aria-label="Story text input - paste your story here for character and location extraction"
                     />
 
                     {/* Stats */}
@@ -124,6 +125,14 @@ Marcus walked into the courtroom, his footsteps echoing against the marble floor
                         disabled={!storyText.trim() || isExtracting}
                         className="w-full"
                         size="lg"
+                        title={
+                            isExtracting
+                                ? 'Extraction in progress...'
+                                : !storyText.trim()
+                                ? 'Enter story text first to extract characters and locations'
+                                : 'Click to extract characters and locations from your story'
+                        }
+                        aria-busy={isExtracting}
                     >
                         {isExtracting ? (
                             <>

@@ -8,11 +8,11 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
-// Model ID for background removal
-const REMOVE_BG_MODEL = 'bria-ai/rmbg-2.0';
+// Model ID for background removal - cjwbw/rembg is stable and cheap (~$0.004/run)
+const REMOVE_BG_MODEL = 'cjwbw/rembg:fb8af171cfa1616ddcf1242c093f9c46bcada5ad4cf6f2fbe8b81b330ec5c003';
 
-// Cost: ~2 cents, charge 3 points (50% margin)
-const REMOVE_BG_COST_POINTS = 3;
+// Cost: ~0.4 cents, charge 2 points (still good margin)
+const REMOVE_BG_COST_POINTS = 2;
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,25 +52,37 @@ export async function POST(request: NextRequest) {
 
     console.log('Starting background removal for:', imageUrl);
 
-    // Call Replicate API
-    const prediction = await replicate.predictions.create({
-      model: REMOVE_BG_MODEL,
+    // Call Replicate API using cjwbw/rembg (works with simple URL output)
+    const rawOutput = await replicate.run(REMOVE_BG_MODEL, {
       input: {
         image: imageUrl,
       },
     });
 
-    console.log('Prediction created:', prediction.id);
+    console.log('Background removal completed');
+    console.log('  - rawOutput type:', typeof rawOutput);
+    console.log('  - rawOutput constructor:', (rawOutput as object)?.constructor?.name);
 
-    // Wait for completion (background removal is fast, ~2-5 seconds)
-    const completedPrediction = await replicate.wait(prediction, {
-      interval: 500,
-    });
+    // Extract URL from output
+    // Replicate SDK v1 returns FileOutput objects which have toString() -> URL
+    let outputUrl: string | undefined;
 
-    console.log('Prediction completed:', completedPrediction.status);
+    if (typeof rawOutput === 'string') {
+      console.log('  - Detected: string output');
+      outputUrl = rawOutput;
+    } else if (rawOutput && typeof rawOutput === 'object') {
+      // FileOutput objects have toString() which returns the URL
+      const stringified = String(rawOutput);
+      console.log('  - Detected: object output, toString() =', stringified);
 
-    if (completedPrediction.status === 'succeeded' && completedPrediction.output) {
-      const outputUrl = completedPrediction.output as string;
+      if (stringified && stringified.startsWith('http')) {
+        outputUrl = stringified;
+      }
+    }
+
+    console.log('Extracted outputUrl:', outputUrl);
+
+    if (outputUrl && typeof outputUrl === 'string' && outputUrl.startsWith('http')) {
 
       // Deduct credits after successful completion (admins bypass)
       if (!userIsAdmin) {
@@ -78,7 +90,6 @@ export async function POST(request: NextRequest) {
           type: 'usage',
           description: 'Background removal',
           metadata: {
-            predictionId: prediction.id,
             originalImage: imageUrl,
             tool: 'remove-background',
           },
@@ -104,10 +115,10 @@ export async function POST(request: NextRequest) {
           .from('gallery')
           .insert({
             user_id: user.id,
-            prediction_id: `bg-removed-${prediction.id}`,
+            prediction_id: `bg-removed-${Date.now()}`,
             generation_type: 'image',
             status: 'completed',
-            image_url: outputUrl,
+            public_url: outputUrl,  // Changed from image_url to match schema
             folder_id: originalEntry?.folder_id || null,
             metadata: {
               ...((originalEntry?.metadata as Record<string, unknown>) || {}),
@@ -138,24 +149,27 @@ export async function POST(request: NextRequest) {
         imageUrl: outputUrl,
         creditsUsed: userIsAdmin ? 0 : REMOVE_BG_COST_POINTS,
       });
-    } else if (completedPrediction.status === 'failed') {
+    } else {
       return NextResponse.json(
-        {
-          error: 'Background removal failed',
-          details: completedPrediction.error,
-        },
+        { error: 'No output from background removal' },
         { status: 500 }
       );
     }
-
-    return NextResponse.json(
-      { error: 'Unexpected prediction status' },
-      { status: 500 }
-    );
   } catch (error) {
     console.error('Background removal error:', error);
+
+    // Better error details for debugging
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorDetails = error instanceof Error ? error.stack : String(error);
+
+    console.error('Full error details:', errorDetails);
+
     return NextResponse.json(
-      { error: 'Failed to remove background' },
+      {
+        error: 'Failed to remove background',
+        message: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? errorDetails : undefined
+      },
       { status: 500 }
     );
   }

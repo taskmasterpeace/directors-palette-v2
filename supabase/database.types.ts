@@ -187,6 +187,71 @@ export type Database = {
         }
         Relationships: []
       }
+      generation_events: {
+        Row: {
+          id: string
+          user_id: string
+          user_email: string | null
+          gallery_id: string | null
+          prediction_id: string | null
+          generation_type: string
+          model_id: string
+          model_name: string | null
+          status: string
+          credits_cost: number
+          is_admin_generation: boolean
+          prompt: string | null
+          settings: Json | null
+          error_message: string | null
+          created_at: string
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          user_email?: string | null
+          gallery_id?: string | null
+          prediction_id?: string | null
+          generation_type?: string
+          model_id: string
+          model_name?: string | null
+          status?: string
+          credits_cost?: number
+          is_admin_generation?: boolean
+          prompt?: string | null
+          settings?: Json | null
+          error_message?: string | null
+          created_at?: string
+          completed_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          user_email?: string | null
+          gallery_id?: string | null
+          prediction_id?: string | null
+          generation_type?: string
+          model_id?: string
+          model_name?: string | null
+          status?: string
+          credits_cost?: number
+          is_admin_generation?: boolean
+          prompt?: string | null
+          settings?: Json | null
+          error_message?: string | null
+          created_at?: string
+          completed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generation_events_gallery_id_fkey"
+            columns: ["gallery_id"]
+            isOneToOne: false
+            referencedRelation: "gallery"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

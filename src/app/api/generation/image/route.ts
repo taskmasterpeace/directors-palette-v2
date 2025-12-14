@@ -5,6 +5,8 @@ import { ImageModel, ImageModelSettings } from "@/features/shot-creator/types/im
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { creditsService } from '@/features/credits';
 import { isAdminEmail } from '@/features/admin/types/admin.types';
+import { generationEventsService } from '@/features/admin/services/generation-events.service';
+import { getModelConfig } from '@/config';
 import type { Database } from '../../../../../supabase/database.types';
 
 const replicate = new Replicate({
@@ -220,6 +222,25 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // ✅ ANALYTICS: Log generation event for admin dashboard
+    const modelConfig = getModelConfig(model as ImageModel);
+    const modelPrice = await creditsService.getPriceForModel(model, 'image');
+    const creditsCost = userIsAdmin ? 0 : modelPrice;
+
+    await generationEventsService.logGeneration({
+      user_id: user.id,
+      user_email: user.email,
+      gallery_id: gallery.id,
+      prediction_id: prediction.id,
+      generation_type: 'image',
+      model_id: model,
+      model_name: modelConfig?.name || model,
+      credits_cost: creditsCost,
+      is_admin_generation: userIsAdmin,
+      prompt: prompt,
+      settings: modelSettings
+    });
 
     // ✅ CREDITS: Deduct credits after successful prediction creation (admins bypass)
     if (!userIsAdmin) {

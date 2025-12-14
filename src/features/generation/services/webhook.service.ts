@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { StorageService } from './storage.service';
+import { generationEventsService } from '@/features/admin/services/generation-events.service';
 import type { Database } from '../../../../supabase/database.types';
 
 // Lazy-load Supabase client to avoid build-time errors when env vars aren't available
@@ -188,6 +189,12 @@ export class WebhookService {
       console.error('Error updating gallery record:', updateError);
       throw new Error(`Failed to update gallery: ${updateError.message}`);
     }
+
+    // Update generation event status
+    await generationEventsService.updateStatus(galleryEntry.prediction_id, {
+      status: 'completed',
+      completed_at: new Date().toISOString()
+    });
   }
 
   /**
@@ -212,6 +219,13 @@ export class WebhookService {
         },
       })
       .eq('prediction_id', predictionId);
+
+    // Update generation event status
+    await generationEventsService.updateStatus(predictionId, {
+      status: 'failed',
+      completed_at: new Date().toISOString(),
+      error_message: errorMessage
+    });
   }
 
   /**

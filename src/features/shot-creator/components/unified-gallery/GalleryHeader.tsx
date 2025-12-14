@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +14,24 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import type { FolderWithCount } from '../../types/folder.types'
 
 interface GalleryHeaderProps {
   totalImages: number
@@ -23,6 +42,7 @@ interface GalleryHeaderProps {
   gridSize: GridSize
   currentFolderName?: string
   useNativeAspectRatio: boolean
+  folders?: FolderWithCount[]
   onSearchChange: (query: string) => void
   onSelectAll: () => void
   onClearSelection: () => void
@@ -30,7 +50,7 @@ interface GalleryHeaderProps {
   onGridSizeChange: (size: GridSize) => void
   onAspectRatioChange: (useNative: boolean) => void
   onOpenMobileMenu?: () => void
-  onBulkMoveToFolder?: () => void
+  onMoveToFolder?: (folderId: string | null) => void
   onBulkDownload?: () => void
 }
 
@@ -43,6 +63,7 @@ export function GalleryHeader({
   gridSize,
   currentFolderName,
   useNativeAspectRatio,
+  folders = [],
   onSearchChange,
   onSelectAll,
   onClearSelection,
@@ -50,9 +71,11 @@ export function GalleryHeader({
   onGridSizeChange,
   onAspectRatioChange,
   onOpenMobileMenu,
-  onBulkMoveToFolder,
+  onMoveToFolder,
   onBulkDownload
 }: GalleryHeaderProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
   return (
     <CardHeader className="pb-4">
       <div className="flex flex-col gap-3">
@@ -185,15 +208,47 @@ export function GalleryHeader({
               >
                 Clear
               </Button>
-              {onBulkMoveToFolder && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onBulkMoveToFolder}
-                >
-                  <FolderInput className="w-4 h-4 mr-2" />
-                  Move to Folder
-                </Button>
+              {onMoveToFolder && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <FolderInput className="w-4 h-4 mr-2" />
+                      Move
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-card border-border">
+                    <DropdownMenuItem
+                      onClick={() => onMoveToFolder(null)}
+                      className="cursor-pointer"
+                    >
+                      <span>Uncategorized</span>
+                    </DropdownMenuItem>
+                    {folders.length > 0 && <DropdownMenuSeparator />}
+                    {folders.map(folder => (
+                      <DropdownMenuItem
+                        key={folder.id}
+                        onClick={() => onMoveToFolder(folder.id)}
+                        className="cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          {folder.color && (
+                            <div
+                              className="h-3 w-3 rounded-full border border-border"
+                              style={{ backgroundColor: folder.color }}
+                            />
+                          )}
+                          <span>{folder.name}</span>
+                          <span className="text-muted-foreground text-xs ml-auto">({folder.imageCount})</span>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                    {folders.length === 0 && (
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                        No folders created yet
+                      </div>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
               {onBulkDownload && (
                 <Button
@@ -208,7 +263,7 @@ export function GalleryHeader({
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={onDeleteSelected}
+                onClick={() => setShowDeleteConfirm(true)}
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete
@@ -217,6 +272,30 @@ export function GalleryHeader({
           )}
         </div>
       </div>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedCount} images?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. These images will be permanently deleted from your gallery and storage.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                onDeleteSelected()
+                setShowDeleteConfirm(false)
+              }}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete {selectedCount} Images
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </CardHeader>
   )
 }

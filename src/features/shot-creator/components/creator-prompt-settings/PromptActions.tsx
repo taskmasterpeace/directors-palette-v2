@@ -27,6 +27,7 @@ import { parseDynamicPrompt } from "../../helpers/prompt-syntax-feedback"
 import { useWildCardStore } from "../../store/wildcard.store"
 import { PromptLibrary } from "./PromptLibrary"
 import { PromptAutocomplete } from "../prompt-autocomplete"
+import { OrganizeButton } from "../prompt-organizer"
 import { usePromptAutocomplete } from "../../hooks/usePromptAutocomplete"
 import type { AutocompleteOption } from "../../types/autocomplete.types"
 import { useCallback } from "react"
@@ -501,6 +502,10 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                                 <Maximize2 className="w-3 h-3" />
                             </Button>
                         </div>
+                        <OrganizeButton
+                            prompt={shotCreatorPrompt}
+                            onApply={setShotCreatorPrompt}
+                        />
                         <Badge variant="secondary" className="text-xs whitespace-nowrap hidden sm:inline-flex">
                             @ refs
                         </Badge>
@@ -636,6 +641,21 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         onClick={handleGenerate}
                         disabled={!canGenerate || isGenerating}
                         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium disabled:opacity-50"
+                        aria-label={
+                            isGenerating
+                                ? "Generating image, please wait"
+                                : `Generate ${generationCost.imageCount} image${generationCost.imageCount > 1 ? 's' : ''} for ${generationCost.tokenCost} points`
+                        }
+                        aria-busy={isGenerating}
+                        title={
+                            isGenerating
+                                ? 'Generation in progress...'
+                                : !shotCreatorPrompt.length
+                                    ? 'Enter a prompt first'
+                                    : shotCreatorReferenceImages.length === 0
+                                        ? 'Add at least one reference image'
+                                        : `Generate ${generationCost.imageCount} image${generationCost.imageCount > 1 ? 's' : ''} (${generationCost.tokenCost} pts)`
+                        }
                     >
                         {isGenerating ? (
                             <>
@@ -657,11 +677,11 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         <div className="text-xs text-center text-muted-foreground">
                             {generationCost.imageCount > 1 ? (
                                 <span>
-                                    {generationCost.imageCount} images × {generationCost.tokenCost / generationCost.imageCount} tokens = <span className="text-primary font-medium">{generationCost.tokenCost} tokens</span>
+                                    {generationCost.imageCount} images × {generationCost.tokenCost / generationCost.imageCount} pts = <span className="text-amber-400 font-medium">{generationCost.tokenCost} pts</span>
                                 </span>
                             ) : (
                                 <span>
-                                    Cost: <span className="text-primary font-medium">{generationCost.tokenCost} tokens</span>
+                                    Cost: <span className="text-amber-400 font-medium">{generationCost.tokenCost} pts</span>
                                 </span>
                             )}
                         </div>

@@ -96,8 +96,6 @@ export const useShotCreatorStore = create<ShotCreatorStore>()((set) => ({
         }),
 
     onSendToReferenceLibrary: async (imageUrl: string, galleryId?: string) => {
-        console.log('🔍 sendToReferenceLibrary called with imageUrl:', imageUrl, 'galleryId:', galleryId)
-
         try {
             const settings = useShotCreatorStore.getState().settings;
             // Store pending generation with gallery ID for later category selection
@@ -108,17 +106,14 @@ export const useShotCreatorStore = create<ShotCreatorStore>()((set) => ({
                 referenceTags: [],
                 galleryId // Store gallery ID for creating reference
             }
-            console.log('🔍 Setting pendingGeneration:', pendingGen)
             set(() => ({ pendingGeneration: pendingGen }))
-            console.log('🔍 Opening category dialog...')
             set(() => ({ categoryDialogOpen: true }))
 
             toast({
                 title: 'Opening Save Dialog',
                 description: 'Select a category for this reference',
             })
-        } catch (error) {
-            console.error('🔴 Error in sendToReferenceLibrary:', error)
+        } catch {
             toast({
                 title: 'Save Failed',
                 description: 'Failed to save to reference library',

@@ -60,8 +60,8 @@ async function globalSetup(config: FullConfig) {
         await page.waitForLoadState('networkidle')
 
         // Fill in credentials
-        await page.fill('input[name="email"], input[type="email"]', email)
-        await page.fill('input[name="password"], input[type="password"]', password)
+        await page.fill('#email', email)
+        await page.fill('#password', password)
 
         // Submit login
         await page.click('button[type="submit"]')

@@ -8,22 +8,54 @@ export interface DatabaseError {
 
 export class DatabaseErrorHandler {
   static handle(error: PostgrestError | Error | unknown): DatabaseError {
-    // Always log the raw error for debugging
-    console.error('[DatabaseErrorHandler] Raw error:', error);
+    // Handle null/undefined
+    if (error === null || error === undefined) {
+      return {
+        message: 'An unexpected error occurred (no details)',
+        code: 'UNKNOWN_ERROR',
+      };
+    }
 
+    // Handle standard Error instances
     if (error instanceof Error) {
+      // Check for network errors
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        return {
+          message: 'Network connection error. Please check your connection and try again.',
+          code: 'NETWORK_ERROR',
+        };
+      }
       return {
         message: error.message,
         code: 'UNKNOWN_ERROR',
       };
     }
 
+    // Handle PostgREST errors (have both message and code)
     if (this.isPostgrestError(error)) {
       return this.handlePostgrestError(error);
     }
 
-    // Log unknown error types with more detail
-    console.error('[DatabaseErrorHandler] Unknown error type:', typeof error, JSON.stringify(error, null, 2));
+    // Handle objects with just message property (typically network errors from Supabase)
+    if (typeof error === 'object' && 'message' in error) {
+      const msg = (error as { message?: string }).message;
+      // Empty message typically means network/connection issue
+      if (!msg || msg === '') {
+        return {
+          message: 'Connection error. Please refresh the page and try again.',
+          code: 'CONNECTION_ERROR',
+        };
+      }
+      return {
+        message: msg,
+        code: 'UNKNOWN_ERROR',
+      };
+    }
+
+    // Log unknown error types (but don't spam console in production)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[DatabaseErrorHandler] Unknown error type:', typeof error, JSON.stringify(error, null, 2));
+    }
 
     return {
       message: 'An unexpected database error occurred',

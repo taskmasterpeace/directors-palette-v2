@@ -64,8 +64,8 @@ const ShotCreator = () => {
         }
     }, [shotCreatorSettings.model, shotCreatorSettings.resolution, updateSettings])
 
-    const onSendToImageEdit = (imageUrl: string) => {
-        console.log('🎞️ Sending video frame to image editor:', imageUrl)
+    const onSendToImageEdit = (_imageUrl: string) => {
+        // TODO: Implement send to image editor
     }
 
     const onSendToLayoutAnnotation = (imageUrl: string) => {
@@ -80,21 +80,16 @@ const ShotCreator = () => {
     }
 
     const handleCategorySave = async (category: string, tags: string[]) => {
-        console.log('🔍 handleCategorySave called with category:', category, 'tags:', tags)
-        console.log('🔍 pendingGeneration:', pendingGeneration)
-
         if (pendingGeneration && pendingGeneration.galleryId) {
             try {
                 // Create reference in Supabase
-                const { data, error } = await createReference(
+                const { error } = await createReference(
                     pendingGeneration.galleryId,
                     category,
                     tags
                 )
 
                 if (error) throw error
-
-                console.log('✅ Reference created with ID:', data?.id)
 
                 // Clear pending generation
                 setPendingGeneration(null)
@@ -107,7 +102,6 @@ const ShotCreator = () => {
                     description: `Image saved to ${category} with ${tags.length} tags`
                 })
             } catch (error) {
-                console.error('🔴 Error in handleCategorySave:', error)
                 toast({
                     title: "Save Failed",
                     description: error instanceof Error ? error.message : "Unknown error occurred",
@@ -115,7 +109,6 @@ const ShotCreator = () => {
                 })
             }
         } else {
-            console.log('❌ No pendingGeneration or galleryId found!')
             toast({
                 title: "Save Failed",
                 description: "Missing gallery ID. Please try again.",

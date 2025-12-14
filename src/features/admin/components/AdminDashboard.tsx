@@ -7,8 +7,11 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
 import { Users, DollarSign, TrendingUp, Gift, Search, RefreshCw, Shield, Loader2, Sparkles } from 'lucide-react'
+import { GenerationsTable } from './GenerationsTable'
+import { GenerationStats } from './GenerationStats'
 
 // Cost per image generation in cents (matches FALLBACK_PRICING.image.price_cents)
 const COST_PER_GENERATION = 20
@@ -118,17 +121,25 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
         )
     }
 
+    const handleExportLogs = () => {
+        const today = new Date()
+        const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
+        const since = thirtyDaysAgo.toISOString().split('T')[0]
+        const until = today.toISOString().split('T')[0]
+        window.open(`/api/admin/export-logs?since=${since}&until=${until}`, '_blank')
+    }
+
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                        <Shield className="w-6 h-6 text-amber-500" />
+                    <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+                        <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500" />
                         Admin Dashboard
                     </h1>
-                    <p className="text-muted-foreground">
-                        Manage users and credits
+                    <p className="text-sm text-muted-foreground">
+                        Manage users, credits, and view analytics
                     </p>
                 </div>
                 <Button onClick={loadData} variant="outline" size="sm">
@@ -137,8 +148,23 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                 </Button>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-4">
+            {/* Tabs */}
+            <Tabs defaultValue="users" className="space-y-6">
+                <TabsList className="bg-zinc-800">
+                    <TabsTrigger value="users" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
+                        <Users className="w-4 h-4 mr-2" />
+                        Users
+                    </TabsTrigger>
+                    <TabsTrigger value="activity" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
+                        <TrendingUp className="w-4 h-4 mr-2" />
+                        Activity
+                    </TabsTrigger>
+                </TabsList>
+
+                {/* Users Tab */}
+                <TabsContent value="users" className="space-y-6">
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
                 <Card className="bg-zinc-900 border-zinc-800">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-zinc-400">Total Users</CardTitle>
@@ -185,35 +211,37 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                 <CardHeader>
                     <CardTitle className="text-white">Users</CardTitle>
                     <CardDescription>All registered users and their credit balances</CardDescription>
-                    <div className="flex items-center gap-2 mt-4">
-                        <Search className="w-4 h-4 text-zinc-500" />
-                        <Input
-                            placeholder="Search by email..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && fetchUsers()}
-                            className="max-w-sm bg-zinc-800 border-zinc-700"
-                        />
-                        <Button onClick={fetchUsers} variant="secondary" size="sm">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-4">
+                        <div className="flex items-center gap-2 flex-1">
+                            <Search className="w-4 h-4 text-zinc-500 hidden sm:block" />
+                            <Input
+                                placeholder="Search by email..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && fetchUsers()}
+                                className="bg-zinc-800 border-zinc-700"
+                            />
+                        </div>
+                        <Button onClick={fetchUsers} variant="secondary" size="sm" className="w-full sm:w-auto">
                             Search
                         </Button>
                     </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow className="border-zinc-800">
                                 <TableHead className="text-zinc-400">Email</TableHead>
                                 <TableHead className="text-zinc-400">Balance</TableHead>
-                                <TableHead className="text-zinc-400">
+                                <TableHead className="text-zinc-400 hidden sm:table-cell">
                                     <div className="flex items-center gap-1">
                                         <Sparkles className="w-3 h-3 text-amber-500" />
                                         Gens
                                     </div>
                                 </TableHead>
-                                <TableHead className="text-zinc-400">Purchased</TableHead>
-                                <TableHead className="text-zinc-400">Used</TableHead>
-                                <TableHead className="text-zinc-400">Joined</TableHead>
+                                <TableHead className="text-zinc-400 hidden md:table-cell">Purchased</TableHead>
+                                <TableHead className="text-zinc-400 hidden md:table-cell">Used</TableHead>
+                                <TableHead className="text-zinc-400 hidden lg:table-cell">Joined</TableHead>
                                 <TableHead className="text-zinc-400">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -221,31 +249,35 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                             {users.map((user) => (
                                 <TableRow key={user.id} className="border-zinc-800">
                                     <TableCell className="font-medium text-white">
-                                        {user.email}
-                                        {user.is_admin && (
-                                            <Badge variant="outline" className="ml-2 border-amber-500 text-amber-500">
-                                                Admin
-                                            </Badge>
-                                        )}
-                                        {user.email === currentUserEmail && (
-                                            <Badge variant="secondary" className="ml-2">
-                                                You
-                                            </Badge>
-                                        )}
+                                        <div className="flex flex-col">
+                                            <span className="truncate max-w-[120px] sm:max-w-none">{user.email}</span>
+                                            <div className="flex gap-1 flex-wrap">
+                                                {user.is_admin && (
+                                                    <Badge variant="outline" className="border-amber-500 text-amber-500 text-xs">
+                                                        Admin
+                                                    </Badge>
+                                                )}
+                                                {user.email === currentUserEmail && (
+                                                    <Badge variant="secondary" className="text-xs">
+                                                        You
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                        </div>
                                     </TableCell>
-                                    <TableCell className="text-green-400 font-mono">
+                                    <TableCell className="text-green-400 font-mono text-sm">
                                         {user.formatted_balance}
                                     </TableCell>
-                                    <TableCell className="text-amber-400 font-mono font-bold">
+                                    <TableCell className="text-amber-400 font-mono font-bold hidden sm:table-cell">
                                         {Math.floor((user.credits?.balance || 0) / COST_PER_GENERATION)}
                                     </TableCell>
-                                    <TableCell className="text-zinc-400 font-mono">
+                                    <TableCell className="text-zinc-400 font-mono hidden md:table-cell">
                                         ${((user.credits?.lifetime_purchased || 0) / 100).toFixed(2)}
                                     </TableCell>
-                                    <TableCell className="text-zinc-400 font-mono">
+                                    <TableCell className="text-zinc-400 font-mono hidden md:table-cell">
                                         ${((user.credits?.lifetime_used || 0) / 100).toFixed(2)}
                                     </TableCell>
-                                    <TableCell className="text-zinc-500">
+                                    <TableCell className="text-zinc-500 hidden lg:table-cell">
                                         {new Date(user.created_at).toLocaleDateString()}
                                     </TableCell>
                                     <TableCell>
@@ -255,8 +287,8 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                                             onClick={() => openGrantDialog(user)}
                                             className="border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
                                         >
-                                            <Gift className="w-4 h-4 mr-1" />
-                                            Grant
+                                            <Gift className="w-4 h-4 sm:mr-1" />
+                                            <span className="hidden sm:inline">Grant</span>
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -272,6 +304,14 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                     </Table>
                 </CardContent>
             </Card>
+                </TabsContent>
+
+                {/* Activity Tab */}
+                <TabsContent value="activity" className="space-y-6">
+                    <GenerationStats />
+                    <GenerationsTable onExportLogs={handleExportLogs} />
+                </TabsContent>
+            </Tabs>
 
             {/* Grant Credits Dialog */}
             <Dialog open={grantDialogOpen} onOpenChange={setGrantDialogOpen}>

@@ -141,7 +141,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
 
   // UI Preferences - use defaults for SSR, hydrate from localStorage after mount
   gridSize: 'medium',
-  isSidebarCollapsed: false,
+  isSidebarCollapsed: true, // Default to collapsed
   useNativeAspectRatio: false,
 
   // Folder state
@@ -197,11 +197,20 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   },
 
   loadImagesPaginated: (images, total, totalPages) => {
+    // Deduplicate images by ID to prevent React key errors
+    const uniqueImages = images.filter((image, index, self) =>
+      index === self.findIndex(img => img.id === image.id)
+    )
+
     set({
-      images: images,
-      recentImages: images.slice(0, 10),
+      images: uniqueImages,
+      recentImages: uniqueImages.slice(0, 10),
       totalItems: total,
-      totalPages: totalPages
+      totalPages: totalPages,
+      // Set offset to the number of loaded images for infinite scroll
+      offset: uniqueImages.length,
+      // hasMore if we loaded less than the total 
+      hasMore: uniqueImages.length < total
     })
   },
 
@@ -431,12 +440,20 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
 
   // Infinite scroll actions
   appendImages: (newImages, hasMore) => {
-    set((state) => ({
-      images: [...state.images, ...newImages],
-      offset: state.offset + newImages.length,
-      hasMore,
-      isLoadingMore: false
-    }))
+    set((state) => {
+      // Get existing IDs for O(1) lookup
+      const existingIds = new Set(state.images.map(img => img.id))
+      // Only add images that don't already exist
+      const uniqueNewImages = newImages.filter(img => !existingIds.has(img.id))
+
+      return {
+        images: [...state.images, ...uniqueNewImages],
+        // Use newImages.length (not uniqueNewImages) to progress pagination correctly
+        offset: state.offset + newImages.length,
+        hasMore,
+        isLoadingMore: false
+      }
+    })
   },
 
   loadMoreImages: async () => {
@@ -449,8 +466,10 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       // Import GalleryService dynamically to avoid circular dependency
       const { GalleryService } = await import('../services/gallery.service')
 
-      // Calculate next page to load (pages are 1-indexed)
-      const nextPage = Math.floor(state.offset / state.pageSize) + 1
+      // Use currentPage + 1 for the next page (currentPage starts at 1 from initial load)
+      const nextPage = state.currentPage + 1
+      console.log(`[loadMoreImages] Loading page ${nextPage}, current offset: ${state.offset}`)
+
       const result = await GalleryService.loadUserGalleryPaginated(
         nextPage,
         state.pageSize,
@@ -458,6 +477,9 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       )
 
       if (result.images.length > 0) {
+        // Update currentPage for future loads
+        set({ currentPage: nextPage })
+
         // Check if there are more images by comparing total loaded vs total in database
         const newOffset = state.offset + result.images.length
         const hasMore = newOffset < state.totalDatabaseCount

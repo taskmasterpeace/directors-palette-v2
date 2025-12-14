@@ -97,6 +97,8 @@ export function ImageActionMenu({
           e.stopPropagation()
           setMobileSheetOpen(true)
         }}
+        aria-label="Image actions menu"
+        title="Image actions"
       >
         <MoreVertical className="h-3 w-3 text-white" />
       </Button>
@@ -131,6 +133,8 @@ export function ImageActionMenu({
             variant="secondary"
             className="hidden md:flex h-6 w-6 p-0 bg-secondary/90 hover:bg-muted border-border"
             onClick={(e) => e.stopPropagation()}
+            aria-label="Image actions menu"
+            title="Image actions"
           >
             <MoreVertical className="h-3 w-3 text-white" />
           </Button>
