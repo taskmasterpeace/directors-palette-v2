@@ -4,6 +4,8 @@ import type { Database } from '../../../../../supabase/database.types';
 import { VideoGenerationService } from '@/features/shot-animator/services/video-generation.service';
 import type { AnimationModel, ModelSettings } from '@/features/shot-animator/types';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { creditsService } from '@/features/credits';
+import { isAdminEmail } from '@/features/admin/types/admin.types';
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -71,6 +73,23 @@ export async function POST(request: NextRequest) {
         { error: 'Validation failed', details: validation.errors },
         { status: 400 }
       );
+    }
+
+    // ✅ CREDITS: Check if user has sufficient credits (admins bypass)
+    const userIsAdmin = isAdminEmail(user.email)
+    if (!userIsAdmin) {
+      const creditCheck = await creditsService.hasSufficientCredits(user.id, model, 'video')
+      if (!creditCheck.sufficient) {
+        return NextResponse.json(
+          {
+            error: 'Insufficient credits',
+            details: `You need ${creditCheck.required} points but only have ${creditCheck.balance} points.`,
+            required: creditCheck.required,
+            balance: creditCheck.balance,
+          },
+          { status: 402 } // Payment Required
+        );
+      }
     }
 
     // Build Replicate input

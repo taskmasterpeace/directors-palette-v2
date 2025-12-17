@@ -204,16 +204,20 @@ export class WebhookService {
     const userIsAdmin = isAdminEmail(userEmail);
 
     if (!userIsAdmin) {
-      const model = (currentMetadata.model as string) || 'nano-banana';
+      // Determine generation type from gallery entry
+      const generationType = galleryEntry.generation_type === 'video' ? 'video' : 'image';
+      const defaultModel = generationType === 'video' ? 'seedance-lite' : 'nano-banana';
+      const model = (currentMetadata.model as string) || defaultModel;
+
       const deductResult = await creditsService.deductCredits(galleryEntry.user_id, model, {
-        generationType: 'image',
+        generationType,
         predictionId: galleryEntry.prediction_id,
-        description: `Image generation (${model})`,
+        description: `${generationType === 'video' ? 'Video' : 'Image'} generation (${model})`,
       });
 
       if (!deductResult.success) {
-        console.error('Failed to deduct credits after successful generation:', deductResult.error);
-        // Don't fail the whole process - the image was generated successfully
+        console.error(`Failed to deduct credits after successful ${generationType} generation:`, deductResult.error);
+        // Don't fail the whole process - the asset was generated successfully
       } else {
         console.log(`Credits deducted for user ${galleryEntry.user_id}. New balance: ${deductResult.newBalance}`);
       }
