@@ -110,7 +110,8 @@ export class GalleryService {
     pageSize: number,
     folderId?: string | null,
     options?: {
-      includeProcessing?: boolean
+      includeProcessing?: boolean;
+      searchQuery?: string;
     }
   ): Promise<{ items: GalleryRow[]; total: number; totalPages: number }> {
     try {
@@ -137,43 +138,26 @@ export class GalleryService {
         generation_type: generationType,
       }
 
-      // Add folder filter if provided
+      // Add folder filter if provided (and not searching, unless we want to search within folders)
       // Note: folderId can be null for uncategorized, string for specific folder, or undefined for all
       if (folderId !== undefined) {
         filters.folder_id = folderId
       }
 
-      // If not including processing, filter by public_url not null
-      if (!options?.includeProcessing) {
-        // Note: Supabase doesn't support 'not null' in filters object
-        // We'll handle this with a custom query
-        const result = await repository.getPaginated(filters, {
-          page,
-          pageSize,
-          orderBy: 'created_at',
-          ascending: false,
-        })
-
-        if (result.error) {
-          console.error(`Error fetching ${generationType} gallery:`, result.error)
-          throw new Error(`Database query failed: ${result.error}`)
-        }
-
-        // Filter out items without public_url
-        const filteredItems = result.data.filter(item => item.public_url !== null)
-
-        return {
-          items: filteredItems,
-          total: result.total,
-          totalPages: result.totalPages,
-        }
-      }
+      // If not including processing, we normally filter by public_url not null.
+      // However, Supabase doesn't support 'not null' in the simple filters object easily for our repository pattern
+      // without modifying it.
+      // But we can filter post-fetch if needed, OR relies on the fact that pending items usually
+      // don't have public_url.
+      // For now, let's just get the data and if includeProcessing is false, we filter post-fetch
+      // unless we improve the repository to handle specific "not null" conditions.
 
       const result = await repository.getPaginated(filters, {
         page,
         pageSize,
         orderBy: 'created_at',
         ascending: false,
+        searchQuery: options?.searchQuery
       })
 
       if (result.error) {
@@ -181,8 +165,17 @@ export class GalleryService {
         throw new Error(`Database query failed: ${result.error}`)
       }
 
+      let items = result.data
+
+      // If not including processing, filter out items without public_url
+      // Note: This reduces the page size, which is not ideal for pagination,
+      // but it's a safe fallback if we don't custom query.
+      if (!options?.includeProcessing) {
+        items = items.filter(item => item.public_url !== null)
+      }
+
       return {
-        items: result.data,
+        items,
         total: result.total,
         totalPages: result.totalPages,
       }
