@@ -27,6 +27,45 @@ This document details all costs and pricing across the platform. All amounts in 
 
 ---
 
+## Video Generation Models
+
+### Per-Video Models (Fixed Duration)
+
+| Model | Our Cost | We Charge | Margin | Max Duration | Features |
+|-------|----------|-----------|--------|--------------|----------|
+| 🎬 WAN 2.2-5B Fast | 2.5¢ | 4 pts | 60% | 4 sec | Start frame |
+| 🎬 WAN 2.2 I2V Fast | 11¢ | 16 pts | 45% | 5 sec | Start + Last frame |
+
+### Per-Second Models (Variable Duration)
+
+| Model | 480p | 720p | 1080p | Max Duration | Features |
+|-------|------|------|-------|--------------|----------|
+| ⚡ Seedance Pro Fast | 2 pts | 4 pts | 9 pts | 12 sec | Start frame |
+| 🌟 Seedance Lite | 3 pts | 5 pts | 11 pts | 12 sec | Start + Last + Ref Images (1-4) |
+| 👑 Kling 2.5 Turbo Pro | - | 10 pts | - | 10 sec | Premium motion |
+
+### Video Cost Examples (5-second @ 720p)
+
+| Model | Points | USD | Use Case |
+|-------|--------|-----|----------|
+| WAN 2.2-5B Fast | 4 pts | $0.04 | Quick previews |
+| WAN 2.2 I2V Fast | 16 pts | $0.16 | Controlled with last frame |
+| Seedance Pro Fast | 20 pts | $0.20 | Longer videos |
+| Seedance Lite | 25 pts | $0.25 | Full control + ref images |
+| Kling Premium | 50 pts | $0.50 | Best motion quality |
+
+### Video Margins (Our Cost vs Revenue)
+
+| Model | Our Cost (5s @720p) | Revenue | Margin |
+|-------|---------------------|---------|--------|
+| WAN 2.2-5B Fast | ~2.5¢ | 4¢ | 60% |
+| WAN 2.2 I2V Fast | ~11¢ | 16¢ | 45% |
+| Seedance Pro Fast | ~12.5¢ | 20¢ | 44% |
+| Seedance Lite | ~18¢ | 25¢ | 44% |
+| Kling Premium | ~35¢ | 50¢ | 43% |
+
+---
+
 ## Tools
 
 | Tool | Our Cost | We Charge | Margin | Margin % |
@@ -127,6 +166,20 @@ Image Generation:
   - Z-Image Turbo:     5 tokens/image
   - Nano Banana:       8 tokens/image
   - Nano Banana Pro:  20 tokens/image (35 for 4K)
+
+Video Generation (Per-Video):
+  - WAN 2.2-5B Fast:    4 tokens/video (max 4s)
+  - WAN 2.2 I2V Fast:  16 tokens/video (max 5s)
+
+Video Generation (Per-Second @ 720p):
+  - Seedance Pro Fast:  4 tokens/second (max 12s)
+  - Seedance Lite:      5 tokens/second (max 12s)
+  - Kling Premium:     10 tokens/second (max 10s)
+
+Resolution Multipliers (for per-second models):
+  - 480p: 0.5x base rate
+  - 720p: 1.0x base rate
+  - 1080p: 2.0-2.2x base rate
 
 Tools:
   - Background Removal: 3 tokens/image
