@@ -22,9 +22,13 @@ import { AnimationModel, AnimatorSettings, ModelSettings } from '../types'
 import {
   ANIMATION_MODELS,
   DURATION_CONSTRAINTS,
-  RESOLUTIONS,
-  ASPECT_RATIOS
+  ASPECT_RATIOS,
+  ACTIVE_VIDEO_MODELS,
+  MODEL_TIER_LABELS,
 } from '../config/models.config'
+import { VIDEO_MODEL_PRICING } from '../types'
+import { Badge } from '@/components/ui/badge'
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 
 interface ModelSettingsModalProps {
   settings: AnimatorSettings
@@ -78,33 +82,39 @@ export function ModelSettingsModal({ settings, onSave }: ModelSettingsModalProps
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as AnimationModel)}>
-          <TabsList className="grid w-full grid-cols-2 bg-card h-11 sm:h-10 touch-manipulation">
-            <TabsTrigger value="seedance-lite" className="data-[state=active]:bg-secondary min-h-[44px] sm:min-h-0">
-              Seedance Lite
-            </TabsTrigger>
-            <TabsTrigger value="seedance-pro" className="data-[state=active]:bg-secondary min-h-[44px] sm:min-h-0">
-              Seedance Pro
-            </TabsTrigger>
-          </TabsList>
+          <ScrollArea className="w-full">
+            <TabsList className="inline-flex w-max bg-card h-11 sm:h-10 touch-manipulation gap-1 p-1">
+              {ACTIVE_VIDEO_MODELS.map((modelId) => {
+                const config = ANIMATION_MODELS[modelId]
+                const tier = MODEL_TIER_LABELS[modelId]
+                return (
+                  <TabsTrigger
+                    key={modelId}
+                    value={modelId}
+                    className="data-[state=active]:bg-secondary min-h-[44px] sm:min-h-0 px-3 whitespace-nowrap"
+                  >
+                    <span className="mr-1">{config.displayName}</span>
+                    <Badge variant="outline" className="text-[9px] px-1 py-0 hidden sm:inline">
+                      {tier}
+                    </Badge>
+                  </TabsTrigger>
+                )
+              })}
+            </TabsList>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
 
-          {/* Seedance Lite Settings */}
+          {/* Model Settings Panels */}
           <div className="max-h-[60vh] overflow-y-auto mt-4 px-2 sm:px-0">
-            <TabsContent value="seedance-lite" className="space-y-6 mt-4">
-              <ModelSettingsPanel
-                model="seedance-lite"
-                settings={localSettings['seedance-lite']}
-                onUpdate={(updates) => updateModelSettings('seedance-lite', updates)}
-              />
-            </TabsContent>
-
-            {/* Seedance Pro Settings */}
-            <TabsContent value="seedance-pro" className="space-y-6 mt-4">
-              <ModelSettingsPanel
-                model="seedance-pro"
-                settings={localSettings['seedance-pro']}
-                onUpdate={(updates) => updateModelSettings('seedance-pro', updates)}
-              />
-            </TabsContent>
+            {ACTIVE_VIDEO_MODELS.map((modelId) => (
+              <TabsContent key={modelId} value={modelId} className="space-y-6 mt-4">
+                <ModelSettingsPanel
+                  model={modelId}
+                  settings={localSettings[modelId]}
+                  onUpdate={(updates) => updateModelSettings(modelId, updates)}
+                />
+              </TabsContent>
+            ))}
           </div>
         </Tabs>
 
@@ -129,27 +139,64 @@ interface ModelSettingsPanelProps {
 
 function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelProps) {
   const modelConfig = ANIMATION_MODELS[model]
+  const pricing = VIDEO_MODEL_PRICING[model]
+  const tier = MODEL_TIER_LABELS[model]
+
+  // Calculate estimated cost for preview
+  const pricePerUnit = pricing[settings.resolution] ?? pricing['720p']
+  const estimatedCost = modelConfig.pricingType === 'per-video'
+    ? pricePerUnit
+    : pricePerUnit * settings.duration
+
+  // Check if duration is fixed for this model
+  const isFixedDuration = modelConfig.pricingType === 'per-video'
 
   return (
     <div className="space-y-6 p-4 sm:p-4 overflow-y-auto bg-card/50 rounded-lg border border-border">
+      {/* Pricing Info Banner */}
+      <div className="flex items-center justify-between bg-primary/10 border border-primary/30 rounded p-3">
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-xs">{tier}</Badge>
+          <span className="text-sm text-muted-foreground">
+            {modelConfig.pricingType === 'per-video'
+              ? `${pricePerUnit} pts/video`
+              : `${pricePerUnit} pts/sec @ ${settings.resolution}`}
+          </span>
+        </div>
+        <div className="text-right">
+          <span className="text-primary font-semibold">{estimatedCost} pts</span>
+          <span className="text-xs text-muted-foreground ml-1">estimated</span>
+        </div>
+      </div>
+
       {/* Duration Slider */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-white">Duration</Label>
-          <span className="text-sm text-muted-foreground">{settings.duration} sec</span>
+          <span className="text-sm text-muted-foreground">
+            {isFixedDuration ? `${modelConfig.maxDuration} sec (fixed)` : `${settings.duration} sec`}
+          </span>
         </div>
-        <Slider
-          value={[settings.duration]}
-          onValueChange={([value]) => onUpdate({ duration: value })}
-          min={DURATION_CONSTRAINTS.min}
-          max={DURATION_CONSTRAINTS.max}
-          step={1}
-          className="w-full"
-        />
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>{DURATION_CONSTRAINTS.min} sec</span>
-          <span>{DURATION_CONSTRAINTS.max} sec</span>
-        </div>
+        {isFixedDuration ? (
+          <div className="text-xs text-muted-foreground bg-secondary/30 rounded p-2">
+            This model has a fixed duration of {modelConfig.maxDuration} seconds per video.
+          </div>
+        ) : (
+          <>
+            <Slider
+              value={[settings.duration]}
+              onValueChange={([value]) => onUpdate({ duration: value })}
+              min={DURATION_CONSTRAINTS.min}
+              max={modelConfig.maxDuration}
+              step={1}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{DURATION_CONSTRAINTS.min} sec</span>
+              <span>{modelConfig.maxDuration} sec</span>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Resolution */}
@@ -160,14 +207,18 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
           onValueChange={(value) => onUpdate({ resolution: value as '480p' | '720p' | '1080p' })}
           className="flex flex-col sm:flex-row gap-3 sm:gap-4"
         >
-          {RESOLUTIONS.map((res) => (
-            <div key={res} className="flex items-center space-x-2 touch-manipulation min-h-[44px] sm:min-h-0">
-              <RadioGroupItem value={res} id={`${model}-${res}`} className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0" />
-              <Label htmlFor={`${model}-${res}`} className="cursor-pointer text-foreground">
-                {res}
-              </Label>
-            </div>
-          ))}
+          {modelConfig.supportedResolutions.map((res) => {
+            const resPrice = pricing[res] ?? pricing['720p']
+            return (
+              <div key={res} className="flex items-center space-x-2 touch-manipulation min-h-[44px] sm:min-h-0">
+                <RadioGroupItem value={res} id={`${model}-${res}`} className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0" />
+                <Label htmlFor={`${model}-${res}`} className="cursor-pointer text-foreground">
+                  {res}
+                  <span className="text-xs text-muted-foreground ml-1">({resPrice} pts)</span>
+                </Label>
+              </div>
+            )
+          })}
         </RadioGroup>
       </div>
 

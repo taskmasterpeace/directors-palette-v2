@@ -8,6 +8,7 @@ import { isAdminEmail } from '@/features/admin/types/admin.types';
 import { generationEventsService } from '@/features/admin/services/generation-events.service';
 import { getModelConfig } from '@/config';
 import { StorageService } from '@/features/generation/services/storage.service';
+import { StorageLimitsService } from '@/features/storage/services/storage-limits.service';
 import type { Database } from '../../../../../supabase/database.types';
 import fs from 'fs';
 import path from 'path';
@@ -176,6 +177,20 @@ export async function POST(request: NextRequest) {
             balance: creditCheck.balance,
           },
           { status: 402 } // Payment Required
+        );
+      }
+
+      // ✅ STORAGE: Check if user has reached image limit (500 max)
+      const storageLimits = await StorageLimitsService.getStorageLimits(user.id)
+      if (!storageLimits.canCreateImage) {
+        return NextResponse.json(
+          {
+            error: 'Storage limit reached',
+            details: `You have reached the maximum of ${storageLimits.imageLimit} images. Delete some images to create more.`,
+            imageCount: storageLimits.imageCount,
+            imageLimit: storageLimits.imageLimit,
+          },
+          { status: 403 } // Forbidden
         );
       }
     }

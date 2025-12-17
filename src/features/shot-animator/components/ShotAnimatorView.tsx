@@ -3,7 +3,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { Upload, ImageIcon, Search, Play, VideoIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -28,7 +27,18 @@ import {
 import {
   ANIMATION_MODELS,
   DEFAULT_MODEL_SETTINGS,
+  ACTIVE_VIDEO_MODELS,
+  MODEL_TIER_LABELS,
 } from '../config/models.config'
+import { VIDEO_MODEL_PRICING } from '../types'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
 import VideoPreviewsModal from "./VideoPreviewsModal"
 
 export function ShotAnimatorView() {
@@ -68,6 +78,22 @@ export function ShotAnimatorView() {
     })
 
   const selectedCount = shotConfigs.filter((s) => s.includeInBatch).length
+
+  // Calculate estimated cost for the batch
+  const estimatedCost = useMemo(() => {
+    if (selectedCount === 0) return 0
+    const settings = modelSettings[selectedModel]
+    const pricing = VIDEO_MODEL_PRICING[selectedModel]
+    const pricePerUnit = pricing[settings.resolution] ?? pricing['720p']
+
+    if (currentModelConfig.pricingType === 'per-video') {
+      // Per-video models: fixed cost per video
+      return selectedCount * pricePerUnit
+    } else {
+      // Per-second models: cost based on duration
+      return selectedCount * pricePerUnit * settings.duration
+    }
+  }, [selectedCount, selectedModel, modelSettings, currentModelConfig.pricingType])
 
   // Real-time subscription to update video URLs when generation completes
   useEffect(() => {
@@ -367,24 +393,53 @@ export function ShotAnimatorView() {
         {/* Model Selection & Settings */}
         <div className="px-2 sm:px-4 py-2 flex flex-col gap-3">
           {/* Model Selection */}
-          <RadioGroup
-            value={selectedModel}
-            onValueChange={(value) => setSelectedModel(value as AnimationModel)}
-            className="flex gap-3 sm:gap-4"
-          >
-            <div className="flex items-center space-x-2 touch-manipulation">
-              <RadioGroupItem value="seedance-lite" id="model-lite" className="min-w-[20px] min-h-[20px]" />
-              <Label htmlFor="model-lite" className="cursor-pointer text-white text-sm whitespace-nowrap">
-                Seedance Lite
-              </Label>
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+            <Label className="text-muted-foreground text-sm whitespace-nowrap">Model:</Label>
+            <Select
+              value={selectedModel}
+              onValueChange={(value) => setSelectedModel(value as AnimationModel)}
+            >
+              <SelectTrigger className="w-full sm:w-[320px] h-10 bg-card border-border text-white">
+                <SelectValue placeholder="Select a model" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border">
+                {ACTIVE_VIDEO_MODELS.map((modelId) => {
+                  const config = ANIMATION_MODELS[modelId]
+                  const pricing = VIDEO_MODEL_PRICING[modelId]
+                  const tierLabel = MODEL_TIER_LABELS[modelId]
+                  const priceDisplay = config.pricingType === 'per-video'
+                    ? `${pricing['720p']} pts/video`
+                    : `${pricing['720p']} pts/sec`
+
+                  return (
+                    <SelectItem key={modelId} value={modelId} className="cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{config.displayName}</span>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                          {tierLabel}
+                        </Badge>
+                        <span className="text-muted-foreground text-xs">
+                          {priceDisplay}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
+            {/* Model Info Badge */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {currentModelConfig.supportsLastFrame && (
+                <Badge variant="secondary" className="text-[10px]">Last Frame</Badge>
+              )}
+              {currentModelConfig.maxReferenceImages > 0 && (
+                <Badge variant="secondary" className="text-[10px]">Ref Images</Badge>
+              )}
+              <Badge variant="outline" className="text-[10px]">
+                Max {currentModelConfig.maxDuration}s
+              </Badge>
             </div>
-            <div className="flex items-center space-x-2 touch-manipulation">
-              <RadioGroupItem value="seedance-pro" id="model-pro" className="min-w-[20px] min-h-[20px]" />
-              <Label htmlFor="model-pro" className="cursor-pointer text-white text-sm whitespace-nowrap">
-                Seedance Pro
-              </Label>
-            </div>
-          </RadioGroup>
+          </div>
 
           {/* Action Buttons - Responsive Layout */}
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -528,7 +583,7 @@ export function ShotAnimatorView() {
             >
               <Play className="w-5 h-5 mr-2" />
               <span className="text-sm sm:text-base">
-                {isGenerating ? `Generating...` : `Generate Videos (${selectedCount} selected) - 75 credits`}
+                {isGenerating ? `Generating...` : `Generate ${selectedCount} Video${selectedCount > 1 ? 's' : ''} - ${estimatedCost} pts`}
               </span>
             </Button>
           </div>

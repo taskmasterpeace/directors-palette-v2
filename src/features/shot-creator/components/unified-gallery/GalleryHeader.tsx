@@ -33,6 +33,10 @@ import {
 } from '@/components/ui/alert-dialog'
 import type { FolderWithCount } from '../../types/folder.types'
 
+// Storage limits constants
+const IMAGE_LIMIT = 500
+const IMAGE_WARNING_THRESHOLD = 400
+
 interface GalleryHeaderProps {
   totalImages: number
   totalDatabaseCount: number
@@ -56,7 +60,7 @@ interface GalleryHeaderProps {
 }
 
 export function GalleryHeader({
-  totalImages,
+  totalImages: _totalImages,
   totalDatabaseCount,
   totalCredits,
   searchQuery,
@@ -112,12 +116,28 @@ export function GalleryHeader({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-xs cursor-help">
-                    {totalImages} / {totalDatabaseCount} images
+                  <Badge
+                    variant="outline"
+                    className={`text-xs cursor-help ${
+                      totalDatabaseCount >= IMAGE_LIMIT
+                        ? 'bg-destructive/20 border-destructive text-destructive'
+                        : totalDatabaseCount >= IMAGE_WARNING_THRESHOLD
+                          ? 'bg-amber-500/20 border-amber-500 text-amber-600 dark:text-amber-400'
+                          : ''
+                    }`}
+                  >
+                    {totalDatabaseCount} / {IMAGE_LIMIT} images
+                    {totalDatabaseCount >= IMAGE_LIMIT && ' (LIMIT)'}
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Showing {totalImages} of {totalDatabaseCount} total images in database</p>
+                  {totalDatabaseCount >= IMAGE_LIMIT ? (
+                    <p className="text-destructive">Storage limit reached! Delete images to create more.</p>
+                  ) : totalDatabaseCount >= IMAGE_WARNING_THRESHOLD ? (
+                    <p className="text-amber-500">Warning: Approaching {IMAGE_LIMIT} image limit ({IMAGE_LIMIT - totalDatabaseCount} remaining)</p>
+                  ) : (
+                    <p>{totalDatabaseCount} of {IMAGE_LIMIT} images used ({IMAGE_LIMIT - totalDatabaseCount} remaining)</p>
+                  )}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
