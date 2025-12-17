@@ -8,14 +8,45 @@ import { CapacitorProvider } from "@/components/providers/CapacitorProvider"
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: "Directors Palette",
-  description: "Visual story and music video breakdown tool",
-  generator: 'Directors Palette v0.dev',
+  title: "Directors Palette - AI Image & Video Generation",
+  description: "Turn stories into visual art. AI-powered image and video generation with advanced prompting. Create consistent characters, stunning scenes, and complete storyboards.",
+  generator: 'Directors Palette',
+  keywords: ['AI image generation', 'storyboard', 'character consistency', 'video generation', 'prompt engineering', 'visual storytelling'],
+  authors: [{ name: 'Machine King Labs', url: 'https://machinekinglabs.com' }],
+  creator: 'Machine King Labs',
+  publisher: 'Machine King Labs',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'Directors Palette'
-  }
+  },
+  openGraph: {
+    title: 'Directors Palette - AI Image & Video Generation',
+    description: 'Turn stories into visual art. Create consistent characters, stunning scenes, and complete storyboards with AI-powered generation.',
+    url: 'https://directorspalette.com',
+    siteName: 'Directors Palette',
+    images: [
+      {
+        url: '/landing/app-results-1.png',
+        width: 1920,
+        height: 1080,
+        alt: 'Directors Palette - AI Generated Storyboard Interface',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Directors Palette - AI Image & Video Generation',
+    description: 'Turn stories into visual art. Create consistent characters, stunning scenes, and complete storyboards with AI.',
+    images: ['/landing/app-results-1.png'],
+    creator: '@machinekinglabs',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 }
 
 export const viewport = {
