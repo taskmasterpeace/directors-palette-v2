@@ -117,16 +117,17 @@ async function generateBanner(config: typeof BANNERS[0]): Promise<string | null>
     let output: unknown;
 
     if (config.model === 'nano-banana') {
-      // Use google/nano-banana for high quality cinematic images
+      // Use flux-dev for high quality cinematic images (better than schnell)
       output = await replicate.run(
-        "google/imagen-3.0-fast",
+        "black-forest-labs/flux-dev",
         {
           input: {
             prompt: config.prompt,
             aspect_ratio: config.width > config.height ? "16:9" : "9:16",
             output_format: "webp",
-            output_quality: 90,
-            safety_filter_level: "block_medium_and_above",
+            output_quality: 95,
+            guidance: 3.5,
+            num_inference_steps: 28,
           }
         }
       );

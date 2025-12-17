@@ -12,41 +12,42 @@ interface SectionHeaderProps {
 }
 
 // Map section IDs to their banner images and default titles
+// Using new cinematic detailed banners generated with flux-dev
 const SECTION_CONFIG: Record<TabValue, { banner: string; title: string }> = {
   'shot-creator': {
-    banner: '/banners/shot-creator-banner.webp',
+    banner: '/banners/shot-creator.webp',
     title: 'Shot Creator'
   },
   'shot-animator': {
-    banner: '/banners/shot-animator-banner.webp',
+    banner: '/banners/shot-animator.webp',
     title: 'Shot Animator'
   },
   'layout-annotation': {
-    banner: '/banners/canvas-editor-banner.webp',
+    banner: '/banners/canvas-editor.webp',
     title: 'Canvas Editor'
   },
   'storyboard': {
-    banner: '/banners/storyboard-banner.webp',
+    banner: '/banners/storyboard.webp',
     title: 'Storyboard'
   },
   'music-lab': {
-    banner: '/banners/music-lab-banner.webp',
+    banner: '/banners/music-lab.webp',
     title: 'Music Lab'
   },
   'prompt-tools': {
-    banner: '/banners/prompt-tools-banner.webp',
+    banner: '/banners/prompt-tools.webp',
     title: 'Prompt Tools'
   },
   'gallery': {
-    banner: '/banners/gallery-banner.webp',
+    banner: '/banners/gallery.webp',
     title: 'Gallery'
   },
   'community': {
-    banner: '/banners/community-banner.webp',
+    banner: '/banners/community.webp',
     title: 'Community'
   },
   'help': {
-    banner: '/banners/help-banner.webp',
+    banner: '/banners/help.webp',
     title: 'Help & Manual'
   }
 }
