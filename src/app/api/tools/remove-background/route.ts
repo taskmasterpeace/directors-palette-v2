@@ -8,11 +8,11 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
-// Model ID for background removal - cjwbw/rembg is stable and cheap (~$0.004/run)
-const REMOVE_BG_MODEL = 'cjwbw/rembg:fb8af171cfa1616ddcf1242c093f9c46bcada5ad4cf6f2fbe8b81b330ec5c003';
+// Model ID for background removal - bria/remove-background is higher quality
+const REMOVE_BG_MODEL = 'bria/remove-background';
 
-// Cost: ~0.4 cents, charge 2 points (still good margin)
-const REMOVE_BG_COST_POINTS = 2;
+// Cost: ~1.5 cents, charge 3 points (still good margin)
+const REMOVE_BG_COST_POINTS = 3;
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,29 +33,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check credits (admins bypass)
-    const userIsAdmin = isAdminEmail(user.email);
+    // Check if user is admin (bypass credit check)
+    const userIsAdmin = isAdminEmail(user.email || '');
+
+    // Check if user has enough credits (unless admin)
     if (!userIsAdmin) {
       const balance = await creditsService.getBalance(user.id);
       if (!balance || balance.balance < REMOVE_BG_COST_POINTS) {
         return NextResponse.json(
-          {
-            error: 'Insufficient credits',
-            details: `You need ${REMOVE_BG_COST_POINTS} points but only have ${balance?.balance || 0} points.`,
-            required: REMOVE_BG_COST_POINTS,
-            balance: balance?.balance || 0,
-          },
+          { error: `Insufficient credits. Need ${REMOVE_BG_COST_POINTS}, have ${balance?.balance || 0}` },
           { status: 402 }
         );
       }
     }
 
     console.log('Starting background removal for:', imageUrl);
+    console.log('Using Bria model:', REMOVE_BG_MODEL);
 
-    // Call Replicate API using cjwbw/rembg (works with simple URL output)
+    // Call Replicate API using bria/remove-background
+    // Bria uses image_url (string) not image (uri), and outputs a URI
     const rawOutput = await replicate.run(REMOVE_BG_MODEL, {
       input: {
-        image: imageUrl,
+        image_url: imageUrl, // Bria uses image_url
       },
     });
 

@@ -7,7 +7,7 @@
  */
 
 import { useState, useCallback } from 'react'
-import { Loader2, RefreshCw, Users } from 'lucide-react'
+import { Loader2, RefreshCw, Users, Clapperboard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ProposalCard } from './ProposalCard'
 import { getAllDirectors } from '../data/directors.data'
@@ -16,9 +16,10 @@ import { useMusicLabStore } from '../store/music-lab.store'
 
 interface ProposalListProps {
     onComplete?: (proposals: DirectorProposal[]) => void
+    onSelectProposal?: (proposal: DirectorProposal) => void
 }
 
-export function ProposalList({ onComplete }: ProposalListProps) {
+export function ProposalList({ onComplete, onSelectProposal }: ProposalListProps) {
     const { project } = useMusicLabStore()
     const [proposals, setProposals] = useState<DirectorProposal[]>([])
     const [isGenerating, setIsGenerating] = useState(false)
@@ -84,8 +85,11 @@ export function ProposalList({ onComplete }: ProposalListProps) {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <Users className="w-5 h-5" />
-                    <h2 className="text-xl font-semibold">Director Proposals</h2>
+                    <Clapperboard className="w-6 h-6 text-primary" />
+                    <div>
+                        <h2 className="text-2xl font-bold tracking-tight">The Director&apos;s Palette</h2>
+                        <p className="text-sm text-muted-foreground">Review treatments and find your visual identity</p>
+                    </div>
                 </div>
 
                 <Button
@@ -95,16 +99,16 @@ export function ProposalList({ onComplete }: ProposalListProps) {
                     {isGenerating ? (
                         <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Generating...
+                            Commissioning...
                         </>
                     ) : proposals.length > 0 ? (
                         <>
                             <RefreshCw className="w-4 h-4 mr-2" />
-                            Regenerate
+                            Commission New Takes
                         </>
                     ) : (
                         <>
-                            Generate Proposals ({directors.length} Directors)
+                            Open The Palette ({directors.length} Directors)
                         </>
                     )}
                 </Button>
@@ -121,22 +125,23 @@ export function ProposalList({ onComplete }: ProposalListProps) {
             {isGenerating && (
                 <div className="flex flex-col items-center justify-center py-12">
                     <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
-                    <p className="text-muted-foreground">
-                        {directors.length} directors are creating their visions...
+                    <p className="text-muted-foreground font-medium">
+                        Directors are listening to your track...
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                        Using Gemini 2.0 Flash for full context
+                    <p className="text-xs text-muted-foreground mt-2 animate-pulse">
+                        Analyzing lyrics • extracting themes • developing visual concepts
                     </p>
                 </div>
             )}
 
             {/* No Proposals Yet */}
             {!isGenerating && proposals.length === 0 && !error && (
-                <div className="text-center py-12 text-muted-foreground">
-                    <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>Click &quot;Generate Proposals&quot; to see how each director interprets your song.</p>
-                    <p className="text-sm mt-2">
-                        {directors.map(d => d.name).join(' • ')}
+                <div className="text-center py-20 text-muted-foreground bg-muted/30 rounded-xl border border-dashed">
+                    <Users className="w-16 h-16 mx-auto mb-6 opacity-20" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">The Studio is Quiet</h3>
+                    <p className="max-w-md mx-auto mb-6">Commission our roster of AI directors to treat your track. They&apos;ll generate unique concepts, locations, and visual vibes.</p>
+                    <p className="text-xs text-muted-foreground">
+                        Featuring: {directors.map(d => d.name).join(' • ')}
                     </p>
                 </div>
             )}
@@ -150,6 +155,7 @@ export function ProposalList({ onComplete }: ProposalListProps) {
                             proposal={proposal}
                             onRatingChange={handleRatingChange}
                             onCherryPick={handleCherryPick}
+                            onSelect={onSelectProposal}
                             cherryPickedItems={cherryPickedItems}
                         />
                     ))}

@@ -8,18 +8,18 @@
  * Based on best practices for Replicate API
  */
 export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number }> = {
-  '1:1': { width: 1024, height: 1024 },
-  '16:9': { width: 1280, height: 720 },
-  '9:16': { width: 720, height: 1280 },
-  '4:3': { width: 1024, height: 768 },
-  '3:4': { width: 768, height: 1024 },
-  '21:9': { width: 1344, height: 576 },
-  '3:2': { width: 1152, height: 768 },
-  '2:3': { width: 768, height: 1152 },
+    '1:1': { width: 1024, height: 1024 },
+    '16:9': { width: 1280, height: 720 },
+    '9:16': { width: 720, height: 1280 },
+    '4:3': { width: 1024, height: 768 },
+    '3:4': { width: 768, height: 1024 },
+    '21:9': { width: 1344, height: 576 },
+    '3:2': { width: 1152, height: 768 },
+    '2:3': { width: 768, height: 1152 },
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana' | 'nano-banana-pro'
+export type ModelId = 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-fast'
 
 export interface ModelParameter {
     id: string
@@ -28,6 +28,7 @@ export interface ModelParameter {
     options?: { value: string; label: string }[]
     min?: number
     max?: number
+    step?: number
     default?: string | number | boolean
     description?: string
 }
@@ -216,6 +217,26 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
             { value: 'block_only_high', label: 'Minimal (Block only high)' }
         ],
         description: 'Content safety filtering level'
+    },
+    // New parameters for z-image-turbo
+    numInferenceSteps: {
+        id: 'numInferenceSteps',
+        label: 'Inference Steps',
+        type: 'slider',
+        min: 1,
+        max: 4,
+        default: 2,
+        description: 'Number of denoising steps (1-4)'
+    },
+    guidanceScale: {
+        id: 'guidanceScale',
+        label: 'Guidance Scale',
+        type: 'slider',
+        min: 0,
+        max: 2,
+        step: 0.1,
+        default: 1.0,
+        description: 'Guidance scale (0-2)'
     }
 }
 
@@ -231,7 +252,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         badgeColor: 'bg-yellow-600',
         textColor: 'text-yellow-300',
         endpoint: 'google/nano-banana',
-        costPerImage: 0.06, // Price we charge users (6 pts = $0.06)
+        costPerImage: 0.08, // 8 points = 8 cents (100% margin on $0.04 cost)
         supportedParameters: ['outputFormat', 'aspectRatio'],
         parameters: {
             outputFormat: MODEL_PARAMETERS.outputFormat,
@@ -259,6 +280,49 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             safetyFilterLevel: MODEL_PARAMETERS.safetyFilterLevel
         },
         maxReferenceImages: 14
+    },
+    'z-image-turbo': {
+        id: 'z-image-turbo',
+        name: 'z-image-turbo',
+        displayName: 'Z-Image Turbo',
+        type: 'generation',
+        icon: '⚡',
+        description: 'Ultra-fast image generation for rapid visualization.',
+        badge: 'Turbo',
+        badgeColor: 'bg-purple-600',
+        textColor: 'text-purple-300',
+        endpoint: 'prunaai/z-image-turbo',
+        costPerImage: 0.05, // 5 points = 5 cents
+        supportedParameters: ['outputFormat', 'aspectRatio', 'numInferenceSteps', 'guidanceScale'],
+        parameters: {
+            outputFormat: MODEL_PARAMETERS.outputFormat,
+            aspectRatio: MODEL_PARAMETERS.aspectRatio,
+            numInferenceSteps: MODEL_PARAMETERS.numInferenceSteps,
+            guidanceScale: MODEL_PARAMETERS.guidanceScale
+        },
+        maxReferenceImages: 1
+    },
+    'qwen-image-fast': {
+        id: 'qwen-image-fast',
+        name: 'qwen-image-fast',
+        displayName: 'Qwen Image Fast',
+        type: 'generation',
+        icon: '🚀',
+        description: 'Lightning-fast image generation. Almost instant results.',
+        badge: 'Instant',
+        badgeColor: 'bg-cyan-600',
+        textColor: 'text-cyan-300',
+        endpoint: 'prunaai/qwen-image-fast:01b324d214eb4870ff424dc4215c067759c4c01a8751e327a434e2b16054db2f',
+        costPerImage: 0.02, // 2 points = 2 cents (100% margin)
+        supportedParameters: ['outputFormat', 'aspectRatio', 'qwenGuidance', 'qwenSteps', 'negativePrompt'],
+        parameters: {
+            outputFormat: MODEL_PARAMETERS.outputFormat,
+            aspectRatio: MODEL_PARAMETERS.aspectRatio,
+            guidance: MODEL_PARAMETERS.qwenGuidance,
+            num_inference_steps: MODEL_PARAMETERS.qwenSteps,
+            negative_prompt: MODEL_PARAMETERS.negativePrompt
+        },
+        maxReferenceImages: 0 // Text-to-image only
     }
 }
 

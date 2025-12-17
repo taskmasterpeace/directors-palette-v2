@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type TabValue = 'shot-creator' | 'shot-animator' | 'layout-annotation' | 'storyboard' | 'gallery' | 'wildcards'
+export type TabValue = 'shot-creator' | 'shot-animator' | 'layout-annotation' | 'storyboard' | 'music-lab' | 'prompt-tools' | 'gallery' | 'community' | 'help'
 
 interface LayoutStore {
   activeTab: TabValue

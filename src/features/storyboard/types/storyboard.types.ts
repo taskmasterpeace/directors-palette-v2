@@ -26,7 +26,7 @@ export type CinematicAngle =
 /**
  * Preset Style (built-in styles)
  */
-export type PresetStyleId = 'claymation' | 'muppet' | 'comic' | 'action-figure'
+export type PresetStyleId = 'none' | 'claymation' | 'muppet' | 'comic' | 'action-figure'
 
 export interface PresetStyle {
     id: PresetStyleId
@@ -37,6 +37,13 @@ export interface PresetStyle {
 }
 
 export const PRESET_STYLES: PresetStyle[] = [
+    {
+        id: 'none',
+        name: 'None (Realistic)',
+        description: 'Real-life, no stylization',
+        imagePath: '',
+        stylePrompt: ''
+    },
     {
         id: 'claymation',
         name: 'Claymation',
@@ -142,6 +149,7 @@ export interface Storyboard {
     story_text: string
     style_guide_id?: string
     style_guide?: StyleGuide // Populated from join
+    director_id?: string
     status: StoryboardStatus
     breakdown_level: BreakdownLevel
     metadata: StoryboardMetadata
@@ -245,6 +253,8 @@ export interface ShotMetadata {
     ai_generated?: boolean
     error?: string
     generated_at?: string
+    rating?: number
+    isGreenlit?: boolean
 }
 
 export interface StoryboardShot {
@@ -265,6 +275,11 @@ export interface StoryboardShot {
     created_at: string
     updated_at: string
     contact_sheet_variants?: ContactSheetVariant[]
+
+    // Director Integration
+    director_id?: string
+    rating?: number // 0-5
+    is_greenlit?: boolean
 }
 
 export interface CreateShotInput {
@@ -405,9 +420,14 @@ export interface GeneratedShotPrompt {
     characterRefs: StoryboardCharacter[]  // Characters with refs mentioned in this shot
     locationRef?: StoryboardLocation      // Location if mentioned
     edited: boolean                // User modified the prompt
+    imageUrl?: string              // Generated image URL (preview)
     metadata?: {
         originalPromptWithWildcards?: string    // Original prompt before wildcard expansion
         appliedWildcards?: Record<string, string>  // Which wildcards were applied and their values
+        directorId?: string
+        rating?: number
+        isGreenlit?: boolean
+        layoutData?: Record<string, unknown> // Fabric.js canvas data
     }
 }
 
@@ -634,3 +654,25 @@ export const DEFAULT_OPENROUTER_MODELS: OpenRouterModel[] = [
         costPer1M: { input: 0.20, output: 0.20 }
     }
 ]
+
+/**
+ * Director Pitch for approval workflow
+ */
+export interface DirectorPitch {
+    id?: string
+    directorId?: string
+    directorName: string
+    visualStyle?: string
+    colorPalette?: string[]
+    pacing?: string
+    exampleEnhancement?: {
+        original: string
+        enhanced: string
+    }
+    // Dialog-specific fields
+    logline?: string
+    visualStrategy?: string
+    thematicFocus?: string
+    note?: string
+    style?: string
+}

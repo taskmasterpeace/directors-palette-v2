@@ -19,16 +19,20 @@ import {
   FlipVertical,
   Trash2,
   Lock,
-  Unlock
+  Unlock,
+  Crop
 } from 'lucide-react'
 import * as fabric from 'fabric'
 import { clipboardManager } from '@/utils/clipboard-manager'
+import { cn } from '@/utils/utils'
 
 type ImageImportMode = 'fit' | 'fill'
+type CanvasMode = 'canvas' | 'photo'
 
 interface FabricCanvasProps {
   tool: 'select' | 'brush' | 'rectangle' | 'circle' | 'line' | 'arrow' | 'text' | 'eraser' | 'crop'
   brushSize: number
+  fontSize?: number
   color: string
   fillMode?: boolean
   backgroundColor?: string
@@ -37,20 +41,31 @@ interface FabricCanvasProps {
   canvasWidth?: number
   canvasHeight?: number
   imageImportMode?: ImageImportMode
+  canvasMode?: CanvasMode
+  backgroundImageUrl?: string | null
+  onCanvasSizeChange?: (width: number, height: number) => void
+  headerContent?: React.ReactNode
+  centerContent?: React.ReactNode
 }
 
 export interface FabricCanvasRef {
   undo: () => void
   redo: () => void
   clear: () => void
+  clearBackground: () => void
   exportCanvas: (format: string) => string
   importImage: (imageUrl: string) => void
+  isEmpty: () => boolean
+  setCropAspectRatio: (ratio: number | null) => void
+  applyCrop: () => Promise<void>
+  getDimensions: () => { width: number; height: number }
 }
 
 const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref) => {
   const {
     tool,
     brushSize,
+    fontSize = 20,
     color,
     fillMode = false,
     backgroundColor = '#ffffff',
@@ -58,12 +73,22 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
     onToolChange,
     canvasWidth = 1200,
     canvasHeight = 675,
-    imageImportMode = 'fit'
+    imageImportMode = 'fit',
+    canvasMode = 'canvas',
+    backgroundImageUrl: _backgroundImageUrl = null,
+
+    onCanvasSizeChange,
+    headerContent
   } = props
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fabricRef = useRef<fabric.Canvas | null>(null)
+
   const containerRef = useRef<HTMLDivElement>(null)
+  const cursorRef = useRef<HTMLDivElement>(null)
+  const cropRectRef = useRef<fabric.Rect | null>(null)
+  const cropTargetRef = useRef<fabric.Image | null>(null)
+  const _cropOverlayRef = useRef<fabric.Rect | null>(null)
   const [scale, setScale] = useState(1)
   const [autoScale, setAutoScale] = useState(true)
   const [selectedObject, setSelectedObject] = useState<fabric.Object | null>(null)
@@ -108,7 +133,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
   const saveStateRef = useRef(saveState);
   const onToolChangeRef = useRef(onToolChange);
   const backgroundColorRef = useRef(backgroundColor);
-  const toolRef = useRef(tool);
+  const toolRef = useRef<'select' | 'brush' | 'rectangle' | 'circle' | 'line' | 'arrow' | 'text' | 'eraser' | 'crop'>(tool);
 
   useEffect(() => {
     onObjectsChangeRef.current = onObjectsChange;
@@ -162,16 +187,21 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
     return () => {
       canvas.dispose()
     }
-  }, [canvasWidth, canvasHeight])
+  }, []) // Remove canvasWidth/height dependencies to prevent re-init on resize
 
   // Update background color when it changes
   useEffect(() => {
     const canvas = fabricRef.current
     if (!canvas) return
 
-    canvas.backgroundColor = backgroundColorRef.current
+    // In Photo Mode, we use backgroundImage, so backgroundColor should be transparent
+    if (canvasMode === 'photo') {
+      canvas.backgroundColor = 'transparent'
+    } else {
+      canvas.backgroundColor = backgroundColorRef.current
+    }
     canvas.renderAll()
-  }, [backgroundColorRef])
+  }, [backgroundColorRef, canvasMode])
 
   // Update tool mode
   useEffect(() => {
@@ -201,11 +231,9 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
         canvas.freeDrawingBrush.color = color
         break
       case 'eraser':
-        canvas.isDrawingMode = true
-        const eraserBrush = new fabric.PencilBrush(canvas)
-        eraserBrush.width = brushSize * 2
-        eraserBrush.color = '#ffffff' // Always white for eraser
-        canvas.freeDrawingBrush = eraserBrush
+        canvas.isDrawingMode = false
+        canvas.selection = false
+        canvas.defaultCursor = 'cell' // Visual indicator for eraser
         break
       case 'crop':
         canvas.isDrawingMode = false
@@ -218,15 +246,81 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
     }
   }, [tool, brushSize, color])
 
+  // Cursor Overlay Logic
+  useEffect(() => {
+    const canvas = fabricRef.current
+    const cursor = cursorRef.current
+    if (!canvas || !cursor) return
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updateCursor = (opt: any) => {
+      if (!opt.e) return
+      const { clientX, clientY } = opt.e as MouseEvent
+      cursor.style.transform = `translate(${clientX}px, ${clientY}px)`
+
+      const isVisibleTool = ['brush', 'eraser', 'text', 'line', 'arrow', 'circle', 'rectangle'].includes(toolRef.current)
+      if (isVisibleTool) {
+        cursor.style.opacity = '0.5'
+      } else {
+        cursor.style.opacity = '0'
+      }
+    }
+
+    const hideCursor = () => { cursor.style.opacity = '0' }
+    const showCursor = () => { cursor.style.opacity = '0.5' }
+
+    // Update cursor size/style
+    let size = brushSize
+    if (toolRef.current === 'text') size = fontSize
+
+    // Scale cursor based on canvas zoom
+    const displaySize = size * scale
+
+    cursor.style.width = `${displaySize}px`
+    cursor.style.height = `${displaySize}px`
+    cursor.style.marginLeft = `-${displaySize / 2}px`
+    cursor.style.marginTop = `-${displaySize / 2}px`
+    cursor.style.borderColor = color
+
+    if (toolRef.current === 'eraser') {
+      cursor.style.borderColor = '#000000'
+      cursor.style.backgroundColor = '#ffffff'
+    } else {
+      cursor.style.backgroundColor = color
+    }
+
+    canvas.on('mouse:move', updateCursor)
+    canvas.on('mouse:out', hideCursor)
+    canvas.on('mouse:over', showCursor)
+
+    return () => {
+      canvas.off('mouse:move', updateCursor)
+      canvas.off('mouse:out', hideCursor)
+      canvas.off('mouse:over', showCursor)
+    }
+  }, [brushSize, fontSize, color, tool, scale])
+
   // Handle click-and-drag shape creation
   useEffect(() => {
     const canvas = fabricRef.current
     if (!canvas) return
+    let isErasing = false
 
     const handleMouseDown = (e: fabric.TPointerEventInfo<fabric.TPointerEvent>) => {
-      if (toolRef.current === 'select' || toolRef.current === 'brush' || toolRef.current === 'eraser') return
+      // Eraser logic: Delete object on click
+      if (toolRef.current === 'eraser') {
+        isErasing = true
+        if (e.target && !(e.target as fabric.Object & { isBackground?: boolean }).isBackground) {
+          canvas.remove(e.target)
+          canvas.requestRenderAll()
+          saveStateRef.current()
+        }
+        return
+      }
 
-      const canvas = fabricRef.current!
+      if (toolRef.current === 'select' || toolRef.current === 'brush') return
+
+      // const canvas = fabricRef.current! // Using outer canvas variable to avoid TDZ
       const pointer = canvas.getPointer(e.e)
       setIsDrawingShape(true)
       setShapeStartPoint({ x: pointer.x, y: pointer.y })
@@ -245,7 +339,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
         const text = new fabric.IText('Double-click to edit', {
           left: pointer.x,
           top: pointer.y,
-          fontSize: brushSize * 3,
+          fontSize: fontSize,
           fill: color,
           editable: true
         })
@@ -254,17 +348,6 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
         text.enterEditing()
         setIsDrawingShape(false)
         return
-      }
-
-      // Crop tool: disable all objects temporarily
-      if (toolRef.current === 'crop') {
-        canvas.discardActiveObject()
-        canvas.forEachObject(obj => {
-          obj.selectable = false
-          obj.evented = false
-        })
-        canvas.defaultCursor = 'crosshair'
-        canvas.selection = false
       }
 
       let shape: fabric.Object | null = null
@@ -345,6 +428,17 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
     }
 
     const handleMouseMove = (e: fabric.TPointerEventInfo<fabric.TPointerEvent>) => {
+      // Eraser logic: Delete objects while dragging
+      if (toolRef.current === 'eraser' && isErasing) {
+        if (e.target && !(e.target as fabric.Object & { isBackground?: boolean }).isBackground) {
+          canvas.remove(e.target)
+          canvas.requestRenderAll()
+          // Note: saving state on every move might be expensive, rely on mouseUp or throttled?
+          // For now, save on mouse up is better, but immediate feedback is needed.
+        }
+        return
+      }
+
       if (!isDrawingShape || !shapeStartPoint || !currentShape) return
 
       const pointer = canvas.getPointer(e.e)
@@ -402,6 +496,14 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
     }
 
     const handleMouseUp = (_e: fabric.TPointerEventInfo<fabric.TPointerEvent>) => {
+      if (toolRef.current === 'eraser') {
+        if (isErasing) {
+          isErasing = false
+          saveStateRef.current()
+        }
+        return
+      }
+
       if (!isDrawingShape || !currentShape) return
 
       // Restore interactions
@@ -543,16 +645,59 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
       canvas.renderAll()
     }
 
+    // Native Size Indicator
+    const handleScaling = (e: { target?: fabric.Object }) => {
+      const target = e.target
+      if (!target || target.type !== 'image') return
+
+      // standard scaleX/scaleY are relative to native width/height
+      const isUpscaled = (target.scaleX || 1) > 1 || (target.scaleY || 1) > 1
+
+      if (isUpscaled) {
+        target.set({
+          borderColor: '#EF4444', // Red-500
+          borderScaleFactor: 2,
+          cornerColor: '#EF4444',
+          borderDashArray: [4, 4]
+        })
+      } else {
+        // Restore defaults usually used by Fabric or our theme
+        target.set({
+          borderColor: 'rgba(102, 169, 255, 0.75)',
+          borderScaleFactor: 1,
+          cornerColor: 'rgba(102, 169, 255, 1)',
+          borderDashArray: undefined
+        })
+      }
+    }
+
     canvas.on('mouse:down', handleMouseDown)
     canvas.on('mouse:move', handleMouseMove)
     canvas.on('mouse:up', handleMouseUp)
+    canvas.on('object:scaling', handleScaling)
 
     return () => {
       canvas.off('mouse:down', handleMouseDown)
       canvas.off('mouse:move', handleMouseMove)
       canvas.off('mouse:up', handleMouseUp)
+      canvas.off('object:scaling', handleScaling)
     }
   }, [color, brushSize, fillMode, isDrawingShape, shapeStartPoint, currentShape])
+
+  // Clear background only (preserves canvas size and other objects)
+  const clearBackground = useCallback(() => {
+    const canvas = fabricRef.current
+    if (!canvas) return
+
+    const objects = canvas.getObjects()
+    objects.forEach(obj => {
+      if ((obj as fabric.Object & { isBackground?: boolean }).isBackground) {
+        canvas.remove(obj)
+      }
+    })
+    canvas.renderAll()
+    saveStateRef.current()
+  }, [])
 
   // Import image function
   const importImage = useCallback((imageUrl: string) => {
@@ -571,6 +716,41 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
         return
       }
 
+      // Photo Mode: Image becomes canvas background, canvas resizes to fit
+      if (canvasMode === 'photo') {
+        console.log('[FabricCanvas] Photo Mode - importing as background')
+        const imgWidth = img.width!
+        const imgHeight = img.height!
+        console.log('[FabricCanvas] Image dimensions:', imgWidth, 'x', imgHeight)
+
+        // Notify parent of new canvas size
+        if (onCanvasSizeChange) {
+          console.log('[FabricCanvas] Calling onCanvasSizeChange:', imgWidth, imgHeight)
+          onCanvasSizeChange(imgWidth, imgHeight)
+        } else {
+          console.log('[FabricCanvas] WARNING: onCanvasSizeChange not provided!')
+        }
+
+        // Set image as canvas background
+        canvas.backgroundImage = img
+        // Ensure background image is centered/placed correctly relative to canvas 
+        // (Since canvas size matches image size, standard origin is fine)
+
+        // Remove any old background objects (cleaning up legacy)
+        const objects = canvas.getObjects()
+        objects.forEach(obj => {
+          if ((obj as fabric.Object & { isBackground?: boolean }).isBackground) {
+            canvas.remove(obj)
+          }
+        })
+
+        canvas.requestRenderAll()
+        canvas.renderAll()
+        saveStateRef.current()
+        return
+      }
+
+      // Canvas Mode: Normal import behavior
       let scale: number
       let left: number
       let top: number
@@ -600,7 +780,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
         top = (canvas.height! - img.getScaledHeight()) / 2
       }
 
-      img.set({ left, top })
+      img.set({ left, top, lockUniScaling: true })
 
       canvas.add(img)
       canvas.setActiveObject(img)
@@ -609,7 +789,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
     }).catch((error) => {
       console.error('Failed to load image:', error)
     })
-  }, [imageImportMode])
+  }, [imageImportMode, canvasMode, onCanvasSizeChange])
 
   // Handle paste from clipboard
   const handlePaste = useCallback(async (e: ClipboardEvent) => {
@@ -899,19 +1079,146 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
     const canvas = fabricRef.current
     if (!canvas) return
 
+    console.log('[FabricCanvas] Updating dimensions/scale:', { width: canvasWidth * scale, height: canvasHeight * scale, scale })
     canvas.setZoom(scale)
     canvas.setDimensions({
       width: canvasWidth * scale,
       height: canvasHeight * scale
     })
+    canvas.calcOffset()
+    canvas.requestRenderAll()
+    canvas.requestRenderAll()
   }, [scale, canvasWidth, canvasHeight])
+
+  // Crop Tool Logic
+  useEffect(() => {
+    const canvas = fabricRef.current
+    if (!canvas) return
+
+    if (tool === 'crop') {
+      const activeObj = canvas.getActiveObject()
+      if (!activeObj || activeObj.type !== 'image') {
+        return
+      }
+
+      const image = activeObj as fabric.Image
+
+      // Create Crop Box
+      // Initial bounds: 80% of image size, centered
+      const initWidth = image.getScaledWidth() * 0.8
+      const initHeight = image.getScaledHeight() * 0.8
+      const initLeft = image.left! + (image.getScaledWidth() - initWidth) / 2
+      const initTop = image.top! + (image.getScaledHeight() - initHeight) / 2
+
+      const cropRect = new fabric.Rect({
+        left: initLeft, top: initTop,
+        width: initWidth, height: initHeight,
+        fill: 'transparent',
+        stroke: '#fff', strokeWidth: 2, strokeDashArray: [5, 5],
+        cornerColor: '#fff', cornerSize: 10,
+        transparentCorners: false,
+        lockRotation: true,
+        hasRotatingPoint: false,
+        excludeFromExport: true
+      })
+
+      // Lock the target image so it can't be selected/moved while cropping
+      image.set({
+        selectable: false,
+        evented: false,
+        opacity: 0.5 // Dim the image to focus on crop area
+      })
+
+      canvas.add(cropRect)
+      canvas.setActiveObject(cropRect)
+      cropRectRef.current = cropRect
+      cropTargetRef.current = image
+
+      canvas.requestRenderAll()
+
+    } else {
+      // Cleanup Crop Mode
+      const canvas = fabricRef.current
+      if (canvas) {
+        if (cropRectRef.current) canvas.remove(cropRectRef.current)
+
+        // Restore target image state if it still exists
+        if (cropTargetRef.current && canvas.contains(cropTargetRef.current)) {
+          cropTargetRef.current.set({
+            selectable: true,
+            evented: true,
+            opacity: 1
+          })
+        }
+
+        canvas.requestRenderAll()
+      }
+      cropRectRef.current = null
+      cropTargetRef.current = null
+    }
+  }, [tool])
 
   useImperativeHandle(ref, () => ({
     undo,
     redo,
     clear,
+    clearBackground,
     exportCanvas,
-    importImage
+
+    importImage,
+    isEmpty: () => {
+      if (!fabricRef.current) return true
+      return fabricRef.current.getObjects().length === 0 && !fabricRef.current.backgroundImage
+    },
+    setCropAspectRatio: (ratio: number | null) => {
+      const cropRect = cropRectRef.current
+      const canvas = fabricRef.current
+      if (!cropRect || !canvas) return
+
+      if (ratio) {
+        // Force aspect ratio
+        const currentW = cropRect.getScaledWidth()
+        const newH = currentW / ratio
+
+        cropRect.set({
+          width: currentW,
+          height: newH,
+          scaleX: 1,
+          scaleY: 1,
+          lockUniScaling: true
+        })
+      } else {
+        cropRect.set({ lockUniScaling: false })
+      }
+      canvas.requestRenderAll()
+    },
+    applyCrop: async () => {
+      const cropRect = cropRectRef.current
+      const target = cropTargetRef.current
+      const canvas = fabricRef.current
+      if (!cropRect || !target || !canvas) return
+
+      // Destructive Crop: Export area -> New Image
+      const dataUrl = canvas.toDataURL({
+        left: cropRect.left,
+        top: cropRect.top,
+        width: cropRect.getScaledWidth(),
+        height: cropRect.getScaledHeight(),
+        format: 'png',
+        multiplier: 1 / canvas.getZoom()
+      })
+
+      const newImg = await fabric.Image.fromURL(dataUrl)
+      newImg.set({
+        left: cropRect.left,
+        top: cropRect.top,
+        lockUniScaling: true
+      })
+      canvas.add(newImg)
+      canvas.remove(target)
+      canvas.setActiveObject(newImg)
+    },
+    getDimensions: () => ({ width: canvasWidth, height: canvasHeight })
   }))
 
   return (
@@ -949,49 +1256,61 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
         </div>
 
         {/* Desktop: Existing Top Controls */}
-        <div className="hidden sm:flex items-center gap-2 mb-4">
-          <Button size="sm" onClick={handleZoomOut} className="bg-secondary hover:bg-muted text-white">
-            <ZoomOut className="w-4 h-4" />
-          </Button>
-          <Button size="sm" onClick={handleFitToScreen} className="bg-primary hover:bg-primary/90 text-white" title="Fit canvas to screen">
-            <Maximize2 className="w-4 h-4" />
-          </Button>
-          <Button size="sm" onClick={handleZoomIn} className="bg-secondary hover:bg-muted text-white">
-            <ZoomIn className="w-4 h-4" />
-          </Button>
+        {/* Desktop: Unified Top Controls */}
+        <div className="hidden sm:flex items-center justify-between gap-2 mb-2 p-1 bg-card/50 border border-border/50 rounded-lg">
+          {/* Left: App Controls (Import, Mode, Undo - Passed from Parent) */}
+          <div className="flex items-center gap-1">
+            {headerContent}
+          </div>
 
-          {selectedObject && (
-            <>
-              <div className="h-6 w-px bg-muted mx-2" />
-              <Button size="sm" onClick={() => rotateSelected(45)} className="bg-secondary hover:bg-muted text-white" title="Rotate 45°">
-                <RotateCw className="w-4 h-4" />
-              </Button>
-              <Button size="sm" onClick={() => flipSelected('horizontal')} className="bg-secondary hover:bg-muted text-white" title="Flip horizontal">
-                <FlipHorizontal className="w-4 h-4" />
-              </Button>
-              <Button size="sm" onClick={() => flipSelected('vertical')} className="bg-secondary hover:bg-muted text-white" title="Flip vertical">
-                <FlipVertical className="w-4 h-4" />
-              </Button>
-              <Button size="sm" onClick={toggleLockSelected} className="bg-secondary hover:bg-muted text-white" title="Lock/Unlock">
-                {selectedObject?.lockMovementX ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-              </Button>
-              <Button size="sm" onClick={deleteSelected} className="bg-primary hover:bg-primary/90 text-white" title="Delete selected">
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </>
-          )}
+          {/* Center: Model Selector etc */}
+          <div className="flex items-center gap-1">
+            {props.centerContent}
+          </div>
 
-          <div className="text-sm text-foreground ml-auto">
-            {Math.round(scale * 100)}% | Tool: {tool}
-            {autoScale && <span className="text-primary ml-2">(Auto-fit)</span>}
-            {selectedObject && <span className="text-emerald-400 ml-2">| Object selected</span>}
+          {/* Right: Canvas Controls (Zoom, Edit, etc.) */}
+          <div className="flex items-center gap-1">
+            <div className="h-4 w-px bg-border mx-1" />
+            <Button size="sm" onClick={handleZoomOut} variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="Zoom Out">
+              <ZoomOut className="w-4 h-4" />
+            </Button>
+            <Button size="sm" onClick={handleFitToScreen} variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="Fit to Screen">
+              <Maximize2 className="w-4 h-4" />
+            </Button>
+            <Button size="sm" onClick={handleZoomIn} variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="Zoom In">
+              <ZoomIn className="w-4 h-4" />
+            </Button>
+
+            {selectedObject && (
+              <>
+                <div className="h-4 w-px bg-border mx-1" />
+                <Button size="sm" onClick={() => rotateSelected(45)} variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="Rotate 45°">
+                  <RotateCw className="w-4 h-4" />
+                </Button>
+                <Button size="sm" onClick={() => flipSelected('horizontal')} variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="Flip horizontal">
+                  <FlipHorizontal className="w-4 h-4" />
+                </Button>
+                <Button size="sm" onClick={() => flipSelected('vertical')} variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="Flip vertical">
+                  <FlipVertical className="w-4 h-4" />
+                </Button>
+                <Button size="sm" onClick={() => onToolChange?.('crop')} variant="ghost" className={cn("h-7 w-7 p-0 text-muted-foreground hover:text-foreground", tool === 'crop' && "bg-primary/20 text-primary")} title="Crop Image">
+                  <Crop className="w-4 h-4" />
+                </Button>
+                <Button size="sm" onClick={toggleLockSelected} variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="Lock/Unlock">
+                  {selectedObject?.lockMovementX ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                </Button>
+                <Button size="sm" onClick={deleteSelected} variant="ghost" className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10" title="Delete selected">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
         {/* Canvas Container */}
         <div
           ref={containerRef}
-          className="flex-1 bg-background rounded-lg p-4 relative flex items-center justify-center overflow-auto border-2 border-primary/50"
+          className="flex-1 bg-background p-4 relative flex items-center justify-center overflow-auto border-2 border-primary/50"
           tabIndex={0}
           style={{
             touchAction: 'none',
@@ -1001,7 +1320,16 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
         >
           <canvas
             ref={canvasRef}
-            className="border-4 border-primary shadow-2xl rounded-lg"
+            className="border-4 border-primary shadow-2xl"
+          />
+
+          <div
+            ref={cursorRef}
+            className="fixed pointer-events-none rounded-full border-2 z-[9999] opacity-0 transition-opacity duration-75 ease-out"
+            style={{
+              top: 0,
+              left: 0
+            }}
           />
         </div>
       </CardContent>

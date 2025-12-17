@@ -35,103 +35,103 @@ export interface DirectorFingerprint {
     // Core Intent (immutable)
     coreIntent: {
         primaryFocus: string[]
-        riskTolerance: 'low' | 'medium' | 'high'
+        riskTolerance: 'low' | 'medium' | 'high' | 'maximum'
         ambiguityPreference: 'explicit' | 'suggestive' | 'unresolved'
-        emotionalTemperature: 'warm' | 'cool' | 'neutral'
-        controlVsSpontaneity: 'controlled' | 'adaptive' | 'exploratory'
+        emotionalTemperature: 'warm' | 'cool' | 'neutral' | 'warm_but_distant' | 'electric'
+        controlVsSpontaneity: 'controlled' | 'adaptive' | 'exploratory' | 'stylized'
     }
 
     // Story Interpretation
     storyInterpretation: {
         readsFor: string[]
-        themeExtractionStyle: 'explicit' | 'implicit'
+        themeExtractionStyle: 'explicit' | 'implicit' | 'visual'
         subtextSensitivity: 'low' | 'medium' | 'high'
-        symbolismUsage: 'minimal' | 'restrained' | 'heavy'
+        symbolismUsage: 'minimal' | 'restrained' | 'heavy' | 'iconic'
     }
 
     // Emotional Language
     emotionalLanguage: {
         preferredEmotionalStates: string[]
-        contrastStrategy: 'subtle' | 'gradual' | 'sharp'
-        emotionalArcBias: 'build' | 'plateau' | 'oscillate'
+        contrastStrategy: 'subtle' | 'gradual' | 'sharp' | 'stark' | 'extreme'
+        emotionalArcBias: 'build' | 'plateau' | 'oscillate' | 'resolve' | 'escalate'
         sentimentalityThreshold: 'avoids' | 'tolerates' | 'embraces'
     }
 
     // Actor Direction
     actorDirection: {
-        directionMode: 'physical' | 'emotional_intention' | 'textual'
+        directionMode: 'physical' | 'emotional_intention' | 'textual' | 'choreographed' | 'performance_focused'
         performancePreferences: string[]
-        noteStyle: 'direct' | 'conceptual' | 'metaphorical'
-        lineDeliveryBias: 'naturalistic' | 'stylized' | 'restrained'
+        noteStyle: 'direct' | 'conceptual' | 'metaphorical' | 'precise' | 'hype'
+        lineDeliveryBias: 'naturalistic' | 'stylized' | 'restrained' | 'flat' | 'energetic'
     }
 
     // Camera Philosophy
     cameraPhilosophy: {
-        pointOfViewBias: 'subjective' | 'objective' | 'observational'
+        pointOfViewBias: 'subjective' | 'objective' | 'observational' | 'heroic'
         framingInstinct: string[]
-        distanceBias: 'intimate' | 'mid-range' | 'detached'
-        stillnessVsMovement: 'stillness-dominant' | 'balanced' | 'movement-dominant'
+        distanceBias: 'intimate' | 'mid-range' | 'detached' | 'wide' | 'extreme'
+        stillnessVsMovement: 'stillness-dominant' | 'balanced' | 'movement-dominant' | 'static-or-tracking'
     }
 
     // Camera Motion Profile (swappable)
     cameraMotionProfile: {
         enabled: boolean
         motionBias: string[]
-        motionFrequency: 'rare' | 'occasional' | 'frequent'
-        escalationRule: 'none' | 'emotional' | 'story-driven'
+        motionFrequency: 'rare' | 'occasional' | 'frequent' | 'constant'
+        escalationRule: 'none' | 'emotional' | 'story-driven' | 'rhythmic' | 'beat-driven'
         forbiddenMovements: string[]
     }
 
     // Visual Decision Biases
     visualDecisionBiases: {
-        complexityPreference: 'minimal' | 'layered' | 'dense'
-        environmentRole: 'background' | 'character' | 'antagonist'
-        iconicFrameTendency: 'rare' | 'selective' | 'frequent'
-        motifRepetition: 'avoids' | 'deliberate' | 'automatic'
+        complexityPreference: 'minimal' | 'layered' | 'dense' | 'curated' | 'high-contrast'
+        environmentRole: 'background' | 'character' | 'antagonist' | 'sci-fi-backdrop'
+        iconicFrameTendency: 'rare' | 'selective' | 'frequent' | 'constant' | 'always'
+        motifRepetition: 'avoids' | 'deliberate' | 'automatic' | 'obsessive' | 'loop-ready'
     }
 
     // Rhythm and Pacing
     rhythmAndPacing: {
-        baselinePacing: 'measured' | 'controlled' | 'dynamic'
+        baselinePacing: 'measured' | 'controlled' | 'dynamic' | 'snappy' | 'frantic'
         sectionalVariation: {
             verse: string
             chorus: string
             bridge: string
         }
         shotDurationBias: 'short' | 'mixed' | 'long'
-        cutMotivation: 'rhythmic' | 'emotional' | 'narrative'
+        cutMotivation: 'rhythmic' | 'emotional' | 'narrative' | 'visual_match' | 'beat'
     }
 
     // Communication Profile
     communicationProfile: {
-        tone: 'calm' | 'reflective' | 'intense'
-        confidenceExpression: 'quiet' | 'assertive'
-        feedbackStyle: 'supportive' | 'surgical' | 'provocative'
+        tone: 'calm' | 'reflective' | 'intense' | 'polite' | 'energetic'
+        confidenceExpression: 'quiet' | 'assertive' | 'matter-of-fact' | 'loud'
+        feedbackStyle: 'supportive' | 'surgical' | 'provocative' | 'specific' | 'hype-man'
         metaphorUsage: 'low' | 'medium' | 'high'
     }
 
     // Questioning Strategy
     questioningStrategy: {
-        defaultMode: 'clarifying' | 'probing' | 'challenging'
+        defaultMode: 'clarifying' | 'probing' | 'challenging' | 'aesthetic' | 'visual'
         preferredQuestions: string[]
         stopConditions: string[]
     }
 
     // Opinionation Model
     opinionationModel: {
-        defaultStance: 'consultant' | 'interpreter' | 'auteur'
-        overrideThreshold: 'low' | 'medium' | 'high'
-        conflictResponse: 'defer' | 'reframe' | 'insist'
+        defaultStance: 'consultant' | 'interpreter' | 'auteur' | 'visionary'
+        overrideThreshold: 'low' | 'medium' | 'high' | 'zero'
+        conflictResponse: 'defer' | 'reframe' | 'insist' | 'ignore' | 'overwhelm'
     }
 
     // Spectacle Profile - VFX, signature moments, memorable visuals
     spectacleProfile: {
-        vfxTolerance: 'none' | 'subtle' | 'moderate' | 'embraces'    // How much VFX/CGI
+        vfxTolerance: 'none' | 'subtle' | 'moderate' | 'embraces' | 'stylized' | 'maximum'
         signatureMoments: string[]       // Types of hero shots this director favors
-        surrealTendency: 'grounded' | 'light-touch' | 'dreamlike' | 'surreal'
-        practicalVsDigital: 'practical-only' | 'practical-preferred' | 'balanced' | 'digital-forward'
+        surrealTendency: 'grounded' | 'light-touch' | 'dreamlike' | 'surreal' | 'stylized' | 'high'
+        practicalVsDigital: 'practical-only' | 'practical-preferred' | 'balanced' | 'digital-forward' | 'miniature-style' | 'hybrid-glossy'
         spectacleTypes: string[]         // What kind of spectacle they'd create
-        budgetAssumption: 'indie' | 'mid' | 'blockbuster'
+        budgetAssumption: 'indie' | 'mid' | 'blockbuster' | 'high' | 'unlimited'
     }
 
     // Image Generation (for UI)
@@ -203,6 +203,7 @@ export interface DirectorProposal {
     id: string
     projectId: string
     directorId: string
+    directorName: string
 
     // Pitch
     logline: string               // 2-3 sentence summary

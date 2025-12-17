@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { useCreditsStore } from '../store/credits.store'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -17,8 +18,9 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Coins, Plus, Loader2, Sparkles, Zap, Star, Crown, Image as ImageIcon } from 'lucide-react'
+import { Coins, Plus, Loader2, Sparkles, Zap, Star, Crown, Image as ImageIcon, Gift } from 'lucide-react'
 import { cn } from '@/utils/utils'
+import { RedeemUsageDialog } from './RedeemUsageDialog'
 
 interface CreditPackage {
     id: string
@@ -181,125 +183,165 @@ export function CreditsDisplay() {
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
-                <DialogContent className="bg-zinc-900 border-zinc-800 max-w-4xl p-0">
-                    {/* Compact Header */}
-                    <div className="p-5 pb-4 border-b border-zinc-800">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-amber-500/20 rounded-lg">
-                                    <Sparkles className="w-5 h-5 text-amber-400" />
+                <DialogContent className="bg-zinc-950/90 border-zinc-800 max-w-4xl p-0 overflow-hidden backdrop-blur-xl">
+                    {/* Glossy Background Effect */}
+                    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-black/90 z-10" />
+                        <img
+                            src="/landing/login-bg-1.png"
+                            alt=""
+                            className="w-full h-full object-cover opacity-30 blur-3xl scale-110"
+                        />
+                    </div>
+
+                    <div className="relative z-10">
+                        {/* Compact Header */}
+                        <div className="p-6 pb-4 border-b border-white/5 bg-white/5 backdrop-blur-sm">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-gradient-to-br from-amber-500/20 to-amber-600/10 rounded-xl border border-amber-500/20 shadow-inner">
+                                        <Sparkles className="w-6 h-6 text-amber-400" />
+                                    </div>
+                                    <div>
+                                        <DialogHeader>
+                                            <DialogTitle className="text-2xl font-bold text-white tracking-tight">Token Store</DialogTitle>
+                                        </DialogHeader>
+                                        <p className="text-sm text-zinc-400">Power your creative workflow</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <DialogHeader>
-                                        <DialogTitle className="text-xl font-bold text-white">Token Store</DialogTitle>
-                                    </DialogHeader>
-                                    <p className="text-sm text-zinc-500">Power your creative workflow</p>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <div className="text-xs text-zinc-500">Your Balance</div>
-                                <div className="text-2xl font-bold font-mono text-amber-400">
-                                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : formatTokens(tokens)}
-                                    <span className="text-sm text-zinc-500 ml-1">tokens</span>
+                                <div className="text-right">
+                                    <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-1">Your Balance</div>
+                                    <div className="text-3xl font-bold font-mono text-amber-400 drop-shadow-sm">
+                                        {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : formatTokens(tokens)}
+                                        <span className="text-sm text-zinc-500 ml-1 font-sans font-normal">tokens</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Wide 3-column packages */}
-                    <div className="p-5">
-                        {loadingPackages ? (
-                            <div className="flex items-center justify-center py-8">
-                                <Loader2 className="w-6 h-6 animate-spin text-amber-500" />
-                            </div>
-                        ) : packages.length === 0 ? (
-                            <div className="text-center py-8 text-zinc-500">
-                                <Coins className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                                <p>No packages available</p>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-3 gap-4">
-                                {packages.map((pkg, index) => {
-                                    const isPopular = index === 1 // Creator pack is most popular (middle)
-                                    const colors = getTierColors(index, isPopular)
-                                    const TierIcon = getTierIcon(index)
-                                    const imgCount = estimateImages(pkg.total_credits)
-                                    const isPurchasing = purchasingId === pkg.id
+                        {/* Wide 3-column packages */}
+                        <div className="p-6">
+                            {loadingPackages ? (
+                                <div className="flex flex-col items-center justify-center py-12 gap-3 text-zinc-500">
+                                    <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+                                    <p className="text-sm">Loading best offers...</p>
+                                </div>
+                            ) : packages.length === 0 ? (
+                                <div className="text-center py-12 text-zinc-500 bg-white/5 rounded-xl border border-white/5 border-dashed">
+                                    <Coins className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                                    <p>No packages available right now</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                    {packages.map((pkg, index) => {
+                                        const isPopular = index === 1 // Creator pack is most popular (middle)
+                                        const colors = getTierColors(index, isPopular)
+                                        const TierIcon = getTierIcon(index)
+                                        const imgCount = estimateImages(pkg.total_credits)
+                                        const isPurchasing = purchasingId === pkg.id
 
-                                    return (
-                                        <div
-                                            key={pkg.id}
-                                            className={cn(
-                                                "relative rounded-xl border-2 transition-all p-4",
-                                                colors.border,
-                                                colors.bg,
-                                                isPopular && "scale-[1.02] shadow-lg shadow-amber-500/10"
-                                            )}
-                                        >
-                                            {isPopular && (
-                                                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                                                    <Badge className="px-2 py-0.5 text-[10px] font-semibold bg-amber-500 text-black">
-                                                        Most Popular
-                                                    </Badge>
-                                                </div>
-                                            )}
-
-                                            {/* Compact header */}
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <TierIcon className={cn("w-4 h-4", colors.icon)} />
-                                                <span className="font-semibold text-white">{pkg.name}</span>
-                                            </div>
-
-                                            {/* Price */}
-                                            <div className="text-3xl font-bold text-white mb-1">
-                                                {pkg.formatted_price}
-                                            </div>
-
-                                            {/* Tokens */}
-                                            <div className="flex items-baseline gap-1 mb-3">
-                                                <span className="text-xl font-bold font-mono text-amber-400">
-                                                    {formatTokens(pkg.total_credits)}
-                                                </span>
-                                                <span className="text-xs text-zinc-500">tokens</span>
-                                                {pkg.savings_percent > 0 && (
-                                                    <Badge className={cn("ml-2 text-[10px] py-0", colors.badge)}>
-                                                        +{pkg.savings_percent}%
-                                                    </Badge>
+                                        return (
+                                            <motion.div
+                                                key={pkg.id}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: index * 0.1, duration: 0.4 }}
+                                                whileHover={{ y: -4 }}
+                                                className={cn(
+                                                    "relative rounded-2xl border transition-all duration-300 p-5 flex flex-col group",
+                                                    colors.border,
+                                                    colors.bg,
+                                                    isPopular ? "shadow-xl shadow-amber-900/20 bg-amber-900/10" : "bg-zinc-900/40 hover:bg-zinc-800/40"
                                                 )}
-                                            </div>
-
-                                            {/* Quick stat */}
-                                            <div className="flex items-center gap-1.5 text-xs text-zinc-400 mb-3">
-                                                <ImageIcon className="w-3.5 h-3.5" />
-                                                <span>~{imgCount} images</span>
-                                            </div>
-
-                                            {/* Buy button */}
-                                            <Button
-                                                size="sm"
-                                                className={cn("w-full font-semibold", colors.button)}
-                                                onClick={() => handlePurchase(pkg)}
-                                                disabled={isPurchasing}
                                             >
-                                                {isPurchasing ? (
-                                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                                ) : (
-                                                    "Get Tokens"
+                                                {isPopular && (
+                                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 shadow-lg shadow-amber-500/20">
+                                                        <Badge className="px-3 py-1 text-[10px] font-bold bg-gradient-to-r from-amber-500 to-amber-600 text-black border-none uppercase tracking-wide">
+                                                            Most Popular
+                                                        </Badge>
+                                                    </div>
                                                 )}
-                                            </Button>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        )}
 
-                        {/* Compact footer */}
-                        <div className="flex items-center justify-center gap-6 mt-4 pt-3 border-t border-zinc-800 text-[11px] text-zinc-500">
-                            <span>Secure checkout</span>
-                            <span>•</span>
-                            <span>Tokens never expire</span>
-                            <span>•</span>
-                            <span>Instant delivery</span>
+                                                {/* Hover Glow */}
+                                                <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+                                                {/* Compact header */}
+                                                <div className="flex items-center gap-2.5 mb-4">
+                                                    <div className={cn("p-1.5 rounded-lg bg-black/30 backdrop-blur-md", colors.icon)}>
+                                                        <TierIcon className="w-5 h-5" />
+                                                    </div>
+                                                    <span className="font-bold text-lg text-white tracking-tight">{pkg.name}</span>
+                                                </div>
+
+                                                {/* Price */}
+                                                <div className="mb-2">
+                                                    <span className="text-4xl font-bold text-white tracking-tighter">{pkg.formatted_price}</span>
+                                                </div>
+
+                                                {/* Tokens */}
+                                                <div className="flex items-baseline gap-1.5 mb-6 pb-6 border-b border-white/10">
+                                                    <span className="text-xl font-bold font-mono text-amber-400">
+                                                        {formatTokens(pkg.total_credits)}
+                                                    </span>
+                                                    <span className="text-xs text-zinc-400 font-medium uppercase">tokens</span>
+                                                    {pkg.savings_percent > 0 && (
+                                                        <Badge className={cn("ml-auto text-[10px] py-0 border-0", colors.badge)}>
+                                                            SAVE {pkg.savings_percent}%
+                                                        </Badge>
+                                                    )}
+                                                </div>
+
+                                                {/* Quick stat */}
+                                                <div className="space-y-3 mb-6 flex-1">
+                                                    <div className="flex items-center gap-2 text-sm text-zinc-300">
+                                                        <ImageIcon className="w-4 h-4 text-zinc-500" />
+                                                        <span>Generates ~{imgCount} images</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 text-sm text-zinc-300">
+                                                        <Zap className="w-4 h-4 text-zinc-500" />
+                                                        <span>Priority Generation</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Buy button */}
+                                                <Button
+                                                    size="lg"
+                                                    className={cn("w-full font-bold shadow-lg transition-all duration-300", colors.button, "group-hover:scale-[1.02]")}
+                                                    onClick={() => handlePurchase(pkg)}
+                                                    disabled={isPurchasing}
+                                                >
+                                                    {isPurchasing ? (
+                                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                                    ) : (
+                                                        "Buy Now"
+                                                    )}
+                                                </Button>
+                                            </motion.div>
+                                        )
+                                    })}
+                                </div>
+                            )}
+
+                            {/* Compact footer */}
+                            <div className="flex items-center justify-center gap-6 mt-8 pt-4 border-t border-white/10 text-[10px] font-medium tracking-wide text-zinc-500 uppercase">
+                                <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-zinc-600" /> Secure checkout</span>
+                                <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-zinc-600" /> Tokens never expire</span>
+                                <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-zinc-600" /> Instant delivery</span>
+                            </div>
+
+                            {/* Redemption Section */}
+                            <div className="mt-6 pt-4 border-t border-white/5 text-center flex justify-center">
+                                <RedeemUsageDialog>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="gap-2 bg-black/20 border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+                                    >
+                                        <Gift className="w-4 h-4" />
+                                        Have a code? Redeem it here
+                                    </Button>
+                                </RedeemUsageDialog>
+                            </div>
                         </div>
                     </div>
                 </DialogContent>

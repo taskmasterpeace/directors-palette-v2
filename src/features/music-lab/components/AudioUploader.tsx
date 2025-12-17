@@ -77,7 +77,8 @@ export function AudioUploader({ onUploadComplete }: AudioUploaderProps) {
             })
 
             if (!response.ok) {
-                throw new Error('Upload failed')
+                const errorData = await response.json().catch(() => ({}))
+                throw new Error(errorData.error || `Upload failed with status ${response.status}`)
             }
 
             const { url } = await response.json()
@@ -129,8 +130,8 @@ export function AudioUploader({ onUploadComplete }: AudioUploaderProps) {
         <div className="space-y-2">
             <Card
                 className={`border-2 border-dashed transition-colors cursor-pointer ${isDragging
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50'
                     }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}

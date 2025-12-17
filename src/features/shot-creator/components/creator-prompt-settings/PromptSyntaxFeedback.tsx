@@ -10,11 +10,9 @@ import { useWildCardStore } from "../../store/wildcard.store";
 interface PromptSyntaxFeedbackProps {
     prompt: string;
     model?: string;
-    rawPromptMode?: boolean;
     disablePipeSyntax?: boolean;
     disableBracketSyntax?: boolean;
     disableWildcardSyntax?: boolean;
-    onToggleRawMode?: (enabled: boolean) => void;
     onTogglePipeSyntax?: (disabled: boolean) => void;
     onToggleBracketSyntax?: (disabled: boolean) => void;
     onToggleWildcardSyntax?: (disabled: boolean) => void;
@@ -22,11 +20,9 @@ interface PromptSyntaxFeedbackProps {
 
 export function PromptSyntaxFeedback({
     prompt,
-    rawPromptMode,
     disablePipeSyntax,
     disableBracketSyntax,
     disableWildcardSyntax,
-    onToggleRawMode,
     onTogglePipeSyntax,
     onToggleBracketSyntax,
     onToggleWildcardSyntax
@@ -45,16 +41,6 @@ export function PromptSyntaxFeedback({
     }, [loadWildCards]);
 
     useEffect(() => {
-        // Show different feedback if raw prompt mode is enabled
-        if (rawPromptMode) {
-            setFeedback({
-                type: 'info',
-                message: 'Raw Prompt Mode Active',
-                details: 'All special syntax will be sent as literal text'
-            });
-            return;
-        }
-
         if (!prompt || prompt.trim().length === 0) {
             setFeedback(null);
             return;
@@ -186,7 +172,7 @@ export function PromptSyntaxFeedback({
 
         // Regular prompt
         setFeedback(null);
-    }, [prompt, wildcards, rawPromptMode, disablePipeSyntax, disableBracketSyntax, disableWildcardSyntax]);
+    }, [prompt, wildcards, disablePipeSyntax, disableBracketSyntax, disableWildcardSyntax]);
 
     // Check if any syntax is disabled (for displaying disabled state)
     const hasAnyDisabled = disablePipeSyntax || disableBracketSyntax || disableWildcardSyntax;
@@ -260,45 +246,31 @@ export function PromptSyntaxFeedback({
                             <span className="opacity-75 ml-1">• {feedback.details}</span>
                         )}
                     </div>
-                    <div className="flex items-center gap-1">
-                        {/* Syntax-specific toggle */}
-                        {syntaxToggle && !rawPromptMode && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={syntaxToggle}
-                                className="h-6 px-2 text-xs hover:bg-white/10"
-                            >
-                                {isCurrentSyntaxDisabled() ? 'Enable' : 'Treat as Literal'}
-                            </Button>
-                        )}
-                        {/* Raw mode toggle */}
-                        {onToggleRawMode && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => onToggleRawMode(!rawPromptMode)}
-                                className="h-6 px-2 text-xs hover:bg-white/10"
-                            >
-                                {rawPromptMode ? 'Exit Raw Mode' : 'Raw Mode'}
-                            </Button>
-                        )}
-                    </div>
+                    {/* Syntax-specific toggle */}
+                    {syntaxToggle && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={syntaxToggle}
+                            className="h-6 px-2 text-xs hover:bg-white/10"
+                        >
+                            {isCurrentSyntaxDisabled() ? 'Enable' : 'Treat as Literal'}
+                        </Button>
+                    )}
                 </div>
             )}
 
             {/* Always-visible syntax toggle bar - shows when there's a prompt */}
-            {showToggleBar && !rawPromptMode && (
+            {showToggleBar && (
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     {hasAnyDisabled && <span>Syntax:</span>}
                     {/* Pipe toggle */}
                     <button
                         onClick={() => onTogglePipeSyntax?.(!disablePipeSyntax)}
-                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all cursor-pointer ${
-                            disablePipeSyntax
+                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all cursor-pointer ${disablePipeSyntax
                                 ? 'border-border bg-card/30 opacity-50 hover:opacity-75'
                                 : 'border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20'
-                        }`}
+                            }`}
                         title={disablePipeSyntax
                             ? 'Pipe syntax disabled - Click to enable. Use prompt1 | prompt2 for sequential chain generation'
                             : 'Pipe syntax enabled - Click to disable. Currently: prompt1 | prompt2 creates a chain'
@@ -312,11 +284,10 @@ export function PromptSyntaxFeedback({
                     {/* Bracket toggle */}
                     <button
                         onClick={() => onToggleBracketSyntax?.(!disableBracketSyntax)}
-                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all cursor-pointer ${
-                            disableBracketSyntax
+                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all cursor-pointer ${disableBracketSyntax
                                 ? 'border-border bg-card/30 opacity-50 hover:opacity-75'
                                 : 'border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20'
-                        }`}
+                            }`}
                         title={disableBracketSyntax
                             ? 'Bracket syntax disabled - Click to enable. Use [a, b, c] for multiple variations'
                             : 'Bracket syntax enabled - Click to disable. Currently: [a, b, c] creates 3 images'
@@ -330,11 +301,10 @@ export function PromptSyntaxFeedback({
                     {/* Wildcard toggle */}
                     <button
                         onClick={() => onToggleWildcardSyntax?.(!disableWildcardSyntax)}
-                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all cursor-pointer ${
-                            disableWildcardSyntax
+                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all cursor-pointer ${disableWildcardSyntax
                                 ? 'border-border bg-card/30 opacity-50 hover:opacity-75'
                                 : 'border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20'
-                        }`}
+                            }`}
                         title={disableWildcardSyntax
                             ? 'Wildcard syntax disabled - Click to enable. Use _name_ for random picks from your lists'
                             : 'Wildcard syntax enabled - Click to disable. Currently: _name_ pulls from your wildcard lists'

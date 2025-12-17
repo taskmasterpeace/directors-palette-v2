@@ -1,12 +1,15 @@
 /**
  * Timeline Store
- * 
+ *
  * Zustand store for timeline editor state.
  */
 
 import { create } from 'zustand'
-import type { TimelineState, TimelineShot, TimelineSectionMarker } from '../types/timeline.types'
+import type { TimelineState, TimelineSectionMarker, SongAnalysisInput, TimelineShot } from '../types/timeline.types'
 import { SECTION_COLORS } from '../types/timeline.types'
+import type { DirectorProposal, DirectorFingerprint, ProposedShot } from '../types/director.types'
+import { getAllDirectors } from '../data/directors.data'
+import { TimelineGenerator } from '../services/timeline-generator.service'
 
 export const useTimelineStore = create<TimelineState>()((set) => ({
     // Initial state
@@ -68,6 +71,48 @@ export const useTimelineStore = create<TimelineState>()((set) => ({
             color: SECTION_COLORS[section.type] || '#6b7280'
         }))
         return { sectionMarkers: markers }
+    }),
+
+    importProposal: (proposal: DirectorProposal, songAnalysis?: SongAnalysisInput) => set((state) => {
+        // Find director
+        const director = getAllDirectors().find((d: DirectorFingerprint) => d.id === proposal.directorId)
+
+        // Reconstruct Analysis if passed, or from state
+        const analysis = songAnalysis ? {
+            bpm: songAnalysis.bpm || 120,
+            duration: songAnalysis.duration || state.duration,
+            sections: songAnalysis.confirmedSections || songAnalysis.sections || []
+        } : {
+            bpm: 120, // Default if missing
+            duration: state.duration,
+            sections: state.sectionMarkers.map(m => ({
+                type: m.type,
+                startTime: m.startTime,
+                endTime: m.endTime
+            }))
+        }
+
+        if (director && analysis.sections.length > 0) {
+            const generatedShots = TimelineGenerator.generateTimeline(analysis, proposal, director)
+            return { shots: generatedShots }
+        }
+
+        // Fallback if no director/analysis found (just Key Shots)
+        const newShots: TimelineShot[] = (proposal.keyShots || []).map((shot: ProposedShot) => ({
+            id: shot.id || `shot_${Math.random().toString(36).substr(2, 9)}`,
+            sectionId: shot.sectionId || 'unknown',
+            startTime: shot.timestamp,
+            endTime: shot.timestamp + 4,
+            prompt: shot.basePrompt || shot.subject,
+            previewImageUrl: shot.previewImageUrl,
+            color: '#3b82f6',
+            directorId: proposal.directorId,
+            proposalId: proposal.id,
+            wardrobeLookId: shot.wardrobeLookId,
+            locationId: shot.locationId
+        }))
+
+        return { shots: newShots }
     }),
 
     reset: () => set({

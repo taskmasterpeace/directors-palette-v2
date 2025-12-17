@@ -1,11 +1,8 @@
-/**
- * Music Lab Audio Upload API
- * 
- * Handles audio file upload to Supabase storage.
- */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { writeFile, mkdir } from 'fs/promises'
+import path from 'path'
 
 export async function POST(request: NextRequest) {
     try {
@@ -13,7 +10,7 @@ export async function POST(request: NextRequest) {
         const auth = await getAuthenticatedUser(request)
         if (auth instanceof NextResponse) return auth
 
-        const { user, supabase } = auth
+        const { user } = auth
 
         // Get form data
         const formData = await request.formData()
@@ -37,30 +34,30 @@ export async function POST(request: NextRequest) {
         // Generate unique filename
         const timestamp = Date.now()
         const ext = file.name.split('.').pop()
-        const fileName = `${user.id}/music-lab/${timestamp}.${ext}`
+        const safeFileName = `${timestamp}-${Math.random().toString(36).slice(2)}.${ext}`
 
-        // Upload to Supabase Storage
-        const arrayBuffer = await file.arrayBuffer()
-        const { data: _data, error: uploadError } = await supabase.storage
-            .from('audio')
-            .upload(fileName, arrayBuffer, {
-                contentType: file.type,
-                upsert: true
-            })
+        // Define Local Storage Path: public/uploads/users/{userId}/audio
+        // We use 'public' so Next.js can serve it directly
+        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'users', user.id, 'audio')
 
-        if (uploadError) {
-            console.error('Upload error:', uploadError)
-            return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
-        }
+        // Ensure directory exists
+        await mkdir(uploadDir, { recursive: true })
 
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-            .from('audio')
-            .getPublicUrl(fileName)
+        // Write file to disk
+        const buffer = Buffer.from(await file.arrayBuffer())
+        const filePath = path.join(uploadDir, safeFileName)
+        await writeFile(filePath, buffer)
+
+        // Generate Public URL
+        const publicUrl = `/uploads/users/${user.id}/audio/${safeFileName}`
 
         return NextResponse.json({ url: publicUrl })
-    } catch (error) {
-        console.error('Audio upload error:', error)
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+
+    } catch (error: unknown) {
+        console.error('Local upload error:', error)
+        const message = error instanceof Error ? error.message : 'Unknown error'
+        return NextResponse.json({
+            error: `Internal server error: ${message}`
+        }, { status: 500 })
     }
 }

@@ -6,12 +6,178 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Plus, Upload, Trash2, Edit, FileText, Copy } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { parseTextFile, validateWildCardName, validateWildCardContent } from '../../services/wildcard.service';
 import { WildCard } from '../../helpers/wildcard/parser';
+import {
+    useFloating,
+    useHover,
+    useInteractions,
+    offset,
+    flip,
+    shift,
+    autoUpdate,
+    FloatingPortal,
+} from '@floating-ui/react';
+
+// Individual wildcard card with floating preview
+function WildCardCard({
+    wildcard,
+    onEdit,
+    onDelete,
+    onCopy,
+}: {
+    wildcard: WildCard;
+    onEdit: (wc: WildCard) => void;
+    onDelete: (wc: WildCard) => void;
+    onCopy: (name: string) => void;
+}) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    const { refs, floatingStyles, context } = useFloating({
+        open: isOpen,
+        onOpenChange: setIsOpen,
+        placement: 'right-start',
+        middleware: [offset(8), flip(), shift({ padding: 8 })],
+        whileElementsMounted: autoUpdate,
+    });
+
+    const hover = useHover(context, {
+        delay: { open: 200, close: 100 },
+    });
+
+    const { getReferenceProps, getFloatingProps } = useInteractions([hover]);
+
+    const getLineCount = (content: string) => {
+        return content.split('\n').filter(line => line.trim()).length;
+    };
+
+    // Get first few lines for preview
+    const getPreviewLines = (content: string, maxLines = 3) => {
+        const lines = content.split('\n').filter(line => line.trim());
+        return lines.slice(0, maxLines);
+    };
+
+    // Get all lines for floating preview
+    const getAllLines = (content: string, maxLines = 15) => {
+        const lines = content.split('\n').filter(line => line.trim());
+        return {
+            lines: lines.slice(0, maxLines),
+            hasMore: lines.length > maxLines,
+            total: lines.length,
+        };
+    };
+
+    const previewLines = getPreviewLines(wildcard.content);
+    const floatingData = getAllLines(wildcard.content);
+
+    return (
+        <>
+            <Card
+                ref={refs.setReference}
+                {...getReferenceProps()}
+                className="bg-card/50 border-border hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 cursor-pointer group"
+            >
+                <CardHeader className="pb-2">
+                    <CardTitle className="text-white flex items-center justify-between">
+                        <span className="text-sm font-mono truncate">_{wildcard.name}_</span>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onCopy(wildcard.name);
+                            }}
+                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                            <Copy className="w-3 h-3" />
+                        </Button>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 pt-0">
+                    {/* Preview of first lines */}
+                    <div className="text-xs text-muted-foreground font-mono space-y-0.5 bg-background/50 rounded p-2 max-h-[60px] overflow-hidden">
+                        {previewLines.map((line, i) => (
+                            <div key={i} className="truncate">
+                                {line}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                            <FileText className="w-3 h-3" />
+                            {getLineCount(wildcard.content)} options
+                        </span>
+                        {wildcard.category && (
+                            <span className="text-primary/70">{wildcard.category}</span>
+                        )}
+                    </div>
+
+                    <div className="flex gap-1.5 pt-1">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit(wildcard);
+                            }}
+                            className="flex-1 h-7 text-xs"
+                        >
+                            <Edit className="w-3 h-3 mr-1" />
+                            Edit
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(wildcard);
+                            }}
+                            className="flex-1 h-7 text-xs"
+                        >
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Delete
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Floating preview on hover (desktop only) */}
+            {isOpen && (
+                <FloatingPortal>
+                    <div
+                        ref={refs.setFloating}
+                        style={floatingStyles}
+                        {...getFloatingProps()}
+                        className="z-50 hidden md:block"
+                    >
+                        <div className="bg-popover border border-border rounded-lg shadow-xl p-3 max-w-xs">
+                            <div className="text-xs font-medium text-white mb-2">
+                                _{wildcard.name}_ entries:
+                            </div>
+                            <div className="text-xs font-mono text-muted-foreground space-y-0.5 max-h-[250px] overflow-y-auto">
+                                {floatingData.lines.map((line, i) => (
+                                    <div key={i} className="py-0.5 border-b border-border/30 last:border-0">
+                                        {line}
+                                    </div>
+                                ))}
+                                {floatingData.hasMore && (
+                                    <div className="text-primary/70 pt-1">
+                                        ... and {floatingData.total - floatingData.lines.length} more
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </FloatingPortal>
+            )}
+        </>
+    );
+}
 
 export function WildCardManager() {
     const {
@@ -157,26 +323,25 @@ export function WildCardManager() {
     };
 
     return (
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="h-full">
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-4xl font-bold text-white mb-2">Wild Card Manager</h1>
-                <p className="text-muted-foreground">
-                    Create and manage wild cards for dynamic prompt variations. Use them in prompts like: _wildcard_name_
-                </p>
-            </div>
-
-            {/* Create Button */}
-            <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+                <div>
+                    <h2 className="text-lg font-semibold text-white">Wild Cards</h2>
+                    <p className="text-xs text-muted-foreground">
+                        Use in prompts like: _wildcard_name_
+                    </p>
+                </div>
                 <Button
                     onClick={() => {
                         setIsEditing(false);
                         setDialogOpen(true);
                     }}
+                    size="sm"
                     className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Wild Card
+                    <Plus className="w-4 h-4 mr-1" />
+                    New
                 </Button>
             </div>
 
@@ -187,72 +352,31 @@ export function WildCardManager() {
                 </div>
             ) : wildcards.length === 0 ? (
                 <Card className="bg-card/50 border-border">
-                    <CardContent className="py-12 text-center">
-                        <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                        <p className="text-muted-foreground mb-4">No wild cards yet</p>
+                    <CardContent className="py-8 text-center">
+                        <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                        <p className="text-muted-foreground mb-3 text-sm">No wild cards yet</p>
                         <Button
                             onClick={() => {
                                 setIsEditing(false);
                                 setDialogOpen(true);
                             }}
                             variant="outline"
+                            size="sm"
                         >
                             Create Your First Wild Card
                         </Button>
                     </CardContent>
                 </Card>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                     {wildcards.map((wildcard) => (
-                        <Card key={wildcard.id} className="bg-card/50 border-border hover:border-border transition-colors">
-                            <CardHeader>
-                                <CardTitle className="text-white flex items-center justify-between">
-                                    <span className="text-lg font-mono">_{wildcard.name}_</span>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleCopyName(wildcard.name)}
-                                        className="h-8 w-8 p-0"
-                                    >
-                                        <Copy className="w-4 h-4" />
-                                    </Button>
-                                </CardTitle>
-                                {wildcard.category && (
-                                    <CardDescription className="text-muted-foreground">
-                                        Category: {wildcard.category}
-                                    </CardDescription>
-                                )}
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                                {wildcard.description && (
-                                    <p className="text-sm text-muted-foreground">{wildcard.description}</p>
-                                )}
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <FileText className="w-4 h-4" />
-                                    <span>{getLineCount(wildcard.content)} options</span>
-                                </div>
-                                <div className="flex gap-2 pt-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handleEdit(wildcard)}
-                                        className="flex-1"
-                                    >
-                                        <Edit className="w-4 h-4 mr-1" />
-                                        Edit
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={() => handleDelete(wildcard)}
-                                        className="flex-1"
-                                    >
-                                        <Trash2 className="w-4 h-4 mr-1" />
-                                        Delete
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <WildCardCard
+                            key={wildcard.id}
+                            wildcard={wildcard}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            onCopy={handleCopyName}
+                        />
                     ))}
                 </div>
             )}
@@ -335,7 +459,7 @@ export function WildCardManager() {
                                 className="bg-background border-border min-h-[200px] font-mono text-sm"
                             />
                             <p className="text-xs text-muted-foreground">
-                                {getLineCount(formData.content)} options • Each line becomes one variation
+                                {getLineCount(formData.content)} options - Each line becomes one variation
                             </p>
                         </div>
                     </div>

@@ -592,8 +592,8 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
                     key={index}
                     onClick={() => setSelectedCellIndex(index)}
                     className={`aspect-video bg-secondary rounded border-2 flex items-center justify-center text-sm font-bold transition-colors ${selectedCellIndex === index
-                        ? 'border-emerald-500 text-emerald-500'
-                        : 'border-border text-muted-foreground hover:border-accent'
+                      ? 'border-primary text-primary'
+                      : 'border-border text-muted-foreground hover:border-accent'
                       }`}
                   >
                     {index + 1}
@@ -656,7 +656,7 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
             {/* Export buttons */}
             <div className="space-y-2">
               <Button
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                className="w-full bg-primary hover:bg-primary/90"
                 onClick={handleSaveToGallery}
                 disabled={isExtracting || cells.length === 0}
               >

@@ -200,11 +200,13 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
 
 export function useImageGeneration() {
     const { toast } = useToast()
-    const [progress, setProgress] = useState<GenerationProgress>({ status: 'idle' })
+    const [_progress, setProgress] = useState<GenerationProgress>({ status: 'idle' })
     const { setShotCreatorProcessing, settings } = useShotCreatorStore()
     const { wildcards, loadWildCards } = useWildCardStore()
     const { fetchBalance } = useCreditsStore()
     const [activeGalleryId, setActiveGalleryId] = useState<string | null>(null)
+    // Track when pipe chain is in progress (blocks concurrent generations)
+    const [isPipeChaining, setIsPipeChaining] = useState(false)
 
     // Load wildcards on mount
     useEffect(() => {
@@ -223,7 +225,7 @@ export function useImageGeneration() {
             if (!supabase) {
                 console.warn('Supabase client not available for subscription')
                 return
-            }           
+            }
             subscription = supabase
                 .channel(`gallery-item-${activeGalleryId}`)
                 .on(
@@ -251,7 +253,7 @@ export function useImageGeneration() {
                                 title: 'Image Ready!',
                                 description: 'Your image has been saved to the gallery.',
                             })
-                        } else if (updatedRecord.metadata?.error) {                            
+                        } else if (updatedRecord.metadata?.error) {
                             if (timeoutId) clearTimeout(timeoutId)
                             setProgress({
                                 status: 'failed',
@@ -299,7 +301,8 @@ export function useImageGeneration() {
         model: ImageModel,
         prompt: string,
         referenceImages: string[] = [],
-        modelSettings: ImageModelSettings
+        modelSettings: ImageModelSettings,
+        recipeInfo?: { recipeId: string; recipeName: string }
     ) => {
         try {
             // Get user ID from Supabase
@@ -465,13 +468,18 @@ export function useImageGeneration() {
             setShotCreatorProcessing(true)
             setProgress({ status: 'starting' })
 
+            // Block concurrent generations ONLY during pipe chaining
+            if (isPipeChaining) {
+                setIsPipeChaining(true)
+            }
+
             toast({
                 title: 'Starting Generation',
                 description: isPipeChaining
                     ? `Chaining ${totalVariations} sequential steps...`
                     : totalVariations > 1
-                    ? `Generating ${totalVariations} variations...`
-                    : 'Your image is being created...',
+                        ? `Generating ${totalVariations} variations...`
+                        : 'Your image is being created...',
             })
 
             const results = []
@@ -505,6 +513,9 @@ export function useImageGeneration() {
                     prompt: variationPrompt,
                     referenceImages: inputImages,
                     modelSettings: currentModelSettings,
+                    // Recipe tracking
+                    recipeId: recipeInfo?.recipeId,
+                    recipeName: recipeInfo?.recipeName,
                     // user_id removed - now extracted server-side from session cookie
                 }
                 toast({
@@ -546,14 +557,15 @@ export function useImageGeneration() {
                 galleryId: results[results.length - 1].galleryId,
             })
             setShotCreatorProcessing(false)
+            setIsPipeChaining(false) // Always reset pipe chaining state
 
             toast({
                 title: isPipeChaining ? 'Chain Complete!' : 'Generation Started!',
                 description: isPipeChaining
                     ? `All ${totalVariations} images saved to gallery!`
                     : totalVariations > 1
-                    ? `${totalVariations} images will appear in the gallery when ready.`
-                    : 'Your image will appear in the gallery when ready.',
+                        ? `${totalVariations} images will appear in the gallery when ready.`
+                        : 'Your image will appear in the gallery when ready.',
             })
 
             // Refresh credits balance to show deduction
@@ -574,6 +586,7 @@ export function useImageGeneration() {
 
             setProgress({ status: 'failed', error: errorMessage })
             setShotCreatorProcessing(false)
+            setIsPipeChaining(false) // Reset pipe state on error
             setActiveGalleryId(null)
 
             if (isCreditsError) {
@@ -609,6 +622,7 @@ export function useImageGeneration() {
     return {
         generateImage,
         resetProgress,
-        isGenerating: progress.status === 'starting' || progress.status === 'processing',
+        // Only block during pipe chaining - regular generations can run concurrently
+        isGenerating: isPipeChaining,
     }
 }

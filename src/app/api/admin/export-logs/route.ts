@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     if (auth instanceof NextResponse) return auth
 
     // Check admin status
-    const isAdmin = await adminService.checkAdminEmailAsync(auth.user.email)
+    const isAdmin = await adminService.checkAdminEmailAsync(auth.user.email || '')
     if (!isAdmin) {
         return NextResponse.json(
             { error: 'Forbidden', message: 'Admin access required' },

@@ -24,7 +24,9 @@ import {
     Image as ImageIcon,
     Copy,
     CheckCircle,
-    MessageSquare
+    MessageSquare,
+    Star,
+    FlaskConical
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useStoryboardStore } from '../../store'
@@ -33,7 +35,7 @@ import {
     type CharacterReplacement
 } from '../../services/name-replacement.service'
 import { HighlightedPrompt } from '../shared'
-import type { ShotBreakdownSegment, GeneratedShotPrompt, StoryboardCharacter } from '../../types/storyboard.types'
+import type { ShotBreakdownSegment, GeneratedShotPrompt, StoryboardCharacter, ShotMetadata } from '../../types/storyboard.types'
 
 interface EditableShotProps {
     segment: ShotBreakdownSegment
@@ -44,6 +46,8 @@ interface EditableShotProps {
     onPromptChange?: (sequence: number, newPrompt: string) => void
     onGeneratedPromptChange?: (sequence: number, newPrompt: string) => void
     onNoteChange?: (sequence: number, note: string) => void
+    onMetadataChange?: (sequence: number, metadata: Partial<ShotMetadata>) => void
+    onRefine?: (sequence: number) => void
 }
 
 function EditableShot({
@@ -54,12 +58,18 @@ function EditableShot({
     shotNote,
     onPromptChange,
     onGeneratedPromptChange,
-    onNoteChange
+    onNoteChange,
+    onMetadataChange,
+    onRefine
 }: EditableShotProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [editedPrompt, setEditedPrompt] = useState(generatedPrompt?.prompt || segment.text)
     const [isExpanded, setIsExpanded] = useState(false)
     const [copied, setCopied] = useState(false)
+    const [hoveredRating, setHoveredRating] = useState(0)
+
+    const isGreenlit = generatedPrompt?.metadata?.isGreenlit
+    const rating = generatedPrompt?.metadata?.rating || 0
 
     const handleCopy = async (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -125,6 +135,12 @@ function EditableShot({
                                     {generatedPrompt.edited && (
                                         <Badge variant="secondary" className="text-[10px] py-0">
                                             edited
+                                        </Badge>
+                                    )}
+                                    {isGreenlit && (
+                                        <Badge variant="default" className="text-[10px] py-0 bg-green-500 hover:bg-green-600 border-none shadow-none">
+                                            <CheckCircle className="w-3 h-3 mr-1" />
+                                            Greenlit
                                         </Badge>
                                     )}
                                 </div>
@@ -206,6 +222,64 @@ function EditableShot({
                                     </Label>
                                     <div className="mt-1 p-2 rounded bg-amber-500/10 text-xs border border-amber-500/20">
                                         {shotNote}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Rating & Greenlight (Director Mode) */}
+                            {generatedPrompt && (
+                                <div className="p-3 bg-muted/20 border rounded-lg flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-3">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex flex-col">
+                                            <Label className="text-xs text-muted-foreground mb-1">Director Rating</Label>
+                                            <div className="flex gap-0.5" onMouseLeave={() => setHoveredRating(0)}>
+                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                    <button
+                                                        key={star}
+                                                        type="button"
+                                                        className="focus:outline-none transition-transform hover:scale-110 p-1 -m-1"
+                                                        onMouseEnter={() => setHoveredRating(star)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            onMetadataChange?.(segment.sequence, { ...generatedPrompt.metadata, rating: star })
+                                                        }}
+                                                    >
+                                                        <Star
+                                                            className={`w-4 h-4 ${(hoveredRating || rating || 0) >= star
+                                                                ? "fill-primary text-primary"
+                                                                : "fill-muted text-muted-foreground/30"
+                                                                }`}
+                                                        />
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2 w-full sm:w-auto">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="flex-1 sm:flex-none border-purple-500/20 text-purple-500 hover:bg-purple-500/10"
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                onRefine?.(segment.sequence)
+                                            }}
+                                        >
+                                            <FlaskConical className="w-4 h-4 mr-2" />
+                                            Refine Shot
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant={isGreenlit ? "default" : "outline"}
+                                            className={`flex-1 sm:flex-none ${isGreenlit ? "bg-green-500 hover:bg-green-600" : ""}`}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                onMetadataChange?.(segment.sequence, { ...generatedPrompt.metadata, isGreenlit: !isGreenlit })
+                                            }}
+                                        >
+                                            <CheckCircle className="w-4 h-4 mr-2" />
+                                            {isGreenlit ? "Greenlit" : "Greenlight"}
+                                        </Button>
                                     </div>
                                 </div>
                             )}
@@ -370,13 +444,24 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         chapters,
         shotNotes,
         isPreviewCollapsed,
+        openShotLab,
         setBreakdownResult,
         addGeneratedPrompts,
         updateGeneratedPrompt,
+        updateGeneratedShot,
+        updateGeneratedPromptMetadata,
         setIsGeneratingPrompts,
         clearGeneratedPrompts,
         setShotNote
     } = useStoryboardStore()
+
+    const handleRefine = (sequence: number) => {
+        openShotLab(sequence)
+    }
+
+    const _handleUpdateLabShot = (updated: GeneratedShotPrompt) => {
+        updateGeneratedShot(updated.sequence, updated)
+    }
 
     const [error, setError] = useState<string | null>(null)
     const [generationProgress, setGenerationProgress] = useState<{
@@ -425,6 +510,10 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
 
     const handleGeneratedPromptChange = (sequence: number, newPrompt: string) => {
         updateGeneratedPrompt(sequence, newPrompt)
+    }
+
+    const handleMetadataChange = (sequence: number, metadata: Partial<ShotMetadata>) => {
+        updateGeneratedPromptMetadata(sequence, metadata)
     }
 
     const BATCH_SIZE = 15 // Must match API route
@@ -537,12 +626,12 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                             characterRefs: characters.filter(c =>
                                 c.has_reference &&
                                 (promptLower.includes(c.name.toLowerCase()) ||
-                                 processedPrompt.includes('@' + c.name.toLowerCase().replace(/\s+/g, '_')))
+                                    processedPrompt.includes('@' + c.name.toLowerCase().replace(/\s+/g, '_')))
                             ),
                             locationRef: locations.find(l =>
                                 l.has_reference &&
                                 (promptLower.includes(l.name.toLowerCase()) ||
-                                 promptLower.includes(l.tag.toLowerCase().replace('@', '')))
+                                    promptLower.includes(l.tag.toLowerCase().replace('@', '')))
                             ),
                             edited: false
                         }
@@ -767,12 +856,17 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                                     onPromptChange={handlePromptChange}
                                     onGeneratedPromptChange={handleGeneratedPromptChange}
                                     onNoteChange={setShotNote}
+                                    onMetadataChange={handleMetadataChange}
+                                    onRefine={handleRefine}
                                 />
                             ))}
                         </div>
                     </ScrollArea>
                 </CardContent>
             </Card>
-        </div>
+
+
+
+        </div >
     )
 }

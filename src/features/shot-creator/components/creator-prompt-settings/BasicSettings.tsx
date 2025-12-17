@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
 import { useShotCreatorSettings } from "../../hooks"
 import { aspectRatios, resolutions } from "../../constants"
 import { getModelConfig, ModelId } from '@/config'
@@ -10,16 +10,12 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
-import { WildCardCreateDialog } from '../wildcard/WildCardCreateDialog'
 import StyleSelector from './StyleSelector'
 
 const BasicSettings = () => {
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
     const selectedModel = shotCreatorSettings.model || 'nano-banana'
     const modelConfig = useMemo(() => getModelConfig(selectedModel as ModelId), [selectedModel])
-    const [wildCardDialogOpen, setWildCardDialogOpen] = useState(false)
 
     // Get model-specific aspect ratios
     const aspectRatioOptions = useMemo(() => {
@@ -63,19 +59,23 @@ const BasicSettings = () => {
 
     return (
         <div className="space-y-4">
-            {/* Style Selector - full width at top */}
-            <StyleSelector />
+            {/* Compact Settings Row - All 4 on same line (desktop), 2x2 (mobile) */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
+                {/* Style */}
+                <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Style</Label>
+                    <StyleSelector compact />
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
                 {/* Aspect Ratio */}
                 {supportsAspectRatio && (
-                    <div className="space-y-2">
-                        <Label className="text-sm text-foreground">Aspect Ratio</Label>
+                    <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Aspect</Label>
                         <Select
                             value={shotCreatorSettings.aspectRatio}
                             onValueChange={(value) => updateSettings({ aspectRatio: value })}
                         >
-                            <SelectTrigger className="bg-card border-border text-white">
+                            <SelectTrigger className="bg-card border-border text-white h-9 text-sm">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -91,13 +91,13 @@ const BasicSettings = () => {
 
                 {/* Resolution */}
                 {supportsResolution && (
-                    <div className="space-y-2">
-                        <Label className="text-sm text-foreground">Resolution</Label>
+                    <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Resolution</Label>
                         <Select
                             value={shotCreatorSettings.resolution}
                             onValueChange={(value) => updateSettings({ resolution: value })}
                         >
-                            <SelectTrigger className="bg-card border-border text-white">
+                            <SelectTrigger className="bg-card border-border text-white h-9 text-sm">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -113,17 +113,17 @@ const BasicSettings = () => {
 
                 {/* Output Format */}
                 {supportsOutputFormat && (
-                    <div className="space-y-2">
-                        <Label className="text-sm text-foreground">Output Format</Label>
+                    <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Output</Label>
                         <Select
                             value={shotCreatorSettings.outputFormat || 'webp'}
                             onValueChange={(value) => updateSettings({ outputFormat: value })}
                         >
-                            <SelectTrigger className="bg-card border-border text-white">
+                            <SelectTrigger className="bg-card border-border text-white h-9 text-sm">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="webp">WebP (Recommended)</SelectItem>
+                                <SelectItem value="webp">WebP</SelectItem>
                                 <SelectItem value="jpg">JPG</SelectItem>
                                 <SelectItem value="png">PNG</SelectItem>
                             </SelectContent>
@@ -131,28 +131,6 @@ const BasicSettings = () => {
                     </div>
                 )}
             </div>
-
-            {/* Wild Card Creation */}
-            <div className="pt-4 border-t border-border">
-                <Button
-                    variant="outline"
-                    className="w-full"
-                    size="sm"
-                    onClick={() => setWildCardDialogOpen(true)}
-                >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Wild Card
-                </Button>
-                <p className="text-xs text-muted-foreground mt-2">
-                    Upload a text file to create _wildcard_ for random prompt variations
-                </p>
-            </div>
-
-            {/* Wild Card Dialog */}
-            <WildCardCreateDialog
-                open={wildCardDialogOpen}
-                onOpenChange={setWildCardDialogOpen}
-            />
         </div>
     )
 }

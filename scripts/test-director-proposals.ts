@@ -159,7 +159,22 @@ console.log('\n\n' + '='.repeat(80))
 console.log('📊 DIRECTOR COMPARISON - Same Song, Different Visions')
 console.log('='.repeat(80))
 
-console.log('\nFor HUMBLE by Kendrick Lamar:\n')
+// Print Hype Millions Prompt explicitly to check logic
+const hype = DIRECTORS.find(d => d.name.includes('Hype'))
+if (hype) {
+    console.log(`\n🔍 DEEP DIVE: ${hype.name.toUpperCase()} PROMPT GENERATION\n`)
+    const hypePrompt = buildProposalPrompt(hype, {
+        songAnalysis: KENDRICK_HUMBLE,
+        genreSelection: KENDRICK_GENRE,
+        locationRequests: KENDRICK_LOCATIONS,
+        artistName: 'Kendrick Lamar',
+        artistNotes: 'Iconic performance'
+    })
+    console.log(hypePrompt)
+    console.log('-'.repeat(80))
+}
+
+console.log('\nFor HUMBLE by Kendrick Lamar (Comparison Table):\n')
 
 const comparisons = DIRECTORS.map(director => ({
     name: director.name,
@@ -171,10 +186,19 @@ const comparisons = DIRECTORS.map(director => ({
     motion: director.cameraMotionProfile.enabled ? director.cameraMotionProfile.motionBias[0] : 'static'
 }))
 
-console.log('| Director | POV | Distance | Pacing | Arc | Stance | Motion |')
-console.log('|----------|-----|----------|--------|-----|--------|--------|')
+console.log('| Director       | POV     | Distance | Pacing  | Arc     | Stance  | Motion  |')
+console.log('|----------------|---------|----------|---------|---------|---------|---------|')
 comparisons.forEach(c => {
-    console.log(`| ${c.name.padEnd(8)} | ${c.pov.slice(0, 3)} | ${c.distance.padEnd(8)} | ${c.pacing.padEnd(6)} | ${c.emotion.padEnd(3)} | ${c.stance.padEnd(6)} | ${(c.motion || 'none').slice(0, 6)} |`)
+    // Truncate or pad
+    const name = c.name.slice(0, 14).padEnd(14)
+    const pov = c.pov.slice(0, 7).padEnd(7)
+    const dist = c.distance.slice(0, 8).padEnd(8)
+    const pace = c.pacing.slice(0, 7).padEnd(7)
+    const arc = c.emotion.slice(0, 7).padEnd(7)
+    const stance = c.stance.slice(0, 7).padEnd(7)
+    const motion = (c.motion || 'none').slice(0, 7).padEnd(7)
+
+    console.log(`| ${name} | ${pov} | ${dist} | ${pace} | ${arc} | ${stance} | ${motion} |`)
 })
 
 console.log('\n✅ Real song test complete!')

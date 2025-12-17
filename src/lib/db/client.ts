@@ -73,7 +73,7 @@ export async function getClient() {
 export async function getAPIClient() {
     if (
         !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-        !process.env.SUPABASE_SERVICE_KEY
+        !process.env.SUPABASE_SERVICE_ROLE_KEY
     ) {
         throw new ConfigurationError(
             'Missing required environment variables for Supabase API client',
@@ -83,7 +83,7 @@ export async function getAPIClient() {
 
     return createClient<Database>(
         process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_KEY,
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
         {
             auth: {
                 autoRefreshToken: false,

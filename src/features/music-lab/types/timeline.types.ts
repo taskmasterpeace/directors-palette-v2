@@ -1,8 +1,10 @@
 /**
  * Timeline Types for Music Lab
- * 
+ *
  * Types for the visual timeline editor.
  */
+
+import type { DirectorProposal } from './director.types'
 
 // =============================================================================
 // TIMELINE SHOT
@@ -55,6 +57,14 @@ export const SECTION_COLORS: Record<string, string> = {
     drop: '#ef4444'        // Red
 }
 
+// Song analysis input for timeline import
+export interface SongAnalysisInput {
+    bpm?: number
+    duration?: number
+    sections?: Array<{ type: string; startTime: number; endTime: number }>
+    confirmedSections?: Array<{ type: string; startTime: number; endTime: number }>
+}
+
 // =============================================================================
 // TIMELINE STATE
 // =============================================================================
@@ -90,5 +100,6 @@ export interface TimelineState {
     selectShot: (id: string | null) => void
     setSectionMarkers: (markers: TimelineSectionMarker[]) => void
     importFromSongAnalysis: (sections: Array<{ type: string; startTime: number; endTime: number }>) => void
+    importProposal: (proposal: DirectorProposal, songAnalysis?: SongAnalysisInput) => void
     reset: () => void
 }

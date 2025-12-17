@@ -7,18 +7,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { creditsService } from '@/features/credits/services/credits.service'
 import { getAPIClient } from '@/lib/db/client'
+import { adminService } from '@/features/admin/services/admin.service'
 
 // Helper to get an untyped client for abuse tables (not in main DB types yet)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getUntypedClient(): Promise<any> {
     return await getAPIClient()
 }
-
-// Admin email allowlist (add your admin emails here)
-const ADMIN_EMAILS = [
-    'taskmasterpeace@gmail.com',
-    // Add more admin emails as needed
-]
 
 /**
  * GET /api/admin/abuse-report
@@ -28,8 +23,9 @@ export async function GET(request: NextRequest) {
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
 
-    // Check if user is admin
-    if (!ADMIN_EMAILS.includes(auth.user.email || '')) {
+    // Check if user is admin via database
+    const isAdmin = await adminService.checkAdminEmailAsync(auth.user.email || '')
+    if (!isAdmin) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
@@ -66,8 +62,9 @@ export async function POST(request: NextRequest) {
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
 
-    // Check if user is admin
-    if (!ADMIN_EMAILS.includes(auth.user.email || '')) {
+    // Check if user is admin via database
+    const isAdmin = await adminService.checkAdminEmailAsync(auth.user.email || '')
+    if (!isAdmin) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 

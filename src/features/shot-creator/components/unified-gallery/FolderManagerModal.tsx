@@ -191,14 +191,59 @@ export function FolderManagerModal({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Emoji Picker */}
+          <div className="space-y-2">
+            <Label>Icon (Optional)</Label>
+            <div className="flex gap-2 flex-wrap">
+              {/* No emoji option */}
+              <button
+                type="button"
+                onClick={() => {
+                  const currentName = name.replace(/^[\uD800-\uDBFF][\uDC00-\uDFFF]\s?/, '')
+                  setName(currentName)
+                }}
+                className={`w-8 h-8 rounded-md border flex items-center justify-center transition-all ${!/^[\uD800-\uDBFF][\uDC00-\uDFFF]/.test(name)
+                    ? 'border-primary ring-2 ring-primary bg-accent'
+                    : 'border-border hover:bg-accent/50'
+                  }`}
+                title="No icon"
+              >
+                <span className="text-sm">Ø</span>
+              </button>
+
+              {/* Common Emojis */}
+              {['📁', '📂', '❤️', '⭐', '🎬', '🎥', '📸', '🎨', '👤', '👥', '🏢', '🏠', '🌍', '💡', '🔥', '✨'].map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => {
+                    // Remove existing emoji prefix if any
+                    const cleanName = name.replace(/^[\uD800-\uDBFF][\uDC00-\uDFFF]\s?/, '')
+                    setName(`${emoji} ${cleanName}`)
+                  }}
+                  className={`w-8 h-8 rounded-md border flex items-center justify-center text-lg transition-all ${name.startsWith(emoji)
+                      ? 'border-primary ring-2 ring-primary bg-accent'
+                      : 'border-border hover:bg-accent/50'
+                    }`}
+                  title="Select icon"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Folder Name */}
           <div className="space-y-2">
             <Label htmlFor="folder-name">Folder Name *</Label>
             <Input
               id="folder-name"
               placeholder="e.g., Characters, Locations, Props"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={name.replace(/^[\uD800-\uDBFF][\uDC00-\uDFFF]\s?/, '')} // Display name without emoji
+              onChange={(e) => {
+                const currentEmoji = name.match(/^[\uD800-\uDBFF][\uDC00-\uDFFF]\s?/)?.[0] || ''
+                setName(currentEmoji + e.target.value)
+              }}
               maxLength={50}
               autoFocus
               onKeyDown={(e) => {
@@ -209,7 +254,7 @@ export function FolderManagerModal({
               }}
             />
             <p className="text-xs text-muted-foreground">
-              {name.length}/50 characters
+              Example: {name || 'Folder Name'}
             </p>
           </div>
 
@@ -221,11 +266,10 @@ export function FolderManagerModal({
               <button
                 type="button"
                 onClick={() => setSelectedColor(undefined)}
-                className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${
-                  selectedColor === undefined
+                className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${selectedColor === undefined
                     ? 'border-primary ring-2 ring-primary ring-offset-2'
                     : 'border-border hover:border-foreground'
-                }`}
+                  }`}
                 title="No color"
               >
                 <div className="w-6 h-6 rounded-full bg-gradient-to-br from-transparent via-muted to-transparent border border-border" />
@@ -237,11 +281,10 @@ export function FolderManagerModal({
                   key={color}
                   type="button"
                   onClick={() => setSelectedColor(color)}
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${
-                    selectedColor === color
+                  className={`w-8 h-8 rounded-full border-2 transition-all ${selectedColor === color
                       ? 'border-primary ring-2 ring-primary ring-offset-2'
                       : 'border-border hover:border-foreground'
-                  }`}
+                    }`}
                   style={{ backgroundColor: color }}
                   title={color}
                 />
@@ -260,8 +303,8 @@ export function FolderManagerModal({
                 ? 'Creating...'
                 : 'Updating...'
               : mode === 'create'
-              ? 'Create Folder'
-              : 'Update Folder'}
+                ? 'Create Folder'
+                : 'Update Folder'}
           </Button>
         </DialogFooter>
       </DialogContent>

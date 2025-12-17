@@ -37,7 +37,11 @@ import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import { toast } from '@/hooks/use-toast'
 
-const StyleSelector = () => {
+interface StyleSelectorProps {
+    compact?: boolean
+}
+
+const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
     const { settings, updateSettings } = useShotCreatorSettings()
     const {
         addCustomStyle,
@@ -184,6 +188,142 @@ const StyleSelector = () => {
         return 'isCustom' in style && style.isCustom === true
     }
 
+    // Compact mode: just the select, no label or clear button
+    if (compact) {
+        return (
+            <>
+                <Select
+                    value={selectedStyleId || 'none'}
+                    onValueChange={handleStyleChange}
+                >
+                    <SelectTrigger className="bg-card border-border text-white h-9 text-sm">
+                        <SelectValue placeholder="No style">
+                            {currentStyle ? (
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-4 h-4 rounded overflow-hidden flex-shrink-0">
+                                        {currentStyle.imagePath ? (
+                                            currentStyle.imagePath.startsWith('data:') ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img
+                                                    src={currentStyle.imagePath}
+                                                    alt={currentStyle.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <Image
+                                                    src={currentStyle.imagePath}
+                                                    alt={currentStyle.name}
+                                                    width={16}
+                                                    height={16}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            )
+                                        ) : (
+                                            <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+                                                <Palette className="w-2 h-2 text-zinc-500" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span className="truncate text-sm">{currentStyle.name}</span>
+                                </div>
+                            ) : (
+                                <span className="text-muted-foreground text-sm">None</span>
+                            )}
+                        </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="none">
+                            <span className="text-muted-foreground">No style</span>
+                        </SelectItem>
+                        <SelectItem value="create-new" className="text-amber-500">
+                            <div className="flex items-center gap-2">
+                                <Plus className="w-4 h-4" />
+                                <span>Create New...</span>
+                            </div>
+                        </SelectItem>
+                        {allStyles.length > 0 && <div className="h-px bg-border my-1" />}
+                        {allStyles.map((style) => (
+                            <SelectItem key={style.id} value={style.id}>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-5 h-5 rounded overflow-hidden flex-shrink-0">
+                                        {style.imagePath ? (
+                                            style.imagePath.startsWith('data:') ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img src={style.imagePath} alt={style.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <Image src={style.imagePath} alt={style.name} width={20} height={20} className="w-full h-full object-cover" />
+                                            )
+                                        ) : (
+                                            <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+                                                <Palette className="w-3 h-3 text-zinc-500" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span className="truncate">{style.name}</span>
+                                </div>
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+
+                {/* Create Style Dialog - reuse from full mode */}
+                <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+                    <DialogContent className="bg-zinc-900 border-zinc-800 max-w-md">
+                        <DialogHeader>
+                            <DialogTitle className="text-white flex items-center gap-2">
+                                <Palette className="w-5 h-5 text-amber-500" />
+                                Create Custom Style
+                            </DialogTitle>
+                            <DialogDescription>
+                                Add your own style with a reference image
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label>Reference Image *</Label>
+                                <div
+                                    className="border-2 border-dashed border-zinc-700 rounded-lg p-4 text-center cursor-pointer hover:border-amber-500/50 transition-colors"
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    {newStyleImage ? (
+                                        <div className="relative w-full aspect-video rounded overflow-hidden">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={newStyleImage} alt="Style preview" className="w-full h-full object-cover" />
+                                            <Button variant="destructive" size="sm" className="absolute top-2 right-2" onClick={(e) => { e.stopPropagation(); setNewStyleImage(''); }}>
+                                                <X className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="py-8">
+                                            <Upload className="w-8 h-8 mx-auto text-zinc-500 mb-2" />
+                                            <p className="text-sm text-zinc-400">Click to upload image</p>
+                                        </div>
+                                    )}
+                                </div>
+                                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="style-name">Style Name *</Label>
+                                <Input id="style-name" placeholder="e.g., Anime, Watercolor" value={newStyleName} onChange={(e) => setNewStyleName(e.target.value)} className="bg-zinc-800 border-zinc-700" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="style-prompt">Style Prompt <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                                <Textarea id="style-prompt" placeholder={`Default: "in the ${newStyleName || '[name]'} style"`} value={newStylePrompt} onChange={(e) => setNewStylePrompt(e.target.value)} className="bg-zinc-800 border-zinc-700 min-h-[60px]" />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+                            <Button onClick={handleCreateStyle} className="bg-amber-500 text-black hover:bg-amber-600">
+                                <Plus className="w-4 h-4 mr-2" />
+                                Create
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </>
+        )
+    }
+
     return (
         <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -212,21 +352,27 @@ const StyleSelector = () => {
                         {currentStyle ? (
                             <div className="flex items-center gap-2">
                                 <div className="w-5 h-5 rounded overflow-hidden flex-shrink-0 relative">
-                                    {currentStyle.imagePath.startsWith('data:') ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img
-                                            src={currentStyle.imagePath}
-                                            alt={currentStyle.name}
-                                            className="w-full h-full object-cover"
-                                        />
+                                    {currentStyle.imagePath ? (
+                                        currentStyle.imagePath.startsWith('data:') ? (
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img
+                                                src={currentStyle.imagePath}
+                                                alt={currentStyle.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <Image
+                                                src={currentStyle.imagePath}
+                                                alt={currentStyle.name}
+                                                width={20}
+                                                height={20}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        )
                                     ) : (
-                                        <Image
-                                            src={currentStyle.imagePath}
-                                            alt={currentStyle.name}
-                                            width={20}
-                                            height={20}
-                                            className="w-full h-full object-cover"
-                                        />
+                                        <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+                                            <Palette className="w-3 h-3 text-zinc-500" />
+                                        </div>
                                     )}
                                 </div>
                                 <span>{currentStyle.name}</span>
@@ -260,21 +406,27 @@ const StyleSelector = () => {
                             <div className="flex items-center justify-between w-full gap-2">
                                 <div className="flex items-center gap-2 flex-1 min-w-0">
                                     <div className="w-6 h-6 rounded overflow-hidden flex-shrink-0">
-                                        {style.imagePath.startsWith('data:') ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img
-                                                src={style.imagePath}
-                                                alt={style.name}
-                                                className="w-full h-full object-cover"
-                                            />
+                                        {style.imagePath ? (
+                                            style.imagePath.startsWith('data:') ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img
+                                                    src={style.imagePath}
+                                                    alt={style.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <Image
+                                                    src={style.imagePath}
+                                                    alt={style.name}
+                                                    width={24}
+                                                    height={24}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            )
                                         ) : (
-                                            <Image
-                                                src={style.imagePath}
-                                                alt={style.name}
-                                                width={24}
-                                                height={24}
-                                                className="w-full h-full object-cover"
-                                            />
+                                            <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+                                                <Palette className="w-3 h-3 text-zinc-500" />
+                                            </div>
                                         )}
                                     </div>
                                     <div className="flex flex-col min-w-0">
@@ -302,7 +454,7 @@ const StyleSelector = () => {
                     ))}
                 </SelectContent>
             </Select>
-            {currentStyle && (
+            {currentStyle && currentStyle.stylePrompt && (
                 <p className="text-xs text-muted-foreground">
                     Auto-injects: &quot;{currentStyle.stylePrompt}&quot;
                 </p>

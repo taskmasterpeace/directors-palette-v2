@@ -20,6 +20,8 @@ import { ShotCreatorReferenceImage } from "@/features/shot-creator"
 import { EXPORT_FORMATS, SCALE_PRESETS } from "../../constants"
 import { clipboardManager } from '@/utils/clipboard-manager'
 
+const gcd = (a: number, b: number): number => b ? gcd(b, a % b) : a
+
 interface CanvasExporterProps {
     canvasRef: React.RefObject<FabricCanvasRef | null>
     onExport?: (format: string, dataUrl: string) => void
@@ -50,6 +52,12 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
     const updateExportSettings = (updates: Partial<ExportSettings>) => {
         setExportSettings(prev => ({ ...prev, ...updates }))
     }
+
+    // Get export dimensions
+    const baseDimensions = canvasRef.current?.getDimensions?.() ?? { width: 1200, height: 675 }
+    const exportWidth = Math.round(baseDimensions.width * exportSettings.scale)
+    const exportHeight = Math.round(baseDimensions.height * exportSettings.scale)
+    const estimatedSizeMB = ((exportWidth * exportHeight * 4) / (1024 * 1024) * (exportSettings.format === 'jpg' ? exportSettings.quality : 0.8)).toFixed(1)
 
     const exportCanvas = async () => {
         if (!canvasRef.current?.exportCanvas) {
@@ -129,36 +137,34 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
 
         try {
             const dataUrl = canvasRef.current.exportCanvas('png')
-            console.log("dataUrl", dataUrl)
-            // Add to unified gallery store
-            // const addImage = useUnifiedGalleryStore.getState().addImage
-            // addImage({
-            //     url: dataUrl,
-            //     prompt: 'Canvas annotation export',
-            //     source: 'layout-annotation',
-            //     model: 'canvas-export',
-            //     reference: `@canvas_${Date.now()}`,
-            //     settings: {
-            //         aspectRatio: '16:9',
-            //         resolution: `${canvasRef.current?.getCanvasWidth?.() || 1200}x${canvasRef.current?.getCanvasHeight?.() || 675}`
-            //     },
-            //     tags: ['canvas', 'annotation', 'export'],
-            //     creditsUsed: 0,
-            //     isPermanent: false,
-            //     persistence: {
-            //         isPermanent: false
-            //     }
-            // })
+
+            // Save to gallery via API
+            const response = await fetch('/api/gallery/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    imageUrl: dataUrl,
+                    source: 'shot-canvas',
+                    metadata: {
+                        type: 'canvas-export',
+                        timestamp: Date.now()
+                    }
+                })
+            })
+
+            if (!response.ok) {
+                throw new Error('Failed to save to gallery')
+            }
 
             toast({
-                title: "Sent to Gallery",
-                description: "Canvas added to image gallery successfully"
+                title: "Saved to Gallery ✓",
+                description: "Canvas saved to your image gallery"
             })
         } catch (error) {
             console.error('Send to gallery failed:', error)
             toast({
-                title: "Failed to Send",
-                description: "Could not send canvas to gallery",
+                title: "Failed to Save",
+                description: "Could not save canvas to gallery",
                 variant: "destructive"
             })
         }
@@ -186,9 +192,9 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
 
                 const aspectRatio = img.width / img.height
                 let detectedAspectRatio = '1:1'
-                if (Math.abs(aspectRatio - 16/9) < 0.1) detectedAspectRatio = '16:9'
-                else if (Math.abs(aspectRatio - 9/16) < 0.1) detectedAspectRatio = '9:16'
-                else if (Math.abs(aspectRatio - 4/3) < 0.1) detectedAspectRatio = '4:3'
+                if (Math.abs(aspectRatio - 16 / 9) < 0.1) detectedAspectRatio = '16:9'
+                else if (Math.abs(aspectRatio - 9 / 16) < 0.1) detectedAspectRatio = '9:16'
+                else if (Math.abs(aspectRatio - 4 / 3) < 0.1) detectedAspectRatio = '4:3'
 
                 const referenceImage: ShotCreatorReferenceImage = {
                     id: `canvas_${Date.now()}`,
@@ -345,19 +351,17 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
                     </div>
                 )}
 
-                {/* Scale Settings */}
-                <div className="space-y-3">
-                    <Label className="text-sm font-medium text-foreground">
-                        Scale: {exportSettings.scale}x
-                    </Label>
-                    <div className="grid grid-cols-2 gap-2">
+                {/* Scale & Dimensions - Compact Row */}
+                <div className="space-y-1">
+                    <div className="flex items-center gap-1 flex-wrap">
+                        <span className="text-xs text-muted-foreground">Scale:</span>
                         {SCALE_PRESETS.map((preset) => (
                             <Button
                                 key={preset.value}
                                 size="sm"
                                 onClick={() => updateExportSettings({ scale: preset.value })}
-                                className={`text-xs ${exportSettings.scale === preset.value
-                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                className={`h-6 px-2 text-[10px] ${exportSettings.scale === preset.value
+                                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
                                     : 'bg-secondary hover:bg-muted text-foreground'
                                     }`}
                             >
@@ -365,24 +369,38 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
                             </Button>
                         ))}
                     </div>
-                </div>
-
-                {/* Transparency (for PNG) */}
-                {exportSettings.format === 'png' && (
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <Label className="text-sm font-medium text-foreground">
-                                Include Transparency
-                            </Label>
-                            <Switch
-                                checked={exportSettings.includeTransparency}
-                                onCheckedChange={(checked) =>
-                                    updateExportSettings({ includeTransparency: checked })
-                                }
-                            />
-                        </div>
+                    {/* Dimensions + Alpha on same line */}
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="font-mono">
+                            {exportWidth}×{exportHeight}
+                            <span className="ml-1 opacity-70">
+                                ({(() => {
+                                    const w = Math.round(exportWidth)
+                                    const h = Math.round(exportHeight)
+                                    const d = gcd(w, h)
+                                    return `${w / d}:${h / d}`
+                                })()})
+                            </span>
+                            {' '}
+                            (~{estimatedSizeMB}MB)
+                        </span>
+                        {exportSettings.format === 'png' && (
+                            <div className="flex items-center gap-1">
+                                <Switch
+                                    id="transparency"
+                                    checked={exportSettings.includeTransparency}
+                                    onCheckedChange={(checked) =>
+                                        updateExportSettings({ includeTransparency: checked })
+                                    }
+                                    className="scale-75"
+                                />
+                                <Label htmlFor="transparency" className="text-[10px]">
+                                    Alpha
+                                </Label>
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
 
                 {/* Background Color (if no transparency) */}
                 {(!exportSettings.includeTransparency || exportSettings.format === 'jpg') && (
@@ -423,7 +441,7 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
 
                     <Button
                         onClick={copyCanvasToClipboard}
-                        className="w-full bg-accent hover:bg-accent/90 text-white transition-all"
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground transition-all"
                     >
                         <Copy className="w-4 h-4 mr-2" />
                         Copy to Clipboard
@@ -439,17 +457,17 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
                 </div>
 
                 {/* Send to Other Tabs */}
-                <div className="space-y-3 border-t border-primary/30 pt-4">
+                <div className="space-y-2 border-t border-primary/30 pt-4">
                     <Label className="text-sm font-medium text-foreground">Send to Tab</Label>
 
-                    <div className="grid grid-cols-1 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                         <Button
                             size="sm"
                             onClick={() => sendToTab('Shot Creator')}
                             className="bg-primary hover:bg-primary/90 text-white"
                         >
                             <Sparkles className="w-3 h-3 mr-1" />
-                            Shot Creator
+                            Creator
                         </Button>
                         <Button
                             size="sm"
@@ -457,20 +475,12 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
                             className="bg-primary hover:bg-primary/90 text-white"
                         >
                             <Film className="w-3 h-3 mr-1" />
-                            Shot Animator
+                            Animator
                         </Button>
                     </div>
                 </div>
 
-                {/* Export Tips */}
-                <div className="bg-primary/15 rounded-lg p-3 border border-primary/20">
-                    <h4 className="text-xs font-medium text-primary mb-2">Export Tips</h4>
-                    <ul className="text-xs text-primary/70 space-y-1">
-                        <li>• PNG: Best for images with transparency</li>
-                        <li>• JPEG: Smaller files, good for photos</li>
-                        <li>• 2x scale for high resolution displays</li>
-                    </ul>
-                </div>
+
             </CardContent>
 
             {/* Hidden download link */}

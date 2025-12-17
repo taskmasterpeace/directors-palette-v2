@@ -1,0 +1,126 @@
+-- API Keys table for external API access
+-- Only admins can have API keys (auto-generated on admin creation)
+
+CREATE TABLE IF NOT EXISTS api_keys (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  key_hash TEXT NOT NULL UNIQUE,  -- SHA-256 hash of the API key
+  key_prefix TEXT NOT NULL,       -- First 8 chars for identification (dp_xxxxxxxx)
+  name TEXT DEFAULT 'Default API Key',
+  scopes TEXT[] DEFAULT ARRAY['images:generate', 'recipes:execute'],
+  is_active BOOLEAN DEFAULT TRUE,
+  last_used_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ  -- NULL means never expires
+);
+
+-- Trigger function to validate that user is an admin before creating API key
+CREATE OR REPLACE FUNCTION validate_api_key_admin()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM admin_users WHERE admin_users.user_id = NEW.user_id) THEN
+    RAISE EXCEPTION 'Only admin users can have API keys';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to validate admin on insert
+DROP TRIGGER IF EXISTS validate_api_key_admin_trigger ON api_keys;
+CREATE TRIGGER validate_api_key_admin_trigger
+  BEFORE INSERT ON api_keys
+  FOR EACH ROW
+  EXECUTE FUNCTION validate_api_key_admin();
+
+-- API usage tracking
+CREATE TABLE IF NOT EXISTS api_usage (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  api_key_id UUID NOT NULL REFERENCES api_keys(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  endpoint TEXT NOT NULL,           -- e.g., '/api/v1/images/generate'
+  method TEXT NOT NULL,             -- GET, POST, etc.
+  status_code INTEGER NOT NULL,
+  credits_used NUMERIC(10,2) DEFAULT 0,
+  request_metadata JSONB,           -- Request details (sanitized)
+  response_time_ms INTEGER,
+  ip_address INET,
+  user_agent TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON api_keys(user_id);
+CREATE INDEX IF NOT EXISTS idx_api_keys_key_hash ON api_keys(key_hash);
+CREATE INDEX IF NOT EXISTS idx_api_keys_active ON api_keys(is_active) WHERE is_active = TRUE;
+
+CREATE INDEX IF NOT EXISTS idx_api_usage_api_key_id ON api_usage(api_key_id);
+CREATE INDEX IF NOT EXISTS idx_api_usage_user_id ON api_usage(user_id);
+CREATE INDEX IF NOT EXISTS idx_api_usage_created_at ON api_usage(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_api_usage_endpoint ON api_usage(endpoint);
+
+-- RLS Policies
+ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
+ALTER TABLE api_usage ENABLE ROW LEVEL SECURITY;
+
+-- API keys: Users can only see their own keys
+CREATE POLICY "Users can view their own API keys"
+  ON api_keys FOR SELECT
+  TO authenticated
+  USING (user_id = auth.uid());
+
+CREATE POLICY "Users can update their own API keys"
+  ON api_keys FOR UPDATE
+  TO authenticated
+  USING (user_id = auth.uid());
+
+-- API usage: Users can only see their own usage
+CREATE POLICY "Users can view their own API usage"
+  ON api_usage FOR SELECT
+  TO authenticated
+  USING (user_id = auth.uid());
+
+-- Service role can do everything (for API key validation)
+CREATE POLICY "Service role full access to api_keys"
+  ON api_keys FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
+
+CREATE POLICY "Service role full access to api_usage"
+  ON api_usage FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
+
+-- Function to auto-generate API key when admin is created
+CREATE OR REPLACE FUNCTION generate_admin_api_key()
+RETURNS TRIGGER AS $$
+DECLARE
+  new_key TEXT;
+  key_hash TEXT;
+BEGIN
+  -- Generate a random API key: dp_ + 32 random hex chars
+  new_key := 'dp_' || encode(gen_random_bytes(16), 'hex');
+  key_hash := encode(sha256(new_key::bytea), 'hex');
+
+  -- Insert the API key (we can't return the raw key from trigger,
+  -- but it will be shown once when admin is created via admin service)
+  INSERT INTO api_keys (user_id, key_hash, key_prefix, name)
+  VALUES (NEW.user_id, key_hash, substring(new_key, 1, 11), 'Auto-generated Admin Key');
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to auto-generate API key when admin is added
+DROP TRIGGER IF EXISTS on_admin_created ON admin_users;
+CREATE TRIGGER on_admin_created
+  AFTER INSERT ON admin_users
+  FOR EACH ROW
+  EXECUTE FUNCTION generate_admin_api_key();
+
+-- Comment for documentation
+COMMENT ON TABLE api_keys IS 'API keys for external API access. Only admins can have keys.';
+COMMENT ON TABLE api_usage IS 'Tracks all API requests for billing and analytics.';
+COMMENT ON COLUMN api_keys.key_hash IS 'SHA-256 hash of the API key. Raw key is never stored.';
+COMMENT ON COLUMN api_keys.key_prefix IS 'First 11 chars (dp_xxxxxxxx) for identification without exposing full key.';

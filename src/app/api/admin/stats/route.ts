@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
-import { adminService, isAdminEmail } from '@/features/admin'
+import { adminService } from '@/features/admin'
 
 /**
  * GET /api/admin/stats
@@ -15,8 +15,11 @@ export async function GET(request: NextRequest) {
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
 
-    // Check admin status
-    if (!isAdminEmail(auth.user.email)) {
+    // Check admin status via database query (not the broken sync function)
+    const isAdmin = await adminService.checkAdminEmailAsync(auth.user.email || '')
+    console.log(`[StatsAPI] Check for ${auth.user.email}: is_admin=${isAdmin}`)
+
+    if (!isAdmin) {
         return NextResponse.json(
             { error: 'Forbidden', message: 'Admin access required' },
             { status: 403 }

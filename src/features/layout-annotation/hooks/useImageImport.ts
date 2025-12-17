@@ -44,7 +44,8 @@ export function useImageImport({ fileInputRef }: ImageImportProps) {
 
     // allow selecting the same file twice in a row
     event.target.value = ''
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    // Give enough time for image to be loaded to canvas before revoking
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
   }, [handleReceiveImage])
 
   return {

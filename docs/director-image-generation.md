@@ -4,36 +4,54 @@
 
 | Director | Style | Approach |
 |----------|-------|----------|
-| **Ryan Coogler** | Emotion-forward | Identity, legacy, communal stakes |
-| **Clint Eastwood** | Economical | Authenticity, moral weight, minimal authority |
-| **David Fincher** | Precision | Psychological tension, systems, inevitability |
+| **Ryan Cooler** | Emotion-forward | Identity, legacy, communal stakes |
+| **Clint Westwood** | Economical | Authenticity, moral weight, minimal authority |
+| **David Pincher** | Precision | Psychological tension, systems, inevitability |
+| **Wes Sanderson** | Whimsy & Symmetry | Composition, color, irony |
+| **Hype Millions** | Glossy Futurist | Spectacle, performance, future-fashion |
 
 ---
 
 ## Generation Prompts
 
-### Ryan Coogler
+### Ryan Cooler
 ```
-Professional photograph of Ryan Coogler, African-American male director 
+Professional photograph of Ryan Cooler, African-American male director 
 in his late 30s, thoughtful expression, wearing casual smart clothing, 
 warm lighting, on a film set, holding a director's viewfinder, intimate 
 atmosphere, documentary style, high quality, photorealistic
 ```
 
-### Clint Eastwood
+### Clint Westwood
 ```
-Professional photograph of Clint Eastwood, Caucasian male director in 
+Professional photograph of Clint Westwood, Caucasian male director in 
 his 90s, weathered face, silver hair, calm piercing gaze, wearing simple 
 dark clothing, naturalistic lighting, on a film set, reserved posture, 
 minimal background, documentary style, high quality, photorealistic
 ```
 
-### David Fincher
+### David Pincher
 ```
-Professional photograph of David Fincher, Caucasian male director in his 
+Professional photograph of David Pincher, Caucasian male director in his 
 early 60s, intense focused expression, clean-shaven, wearing dark technical 
 clothing, precise controlled lighting, symmetrical composition, on a 
 meticulously organized set, perfectionist energy, high quality, photorealistic
+```
+
+### Wes Sanderson
+```
+Professional photograph of Wes Sanderson, Caucasian male director in his 50s, 
+wearing a tweed suit and scarf, quirky glasses, standing on a pastel colored set, 
+perfectly symmetrical composition, whimsical atmosphere, soft lighting, 
+holding a vintage camera, high quality, photorealistic
+```
+
+### Hype Millions
+```
+Professional photograph of Hype Millions, African-American male director in his 30s, 
+wearing futuristic streetwear and sunglasses, standing in a high-tech wind tunnel, 
+fisheye lens distortion, glossy lighting, high contrast, music video aesthetic, 
+cool pose, wide angle, high quality, photorealistic
 ```
 
 ---

@@ -10,84 +10,11 @@ import { Music2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
 import { useMusicLabStore } from '../store/music-lab.store'
 import type { MusicGenre } from '../types/music-lab.types'
 
-const GENRES: { value: MusicGenre; label: string; subgenres: string[] }[] = [
-    {
-        value: 'hip-hop',
-        label: 'Hip-Hop',
-        subgenres: ['Trap', 'Boom Bap', 'Conscious', 'Drill', 'Lo-Fi', 'Melodic', 'Old School', 'Southern']
-    },
-    {
-        value: 'r-and-b',
-        label: 'R&B',
-        subgenres: ['Contemporary', 'Neo-Soul', 'Classic', 'Alternative', 'PBR&B']
-    },
-    {
-        value: 'pop',
-        label: 'Pop',
-        subgenres: ['Synth Pop', 'Dance Pop', 'Indie Pop', 'Alt Pop', 'K-Pop', 'Teen Pop']
-    },
-    {
-        value: 'rock',
-        label: 'Rock',
-        subgenres: ['Alternative', 'Indie', 'Classic', 'Hard Rock', 'Punk', 'Metal', 'Grunge']
-    },
-    {
-        value: 'electronic',
-        label: 'Electronic',
-        subgenres: ['House', 'Techno', 'Dubstep', 'EDM', 'Ambient', 'IDM', 'Drum & Bass']
-    },
-    {
-        value: 'indie',
-        label: 'Indie',
-        subgenres: ['Indie Rock', 'Indie Folk', 'Indie Electronic', 'Dream Pop', 'Shoegaze']
-    },
-    {
-        value: 'country',
-        label: 'Country',
-        subgenres: ['Modern', 'Classic', 'Country Pop', 'Outlaw', 'Bluegrass']
-    },
-    {
-        value: 'latin',
-        label: 'Latin',
-        subgenres: ['Reggaeton', 'Latin Pop', 'Salsa', 'Bachata', 'Latin Trap']
-    },
-    {
-        value: 'jazz',
-        label: 'Jazz',
-        subgenres: ['Contemporary', 'Classic', 'Fusion', 'Smooth', 'Bebop']
-    },
-    {
-        value: 'classical',
-        label: 'Classical',
-        subgenres: ['Orchestral', 'Chamber', 'Contemporary', 'Minimalist', 'Film Score']
-    },
-    {
-        value: 'other',
-        label: 'Other',
-        subgenres: []
-    }
-]
-
 export function GenreSelector() {
     const { project, setGenre } = useMusicLabStore()
-    const selectedGenre = GENRES.find(g => g.value === project.genreSelection?.genre)
-
-    const handleGenreChange = (value: MusicGenre) => {
-        setGenre({
-            genre: value,
-            subgenre: project.genreSelection?.subgenre || ''
-        })
-    }
 
     const handleSubgenreChange = (value: string) => {
         setGenre({
@@ -107,48 +34,23 @@ export function GenreSelector() {
             <CardContent className="space-y-4">
                 <div className="space-y-2">
                     <Label>Primary Genre</Label>
-                    <Select
-                        value={project.genreSelection?.genre || 'hip-hop'}
-                        onValueChange={handleGenreChange}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select genre" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {GENRES.map(genre => (
-                                <SelectItem key={genre.value} value={genre.value}>
-                                    {genre.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <Input
+                        value={project.genreSelection?.genre || ''}
+                        onChange={(e) => setGenre({
+                            genre: e.target.value as MusicGenre,
+                            subgenre: project.genreSelection?.subgenre || ''
+                        })}
+                        placeholder="e.g., Hip-Hop, R&B, Pop, Rock, Electronic..."
+                    />
                 </div>
 
                 <div className="space-y-2">
                     <Label>Subgenre / Style</Label>
-                    {selectedGenre && selectedGenre.subgenres.length > 0 ? (
-                        <Select
-                            value={project.genreSelection?.subgenre || ''}
-                            onValueChange={handleSubgenreChange}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select subgenre (optional)" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {selectedGenre.subgenres.map(sub => (
-                                    <SelectItem key={sub} value={sub}>
-                                        {sub}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    ) : (
-                        <Input
-                            value={project.genreSelection?.subgenre || ''}
-                            onChange={(e) => handleSubgenreChange(e.target.value)}
-                            placeholder="Describe the style (e.g., 'Boom Bap Revival')"
-                        />
-                    )}
+                    <Input
+                        value={project.genreSelection?.subgenre || ''}
+                        onChange={(e) => handleSubgenreChange(e.target.value)}
+                        placeholder="e.g., Trap, Neo-Soul, Dream Pop..."
+                    />
                 </div>
             </CardContent>
         </Card>

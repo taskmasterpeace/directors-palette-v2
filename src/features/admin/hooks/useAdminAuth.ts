@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { getClient } from '@/lib/db/client'
-import { isAdminEmail } from '../types/admin.types'
 
 interface AdminAuthState {
     loading: boolean
@@ -41,14 +40,20 @@ export function useAdminAuth(): AdminAuthState {
                     return
                 }
 
-                const email = user.email || ''
-                const admin = isAdminEmail(email)
+
+
+                // Check against API which uses Service Role (bypassing RLS)
+                const res = await fetch('/api/admin/check')
+                const data = await res.json()
+                const admin = data.isAdmin
+
+
 
                 setState({
                     loading: false,
                     isAuthenticated: true,
                     isAdmin: admin,
-                    email,
+                    email: user.email || '',
                     userId: user.id,
                     error: admin ? null : 'Not authorized as admin'
                 })

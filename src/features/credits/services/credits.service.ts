@@ -36,8 +36,8 @@ const FALLBACK_PRICING: Record<GenerationType, { cost_cents: number; price_cents
     text: { cost_cents: 2, price_cents: 3 },
 }
 
-// Initial credits for new users (3 image generations = 3 x 20 cents = 60 cents)
-const INITIAL_CREDITS_FOR_NEW_USERS = 60
+// Initial credits for new users (matches database trigger in migrations)
+const INITIAL_CREDITS_FOR_NEW_USERS = 65
 
 // Reduced credits for suspicious signups (detected same IP)
 const REDUCED_CREDITS_FOR_SUSPICIOUS = 0  // Give nothing if IP already used

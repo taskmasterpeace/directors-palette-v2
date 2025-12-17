@@ -12,7 +12,10 @@ import type {
   ImageGenerationResponse,
   NanoBananaSettings,
   NanoBananaProSettings,
+  ZImageTurboSettings,
+  QwenImageFastSettings,
 } from '../types/image-generation.types'
+import { ASPECT_RATIO_SIZES } from '@/config'
 
 export class ImageGenerationService {
   private baseUrl = '/api'
@@ -42,6 +45,15 @@ export class ImageGenerationService {
         break
       case 'nano-banana-pro':
         errors.push(...this.validateNanoBananaPro(input, modelConfig?.maxReferenceImages || 14))
+        break
+      case 'z-image-turbo':
+        errors.push(...this.validateZImageTurbo(input))
+        break
+      case 'qwen-image-fast':
+        // Qwen Image Fast is text-to-image only, no reference images
+        if (input.referenceImages && input.referenceImages.length > 0) {
+          errors.push('Qwen Image Fast does not support reference images (text-to-image only)')
+        }
         break
     }
 
@@ -78,6 +90,20 @@ export class ImageGenerationService {
   }
 
   /**
+   * Validate z-image-turbo specific constraints
+   */
+  private static validateZImageTurbo(input: ImageGenerationInput): string[] {
+    const errors: string[] = []
+
+    // Z-Image likely takes 1 image input if doing i2i, usually
+    if (input.referenceImages && input.referenceImages.length > 1) {
+      errors.push('Z-Image Turbo supports maximum 1 reference image')
+    }
+
+    return errors
+  }
+
+  /**
    * Build Replicate input object based on model
    */
   static buildReplicateInput(input: ImageGenerationInput): Record<string, unknown> {
@@ -86,6 +112,10 @@ export class ImageGenerationService {
         return this.buildNanoBananaInput(input)
       case 'nano-banana-pro':
         return this.buildNanoBananaProInput(input)
+      case 'z-image-turbo':
+        return this.buildZImageTurboInput(input)
+      case 'qwen-image-fast':
+        return this.buildQwenImageFastInput(input)
       default:
         throw new Error(`Unsupported model: ${input.model}`)
     }
@@ -106,7 +136,9 @@ export class ImageGenerationService {
     }
 
     if (input.referenceImages && input.referenceImages.length > 0) {
-      replicateInput.image_input = input.referenceImages
+      // Normalize reference images to URL strings
+      // Can be either string[] or {url, weight}[]
+      replicateInput.image_input = this.normalizeReferenceImages(input.referenceImages)
     }
 
     return replicateInput
@@ -135,10 +167,87 @@ export class ImageGenerationService {
     }
 
     if (input.referenceImages && input.referenceImages.length > 0) {
-      replicateInput.image_input = input.referenceImages
+      // Normalize reference images to URL strings
+      // Can be either string[] or {url, weight}[]
+      replicateInput.image_input = this.normalizeReferenceImages(input.referenceImages)
     }
 
     return replicateInput
+  }
+
+  private static buildZImageTurboInput(input: ImageGenerationInput) {
+    const settings = input.modelSettings as ZImageTurboSettings
+    const replicateInput: Record<string, unknown> = {
+      prompt: input.prompt,
+    }
+
+    if (settings.numInferenceSteps) {
+      replicateInput.num_inference_steps = settings.numInferenceSteps
+    }
+
+    if (settings.guidanceScale) {
+      replicateInput.guidance_scale = settings.guidanceScale
+    }
+
+    if (settings.aspectRatio) {
+      // Check if z-image-turbo supports aspect_ratio param. 
+      // Assuming yes based on standard Replicate models.
+      // If not, we might need width/height mapping.
+      replicateInput.aspect_ratio = settings.aspectRatio
+    }
+
+    // Z-Image uses 'image' key for single reference image usually
+    if (input.referenceImages && input.referenceImages.length > 0) {
+      replicateInput.image = this.normalizeReferenceImages(input.referenceImages)[0]
+    }
+
+    return replicateInput
+  }
+
+  private static buildQwenImageFastInput(input: ImageGenerationInput) {
+    const settings = input.modelSettings as QwenImageFastSettings
+    const replicateInput: Record<string, unknown> = {
+      prompt: input.prompt,
+    }
+
+    // Qwen uses width/height instead of aspect_ratio
+    if (settings.aspectRatio && settings.aspectRatio !== 'match_input_image') {
+      const dimensions = ASPECT_RATIO_SIZES[settings.aspectRatio]
+      if (dimensions) {
+        replicateInput.width = dimensions.width
+        replicateInput.height = dimensions.height
+      }
+    }
+
+    if (settings.guidance !== undefined) {
+      replicateInput.guidance = settings.guidance
+    }
+
+    if (settings.num_inference_steps !== undefined) {
+      replicateInput.num_inference_steps = settings.num_inference_steps
+    }
+
+    if (settings.negative_prompt) {
+      replicateInput.negative_prompt = settings.negative_prompt
+    }
+
+    return replicateInput
+  }
+
+  /**
+   * Normalize reference images to URL strings
+   * Handles both string[] and {url, weight}[] formats
+   */
+  private static normalizeReferenceImages(refs: unknown[]): string[] {
+    return refs.map(ref => {
+      if (typeof ref === 'string') {
+        return ref
+      }
+      if (ref && typeof ref === 'object' && 'url' in ref) {
+        return (ref as { url: string }).url
+      }
+      return String(ref)
+    })
   }
 
   /**
@@ -160,6 +269,9 @@ export class ImageGenerationService {
       modelSettings: JSON.parse(JSON.stringify(input.modelSettings)), // Ensure JSON serializable
       has_reference_images: input.referenceImages && input.referenceImages.length > 0,
       reference_images_count: input.referenceImages?.length || 0,
+      // Recipe tracking
+      recipeId: input.recipeId || null,
+      recipeName: input.recipeName || null,
     }
   }
 

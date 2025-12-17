@@ -99,6 +99,12 @@ export interface StoryboardStore {
     selectedModel: string // OpenRouter model selection
     isPreviewCollapsed: boolean // Collapse Color-Coded Preview after generation
 
+    // ---- Shot Lab UI State ----
+    isShotLabOpen: boolean
+    activeLabShotSequence: number | null
+    openShotLab: (sequence: number) => void
+    closeShotLab: () => void
+
     // ---- Generation Settings (persisted) ----
     generationSettings: GenerationSettings
     globalPromptPrefix: string  // Prepended to all prompts
@@ -184,6 +190,8 @@ export interface StoryboardStore {
     setGeneratedPrompts: (prompts: GeneratedShotPrompt[]) => void
     addGeneratedPrompts: (prompts: GeneratedShotPrompt[]) => void
     updateGeneratedPrompt: (sequence: number, prompt: string) => void
+    updateGeneratedShot: (sequence: number, updates: Partial<GeneratedShotPrompt>) => void
+    updateGeneratedPromptMetadata: (sequence: number, metadata: Partial<GeneratedShotPrompt['metadata']>) => void
     clearGeneratedPrompts: () => void
     setIsGeneratingPrompts: (generating: boolean) => void
 
@@ -331,329 +339,345 @@ const PERSISTED_FIELDS = [
 export const useStoryboardStore = create<StoryboardStore>()(
     persist(
         (set, get) => ({
-    ...initialState,
+            ...initialState,
 
-    // ---- Storyboard Actions ----
-    setStoryboards: (storyboards) => set({ storyboards }),
-    setCurrentStoryboard: (storyboard) => set({ currentStoryboard: storyboard }),
-    addStoryboard: (storyboard) => set((state) => ({
-        storyboards: [storyboard, ...state.storyboards]
-    })),
-    updateStoryboard: (id, updates) => set((state) => ({
-        storyboards: state.storyboards.map((s) =>
-            s.id === id ? { ...s, ...updates } : s
-        ),
-        currentStoryboard: state.currentStoryboard?.id === id
-            ? { ...state.currentStoryboard, ...updates }
-            : state.currentStoryboard
-    })),
-    deleteStoryboard: (id) => set((state) => ({
-        storyboards: state.storyboards.filter((s) => s.id !== id),
-        currentStoryboard: state.currentStoryboard?.id === id ? null : state.currentStoryboard
-    })),
-    setLoadingStoryboards: (loading) => set({ loadingStoryboards: loading }),
+            // ---- Storyboard Actions ----
+            setStoryboards: (storyboards) => set({ storyboards }),
+            setCurrentStoryboard: (storyboard) => set({ currentStoryboard: storyboard }),
+            addStoryboard: (storyboard) => set((state) => ({
+                storyboards: [storyboard, ...state.storyboards]
+            })),
+            updateStoryboard: (id, updates) => set((state) => ({
+                storyboards: state.storyboards.map((s) =>
+                    s.id === id ? { ...s, ...updates } : s
+                ),
+                currentStoryboard: state.currentStoryboard?.id === id
+                    ? { ...state.currentStoryboard, ...updates }
+                    : state.currentStoryboard
+            })),
+            deleteStoryboard: (id) => set((state) => ({
+                storyboards: state.storyboards.filter((s) => s.id !== id),
+                currentStoryboard: state.currentStoryboard?.id === id ? null : state.currentStoryboard
+            })),
+            setLoadingStoryboards: (loading) => set({ loadingStoryboards: loading }),
 
-    // ---- Character Actions ----
-    setCharacters: (characters) => set({ characters }),
-    addCharacter: (character) => set((state) => ({
-        characters: [...state.characters, character]
-    })),
-    updateCharacter: (id, updates) => set((state) => ({
-        characters: state.characters.map((c) =>
-            c.id === id ? { ...c, ...updates } : c
-        )
-    })),
-    deleteCharacter: (id) => set((state) => ({
-        characters: state.characters.filter((c) => c.id !== id)
-    })),
-    toggleCharacterReference: (id) => set((state) => ({
-        characters: state.characters.map((c) =>
-            c.id === id ? { ...c, has_reference: !c.has_reference } : c
-        )
-    })),
-    setLoadingCharacters: (loading) => set({ loadingCharacters: loading }),
+            // ---- Character Actions ----
+            setCharacters: (characters) => set({ characters }),
+            addCharacter: (character) => set((state) => ({
+                characters: [...state.characters, character]
+            })),
+            updateCharacter: (id, updates) => set((state) => ({
+                characters: state.characters.map((c) =>
+                    c.id === id ? { ...c, ...updates } : c
+                )
+            })),
+            deleteCharacter: (id) => set((state) => ({
+                characters: state.characters.filter((c) => c.id !== id)
+            })),
+            toggleCharacterReference: (id) => set((state) => ({
+                characters: state.characters.map((c) =>
+                    c.id === id ? { ...c, has_reference: !c.has_reference } : c
+                )
+            })),
+            setLoadingCharacters: (loading) => set({ loadingCharacters: loading }),
 
-    // ---- Location Actions ----
-    setLocations: (locations) => set({ locations }),
-    addLocation: (location) => set((state) => ({
-        locations: [...state.locations, location]
-    })),
-    updateLocation: (id, updates) => set((state) => ({
-        locations: state.locations.map((l) =>
-            l.id === id ? { ...l, ...updates } : l
-        )
-    })),
-    deleteLocation: (id) => set((state) => ({
-        locations: state.locations.filter((l) => l.id !== id)
-    })),
-    toggleLocationReference: (id) => set((state) => ({
-        locations: state.locations.map((l) =>
-            l.id === id ? { ...l, has_reference: !l.has_reference } : l
-        )
-    })),
-    setLoadingLocations: (loading) => set({ loadingLocations: loading }),
+            // ---- Location Actions ----
+            setLocations: (locations) => set({ locations }),
+            addLocation: (location) => set((state) => ({
+                locations: [...state.locations, location]
+            })),
+            updateLocation: (id, updates) => set((state) => ({
+                locations: state.locations.map((l) =>
+                    l.id === id ? { ...l, ...updates } : l
+                )
+            })),
+            deleteLocation: (id) => set((state) => ({
+                locations: state.locations.filter((l) => l.id !== id)
+            })),
+            toggleLocationReference: (id) => set((state) => ({
+                locations: state.locations.map((l) =>
+                    l.id === id ? { ...l, has_reference: !l.has_reference } : l
+                )
+            })),
+            setLoadingLocations: (loading) => set({ loadingLocations: loading }),
 
-    // ---- Style Guide Actions ----
-    setStyleGuides: (guides) => set({ styleGuides: guides }),
-    setCurrentStyleGuide: (guide) => set({ currentStyleGuide: guide }),
-    setSelectedPresetStyle: (presetId) => set({
-        selectedPresetStyle: presetId,
-        // Clear custom style guide when selecting preset
-        currentStyleGuide: presetId ? null : undefined
-    }),
-    addStyleGuide: (guide) => set((state) => ({
-        styleGuides: [...state.styleGuides, guide]
-    })),
-    updateStyleGuide: (id, updates) => set((state) => ({
-        styleGuides: state.styleGuides.map((g) =>
-            g.id === id ? { ...g, ...updates } : g
-        ),
-        currentStyleGuide: state.currentStyleGuide?.id === id
-            ? { ...state.currentStyleGuide, ...updates }
-            : state.currentStyleGuide
-    })),
-    deleteStyleGuide: (id) => set((state) => ({
-        styleGuides: state.styleGuides.filter((g) => g.id !== id),
-        currentStyleGuide: state.currentStyleGuide?.id === id ? null : state.currentStyleGuide
-    })),
-    setLoadingStyleGuides: (loading) => set({ loadingStyleGuides: loading }),
+            // ---- Style Guide Actions ----
+            setStyleGuides: (guides) => set({ styleGuides: guides }),
+            setCurrentStyleGuide: (guide) => set({ currentStyleGuide: guide }),
+            setSelectedPresetStyle: (presetId) => set({
+                selectedPresetStyle: presetId,
+                // Clear custom style guide when selecting preset
+                currentStyleGuide: presetId ? null : undefined
+            }),
+            addStyleGuide: (guide) => set((state) => ({
+                styleGuides: [...state.styleGuides, guide]
+            })),
+            updateStyleGuide: (id, updates) => set((state) => ({
+                styleGuides: state.styleGuides.map((g) =>
+                    g.id === id ? { ...g, ...updates } : g
+                ),
+                currentStyleGuide: state.currentStyleGuide?.id === id
+                    ? { ...state.currentStyleGuide, ...updates }
+                    : state.currentStyleGuide
+            })),
+            deleteStyleGuide: (id) => set((state) => ({
+                styleGuides: state.styleGuides.filter((g) => g.id !== id),
+                currentStyleGuide: state.currentStyleGuide?.id === id ? null : state.currentStyleGuide
+            })),
+            setLoadingStyleGuides: (loading) => set({ loadingStyleGuides: loading }),
 
-    // ---- Shot Actions ----
-    setShots: (shots) => set({ shots: shots.sort((a, b) => a.sequence_number - b.sequence_number) }),
-    addShot: (shot) => set((state) => ({
-        shots: [...state.shots, shot].sort((a, b) => a.sequence_number - b.sequence_number)
-    })),
-    updateShot: (id, updates) => set((state) => ({
-        shots: state.shots.map((s) =>
-            s.id === id ? { ...s, ...updates } : s
-        )
-    })),
-    deleteShot: (id) => set((state) => ({
-        shots: state.shots.filter((s) => s.id !== id),
-        selectedShotIds: state.selectedShotIds.filter(sid => sid !== id)
-    })),
-    setLoadingShots: (loading) => set({ loadingShots: loading }),
-    toggleShotSelection: (id) => set((state) => ({
-        selectedShotIds: state.selectedShotIds.includes(id)
-            ? state.selectedShotIds.filter(sid => sid !== id)
-            : [...state.selectedShotIds, id]
-    })),
-    selectAllShots: () => set((state) => ({
-        selectedShotIds: state.shots.map(s => s.id)
-    })),
-    clearShotSelection: () => set({ selectedShotIds: [] }),
+            // ---- Shot Actions ----
+            setShots: (shots) => set({ shots: shots.sort((a, b) => a.sequence_number - b.sequence_number) }),
+            addShot: (shot) => set((state) => ({
+                shots: [...state.shots, shot].sort((a, b) => a.sequence_number - b.sequence_number)
+            })),
+            updateShot: (id, updates) => set((state) => ({
+                shots: state.shots.map((s) =>
+                    s.id === id ? { ...s, ...updates } : s
+                )
+            })),
+            deleteShot: (id) => set((state) => ({
+                shots: state.shots.filter((s) => s.id !== id),
+                selectedShotIds: state.selectedShotIds.filter(sid => sid !== id)
+            })),
+            setLoadingShots: (loading) => set({ loadingShots: loading }),
+            toggleShotSelection: (id) => set((state) => ({
+                selectedShotIds: state.selectedShotIds.includes(id)
+                    ? state.selectedShotIds.filter(sid => sid !== id)
+                    : [...state.selectedShotIds, id]
+            })),
+            selectAllShots: () => set((state) => ({
+                selectedShotIds: state.shots.map(s => s.id)
+            })),
+            clearShotSelection: () => set({ selectedShotIds: [] }),
 
-    // ---- B-Roll Actions ----
-    setBRollShots: (shots) => set({ brollShots: shots }),
-    addBRollShot: (shot) => set((state) => ({
-        brollShots: [...state.brollShots, shot]
-    })),
-    updateBRollShot: (id, updates) => set((state) => ({
-        brollShots: state.brollShots.map((s) =>
-            s.id === id ? { ...s, ...updates } : s
-        )
-    })),
-    deleteBRollShot: (id) => set((state) => ({
-        brollShots: state.brollShots.filter((s) => s.id !== id)
-    })),
-    setLoadingBroll: (loading) => set({ loadingBroll: loading }),
+            // ---- B-Roll Actions ----
+            setBRollShots: (shots) => set({ brollShots: shots }),
+            addBRollShot: (shot) => set((state) => ({
+                brollShots: [...state.brollShots, shot]
+            })),
+            updateBRollShot: (id, updates) => set((state) => ({
+                brollShots: state.brollShots.map((s) =>
+                    s.id === id ? { ...s, ...updates } : s
+                )
+            })),
+            deleteBRollShot: (id) => set((state) => ({
+                brollShots: state.brollShots.filter((s) => s.id !== id)
+            })),
+            setLoadingBroll: (loading) => set({ loadingBroll: loading }),
 
-    // ---- Contact Sheet Actions ----
-    openContactSheetModal: (shotId) => set({
-        contactSheetModalOpen: true,
-        contactSheetShotId: shotId
-    }),
-    closeContactSheetModal: () => set({
-        contactSheetModalOpen: false,
-        contactSheetShotId: null,
-        contactSheetVariants: []
-    }),
-    setContactSheetVariants: (variants) => set({ contactSheetVariants: variants }),
-    updateContactSheetVariant: (id, updates) => set((state) => ({
-        contactSheetVariants: state.contactSheetVariants.map((v) =>
-            v.id === id ? { ...v, ...updates } : v
-        )
-    })),
-    setLoadingContactSheet: (loading) => set({ loadingContactSheet: loading }),
+            // ---- Contact Sheet Actions ----
+            openContactSheetModal: (shotId) => set({
+                contactSheetModalOpen: true,
+                contactSheetShotId: shotId
+            }),
+            closeContactSheetModal: () => set({
+                contactSheetModalOpen: false,
+                contactSheetShotId: null,
+                contactSheetVariants: []
+            }),
+            setContactSheetVariants: (variants) => set({ contactSheetVariants: variants }),
+            updateContactSheetVariant: (id, updates) => set((state) => ({
+                contactSheetVariants: state.contactSheetVariants.map((v) =>
+                    v.id === id ? { ...v, ...updates } : v
+                )
+            })),
+            setLoadingContactSheet: (loading) => set({ loadingContactSheet: loading }),
 
-    // ---- Queue Actions ----
-    setCurrentQueue: (queue) => set({ currentQueue: queue }),
-    updateQueueProgress: (progress, currentIndex) => set((state) => ({
-        currentQueue: state.currentQueue
-            ? { ...state.currentQueue, progress, current_shot_index: currentIndex }
-            : null
-    })),
-    setLoadingQueue: (loading) => set({ loadingQueue: loading }),
+            // ---- Queue Actions ----
+            setCurrentQueue: (queue) => set({ currentQueue: queue }),
+            updateQueueProgress: (progress, currentIndex) => set((state) => ({
+                currentQueue: state.currentQueue
+                    ? { ...state.currentQueue, progress, current_shot_index: currentIndex }
+                    : null
+            })),
+            setLoadingQueue: (loading) => set({ loadingQueue: loading }),
 
-    // ---- LLM Settings Actions ----
-    setLLMSettings: (settings) => set({ llmSettings: settings }),
-    setLoadingLLMSettings: (loading) => set({ loadingLLMSettings: loading }),
+            // ---- LLM Settings Actions ----
+            setLLMSettings: (settings) => set({ llmSettings: settings }),
+            setLoadingLLMSettings: (loading) => set({ loadingLLMSettings: loading }),
 
-    // ---- Shot Breakdown Actions ----
-    setBreakdownLevel: (level) => set({ breakdownLevel: level }),
-    setBreakdownResult: (result) => set({ breakdownResult: result }),
+            // ---- Shot Breakdown Actions ----
+            setBreakdownLevel: (level) => set({ breakdownLevel: level }),
+            setBreakdownResult: (result) => set({ breakdownResult: result }),
 
-    // ---- Generated Prompts Actions ----
-    setGeneratedPrompts: (prompts) => set({
-        generatedPrompts: prompts,
-        promptsGenerated: prompts.length > 0
-    }),
-    addGeneratedPrompts: (prompts) => set((state) => {
-        // Merge new prompts, avoiding duplicates by sequence number
-        const existingSequences = new Set(state.generatedPrompts.map(p => p.sequence))
-        const newPrompts = prompts.filter(p => !existingSequences.has(p.sequence))
-        const merged = [...state.generatedPrompts, ...newPrompts].sort((a, b) => a.sequence - b.sequence)
-        return {
-            generatedPrompts: merged,
-            promptsGenerated: merged.length > 0,
-            // Auto-collapse preview when prompts are generated
-            isPreviewCollapsed: merged.length > 0 ? true : state.isPreviewCollapsed
-        }
-    }),
-    updateGeneratedPrompt: (sequence, prompt) => set((state) => ({
-        generatedPrompts: state.generatedPrompts.map((p) =>
-            p.sequence === sequence ? { ...p, prompt, edited: true } : p
-        )
-    })),
-    clearGeneratedPrompts: () => set({
-        generatedPrompts: [],
-        promptsGenerated: false
-    }),
-    setIsGeneratingPrompts: (generating) => set({ isGeneratingPrompts: generating }),
-
-    // ---- Extraction Actions ----
-    setExtractionResult: (result) => set({ extractionResult: result }),
-    setIsExtracting: (extracting) => set({ isExtracting: extracting }),
-
-    // ---- Generated Images Actions ----
-    setGeneratedImage: (shotNumber, data) => set((state) => ({
-        generatedImages: { ...state.generatedImages, [shotNumber]: data }
-    })),
-    updateGeneratedImageStatus: (shotNumber, status, imageUrl, error) => set((state) => ({
-        generatedImages: {
-            ...state.generatedImages,
-            [shotNumber]: {
-                ...state.generatedImages[shotNumber],
-                status,
-                ...(imageUrl && { imageUrl }),
-                ...(error && { error })
-            }
-        }
-    })),
-    clearGeneratedImages: () => set({ generatedImages: {} }),
-
-    // ---- Chapter Actions ----
-    setChapters: (result) => set({
-        chapters: result.chapters,
-        shouldShowChapters: result.shouldChapter,
-        chapterDetectionReason: result.reason,
-        activeChapterIndex: 0
-    }),
-    setActiveChapter: (index) => set({ activeChapterIndex: index }),
-    clearChapters: () => set({
-        chapters: [],
-        shouldShowChapters: false,
-        chapterDetectionReason: '',
-        activeChapterIndex: 0
-    }),
-    getChapterSegments: (chapterIndex) => {
-        const state = get()
-        const chapter = state.chapters[chapterIndex]
-        if (!chapter) return state.generatedPrompts
-
-        // If no segments mapped to chapters yet, return all
-        if (chapter.segmentIndices.length === 0) {
-            return state.generatedPrompts
-        }
-
-        return state.generatedPrompts.filter(p =>
-            chapter.segmentIndices.includes(p.sequence)
-        )
-    },
-
-    // ---- UI Actions ----
-    setInternalTab: (tab) => set({ internalTab: tab }),
-    setStoryText: (text) => set((state) => {
-        // Detect significant text change (e.g., pasting a new story)
-        // If the text changed by more than 50% or length changed by more than 500 chars
-        // clear extraction results to avoid stale data
-        const oldText = state.storyText
-        const lengthChange = Math.abs(text.length - oldText.length)
-        const isSignificantChange = lengthChange > 500 ||
-            (oldText.length > 100 && text.length > 100 && lengthChange > oldText.length * 0.5)
-
-        if (isSignificantChange) {
-            console.log('Significant story change detected, clearing old extraction data')
-            return {
-                storyText: text,
-                // Clear extraction-related data
-                extractionResult: null,
-                characters: [],
-                locations: [],
-                // Clear generated data
+            // ---- Generated Prompts Actions ----
+            setGeneratedPrompts: (prompts) => set({
+                generatedPrompts: prompts,
+                promptsGenerated: prompts.length > 0
+            }),
+            addGeneratedPrompts: (prompts) => set((state) => {
+                // Merge new prompts, avoiding duplicates by sequence number
+                const existingSequences = new Set(state.generatedPrompts.map(p => p.sequence))
+                const newPrompts = prompts.filter(p => !existingSequences.has(p.sequence))
+                const merged = [...state.generatedPrompts, ...newPrompts].sort((a, b) => a.sequence - b.sequence)
+                return {
+                    generatedPrompts: merged,
+                    promptsGenerated: merged.length > 0,
+                    // Auto-collapse preview when prompts are generated
+                    isPreviewCollapsed: merged.length > 0 ? true : state.isPreviewCollapsed
+                }
+            }),
+            updateGeneratedPrompt: (sequence, prompt) => set((state) => ({
+                generatedPrompts: state.generatedPrompts.map((p) =>
+                    p.sequence === sequence ? { ...p, prompt, edited: true } : p
+                )
+            })),
+            updateGeneratedShot: (sequence, updates) => set((state) => ({
+                generatedPrompts: state.generatedPrompts.map((p) =>
+                    p.sequence === sequence ? { ...p, ...updates } : p
+                )
+            })),
+            updateGeneratedPromptMetadata: (sequence, metadata) => set((state) => ({
+                generatedPrompts: state.generatedPrompts.map((p) =>
+                    p.sequence === sequence ? { ...p, metadata: { ...p.metadata, ...metadata } } : p
+                )
+            })),
+            clearGeneratedPrompts: () => set({
                 generatedPrompts: [],
-                promptsGenerated: false,
-                generatedImages: {},
-                // Reset chapter detection
+                promptsGenerated: false
+            }),
+            setIsGeneratingPrompts: (generating) => set({ isGeneratingPrompts: generating }),
+
+            // ---- Extraction Actions ----
+            setExtractionResult: (result) => set({ extractionResult: result }),
+            setIsExtracting: (extracting) => set({ isExtracting: extracting }),
+
+            // ---- Generated Images Actions ----
+            setGeneratedImage: (shotNumber, data) => set((state) => ({
+                generatedImages: { ...state.generatedImages, [shotNumber]: data }
+            })),
+            updateGeneratedImageStatus: (shotNumber, status, imageUrl, error) => set((state) => ({
+                generatedImages: {
+                    ...state.generatedImages,
+                    [shotNumber]: {
+                        ...state.generatedImages[shotNumber],
+                        status,
+                        ...(imageUrl && { imageUrl }),
+                        ...(error && { error })
+                    }
+                }
+            })),
+            clearGeneratedImages: () => set({ generatedImages: {} }),
+
+            // ---- Chapter Actions ----
+            setChapters: (result) => set({
+                chapters: result.chapters,
+                shouldShowChapters: result.shouldChapter,
+                chapterDetectionReason: result.reason,
+                activeChapterIndex: 0
+            }),
+            setActiveChapter: (index) => set({ activeChapterIndex: index }),
+            clearChapters: () => set({
                 chapters: [],
                 shouldShowChapters: false,
                 chapterDetectionReason: '',
-                activeChapterIndex: 0,
-                // Clear breakdown (will be recalculated)
-                breakdownResult: null
+                activeChapterIndex: 0
+            }),
+            getChapterSegments: (chapterIndex) => {
+                const state = get()
+                const chapter = state.chapters[chapterIndex]
+                if (!chapter) return state.generatedPrompts
+
+                // If no segments mapped to chapters yet, return all
+                if (chapter.segmentIndices.length === 0) {
+                    return state.generatedPrompts
+                }
+
+                return state.generatedPrompts.filter(p =>
+                    chapter.segmentIndices.includes(p.sequence)
+                )
+            },
+
+            // ---- UI Actions ----
+            setInternalTab: (tab) => set({ internalTab: tab }),
+            setStoryText: (text) => set((state) => {
+                // Detect significant text change (e.g., pasting a new story)
+                // If the text changed by more than 50% or length changed by more than 500 chars
+                // clear extraction results to avoid stale data
+                const oldText = state.storyText
+                const lengthChange = Math.abs(text.length - oldText.length)
+                const isSignificantChange = lengthChange > 500 ||
+                    (oldText.length > 100 && text.length > 100 && lengthChange > oldText.length * 0.5)
+
+                if (isSignificantChange) {
+                    console.log('Significant story change detected, clearing old extraction data')
+                    return {
+                        storyText: text,
+                        // Clear extraction-related data
+                        extractionResult: null,
+                        characters: [],
+                        locations: [],
+                        // Clear generated data
+                        generatedPrompts: [],
+                        promptsGenerated: false,
+                        generatedImages: {},
+                        // Reset chapter detection
+                        chapters: [],
+                        shouldShowChapters: false,
+                        chapterDetectionReason: '',
+                        activeChapterIndex: 0,
+                        // Clear breakdown (will be recalculated)
+                        breakdownResult: null
+                    }
+                }
+                return { storyText: text }
+            }),
+            setSearchQuery: (query) => set({ searchQuery: query }),
+            setSelectedModel: (model) => set({ selectedModel: model }),
+            setPreviewCollapsed: (collapsed) => set({ isPreviewCollapsed: collapsed }),
+            togglePreviewCollapsed: () => set((state) => ({ isPreviewCollapsed: !state.isPreviewCollapsed })),
+
+            // ---- Shot Lab UI Actions ----
+            isShotLabOpen: false,
+            activeLabShotSequence: null,
+            openShotLab: (sequence: number) => set({ isShotLabOpen: true, activeLabShotSequence: sequence }),
+            closeShotLab: () => set({ isShotLabOpen: false, activeLabShotSequence: null }),
+
+            // ---- Generation Settings Actions ----
+            setGenerationSettings: (settings) => set((state) => ({
+                generationSettings: { ...state.generationSettings, ...settings },
+                lastSavedAt: Date.now()
+            })),
+            setGlobalPromptPrefix: (prefix) => set({ globalPromptPrefix: prefix, lastSavedAt: Date.now() }),
+            setGlobalPromptSuffix: (suffix) => set({ globalPromptSuffix: suffix, lastSavedAt: Date.now() }),
+
+            // ---- Shot Notes Actions ----
+            setShotNote: (sequence, note) => set((state) => ({
+                shotNotes: { ...state.shotNotes, [sequence]: note },
+                lastSavedAt: Date.now()
+            })),
+            clearShotNotes: () => set({ shotNotes: {}, lastSavedAt: Date.now() }),
+
+            // ---- Reset ----
+            resetStoryboard: () => set({
+                ...initialState,
+                storyboards: get().storyboards, // Keep storyboards list
+                styleGuides: get().styleGuides, // Keep style guides
+                llmSettings: get().llmSettings, // Keep LLM settings
+                generatedImages: {}, // Clear generated images
+                generatedPrompts: [], // Clear generated prompts
+                promptsGenerated: false
+            }),
+
+            // ---- Computed Getters ----
+            getCharactersWithReferences: () => {
+                return get().characters.filter(c => c.has_reference)
+            },
+
+            getLocationsWithReferences: () => {
+                return get().locations.filter(l => l.has_reference)
+            },
+
+            getSelectedShots: () => {
+                const state = get()
+                return state.shots.filter(s => state.selectedShotIds.includes(s.id))
+            },
+
+            getShotBySequence: (sequence) => {
+                return get().shots.find(s => s.sequence_number === sequence)
             }
-        }
-        return { storyText: text }
-    }),
-    setSearchQuery: (query) => set({ searchQuery: query }),
-    setSelectedModel: (model) => set({ selectedModel: model }),
-    setPreviewCollapsed: (collapsed) => set({ isPreviewCollapsed: collapsed }),
-    togglePreviewCollapsed: () => set((state) => ({ isPreviewCollapsed: !state.isPreviewCollapsed })),
-
-    // ---- Generation Settings Actions ----
-    setGenerationSettings: (settings) => set((state) => ({
-        generationSettings: { ...state.generationSettings, ...settings },
-        lastSavedAt: Date.now()
-    })),
-    setGlobalPromptPrefix: (prefix) => set({ globalPromptPrefix: prefix, lastSavedAt: Date.now() }),
-    setGlobalPromptSuffix: (suffix) => set({ globalPromptSuffix: suffix, lastSavedAt: Date.now() }),
-
-    // ---- Shot Notes Actions ----
-    setShotNote: (sequence, note) => set((state) => ({
-        shotNotes: { ...state.shotNotes, [sequence]: note },
-        lastSavedAt: Date.now()
-    })),
-    clearShotNotes: () => set({ shotNotes: {}, lastSavedAt: Date.now() }),
-
-    // ---- Reset ----
-    resetStoryboard: () => set({
-        ...initialState,
-        storyboards: get().storyboards, // Keep storyboards list
-        styleGuides: get().styleGuides, // Keep style guides
-        llmSettings: get().llmSettings, // Keep LLM settings
-        generatedImages: {}, // Clear generated images
-        generatedPrompts: [], // Clear generated prompts
-        promptsGenerated: false
-    }),
-
-    // ---- Computed Getters ----
-    getCharactersWithReferences: () => {
-        return get().characters.filter(c => c.has_reference)
-    },
-
-    getLocationsWithReferences: () => {
-        return get().locations.filter(l => l.has_reference)
-    },
-
-    getSelectedShots: () => {
-        const state = get()
-        return state.shots.filter(s => state.selectedShotIds.includes(s.id))
-    },
-
-    getShotBySequence: (sequence) => {
-        return get().shots.find(s => s.sequence_number === sequence)
-    }
-}),
+        }),
         {
             name: 'storyboard-storage',
             partialize: (state) => {

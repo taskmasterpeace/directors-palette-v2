@@ -9,9 +9,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
-import { Users, DollarSign, TrendingUp, Gift, Search, RefreshCw, Shield, Loader2, Sparkles } from 'lucide-react'
+import { Users, DollarSign, TrendingUp, Gift, Search, RefreshCw, Shield, Loader2, Sparkles, Ticket, FileText, UsersRound, Key } from 'lucide-react'
 import { GenerationsTable } from './GenerationsTable'
 import { GenerationStats } from './GenerationStats'
+import { CouponsTab } from './CouponsTab'
+import { CommunityModerationTab } from './CommunityModerationTab'
+import { ApiUsageTab } from './ApiUsageTab'
+import { PromptTemplateEditor } from '@/features/prompt-templates'
 
 // Cost per image generation in cents (matches FALLBACK_PRICING.image.price_cents)
 const COST_PER_GENERATION = 20
@@ -158,6 +162,22 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                     <TabsTrigger value="activity" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
                         <TrendingUp className="w-4 h-4 mr-2" />
                         Activity
+                    </TabsTrigger>
+                    <TabsTrigger value="coupons" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
+                        <Ticket className="w-4 h-4 mr-2" />
+                        Coupons
+                    </TabsTrigger>
+                    <TabsTrigger value="templates" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
+                        <FileText className="w-4 h-4 mr-2" />
+                        Templates
+                    </TabsTrigger>
+                    <TabsTrigger value="community" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
+                        <UsersRound className="w-4 h-4 mr-2" />
+                        Community
+                    </TabsTrigger>
+                    <TabsTrigger value="api" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
+                        <Key className="w-4 h-4 mr-2" />
+                        API
                     </TabsTrigger>
                 </TabsList>
 
@@ -310,6 +330,26 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                 <TabsContent value="activity" className="space-y-6">
                     <GenerationStats />
                     <GenerationsTable onExportLogs={handleExportLogs} />
+                </TabsContent>
+
+                {/* Coupons Tab */}
+                <TabsContent value="coupons" className="space-y-6">
+                    <CouponsTab />
+                </TabsContent>
+
+                {/* Templates Tab */}
+                <TabsContent value="templates" className="space-y-6">
+                    <PromptTemplateEditor />
+                </TabsContent>
+
+                {/* Community Tab */}
+                <TabsContent value="community" className="space-y-6">
+                    <CommunityModerationTab />
+                </TabsContent>
+
+                {/* API Tab */}
+                <TabsContent value="api" className="space-y-6">
+                    <ApiUsageTab />
                 </TabsContent>
             </Tabs>
 

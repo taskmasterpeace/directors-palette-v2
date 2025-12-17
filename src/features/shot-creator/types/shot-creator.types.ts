@@ -1,4 +1,5 @@
 import { Category } from "../components/CategorySelectDialog"
+import type { ModelId } from '@/config'
 
 export interface GalleryImage {
     id?: string
@@ -41,7 +42,7 @@ export interface ShotCreatorSettings {
     aspectRatio: string
     resolution: string
     seed?: number
-    model?: 'nano-banana' | 'nano-banana-pro'
+    model?: ModelId
     rawPromptMode?: boolean // Skip bracket/pipe/wildcard parsing, send prompt as-is
     // Granular syntax controls (when rawPromptMode is false)
     disablePipeSyntax?: boolean // Treat | as literal text, not separator

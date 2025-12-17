@@ -1,18 +1,10 @@
 import React, { Fragment, useState, useEffect, useRef } from "react"
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from '@/components/ui/accordion'
 import {
     Sparkles,
     HelpCircle,
-    BookOpen,
     X,
     Minimize2,
     Maximize2,
@@ -25,7 +17,7 @@ import { useImageGeneration } from "../../hooks/useImageGeneration"
 import { PromptSyntaxFeedback } from "./PromptSyntaxFeedback"
 import { parseDynamicPrompt } from "../../helpers/prompt-syntax-feedback"
 import { useWildCardStore } from "../../store/wildcard.store"
-import { PromptLibrary } from "./PromptLibrary"
+import { QuickAccessBar, RecipeFormFields } from "../recipe"
 import { PromptAutocomplete } from "../prompt-autocomplete"
 import { OrganizeButton } from "../prompt-organizer"
 import { usePromptAutocomplete } from "../../hooks/usePromptAutocomplete"
@@ -35,6 +27,7 @@ import { extractAtTags, urlToFile } from "../../helpers"
 import { ShotCreatorReferenceImage } from "../../types"
 import { useUnifiedGalleryStore } from "../../store/unified-gallery-store"
 import { useLibraryStore } from "../../store/shot-library.store"
+import { useRecipeStore } from "../../store/recipe.store"
 import { cn } from "@/utils/utils"
 import { Category } from "../CategorySelectDialog"
 
@@ -50,6 +43,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     const { generateImage, isGenerating } = useImageGeneration()
     const { libraryItems } = useLibraryStore()
     const { wildcards } = useWildCardStore()
+    const { activeRecipeId, setActiveRecipe, getActiveRecipe } = useRecipeStore()
 
     // Calculate generation cost
     const generationCost = React.useMemo(() => {
@@ -87,6 +81,9 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     // Textarea size state
     type TextareaSize = 'small' | 'medium' | 'large'
     const [textareaSize, setTextareaSize] = useState<TextareaSize>('medium')
+
+    // Track last used recipe for generation metadata
+    const [lastUsedRecipe, setLastUsedRecipe] = useState<{ recipeId: string; recipeName: string } | null>(null)
 
     // Get textarea height class based on size
     const getTextareaHeight = (size: TextareaSize) => {
@@ -290,21 +287,41 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             // Build model-specific settings
             const modelSettings = buildModelSettings()
 
-            // Call the generation API
+            // Call the generation API with recipe info if available
             await generateImage(
                 model,
                 shotCreatorPrompt,
                 referenceUrls,
-                modelSettings
+                modelSettings,
+                lastUsedRecipe || undefined
             )
-        }
-    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings])
 
-    // Handle selecting prompt from library
-    const handleSelectPrompt = useCallback((prompt: string) => {
-        setShotCreatorPrompt(prompt)
-        // setIsPromptLibraryOpen(false)
-    }, [setShotCreatorPrompt])
+            // Clear recipe tracking after generation
+            setLastUsedRecipe(null)
+        }
+    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe])
+
+    // Handle selecting a recipe
+    const handleSelectRecipe = useCallback((recipeId: string) => {
+        setActiveRecipe(recipeId)
+    }, [setActiveRecipe])
+
+    // Handle applying a recipe's generated prompts
+    // For multi-stage recipes, we use the first stage prompt for now
+    // Full pipe execution will be handled in the image generation service
+    const handleApplyRecipePrompt = useCallback((prompts: string[]) => {
+        // Get the active recipe info before closing
+        const recipe = getActiveRecipe()
+        if (recipe) {
+            setLastUsedRecipe({ recipeId: recipe.id, recipeName: recipe.name })
+        }
+
+        // Use first stage prompt for the main prompt field
+        if (prompts.length > 0) {
+            setShotCreatorPrompt(prompts[0])
+        }
+        setActiveRecipe(null)
+    }, [setShotCreatorPrompt, setActiveRecipe, getActiveRecipe])
 
     // Calculate dropdown position based on cursor
     const calculateDropdownPosition = useCallback(() => {
@@ -457,12 +474,25 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
 
     return (
         <Fragment>
+            {/* Recipe Form Fields - Shows when a recipe is active */}
+            {activeRecipeId && (
+                <RecipeFormFields
+                    onApplyPrompt={handleApplyRecipePrompt}
+                    className="mb-3"
+                />
+            )}
+
             <div className="space-y-2">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <Label className="text-sm text-foreground">
-                        Prompt
-                    </Label>
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                {/* Combined row: Recipes on left, controls on right */}
+                <div className="flex items-center justify-between gap-2">
+                    {/* Left: Recipe quick access */}
+                    <QuickAccessBar
+                        onSelectRecipe={handleSelectRecipe}
+                        className="flex-shrink-0"
+                    />
+
+                    {/* Right: Controls */}
+                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
                         {/* Size toggle buttons */}
                         <div className="flex items-center gap-1 bg-card/50 rounded p-0.5">
                             <Button
@@ -615,11 +645,9 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                     <PromptSyntaxFeedback
                         prompt={shotCreatorPrompt}
                         model={shotCreatorSettings.model}
-                        rawPromptMode={shotCreatorSettings.rawPromptMode}
                         disablePipeSyntax={shotCreatorSettings.disablePipeSyntax}
                         disableBracketSyntax={shotCreatorSettings.disableBracketSyntax}
                         disableWildcardSyntax={shotCreatorSettings.disableWildcardSyntax}
-                        onToggleRawMode={(enabled) => updateSettings({ rawPromptMode: enabled })}
                         onTogglePipeSyntax={(disabled) => updateSettings({ disablePipeSyntax: disabled })}
                         onToggleBracketSyntax={(disabled) => updateSettings({ disableBracketSyntax: disabled })}
                         onToggleWildcardSyntax={(disabled) => updateSettings({ disableWildcardSyntax: disabled })}
@@ -690,77 +718,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
 
             </div>
 
-            {/* Accordion System for Prompt Library and Help */}
-            <Accordion type="single" collapsible className="w-full">
-                {/* Prompt Library Section */}
-                <AccordionItem value="library" className="border-border">
-                    <AccordionTrigger className="text-foreground hover:text-white">
-                        <div className="flex items-center gap-2">
-                            <BookOpen className="w-4 h-4" />
-                            Prompt Library
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4">
-                        <div className="h-[400px] overflow-y-auto">
-                            <PromptLibrary
-                                onSelectPrompt={handleSelectPrompt}
-                                showQuickAccess={true}
-                                className="h-full"
-                            />
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-
-                {/* Help Section */}
-                <AccordionItem value="help" className="border-border">
-                    <AccordionTrigger className="text-foreground hover:text-white">
-                        <div className="flex items-center gap-2">
-                            <HelpCircle className="w-4 h-4" />
-                            Prompting Language Guide
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="space-y-4 pt-4">
-                        <div className="space-y-3 text-sm text-foreground">
-                            <div className="bg-card/50 rounded-lg p-3 space-y-2">
-                                <div className="font-medium text-accent">🎯 Bracket Variations</div>
-                                <div className="text-xs text-muted-foreground">Generate multiple images with one prompt</div>
-                                <code className="block bg-background p-2 rounded text-xs text-emerald-400">
-                                    A cat in [a garden, a car, space] looking happy
-                                </code>
-                                <div className="text-xs">→ Creates 3 images with different locations</div>
-                            </div>
-
-                            <div className="bg-card/50 rounded-lg p-3 space-y-2">
-                                <div className="font-medium text-primary">✨ Wild Cards</div>
-                                <div className="text-xs text-muted-foreground">Use dynamic placeholders for creative variations</div>
-                                <code className="block bg-background p-2 rounded text-xs text-emerald-400">
-                                    _character_ holding _object_ in _location_
-                                </code>
-                                <div className="text-xs">→ Randomly selects from your wild card libraries</div>
-                            </div>
-
-                            <div className="bg-card/50 rounded-lg p-3 space-y-2">
-                                <div className="font-medium text-orange-400">🔗 Chain Prompting</div>
-                                <div className="text-xs text-muted-foreground">Build complex images step by step</div>
-                                <code className="block bg-background p-2 rounded text-xs text-emerald-400">
-                                    sunset landscape | add flying birds | dramatic lighting
-                                </code>
-                                <div className="text-xs">→ Each step refines the previous result</div>
-                            </div>
-
-                            <div className="bg-card/50 rounded-lg p-3 space-y-2">
-                                <div className="font-medium text-accent">@ References</div>
-                                <div className="text-xs text-muted-foreground">Pull from Prompt Library categories</div>
-                                <code className="block bg-background p-2 rounded text-xs text-emerald-400">
-                                    @cinematic shot with @lighting and @mood
-                                </code>
-                                <div className="text-xs">→ Randomly selects prompts from each category</div>
-                            </div>
-                        </div>
-                    </AccordionContent>
-                </AccordionItem>
-            </Accordion>
-        </Fragment>
+            </Fragment>
     )
 }
 

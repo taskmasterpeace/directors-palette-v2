@@ -38,13 +38,17 @@ export function PresetStyleSelector({ selectedPresetId, onSelect }: PresetStyleS
                             )}
                             onClick={() => onSelect(isSelected ? null : style.id)}
                         >
-                            <div className="relative aspect-video">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                    src={style.imagePath}
-                                    alt={style.name}
-                                    className="w-full h-full object-cover"
-                                />
+                            <div className="relative aspect-video bg-muted flex items-center justify-center overflow-hidden">
+                                {style.imagePath ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                        src={style.imagePath}
+                                        alt={style.name}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <span className="text-xs text-muted-foreground/50">{style.name[0]}</span>
+                                )}
                                 {isSelected && (
                                     <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
                                         <div className="bg-primary text-primary-foreground rounded-full p-1">

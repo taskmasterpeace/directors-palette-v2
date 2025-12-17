@@ -1,0 +1,206 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { createClient } from '@supabase/supabase-js'
+import { adminService } from '@/features/admin/services/admin.service'
+
+/**
+ * GET /api/admin/community
+ * Get all community items (including pending) for admin review
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+
+    const { user } = auth
+
+    // Check admin via database
+    const isAdmin = await adminService.checkAdminEmailAsync(user.email || '')
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+
+    // Use service role client for admin operations
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status') || 'pending'
+
+    let query = supabase
+      .from('community_items')
+      .select('*')
+      .order('submitted_at', { ascending: false })
+
+    if (status !== 'all') {
+      query = query.eq('status', status)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Error fetching community items for admin:', error)
+      return NextResponse.json(
+        { error: 'Failed to fetch items' },
+        { status: 500 }
+      )
+    }
+
+    const items = (data || []).map(row => ({
+      id: row.id,
+      type: row.type,
+      name: row.name,
+      description: row.description,
+      category: row.category,
+      tags: row.tags,
+      submittedBy: row.submitted_by,
+      submittedByName: row.submitted_by_name,
+      submittedAt: row.submitted_at,
+      status: row.status,
+      approvedBy: row.approved_by,
+      approvedAt: row.approved_at,
+      rejectedReason: row.rejected_reason,
+      addCount: row.add_count,
+      ratingSum: row.rating_sum,
+      ratingCount: row.rating_count,
+      isFeatured: row.is_featured || false,
+      averageRating: row.rating_count > 0 ? row.rating_sum / row.rating_count : 0,
+      content: row.content,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }))
+
+    return NextResponse.json({ items })
+  } catch (error) {
+    console.error('Admin community GET error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * POST /api/admin/community
+ * Approve, reject, or update community items
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+
+    const { user } = auth
+
+    // Check admin via database
+    const isAdmin = await adminService.checkAdminEmailAsync(user.email || '')
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const { action, itemId, reason } = body
+
+    if (!action || !itemId) {
+      return NextResponse.json(
+        { error: 'Missing required fields: action, itemId' },
+        { status: 400 }
+      )
+    }
+
+    // Use service role client for admin operations
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    let updateData: Record<string, unknown> = {}
+
+    switch (action) {
+      case 'approve':
+        updateData = {
+          status: 'approved',
+          approved_by: user.id,
+          approved_at: new Date().toISOString(),
+          rejected_reason: null,
+        }
+        break
+
+      case 'reject':
+        if (!reason) {
+          return NextResponse.json(
+            { error: 'Rejection reason is required' },
+            { status: 400 }
+          )
+        }
+        updateData = {
+          status: 'rejected',
+          rejected_reason: reason,
+        }
+        break
+
+      case 'feature':
+        updateData = { is_featured: true }
+        break
+
+      case 'unfeature':
+        updateData = { is_featured: false }
+        break
+
+      case 'delete':
+        const { error: deleteError } = await supabase
+          .from('community_items')
+          .delete()
+          .eq('id', itemId)
+
+        if (deleteError) {
+          console.error('Error deleting item:', deleteError)
+          return NextResponse.json(
+            { error: 'Failed to delete item' },
+            { status: 500 }
+          )
+        }
+
+        return NextResponse.json({ message: 'Item deleted successfully' })
+
+      default:
+        return NextResponse.json(
+          { error: `Unknown action: ${action}` },
+          { status: 400 }
+        )
+    }
+
+    const { data, error } = await supabase
+      .from('community_items')
+      .update(updateData)
+      .eq('id', itemId)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error updating item:', error)
+      return NextResponse.json(
+        { error: 'Failed to update item' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      item: {
+        id: data.id,
+        type: data.type,
+        name: data.name,
+        status: data.status,
+        isFeatured: data.is_featured || false,
+      },
+      message: `Item ${action}d successfully`,
+    })
+  } catch (error) {
+    console.error('Admin community POST error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

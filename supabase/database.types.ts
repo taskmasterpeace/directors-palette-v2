@@ -252,6 +252,160 @@ export type Database = {
           }
         ]
       }
+      community_items: {
+        Row: {
+          id: string
+          type: string
+          name: string
+          description: string | null
+          category: string
+          tags: string[]
+          content: Json
+          submitted_by: string | null
+          submitted_by_name: string
+          submitted_at: string
+          status: string
+          approved_by: string | null
+          approved_at: string | null
+          rejected_reason: string | null
+          add_count: number
+          rating_sum: number
+          rating_count: number
+          is_featured: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          type: string
+          name: string
+          description?: string | null
+          category: string
+          tags?: string[]
+          content: Json
+          submitted_by?: string | null
+          submitted_by_name: string
+          submitted_at?: string
+          status?: string
+          approved_by?: string | null
+          approved_at?: string | null
+          rejected_reason?: string | null
+          add_count?: number
+          rating_sum?: number
+          rating_count?: number
+          is_featured?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          type?: string
+          name?: string
+          description?: string | null
+          category?: string
+          tags?: string[]
+          content?: Json
+          submitted_by?: string | null
+          submitted_by_name?: string
+          submitted_at?: string
+          status?: string
+          approved_by?: string | null
+          approved_at?: string | null
+          rejected_reason?: string | null
+          add_count?: number
+          rating_sum?: number
+          rating_count?: number
+          is_featured?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      community_ratings: {
+        Row: {
+          id: string
+          user_id: string
+          community_item_id: string
+          rating: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          community_item_id: string
+          rating: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          community_item_id?: string
+          rating?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_ratings_community_item_id_fkey"
+            columns: ["community_item_id"]
+            isOneToOne: false
+            referencedRelation: "community_items"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      user_library_items: {
+        Row: {
+          id: string
+          user_id: string
+          community_item_id: string | null
+          type: string
+          name: string
+          content: Json
+          is_modified: boolean
+          submitted_to_community: boolean
+          community_status: string | null
+          added_at: string
+          modified_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          community_item_id?: string | null
+          type: string
+          name: string
+          content: Json
+          is_modified?: boolean
+          submitted_to_community?: boolean
+          community_status?: string | null
+          added_at?: string
+          modified_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          community_item_id?: string | null
+          type?: string
+          name?: string
+          content?: Json
+          is_modified?: boolean
+          submitted_to_community?: boolean
+          community_status?: string | null
+          added_at?: string
+          modified_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_library_items_community_item_id_fkey"
+            columns: ["community_item_id"]
+            isOneToOne: false
+            referencedRelation: "community_items"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -10,7 +10,13 @@
  * - Free tier available
  */
 
-import type { DirectorFingerprint } from '../types/director.types'
+import type {
+    DirectorFingerprint,
+    DirectorProposal,
+    ProposedShot,
+    ProposedLocation,
+    ProposedWardrobe
+} from '../types/director.types'
 import type { SongAnalysis, LocationRequest, GenreSelection } from '../types/music-lab.types'
 
 // =============================================================================
@@ -23,55 +29,6 @@ export interface ProposalInput {
     locationRequests: LocationRequest[]
     artistName: string
     artistNotes?: string
-}
-
-export interface ProposedShot {
-    id: string
-    sectionId: string
-    sectionType: string
-    timestamp: number
-    framing: string
-    angle: string
-    subject: string
-    emotion: string
-    basePrompt: string
-    directorNotes: string
-}
-
-export interface ProposedLocation {
-    id: string
-    name: string
-    description: string
-    timeOfDay: string
-    lighting: string
-    forSections: string[]
-}
-
-export interface ProposedWardrobe {
-    id: string
-    lookName: string
-    description: string
-    forSections: string[]
-}
-
-export interface DirectorProposal {
-    id: string
-    directorId: string
-    directorName: string
-
-    // Pitch
-    logline: string
-    conceptOverview: string
-
-    // Structure
-    locations: ProposedLocation[]
-    wardrobeLooks: ProposedWardrobe[]
-    keyShots: ProposedShot[]
-
-    // Ratings (user sets later)
-    overallRating?: number
-
-    createdAt: string
 }
 
 // =============================================================================
@@ -223,22 +180,23 @@ class DirectorProposalService {
 
         return {
             id: `proposal_${director.id}_${Date.now()}`,
+            projectId: 'temp_project_id', // Needs to be injected or managed by store
             directorId: director.id,
             directorName: director.name,
             logline: data.logline,
             conceptOverview: data.conceptOverview,
-            locations: data.locations.map((l: ProposedLocation, i: number) => ({
+            locations: data.locations.map((l: Omit<ProposedLocation, 'id'>, i: number) => ({
                 ...l,
                 id: `loc_${i}`
             })),
-            wardrobeLooks: data.wardrobeLooks.map((w: ProposedWardrobe, i: number) => ({
+            wardrobeLooks: data.wardrobeLooks.map((w: Omit<ProposedWardrobe, 'id'>, i: number) => ({
                 ...w,
                 id: `ward_${i}`
             })),
-            keyShots: data.keyShots.map((s: ProposedShot, i: number) => ({
+            keyShots: data.keyShots.map((s: Omit<ProposedShot, 'id' | 'sectionId'> & { sectionType: string }, i: number) => ({
                 ...s,
                 id: `shot_${i}`,
-                sectionId: s.sectionType
+                sectionId: s.sectionType // Map sectionType (from JSON) to sectionId (Type)
             })),
             createdAt: new Date().toISOString()
         }
@@ -258,3 +216,4 @@ class DirectorProposalService {
 
 export const directorProposalService = new DirectorProposalService()
 export { buildProposalPrompt }
+export type { DirectorProposal, ProposedShot, ProposedLocation, ProposedWardrobe }

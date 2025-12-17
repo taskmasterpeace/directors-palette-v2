@@ -1,6 +1,6 @@
 'use client'
 
-import { LayoutGrid, Check, Sparkles, ImageIcon, Layout, Film, Images, Wand2 } from 'lucide-react'
+import { LayoutGrid, Check, Sparkles, ImageIcon, Layout, Film, Images, FlaskConical, Music } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
     Popover,
@@ -21,7 +21,8 @@ const SCREEN_OPTIONS: ScreenOption[] = [
     { value: 'layout-annotation', label: 'Layout & Annotation', icon: Layout },
     { value: 'storyboard', label: 'Storyboard', icon: Film },
     { value: 'gallery', label: 'Gallery', icon: Images },
-    { value: 'wildcards', label: 'Wildcards', icon: Wand2 },
+    { value: 'prompt-tools', label: 'Prompt Tools', icon: FlaskConical },
+    { value: 'music-lab', label: 'Music Lab', icon: Music },
 ]
 
 interface ScreenNavigationIconSelectorProps {
@@ -59,15 +60,13 @@ export function ScreenNavigationIconSelector({ value, onChange }: ScreenNavigati
                             <button
                                 key={screen.value}
                                 onClick={() => onChange(screen.value)}
-                                className={`w-full min-h-[44px] px-4 py-3 rounded-lg text-white text-left hover:bg-primary/40 hover:scale-[1.02] active:scale-95 touch-manipulation transition-all duration-200 ease-out flex items-center justify-between group ${
-                                    value === screen.value ? 'bg-primary/60 font-semibold shadow-lg' : ''
-                                }`}
+                                className={`w-full min-h-[44px] px-4 py-3 rounded-lg text-white text-left hover:bg-primary/40 hover:scale-[1.02] active:scale-95 touch-manipulation transition-all duration-200 ease-out flex items-center justify-between group ${value === screen.value ? 'bg-primary/60 font-semibold shadow-lg' : ''
+                                    }`}
                                 aria-label={screen.label}
                             >
                                 <div className="flex items-center gap-3">
-                                    <IconComponent className={`w-5 h-5 transition-transform duration-200 group-hover:scale-110 ${
-                                        value === screen.value ? 'text-primary' : 'text-primary'
-                                    }`} />
+                                    <IconComponent className={`w-5 h-5 transition-transform duration-200 group-hover:scale-110 ${value === screen.value ? 'text-primary' : 'text-primary'
+                                        }`} />
                                     <span className="text-base">{screen.label}</span>
                                 </div>
                                 {value === screen.value && (

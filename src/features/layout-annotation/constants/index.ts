@@ -7,7 +7,7 @@ import { CanvasState } from "../types"
 export const INITIAL_CANVAS_STATE: CanvasState = {
     tool: 'select',
     brushSize: 5,
-    color: '#FF0000',
+    color: '#00d2d3', // Cyan for annotations
     opacity: 1,
     fontSize: 24,
     fontFamily: 'Arial',
