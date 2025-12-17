@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'echo \"\" && echo \"=== DIRECTORS PALETTE SESSION START ===\" && echo \"Branch: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo \"not a git repo\")\" && echo \"\" && CHANGES=$(git status --short 2>/dev/null | wc -l); if [ \"$CHANGES\" -gt 0 ]; then echo \"WARNING: $CHANGES uncommitted changes found!\"; git status --short | head -10; echo \"\"; echo \"COMMIT THESE BEFORE STARTING NEW WORK!\"; else echo \"Git status: Clean - no uncommitted changes\"; fi && echo \"==========================================\" && echo \"\"'"
+          }
+        ]
+      }
+    ]
+  }
+}
