@@ -7,11 +7,115 @@ import { creditsService } from '@/features/credits';
 import { isAdminEmail } from '@/features/admin/types/admin.types';
 import { generationEventsService } from '@/features/admin/services/generation-events.service';
 import { getModelConfig } from '@/config';
+import { StorageService } from '@/features/generation/services/storage.service';
 import type { Database } from '../../../../../supabase/database.types';
+import fs from 'fs';
+import path from 'path';
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
+
+/**
+ * Check if a URL is accessible by Replicate (external, public URL)
+ */
+function isPublicUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    // Replicate URLs are already accessible
+    if (parsed.hostname.includes('replicate.')) return true;
+    // Supabase storage URLs are accessible
+    if (parsed.hostname.includes('supabase.')) return true;
+    // Localhost URLs are NOT accessible to Replicate
+    if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') return false;
+    // Check for invalid/non-existent domains (hardcoded fallback domain)
+    if (parsed.hostname === 'directorspalette.app') return false;
+    // Other external URLs are assumed to be accessible
+    return true;
+  } catch {
+    // Not a valid URL (could be a local path)
+    return false;
+  }
+}
+
+/**
+ * Process reference images - upload local/inaccessible URLs to Replicate
+ */
+async function processReferenceImages(
+  referenceImages: (string | { url: string; weight?: number })[],
+  replicateClient: Replicate
+): Promise<(string | { url: string; weight?: number })[]> {
+  const processed: (string | { url: string; weight?: number })[] = [];
+
+  for (const ref of referenceImages) {
+    const url = typeof ref === 'string' ? ref : ref.url;
+    const weight = typeof ref === 'object' ? ref.weight : undefined;
+
+    // If it's already a public URL, keep as-is
+    if (isPublicUrl(url)) {
+      processed.push(ref);
+      continue;
+    }
+
+    console.log(`[Image Generation API] Processing inaccessible URL: ${url}`);
+
+    try {
+      let imageBuffer: Buffer;
+
+      // Check if it's a local path (starts with /)
+      if (url.startsWith('/')) {
+        // Read from public folder
+        const publicPath = path.join(process.cwd(), 'public', url);
+        console.log(`[Image Generation API] Reading local file: ${publicPath}`);
+
+        if (!fs.existsSync(publicPath)) {
+          console.error(`[Image Generation API] Local file not found: ${publicPath}`);
+          continue; // Skip this reference image
+        }
+
+        imageBuffer = fs.readFileSync(publicPath);
+      } else {
+        // It's a URL that's not publicly accessible (e.g., localhost or invalid domain)
+        // Try to fetch it if we're on the same server
+        const fullUrl = url.startsWith('http') ? url : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${url}`;
+        console.log(`[Image Generation API] Fetching URL: ${fullUrl}`);
+
+        const response = await fetch(fullUrl);
+        if (!response.ok) {
+          console.error(`[Image Generation API] Failed to fetch URL: ${fullUrl} - ${response.status}`);
+          continue;
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        imageBuffer = Buffer.from(arrayBuffer);
+      }
+
+      // Determine MIME type from URL
+      const ext = url.split('.').pop()?.toLowerCase() || 'png';
+      const mimeType = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/png';
+
+      // Upload to Replicate - convert Buffer to Uint8Array for File compatibility
+      const uint8Array = new Uint8Array(imageBuffer);
+      const file = new File([uint8Array], `reference.${ext}`, { type: mimeType });
+      const uploadedFile = await replicateClient.files.create(file);
+      const uploadedUrl = uploadedFile.urls.get;
+
+      console.log(`[Image Generation API] Uploaded to Replicate: ${uploadedUrl}`);
+
+      // Preserve weight if present
+      if (weight !== undefined) {
+        processed.push({ url: uploadedUrl, weight });
+      } else {
+        processed.push(uploadedUrl);
+      }
+    } catch (error) {
+      console.error(`[Image Generation API] Error processing reference image ${url}:`, error);
+      // Skip this reference image on error
+    }
+  }
+
+  return processed;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,7 +131,15 @@ export async function POST(request: NextRequest) {
       prompt,
       referenceImages,
       modelSettings,
+      recipeId,
+      recipeName,
     } = body;
+
+    // Debug logging for reference images
+    console.log('[Image Generation API] Received request:');
+    console.log('  - model:', model);
+    console.log('  - prompt length:', prompt?.length || 0);
+    console.log('  - referenceImages:', JSON.stringify(referenceImages));
 
     // Validate required fields
     if (!model) {
@@ -84,11 +196,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Process reference images - upload local/inaccessible URLs to Replicate
+    let processedReferenceImages = referenceImages;
+    if (referenceImages && referenceImages.length > 0) {
+      processedReferenceImages = await processReferenceImages(referenceImages, replicate);
+      console.log('[Image Generation API] Processed reference images:', processedReferenceImages);
+    }
+
     // Build Replicate input
     const replicateInput = ImageGenerationService.buildReplicateInput({
       model: model as ImageModel,
       prompt,
-      referenceImages,
+      referenceImages: processedReferenceImages,
       modelSettings: modelSettings as ImageModelSettings,
       userId: user.id, // ✅ Use authenticated user
     });
@@ -199,6 +318,8 @@ export async function POST(request: NextRequest) {
       referenceImages,
       modelSettings: modelSettings as ImageModelSettings,
       userId: user.id, // ✅ Use authenticated user
+      recipeId,
+      recipeName,
     });
 
     // ✅ SECURITY: Create gallery entry with authenticated user's ID
@@ -242,21 +363,8 @@ export async function POST(request: NextRequest) {
       settings: modelSettings
     });
 
-    // ✅ CREDITS: Deduct credits after successful prediction creation (admins bypass)
-    if (!userIsAdmin) {
-      const deductResult = await creditsService.deductCredits(user.id, model, {
-        generationType: 'image',
-        predictionId: prediction.id,
-        description: `Image generation (${model})`,
-      })
-      if (!deductResult.success) {
-        console.error('Failed to deduct credits:', deductResult.error)
-        // Note: We don't fail the request here since the prediction was already created
-        // The user will still see the image, but this should be monitored
-      } else {
-        console.log(`Deducted credits for user ${user.id}. New balance: ${deductResult.newBalance}`)
-      }
-    }
+    // Note: Credits are now deducted AFTER successful completion (in webhook handler or polling)
+    // This ensures users aren't charged for failed generations
 
     // If no webhook, poll for results (for local development)
     if (!webhookUrl) {
@@ -271,34 +379,96 @@ export async function POST(request: NextRequest) {
 
         if (completedPrediction.status === 'succeeded' && completedPrediction.output) {
           // Get the image URL (output can be string or array)
-          const imageUrl = Array.isArray(completedPrediction.output)
+          const replicateUrl = Array.isArray(completedPrediction.output)
             ? completedPrediction.output[0]
             : completedPrediction.output;
 
-          console.log('Image URL:', imageUrl);
+          console.log('Replicate URL:', replicateUrl);
 
-          // Update gallery entry with completed status and image URL
-          // Use public_url to match webhook handler and waitForImageCompletion
-          const { error: updateError } = await supabase
-            .from('gallery')
-            .update({
+          // Download from Replicate and upload to Supabase Storage (same as webhook handler)
+          try {
+            const { buffer } = await StorageService.downloadAsset(replicateUrl);
+            const { ext, mimeType } = StorageService.getMimeType(replicateUrl, modelSettings?.outputFormat);
+            const { publicUrl, storagePath, fileSize } = await StorageService.uploadToStorage(
+              buffer,
+              user.id,
+              prediction.id,
+              ext,
+              mimeType
+            );
+
+            console.log('Uploaded to Supabase Storage:', publicUrl);
+
+            // Update gallery entry with completed status and permanent Supabase URL
+            const { error: updateError } = await supabase
+              .from('gallery')
+              .update({
+                status: 'completed',
+                public_url: publicUrl,
+                storage_path: storagePath,
+                file_size: fileSize,
+                mime_type: mimeType,
+              })
+              .eq('id', gallery.id);
+
+            if (updateError) {
+              console.error('Failed to update gallery:', updateError);
+            } else {
+              console.log('Gallery updated successfully');
+            }
+
+            // ✅ CREDITS: Deduct credits only AFTER successful generation (admins bypass)
+            if (!userIsAdmin) {
+              const deductResult = await creditsService.deductCredits(user.id, model, {
+                generationType: 'image',
+                predictionId: prediction.id,
+                description: `Image generation (${model})`,
+              })
+              if (!deductResult.success) {
+                console.error('Failed to deduct credits:', deductResult.error)
+              } else {
+                console.log(`Deducted credits for user ${user.id}. New balance: ${deductResult.newBalance}`)
+              }
+            }
+
+            return NextResponse.json({
+              predictionId: prediction.id,
+              galleryId: gallery.id,
               status: 'completed',
-              public_url: imageUrl,
-            })
-            .eq('id', gallery.id);
+              imageUrl: publicUrl,
+            });
+          } catch (uploadError) {
+            console.error('Failed to upload to Supabase Storage:', uploadError);
+            // Fallback: store Replicate URL (will expire, but at least show something)
+            await supabase
+              .from('gallery')
+              .update({
+                status: 'completed',
+                public_url: replicateUrl,
+              })
+              .eq('id', gallery.id);
 
-          if (updateError) {
-            console.error('Failed to update gallery:', updateError);
-          } else {
-            console.log('Gallery updated successfully');
+            // ✅ CREDITS: Deduct credits for fallback success case too (admins bypass)
+            if (!userIsAdmin) {
+              const deductResult = await creditsService.deductCredits(user.id, model, {
+                generationType: 'image',
+                predictionId: prediction.id,
+                description: `Image generation (${model})`,
+              })
+              if (!deductResult.success) {
+                console.error('Failed to deduct credits:', deductResult.error)
+              } else {
+                console.log(`Deducted credits for user ${user.id}. New balance: ${deductResult.newBalance}`)
+              }
+            }
+
+            return NextResponse.json({
+              predictionId: prediction.id,
+              galleryId: gallery.id,
+              status: 'completed',
+              imageUrl: replicateUrl,
+            });
           }
-
-          return NextResponse.json({
-            predictionId: prediction.id,
-            galleryId: gallery.id,
-            status: 'completed',
-            imageUrl: imageUrl,
-          });
         } else if (completedPrediction.status === 'failed') {
           // Update gallery with failed status
           await supabase

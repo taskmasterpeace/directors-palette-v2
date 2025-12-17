@@ -58,6 +58,7 @@ export function useGalleryLoader() {
     const currentPage = useUnifiedGalleryStore(state => state.currentPage)
     const pageSize = useUnifiedGalleryStore(state => state.pageSize)
     const currentFolderId = useUnifiedGalleryStore(state => state.currentFolderId)
+    const searchQuery = useUnifiedGalleryStore(state => state.searchQuery)
     const setTotalDatabaseCount = useUnifiedGalleryStore(state => state.setTotalDatabaseCount)
 
     // Load gallery on mount and subscribe to real-time updates
@@ -81,7 +82,7 @@ export function useGalleryLoader() {
                 const [totalCount, paginatedResult] = await Promise.all([
                     GalleryService.getTotalImageCount(),
                     retryWithBackoff(() =>
-                        GalleryService.loadUserGalleryPaginated(currentPage, pageSize, currentFolderId)
+                        GalleryService.loadUserGalleryPaginated(currentPage, pageSize, currentFolderId, { searchQuery: searchQuery || undefined })
                     )
                 ])
 
@@ -112,7 +113,7 @@ export function useGalleryLoader() {
                                         // Reload gallery and total count when changes occur
                                         const [updatedTotalCount, paginatedUpdate] = await Promise.all([
                                             GalleryService.getTotalImageCount(),
-                                            GalleryService.loadUserGalleryPaginated(currentPage, pageSize, currentFolderId)
+                                            GalleryService.loadUserGalleryPaginated(currentPage, pageSize, currentFolderId, { searchQuery: searchQuery || undefined })
                                         ])
 
                                         if (mounted) {
@@ -153,7 +154,7 @@ export function useGalleryLoader() {
                 subscription.unsubscribe()
             }
         }
-    }, [loadImagesPaginated, loadFolders, currentPage, pageSize, currentFolderId, setTotalDatabaseCount])
+    }, [loadImagesPaginated, loadFolders, currentPage, pageSize, currentFolderId, searchQuery, setTotalDatabaseCount])
 
     return {
         isLoading,

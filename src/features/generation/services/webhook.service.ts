@@ -1,6 +1,8 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { StorageService } from './storage.service';
 import { generationEventsService } from '@/features/admin/services/generation-events.service';
+import { creditsService } from '@/features/credits';
+import { isAdminEmail } from '@/features/admin/types/admin.types';
 import type { Database } from '../../../../supabase/database.types';
 
 // Lazy-load Supabase client to avoid build-time errors when env vars aren't available
@@ -188,6 +190,33 @@ export class WebhookService {
     if (updateError) {
       console.error('Error updating gallery record:', updateError);
       throw new Error(`Failed to update gallery: ${updateError.message}`);
+    }
+
+    // ✅ CREDITS: Deduct credits ONLY after successful generation
+    // Get user email to check if admin (admins don't pay credits)
+    const { data: userData } = await getSupabase()
+      .from('profiles')
+      .select('email')
+      .eq('id', galleryEntry.user_id)
+      .single();
+
+    const userEmail = userData?.email || '';
+    const userIsAdmin = isAdminEmail(userEmail);
+
+    if (!userIsAdmin) {
+      const model = (currentMetadata.model as string) || 'nano-banana';
+      const deductResult = await creditsService.deductCredits(galleryEntry.user_id, model, {
+        generationType: 'image',
+        predictionId: galleryEntry.prediction_id,
+        description: `Image generation (${model})`,
+      });
+
+      if (!deductResult.success) {
+        console.error('Failed to deduct credits after successful generation:', deductResult.error);
+        // Don't fail the whole process - the image was generated successfully
+      } else {
+        console.log(`Credits deducted for user ${galleryEntry.user_id}. New balance: ${deductResult.newBalance}`);
+      }
     }
 
     // Update generation event status

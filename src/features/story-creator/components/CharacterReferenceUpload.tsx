@@ -148,6 +148,7 @@ export function CharacterReferenceUpload({
                 tags: [],
                 creditsUsed: 0,
                 timestamp: Date.now(),
+                status: 'completed',
                 persistence: {
                     isPermanent: true,
                     storagePath: storagePath,

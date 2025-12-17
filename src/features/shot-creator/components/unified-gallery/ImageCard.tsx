@@ -12,6 +12,8 @@ import { MetadataBar } from "./MetadataBar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/utils/utils"
 import type { GridSize } from "../../store/unified-gallery-store"
+import { Loader2, AlertCircle, RefreshCw, Trash2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface ImageCardProps {
   image: GeneratedImage
@@ -35,6 +37,7 @@ interface ImageCardProps {
   showActions?: boolean
   useNativeAspectRatio?: boolean
   gridSize?: GridSize
+  onRetry?: () => void
 }
 
 /**
@@ -62,11 +65,97 @@ const ImageCardComponent = ({
   folders = [],
   showActions = true,
   useNativeAspectRatio = false,
-  gridSize = 'medium'
+  gridSize = 'medium',
+  onRetry
 }: ImageCardProps) => {
   const { handleCopyPrompt, handleCopyImage } = useImageActions()
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [imageLoadError, setImageLoadError] = useState(false)
 
+  // Check if image is still loading (pending/processing status)
+  const isLoading = image.status === 'pending' || image.status === 'processing'
+  const hasFailed = image.status === 'failed' || imageLoadError
+  // Note: completed state is the default render path (no explicit check needed)
+
+  // Render loading state
+  if (isLoading) {
+    return (
+      <div className="relative group rounded-lg overflow-hidden bg-card border border-border">
+        <div className={cn(
+          "w-full relative flex flex-col items-center justify-center bg-gradient-to-br from-violet-950/30 via-background to-fuchsia-950/20",
+          useNativeAspectRatio ? "aspect-video" : "aspect-square"
+        )}>
+          {/* Animated loading spinner */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full blur-xl opacity-30 animate-pulse" />
+            <Loader2 className="w-10 h-10 text-violet-400 animate-spin relative z-10" />
+          </div>
+          <p className="text-sm text-muted-foreground mt-3">Generating...</p>
+          {image.prompt && (
+            <p className="text-xs text-muted-foreground/60 mt-1 px-4 text-center line-clamp-2 max-w-[200px]">
+              {image.prompt.slice(0, 60)}...
+            </p>
+          )}
+        </div>
+        {/* Model badge for loading state */}
+        <ModelBadge model={image.model} />
+      </div>
+    )
+  }
+
+  // Render failed/error state
+  if (hasFailed) {
+    const isLoadError = imageLoadError && image.status !== 'failed'
+    return (
+      <div className="relative group rounded-lg overflow-hidden bg-card border border-red-900/50">
+        <div className={cn(
+          "w-full relative flex flex-col items-center justify-center bg-gradient-to-br from-red-950/30 via-background to-red-950/20",
+          useNativeAspectRatio ? "aspect-video" : "aspect-square"
+        )}>
+          <AlertCircle className="w-10 h-10 text-red-400" />
+          <p className="text-sm text-red-400 mt-3 font-medium">
+            {isLoadError ? 'Image Unavailable' : 'Generation Failed'}
+          </p>
+          {image.metadata?.error && !isLoadError && (
+            <p className="text-xs text-muted-foreground mt-1 px-4 text-center line-clamp-2 max-w-[200px]">
+              {image.metadata.error}
+            </p>
+          )}
+          {isLoadError && (
+            <p className="text-xs text-muted-foreground mt-1 px-4 text-center max-w-[200px]">
+              The image could not be loaded. It may have expired.
+            </p>
+          )}
+          <div className="flex gap-2 mt-4">
+            {onRetry && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onRetry}
+                className="text-xs h-7 border-violet-500/50 hover:bg-violet-500/10"
+              >
+                <RefreshCw className="w-3 h-3 mr-1" />
+                Retry
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onDelete}
+              className="text-xs h-7 border-red-500/50 hover:bg-red-500/10 text-red-400"
+            >
+              <Trash2 className="w-3 h-3 mr-1" />
+              Remove
+            </Button>
+          </div>
+        </div>
+        {/* Model badge for failed state */}
+        <ModelBadge model={image.model} />
+      </div>
+    )
+  }
+
+  // Render completed state (normal image)
   return (
     <div className={`relative group rounded-lg overflow-hidden bg-card border transition-all ${isSelected ? 'border-primary border-2' : 'border-border hover:border-primary/50'}`}>
       {/* Selection Checkbox */}
@@ -94,6 +183,7 @@ const ImageCardComponent = ({
             useNativeAspectRatio ? "object-contain" : "object-cover"
           )}
           onClick={onZoom}
+          onError={() => setImageLoadError(true)}
         />
       </div>
 
@@ -147,6 +237,7 @@ export const ImageCard = memo(ImageCardComponent, (prevProps, nextProps) => {
   return (
     prevProps.image.id === nextProps.image.id &&
     prevProps.image.url === nextProps.image.url &&
+    prevProps.image.status === nextProps.image.status &&
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.showActions === nextProps.showActions &&
     prevProps.useNativeAspectRatio === nextProps.useNativeAspectRatio &&

@@ -90,6 +90,7 @@ export async function getRandomFromCategory(
       createdAt: galleryData.created_at as string,
       timestamp: new Date(galleryData.created_at as string).getTime(),
       tags: randomItem.tags || [],
+      status: 'completed',
       persistence: {
         isPermanent: true,
         storagePath: galleryData.storage_path as string | undefined,

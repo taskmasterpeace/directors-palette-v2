@@ -4,7 +4,7 @@
  */
 
 import { GalleryService as UnifiedGalleryService } from '@/lib/services/gallery.service'
-import type { GeneratedImage } from '../store/unified-gallery-store'
+import type { GeneratedImage, GenerationStatus } from '../store/unified-gallery-store'
 import { GalleryMetadata } from "@/features/generation/services/webhook.service"
 import type { GalleryRow } from '@/lib/db/types'
 
@@ -41,25 +41,46 @@ export class GalleryService {
 
     /**
      * Load gallery images with pagination and optional folder filtering
+     * Now includes pending and failed items to show loading/error states
      */
     static async loadUserGalleryPaginated(
         page: number,
         pageSize: number,
-        folderId?: string | null
+        folderId?: string | null,
+        options?: { includeProcessing?: boolean; searchQuery?: string }
     ): Promise<{ images: GeneratedImage[]; total: number; totalPages: number }> {
         try {
-            const result = await UnifiedGalleryService.loadUserGalleryPaginated('image', page, pageSize, folderId)
+            // Include processing items to show loading states
+            const result = await UnifiedGalleryService.loadUserGalleryPaginated(
+                'image',
+                page,
+                pageSize,
+                folderId,
+                {
+                    includeProcessing: options?.includeProcessing ?? true,
+                    searchQuery: options?.searchQuery
+                }
+            )
 
-            // Filter out items with invalid URLs (null, empty, or not starting with http)
+            // Transform ALL items (including pending/failed) to show loading/error states
+            // Only filter out items that have been pending for too long (> 10 minutes)
+            const tenMinutesAgo = Date.now() - 10 * 60 * 1000
             const validItems = result.items.filter(item => {
-                const url = item.public_url
-                return url && typeof url === 'string' && url.startsWith('http')
+                // Always include completed items with valid URLs
+                if (item.status === 'completed' && item.public_url) {
+                    return true
+                }
+                // Include pending/processing items that are recent
+                if (item.status === 'pending' || item.status === 'processing') {
+                    const createdAt = new Date(item.created_at).getTime()
+                    return createdAt > tenMinutesAgo
+                }
+                // Include failed items to show error state
+                if (item.status === 'failed') {
+                    return true
+                }
+                return false
             })
-
-            // Log if we filtered any bad entries
-            if (validItems.length < result.items.length) {
-                console.warn(`[GalleryService] Filtered out ${result.items.length - validItems.length} items with invalid URLs`)
-            }
 
             // Transform database records to GeneratedImage format
             const images: GeneratedImage[] = validItems.map(item => this.transformToGeneratedImage(item))
@@ -125,6 +146,20 @@ export class GalleryService {
         const folderId = (item as GalleryRow & { folder_id?: string | null }).folder_id || undefined
         const folderName = undefined // We don't have folder name in the row, will be populated by store if needed
 
+        // Map database status to GenerationStatus
+        const dbStatus = item.status as string
+        let status: GenerationStatus = 'completed'
+        if (dbStatus === 'pending' || dbStatus === 'processing') {
+            status = 'pending'
+        } else if (dbStatus === 'failed') {
+            status = 'failed'
+        } else if (dbStatus === 'completed' && item.public_url) {
+            status = 'completed'
+        }
+
+        // Extract error message from metadata if generation failed
+        const errorMessage = (metadata as { error?: string }).error || undefined
+
         return {
             id: item.id,
             url: item.public_url || '',
@@ -145,16 +180,19 @@ export class GalleryService {
             metadata: {
                 createdAt: item.created_at,
                 creditsUsed: 1,
+                error: errorMessage,
             },
             createdAt: item.created_at,
             timestamp: new Date(item.created_at).getTime(),
             tags: [],
+            status,
             persistence: {
-                isPermanent: true,
+                isPermanent: status === 'completed',
                 temporaryUrl: metadata.replicate_url,
                 storagePath: item.storage_path || undefined,
                 fileSize: item.file_size || undefined,
                 downloadedAt: item.created_at,
+                error: errorMessage,
             },
         }
     }

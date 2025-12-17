@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -52,8 +51,6 @@ export function FolderSidebar({
   collapsed = false,
   onToggleCollapse,
 }: FolderSidebarProps) {
-  const [_hoveredFolderId, _setHoveredFolderId] = useState<string | null>(null)
-
   const isAllImagesActive = currentFolderId === null
   const isUncategorizedActive = currentFolderId === SPECIAL_FOLDERS.UNCATEGORIZED
 
@@ -71,21 +68,34 @@ export function FolderSidebar({
             {!collapsed && (
               <h3 className="text-sm font-semibold text-foreground">Folders</h3>
             )}
-            {onToggleCollapse && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={onToggleCollapse}
-                title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              >
-                {collapsed ? (
-                  <ChevronRight className="h-4 w-4" />
-                ) : (
-                  <ChevronLeft className="h-4 w-4" />
-                )}
-              </Button>
-            )}
+            <div className="flex items-center gap-1">
+              {!collapsed && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={onCreateFolder}
+                  title="Create new folder"
+                >
+                  <FolderPlus className="h-4 w-4" />
+                </Button>
+              )}
+              {onToggleCollapse && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={onToggleCollapse}
+                  title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                >
+                  {collapsed ? (
+                    <ChevronRight className="h-4 w-4" />
+                  ) : (
+                    <ChevronLeft className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -95,8 +105,6 @@ export function FolderSidebar({
             {/* All Images */}
             <button
               onClick={() => onFolderSelect(null)}
-              onMouseEnter={() => _setHoveredFolderId(SPECIAL_FOLDERS.ALL)}
-              onMouseLeave={() => _setHoveredFolderId(null)}
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
                 isAllImagesActive
@@ -122,8 +130,6 @@ export function FolderSidebar({
             {/* Uncategorized */}
             <button
               onClick={() => onFolderSelect(SPECIAL_FOLDERS.UNCATEGORIZED)}
-              onMouseEnter={() => _setHoveredFolderId(SPECIAL_FOLDERS.UNCATEGORIZED)}
-              onMouseLeave={() => _setHoveredFolderId(null)}
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
                 isUncategorizedActive
@@ -164,8 +170,6 @@ export function FolderSidebar({
                   <div
                     key={folder.id}
                     className="group relative flex items-center"
-                    onMouseEnter={() => _setHoveredFolderId(folder.id)}
-                    onMouseLeave={() => _setHoveredFolderId(null)}
                   >
                     <button
                       onClick={() => onFolderSelect(folder.id)}

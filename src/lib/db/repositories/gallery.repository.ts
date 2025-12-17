@@ -85,10 +85,11 @@ export class GalleryRepository {
       pageSize: number;
       orderBy?: string;
       ascending?: boolean;
+      searchQuery?: string;
     }
   ): Promise<RepositoryListResult<GalleryRow> & { total: number; totalPages: number }> {
     try {
-      const { page, pageSize, orderBy = 'created_at', ascending = false } = options;
+      const { page, pageSize, orderBy = 'created_at', ascending = false, searchQuery } = options;
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
@@ -107,6 +108,14 @@ export class GalleryRepository {
         }
       });
 
+      // Apply search query if provided
+      // Note: The prompt is stored in the metadata JSON field, so we search metadata->>'prompt'
+      if (searchQuery) {
+        // Use textSearch on metadata->>'prompt' for searching within JSON field
+        // Supabase/PostgreSQL syntax: metadata->>key for JSON text extraction
+        countQuery = countQuery.or(`metadata->>prompt.ilike.%${searchQuery}%,metadata->>model.ilike.%${searchQuery}%`);
+      }
+
       // Build data query
       let dataQuery = this.client.from('gallery').select('*');
       Object.entries(filters).forEach(([key, value]) => {
@@ -121,6 +130,11 @@ export class GalleryRepository {
           }
         }
       });
+
+      // Apply search query if provided
+      if (searchQuery) {
+        dataQuery = dataQuery.or(`metadata->>prompt.ilike.%${searchQuery}%,metadata->>model.ilike.%${searchQuery}%`);
+      }
 
       // Apply ordering and pagination
       dataQuery = dataQuery.order(orderBy, { ascending }).range(from, to);

@@ -1,20 +1,11 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useUnifiedGalleryStore } from '../store/unified-gallery-store'
-import type { GalleryImage } from '../types'
 import { useToast } from '@/hooks/use-toast'
 import { clipboardManager } from '@/utils/clipboard-manager'
 import { haptics } from '@/utils/haptics'
 import { BulkDownloadService, DownloadProgress } from '../services/bulk-download.service'
-
-export interface ChainData {
-  chainId: string
-  images: GalleryImage[]
-  totalCredits: number
-  startTime: number
-  endTime: number
-}
 
 export type ViewMode = 'grid'
 
@@ -40,33 +31,20 @@ export function useGalleryLogic(
     getTotalCreditsUsed,
     updateImageReference,
     totalPages: storeTotalPages,
-    setCurrentPage: storeSetCurrentPage
+    setCurrentPage: storeSetCurrentPage,
+    searchQuery,
+    setSearchQuery
   } = useUnifiedGalleryStore()
 
   // State
   const [selectedImages, setSelectedImages] = useState<string[]>([])
-  const [filters, setFilters] = useState<GalleryFilters>({
-    searchQuery: '',
-    viewMode: 'grid'
-  })
+  // We only keep viewMode locally as it's UI preference
+  const [viewMode, setViewMode] = useState<ViewMode>('grid')
+
   const [downloadModalOpen, setDownloadModalOpen] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState<DownloadProgress | null>(null)
 
-  // Filter logic (no local pagination)
-  const filteredImages = useMemo(() => {
-    // If search query is empty, return all images
-    if (filters.searchQuery.trim() === '') {
-      return images
-    }
-
-    // Filter by search query
-    return images.filter((image: GalleryImage) =>
-      image.prompt.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
-      image.model?.toLowerCase().includes(filters.searchQuery.toLowerCase())
-    )
-  }, [images, filters.searchQuery])
-
-  // Use images directly from store (already paginated by server)
+  // Use images directly from store (server-side filtered)
   const paginatedImages = images
   const totalPages = storeTotalPages
 
@@ -91,13 +69,46 @@ export function useGalleryLogic(
     setSelectedImages(paginatedImages.map(img => img.url))
   }
 
-  const handleDeleteSelected = () => {
-    selectedImages.forEach(url => removeImage(url))
-    setSelectedImages([])
-    toast({
-      title: "Images Deleted Permanently",
-      description: `${selectedImages.length} images removed from database and storage`
+  const handleDeleteSelected = async () => {
+    let successCount = 0
+    let failedCount = 0
+
+    // Delete images in parallel, but await all results
+    const results = await Promise.all(
+      selectedImages.map(async (url) => {
+        const success = await removeImage(url)
+        return success
+      })
+    )
+
+    results.forEach(success => {
+      if (success) {
+        successCount++
+      } else {
+        failedCount++
+      }
     })
+
+    setSelectedImages([])
+
+    if (failedCount === 0) {
+      toast({
+        title: "Images Deleted Permanently",
+        description: `${successCount} images removed from database and storage`
+      })
+    } else if (successCount === 0) {
+      toast({
+        title: "Delete Failed",
+        description: `Failed to delete ${failedCount} images. Please try again.`,
+        variant: "destructive"
+      })
+    } else {
+      toast({
+        title: "Partial Delete",
+        description: `Deleted ${successCount} images, but ${failedCount} failed.`,
+        variant: "destructive"
+      })
+    }
   }
 
   const handleCopyImage = async (url: string) => {
@@ -250,15 +261,13 @@ export function useGalleryLogic(
       description: `Image sent to ${target}`
     })
   }
-
   const handleSearchChange = (query: string) => {
-    setFilters(prev => ({ ...prev, searchQuery: query }))
-    storeSetCurrentPage(1) // Reset to first page when searching
+    // Debouncing could be added here or in the UI component
+    setSearchQuery(query)
   }
 
   const handleViewModeChange = (mode: ViewMode) => {
-    setFilters(prev => ({ ...prev, viewMode: mode }))
-    storeSetCurrentPage(1) // Reset to first page when changing view mode
+    setViewMode(mode)
   }
 
   const handlePageChange = (page: number) => {
@@ -314,11 +323,14 @@ export function useGalleryLogic(
   return {
     // Data
     images,
-    filteredImages,
+    filteredImages: images, // Logic is now server-side, so images ARE the filtered images
     paginatedImages,
     totalPages,
     selectedImages,
-    filters,
+    filters: {
+      searchQuery: searchQuery,
+      viewMode: viewMode
+    },
     fullscreenImage,
 
     // Stats

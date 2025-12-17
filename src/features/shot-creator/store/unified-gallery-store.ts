@@ -3,6 +3,8 @@ import { GalleryService } from '../services/gallery.service'
 import { FolderService } from '@/lib/services/folder.service'
 import type { FolderWithCount, CreateFolderInput, UpdateFolderInput } from '../types/folder.types'
 
+export type GenerationStatus = 'pending' | 'processing' | 'completed' | 'failed'
+
 export interface GeneratedImage {
   id: string
   url: string // Now stores permanent Supabase Storage URL
@@ -14,6 +16,8 @@ export interface GeneratedImage {
   reference?: string // NEW: @reference tag for easier referencing (e.g. "@hero", "@villain")
   folderId?: string | null // NEW: Folder organization
   folderName?: string // NEW: Folder name for display
+  recipeId?: string // Recipe used to generate this image
+  recipeName?: string // Recipe name for display
   settings: {
     aspectRatio: string
     resolution: string
@@ -26,12 +30,16 @@ export interface GeneratedImage {
     createdAt: string
     creditsUsed: number
     processingTime?: number
+    error?: string // Error message if generation failed
   }
   createdAt?: string
   timestamp: number // NEW: Timestamp for compatibility with GalleryImage
   tags: string[]
   width?: number
   height?: number
+
+  // Generation status for showing loading/error states
+  status: GenerationStatus
 
   // NEW: Persistence metadata
   persistence: {
@@ -68,6 +76,7 @@ interface UnifiedGalleryState {
   gridSize: GridSize
   isSidebarCollapsed: boolean
   useNativeAspectRatio: boolean
+  searchQuery: string // NEW: Server-side search query
 
   // Folder state
   folders: FolderWithCount[]
@@ -93,6 +102,7 @@ interface UnifiedGalleryState {
   setGridSize: (size: GridSize) => void
   setIsSidebarCollapsed: (collapsed: boolean) => void
   setUseNativeAspectRatio: (value: boolean) => void
+  setSearchQuery: (query: string) => void
 
   // Infinite scroll actions
   appendImages: (images: GeneratedImage[], hasMore: boolean) => void
@@ -143,6 +153,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   gridSize: 'medium',
   isSidebarCollapsed: true, // Default to collapsed
   useNativeAspectRatio: false,
+  searchQuery: '',
 
   // Folder state
   folders: [],
@@ -155,9 +166,11 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       metadata: {
         createdAt: new Date().toISOString(),
-        creditsUsed: imageData.creditsUsed
+        creditsUsed: imageData.creditsUsed,
+        error: imageData.error
       },
       timestamp: Date.now(), // NEW: Add timestamp for GalleryImage compatibility
+      status: imageData.isPermanent ? 'completed' : 'pending', // Set status based on whether image is ready
       persistence: {
         isPermanent: imageData.isPermanent ?? false,
         temporaryUrl: imageData.temporaryUrl,
@@ -326,6 +339,11 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
     }
   },
 
+  setSearchQuery: (query) => {
+    set({ searchQuery: query, currentPage: 1, offset: 0, images: [] }) // Reset list on search
+    get().refreshGallery()
+  },
+
   getAllReferences: () => {
     const refs = get().images
       .filter(img => img.reference)
@@ -473,7 +491,8 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       const result = await GalleryService.loadUserGalleryPaginated(
         nextPage,
         state.pageSize,
-        state.currentFolderId
+        state.currentFolderId,
+        { searchQuery: state.searchQuery || undefined }
       )
 
       if (result.images.length > 0) {
@@ -510,20 +529,26 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       // Import GalleryService dynamically to avoid circular dependency
       const { GalleryService } = await import('../services/gallery.service')
 
-      // Fetch fresh data for the current page/folder
+      // Fetch fresh data for the current page/folder with optional search query
       const result = await GalleryService.loadUserGalleryPaginated(
         1, // Always load first page on refresh
         state.pageSize,
-        state.currentFolderId
+        state.currentFolderId,
+        { searchQuery: state.searchQuery || undefined }
+      )
+
+      // Deduplicate images by ID before setting
+      const uniqueImages = result.images.filter((image, index, self) =>
+        index === self.findIndex(img => img.id === image.id)
       )
 
       // Update store with fresh data
       set({
-        images: result.images,
+        images: uniqueImages,
         totalItems: result.total,
         totalPages: result.totalPages,
-        offset: result.images.length,
-        hasMore: result.images.length < result.total,
+        offset: uniqueImages.length,
+        hasMore: uniqueImages.length < result.total,
         currentPage: 1
       })
     } catch (error) {

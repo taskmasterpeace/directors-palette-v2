@@ -169,29 +169,27 @@ export function UnifiedImageGallery({
         })
 
         try {
-            // Build the 9-shot cinematic prompt
-            const cinematicPrompt = `9-shot visual breakdown, cinematic contact sheet:
+            // Template image for 9-shot cinematic layout
+            // Use NEXT_PUBLIC_SITE_URL for public access, fallback to production URL
+            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://directorspalette.app'
+            const cinematicTemplateUrl = `${siteUrl}/templates/cinematic-reference.png`
 
-Top row - WIDE SHOTS establishing environment/scale:
-Bird's Eye aerial view | Wide Establishing shot | Wide Master full body
+            // Proper cinematic grid prompt with detailed instructions
+            const cinematicPrompt = `<instruction> Analyze the entire composition of the input image. Identify all key subjects present (whether it's a single person, a group/couple, a vehicle, or a specific object) and their spatial relationship or interaction. Generate a cohesive 3x3 cinematic contact sheet featuring 9 distinct camera shots of exactly these subjects in the same environment. These shots must cover the full range from wide environmental framing to intimate close detail. Adapt the framing to fit the content: if the subject is a group, keep the group together; if the subject is an object, frame the entire object appropriately. Row 1 should consist of three progressively closer environmental/context shots, beginning with a very distant wide view, followed by a full-body view, and then a slightly tighter long-framing view. Row 2 should cover the core subject area: a waist-up framing, a chest-up framing, and a tight facial or frontal framing. Row 3 should focus on intimate details and angle variations: a macro detail shot, a dramatic low-angle upward shot, and a high-angle downward shot. Ensure strict consistency across all 9 frames: identical subjects, identical outfits, identical environment, identical lighting, and coherent scene continuity. Depth of field should become increasingly shallow as the framing moves closer, especially in the final row. </instruction> A professional 3x3 cinematic storyboard grid containing 9 panels, covering the entire visual range from wide environmental shots to macro detail. No labels, text, overlays, icons, or shot-type captions in any frame. Only clean cinematic imagery. Top row: wide environment, full-body, medium-long view. Middle row: waist-up, chest-up, tight face/front framing. Bottom row: macro detail, low-angle, high-angle. All frames must feature consistent photorealistic textures, cinematic color grading, and faithful continuity of subjects and scene. maintain the provided style`
 
-Middle row - MEDIUM SHOTS for context/relationship:
-Medium Full cowboy shot | Medium waist up | Medium Close upper body
-
-Bottom row - CLOSE-UPS for detail/emotion:
-Close-up face focus | Extreme Close-up detailed | Macro detail shot
-
-One unified 3x3 grid image with consistent style matching the reference image.`
-
+            // Send BOTH the user's selected image AND the template image
             const response = await fetch('/api/generation/image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     model: 'nano-banana-pro', // Use Nano Banana Pro for best quality
                     prompt: cinematicPrompt,
-                    referenceImages: [{ url: image.url, weight: 0.8 }],
+                    referenceImages: [
+                        { url: image.url, weight: 0.8 },          // User's selected image
+                        { url: cinematicTemplateUrl, weight: 0.5 } // 9-shot layout template
+                    ],
                     modelSettings: {
-                        aspectRatio: '1:1', // Square for 3x3 grid
+                        aspectRatio: '16:9', // Widescreen for cinematic output
                         resolution: '2K'
                     }
                 })
@@ -231,6 +229,7 @@ One unified 3x3 grid image with consistent style matching the reference image.`
     // Hydrate UI preferences from localStorage after mount (SSR compatibility)
     useEffect(() => {
         useUnifiedGalleryStore.getState().hydrateFromStorage()
+        useUnifiedGalleryStore.getState().loadFolders()
     }, [])
 
     // Get uncategorized count
@@ -378,6 +377,29 @@ One unified 3x3 grid image with consistent style matching the reference image.`
         }
     }, [toast])
 
+    // Handle retry for failed generations
+    // Copies the prompt to clipboard and removes the failed entry
+    const handleRetryGeneration = useCallback(async (image: GeneratedImage) => {
+        // Copy prompt to clipboard for easy regeneration
+        if (image.prompt) {
+            try {
+                await navigator.clipboard.writeText(image.prompt)
+                toast({
+                    title: "Prompt Copied",
+                    description: "Paste the prompt in Shot Creator to regenerate. Failed entry removed."
+                })
+            } catch {
+                toast({
+                    title: "Retry Ready",
+                    description: `Failed entry removed. Original prompt: "${image.prompt.slice(0, 100)}${image.prompt.length > 100 ? '...' : ''}"`
+                })
+            }
+        }
+
+        // Delete the failed entry
+        await handleDeleteImage(image.url || image.id)
+    }, [handleDeleteImage, toast])
+
     // Grid size to CSS classes mapping
     // Mobile: small=3cols, medium=2cols, large=1col for clear differentiation
     const getGridClasses = (size: GridSize): string => {
@@ -483,6 +505,7 @@ One unified 3x3 grid image with consistent style matching the reference image.`
                             showActions={true}
                             useNativeAspectRatio={useNativeAspectRatio}
                             gridSize={gridSize}
+                            onRetry={() => handleRetryGeneration(image)}
                         />
                     ))}
                 </div>
@@ -573,6 +596,7 @@ One unified 3x3 grid image with consistent style matching the reference image.`
                             }
                         }}
                         onBulkDownload={handleBulkDownload}
+                        onCreateFolder={openCreateModal}
                     />
 
                     <CardContent className="flex-1 flex flex-col overflow-hidden">
@@ -636,6 +660,7 @@ One unified 3x3 grid image with consistent style matching the reference image.`
                                                 showActions={true}
                                                 useNativeAspectRatio={useNativeAspectRatio}
                                                 gridSize={gridSize}
+                                                onRetry={() => handleRetryGeneration(image)}
                                             />
                                         ))}
                                     </div>

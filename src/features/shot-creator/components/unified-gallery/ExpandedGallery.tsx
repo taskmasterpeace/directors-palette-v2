@@ -151,6 +151,20 @@ export function ExpandedGallery() {
     }
   }
 
+  // Handle retry for failed generations - copies prompt and removes failed entry
+  const handleRetryGeneration = useCallback(async (image: GeneratedImage) => {
+    if (image.prompt) {
+      try {
+        await navigator.clipboard.writeText(image.prompt)
+        alert('Prompt copied to clipboard. Use Shot Creator to regenerate.')
+      } catch {
+        alert(`Failed entry removed. Prompt was: "${image.prompt.slice(0, 100)}${image.prompt.length > 100 ? '...' : ''}"`)
+      }
+    }
+    await removeImage(image.url || image.id)
+    await loadGallery(currentPage)
+  }, [removeImage, loadGallery, currentPage])
+
   // Keyboard navigation for fullscreen modal
   const navigateToImage = useCallback((direction: 'next' | 'previous') => {
     if (!fullscreenImage || filteredImages.length <= 1) return
@@ -308,6 +322,7 @@ export function ExpandedGallery() {
                       await updateImageReference(image.id, newRef)
                     }
                   }}
+                  onRetry={() => handleRetryGeneration(image)}
                   showActions={true}
                 />
               ))}
