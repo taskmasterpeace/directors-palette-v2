@@ -2,6 +2,49 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+# 🚨 CRITICAL: MANDATORY GIT COMMIT PROTOCOL 🚨
+
+**INCIDENT DATE: December 16, 2024** - 194 files (27,881 lines) were nearly lost because they were never committed. See LESSONS_LEARNED.md for details.
+
+## AT SESSION START (MANDATORY)
+```bash
+git status
+```
+1. **ALWAYS run `git status` as your FIRST action**
+2. If uncommitted changes exist, **REPORT THEM IMMEDIATELY** to the user
+3. **DO NOT START NEW WORK** until existing changes are committed
+4. Say: "I found uncommitted changes. Let me commit these first."
+
+## DURING DEVELOPMENT (MANDATORY)
+1. **Commit after EVERY feature completion** - no exceptions
+2. **Never let more than 30 minutes of work go uncommitted**
+3. **Push after every commit** - local commits are not safe
+4. Use descriptive commit messages
+
+## AT SESSION END (MANDATORY)
+1. **ALWAYS run `git status`**
+2. If ANY uncommitted changes exist:
+   - **STOP EVERYTHING**
+   - **COMMIT IMMEDIATELY**
+   - **PUSH TO REMOTE**
+3. Say: "Before we end, let me commit and push all changes."
+
+## NEVER DO THESE
+- ❌ Leave uncommitted changes at session end
+- ❌ Start new features with pending uncommitted work
+- ❌ End a session with uncommitted code
+- ❌ Assume changes will persist without commits
+- ❌ Let context loss cause work to be forgotten
+
+## COMMIT COMMAND PATTERN
+```bash
+git add -A && git commit -m "type: description" && git push origin main
+```
+
+---
+
 ## Project Overview
 
 **directors-palette-v2** is a Next.js 15 application using React 19, TypeScript, and Tailwind CSS v4. The project uses Turbopack for faster builds and development.
