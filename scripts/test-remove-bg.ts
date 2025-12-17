@@ -79,9 +79,10 @@ async function testModel(modelId: string, label: string) {
             console.log(`Has asyncIterator: ${hasAsyncIterator}`);
         }
 
-        if (typeof output === 'string') {
-            console.log(`\nOutput URL: ${output}`);
-            console.log(`Starts with http: ${output.startsWith('http')}`);
+        const outputValue = output as unknown;
+        if (typeof outputValue === 'string') {
+            console.log(`\nOutput URL: ${outputValue}`);
+            console.log(`Starts with http: ${outputValue.startsWith('http')}`);
         }
 
         return { success: true, output, elapsed };
