@@ -51,6 +51,7 @@ interface GalleryHeaderProps {
   onAspectRatioChange: (useNative: boolean) => void
   onOpenMobileMenu?: () => void
   onMoveToFolder?: (folderId: string | null) => void
+  onCreateFolder?: () => void
   onBulkDownload?: () => void
 }
 
@@ -72,6 +73,7 @@ export function GalleryHeader({
   onAspectRatioChange,
   onOpenMobileMenu,
   onMoveToFolder,
+  onCreateFolder,
   onBulkDownload
 }: GalleryHeaderProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -223,7 +225,16 @@ export function GalleryHeader({
                     >
                       <span>Uncategorized</span>
                     </DropdownMenuItem>
-                    {folders.length > 0 && <DropdownMenuSeparator />}
+                    {onCreateFolder && (
+                      <DropdownMenuItem
+                        onClick={onCreateFolder}
+                        className="cursor-pointer text-primary"
+                      >
+                        <FolderInput className="w-4 h-4 mr-2" />
+                        <span>Create new folder...</span>
+                      </DropdownMenuItem>
+                    )}
+                    {(folders.length > 0 || onCreateFolder) && <DropdownMenuSeparator />}
                     {folders.map(folder => (
                       <DropdownMenuItem
                         key={folder.id}
