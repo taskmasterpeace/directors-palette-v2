@@ -3,7 +3,13 @@
  */
 
 // Available animation models
-export type AnimationModel = 'seedance-lite' | 'seedance-pro'
+export type AnimationModel =
+  | 'wan-2.2-5b-fast'      // Ultra budget, 4s max, start frame only
+  | 'wan-2.2-i2v-fast'     // Budget+, 5s max, start + last frame
+  | 'seedance-pro-fast'    // Standard, 12s max, start frame only
+  | 'seedance-lite'        // Featured, 12s max, start + last + ref images
+  | 'kling-2.5-turbo-pro'  // Premium, 10s max, best motion
+  | 'seedance-pro'         // Legacy - keeping for backwards compatibility
 
 // Generated video entry for shot animator
 export interface ShotGeneratedVideo {
@@ -39,8 +45,12 @@ export interface ModelSettings {
 
 // Settings per model
 export interface AnimatorSettings {
+  'wan-2.2-5b-fast': ModelSettings
+  'wan-2.2-i2v-fast': ModelSettings
+  'seedance-pro-fast': ModelSettings
   'seedance-lite': ModelSettings
-  'seedance-pro': ModelSettings
+  'kling-2.5-turbo-pro': ModelSettings
+  'seedance-pro': ModelSettings // Legacy
 }
 
 // Generation queue item
@@ -64,7 +74,27 @@ export interface ModelConfig {
   maxReferenceImages: number
   supportsLastFrame: boolean
   defaultResolution: '480p' | '720p' | '1080p'
+  maxDuration: number // Max duration in seconds
+  supportedResolutions: ('480p' | '720p' | '1080p')[]
+  pricingType: 'per-video' | 'per-second'
   restrictions?: string[]
+}
+
+// Video pricing configuration
+export interface VideoPricing {
+  '480p': number  // Points per second (or per video for fixed-duration models)
+  '720p': number
+  '1080p'?: number
+}
+
+// Model pricing map
+export const VIDEO_MODEL_PRICING: Record<AnimationModel, VideoPricing> = {
+  'wan-2.2-5b-fast': { '480p': 1, '720p': 1 },           // Per video (~4s)
+  'wan-2.2-i2v-fast': { '480p': 2, '720p': 3 },          // Per video (5s)
+  'seedance-pro-fast': { '480p': 2, '720p': 4, '1080p': 9 },   // Per second
+  'seedance-lite': { '480p': 3, '720p': 5, '1080p': 11 },      // Per second
+  'kling-2.5-turbo-pro': { '480p': 10, '720p': 10 },           // Per second
+  'seedance-pro': { '480p': 4, '720p': 6, '1080p': 15 },       // Per second (legacy)
 }
 
 // Generated videos in unified gallery

@@ -1,9 +1,85 @@
 /**
  * Video Generation Service
- * Handles Seedance model input validation and Replicate input building
+ * Handles video model input validation, Replicate input building, and pricing calculations
  */
 
-import type { AnimationModel, ModelSettings } from '../types'
+import type { AnimationModel, ModelSettings, ModelConfig } from '../types'
+import { VIDEO_MODEL_PRICING } from '../types'
+
+// Model configurations
+export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
+  'wan-2.2-5b-fast': {
+    id: 'wan-2.2-5b-fast',
+    displayName: 'WAN 2.2 Fast',
+    description: 'Ultra budget - Quick previews (~4s)',
+    maxReferenceImages: 0,
+    supportsLastFrame: false,
+    defaultResolution: '720p',
+    maxDuration: 4,
+    supportedResolutions: ['480p', '720p'],
+    pricingType: 'per-video',
+    restrictions: ['No last frame', 'Max 4 seconds', 'No 1080p'],
+  },
+  'wan-2.2-i2v-fast': {
+    id: 'wan-2.2-i2v-fast',
+    displayName: 'WAN 2.2 I2V',
+    description: 'Budget with last frame control (5s)',
+    maxReferenceImages: 0,
+    supportsLastFrame: true,
+    defaultResolution: '720p',
+    maxDuration: 5,
+    supportedResolutions: ['480p', '720p'],
+    pricingType: 'per-video',
+    restrictions: ['Max 5 seconds', 'No 1080p'],
+  },
+  'seedance-pro-fast': {
+    id: 'seedance-pro-fast',
+    displayName: 'Seedance Fast',
+    description: 'Standard - Longer videos, fast generation',
+    maxReferenceImages: 0,
+    supportsLastFrame: false,
+    defaultResolution: '720p',
+    maxDuration: 12,
+    supportedResolutions: ['480p', '720p', '1080p'],
+    pricingType: 'per-second',
+    restrictions: ['No last frame', 'No reference images'],
+  },
+  'seedance-lite': {
+    id: 'seedance-lite',
+    displayName: 'Seedance Lite',
+    description: 'Featured - Full control with reference images',
+    maxReferenceImages: 4,
+    supportsLastFrame: true,
+    defaultResolution: '720p',
+    maxDuration: 12,
+    supportedResolutions: ['480p', '720p', '1080p'],
+    pricingType: 'per-second',
+    restrictions: ['Ref images not with 1080p or last frame'],
+  },
+  'kling-2.5-turbo-pro': {
+    id: 'kling-2.5-turbo-pro',
+    displayName: 'Kling Premium',
+    description: 'Premium - Best motion quality',
+    maxReferenceImages: 0,
+    supportsLastFrame: false,
+    defaultResolution: '720p',
+    maxDuration: 10,
+    supportedResolutions: ['720p'],
+    pricingType: 'per-second',
+    restrictions: ['720p only', 'No last frame'],
+  },
+  'seedance-pro': {
+    id: 'seedance-pro',
+    displayName: 'Seedance Pro (Legacy)',
+    description: 'High-quality video generation',
+    maxReferenceImages: 0,
+    supportsLastFrame: true,
+    defaultResolution: '1080p',
+    maxDuration: 12,
+    supportedResolutions: ['480p', '720p', '1080p'],
+    pricingType: 'per-second',
+  },
+}
 
 export interface VideoGenerationInput {
   model: AnimationModel
@@ -41,6 +117,37 @@ export class VideoGenerationService {
 
     if (!input.image) {
       errors.push('Base image is required for image-to-video generation')
+    }
+
+    // Model-specific validations
+    const config = VIDEO_MODEL_CONFIGS[input.model]
+    if (!config) {
+      errors.push(`Unknown model: ${input.model}`)
+      return { valid: false, errors }
+    }
+
+    // Validate duration against model max
+    if (input.modelSettings.duration > config.maxDuration) {
+      errors.push(`${config.displayName} supports max ${config.maxDuration} seconds`)
+    }
+
+    // Validate resolution
+    if (!config.supportedResolutions.includes(input.modelSettings.resolution)) {
+      errors.push(`${config.displayName} does not support ${input.modelSettings.resolution}`)
+    }
+
+    // Validate reference images
+    if (input.referenceImages && input.referenceImages.length > 0) {
+      if (config.maxReferenceImages === 0) {
+        errors.push(`${config.displayName} does not support reference images`)
+      } else if (input.referenceImages.length > config.maxReferenceImages) {
+        errors.push(`${config.displayName} supports max ${config.maxReferenceImages} reference images`)
+      }
+    }
+
+    // Validate last frame
+    if (input.lastFrameImage && !config.supportsLastFrame) {
+      errors.push(`${config.displayName} does not support last frame control`)
     }
 
     // Model-specific validations
@@ -138,11 +245,54 @@ export class VideoGenerationService {
    */
   static getReplicateModelId(model: AnimationModel): string {
     const modelMap: Record<AnimationModel, string> = {
+      'wan-2.2-5b-fast': 'wan-video/wan-2.2-5b-fast',
+      'wan-2.2-i2v-fast': 'wan-video/wan-2.2-i2v-fast',
+      'seedance-pro-fast': 'bytedance/seedance-1-pro-fast',
       'seedance-lite': 'bytedance/seedance-1-lite',
+      'kling-2.5-turbo-pro': 'kwaivgi/kling-v2.5-turbo-pro',
       'seedance-pro': 'bytedance/seedance-1-pro',
     }
 
     return modelMap[model]
+  }
+
+  /**
+   * Calculate estimated cost in points for a video generation
+   */
+  static calculateCost(
+    model: AnimationModel,
+    duration: number,
+    resolution: '480p' | '720p' | '1080p'
+  ): number {
+    const config = VIDEO_MODEL_CONFIGS[model]
+    const pricing = VIDEO_MODEL_PRICING[model]
+
+    // Get price for resolution (fallback to 720p if not supported)
+    const pricePerUnit = pricing[resolution] ?? pricing['720p']
+
+    // Per-video models charge flat rate regardless of duration
+    if (config.pricingType === 'per-video') {
+      return pricePerUnit
+    }
+
+    // Per-second models charge based on duration
+    return pricePerUnit * duration
+  }
+
+  /**
+   * Get model configuration
+   */
+  static getModelConfig(model: AnimationModel): ModelConfig {
+    return VIDEO_MODEL_CONFIGS[model]
+  }
+
+  /**
+   * Get all available models
+   */
+  static getAvailableModels(): ModelConfig[] {
+    return Object.values(VIDEO_MODEL_CONFIGS).filter(
+      config => config.id !== 'seedance-pro' // Hide legacy model
+    )
   }
 
   /**
