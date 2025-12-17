@@ -21,49 +21,77 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
-// Banner configurations
+// Banner configurations - CINEMATIC DETAILED PROMPTS
 const BANNERS = [
   {
     name: 'shot-creator',
-    prompt: 'Abstract cinematic film strip, camera lens flares, bokeh lights, deep purple and gold tones, professional photography studio aesthetic, wide panoramic, horizontal banner format',
+    prompt: 'Wide panoramic view of a professional film set behind the scenes, RED camera on dolly track in foreground, soft cinematic lighting with lens flares, crew silhouettes in moody purple and amber haze, anamorphic bokeh orbs floating, 35mm film grain texture, Blade Runner 2049 cinematography style, ultra wide banner format',
     width: 1920,
-    height: 256,
+    height: 320,
+    model: 'nano-banana',
   },
   {
     name: 'storyboard',
-    prompt: 'Abstract storyboard sketches, pencil lines, film frames, vintage paper texture, soft amber and sepia tones, artistic drawing concept, wide panoramic horizontal',
+    prompt: 'Screenwriters workshop desk covered in hand-drawn storyboard panels with pencil sketches, coffee-stained script pages, vintage Moleskin notebook, film clapperboard, polaroid reference photos pinned to corkboard in background, warm tungsten desk lamp glow, shallow depth of field, Wes Anderson aesthetic, ultra wide banner format',
     width: 1920,
-    height: 256,
+    height: 320,
+    model: 'nano-banana',
   },
   {
     name: 'music-lab',
-    prompt: 'Abstract sound waves, audio waveform visualization, neon blue and purple, music production aesthetic, equalizer bars, wide panoramic horizontal',
+    prompt: 'Professional music production studio control room at night, glowing VU meters and analog synthesizers, vintage Neve mixing console with LED lights, sound waves visualized as neon ribbons floating in dark space, DJ turntables spinning vinyl, cyberpunk purple and cyan neon accents, ultra wide banner format',
     width: 1920,
-    height: 256,
+    height: 320,
+    model: 'nano-banana',
   },
   {
     name: 'gallery',
-    prompt: 'Abstract photo gallery frames, floating polaroid images, soft light rays, elegant white and silver tones, museum aesthetic, wide panoramic horizontal',
+    prompt: 'Elegant art gallery exhibition space with floating photographs in ornate gold frames, dramatic museum spotlight beams cutting through dusty air, marble floors reflecting images, velvet rope barriers, minimal white walls, sophisticated gallery opening atmosphere, ultra wide banner format',
     width: 1920,
-    height: 256,
+    height: 320,
+    model: 'nano-banana',
   },
   {
     name: 'canvas-editor',
-    prompt: 'Abstract digital canvas, paint brush strokes, geometric shapes, creative tools, vibrant cyan and magenta accents, digital art aesthetic, wide panoramic horizontal',
+    prompt: 'Digital artists workspace with Wacom tablet and stylus, paint splatter explosion frozen in time, RGB color wheels floating holographically, layer panels and UI elements ghosted in background, creative chaos of brushes and tools, vaporwave aesthetic with pink and cyan gradients, ultra wide banner format',
     width: 1920,
-    height: 256,
+    height: 320,
+    model: 'nano-banana',
   },
   {
     name: 'prompt-tools',
-    prompt: 'Abstract text and typography, floating words, ai neural network nodes, soft green matrix code aesthetic, futuristic tech vibe, wide panoramic horizontal',
+    prompt: 'Futuristic AI laboratory with holographic text floating in mid-air, neural network visualization glowing green like Matrix code, typewriter keys morphing into digital particles, vintage telegram machine meets quantum computer aesthetic, dark moody atmosphere with emerald accent lighting, ultra wide banner format',
     width: 1920,
-    height: 256,
+    height: 320,
+    model: 'nano-banana',
   },
   {
     name: 'sidebar',
-    prompt: 'Abstract dark cinematic gradient, subtle film grain, deep navy and purple vertical flow, elegant minimal, stars and soft bokeh lights, tall vertical format',
+    prompt: 'Vertical abstract cinematic composition, old Hollywood film strip unspooling vertically, vintage movie camera silhouette, film noir shadows with dramatic spotlight, deep burgundy red and gold accents, elegant theater curtain texture fading to black, tall vertical format',
     width: 320,
     height: 1080,
+    model: 'nano-banana',
+  },
+  {
+    name: 'shot-animator',
+    prompt: 'Motion capture studio with figure in mocap suit surrounded by tracking markers, animated keyframes floating as glowing diamonds in timeline, high-speed camera flash frozen mid-explosion, bullet time effect with multiple exposure trails, Matrix-style green tint meets Hollywood action set, ultra wide banner format',
+    width: 1920,
+    height: 320,
+    model: 'nano-banana',
+  },
+  {
+    name: 'help',
+    prompt: 'Cozy filmmakers library with leather-bound cinematography books, vintage Oscar statuette on shelf, warm reading lamp illuminating film history posters, screenwriting manual open on mahogany desk, old Hollywood photographs framed on wood-paneled walls, nostalgic golden hour lighting, ultra wide banner format',
+    width: 1920,
+    height: 320,
+    model: 'nano-banana',
+  },
+  {
+    name: 'community',
+    prompt: 'Grand premiere red carpet event from above, crowd of filmmakers and artists gathered under marquee lights, vintage cinema facade with neon signs, paparazzi camera flashes creating starburst effects, glamorous Hollywood golden age meets modern indie film festival vibe, ultra wide banner format',
+    width: 1920,
+    height: 320,
+    model: 'nano-banana',
   },
 ];
 
@@ -81,24 +109,43 @@ async function downloadImage(url: string, filepath: string): Promise<void> {
 
 async function generateBanner(config: typeof BANNERS[0]): Promise<string | null> {
   console.log(`\n🎨 Generating banner: ${config.name}`);
-  console.log(`   Prompt: ${config.prompt.substring(0, 60)}...`);
+  console.log(`   Prompt: ${config.prompt.substring(0, 80)}...`);
   console.log(`   Size: ${config.width}x${config.height}`);
+  console.log(`   Model: ${config.model || 'flux-schnell'}`);
 
   try {
-    // Use flux-schnell for fast generation
-    const output = await replicate.run(
-      "black-forest-labs/flux-schnell",
-      {
-        input: {
-          prompt: config.prompt,
-          go_fast: true,
-          num_outputs: 1,
-          aspect_ratio: config.width > config.height ? "16:9" : "9:16",
-          output_format: "webp",
-          output_quality: 90,
+    let output: unknown;
+
+    if (config.model === 'nano-banana') {
+      // Use google/nano-banana for high quality cinematic images
+      output = await replicate.run(
+        "google/imagen-3.0-fast",
+        {
+          input: {
+            prompt: config.prompt,
+            aspect_ratio: config.width > config.height ? "16:9" : "9:16",
+            output_format: "webp",
+            output_quality: 90,
+            safety_filter_level: "block_medium_and_above",
+          }
         }
-      }
-    );
+      );
+    } else {
+      // Use flux-schnell for fast generation
+      output = await replicate.run(
+        "black-forest-labs/flux-schnell",
+        {
+          input: {
+            prompt: config.prompt,
+            go_fast: true,
+            num_outputs: 1,
+            aspect_ratio: config.width > config.height ? "16:9" : "9:16",
+            output_format: "webp",
+            output_quality: 90,
+          }
+        }
+      );
+    }
 
     // Get the output URL - handle both string array and FileOutput object
     let imageUrl: string;
