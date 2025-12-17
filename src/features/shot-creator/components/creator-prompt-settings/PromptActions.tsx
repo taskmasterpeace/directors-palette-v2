@@ -20,6 +20,7 @@ import { useWildCardStore } from "../../store/wildcard.store"
 import { QuickAccessBar, RecipeFormFields } from "../recipe"
 import { PromptAutocomplete } from "../prompt-autocomplete"
 import { OrganizeButton } from "../prompt-organizer"
+import { MobilePromptsRecipesBar } from "./MobilePromptsRecipesBar"
 import { usePromptAutocomplete } from "../../hooks/usePromptAutocomplete"
 import type { AutocompleteOption } from "../../types/autocomplete.types"
 import { useCallback } from "react"
@@ -472,6 +473,13 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         }
     }, [autocompleteIsOpen, calculateDropdownPosition]);
 
+    // Handle mobile prompt selection (with optional overwrite confirmation)
+    const handleMobilePromptSelect = useCallback((promptText: string) => {
+        // If there's existing text, just overwrite (could add confirmation later)
+        setShotCreatorPrompt(promptText)
+        textareaRef.current?.focus()
+    }, [setShotCreatorPrompt, textareaRef])
+
     return (
         <Fragment>
             {/* Recipe Form Fields - Shows when a recipe is active */}
@@ -482,9 +490,16 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 />
             )}
 
+            {/* Mobile: Prompts & Recipes Toggle Bar */}
+            <MobilePromptsRecipesBar
+                onSelectPrompt={handleMobilePromptSelect}
+                onSelectRecipe={handleSelectRecipe}
+                className="mb-2"
+            />
+
             <div className="space-y-2">
-                {/* Combined row: Recipes on left, controls on right */}
-                <div className="flex items-center justify-between gap-2">
+                {/* Desktop: Combined row: Recipes on left, controls on right */}
+                <div className="hidden lg:flex items-center justify-between gap-2">
                     {/* Left: Recipe quick access */}
                     <QuickAccessBar
                         onSelectRecipe={handleSelectRecipe}

@@ -1,39 +1,11 @@
 /**
  * Prompt Parser Service
- * 
+ *
  * Parses messy prompts into structured format using Gemini 2.0 Flash.
+ * Uses comprehensive Page2Prompt token system.
  */
 
 import type { StructuredPrompt, ParseResult, DetectedReference } from '../types/prompt-organizer.types'
-// System prompt used by API route (kept here for reference)
-const _SYSTEM_PROMPT = `You are a prompt parser for AI image generation. Extract components from the user's prompt into JSON.
-
-RULES:
-1. Identify @references (e.g., @marcus, @sarah) - these are character tags
-2. Extract wardrobe/clothing descriptions
-3. Extract location/setting descriptions  
-4. Extract lighting descriptions (golden hour, dramatic lighting, etc.)
-5. Extract framing terms (close-up, wide shot, medium shot, etc.)
-6. Extract camera angles (low angle, high angle, dutch angle, etc.)
-7. Extract camera movement for video (dolly, pan, tracking, etc.) - null for stills
-8. Extract emotional state (contemplative, joyful, intense, etc.)
-9. Put anything else in "additional"
-
-OUTPUT FORMAT (JSON only, no markdown):
-{
-  "subject": {
-    "reference": "@tag or null",
-    "description": "subject description without the @tag",
-    "emotion": "emotional state or null"
-  },
-  "wardrobe": "clothing description or null",
-  "location": "setting description or null", 
-  "lighting": "lighting description or null",
-  "framing": "shot framing or null",
-  "angle": "camera angle or null",
-  "cameraMovement": null,
-  "additional": "other details or null"
-}`
 
 class PromptParserService {
     /**
@@ -134,9 +106,23 @@ class PromptParserService {
 
     /**
      * Reconstruct prompt from structured data
+     * Follows cinematic prompt structure order
      */
     reconstruct(structured: StructuredPrompt): string {
         const parts: string[] = []
+
+        // Style prefix first
+        if (structured.stylePrefix) {
+            parts.push(structured.stylePrefix)
+        }
+
+        // Shot size and camera angle (cinematography opener)
+        if (structured.shotSize) {
+            parts.push(structured.shotSize)
+        }
+        if (structured.cameraAngle) {
+            parts.push(structured.cameraAngle)
+        }
 
         // Subject with reference
         if (structured.subject.reference) {
@@ -145,6 +131,13 @@ class PromptParserService {
         if (structured.subject.description) {
             parts.push(structured.subject.description)
         }
+
+        // Action - what the subject is doing
+        if (structured.action) {
+            parts.push(structured.action)
+        }
+
+        // Emotion
         if (structured.subject.emotion) {
             parts.push(`${structured.subject.emotion} expression`)
         }
@@ -154,34 +147,67 @@ class PromptParserService {
             parts.push(`wearing ${structured.wardrobe}`)
         }
 
-        // Location
-        if (structured.location) {
-            parts.push(`in ${structured.location}`)
+        // Subject facing direction
+        if (structured.subjectFacing) {
+            parts.push(`${structured.subjectFacing} view`)
         }
 
-        // Lighting
+        // Shot type
+        if (structured.shotType) {
+            parts.push(structured.shotType)
+        }
+
+        // Framing/composition
+        if (structured.framing) {
+            parts.push(`${structured.framing} composition`)
+        }
+
+        // Foreground elements
+        if (structured.foreground) {
+            parts.push(`${structured.foreground} in foreground`)
+        }
+
+        // Background/location
+        if (structured.background) {
+            parts.push(`in ${structured.background}`)
+        }
+
+        // Visual look
+        if (structured.lensEffect) {
+            parts.push(structured.lensEffect)
+        }
+        if (structured.depthOfField) {
+            parts.push(structured.depthOfField)
+        }
         if (structured.lighting) {
             parts.push(structured.lighting)
         }
-
-        // Framing
-        if (structured.framing) {
-            parts.push(structured.framing)
+        if (structured.colorGrade) {
+            parts.push(`${structured.colorGrade} color grade`)
+        }
+        if (structured.filmGrain) {
+            parts.push(`${structured.filmGrain} film grain`)
         }
 
-        // Angle
-        if (structured.angle) {
-            parts.push(structured.angle)
-        }
-
-        // Camera movement
-        if (structured.cameraMovement) {
+        // Motion (for video)
+        if (structured.cameraMovement && structured.cameraMovement !== 'static') {
             parts.push(structured.cameraMovement)
         }
+        if (structured.movementIntensity && structured.movementIntensity !== 'moderate') {
+            parts.push(`${structured.movementIntensity} movement`)
+        }
+        if (structured.subjectMotion && structured.subjectMotion !== 'static') {
+            parts.push(`subject ${structured.subjectMotion}`)
+        }
 
-        // Additional
+        // Additional details
         if (structured.additional) {
             parts.push(structured.additional)
+        }
+
+        // Style suffix last
+        if (structured.styleSuffix) {
+            parts.push(structured.styleSuffix)
         }
 
         return parts.join(', ')
