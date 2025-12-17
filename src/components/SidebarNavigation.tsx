@@ -462,17 +462,17 @@ function MobileNavigation({ open, onOpenChange, activeTab, onNavSelect, user, on
 
     return (
         <>
-            {/* Floating Logo Button - Fixed position, top-right */}
+            {/* Floating Logo Button - Fixed position, top-right - RED theme */}
             <Button
                 variant="ghost"
                 size="icon"
-                className="fixed top-3 right-3 z-50 h-12 w-12 rounded-full bg-card/90 backdrop-blur-md border border-border shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
+                className="fixed top-3 right-3 z-50 h-12 w-12 rounded-full bg-red-600/90 hover:bg-red-500 backdrop-blur-md border border-red-500/50 shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
                 onClick={() => onOpenChange(true)}
             >
                 <img
                     src="/favicon.ico"
                     alt="Menu"
-                    className="w-7 h-7 object-contain filter grayscale brightness-200"
+                    className="w-7 h-7 object-contain"
                 />
             </Button>
 

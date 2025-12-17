@@ -3,6 +3,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { TabValue } from '@/store/layout.store'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 interface SectionHeaderProps {
   section: TabValue
@@ -52,9 +53,22 @@ const SECTION_CONFIG: Record<TabValue, { banner: string; title: string }> = {
 
 export function SectionHeader({ section, title, showBanner = true }: SectionHeaderProps) {
   const config = SECTION_CONFIG[section]
+  const isMobile = useIsMobile()
   if (!config) return null
 
   const displayTitle = title || config.title
+
+  // On mobile, show a minimal header (no banner, shorter height)
+  if (isMobile) {
+    return (
+      <div className="relative h-12 w-full flex items-center px-4 border-b border-border/50 bg-background/50 flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="h-5 w-1 rounded-full bg-gradient-to-b from-violet-500 via-fuchsia-500 to-amber-500" />
+          <h1 className="text-lg font-semibold text-foreground">{displayTitle}</h1>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <motion.div
