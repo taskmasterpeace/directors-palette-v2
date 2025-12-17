@@ -96,6 +96,196 @@ export default function LandingPage() {
                 </div>
             </section>
 
+            {/* As Seen At - Credibility Section */}
+            <section className="py-12 bg-card/30 border-y border-border/50 overflow-hidden">
+                <div className="container mx-auto px-4">
+                    <p className="text-center text-sm text-muted-foreground mb-8 uppercase tracking-widest">
+                        As Seen At
+                    </p>
+                </div>
+
+                {/* Infinite Scroll Marquee */}
+                <div className="relative">
+                    {/* Gradient overlays for smooth edges */}
+                    <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-card/30 to-transparent z-10" />
+                    <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-card/30 to-transparent z-10" />
+
+                    {/* Scrolling container */}
+                    <div className="flex animate-marquee">
+                        {/* First set of logos */}
+                        <div className="flex items-center gap-12 px-6 shrink-0">
+                            <a
+                                href="https://www.youtube.com/@AlgorithmInstituteofBR"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition-opacity"
+                            >
+                                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-border group-hover:border-amber-500/50 transition-colors bg-background">
+                                    <Image
+                                        src="/landing/partners/algorithm-institute.png"
+                                        alt="Algorithm Institute of Battle Rap"
+                                        width={96}
+                                        height={96}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <span className="text-xs text-muted-foreground group-hover:text-white transition-colors whitespace-nowrap">Algorithm Institute</span>
+                            </a>
+
+                            <a
+                                href="https://www.youtube.com/@Hood_History_Club"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition-opacity"
+                            >
+                                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-border group-hover:border-amber-500/50 transition-colors bg-background">
+                                    <Image
+                                        src="/landing/partners/hood-history-club.jpg"
+                                        alt="Hood History Club"
+                                        width={96}
+                                        height={96}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <span className="text-xs text-muted-foreground group-hover:text-white transition-colors whitespace-nowrap">Hood History Club</span>
+                            </a>
+
+                            <a
+                                href="https://www.heyyourehired.com/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition-opacity"
+                            >
+                                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-border group-hover:border-amber-500/50 transition-colors bg-background flex items-center justify-center">
+                                    <Image
+                                        src="/landing/partners/machine-king-labs.webp"
+                                        alt="Machine King Labs"
+                                        width={96}
+                                        height={96}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <span className="text-xs text-muted-foreground group-hover:text-white transition-colors whitespace-nowrap">Machine King Labs</span>
+                            </a>
+                        </div>
+
+                        {/* Duplicate set for seamless loop */}
+                        <div className="flex items-center gap-12 px-6 shrink-0">
+                            <a
+                                href="https://www.youtube.com/@AlgorithmInstituteofBR"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition-opacity"
+                            >
+                                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-border group-hover:border-amber-500/50 transition-colors bg-background">
+                                    <Image
+                                        src="/landing/partners/algorithm-institute.png"
+                                        alt="Algorithm Institute of Battle Rap"
+                                        width={96}
+                                        height={96}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <span className="text-xs text-muted-foreground group-hover:text-white transition-colors whitespace-nowrap">Algorithm Institute</span>
+                            </a>
+
+                            <a
+                                href="https://www.youtube.com/@Hood_History_Club"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition-opacity"
+                            >
+                                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-border group-hover:border-amber-500/50 transition-colors bg-background">
+                                    <Image
+                                        src="/landing/partners/hood-history-club.jpg"
+                                        alt="Hood History Club"
+                                        width={96}
+                                        height={96}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <span className="text-xs text-muted-foreground group-hover:text-white transition-colors whitespace-nowrap">Hood History Club</span>
+                            </a>
+
+                            <a
+                                href="https://www.heyyourehired.com/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition-opacity"
+                            >
+                                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-border group-hover:border-amber-500/50 transition-colors bg-background flex items-center justify-center">
+                                    <Image
+                                        src="/landing/partners/machine-king-labs.webp"
+                                        alt="Machine King Labs"
+                                        width={96}
+                                        height={96}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <span className="text-xs text-muted-foreground group-hover:text-white transition-colors whitespace-nowrap">Machine King Labs</span>
+                            </a>
+                        </div>
+
+                        {/* Third set for extra seamless loop */}
+                        <div className="flex items-center gap-12 px-6 shrink-0">
+                            <a
+                                href="https://www.youtube.com/@AlgorithmInstituteofBR"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition-opacity"
+                            >
+                                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-border group-hover:border-amber-500/50 transition-colors bg-background">
+                                    <Image
+                                        src="/landing/partners/algorithm-institute.png"
+                                        alt="Algorithm Institute of Battle Rap"
+                                        width={96}
+                                        height={96}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <span className="text-xs text-muted-foreground group-hover:text-white transition-colors whitespace-nowrap">Algorithm Institute</span>
+                            </a>
+
+                            <a
+                                href="https://www.youtube.com/@Hood_History_Club"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition-opacity"
+                            >
+                                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-border group-hover:border-amber-500/50 transition-colors bg-background">
+                                    <Image
+                                        src="/landing/partners/hood-history-club.jpg"
+                                        alt="Hood History Club"
+                                        width={96}
+                                        height={96}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <span className="text-xs text-muted-foreground group-hover:text-white transition-colors whitespace-nowrap">Hood History Club</span>
+                            </a>
+
+                            <a
+                                href="https://www.heyyourehired.com/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition-opacity"
+                            >
+                                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-2 border-border group-hover:border-amber-500/50 transition-colors bg-background flex items-center justify-center">
+                                    <Image
+                                        src="/landing/partners/machine-king-labs.webp"
+                                        alt="Machine King Labs"
+                                        width={96}
+                                        height={96}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <span className="text-xs text-muted-foreground group-hover:text-white transition-colors whitespace-nowrap">Machine King Labs</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* Style Showcase Section */}
             <section className="py-16 bg-gradient-to-b from-background to-card/50">
                 <div className="container mx-auto px-4">
