@@ -30,6 +30,14 @@ import {
 import { createBrowserClient } from '@supabase/ssr'
 import { CreditsDisplay } from '@/features/credits/components/CreditsDisplay'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
+import { useIsMobile } from '@/hooks/use-mobile'
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface NavItem {
     id: TabValue
@@ -54,6 +62,8 @@ export function SidebarNavigation() {
     const [isCollapsed, setIsCollapsed] = useState(false)
     const [user, setUser] = useState<{ email?: string, avatar_url?: string } | null>(null)
     const { balance } = useCreditsStore()
+    const isMobile = useIsMobile()
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
     // Load collapsed state from local storage
     useEffect(() => {
@@ -107,6 +117,26 @@ export function SidebarNavigation() {
         window.location.href = "/auth/signin"
     }
 
+    const handleMobileNavSelect = (tab: TabValue) => {
+        setActiveTab(tab)
+        setMobileMenuOpen(false)
+    }
+
+    // Mobile: Floating logo button + Sheet menu
+    if (isMobile) {
+        return (
+            <MobileNavigation
+                open={mobileMenuOpen}
+                onOpenChange={setMobileMenuOpen}
+                activeTab={activeTab}
+                onNavSelect={handleMobileNavSelect}
+                user={user}
+                onSignOut={handleSignOut}
+            />
+        )
+    }
+
+    // Desktop: Original sidebar
     return (
         <motion.div
             initial={false}
@@ -402,5 +432,177 @@ function AdminNavItem({ isCollapsed }: { isCollapsed: boolean }) {
                 )}
             </Tooltip>
         </TooltipProvider>
+    )
+}
+
+// ============================================
+// MOBILE NAVIGATION COMPONENTS
+// ============================================
+
+interface MobileNavigationProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    activeTab: TabValue
+    onNavSelect: (tab: TabValue) => void
+    user: { email?: string, avatar_url?: string } | null
+    onSignOut: () => void
+}
+
+function MobileNavigation({ open, onOpenChange, activeTab, onNavSelect, user, onSignOut }: MobileNavigationProps) {
+    const { isAdmin } = useAdminAuth()
+
+    return (
+        <>
+            {/* Floating Logo Button - Fixed position, top-right */}
+            <Button
+                variant="ghost"
+                size="icon"
+                className="fixed top-3 right-3 z-50 h-12 w-12 rounded-full bg-card/90 backdrop-blur-md border border-border shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
+                onClick={() => onOpenChange(true)}
+            >
+                <img
+                    src="/favicon.ico"
+                    alt="Menu"
+                    className="w-7 h-7 object-contain filter grayscale brightness-200"
+                />
+            </Button>
+
+            {/* Sheet Menu - Slides from right */}
+            <Sheet open={open} onOpenChange={onOpenChange}>
+                <SheetContent side="right" className="w-[280px] p-0 flex flex-col bg-card/95 backdrop-blur-xl">
+                    {/* Header */}
+                    <SheetHeader className="p-4 border-b border-border/50">
+                        <div className="flex items-center gap-2">
+                            <img
+                                src="/favicon.ico"
+                                className="w-7 h-7 object-contain filter grayscale brightness-200"
+                                alt="Logo"
+                            />
+                            <SheetTitle className="text-lg font-bold">Director&apos;s Palette</SheetTitle>
+                        </div>
+                    </SheetHeader>
+
+                    {/* Navigation Items */}
+                    <ScrollArea className="flex-1">
+                        <div className="p-2 space-y-1">
+                            {/* Admin Panel Link (if admin) */}
+                            {isAdmin && (
+                                <a
+                                    href="/admin/coupons"
+                                    className="w-full flex items-center gap-3 px-3 py-3 rounded-md transition-all text-amber-500 font-medium min-h-[48px] relative overflow-hidden group"
+                                >
+                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent" />
+                                    <div className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full bg-gradient-to-b from-amber-400 via-orange-500 to-amber-600" />
+                                    <ShieldCheck className="w-5 h-5 relative z-10" />
+                                    <span className="uppercase tracking-wider text-xs font-bold relative z-10">Admin Panel</span>
+                                </a>
+                            )}
+
+                            {/* Main Navigation Items */}
+                            {NAV_ITEMS.map((item) => {
+                                const label = item.id === 'layout-annotation' ? 'Canvas Editor' : item.label
+                                return (
+                                    <MobileNavButton
+                                        key={item.id}
+                                        icon={item.icon}
+                                        label={label}
+                                        isActive={activeTab === item.id}
+                                        comingSoon={item.comingSoon}
+                                        onClick={() => !item.comingSoon && onNavSelect(item.id)}
+                                    />
+                                )
+                            })}
+
+                            {/* Help & Manual */}
+                            <MobileNavButton
+                                icon={HelpCircle}
+                                label="Help & Manual"
+                                isActive={activeTab === 'help'}
+                                onClick={() => onNavSelect('help')}
+                            />
+                        </div>
+                    </ScrollArea>
+
+                    {/* Footer - Credits & User */}
+                    <div className="border-t border-border/50 p-3 space-y-3 bg-background/30">
+                        {/* Credits Display */}
+                        <div className="px-1">
+                            <CreditsDisplay />
+                        </div>
+
+                        {/* User Profile */}
+                        {user && (
+                            <div className="flex items-center gap-3 p-2 rounded-lg bg-accent/30">
+                                <Avatar className="w-9 h-9 border border-border">
+                                    <AvatarImage src={user.avatar_url} />
+                                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                        {user.email?.slice(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 overflow-hidden">
+                                    <p className="text-sm font-medium truncate">{user.email?.split('@')[0]}</p>
+                                    <button
+                                        className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                                        onClick={onSignOut}
+                                    >
+                                        Sign out
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </SheetContent>
+            </Sheet>
+        </>
+    )
+}
+
+interface MobileNavButtonProps {
+    icon: React.ElementType
+    label: string
+    isActive: boolean
+    comingSoon?: boolean
+    onClick: () => void
+}
+
+function MobileNavButton({ icon: Icon, label, isActive, comingSoon, onClick }: MobileNavButtonProps) {
+    return (
+        <button
+            onClick={onClick}
+            disabled={comingSoon}
+            className={cn(
+                "w-full flex items-center gap-3 px-3 py-3 rounded-md transition-all min-h-[48px] relative overflow-hidden group",
+                comingSoon
+                    ? "text-muted-foreground/50 cursor-not-allowed"
+                    : isActive
+                        ? "bg-gradient-to-r from-violet-500/20 via-fuchsia-500/15 to-transparent text-foreground font-medium"
+                        : "text-muted-foreground hover:text-foreground"
+            )}
+        >
+            {/* Hover gradient background */}
+            {!isActive && !comingSoon && (
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-violet-500/10 via-fuchsia-500/5 to-transparent" />
+            )}
+
+            {/* Active indicator */}
+            {isActive && !comingSoon && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full bg-gradient-to-b from-violet-500 via-fuchsia-500 to-amber-500" />
+            )}
+
+            <Icon className={cn("w-5 h-5 flex-shrink-0 relative z-10", isActive && !comingSoon && "text-violet-400")} />
+            <span className="relative z-10 flex items-center gap-2">
+                {label}
+                {comingSoon && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">
+                        Soon
+                    </span>
+                )}
+            </span>
+
+            {/* Active dot indicator */}
+            {isActive && !comingSoon && (
+                <div className="ml-auto w-2 h-2 rounded-full bg-violet-500 relative z-10" />
+            )}
+        </button>
     )
 }
