@@ -349,6 +349,50 @@ export default function LandingPage() {
                         </div>
                     </div>
 
+                    {/* Wildcard Example Results */}
+                    <div className="mt-12 max-w-4xl mx-auto">
+                        <div className="bg-gradient-to-r from-green-500/10 to-cyan-500/10 border border-green-500/30 rounded-xl p-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                    <Shuffle className="w-5 h-5 text-green-400" />
+                                </div>
+                                <div>
+                                    <h4 className="text-lg font-semibold text-white">Wildcard in Action</h4>
+                                    <p className="text-sm text-muted-foreground">Same prompt, 3 different moods</p>
+                                </div>
+                            </div>
+                            <div className="bg-background/50 rounded-lg p-4 font-mono text-sm mb-4">
+                                <p className="text-xs text-muted-foreground mb-2">Wildcard <span className="text-green-400">_mood_</span> contains: dramatic, peaceful, mysterious</p>
+                                <span className="text-muted-foreground">A </span>
+                                <span className="text-green-400">_mood_</span>
+                                <span className="text-muted-foreground"> forest landscape at sunset</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="text-center">
+                                    <div className="aspect-video bg-muted/30 rounded-lg border border-border flex items-center justify-center mb-2 overflow-hidden">
+                                        <span className="text-xs text-muted-foreground">dramatic forest</span>
+                                    </div>
+                                    <span className="text-xs text-amber-400">&quot;A dramatic forest...&quot;</span>
+                                </div>
+                                <div className="text-center">
+                                    <div className="aspect-video bg-muted/30 rounded-lg border border-border flex items-center justify-center mb-2 overflow-hidden">
+                                        <span className="text-xs text-muted-foreground">peaceful forest</span>
+                                    </div>
+                                    <span className="text-xs text-amber-400">&quot;A peaceful forest...&quot;</span>
+                                </div>
+                                <div className="text-center">
+                                    <div className="aspect-video bg-muted/30 rounded-lg border border-border flex items-center justify-center mb-2 overflow-hidden">
+                                        <span className="text-xs text-muted-foreground">mysterious forest</span>
+                                    </div>
+                                    <span className="text-xs text-amber-400">&quot;A mysterious forest...&quot;</span>
+                                </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-4 text-center">
+                                Create your wildcards in Prompt Tools → Wildcards
+                            </p>
+                        </div>
+                    </div>
+
                     {/* Mix and Match */}
                     <div className="mt-12 max-w-3xl mx-auto">
                         <div className="bg-gradient-to-r from-amber-500/10 to-purple-500/10 border border-amber-500/30 rounded-xl p-6">
@@ -381,8 +425,98 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* How It Works Section */}
+            {/* Canvas Editor / VFX Bay Section */}
             <section className="py-20 bg-card/30">
+                <div className="container mx-auto px-4">
+                    <div className="text-center mb-12">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-full text-purple-400 text-sm font-medium mb-6">
+                            <Layout className="w-4 h-4" />
+                            VFX Bay
+                        </div>
+                        <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                            Fix Details Without Starting Over
+                        </h3>
+                        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                            Paint a mask over any part of your image and describe what you want changed.
+                            AI seamlessly blends the new element while keeping everything else intact.
+                        </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto items-center">
+                        {/* Use Case Example */}
+                        <div className="space-y-6">
+                            <div className="bg-card/50 border border-border rounded-xl p-6">
+                                <h4 className="text-lg font-semibold text-white mb-4">Example: Add a Prop</h4>
+                                <div className="space-y-4">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <span className="text-sm font-bold text-purple-400">1</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-white font-medium">Generate your base image</p>
+                                            <p className="text-sm text-muted-foreground">&quot;A purple octopus in a wizard&apos;s study&quot;</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <span className="text-sm font-bold text-purple-400">2</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-white font-medium">Paint a mask over one tentacle</p>
+                                            <p className="text-sm text-muted-foreground">Select just the area you want to modify</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <span className="text-sm font-bold text-purple-400">3</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-white font-medium">Describe the change</p>
+                                            <p className="text-sm text-muted-foreground">&quot;Holding a glowing magic wand&quot;</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            <CheckCircle2 className="w-4 h-4 text-green-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-white font-medium">Result</p>
+                                            <p className="text-sm text-muted-foreground">Octopus now holds a wand, rest of image unchanged</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Common Use Cases */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-card/50 border border-border rounded-lg p-4 hover:border-purple-500/50 transition-colors">
+                                <div className="text-2xl mb-2">🖐️</div>
+                                <h5 className="font-semibold text-white text-sm mb-1">Fix Hands</h5>
+                                <p className="text-xs text-muted-foreground">AI hands look wrong? Mask and regenerate just that area.</p>
+                            </div>
+                            <div className="bg-card/50 border border-border rounded-lg p-4 hover:border-purple-500/50 transition-colors">
+                                <div className="text-2xl mb-2">👔</div>
+                                <h5 className="font-semibold text-white text-sm mb-1">Change Clothes</h5>
+                                <p className="text-xs text-muted-foreground">Swap outfits without regenerating the whole character.</p>
+                            </div>
+                            <div className="bg-card/50 border border-border rounded-lg p-4 hover:border-purple-500/50 transition-colors">
+                                <div className="text-2xl mb-2">🏔️</div>
+                                <h5 className="font-semibold text-white text-sm mb-1">Swap Backgrounds</h5>
+                                <p className="text-xs text-muted-foreground">Keep your subject, change the entire scene.</p>
+                            </div>
+                            <div className="bg-card/50 border border-border rounded-lg p-4 hover:border-purple-500/50 transition-colors">
+                                <div className="text-2xl mb-2">✨</div>
+                                <h5 className="font-semibold text-white text-sm mb-1">Add Props</h5>
+                                <p className="text-xs text-muted-foreground">Give your character a sword, phone, or coffee cup.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* How It Works Section */}
+            <section className="py-20 bg-background">
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-16">
                         <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
