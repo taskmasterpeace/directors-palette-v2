@@ -2,8 +2,15 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
+import { HelpCircle } from 'lucide-react'
 import { TabValue } from '@/store/layout.store'
 import { useIsMobile } from '@/hooks/use-mobile'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 interface SectionHeaderProps {
   section: TabValue
@@ -11,44 +18,62 @@ interface SectionHeaderProps {
   showBanner?: boolean
 }
 
-// Map section IDs to their banner images and default titles
+// Map section IDs to their banner images, titles, subtitles, and help content
 // Using new cinematic detailed banners generated with flux-dev
-const SECTION_CONFIG: Record<TabValue, { banner: string; title: string }> = {
+const SECTION_CONFIG: Record<TabValue, { banner: string; title: string; subtitle?: string; helpTip?: string }> = {
   'shot-creator': {
     banner: '/banners/shot-creator.webp',
-    title: 'Shot Creator'
+    title: 'Shot Creator',
+    subtitle: 'Generate images with advanced prompting syntax',
+    helpTip: 'Use [brackets] for variations, | pipes for sequences, and _wildcards_ for random picks'
   },
   'shot-animator': {
     banner: '/banners/shot-animator.webp',
-    title: 'Shot Animator'
+    title: 'Shot Animator',
+    subtitle: 'Transform images into videos',
+    helpTip: 'Upload or select an image to animate with AI-powered video generation'
   },
   'layout-annotation': {
     banner: '/banners/canvas-editor.webp',
-    title: 'Canvas Editor'
+    title: 'Canvas Editor',
+    subtitle: 'Annotate and edit your images',
+    helpTip: 'Draw, add text, shapes, and annotations to your images for storyboards'
   },
   'storyboard': {
     banner: '/banners/storyboard.webp',
-    title: 'Storyboard'
+    title: 'Storyboard',
+    subtitle: 'Turn stories into visual sequences',
+    helpTip: '6-step workflow: paste story, set style, define characters, break into shots, generate'
   },
   'music-lab': {
     banner: '/banners/music-lab.webp',
-    title: 'Music Lab'
+    title: 'Music Lab',
+    subtitle: 'Sync visuals with music',
+    helpTip: 'Upload audio, transcribe lyrics, and create visual beat sheets'
   },
   'prompt-tools': {
     banner: '/banners/prompt-tools.webp',
-    title: 'Prompt Tools'
+    title: 'Prompt Tools',
+    subtitle: 'Manage your prompt library, wildcards, recipes, and styles',
+    helpTip: 'Create reusable prompts, wildcards for randomization, and recipe templates'
   },
   'gallery': {
     banner: '/banners/gallery.webp',
-    title: 'Gallery'
+    title: 'Gallery',
+    subtitle: 'Browse and manage your generations',
+    helpTip: 'View all generated images, organize into folders, and export'
   },
   'community': {
     banner: '/banners/community.webp',
-    title: 'Community'
+    title: 'Community',
+    subtitle: 'Discover and share wildcards, recipes, prompts, and directors',
+    helpTip: 'Browse community submissions, add to your library, and share your own creations'
   },
   'help': {
     banner: '/banners/help.webp',
-    title: 'Help & Manual'
+    title: 'Help & Manual',
+    subtitle: 'Learn how to use Director\'s Palette',
+    helpTip: 'Comprehensive guide to all features and workflows'
   }
 }
 
@@ -64,7 +89,7 @@ export function SectionHeader({ section, title, showBanner = true }: SectionHead
     return (
       <div className="relative h-12 w-full flex items-center px-4 border-b border-border/50 bg-background/50 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <div className="h-5 w-1 rounded-full bg-gradient-to-b from-violet-500 via-fuchsia-500 to-amber-500" />
+          <div className="h-5 w-1 rounded-full bg-gradient-to-b from-amber-400 via-orange-500 to-red-500" />
           <h1 className="text-lg font-semibold text-foreground">{displayTitle}</h1>
         </div>
       </div>
@@ -78,28 +103,44 @@ export function SectionHeader({ section, title, showBanner = true }: SectionHead
       transition={{ duration: 0.3 }}
       className="relative h-16 w-full overflow-hidden flex-shrink-0"
     >
-      {/* Banner Background */}
+      {/* Banner Background - More visible */}
       {showBanner && (
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage: `url(${config.banner})`,
-            filter: 'brightness(0.4) saturate(0.8)'
+            filter: 'brightness(0.65) saturate(1.1)'
           }}
         />
       )}
 
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/60 to-background/90" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
+      {/* Gradient Overlay - Reduced for better visibility */}
+      <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/30 to-background/70" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/80" />
 
       {/* Content */}
       <div className="relative h-full flex items-center px-6 z-10">
-        <div className="flex items-center gap-3">
-          {/* Gradient Accent Line */}
+        <div className="flex items-center gap-3 flex-1">
+          {/* Help Icon with Tooltip */}
+          {config.helpTip && (
+            <TooltipProvider>
+              <Tooltip delayDuration={200}>
+                <TooltipTrigger asChild>
+                  <button className="p-1.5 rounded-full bg-background/50 hover:bg-background/80 transition-colors">
+                    <HelpCircle className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p className="text-sm">{config.helpTip}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+          {/* Gradient Accent Line - Warm tones */}
           <div className="h-8 w-1 rounded-full overflow-hidden">
             <motion.div
-              className="h-full w-full bg-gradient-to-b from-violet-500 via-fuchsia-500 to-amber-500"
+              className="h-full w-full bg-gradient-to-b from-amber-400 via-orange-500 to-red-500"
               animate={{
                 backgroundPosition: ['0% 0%', '0% 100%', '0% 0%'],
               }}
@@ -112,15 +153,22 @@ export function SectionHeader({ section, title, showBanner = true }: SectionHead
             />
           </div>
 
-          {/* Title */}
-          <h1 className="text-xl font-semibold text-foreground tracking-tight">
-            {displayTitle}
-          </h1>
+          {/* Title & Subtitle */}
+          <div className="flex items-baseline gap-3">
+            <h1 className="text-xl font-semibold text-foreground tracking-tight">
+              {displayTitle}
+            </h1>
+            {config.subtitle && (
+              <span className="text-sm text-muted-foreground hidden sm:inline">
+                {config.subtitle}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Bottom Border Gradient */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
+      {/* Bottom Border Gradient - Warm tones */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
     </motion.div>
   )
 }
@@ -149,7 +197,7 @@ export function SectionHeaderCompact({ section, title }: Omit<SectionHeaderProps
       {/* Content */}
       <div className="relative h-full flex items-center px-4 z-10">
         <div className="flex items-center gap-2">
-          <div className="h-4 w-0.5 rounded-full bg-gradient-to-b from-violet-500 to-fuchsia-500" />
+          <div className="h-4 w-0.5 rounded-full bg-gradient-to-b from-amber-400 to-orange-500" />
           <span className="text-sm font-medium text-muted-foreground">
             {displayTitle}
           </span>

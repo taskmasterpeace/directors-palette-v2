@@ -38,6 +38,7 @@ import {
   Settings,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
+import { useToast } from '@/hooks/use-toast'
 import {
   Recipe,
   RecipeStage,
@@ -63,6 +64,7 @@ interface RecipeBuilderProps {
 }
 
 export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps) {
+  const { toast } = useToast()
   const {
     recipes,
     categories,
@@ -142,6 +144,8 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
       fields: parseStageTemplate(stage.template, idx),
     }))
 
+    const totalImages = stagesWithFields.reduce((acc, s) => acc + s.referenceImages.length, 0)
+
     addRecipe({
       name: formName.trim(),
       description: formDescription.trim() || undefined,
@@ -151,6 +155,11 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
       categoryId: formCategory || undefined,
       quickAccessLabel: formIsQuickAccess ? formQuickLabel.trim() : undefined,
       isQuickAccess: formIsQuickAccess && !!formQuickLabel.trim(),
+    })
+
+    toast({
+      title: 'Recipe Created',
+      description: `"${formName.trim()}" saved with ${stagesWithFields.length} stage(s)${totalImages > 0 ? ` and ${totalImages} image(s)` : ''}.`,
     })
 
     setIsCreateOpen(false)
@@ -168,6 +177,8 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
       fields: parseStageTemplate(stage.template, idx),
     }))
 
+    const totalImages = stagesWithFields.reduce((acc, s) => acc + s.referenceImages.length, 0)
+
     updateRecipe(editingRecipe.id, {
       name: formName.trim(),
       description: formDescription.trim() || undefined,
@@ -177,6 +188,11 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
       categoryId: formCategory || undefined,
       quickAccessLabel: formIsQuickAccess ? formQuickLabel.trim() : undefined,
       isQuickAccess: formIsQuickAccess && !!formQuickLabel.trim(),
+    })
+
+    toast({
+      title: 'Recipe Updated',
+      description: `"${formName.trim()}" saved with ${stagesWithFields.length} stage(s)${totalImages > 0 ? ` and ${totalImages} image(s)` : ''}.`,
     })
 
     setIsEditOpen(false)

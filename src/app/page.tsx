@@ -33,6 +33,7 @@ export default function Home() {
             {activeTab === 'shot-creator' && (
               <TabsContent key="shot-creator" value="shot-creator" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
                 <PageTransition>
+                  <SectionHeader section="shot-creator" />
                   <ShotCreator />
                 </PageTransition>
               </TabsContent>
@@ -41,6 +42,7 @@ export default function Home() {
             {activeTab === 'shot-animator' && (
               <TabsContent key="shot-animator" value="shot-animator" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
                 <PageTransition>
+                  <SectionHeader section="shot-animator" />
                   <ShotAnimator />
                 </PageTransition>
               </TabsContent>
@@ -49,6 +51,7 @@ export default function Home() {
             {activeTab === 'layout-annotation' && (
               <TabsContent key="layout-annotation" value="layout-annotation" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
                 <PageTransition>
+                  <SectionHeader section="layout-annotation" />
                   <LayoutAnnotation />
                 </PageTransition>
               </TabsContent>
@@ -57,6 +60,7 @@ export default function Home() {
             {activeTab === 'storyboard' && (
               <TabsContent key="storyboard" value="storyboard" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
                 <PageTransition>
+                  <SectionHeader section="storyboard" />
                   <Storyboard />
                 </PageTransition>
               </TabsContent>

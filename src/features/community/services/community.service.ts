@@ -76,8 +76,13 @@ class CommunityService {
     const { data, error } = await query
 
     if (error) {
-      console.error('Error fetching community items:', error)
-      throw error
+      // Schema cache errors are expected when tables haven't been loaded yet
+      const isSchemaError = error.code === 'PGRST205' || error.message?.includes('schema cache')
+      if (!isSchemaError) {
+        console.error('Error fetching community items:', JSON.stringify(error, null, 2))
+      }
+      const errorMessage = error.message || error.code || 'Unknown database error'
+      throw new Error(errorMessage)
     }
 
     return (data as CommunityItemRow[]).map(row => ({
@@ -357,7 +362,11 @@ class CommunityService {
       .not('community_item_id', 'is', null)
 
     if (error) {
-      console.error('Error fetching library item IDs:', error)
+      // Silent fail for schema cache errors - these are expected when tables aren't loaded
+      const isSchemaError = error.code === 'PGRST205' || error.message?.includes('schema cache')
+      if (!isSchemaError) {
+        console.error('Error fetching library item IDs:', error)
+      }
       return new Set()
     }
 
@@ -437,7 +446,11 @@ class CommunityService {
       .eq('user_id', userId)
 
     if (error) {
-      console.error('Error fetching user ratings:', error)
+      // Silent fail for schema cache errors
+      const isSchemaError = error.code === 'PGRST205' || error.message?.includes('schema cache')
+      if (!isSchemaError) {
+        console.error('Error fetching user ratings:', error)
+      }
       return new Map()
     }
 

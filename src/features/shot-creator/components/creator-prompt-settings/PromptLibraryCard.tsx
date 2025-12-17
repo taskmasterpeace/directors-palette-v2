@@ -5,6 +5,13 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
 // Import to trigger module-level initialization
 import '@/features/shot-creator/helpers/prompt-library-init'
 import {
@@ -14,7 +21,9 @@ import {
     Grid,
     Table,
     Download,
-    Upload
+    Upload,
+    MoreVertical,
+    Trash2
 } from 'lucide-react'
 import { useState } from "react"
 import { usePromptLibraryManager } from "../../hooks/usePromptLibraryManager"
@@ -43,6 +52,9 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
         categoryPrompts,
         handleExportPrompts,
         handleImportPrompts,
+        handleUpdateCategory,
+        handleDeleteCategory,
+        handleClearAllPrompts,
         setSearchQuery,
         setSelectedCategory,
         searchQuery,
@@ -54,6 +66,8 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
         processPromptReplacements,
         handleUpdatePrompt,
     } = usePromptLibraryManager(onSelectPrompt)
+
+    const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false)
 
     // Handle edit prompt
     const handleEdit = (prompt: SavedPrompt) => {
@@ -140,6 +154,30 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                             <Plus className="w-4 h-4 mr-1" />
                             Add
                         </Button>
+
+                        {/* More Options Menu */}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" className="border-border hover:bg-card">
+                                    <MoreVertical className="w-4 h-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleExportPrompts()}>
+                                    <Download className="w-4 h-4 mr-2" />
+                                    Export All
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onClick={() => setIsClearConfirmOpen(true)}
+                                    className="text-red-400"
+                                    disabled={prompts.length === 0}
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Clear All Prompts
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </CardTitle>
             </CardHeader>
@@ -172,8 +210,8 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                                 <TabsTrigger value="categories">Categories</TabsTrigger>
                             </TabsList>
 
-                            <TabsContent value="all" className="flex-1 mt-4">
-                                <ScrollArea className="h-[500px]">
+                            <TabsContent value="all" className="flex-1 mt-4 min-h-0">
+                                <ScrollArea className="h-full max-h-[calc(100vh-400px)] min-h-[300px]">
                                     <div className="grid gap-3">
                                         {filteredPrompts.map(prompt => {
                                             const category = categories.find(c => c.id === prompt.categoryId)
@@ -196,8 +234,8 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                             </TabsContent>
 
                             {showQuickAccess && (
-                                <TabsContent value="quick" className="flex-1 mt-4">
-                                    <ScrollArea className="h-[500px]">
+                                <TabsContent value="quick" className="flex-1 mt-4 min-h-0">
+                                    <ScrollArea className="h-full max-h-[calc(100vh-400px)] min-h-[300px]">
                                         <div className="grid gap-3">
                                             {quickPrompts.map(prompt => {
                                                 const category = categories.find(c => c.id === prompt.categoryId)
@@ -220,23 +258,28 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                                 </TabsContent>
                             )}
 
-                            <TabsContent value="categories" className="flex-1 mt-4">
+                            <TabsContent value="categories" className="flex-1 mt-4 min-h-0">
                                 {!selectedCategory ? (
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {categories.map(category => {
-                                            const promptCount = getPromptsByCategory(category.id).length
-                                            return (
-                                                <CategoryCard
-                                                    key={category.id}
-                                                    id={category.id}
-                                                    name={category.name}
-                                                    icon={category.icon}
-                                                    promptCount={promptCount}
-                                                    onClick={setSelectedCategory}
-                                                />
-                                            )
-                                        })}
-                                    </div>
+                                    <ScrollArea className="h-full max-h-[calc(100vh-400px)] min-h-[300px]">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {categories.map(category => {
+                                                const promptCount = getPromptsByCategory(category.id).length
+                                                return (
+                                                    <CategoryCard
+                                                        key={category.id}
+                                                        id={category.id}
+                                                        name={category.name}
+                                                        icon={category.icon}
+                                                        promptCount={promptCount}
+                                                        isEditable={category.isEditable}
+                                                        onClick={setSelectedCategory}
+                                                        onEdit={handleUpdateCategory}
+                                                        onDelete={handleDeleteCategory}
+                                                    />
+                                                )
+                                            })}
+                                        </div>
+                                    </ScrollArea>
                                 ) : (
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between">
@@ -259,7 +302,7 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                                                 </div>
                                             </div>
                                         </div>
-                                        <ScrollArea className="h-[450px]">
+                                        <ScrollArea className="h-full max-h-[calc(100vh-450px)] min-h-[250px]">
                                             <div className="grid gap-3">
                                                 {categoryPrompts.length > 0 ? (
                                                     categoryPrompts.map(prompt => {
@@ -301,6 +344,35 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                 categories={categories}
                 onUpdate={handleEditSave}
             />
+
+            {/* Clear All Confirmation Dialog */}
+            {isClearConfirmOpen && (
+                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+                    <div className="bg-card border border-border rounded-lg p-6 max-w-md mx-4 shadow-xl">
+                        <div className="flex items-center gap-2 text-amber-400 mb-4">
+                            <Trash2 className="h-5 w-5" />
+                            <h3 className="text-lg font-medium">Clear All Prompts</h3>
+                        </div>
+                        <p className="text-muted-foreground mb-4">
+                            Are you sure you want to delete all {prompts.length} prompts? This action cannot be undone.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <Button variant="outline" onClick={() => setIsClearConfirmOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={() => {
+                                    handleClearAllPrompts()
+                                    setIsClearConfirmOpen(false)
+                                }}
+                            >
+                                Delete All
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </Card>
     )
 }

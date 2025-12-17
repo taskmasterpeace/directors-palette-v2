@@ -14,6 +14,7 @@ import type {
   NanoBananaProSettings,
   ZImageTurboSettings,
   QwenImageFastSettings,
+  GptImageSettings,
 } from '../types/image-generation.types'
 import { ASPECT_RATIO_SIZES } from '@/config'
 
@@ -54,6 +55,11 @@ export class ImageGenerationService {
         if (input.referenceImages && input.referenceImages.length > 0) {
           errors.push('Qwen Image Fast does not support reference images (text-to-image only)')
         }
+        break
+      case 'gpt-image-low':
+      case 'gpt-image-medium':
+      case 'gpt-image-high':
+        errors.push(...this.validateGptImage(input))
         break
     }
 
@@ -104,6 +110,33 @@ export class ImageGenerationService {
   }
 
   /**
+   * Validate gpt-image specific constraints
+   */
+  private static validateGptImage(input: ImageGenerationInput): string[] {
+    const errors: string[] = []
+    const settings = input.modelSettings as GptImageSettings
+
+    // GPT Image is text-to-image only, no reference images
+    if (input.referenceImages && input.referenceImages.length > 0) {
+      errors.push('GPT Image does not support reference images (text-to-image only)')
+    }
+
+    // Validate numImages if provided
+    if (settings.numImages !== undefined) {
+      if (settings.numImages < 1 || settings.numImages > 10) {
+        errors.push('GPT Image supports 1-10 images per request')
+      }
+    }
+
+    // Validate transparent background requires PNG
+    if (settings.background === 'transparent' && settings.outputFormat && settings.outputFormat !== 'png') {
+      errors.push('Transparent background requires PNG output format')
+    }
+
+    return errors
+  }
+
+  /**
    * Build Replicate input object based on model
    */
   static buildReplicateInput(input: ImageGenerationInput): Record<string, unknown> {
@@ -116,6 +149,12 @@ export class ImageGenerationService {
         return this.buildZImageTurboInput(input)
       case 'qwen-image-fast':
         return this.buildQwenImageFastInput(input)
+      case 'gpt-image-low':
+        return this.buildGptImageInput(input, 'low')
+      case 'gpt-image-medium':
+        return this.buildGptImageInput(input, 'medium')
+      case 'gpt-image-high':
+        return this.buildGptImageInput(input, 'high')
       default:
         throw new Error(`Unsupported model: ${input.model}`)
     }
@@ -229,6 +268,32 @@ export class ImageGenerationService {
 
     if (settings.negative_prompt) {
       replicateInput.negative_prompt = settings.negative_prompt
+    }
+
+    return replicateInput
+  }
+
+  private static buildGptImageInput(input: ImageGenerationInput, quality: 'low' | 'medium' | 'high' | 'auto') {
+    const settings = input.modelSettings as GptImageSettings
+    const replicateInput: Record<string, unknown> = {
+      prompt: input.prompt,
+      quality: quality,
+    }
+
+    if (settings.aspectRatio) {
+      replicateInput.aspect_ratio = settings.aspectRatio
+    }
+
+    if (settings.outputFormat) {
+      replicateInput.output_format = settings.outputFormat
+    }
+
+    if (settings.background) {
+      replicateInput.background = settings.background
+    }
+
+    if (settings.numImages && settings.numImages > 1) {
+      replicateInput.n = settings.numImages
     }
 
     return replicateInput

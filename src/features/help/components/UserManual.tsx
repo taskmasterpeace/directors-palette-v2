@@ -12,7 +12,10 @@ import {
     Grid,
     Film,
     Wand2,
-    Info
+    Info,
+    Key,
+    Code,
+    Shuffle
 } from "lucide-react"
 
 export function UserManual() {
@@ -30,9 +33,11 @@ export function UserManual() {
                     <a href="#storyboard" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">The Storyboard</a>
                     <a href="#director-vision" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Director&apos;s Vision</a>
                     <a href="#shot-lab" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Shot Lab</a>
+                    <a href="#recipes" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Recipes</a>
                     <a href="#syntax" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Prompt Syntax</a>
                     <a href="#gallery" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Gallery</a>
                     <a href="#models" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">AI Models</a>
+                    <a href="#api-access" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">API Access</a>
                 </nav>
 
                 <div className="pt-6 border-t border-border/50">
@@ -211,38 +216,183 @@ export function UserManual() {
                         </Card>
                     </section>
 
+                    {/* Recipes */}
+                    <section id="recipes" className="space-y-6 scroll-mt-20">
+                        <h2 className="text-2xl font-bold flex items-center gap-2">
+                            <FlaskConical className="w-6 h-6 text-amber-500" /> Recipes
+                        </h2>
+                        <p className="text-muted-foreground">
+                            Recipes are reusable prompt templates with customizable fields. Create consistent outputs with variable substitution.
+                        </p>
+
+                        <Card>
+                            <CardContent className="p-6 space-y-6">
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">How Recipes Work</h3>
+                                    <p className="text-muted-foreground mb-4">
+                                        A recipe is a prompt template with placeholders that you fill in before generating.
+                                        This ensures consistency across multiple generations while allowing customization.
+                                    </p>
+                                    <div className="bg-muted p-4 rounded-md text-sm font-mono">
+                                        <p className="text-amber-400 mb-2">Template:</p>
+                                        <p className="text-muted-foreground">&quot;A {'{{style}}'} portrait of {'{{subject}}'} in {'{{setting}}'}, {'{{lighting}}'} lighting&quot;</p>
+                                        <p className="text-amber-400 mt-4 mb-2">Filled In:</p>
+                                        <p className="text-muted-foreground">&quot;A cinematic portrait of a detective in a rain-soaked alley, neon lighting&quot;</p>
+                                    </div>
+                                </div>
+
+                                <Separator />
+
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Built-in Recipes</h3>
+                                    <div className="grid sm:grid-cols-2 gap-4">
+                                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                                            <h4 className="font-semibold text-sm">Style Guide Grid</h4>
+                                            <p className="text-xs text-muted-foreground mt-1">Generate 9 variations of a subject in different styles</p>
+                                        </div>
+                                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                                            <h4 className="font-semibold text-sm">Character Sheet</h4>
+                                            <p className="text-xs text-muted-foreground mt-1">Create character turnarounds and expression sheets</p>
+                                        </div>
+                                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                                            <h4 className="font-semibold text-sm">9-Frame Cinematic</h4>
+                                            <p className="text-xs text-muted-foreground mt-1">Generate a sequence of 9 cinematic shots</p>
+                                        </div>
+                                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                                            <h4 className="font-semibold text-sm">Time of Day</h4>
+                                            <p className="text-xs text-muted-foreground mt-1">Same scene at different times (dawn, noon, dusk, night)</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <Separator />
+
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Creating Custom Recipes</h3>
+                                    <ol className="space-y-2 text-sm text-muted-foreground list-decimal pl-4">
+                                        <li>Go to <strong>Prompt Tools → Recipes</strong></li>
+                                        <li>Click <strong>Create Recipe</strong></li>
+                                        <li>Write your prompt template with <code className="px-1 bg-muted rounded">{'{{field_name}}'}</code> placeholders</li>
+                                        <li>Define field types: text input, dropdown select, or number</li>
+                                        <li>Save and use from the Shot Creator</li>
+                                    </ol>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </section>
+
                     {/* Prompt Syntax */}
                     <section id="syntax" className="space-y-6 scroll-mt-20">
                         <h2 className="text-2xl font-bold flex items-center gap-2">
-                            <Sparkles className="w-6 h-6 text-pink-500" /> Prompt Syntax
+                            <Code className="w-6 h-6 text-pink-500" /> Prompt Syntax
                         </h2>
-                        <p className="text-muted-foreground">Power users can utilize our prompt engine&apos;s special variables.</p>
+                        <p className="text-muted-foreground">
+                            Director&apos;s Palette has a powerful prompt syntax for variations, sequences, and randomization.
+                        </p>
 
-                        <div className="space-y-4">
-                            <div className="flex flex-col sm:flex-row gap-4 items-start p-4 rounded-lg border bg-card">
-                                <code className="px-2 py-1 bg-muted rounded text-primary font-mono whitespace-nowrap">INT. / EXT.</code>
+                        <Card>
+                            <CardContent className="p-6 space-y-6">
+                                {/* Brackets - Variations */}
                                 <div>
-                                    <h4 className="font-semibold">Scene Header</h4>
-                                    <p className="text-sm text-muted-foreground">Sets the context. Use at the start of prompts.</p>
+                                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                        <span className="text-violet-400">[Brackets]</span> - Variations
+                                    </h3>
+                                    <p className="text-muted-foreground mb-3">
+                                        Use brackets to create multiple variations. Each option separated by commas generates a separate image.
+                                    </p>
+                                    <div className="bg-muted p-4 rounded-md space-y-3">
+                                        <div>
+                                            <p className="text-xs text-muted-foreground mb-1">Input:</p>
+                                            <code className="text-sm text-violet-400">A [red, blue, green] sports car</code>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-muted-foreground mb-1">Generates 3 images:</p>
+                                            <p className="text-sm text-muted-foreground">• A red sports car</p>
+                                            <p className="text-sm text-muted-foreground">• A blue sports car</p>
+                                            <p className="text-sm text-muted-foreground">• A green sports car</p>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div className="flex flex-col sm:flex-row gap-4 items-start p-4 rounded-lg border bg-card">
-                                <code className="px-2 py-1 bg-muted rounded text-primary font-mono whitespace-nowrap">[style]</code>
-                                <div>
-                                    <h4 className="font-semibold">Style Wildcard</h4>
-                                    <p className="text-sm text-muted-foreground">Injects the active Director&apos;s visual tokens (e.g. &quot;neon lighting&quot;, &quot;pastel colors&quot;).</p>
-                                </div>
-                            </div>
+                                <Separator />
 
-                            <div className="flex flex-col sm:flex-row gap-4 items-start p-4 rounded-lg border bg-card">
-                                <code className="px-2 py-1 bg-muted rounded text-primary font-mono whitespace-nowrap">{'{character}'}</code>
+                                {/* Pipes - Sequences */}
                                 <div>
-                                    <h4 className="font-semibold">Character Interpolation</h4>
-                                    <p className="text-sm text-muted-foreground">Replaces placeholders with trained LoRA triggers or consistent character descriptions.</p>
+                                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                        <span className="text-amber-400">|Pipes|</span> - Sequences (Pipe Chaining)
+                                    </h3>
+                                    <p className="text-muted-foreground mb-3">
+                                        Use pipes to chain prompts in sequence. The output of each step becomes the input for the next.
+                                    </p>
+                                    <div className="bg-muted p-4 rounded-md space-y-3">
+                                        <div>
+                                            <p className="text-xs text-muted-foreground mb-1">Input:</p>
+                                            <code className="text-sm text-amber-400">A sketch of a robot | colored pencil rendering | photorealistic 3D render</code>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-muted-foreground mb-1">Sequence:</p>
+                                            <p className="text-sm text-muted-foreground">1. Generate sketch → 2. Use as reference for colored version → 3. Use as reference for 3D render</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-3">
+                                        Great for iterative refinement: start rough, progressively add detail.
+                                    </p>
                                 </div>
-                            </div>
-                        </div>
+
+                                <Separator />
+
+                                {/* Wildcards */}
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                        <Shuffle className="w-4 h-4 text-cyan-400" />
+                                        <span className="text-cyan-400">_Wildcards_</span> - Random Selection
+                                    </h3>
+                                    <p className="text-muted-foreground mb-3">
+                                        Use underscores to reference your wildcard lists. A random value from the list is inserted each generation.
+                                    </p>
+                                    <div className="bg-muted p-4 rounded-md space-y-3">
+                                        <div>
+                                            <p className="text-xs text-muted-foreground mb-1">Wildcard &quot;mood&quot; contains: dramatic, peaceful, mysterious, energetic</p>
+                                            <p className="text-xs text-muted-foreground mb-1">Input:</p>
+                                            <code className="text-sm text-cyan-400">A _mood_ forest landscape at sunset</code>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-muted-foreground mb-1">Might generate:</p>
+                                            <p className="text-sm text-muted-foreground">• A dramatic forest landscape at sunset</p>
+                                            <p className="text-sm text-muted-foreground">• A mysterious forest landscape at sunset</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-3">
+                                        Create wildcards in <strong>Prompt Tools → Wildcards</strong>
+                                    </p>
+                                </div>
+
+                                <Separator />
+
+                                {/* Scene Headers */}
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Scene Headers</h3>
+                                    <div className="grid sm:grid-cols-2 gap-4">
+                                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                                            <code className="text-primary font-mono">INT.</code>
+                                            <p className="text-xs text-muted-foreground mt-1">Interior scene - indoor lighting assumed</p>
+                                        </div>
+                                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                                            <code className="text-primary font-mono">EXT.</code>
+                                            <p className="text-xs text-muted-foreground mt-1">Exterior scene - natural lighting assumed</p>
+                                        </div>
+                                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                                            <code className="text-primary font-mono">CU</code>
+                                            <p className="text-xs text-muted-foreground mt-1">Close-up shot</p>
+                                        </div>
+                                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                                            <code className="text-primary font-mono">WS</code>
+                                            <p className="text-xs text-muted-foreground mt-1">Wide shot / establishing shot</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </section>
 
                     {/* Gallery */}
@@ -465,7 +615,162 @@ export function UserManual() {
                                     </p>
                                 </CardContent>
                             </Card>
+
+                            {/* GPT Image Family */}
+                            <Card className="bg-gradient-to-br from-blue-950/20 to-background border-blue-900/30">
+                                <CardHeader className="pb-2">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="flex items-center gap-2">
+                                            <span className="text-2xl">🎨</span> GPT Image Family
+                                        </CardTitle>
+                                        <div className="flex gap-2 text-xs font-bold">
+                                            <span className="px-2 py-1 rounded bg-green-500/20 text-green-400">3-27 TOKENS</span>
+                                        </div>
+                                    </div>
+                                    <CardDescription>OpenAI GPT Image 1.5 - Premium quality with transparent backgrounds</CardDescription>
+                                </CardHeader>
+                                <CardContent className="text-sm space-y-4">
+                                    <div className="grid grid-cols-3 gap-2 text-xs">
+                                        <div className="p-2 rounded bg-green-500/10 border border-green-500/20 text-center">
+                                            <span className="font-semibold text-green-400">Low</span>
+                                            <p className="text-muted-foreground">3 tokens</p>
+                                            <p className="text-[10px] text-muted-foreground/70">Fast drafts</p>
+                                        </div>
+                                        <div className="p-2 rounded bg-blue-500/10 border border-blue-500/20 text-center">
+                                            <span className="font-semibold text-blue-400">Medium</span>
+                                            <p className="text-muted-foreground">10 tokens</p>
+                                            <p className="text-[10px] text-muted-foreground/70">Standard</p>
+                                        </div>
+                                        <div className="p-2 rounded bg-violet-500/10 border border-violet-500/20 text-center">
+                                            <span className="font-semibold text-violet-400">High</span>
+                                            <p className="text-muted-foreground">27 tokens</p>
+                                            <p className="text-[10px] text-muted-foreground/70">Premium</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <h4 className="font-semibold text-blue-400">Special Features</h4>
+                                        <ul className="text-muted-foreground space-y-1 list-disc pl-4">
+                                            <li><strong>Transparent backgrounds:</strong> PNG output with no background for compositing</li>
+                                            <li><strong>Multi-image generation:</strong> Generate 1-10 images per request</li>
+                                            <li><strong>Best-in-class text rendering:</strong> Accurate text in images</li>
+                                            <li><strong>Aspect ratios:</strong> 1:1 Square, 3:2 Landscape, 2:3 Portrait</li>
+                                        </ul>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <h4 className="font-semibold text-blue-400">Prompting Tips</h4>
+                                        <ul className="text-muted-foreground space-y-1 list-disc pl-4">
+                                            <li>Highly capable with conversational prompts</li>
+                                            <li>Excels at detailed scenes and photorealistic content</li>
+                                            <li>For transparent backgrounds, select PNG format and &quot;Transparent&quot; background</li>
+                                            <li>Use Low for quick iterations, High for final renders</li>
+                                        </ul>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 text-xs">
+                                        <div className="p-2 rounded bg-green-500/10 border border-green-500/20">
+                                            <span className="font-semibold text-green-400">Strengths</span>
+                                            <p className="text-muted-foreground mt-1">Transparent backgrounds, excellent text rendering, high quality, multi-image generation, versatile quality tiers</p>
+                                        </div>
+                                        <div className="p-2 rounded bg-red-500/10 border border-red-500/20">
+                                            <span className="font-semibold text-red-400">Weaknesses</span>
+                                            <p className="text-muted-foreground mt-1">Higher cost at high quality, no reference image support, limited aspect ratio options</p>
+                                        </div>
+                                    </div>
+
+                                    <p className="text-muted-foreground border-t border-border/50 pt-3">
+                                        <strong>Best for:</strong> Product images with transparent backgrounds, text-heavy designs, marketing assets, batch generation, compositing work.
+                                    </p>
+                                </CardContent>
+                            </Card>
                         </div>
+
+                        {/* Model Comparison Table */}
+                        <Card className="bg-muted/20 border-border/50">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Grid className="w-5 h-5 text-amber-400" /> Quick Comparison
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="border-b border-border/50">
+                                                <th className="text-left p-2">Model</th>
+                                                <th className="text-center p-2">Cost</th>
+                                                <th className="text-center p-2">Speed</th>
+                                                <th className="text-center p-2">Quality</th>
+                                                <th className="text-center p-2">Text</th>
+                                                <th className="text-center p-2">References</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-muted-foreground">
+                                            <tr className="border-b border-border/30 hover:bg-muted/30">
+                                                <td className="p-2">🚀 Qwen Image Fast</td>
+                                                <td className="text-center p-2 text-cyan-400">2 pts</td>
+                                                <td className="text-center p-2">⚡⚡⚡</td>
+                                                <td className="text-center p-2">★★★☆☆</td>
+                                                <td className="text-center p-2">★★★★★</td>
+                                                <td className="text-center p-2 text-muted-foreground/50">-</td>
+                                            </tr>
+                                            <tr className="border-b border-border/30 hover:bg-muted/30">
+                                                <td className="p-2">⚡ Z-Image Turbo</td>
+                                                <td className="text-center p-2 text-purple-400">5 pts</td>
+                                                <td className="text-center p-2">⚡⚡⚡</td>
+                                                <td className="text-center p-2">★★★☆☆</td>
+                                                <td className="text-center p-2">★★★★☆</td>
+                                                <td className="text-center p-2">1</td>
+                                            </tr>
+                                            <tr className="border-b border-border/30 hover:bg-muted/30">
+                                                <td className="p-2">🍌 Nano Banana</td>
+                                                <td className="text-center p-2 text-yellow-400">8 pts</td>
+                                                <td className="text-center p-2">⚡⚡</td>
+                                                <td className="text-center p-2">★★★★☆</td>
+                                                <td className="text-center p-2">★★★★☆</td>
+                                                <td className="text-center p-2">4</td>
+                                            </tr>
+                                            <tr className="border-b border-border/30 hover:bg-muted/30">
+                                                <td className="p-2">🔥 Nano Banana Pro</td>
+                                                <td className="text-center p-2 text-amber-400">20 pts</td>
+                                                <td className="text-center p-2">⚡</td>
+                                                <td className="text-center p-2">★★★★★</td>
+                                                <td className="text-center p-2">★★★★★</td>
+                                                <td className="text-center p-2">14</td>
+                                            </tr>
+                                            <tr className="border-b border-border/30 hover:bg-muted/30">
+                                                <td className="p-2">🎨 GPT Image Low</td>
+                                                <td className="text-center p-2 text-green-400">3 pts</td>
+                                                <td className="text-center p-2">⚡⚡⚡</td>
+                                                <td className="text-center p-2">★★★☆☆</td>
+                                                <td className="text-center p-2">★★★★★</td>
+                                                <td className="text-center p-2 text-muted-foreground/50">-</td>
+                                            </tr>
+                                            <tr className="border-b border-border/30 hover:bg-muted/30">
+                                                <td className="p-2">🎨 GPT Image Medium</td>
+                                                <td className="text-center p-2 text-blue-400">10 pts</td>
+                                                <td className="text-center p-2">⚡⚡</td>
+                                                <td className="text-center p-2">★★★★☆</td>
+                                                <td className="text-center p-2">★★★★★</td>
+                                                <td className="text-center p-2 text-muted-foreground/50">-</td>
+                                            </tr>
+                                            <tr className="hover:bg-muted/30">
+                                                <td className="p-2">✨ GPT Image HD</td>
+                                                <td className="text-center p-2 text-violet-400">27 pts</td>
+                                                <td className="text-center p-2">⚡</td>
+                                                <td className="text-center p-2">★★★★★</td>
+                                                <td className="text-center p-2">★★★★★</td>
+                                                <td className="text-center p-2 text-muted-foreground/50">-</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-4">
+                                    <strong>Note:</strong> GPT Image models support transparent PNG backgrounds. Cost varies by quality tier.
+                                </p>
+                            </CardContent>
+                        </Card>
 
                         {/* General Prompting Guide */}
                         <Card className="bg-gradient-to-br from-violet-950/20 to-background border-violet-900/30">
@@ -524,9 +829,123 @@ export function UserManual() {
                         </Card>
                     </section>
 
+                    {/* API Access */}
+                    <section id="api-access" className="space-y-6 scroll-mt-20">
+                        <h2 className="text-2xl font-bold flex items-center gap-2">
+                            <Key className="w-6 h-6 text-green-500" /> API Access
+                        </h2>
+                        <p className="text-muted-foreground">
+                            Use Director&apos;s Palette programmatically via our REST API. Generate images, execute recipes, and integrate with your own tools.
+                        </p>
+
+                        <Card className="bg-gradient-to-br from-green-950/20 to-background border-green-900/30">
+                            <CardContent className="p-6 space-y-6">
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Getting an API Key</h3>
+                                    <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30 mb-4">
+                                        <p className="text-sm text-amber-300">
+                                            <strong>API keys are available by request.</strong> Contact us at{' '}
+                                            <a href="mailto:support@directorspalette.com" className="underline hover:text-amber-200">
+                                                support@directorspalette.com
+                                            </a>
+                                            {' '}to request API access for your account.
+                                        </p>
+                                    </div>
+                                    <p className="text-muted-foreground text-sm">
+                                        Once approved, you&apos;ll receive access to the Admin Panel where you can generate your API key.
+                                        Keys are prefixed with <code className="px-1 bg-muted rounded">dp_</code> and shown only once on creation.
+                                    </p>
+                                </div>
+
+                                <Separator />
+
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Authentication</h3>
+                                    <p className="text-muted-foreground mb-3 text-sm">
+                                        Include your API key in the Authorization header:
+                                    </p>
+                                    <div className="bg-muted p-4 rounded-md font-mono text-sm overflow-x-auto">
+                                        <code className="text-green-400">Authorization: Bearer dp_your_api_key_here</code>
+                                    </div>
+                                </div>
+
+                                <Separator />
+
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Available Endpoints</h3>
+                                    <div className="space-y-3">
+                                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                                            <div className="flex items-center gap-2">
+                                                <span className="px-2 py-0.5 text-xs font-bold rounded bg-blue-500/20 text-blue-400">POST</span>
+                                                <code className="text-sm">/api/v1/images/generate</code>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-1">Generate images from prompts</p>
+                                        </div>
+                                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                                            <div className="flex items-center gap-2">
+                                                <span className="px-2 py-0.5 text-xs font-bold rounded bg-green-500/20 text-green-400">GET</span>
+                                                <code className="text-sm">/api/v1/recipes</code>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-1">List available recipe templates</p>
+                                        </div>
+                                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                                            <div className="flex items-center gap-2">
+                                                <span className="px-2 py-0.5 text-xs font-bold rounded bg-blue-500/20 text-blue-400">POST</span>
+                                                <code className="text-sm">/api/v1/recipes/execute</code>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-1">Execute a recipe with variables</p>
+                                        </div>
+                                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                                            <div className="flex items-center gap-2">
+                                                <span className="px-2 py-0.5 text-xs font-bold rounded bg-green-500/20 text-green-400">GET</span>
+                                                <code className="text-sm">/api/v1/usage</code>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-1">Check your API usage statistics</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <Separator />
+
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Example Request</h3>
+                                    <div className="bg-muted p-4 rounded-md font-mono text-xs overflow-x-auto space-y-2">
+                                        <p className="text-muted-foreground"># Generate an image</p>
+                                        <p className="text-green-400">curl -X POST https://directorspalette.com/api/v1/images/generate \</p>
+                                        <p className="text-green-400 pl-4">-H &quot;Authorization: Bearer dp_your_key&quot; \</p>
+                                        <p className="text-green-400 pl-4">-H &quot;Content-Type: application/json&quot; \</p>
+                                        <p className="text-green-400 pl-4">-d &apos;{'{"prompt": "A sunset over mountains", "model": "nano-banana"}'}&apos;</p>
+                                    </div>
+                                </div>
+
+                                <Separator />
+
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Rate Limits</h3>
+                                    <div className="grid sm:grid-cols-2 gap-4">
+                                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                                            <span className="font-semibold text-sm">Standard</span>
+                                            <p className="text-xs text-muted-foreground mt-1">60 requests per minute</p>
+                                        </div>
+                                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                                            <span className="font-semibold text-sm">Burst</span>
+                                            <p className="text-xs text-muted-foreground mt-1">Up to 100 requests in short bursts</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+                                    <p className="text-sm text-muted-foreground">
+                                        <strong>Full API Documentation:</strong> See <code className="px-1 bg-muted rounded">docs/API_DOCUMENTATION.md</code> for complete endpoint specs, code examples in Python/JavaScript, and error handling.
+                                    </p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </section>
+
                     {/* Footer */}
                     <div className="pt-12 text-center text-muted-foreground">
-                        <p>Need more help? Contact our support team.</p>
+                        <p>Need more help? Contact us at support@directorspalette.com</p>
                     </div>
 
                 </div>

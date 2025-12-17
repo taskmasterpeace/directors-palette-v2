@@ -78,11 +78,11 @@ export function Storyboard() {
     }
 
     return (
-        <div className="space-y-2">
+        <div className="flex flex-col h-full overflow-hidden p-2">
             {/* Workflow Tabs with Step Numbers */}
-            <Tabs value={internalTab} onValueChange={(v) => setInternalTab(v as typeof internalTab)}>
+            <Tabs value={internalTab} onValueChange={(v) => setInternalTab(v as typeof internalTab)} className="flex-1 flex flex-col overflow-hidden">
                 {/* Save Indicator & Help */}
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-1 flex-shrink-0">
                     <StoryboardHelp />
                     <SaveIndicator />
                 </div>

@@ -28,6 +28,9 @@ export function usePromptLibraryManager(onSelectPrompt?: (prompt: string) => voi
         deletePrompt,
         toggleQuickAccess,
         addCategory,
+        updateCategory,
+        deleteCategory,
+        clearAllPrompts,
         setSearchQuery,
         setSelectedCategory,
         loadUserPrompts,
@@ -287,6 +290,34 @@ export function usePromptLibraryManager(onSelectPrompt?: (prompt: string) => voi
         }
     }
 
+    // Update category
+    const handleUpdateCategory = async (id: string, updates: { name: string; icon: string }) => {
+        try {
+            await updateCategory(id, updates)
+            toast({ title: 'Success', description: 'Category updated' })
+        } catch (error) {
+            console.error('Failed to update category:', error)
+            toast({ title: 'Error', description: 'Failed to update category', variant: 'destructive' })
+        }
+    }
+
+    // Delete category
+    const handleDeleteCategory = async (id: string) => {
+        try {
+            await deleteCategory(id)
+            toast({ title: 'Success', description: 'Category deleted' })
+        } catch (error) {
+            console.error('Failed to delete category:', error)
+            toast({ title: 'Error', description: 'Failed to delete category', variant: 'destructive' })
+        }
+    }
+
+    // Clear all prompts
+    const handleClearAllPrompts = () => {
+        clearAllPrompts()
+        toast({ title: 'Cleared', description: 'All prompts have been removed' })
+    }
+
     return {
         prompts,
         categories,
@@ -301,6 +332,9 @@ export function usePromptLibraryManager(onSelectPrompt?: (prompt: string) => voi
         handleSelectPrompt,
         handleExportPrompts,
         handleImportPrompts,
+        handleUpdateCategory,
+        handleDeleteCategory,
+        handleClearAllPrompts,
         setSearchQuery,
         setSelectedCategory,
         toggleQuickAccess,

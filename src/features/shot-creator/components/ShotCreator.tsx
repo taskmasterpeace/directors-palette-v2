@@ -121,9 +121,9 @@ const ShotCreator = () => {
     }
 
     return (
-        <div className="w-full h-full">
+        <div className="w-full h-full flex flex-col overflow-hidden">
             {/* Mobile: Vertical stack, Desktop: Resizable panels */}
-            <div className="pb-4 pt-2">
+            <div className="flex-1 overflow-hidden">
                 {/* Mobile Layout (< lg) */}
                 <div className="lg:hidden space-y-4">
                     {/* Reference Images */}
@@ -195,13 +195,13 @@ const ShotCreator = () => {
                 </div>
 
                 {/* Desktop Layout (>= lg) - Resizable */}
-                <div className="hidden lg:block h-[calc(100vh-120px)] relative">
-                    {/* Toggle Button - Always visible */}
+                <div className="hidden lg:flex h-full relative">
+                    {/* Toggle Button - Always visible, positioned at top */}
                     <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 z-50 bg-primary/90 hover:bg-primary text-white rounded-l-lg p-1 w-6 h-14 flex items-center justify-center transition-all shadow-lg"
+                        className="absolute right-0 top-4 z-50 bg-primary/90 hover:bg-primary text-white rounded-l-lg p-1 w-6 h-10 flex items-center justify-center transition-all shadow-lg"
                         style={{ marginRight: rightPanelCollapsed ? '0' : 'calc(40% - 12px)' }}
                         title={rightPanelCollapsed ? 'Show gallery panel' : 'Hide gallery panel'}
                     >

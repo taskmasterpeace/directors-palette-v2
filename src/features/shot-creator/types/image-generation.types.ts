@@ -11,6 +11,9 @@ export type ImageModel = Extract<ModelId,
   | 'nano-banana-pro'
   | 'z-image-turbo'
   | 'qwen-image-fast'
+  | 'gpt-image-low'
+  | 'gpt-image-medium'
+  | 'gpt-image-high'
 >
 
 // Model-specific settings interfaces
@@ -42,12 +45,20 @@ export interface QwenImageFastSettings {
   negative_prompt?: string
 }
 
+export interface GptImageSettings {
+  aspectRatio?: '1:1' | '3:2' | '2:3'
+  outputFormat?: 'png' | 'jpeg' | 'webp'
+  background?: 'opaque' | 'transparent' | 'auto'
+  numImages?: number // 1-10
+}
+
 // Union type for all model settings
 export type ImageModelSettings =
   | NanoBananaSettings
   | NanoBananaProSettings
   | ZImageTurboSettings
   | QwenImageFastSettings
+  | GptImageSettings
 
 // Input for image generation service
 export interface ImageGenerationInput {
@@ -96,12 +107,22 @@ export interface QwenImageFastInput {
   negative_prompt?: string
 }
 
+export interface GptImageInput {
+  prompt: string
+  aspect_ratio?: '1:1' | '3:2' | '2:3'
+  output_format?: 'png' | 'jpeg' | 'webp'
+  background?: 'opaque' | 'transparent' | 'auto'
+  quality?: 'low' | 'medium' | 'high' | 'auto'
+  n?: number // Number of images (1-10)
+}
+
 // Union type for all Replicate inputs
 export type ReplicateImageInput =
   | NanoBananaInput
   | NanoBananaProInput
   | ZImageTurboInput
   | QwenImageFastInput
+  | GptImageInput
 
 // API Request/Response types
 export interface ImageGenerationRequest {

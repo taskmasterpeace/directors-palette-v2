@@ -107,34 +107,30 @@ const ImageCardComponent = ({
   if (hasFailed) {
     const isLoadError = imageLoadError && image.status !== 'failed'
     return (
-      <div className="relative group rounded-lg overflow-hidden bg-card border border-red-900/50">
+      <div className="relative group rounded-lg overflow-hidden bg-card border-2 border-red-500/50">
         <div className={cn(
-          "w-full relative flex flex-col items-center justify-center bg-gradient-to-br from-red-950/30 via-background to-red-950/20",
+          "w-full relative flex flex-col items-center justify-center bg-gradient-to-br from-red-950/40 via-background to-red-950/30 p-3",
           useNativeAspectRatio ? "aspect-video" : "aspect-square"
         )}>
-          <AlertCircle className="w-10 h-10 text-red-400" />
-          <p className="text-sm text-red-400 mt-3 font-medium">
-            {isLoadError ? 'Image Unavailable' : 'Generation Failed'}
+          <AlertCircle className="w-8 h-8 text-red-400 flex-shrink-0" />
+          <p className="text-sm text-red-400 mt-2 font-medium text-center">
+            {isLoadError ? 'Unavailable' : 'Failed'}
           </p>
           {image.metadata?.error && !isLoadError && (
-            <p className="text-xs text-muted-foreground mt-1 px-4 text-center line-clamp-2 max-w-[200px]">
+            <p className="text-xs text-muted-foreground mt-1 px-2 text-center line-clamp-1">
               {image.metadata.error}
             </p>
           )}
-          {isLoadError && (
-            <p className="text-xs text-muted-foreground mt-1 px-4 text-center max-w-[200px]">
-              The image could not be loaded. It may have expired.
-            </p>
-          )}
-          <div className="flex gap-2 mt-4">
+          {/* Action buttons - always visible */}
+          <div className="flex gap-2 mt-3 flex-shrink-0">
             {onRetry && (
               <Button
                 size="sm"
                 variant="outline"
                 onClick={onRetry}
-                className="text-xs h-7 border-violet-500/50 hover:bg-violet-500/10"
+                className="text-xs h-8 px-2 border-violet-500/50 hover:bg-violet-500/20 bg-violet-500/10"
               >
-                <RefreshCw className="w-3 h-3 mr-1" />
+                <RefreshCw className="w-3.5 h-3.5 mr-1" />
                 Retry
               </Button>
             )}
@@ -142,9 +138,9 @@ const ImageCardComponent = ({
               size="sm"
               variant="outline"
               onClick={onDelete}
-              className="text-xs h-7 border-red-500/50 hover:bg-red-500/10 text-red-400"
+              className="text-xs h-8 px-2 border-red-500/50 hover:bg-red-500/20 bg-red-500/10 text-red-400"
             >
-              <Trash2 className="w-3 h-3 mr-1" />
+              <Trash2 className="w-3.5 h-3.5 mr-1" />
               Remove
             </Button>
           </div>

@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useMemo } from 'react'
-import { Users, RefreshCw, Star, Sparkles } from 'lucide-react'
+import { RefreshCw, Star, Sparkles, Database } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CommunityFilters } from './CommunityFilters'
 import { CommunityGrid } from './CommunityGrid'
 import { CommunityCard } from './CommunityCard'
 import { useCommunity } from '../hooks/useCommunity'
 import { useToast } from '@/hooks/use-toast'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import type { CommunityItemType } from '../types/community.types'
 
 const TYPE_LABELS: Record<CommunityItemType, string> = {
@@ -85,9 +86,12 @@ export function CommunityPage() {
     return success
   }
 
-  // Show error toast
+  // Check if it's a schema cache error (tables not available)
+  const isSchemaError = error?.includes('schema cache') || error?.includes('PGRST205')
+
+  // Show error toast only for non-schema errors
   React.useEffect(() => {
-    if (error) {
+    if (error && !isSchemaError) {
       toast({
         title: 'Error',
         description: error,
@@ -95,7 +99,7 @@ export function CommunityPage() {
       })
       clearError()
     }
-  }, [error, toast, clearError])
+  }, [error, toast, clearError, isSchemaError])
 
   if (!isInitialized) {
     return (
@@ -105,43 +109,69 @@ export function CommunityPage() {
     )
   }
 
-  return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border/50">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Users className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold">Community</h1>
-            <p className="text-sm text-muted-foreground">
-              Discover and share Wildcards, Recipes, Prompts, and Directors
-            </p>
+  // Show schema error message if tables aren't available
+  if (isSchemaError) {
+    return (
+      <div className="h-full flex flex-col overflow-hidden">
+        {/* Setup Required Message */}
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="max-w-md space-y-4">
+            <Alert variant="default" className="border-amber-500/50 bg-amber-500/10">
+              <Database className="h-5 w-5 text-amber-500" />
+              <AlertTitle className="text-amber-400">Community Setup Required</AlertTitle>
+              <AlertDescription className="text-muted-foreground mt-2">
+                <p className="mb-3">
+                  The Community feature requires database tables that need to be refreshed in Supabase.
+                </p>
+                <p className="text-sm mb-3">
+                  <strong>To fix this:</strong>
+                </p>
+                <ol className="list-decimal list-inside text-sm space-y-1 mb-4">
+                  <li>Go to Supabase Dashboard</li>
+                  <li>Navigate to Settings → API</li>
+                  <li>Click &quot;Reload schema&quot; button</li>
+                  <li>Come back and refresh this page</li>
+                </ol>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={refresh}
+                  className="gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Try Again
+                </Button>
+              </AlertDescription>
+            </Alert>
           </div>
         </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={refresh}
-          disabled={isLoading}
-          className="gap-2"
-        >
-          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
       </div>
+    )
+  }
 
+  return (
+    <div className="h-full flex flex-col overflow-hidden">
       {/* Filters */}
-      <div className="p-4 border-b border-border/50">
-        <CommunityFilters
+      <div className="p-4 border-b border-border/50 flex items-center gap-4">
+        <div className="flex-1">
+          <CommunityFilters
           filters={filters}
           onTypeChange={setTypeFilter}
           onCategoryChange={setCategoryFilter}
           onSearchChange={setSearchFilter}
           onSortChange={setSortBy}
         />
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={refresh}
+          disabled={isLoading}
+          className="gap-2 flex-shrink-0"
+        >
+          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       {/* Content */}

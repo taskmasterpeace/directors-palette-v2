@@ -32,17 +32,9 @@ export function PromptToolsPage() {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="p-6 border-b border-border">
-        <h1 className="text-2xl font-bold text-white">Prompt Tools</h1>
-        <p className="text-muted-foreground mt-1">
-          Manage your prompt library, wildcards, recipes, and styles
-        </p>
-      </div>
-
+    <div className="h-full flex flex-col overflow-hidden">
       {/* Tabs */}
-      <div className="flex-1 p-6 overflow-hidden">
+      <div className="flex-1 p-4 overflow-hidden">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
           <TabsList className="w-full grid grid-cols-4 bg-card/50 h-12 mb-4">
             <TabsTrigger

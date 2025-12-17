@@ -61,8 +61,9 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       const items = await communityService.getApprovedItems(filters)
       set({ items, isLoading: false })
     } catch (error) {
-      console.error('Error fetching community items:', error)
-      set({ error: 'Failed to load community items', isLoading: false })
+      // Capture actual error message for schema cache detection in UI
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load community items'
+      set({ error: errorMessage, isLoading: false })
     }
   },
 

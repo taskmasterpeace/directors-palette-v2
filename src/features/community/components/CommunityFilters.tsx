@@ -120,11 +120,15 @@ export function CommunityFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            {(filters.type && filters.type !== 'all' ? categories : allCategories).map((cat) => (
-              <SelectItem key={cat.value} value={cat.value}>
-                {cat.label}
-              </SelectItem>
-            ))}
+            {(filters.type && filters.type !== 'all' ? categories : allCategories).map((cat) => {
+              // When showing all categories, use type-prefixed key to avoid duplicates (e.g., "action" exists in recipe, prompt, director)
+              const key = 'type' in cat ? `${cat.type}-${cat.value}` : cat.value
+              return (
+                <SelectItem key={key} value={cat.value}>
+                  {cat.label}
+                </SelectItem>
+              )
+            })}
           </SelectContent>
         </Select>
 

@@ -43,18 +43,19 @@ interface NavItem {
     id: TabValue
     label: string
     icon: React.ElementType
+    banner: string // Banner image path
     comingSoon?: boolean
 }
 
 const NAV_ITEMS: NavItem[] = [
-    { id: 'shot-creator', label: 'Shot Creator', icon: Sparkles },
-    { id: 'shot-animator', label: 'Shot Animator', icon: Film },
-    { id: 'layout-annotation', label: 'Layout & Annotation', icon: Layout },
-    { id: 'storyboard', label: 'Storyboard', icon: BookOpen },
-    { id: 'music-lab', label: 'Music Lab', icon: Music },
-    { id: 'prompt-tools', label: 'Prompt Tools', icon: FlaskConical },
-    { id: 'gallery', label: 'Gallery', icon: Images },
-    { id: 'community', label: 'Community', icon: Users },
+    { id: 'shot-creator', label: 'Shot Creator', icon: Sparkles, banner: '/banners/shot-creator.webp' },
+    { id: 'shot-animator', label: 'Shot Animator', icon: Film, banner: '/banners/shot-animator.webp' },
+    { id: 'layout-annotation', label: 'Canvas Editor', icon: Layout, banner: '/banners/canvas-editor.webp' },
+    { id: 'storyboard', label: 'Storyboard', icon: BookOpen, banner: '/banners/storyboard.webp' },
+    { id: 'music-lab', label: 'Music Lab', icon: Music, banner: '/banners/music-lab.webp' },
+    { id: 'prompt-tools', label: 'Prompt Tools', icon: FlaskConical, banner: '/banners/prompt-tools.webp' },
+    { id: 'gallery', label: 'Gallery', icon: Images, banner: '/banners/gallery.webp' },
+    { id: 'community', label: 'Community', icon: Users, banner: '/banners/community.webp' },
 ]
 
 export function SidebarNavigation() {
@@ -179,13 +180,12 @@ export function SidebarNavigation() {
             </div>
 
             {/* Navigation Items */}
-            <div className="flex-1 py-4 overflow-y-auto overflow-x-hidden space-y-1 px-2">
+            <div className="flex-1 py-4 overflow-y-auto overflow-x-hidden space-y-1.5 px-2">
                 <AdminNavItem isCollapsed={isCollapsed} />
                 <TooltipProvider delayDuration={0}>
                     {NAV_ITEMS.map((item) => {
                         const isActive = activeTab === item.id
-                        // Rename Layout & Annotation to Canvas Editor in UI
-                        const label = item.id === 'layout-annotation' ? 'Canvas Editor' : item.label
+                        const label = item.label
 
                         return (
                             <Tooltip key={item.id}>
@@ -193,24 +193,49 @@ export function SidebarNavigation() {
                                     <button
                                         onClick={() => !item.comingSoon && setActiveTab(item.id)}
                                         className={cn(
-                                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all relative group overflow-hidden",
+                                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all relative group overflow-hidden",
                                             item.comingSoon
                                                 ? "text-muted-foreground/50 cursor-not-allowed"
                                                 : isActive
-                                                    ? "bg-gradient-to-r from-violet-500/20 via-fuchsia-500/15 to-transparent text-foreground font-medium"
-                                                    : "text-muted-foreground hover:text-foreground"
+                                                    ? "text-foreground font-medium shadow-lg"
+                                                    : "text-muted-foreground hover:text-foreground hover:shadow-md"
                                         )}
                                     >
-                                        {/* Hover gradient background */}
-                                        {!isActive && !item.comingSoon && (
-                                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-violet-500/10 via-fuchsia-500/5 to-transparent" />
+                                        {/* Banner image background - visible on hover or when active */}
+                                        <div
+                                            className={cn(
+                                                "absolute inset-0 bg-cover bg-center transition-opacity duration-300",
+                                                isActive ? "opacity-40" : "opacity-0 group-hover:opacity-30"
+                                            )}
+                                            style={{
+                                                backgroundImage: `url(${item.banner})`,
+                                                filter: 'brightness(0.8) saturate(1.2)'
+                                            }}
+                                        />
+                                        {/* Gradient overlay for readability */}
+                                        <div className={cn(
+                                            "absolute inset-0 transition-opacity duration-300",
+                                            isActive
+                                                ? "bg-gradient-to-r from-amber-900/80 via-orange-900/60 to-red-900/40 opacity-100"
+                                                : "bg-gradient-to-r from-background/90 via-background/70 to-background/50 opacity-0 group-hover:opacity-100"
+                                        )} />
+                                        {/* Active state warm glow border */}
+                                        {isActive && (
+                                            <div className="absolute inset-0 rounded-lg ring-1 ring-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)]" />
                                         )}
-                                        <item.icon className={cn("w-5 h-5 flex-shrink-0 relative z-10", isActive && !item.comingSoon && "text-violet-400")} />
+                                        {/* Hover drop shadow effect */}
+                                        {!isActive && !item.comingSoon && (
+                                            <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.3)]" />
+                                        )}
+                                        <item.icon className={cn(
+                                            "w-5 h-5 flex-shrink-0 relative z-10 transition-colors",
+                                            isActive && !item.comingSoon ? "text-amber-400" : "group-hover:text-amber-300"
+                                        )} />
                                         {!isCollapsed && (
                                             <motion.span
                                                 initial={{ opacity: 0, x: -10 }}
                                                 animate={{ opacity: 1, x: 0 }}
-                                                className="truncate flex items-center gap-2 relative z-10"
+                                                className="truncate flex items-center gap-2 relative z-10 drop-shadow-sm"
                                             >
                                                 {label}
                                                 {item.comingSoon && (
@@ -222,7 +247,7 @@ export function SidebarNavigation() {
                                         )}
                                         {isActive && !item.comingSoon && (
                                             <>
-                                                {/* Animated Gradient Indicator */}
+                                                {/* Animated Gradient Indicator - Warm tones */}
                                                 <motion.div
                                                     layoutId="activeTabIndicator"
                                                     className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full overflow-hidden"
@@ -231,7 +256,7 @@ export function SidebarNavigation() {
                                                     exit={{ opacity: 0 }}
                                                 >
                                                     <motion.div
-                                                        className="absolute inset-0 bg-gradient-to-b from-violet-500 via-fuchsia-500 to-amber-500"
+                                                        className="absolute inset-0 bg-gradient-to-b from-amber-400 via-orange-500 to-red-500"
                                                         animate={{
                                                             backgroundPosition: ['0% 0%', '0% 100%', '0% 0%'],
                                                         }}
@@ -243,10 +268,10 @@ export function SidebarNavigation() {
                                                         style={{ backgroundSize: '100% 200%' }}
                                                     />
                                                 </motion.div>
-                                                {/* Glow Effect */}
+                                                {/* Warm Glow Effect */}
                                                 <motion.div
                                                     layoutId="activeTabGlow"
-                                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-gradient-to-r from-violet-500/30 via-fuchsia-500/20 to-transparent blur-lg pointer-events-none"
+                                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-gradient-to-r from-amber-500/40 via-orange-500/20 to-transparent blur-lg pointer-events-none"
                                                     initial={{ opacity: 0 }}
                                                     animate={{ opacity: 1 }}
                                                     exit={{ opacity: 0 }}
@@ -276,23 +301,44 @@ export function SidebarNavigation() {
                             <button
                                 onClick={() => setActiveTab('help')}
                                 className={cn(
-                                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all relative group overflow-hidden",
+                                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all relative group overflow-hidden",
                                     activeTab === 'help'
-                                        ? "bg-gradient-to-r from-violet-500/20 via-fuchsia-500/15 to-transparent text-foreground font-medium"
-                                        : "text-muted-foreground hover:text-foreground",
+                                        ? "text-foreground font-medium shadow-lg"
+                                        : "text-muted-foreground hover:text-foreground hover:shadow-md",
                                     isCollapsed && "justify-center px-0"
                                 )}
                             >
-                                {/* Hover gradient background */}
-                                {activeTab !== 'help' && (
-                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-violet-500/10 via-fuchsia-500/5 to-transparent" />
+                                {/* Banner image background */}
+                                <div
+                                    className={cn(
+                                        "absolute inset-0 bg-cover bg-center transition-opacity duration-300",
+                                        activeTab === 'help' ? "opacity-40" : "opacity-0 group-hover:opacity-30"
+                                    )}
+                                    style={{
+                                        backgroundImage: 'url(/banners/help.webp)',
+                                        filter: 'brightness(0.8) saturate(1.2)'
+                                    }}
+                                />
+                                {/* Gradient overlay */}
+                                <div className={cn(
+                                    "absolute inset-0 transition-opacity duration-300",
+                                    activeTab === 'help'
+                                        ? "bg-gradient-to-r from-amber-900/80 via-orange-900/60 to-red-900/40 opacity-100"
+                                        : "bg-gradient-to-r from-background/90 via-background/70 to-background/50 opacity-0 group-hover:opacity-100"
+                                )} />
+                                {/* Active state warm glow border */}
+                                {activeTab === 'help' && (
+                                    <div className="absolute inset-0 rounded-lg ring-1 ring-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)]" />
                                 )}
-                                <HelpCircle className={cn("w-5 h-5 flex-shrink-0 relative z-10", activeTab === 'help' && "text-violet-400")} />
+                                <HelpCircle className={cn(
+                                    "w-5 h-5 flex-shrink-0 relative z-10 transition-colors",
+                                    activeTab === 'help' ? "text-amber-400" : "group-hover:text-amber-300"
+                                )} />
                                 {!isCollapsed && (
                                     <motion.span
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
-                                        className="truncate relative z-10"
+                                        className="truncate relative z-10 drop-shadow-sm"
                                     >
                                         Help & Manual
                                     </motion.span>
@@ -307,7 +353,7 @@ export function SidebarNavigation() {
                                             exit={{ opacity: 0 }}
                                         >
                                             <motion.div
-                                                className="absolute inset-0 bg-gradient-to-b from-violet-500 via-fuchsia-500 to-amber-500"
+                                                className="absolute inset-0 bg-gradient-to-b from-amber-400 via-orange-500 to-red-500"
                                                 animate={{
                                                     backgroundPosition: ['0% 0%', '0% 100%', '0% 0%'],
                                                 }}
@@ -321,7 +367,7 @@ export function SidebarNavigation() {
                                         </motion.div>
                                         <motion.div
                                             layoutId="activeTabGlowFooter"
-                                            className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-gradient-to-r from-violet-500/30 via-fuchsia-500/20 to-transparent blur-lg pointer-events-none"
+                                            className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-gradient-to-r from-amber-500/40 via-orange-500/20 to-transparent blur-lg pointer-events-none"
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             exit={{ opacity: 0 }}
@@ -574,32 +620,62 @@ interface MobileNavButtonProps {
     onClick: () => void
 }
 
-function MobileNavButton({ icon: Icon, label, isActive, comingSoon, onClick }: MobileNavButtonProps) {
+interface MobileNavButtonWithBannerProps extends MobileNavButtonProps {
+    banner?: string
+}
+
+function MobileNavButton({ icon: Icon, label, isActive, comingSoon, onClick, banner }: MobileNavButtonWithBannerProps) {
+    // Find banner from NAV_ITEMS if not provided
+    const navItem = NAV_ITEMS.find(item => item.label === label || (item.id === 'layout-annotation' && label === 'Canvas Editor'))
+    const bannerUrl = banner || navItem?.banner || '/banners/help.webp'
+
     return (
         <button
             onClick={onClick}
             disabled={comingSoon}
             className={cn(
-                "w-full flex items-center gap-3 px-3 py-3 rounded-md transition-all min-h-[48px] relative overflow-hidden group",
+                "w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all min-h-[48px] relative overflow-hidden group",
                 comingSoon
                     ? "text-muted-foreground/50 cursor-not-allowed"
                     : isActive
-                        ? "bg-gradient-to-r from-violet-500/20 via-fuchsia-500/15 to-transparent text-foreground font-medium"
+                        ? "text-foreground font-medium shadow-lg"
                         : "text-muted-foreground hover:text-foreground"
             )}
         >
-            {/* Hover gradient background */}
-            {!isActive && !comingSoon && (
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-violet-500/10 via-fuchsia-500/5 to-transparent" />
+            {/* Banner image background */}
+            <div
+                className={cn(
+                    "absolute inset-0 bg-cover bg-center transition-opacity duration-300",
+                    isActive ? "opacity-40" : "opacity-0 group-hover:opacity-30"
+                )}
+                style={{
+                    backgroundImage: `url(${bannerUrl})`,
+                    filter: 'brightness(0.8) saturate(1.2)'
+                }}
+            />
+            {/* Gradient overlay */}
+            <div className={cn(
+                "absolute inset-0 transition-opacity duration-300",
+                isActive
+                    ? "bg-gradient-to-r from-amber-900/80 via-orange-900/60 to-red-900/40 opacity-100"
+                    : "bg-gradient-to-r from-background/90 via-background/70 to-background/50 opacity-0 group-hover:opacity-100"
+            )} />
+
+            {/* Active state warm glow border */}
+            {isActive && !comingSoon && (
+                <div className="absolute inset-0 rounded-lg ring-1 ring-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)]" />
             )}
 
             {/* Active indicator */}
             {isActive && !comingSoon && (
-                <div className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full bg-gradient-to-b from-violet-500 via-fuchsia-500 to-amber-500" />
+                <div className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full bg-gradient-to-b from-amber-400 via-orange-500 to-red-500" />
             )}
 
-            <Icon className={cn("w-5 h-5 flex-shrink-0 relative z-10", isActive && !comingSoon && "text-violet-400")} />
-            <span className="relative z-10 flex items-center gap-2">
+            <Icon className={cn(
+                "w-5 h-5 flex-shrink-0 relative z-10 transition-colors",
+                isActive && !comingSoon ? "text-amber-400" : "group-hover:text-amber-300"
+            )} />
+            <span className="relative z-10 flex items-center gap-2 drop-shadow-sm">
                 {label}
                 {comingSoon && (
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">
@@ -608,9 +684,9 @@ function MobileNavButton({ icon: Icon, label, isActive, comingSoon, onClick }: M
                 )}
             </span>
 
-            {/* Active dot indicator */}
+            {/* Active dot indicator - warm color */}
             {isActive && !comingSoon && (
-                <div className="ml-auto w-2 h-2 rounded-full bg-violet-500 relative z-10" />
+                <div className="ml-auto w-2 h-2 rounded-full bg-amber-500 relative z-10" />
             )}
         </button>
     )

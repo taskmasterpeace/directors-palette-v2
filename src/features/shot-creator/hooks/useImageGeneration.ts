@@ -246,8 +246,8 @@ export function useImageGeneration() {
                             setShotCreatorProcessing(false)
                             setActiveGalleryId(null)
 
-                            // Navigate to page 1 to show the new image immediately
-                            useUnifiedGalleryStore.getState().setCurrentPage(1)
+                            // Refresh gallery to update the pending placeholder with the completed image
+                            useUnifiedGalleryStore.getState().refreshGallery()
 
                             toast({
                                 title: 'Image Ready!',
@@ -260,6 +260,18 @@ export function useImageGeneration() {
                                 error: updatedRecord.metadata.error
                             })
                             setShotCreatorProcessing(false)
+
+                            // Update the pending placeholder to show failed state
+                            if (activeGalleryId) {
+                                useUnifiedGalleryStore.getState().updatePendingImage(activeGalleryId, {
+                                    status: 'failed',
+                                    metadata: {
+                                        createdAt: new Date().toISOString(),
+                                        creditsUsed: 1,
+                                        error: updatedRecord.metadata.error
+                                    }
+                                })
+                            }
                             setActiveGalleryId(null)
 
                             toast({
@@ -523,6 +535,16 @@ export function useImageGeneration() {
                     description: variationPrompt.slice(0, 60) + (variationPrompt.length > 60 ? '...' : ''),
                 })
                 const response = await imageGenerationService.generateImage(request)
+
+                // Add pending placeholder to gallery immediately after API responds with galleryId
+                if (response.galleryId) {
+                    useUnifiedGalleryStore.getState().addPendingPlaceholder(
+                        response.galleryId,
+                        variationPrompt,
+                        model,
+                        modelSettings.aspectRatio || '16:9'
+                    )
+                }
                 results.push(response)
                 // For pipe chaining, wait for the image to complete before proceeding to next step for pipe previous result
                 if (isPipeChaining) {

@@ -127,6 +127,11 @@ interface UnifiedGalleryState {
   getTotalImages: () => number
   getTotalCreditsUsed: () => number
 
+  // Pending placeholder management
+  addPendingPlaceholder: (galleryId: string, prompt: string, model: string, aspectRatio?: string) => void
+  updatePendingImage: (galleryId: string, updates: Partial<GeneratedImage>) => void
+  removePendingByGalleryId: (galleryId: string) => void
+
   // Hydration (for SSR compatibility)
   hydrateFromStorage: () => void
 }
@@ -241,16 +246,23 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
     const image = state.images.find(img => img.id === imageIdOrUrl || img.url === imageIdOrUrl)
 
     if (image) {
-      // Delete from Supabase (database and storage)
-      const result = await GalleryService.deleteImage(image.id)
+      // Only try to delete from Supabase if the image has a valid database ID (not local-only)
+      // and is not in a failed/pending state that was never persisted
+      const isLocalOnly = image.id.startsWith('img_') && !image.persistence?.isPermanent
 
-      if (!result.success) {
-        console.error('Failed to delete image:', result.error)
-        return false
+      if (!isLocalOnly) {
+        // Delete from Supabase (database and storage)
+        const result = await GalleryService.deleteImage(image.id)
+
+        if (!result.success) {
+          console.warn('Failed to delete image from Supabase:', result.error)
+          // Continue with local removal anyway - the image might have been already deleted
+          // or never existed in Supabase (failed generations)
+        }
       }
     }
 
-    // Remove from store
+    // Always remove from local store
     set((state) => ({
       images: state.images.filter(img =>
         img.id !== imageIdOrUrl && img.url !== imageIdOrUrl
@@ -554,6 +566,61 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
     } catch (error) {
       console.error('Failed to refresh gallery:', error)
     }
+  },
+
+  // Pending placeholder management
+  addPendingPlaceholder: (galleryId, prompt, model, aspectRatio = '16:9') => {
+    const pendingImage: GeneratedImage = {
+      id: galleryId, // Use the gallery ID so we can update it later
+      url: '', // No URL yet
+      prompt,
+      source: 'shot-creator',
+      model,
+      settings: {
+        aspectRatio,
+        resolution: '1024x1024',
+        aspect_ratio: aspectRatio,
+      },
+      metadata: {
+        createdAt: new Date().toISOString(),
+        creditsUsed: 1,
+      },
+      timestamp: Date.now(),
+      tags: [],
+      status: 'pending',
+      persistence: {
+        isPermanent: false,
+      },
+    }
+
+    set((state) => ({
+      images: [pendingImage, ...state.images],
+      recentImages: [pendingImage, ...state.recentImages.slice(0, 9)]
+    }))
+
+    console.log('⏳ Gallery: Added pending placeholder', { galleryId, prompt: prompt.slice(0, 50) })
+  },
+
+  updatePendingImage: (galleryId, updates) => {
+    set((state) => ({
+      images: state.images.map(img =>
+        img.id === galleryId
+          ? { ...img, ...updates }
+          : img
+      ),
+      recentImages: state.recentImages.map(img =>
+        img.id === galleryId
+          ? { ...img, ...updates }
+          : img
+      )
+    }))
+  },
+
+  removePendingByGalleryId: (galleryId) => {
+    set((state) => ({
+      images: state.images.filter(img => img.id !== galleryId),
+      recentImages: state.recentImages.filter(img => img.id !== galleryId)
+    }))
   },
 
   // Hydrate UI preferences from localStorage (call after mount to avoid SSR mismatch)

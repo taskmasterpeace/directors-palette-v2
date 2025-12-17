@@ -19,7 +19,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-fast'
+export type ModelId = 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-fast' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high'
 
 export interface ModelParameter {
     id: string
@@ -237,6 +237,50 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         step: 0.1,
         default: 1.0,
         description: 'Guidance scale (0-2)'
+    },
+    // GPT Image specific parameters
+    gptImageAspectRatio: {
+        id: 'aspectRatio',
+        label: 'Aspect Ratio',
+        type: 'select',
+        default: '3:2',
+        options: [
+            { value: '1:1', label: '1:1 Square' },
+            { value: '3:2', label: '3:2 Landscape' },
+            { value: '2:3', label: '2:3 Portrait' }
+        ]
+    },
+    gptImageBackground: {
+        id: 'background',
+        label: 'Background',
+        type: 'select',
+        default: 'opaque',
+        options: [
+            { value: 'opaque', label: 'Opaque (Standard)' },
+            { value: 'transparent', label: 'Transparent (PNG only)' },
+            { value: 'auto', label: 'Auto' }
+        ],
+        description: 'Transparent backgrounds are only available with PNG format'
+    },
+    gptImageOutputFormat: {
+        id: 'outputFormat',
+        label: 'Output Format',
+        type: 'select',
+        default: 'webp',
+        options: [
+            { value: 'webp', label: 'WebP (Recommended)' },
+            { value: 'png', label: 'PNG (Supports transparency)' },
+            { value: 'jpeg', label: 'JPEG' }
+        ]
+    },
+    gptImageNumImages: {
+        id: 'numImages',
+        label: 'Number of Images',
+        type: 'slider',
+        min: 1,
+        max: 10,
+        default: 1,
+        description: 'Generate multiple images in one request (1-10). Cost multiplied by count.'
     }
 }
 
@@ -321,6 +365,72 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             guidance: MODEL_PARAMETERS.qwenGuidance,
             num_inference_steps: MODEL_PARAMETERS.qwenSteps,
             negative_prompt: MODEL_PARAMETERS.negativePrompt
+        },
+        maxReferenceImages: 0 // Text-to-image only
+    },
+    // OpenAI GPT Image 1.5 - Low Quality (Budget option)
+    'gpt-image-low': {
+        id: 'gpt-image-low',
+        name: 'gpt-image-low',
+        displayName: 'GPT Image Low',
+        type: 'generation',
+        icon: '🎨',
+        description: 'OpenAI GPT Image - Budget quality. Fast & affordable for drafts.',
+        badge: 'Budget',
+        badgeColor: 'bg-green-600',
+        textColor: 'text-green-300',
+        endpoint: 'openai/gpt-image-1.5',
+        costPerImage: 0.03, // 3 tokens = 3 cents (~130% margin on $0.013)
+        supportedParameters: ['gptImageAspectRatio', 'gptImageOutputFormat', 'gptImageBackground', 'gptImageNumImages'],
+        parameters: {
+            aspectRatio: MODEL_PARAMETERS.gptImageAspectRatio,
+            outputFormat: MODEL_PARAMETERS.gptImageOutputFormat,
+            background: MODEL_PARAMETERS.gptImageBackground,
+            numImages: MODEL_PARAMETERS.gptImageNumImages
+        },
+        maxReferenceImages: 0 // Text-to-image only
+    },
+    // OpenAI GPT Image 1.5 - Medium Quality
+    'gpt-image-medium': {
+        id: 'gpt-image-medium',
+        name: 'gpt-image-medium',
+        displayName: 'GPT Image',
+        type: 'generation',
+        icon: '🎨',
+        description: 'OpenAI GPT Image - Standard quality. Excellent text rendering.',
+        badge: 'Standard',
+        badgeColor: 'bg-blue-600',
+        textColor: 'text-blue-300',
+        endpoint: 'openai/gpt-image-1.5',
+        costPerImage: 0.10, // 10 tokens = 10 cents (100% margin on $0.05)
+        supportedParameters: ['gptImageAspectRatio', 'gptImageOutputFormat', 'gptImageBackground', 'gptImageNumImages'],
+        parameters: {
+            aspectRatio: MODEL_PARAMETERS.gptImageAspectRatio,
+            outputFormat: MODEL_PARAMETERS.gptImageOutputFormat,
+            background: MODEL_PARAMETERS.gptImageBackground,
+            numImages: MODEL_PARAMETERS.gptImageNumImages
+        },
+        maxReferenceImages: 0 // Text-to-image only
+    },
+    // OpenAI GPT Image 1.5 - High Quality
+    'gpt-image-high': {
+        id: 'gpt-image-high',
+        name: 'gpt-image-high',
+        displayName: 'GPT Image HD',
+        type: 'generation',
+        icon: '✨',
+        description: 'OpenAI GPT Image - Highest quality. Best for final renders & detailed work.',
+        badge: 'Premium',
+        badgeColor: 'bg-violet-600',
+        textColor: 'text-violet-300',
+        endpoint: 'openai/gpt-image-1.5',
+        costPerImage: 0.27, // 27 tokens = 27 cents (~100% margin on $0.136)
+        supportedParameters: ['gptImageAspectRatio', 'gptImageOutputFormat', 'gptImageBackground', 'gptImageNumImages'],
+        parameters: {
+            aspectRatio: MODEL_PARAMETERS.gptImageAspectRatio,
+            outputFormat: MODEL_PARAMETERS.gptImageOutputFormat,
+            background: MODEL_PARAMETERS.gptImageBackground,
+            numImages: MODEL_PARAMETERS.gptImageNumImages
         },
         maxReferenceImages: 0 // Text-to-image only
     }
