@@ -1,12 +1,16 @@
-End of session safety check. Run this before ending any Claude Code session.
+---
+description: End of session safety check - commit and push all changes before ending
+---
 
-Steps:
+## Session End Safety Check
+
+Run these steps before ending this Claude Code session:
+
 1. Run `git status` to check for uncommitted changes
 2. If any changes exist:
    - Stage them with `git add -A`
-   - Commit with descriptive message
+   - Create a descriptive commit message
    - Push to origin main
-3. Verify Vercel deployment status
-4. Report final status to user
+3. Report final status
 
-NEVER end a session with uncommitted work!
+**CRITICAL: NEVER end a session with uncommitted work!**
