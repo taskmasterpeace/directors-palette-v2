@@ -26,7 +26,7 @@ interface Coupon {
     created_at: string
 }
 
-interface Redemption {
+interface _Redemption {
     id: string
     coupon_id: string
     user_id: string

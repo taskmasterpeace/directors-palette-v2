@@ -10,11 +10,71 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card'
+import {
   Sparkles,
   Info,
-  Flame
+  Flame,
+  Zap,
+  Image,
+  Type,
+  Clock
 } from 'lucide-react'
 import { getAvailableModels, ModelId } from "@/config/index"
+
+// Enhanced model capability info
+const MODEL_CAPABILITIES: Record<ModelId, {
+  speed: string
+  textRendering: string
+  refImages: string
+  bestFor: string[]
+}> = {
+  'qwen-image-fast': {
+    speed: '~2s (Fastest)',
+    textRendering: 'Fair',
+    refImages: 'None',
+    bestFor: ['Rapid iteration', 'Concept exploration', 'Budget work']
+  },
+  'z-image-turbo': {
+    speed: '~5s (Fast)',
+    textRendering: 'Good',
+    refImages: '1 image',
+    bestFor: ['Quick image-to-image', 'Style transfer', 'Fast refinements']
+  },
+  'nano-banana': {
+    speed: '~8s (Moderate)',
+    textRendering: 'Good',
+    refImages: 'Up to 10',
+    bestFor: ['Multi-reference work', 'Character consistency', 'General use']
+  },
+  'nano-banana-pro': {
+    speed: '~15s (Moderate)',
+    textRendering: 'Excellent',
+    refImages: 'Up to 14',
+    bestFor: ['Text in images', 'Complex scenes', 'Multi-reference composites']
+  },
+  'gpt-image-low': {
+    speed: '~16s (Slower)',
+    textRendering: 'Very Good',
+    refImages: 'None',
+    bestFor: ['Budget GPT quality', 'Drafts with text', 'Quick concepts']
+  },
+  'gpt-image-medium': {
+    speed: '~18s (Slower)',
+    textRendering: 'Excellent',
+    refImages: 'None',
+    bestFor: ['Accurate text', 'Story prompts', 'Final renders']
+  },
+  'gpt-image-high': {
+    speed: '~25s (Slowest)',
+    textRendering: 'Excellent',
+    refImages: 'None',
+    bestFor: ['Maximum quality', 'Client work', 'Detailed scenes']
+  }
+}
 
 interface ModelSelectorProps {
   selectedModel: string
@@ -96,35 +156,34 @@ export function ModelSelector({
         {models.map((model) => {
           const isSelected = selectedModel === model.id
           const IconComponent = model.iconComponent
-          
-          return (
+          const capabilities = MODEL_CAPABILITIES[model.id as ModelId]
+
+          const buttonContent = (
             <Button
-              key={model.id}
               variant={isSelected ? "default" : "outline"}
               onClick={() => onModelChange(model.id)}
-              className={`h-auto p-4 flex flex-col items-center gap-2 transition-all duration-200 ${
-                isSelected 
-                  ? 'bg-secondary border-border shadow-md ring-2 ring-ring/30' 
+              className={`h-auto p-4 flex flex-col items-center gap-2 transition-all duration-200 w-full ${
+                isSelected
+                  ? 'bg-secondary border-border shadow-md ring-2 ring-ring/30'
                   : 'bg-card/50 border-border hover:bg-secondary hover:border-border'
               }`}
-              title={showTooltips ? model.description : undefined}
             >
               {/* Icon */}
               <div className="flex items-center gap-1">
                 <span className="text-2xl">{model.icon}</span>
                 <IconComponent className={`w-4 h-4 ${model.textColor}`} />
               </div>
-              
+
               {/* Name */}
               <span className="text-sm font-medium text-white">
                 {model.displayName}
               </span>
-              
-              {/* Badge */}
+
+              {/* Cost Badge */}
               <Badge className={`${model.badgeColor} text-white text-xs`}>
-                {model.badge}
+                {Math.round(model.costPerImage * 100)} pts
               </Badge>
-              
+
               {/* Description for selected */}
               {isSelected && showTooltips && (
                 <p className="text-xs text-foreground text-center mt-1">
@@ -133,6 +192,69 @@ export function ModelSelector({
               )}
             </Button>
           )
+
+          // Wrap with HoverCard for tooltips
+          if (showTooltips && capabilities) {
+            return (
+              <HoverCard key={model.id} openDelay={200} closeDelay={100}>
+                <HoverCardTrigger asChild>
+                  {buttonContent}
+                </HoverCardTrigger>
+                <HoverCardContent
+                  side="top"
+                  align="center"
+                  className="w-64 bg-card border-border"
+                >
+                  <div className="space-y-3">
+                    {/* Header */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{model.icon}</span>
+                      <div>
+                        <h4 className="text-sm font-semibold text-white">{model.displayName}</h4>
+                        <p className="text-xs text-muted-foreground">{model.description}</p>
+                      </div>
+                    </div>
+
+                    {/* Stats grid */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-3 h-3 text-cyan-400" />
+                        <span className="text-muted-foreground">Speed:</span>
+                        <span className="text-white">{capabilities.speed}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Type className="w-3 h-3 text-violet-400" />
+                        <span className="text-muted-foreground">Text:</span>
+                        <span className="text-white">{capabilities.textRendering}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 col-span-2">
+                        <Image className="w-3 h-3 text-amber-400" />
+                        <span className="text-muted-foreground">References:</span>
+                        <span className="text-white">{capabilities.refImages}</span>
+                      </div>
+                    </div>
+
+                    {/* Best for */}
+                    <div className="border-t border-border pt-2">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Zap className="w-3 h-3 text-green-400" />
+                        <span className="text-xs text-muted-foreground">Best for:</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {capabilities.bestFor.map((use, i) => (
+                          <Badge key={i} variant="secondary" className="text-[10px] px-1.5 py-0">
+                            {use}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </HoverCardContent>
+              </HoverCard>
+            )
+          }
+
+          return <div key={model.id}>{buttonContent}</div>
         })}
       </div>
     </div>

@@ -2,10 +2,16 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { Upload, Clipboard, Expand, Trash2, Edit, Camera } from "lucide-react"
+import { Upload, Clipboard, Expand, Trash2, Edit, Camera, Eraser, Download, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 import InlineTagEditor from "./InlineTagEditor"
 import { Capacitor } from '@capacitor/core'
 import { cn } from "@/utils/utils"
@@ -43,6 +49,11 @@ interface ReferenceImageCardProps {
     removeShotCreatorImage: (id: string) => void
     setFullscreenImage: (img: ShotImage) => void
     useNativeAspectRatio?: boolean
+    // Action callbacks
+    onRemoveBackground?: (image: ShotImage) => Promise<void>
+    onSaveToGallery?: (image: ShotImage) => Promise<void>
+    isRemovingBackground?: boolean
+    isSavingToGallery?: boolean
 }
 
 export function ReferenceImageCard({
@@ -59,7 +70,11 @@ export function ReferenceImageCard({
     handleCameraCapture,
     removeShotCreatorImage,
     setFullscreenImage,
-    useNativeAspectRatio = false
+    useNativeAspectRatio = false,
+    onRemoveBackground,
+    onSaveToGallery,
+    isRemovingBackground = false,
+    isSavingToGallery = false
 }: ReferenceImageCardProps) {
     const isNative = Capacitor.isNativePlatform()
     return (
@@ -113,15 +128,87 @@ export function ReferenceImageCard({
                                 onClick={() => setFullscreenImage(image)}
                             />
                         </div>
-                        {/* Fullscreen button */}
-                        <Button
-                            size="sm"
-                            variant="ghost"
-                            className="absolute bottom-2 left-2 h-8 w-8 p-0 md:h-6 md:w-6 bg-black/50 hover:bg-black/70"
-                            onClick={() => setFullscreenImage(image)}
-                        >
-                            <Expand className="h-4 w-4 md:h-3 md:w-3 text-white" />
-                        </Button>
+                        {/* Action buttons row at bottom */}
+                        <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center">
+                            <div className="flex gap-1">
+                                {/* Fullscreen button */}
+                                <TooltipProvider delayDuration={300}>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                className="h-8 w-8 p-0 md:h-6 md:w-6 bg-black/50 hover:bg-black/70"
+                                                onClick={() => setFullscreenImage(image)}
+                                            >
+                                                <Expand className="h-4 w-4 md:h-3 md:w-3 text-white" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="text-xs">
+                                            View fullscreen
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+
+                                {/* Remove Background button */}
+                                {onRemoveBackground && (
+                                    <TooltipProvider delayDuration={300}>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="h-8 w-8 p-0 md:h-6 md:w-6 bg-black/50 hover:bg-black/70"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        onRemoveBackground(image)
+                                                    }}
+                                                    disabled={isRemovingBackground}
+                                                >
+                                                    {isRemovingBackground ? (
+                                                        <Loader2 className="h-4 w-4 md:h-3 md:w-3 text-white animate-spin" />
+                                                    ) : (
+                                                        <Eraser className="h-4 w-4 md:h-3 md:w-3 text-white" />
+                                                    )}
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="top" className="text-xs">
+                                                Remove background (3 pts)
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                )}
+
+                                {/* Save to Gallery button */}
+                                {onSaveToGallery && (
+                                    <TooltipProvider delayDuration={300}>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="h-8 w-8 p-0 md:h-6 md:w-6 bg-black/50 hover:bg-black/70"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        onSaveToGallery(image)
+                                                    }}
+                                                    disabled={isSavingToGallery}
+                                                >
+                                                    {isSavingToGallery ? (
+                                                        <Loader2 className="h-4 w-4 md:h-3 md:w-3 text-white animate-spin" />
+                                                    ) : (
+                                                        <Download className="h-4 w-4 md:h-3 md:w-3 text-white" />
+                                                    )}
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="top" className="text-xs">
+                                                Save to gallery
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                )}
+                            </div>
+                        </div>
                         {/* Delete button */}
                         <Button
                             size="sm"

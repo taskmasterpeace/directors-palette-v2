@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, ReactNode } from 'react'
+import { useState, ReactNode, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Trash2,
@@ -11,14 +11,17 @@ import {
   Copy,
   Film,
   Layout,
+  Eraser,
+  Loader2,
 } from 'lucide-react'
 import Image from "next/image"
 import CreatorReferenceManagerCompact from "./CreatorReferenceManagerCompact"
 import { useShotCreatorStore } from "../../store/shot-creator.store"
 import { useReferenceImageManager } from "../../hooks/useReferenceImageManager"
-import { ReferenceImageCard } from "./ReferenceImageCard"
+import { ReferenceImageCard, type ShotImage } from "./ReferenceImageCard"
 import { useToast } from "@/hooks/use-toast"
 import { clipboardManager } from '@/utils/clipboard-manager'
+import { useUnifiedGalleryStore } from "../../store/unified-gallery-store"
 
 interface CreatorReferenceManagerProps {
   compact?: boolean
@@ -33,6 +36,8 @@ export function CreatorReferenceManager({
 }: CreatorReferenceManagerProps) {
   const { shotCreatorReferenceImages, setShotCreatorReferenceImages, useNativeAspectRatio, setUseNativeAspectRatio, onSendToShotAnimator } = useShotCreatorStore()
   const [editingTagsId, setEditingTagsId] = useState<string | null>(null)
+  const [removingBackgroundId, setRemovingBackgroundId] = useState<string | null>(null)
+  const [savingToGalleryId, setSavingToGalleryId] = useState<string | null>(null)
   const { toast } = useToast()
 
   const {
@@ -103,6 +108,118 @@ export function CreatorReferenceManager({
     setFullscreenImage(null)
   }
 
+  // Handle removing background from reference image
+  const handleRemoveBackground = useCallback(async (image: ShotImage) => {
+    if (removingBackgroundId) return // Prevent multiple concurrent removals
+
+    setRemovingBackgroundId(image.id)
+    toast({
+      title: "Removing Background",
+      description: "Processing image... (3 pts)"
+    })
+
+    try {
+      const response = await fetch('/api/tools/remove-background', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageUrl: image.preview,
+          saveToGallery: true // Save the result to gallery
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to remove background')
+      }
+
+      toast({
+        title: "Background Removed!",
+        description: "New image saved to gallery."
+      })
+
+      // Refresh gallery to show the new image
+      setTimeout(async () => {
+        await useUnifiedGalleryStore.getState().refreshGallery()
+      }, 500)
+    } catch (error) {
+      console.error('Background removal error:', error)
+      toast({
+        title: "Remove Background Failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive"
+      })
+    } finally {
+      setRemovingBackgroundId(null)
+    }
+  }, [removingBackgroundId, toast])
+
+  // Handle saving reference image to gallery
+  const handleSaveToGallery = useCallback(async (image: ShotImage) => {
+    if (savingToGalleryId) return // Prevent multiple concurrent saves
+
+    setSavingToGalleryId(image.id)
+    toast({
+      title: "Saving to Gallery",
+      description: "Uploading image..."
+    })
+
+    try {
+      // Convert image URL to base64 data URL
+      const response = await fetch(image.preview)
+      const blob = await response.blob()
+      const reader = new FileReader()
+
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(blob)
+      })
+
+      // Use the save-frame API to save to gallery
+      const saveResponse = await fetch('/api/gallery/save-frame', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageData: base64Data,
+          metadata: {
+            aspectRatio: image.detectedAspectRatio || '16:9',
+            width: 1024,
+            height: 576,
+            row: 0,
+            col: 0
+          }
+        })
+      })
+
+      const result = await saveResponse.json()
+
+      if (!saveResponse.ok) {
+        throw new Error(result.error || 'Failed to save to gallery')
+      }
+
+      toast({
+        title: "Saved to Gallery!",
+        description: "Reference image added to your gallery."
+      })
+
+      // Refresh gallery to show the new image
+      setTimeout(async () => {
+        await useUnifiedGalleryStore.getState().refreshGallery()
+      }, 500)
+    } catch (error) {
+      console.error('Save to gallery error:', error)
+      toast({
+        title: "Save Failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive"
+      })
+    } finally {
+      setSavingToGalleryId(null)
+    }
+  }, [savingToGalleryId, toast])
+
   if (compact) {
     return (
       <CreatorReferenceManagerCompact
@@ -162,6 +279,10 @@ export function CreatorReferenceManager({
               removeShotCreatorImage={removeShotCreatorImage}
               setFullscreenImage={setFullscreenImage}
               useNativeAspectRatio={useNativeAspectRatio}
+              onRemoveBackground={handleRemoveBackground}
+              onSaveToGallery={handleSaveToGallery}
+              isRemovingBackground={removingBackgroundId === image?.id}
+              isSavingToGallery={savingToGalleryId === image?.id}
             />
           )
         })}
@@ -216,7 +337,7 @@ export function CreatorReferenceManager({
               </div>
 
               {/* Action buttons grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 <Button
                   size="sm"
                   variant="outline"
@@ -234,6 +355,34 @@ export function CreatorReferenceManager({
                 >
                   <Download className="h-4 w-4 mr-1" />
                   Download
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-white border-zinc-600 hover:bg-zinc-700"
+                  onClick={() => handleRemoveBackground(fullscreenImage)}
+                  disabled={removingBackgroundId === fullscreenImage.id}
+                >
+                  {removingBackgroundId === fullscreenImage.id ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <Eraser className="h-4 w-4 mr-1" />
+                  )}
+                  {removingBackgroundId === fullscreenImage.id ? 'Removing...' : 'Remove BG'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-white border-zinc-600 hover:bg-zinc-700"
+                  onClick={() => handleSaveToGallery(fullscreenImage)}
+                  disabled={savingToGalleryId === fullscreenImage.id}
+                >
+                  {savingToGalleryId === fullscreenImage.id ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4 mr-1" />
+                  )}
+                  {savingToGalleryId === fullscreenImage.id ? 'Saving...' : 'Save to Gallery'}
                 </Button>
                 <Button
                   size="sm"
