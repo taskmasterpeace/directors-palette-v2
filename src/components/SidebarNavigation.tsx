@@ -141,8 +141,17 @@ export function SidebarNavigation() {
         <motion.div
             initial={false}
             animate={{ width: isCollapsed ? 64 : 240 }}
-            className="h-full border-r border-border bg-card/50 backdrop-blur-xl flex flex-col z-50 relative"
+            className="h-full border-r border-border bg-card/50 backdrop-blur-xl flex flex-col z-50 relative overflow-hidden"
         >
+            {/* Sidebar Background Banner */}
+            <div
+                className="absolute inset-0 bg-cover bg-center opacity-20 pointer-events-none"
+                style={{
+                    backgroundImage: 'url(/banners/sidebar.webp)',
+                    filter: 'brightness(0.6) saturate(0.7)'
+                }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background/80 pointer-events-none" />
             {/* Header / Collapse Toggle */}
             <div className="h-14 flex items-center justify-between px-3 border-b border-border/50">
                 {!isCollapsed && (
