@@ -1,8 +1,7 @@
 ---
 description: Check git status and report uncommitted changes
+allowed-tools: Bash(git status:*)
 ---
-
-## Git Status Check
 
 Run `git status` and report:
 - Current branch

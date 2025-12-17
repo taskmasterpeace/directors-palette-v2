@@ -1,8 +1,7 @@
 ---
-description: End of session safety check - commit and push all changes before ending
+description: End of session safety check - commit and push all changes
+allowed-tools: Bash(git status:*), Bash(git add:*), Bash(git commit:*), Bash(git push:*)
 ---
-
-## Session End Safety Check
 
 Run these steps before ending this Claude Code session:
 
@@ -13,4 +12,4 @@ Run these steps before ending this Claude Code session:
    - Push to origin main
 3. Report final status
 
-**CRITICAL: NEVER end a session with uncommitted work!**
+NEVER end a session with uncommitted work!
