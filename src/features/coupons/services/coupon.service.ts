@@ -1,5 +1,5 @@
 
-import { getClient } from '@/lib/db/client'
+import { getAPIClient } from '@/lib/db/client'
 import { adminService } from '@/features/admin/services/admin.service'
 
 export interface Coupon {
@@ -44,7 +44,7 @@ export class CouponService {
             return { success: false, error: 'Unauthorized: Not an admin' }
         }
 
-        const supabase = await getClient()
+        const supabase = await getAPIClient()
 
         try {
             console.log('[CouponService] Inserting into coupons table...')
@@ -88,7 +88,7 @@ export class CouponService {
             return []
         }
 
-        const supabase = await getClient()
+        const supabase = await getAPIClient()
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase as any)
@@ -111,7 +111,7 @@ export class CouponService {
         userId: string,
         code: string
     ): Promise<{ success: boolean; pointsAdded?: number; error?: string }> {
-        const supabase = await getClient()
+        const supabase = await getAPIClient()
 
         try {
             // Call the database RPC function we created
