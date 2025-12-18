@@ -1,0 +1,76 @@
+A professional dark-themed infographic poster titled "Directors Palette - Video Generation System". Clean modern data visualization style with organized sections.
+
+HEADER: "Video Generation Credit System" with a film reel and coin icon
+
+SECTION 1 - "VIDEO MODELS" (5 tiers displayed as colored horizontal cards stacked vertically):
+
+TIER 1 (GREEN badge): "WAN 2.2-5B Fast"
+- Price: 1 point per video (flat rate)
+- Duration: Fixed 4 seconds
+- Resolution: 480p or 720p max
+- Features: Ultra budget, quick previews
+- Icon: Lightning bolt
+
+TIER 2 (BLUE badge): "WAN 2.2 I2V Fast"
+- Price: 2-3 points per video (flat rate)
+- Duration: Fixed 5 seconds
+- Resolution: 480p or 720p max
+- Features: Has LAST FRAME control
+- Icon: Frame with arrow
+
+TIER 3 (YELLOW badge): "Seedance Pro Fast"
+- Price: 2-9 points PER SECOND (varies by resolution)
+- Duration: Up to 12 seconds
+- Resolution: 480p, 720p, or 1080p
+- Features: Fast generation, longer videos
+- Icon: Rocket
+
+TIER 4 (ORANGE badge): "Seedance Lite"
+- Price: 3-11 points PER SECOND (varies by resolution)
+- Duration: Up to 12 seconds
+- Resolution: 480p, 720p, or 1080p
+- Features: LAST FRAME + REFERENCE IMAGES (1-4 images)
+- Icon: Star with sparkles
+
+TIER 5 (RED badge): "Kling 2.5 Turbo Pro"
+- Price: 10 points PER SECOND
+- Duration: Up to 10 seconds
+- Resolution: 720p only
+- Features: PREMIUM motion quality, best results
+- Icon: Crown
+
+SECTION 2 - "GENERATION FLOW" (horizontal arrow diagram):
+[User Icon] "Request" → [Coin Icon] "Credit Check" → [Video Icon] "AI Generate" → [Webhook Icon] "Webhook" → [Minus Icon] "Deduct" → [Checkmark] "Done"
+
+SECTION 3 - "STORAGE LIMITS" (two side-by-side info cards):
+
+LEFT CARD - "Images":
+- Limit: 500 maximum
+- Warning: Amber alert at 400
+- Blocked: Red at 500
+- Expiration: Never (permanent)
+- Icon: Image stack
+
+RIGHT CARD - "Videos":
+- Limit: Unlimited count
+- Expiration: Auto-delete after 7 days
+- Cleanup: Daily cron job at 3 AM UTC
+- Icon: Clock with video
+
+SECTION 4 - "PRICING FORMULA" (calculation box):
+Per-Video: "Flat Rate = Total Cost"
+Per-Second: "Rate × Duration = Total Cost"
+Example: "Seedance Lite @ 720p (5 pts) × 8 sec = 40 points"
+
+FOOTER: "Powered by Replicate AI • Credits deducted only on success"
+
+STYLE REQUIREMENTS:
+- Dark background color (#0f0f23 or similar deep navy)
+- Neon accent colors for tier badges
+- Clean sans-serif typography
+- Subtle grid or circuit pattern in background
+- Professional SaaS/tech infographic aesthetic
+- Icons are simple line art style
+- Good visual hierarchy with clear sections
+- Rounded corners on cards
+- Subtle shadows for depth

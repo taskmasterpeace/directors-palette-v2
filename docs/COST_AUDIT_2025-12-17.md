@@ -31,38 +31,140 @@ This document details all costs and pricing across the platform. All amounts in 
 
 ### Per-Video Models (Fixed Duration)
 
-| Model | Our Cost | We Charge | Margin | Max Duration | Features |
-|-------|----------|-----------|--------|--------------|----------|
-| 🎬 WAN 2.2-5B Fast | 2.5¢ | 4 pts | 60% | 4 sec | Start frame |
-| 🎬 WAN 2.2 I2V Fast | 11¢ | 16 pts | 45% | 5 sec | Start + Last frame |
+These models charge a flat rate per video regardless of duration:
+
+| Model | 480p | 720p | Max Duration | Features |
+|-------|------|------|--------------|----------|
+| 🎬 WAN 2.2-5B Fast | 1 pt | 1 pt | ~4 sec | Start frame |
+| 🎬 WAN 2.2 I2V Fast | 2 pts | 3 pts | 5 sec | Start + Last frame |
+
+**Cost Structure:** Fixed per-video pricing means the same cost whether the video is 1 second or max duration.
 
 ### Per-Second Models (Variable Duration)
 
+These models charge per second of video generated:
+
 | Model | 480p | 720p | 1080p | Max Duration | Features |
 |-------|------|------|-------|--------------|----------|
-| ⚡ Seedance Pro Fast | 2 pts | 4 pts | 9 pts | 12 sec | Start frame |
-| 🌟 Seedance Lite | 3 pts | 5 pts | 11 pts | 12 sec | Start + Last + Ref Images (1-4) |
-| 👑 Kling 2.5 Turbo Pro | - | 10 pts | - | 10 sec | Premium motion |
+| ⚡ Seedance Pro Fast | 2 pts/sec | 4 pts/sec | 9 pts/sec | 12 sec | Start frame |
+| 🌟 Seedance Lite | 3 pts/sec | 5 pts/sec | 11 pts/sec | 12 sec | Start + Last + Ref Images (1-4) |
+| 👑 Kling 2.5 Turbo Pro | - | 10 pts/sec | - | 10 sec | Premium motion (720p only) |
 
-### Video Cost Examples (5-second @ 720p)
+**Cost Structure:** Per-second pricing means total cost = rate × duration
 
-| Model | Points | USD | Use Case |
-|-------|--------|-----|----------|
-| WAN 2.2-5B Fast | 4 pts | $0.04 | Quick previews |
-| WAN 2.2 I2V Fast | 16 pts | $0.16 | Controlled with last frame |
-| Seedance Pro Fast | 20 pts | $0.20 | Longer videos |
-| Seedance Lite | 25 pts | $0.25 | Full control + ref images |
-| Kling Premium | 50 pts | $0.50 | Best motion quality |
+### Pricing Formula Examples
+
+#### Per-Video Models (Fixed Cost)
+**WAN 2.2-5B Fast @ 720p:**
+- Formula: Fixed 1 pt per video
+- 1 second video: 1 pt ($0.01)
+- 4 second video: 1 pt ($0.01)
+
+**WAN 2.2 I2V Fast @ 720p:**
+- Formula: Fixed 3 pts per video
+- 1 second video: 3 pts ($0.03)
+- 5 second video: 3 pts ($0.03)
+
+#### Per-Second Models (Variable Cost)
+**Seedance Pro Fast @ 720p:**
+- Formula: 4 pts/sec × duration
+- 5 second video: 4 × 5 = 20 pts ($0.20)
+- 10 second video: 4 × 10 = 40 pts ($0.40)
+
+**Seedance Lite @ 1080p:**
+- Formula: 11 pts/sec × duration
+- 5 second video: 11 × 5 = 55 pts ($0.55)
+- 10 second video: 11 × 10 = 110 pts ($1.10)
+
+**Kling 2.5 Turbo Pro @ 720p:**
+- Formula: 10 pts/sec × duration
+- 5 second video: 10 × 5 = 50 pts ($0.50)
+- 10 second video: 10 × 10 = 100 pts ($1.00)
+
+### Video Cost Comparison (5-second @ 720p)
+
+| Model | Calculation | Points | USD | Use Case |
+|-------|-------------|--------|-----|----------|
+| WAN 2.2-5B Fast | Fixed | 1 pt | $0.01 | Quick previews |
+| WAN 2.2 I2V Fast | Fixed | 3 pts | $0.03 | Controlled with last frame |
+| Seedance Pro Fast | 4 × 5 sec | 20 pts | $0.20 | Longer videos |
+| Seedance Lite | 5 × 5 sec | 25 pts | $0.25 | Full control + ref images |
+| Kling Premium | 10 × 5 sec | 50 pts | $0.50 | Best motion quality |
 
 ### Video Margins (Our Cost vs Revenue)
 
 | Model | Our Cost (5s @720p) | Revenue | Margin |
 |-------|---------------------|---------|--------|
-| WAN 2.2-5B Fast | ~2.5¢ | 4¢ | 60% |
-| WAN 2.2 I2V Fast | ~11¢ | 16¢ | 45% |
-| Seedance Pro Fast | ~12.5¢ | 20¢ | 44% |
-| Seedance Lite | ~18¢ | 25¢ | 44% |
+| WAN 2.2-5B Fast | ~0.5¢ | 1¢ | 100% |
+| WAN 2.2 I2V Fast | ~1.5¢ | 3¢ | 100% |
+| Seedance Pro Fast | ~12.5¢ | 20¢ | 60% |
+| Seedance Lite | ~18¢ | 25¢ | 39% |
 | Kling Premium | ~35¢ | 50¢ | 43% |
+
+---
+
+## Storage Limits & Auto-Expiration
+
+### Image Storage
+- **Maximum:** 500 images per user
+- **Warning threshold:** 400 images (80% capacity)
+- **Action required:** Delete old images before creating new ones
+- **No auto-expiration:** Images persist until manually deleted
+
+### Video Storage
+- **Maximum:** No hard limit
+- **Auto-expiration:** 7 days from creation
+- **Cleanup:** Automatic deletion after expiration
+- **Storage cost:** Included in generation cost (no separate storage fees)
+
+### Storage Flow
+1. User generates content (image/video)
+2. Content stored in Supabase Storage
+3. Images: Count tracked, warning at 400, hard limit at 500
+4. Videos: Expiration date set to 7 days from creation
+5. Daily cleanup job removes expired videos
+
+---
+
+## Credit Flow & Deduction
+
+### Credit Check Flow
+```
+1. User initiates generation request
+2. System checks user's current credit balance
+3. System calculates required credits based on:
+   - Model selected
+   - Resolution (for videos)
+   - Duration (for per-second video models)
+   - Image count (for GPT Image models)
+4. If credits insufficient: Reject with error
+5. If credits sufficient: Proceed to generation
+```
+
+### Generation Flow
+```
+1. Request sent to provider (Replicate/OpenAI)
+2. Generation starts (credits NOT deducted yet)
+3. Webhook received on completion
+4. Credits deducted from user balance
+5. Content URL stored in database
+```
+
+### Credit Deduction Points
+
+**Pre-Flight Check:**
+- Credits validated BEFORE generation starts
+- Prevents insufficient balance errors mid-generation
+
+**Post-Completion Deduction:**
+- Credits deducted AFTER successful generation
+- Webhook triggers credit deduction
+- Failed generations = No credit deduction
+
+**Edge Cases:**
+- Webhook failure: Credits may not deduct (manual reconciliation needed)
+- Generation timeout: No deduction
+- Provider error: No deduction
 
 ---
 
@@ -167,19 +269,25 @@ Image Generation:
   - Nano Banana:       8 tokens/image
   - Nano Banana Pro:  20 tokens/image (35 for 4K)
 
-Video Generation (Per-Video):
-  - WAN 2.2-5B Fast:    4 tokens/video (max 4s)
-  - WAN 2.2 I2V Fast:  16 tokens/video (max 5s)
+Video Generation (Per-Video - Fixed Cost):
+  - WAN 2.2-5B Fast:    1 token @ 480p/720p (max ~4s)
+  - WAN 2.2 I2V Fast:   2 tokens @ 480p, 3 tokens @ 720p (max 5s)
 
-Video Generation (Per-Second @ 720p):
-  - Seedance Pro Fast:  4 tokens/second (max 12s)
-  - Seedance Lite:      5 tokens/second (max 12s)
-  - Kling Premium:     10 tokens/second (max 10s)
+Video Generation (Per-Second - Variable Cost):
+  - Seedance Pro Fast:
+    - 480p: 2 tokens/second (max 12s)
+    - 720p: 4 tokens/second (max 12s)
+    - 1080p: 9 tokens/second (max 12s)
+  - Seedance Lite:
+    - 480p: 3 tokens/second (max 12s)
+    - 720p: 5 tokens/second (max 12s)
+    - 1080p: 11 tokens/second (max 12s)
+  - Kling 2.5 Turbo Pro:
+    - 720p only: 10 tokens/second (max 10s)
 
-Resolution Multipliers (for per-second models):
-  - 480p: 0.5x base rate
-  - 720p: 1.0x base rate
-  - 1080p: 2.0-2.2x base rate
+Pricing Formula:
+  - Per-Video: Fixed cost regardless of duration
+  - Per-Second: Rate × Duration = Total Cost
 
 Tools:
   - Background Removal: 3 tokens/image
