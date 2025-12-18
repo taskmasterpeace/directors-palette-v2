@@ -413,36 +413,48 @@ No labels, text overlays, or captions in the final image. Only clean cinematic i
     categoryId: 'styles',
   },
 
-  // Character Sheet - Full body + close-ups
+  // Character Sheet - Professional reference sheet matching action figure style
   {
     name: 'Character Sheet',
-    description: 'Two-sided character reference sheet with full-body and expression closeups',
-    recipeNote: 'Attach a reference image of your character. Enter the character name/tag for consistent referencing.',
+    description: 'Professional character reference sheet with full-body views, expressions, and accessories',
+    recipeNote: 'Attach a reference image of your character. The sheet will include turnarounds, expressions, talking views, and accessory slots.',
     stages: [{
       id: 'stage_0',
       order: 0,
-      template: `Name/Tag: @<<CHARACTER_NAME:name!>>
+      template: `CHARACTER @<<CHARACTER_NAME:name!>>
 
-Create a clean character reference sheet on a white background with two sections:
+Create a professional character reference sheet on a clean white/light gray background.
 
-SIDE A - FULL BODY:
-- Center: Neutral standing full-body pose showing entire outfit, body shape, silhouette, and proportions
-- Avoid foreshortening or poses that hide clothing
-- Optional: Small front/side/back turnarounds along a baseline
-- Color swatches for skin, hair, and main clothing colors
+LAYOUT (Left to Right):
 
-SIDE B - EXPRESSIONS:
-- Multiple head/face close-ups showing key expressions
-- Neutral, happy, angry, sad, surprised
-- Clear proportions and readable features
-- Consistent lighting across all expressions
+SECTION 1 - FULL BODY VIEWS:
+- Large front view with proportion grid lines
+- Side profile view
+- Back view
+- All views on same baseline for height reference
+- Below: COLOR PALETTE strip showing skin, hair, eye colors, and main clothing colors
 
-Render in <<STYLE:select(claymation,anime,3D render,cartoon,realistic,watercolor,oil painting)>> style.
-Keep the design clean, informative, and production-ready.`,
+SECTION 2 - EXPRESSIONS & DETAILS:
+- Header: "CHARACTER @<<CHARACTER_NAME:name!>>" with description box
+- EXPRESSION GRID (2 rows × 3 columns):
+  Row 1: Talking-Neutral, Talking-Happy, Talking-Angry
+  Row 2: Sad, Surprised, Smug/Confident
+- Below: CLOSE-UP DETAILS box for distinctive features
+- ACCESSORIES boxes for props/items
+
+SECTION 3 - TALKING VIEWS:
+- Profile head shots showing speaking poses
+- Additional ACCESSORIES boxes
+
+STYLE: <<STYLE:select(claymation,anime,3D render,cartoon,realistic,watercolor,oil painting,illustrated,Pixar-style,Disney-style)>>
+
+Clean, production-ready layout. No busy backgrounds.
+Consistent lighting and rendering across all views.
+Professional character sheet suitable for animation/illustration reference.`,
       fields: [],
       referenceImages: [],
     }],
-    suggestedAspectRatio: '3:2',
+    suggestedAspectRatio: '21:9',
     isQuickAccess: true,
     quickAccessLabel: 'CharSheet',
     categoryId: 'characters',
@@ -776,46 +788,45 @@ Maintain perfect character and style consistency. No text overlays.`,
     categoryId: 'scenes',
   },
 
-  // Wardrobe Variations - Character sheets with different outfit options
+  // Wardrobe Variations - Character in different outfits (user specifies each)
   {
     name: 'Wardrobe Variations',
-    description: 'Generate 6 character sheet variations with completely different outfits',
-    recipeNote: 'Attach your character reference or character sheet. Each tile shows a mini character sheet with a different luxury outfit.',
+    description: 'Generate 6 variations of your character in different outfits you specify',
+    recipeNote: 'Attach your character reference. Specify what outfit/look goes in each cell, or leave blank for random luxury outfits.',
     stages: [{
       id: 'stage_0',
       order: 0,
       template: `Analyze the character in the reference image. This is @<<CHARACTER_NAME:name!>>.
 
-Create a 2x3 grid (2 rows, 3 columns) showing 6 MINI CHARACTER SHEETS of this EXACT same character.
+Create a 2x3 grid (2 rows, 3 columns) showing this EXACT same character in 6 different outfits.
 
-CRITICAL - MAINTAIN ACROSS ALL 6:
+CRITICAL - MAINTAIN ACROSS ALL 6 CELLS:
 - Identical face, facial features, expression style
 - Same hair style and color
 - Same body type and proportions
 - Same art style and rendering quality
 - Same age and overall appearance
 
-EACH TILE IS A MINI CHARACTER SHEET:
-- Solid <<BACKGROUND_COLOR:select(white,light gray,soft blue,cream,pale pink,mint green)!>> background
+EACH CELL LAYOUT:
+- <<BACKGROUND_COLOR:select(white,light gray,soft blue,cream,pale pink,mint green)!>> background
 - Full body view showing complete outfit
-- Small expression thumbnails in corner (happy, neutral, surprised)
-- Clean, production-ready layout
+- Clean, production-ready framing
 
-THE 6 DIFFERENT LUXURY OUTFITS:
-1. Casual Elegant - Relaxed but refined everyday wear
-2. Formal Sophisticated - Event-ready upscale attire
-3. Adventure Ready - Stylish outdoor/exploration wear
-4. Cozy Comfort - Luxe loungewear or home attire
-5. Creative Expression - Artistic, bold fashion statement
-6. Classic Timeless - Traditional, never-goes-out-of-style look
+THE 6 OUTFITS (Row 1, Col 1 → Row 2, Col 3):
+Row 1, Col 1: <<OUTFIT_1:text>>
+Row 1, Col 2: <<OUTFIT_2:text>>
+Row 1, Col 3: <<OUTFIT_3:text>>
+Row 2, Col 1: <<OUTFIT_4:text>>
+Row 2, Col 2: <<OUTFIT_5:text>>
+Row 2, Col 3: <<OUTFIT_6:text>>
 
+If any outfit field is empty, generate a creative luxury outfit variation.
 Each outfit should be COMPLETELY DIFFERENT in style, silhouette, and color palette.
-All outfits should feel premium and well-designed.
 No text labels - clean imagery only.`,
       fields: [],
       referenceImages: [],
     }],
-    suggestedAspectRatio: '3:2',
+    suggestedAspectRatio: '16:9',
     isQuickAccess: true,
     quickAccessLabel: 'Wardrobe',
     categoryId: 'characters',

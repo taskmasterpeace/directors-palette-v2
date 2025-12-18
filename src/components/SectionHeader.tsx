@@ -45,6 +45,12 @@ const SECTION_CONFIG: Record<TabValue, { banner: string; title: string; subtitle
     subtitle: 'Turn stories into visual sequences',
     helpTip: '6-step workflow: paste story, set style, define characters, break into shots, generate'
   },
+  'storybook': {
+    banner: '/banners/storybook-banner.webp',
+    title: 'Storybook',
+    subtitle: 'Create illustrated children\'s books with AI',
+    helpTip: '5-step wizard: write story, choose style, create characters, generate pages, preview book'
+  },
   'music-lab': {
     banner: '/banners/music-lab.webp',
     title: 'Music Lab',

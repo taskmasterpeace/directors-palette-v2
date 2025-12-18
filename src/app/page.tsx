@@ -6,6 +6,7 @@ import { ShotCreator } from "@/features/shot-creator"
 import { ShotAnimator } from "@/features/shot-animator"
 import { LayoutAnnotation } from "@/features/layout-annotation"
 import { Storyboard } from "@/features/storyboard"
+import { Storybook } from "@/features/storybook"
 import { PromptToolsPage } from "@/features/prompt-tools"
 import MusicLabPage from "@/app/(app)/music-lab/page"
 import { UnifiedImageGallery } from "@/features/shot-creator/components/unified-gallery/UnifiedImageGallery"
@@ -62,6 +63,14 @@ export default function Home() {
                 <PageTransition>
                   <SectionHeader section="storyboard" />
                   <Storyboard />
+                </PageTransition>
+              </TabsContent>
+            )}
+
+            {activeTab === 'storybook' && (
+              <TabsContent key="storybook" value="storybook" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
+                <PageTransition>
+                  <Storybook />
                 </PageTransition>
               </TabsContent>
             )}

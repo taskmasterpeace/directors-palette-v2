@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(cat:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npm run build:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: Add Wardrobe Variations recipe + coupon deletion\n\nRecipes:\n- Add Wardrobe Variations recipe \\(2x3 grid of character sheets with different luxury outfits\\)\n\nAdmin:\n- Add delete coupon functionality to admin panel\n- Add deleteCoupon method to coupon service\n- Add DELETE handler to /api/coupons endpoint\n- Add trash button to coupons table with confirmation\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ],
     "deny": [],
     "ask": []
