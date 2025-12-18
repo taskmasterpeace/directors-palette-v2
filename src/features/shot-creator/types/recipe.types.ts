@@ -1311,4 +1311,61 @@ REQUIREMENTS:
     quickAccessLabel: 'WideShots',
     categoryId: 'scenes',
   },
+
+  // 5 Minutes Later - Time progression from a single action
+  {
+    name: '5 Minutes Later',
+    description: 'Show time progression of an action through 9 frames - from normal state to consequences',
+    recipeNote: 'Attach a starting image (person in normal state). Enter what action they decide to do. The 9 frames show the progression from decision to consequences.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Analyze the reference image. This is the STARTING STATE - the person in their normal life before making a decision.
+
+Generate a 3x3 grid showing a TIME PROGRESSION narrative of what happens after this person decides to: <<ACTION:text!>>
+
+IMPORTANT: Separate each cell with a solid BLACK LINE (4-6 pixels wide) for clean extraction.
+
+CRITICAL - ABSOLUTE CONSISTENCY:
+- SAME person (exact face, body, features) in all 9 frames
+- Only clothing changes if the story requires it
+- Art style remains PERFECTLY consistent
+- Each frame shows a different MOMENT IN TIME
+
+THE 9 FRAMES (Time Progression):
+
+ROW 1 - THE DECISION (0-5 minutes):
+1. NORMAL STATE: The person in their everyday life, as shown in the reference image. Peaceful, mundane, routine.
+2. THE IDEA: A thought bubble or expression showing they're considering the action. Internal conflict visible.
+3. PREPARATION: Making ready - gathering items, making a plan, the moment before commitment.
+
+ROW 2 - THE ACTION (5-30 minutes):
+4. POINT OF NO RETURN: The decisive moment - stepping through the door, making the call, starting the action.
+5. IN THE MIDDLE: Deep in the action - fully committed, adrenaline, focus, the peak of the event.
+6. IMMEDIATE AFTERMATH: The action complete - catching breath, looking at what they've done, first reaction.
+
+ROW 3 - THE CONSEQUENCES (30 minutes - hours later):
+7. RIPPLES BEGIN: First signs of consequences - other people noticing, things changing, domino effects starting.
+8. FULL CONSEQUENCES: The weight of the decision fully realized - emotional, social, or physical impact visible.
+9. NEW NORMAL: The final state - how their life has changed, for better or worse, the new equilibrium.
+
+VISUAL STORYTELLING:
+- Use lighting to show mood progression (warm → tense → cool or vice versa)
+- Vary shot types: wide establishing → medium → close-up for emotional beats
+- Time-of-day can progress to show passage of time
+- Environmental details should reflect consequences (messy vs clean, crowded vs empty)
+
+<<TONE:select(comedic/lighthearted,dramatic/serious,absurdist/surreal,wholesome/heartwarming,dark comedy)!>>
+<<TIME_SPAN:select(5 minutes to 1 hour,1 hour to 1 day,1 day to 1 week,instant to lifetime)!>>
+
+The story should be VISUALLY CLEAR without text.
+Black grid lines between all cells. No dialogue or captions.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '1:1',
+    isQuickAccess: true,
+    quickAccessLabel: '5MinLater',
+    categoryId: 'time-based',
+  },
 ]

@@ -41,6 +41,7 @@ export interface RecipeContent {
     url: string
     name: string
   }[]
+  templateUrl?: string  // Visual layout guide showing expected output
 }
 
 export interface PromptContent {

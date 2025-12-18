@@ -90,10 +90,21 @@ export function CommunityCard({
         const content = item.content as RecipeContent
         const fieldCount = content.stages.reduce((acc, s) => acc + s.fields.length, 0)
         return (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>{content.stages.length} stage{content.stages.length > 1 ? 's' : ''}</span>
-            <span className="text-muted-foreground/30">|</span>
-            <span>{fieldCount} field{fieldCount > 1 ? 's' : ''}</span>
+          <div className="space-y-2">
+            {content.templateUrl && (
+              <div className="relative aspect-video rounded overflow-hidden bg-muted/20 mb-2">
+                <img
+                  src={content.templateUrl}
+                  alt="Template layout"
+                  className="object-contain w-full h-full"
+                />
+              </div>
+            )}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>{content.stages.length} stage{content.stages.length > 1 ? 's' : ''}</span>
+              <span className="text-muted-foreground/30">|</span>
+              <span>{fieldCount} field{fieldCount > 1 ? 's' : ''}</span>
+            </div>
           </div>
         )
       }

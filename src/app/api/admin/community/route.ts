@@ -164,6 +164,31 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ message: 'Item deleted successfully' })
 
+      case 'edit':
+        const { updates } = body
+        if (!updates || typeof updates !== 'object') {
+          return NextResponse.json(
+            { error: 'Updates object is required for edit action' },
+            { status: 400 }
+          )
+        }
+
+        // Whitelist allowed fields to update
+        const allowedFields = ['name', 'description', 'category', 'tags', 'content', 'is_featured']
+        const sanitizedUpdates: Record<string, unknown> = {}
+
+        for (const [key, value] of Object.entries(updates)) {
+          // Convert camelCase to snake_case for database
+          const snakeKey = key === 'isFeatured' ? 'is_featured' : key
+          if (allowedFields.includes(snakeKey)) {
+            sanitizedUpdates[snakeKey] = value
+          }
+        }
+
+        sanitizedUpdates.updated_at = new Date().toISOString()
+        updateData = sanitizedUpdates
+        break
+
       default:
         return NextResponse.json(
           { error: `Unknown action: ${action}` },

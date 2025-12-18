@@ -70,6 +70,7 @@ export default function Home() {
             {activeTab === 'storybook' && (
               <TabsContent key="storybook" value="storybook" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
                 <PageTransition>
+                  <SectionHeader section="storybook" />
                   <Storybook />
                 </PageTransition>
               </TabsContent>

@@ -18,7 +18,10 @@ import {
   CheckCircle,
   XCircle,
   Eye,
+  Pencil,
 } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import type { CommunityItem, CommunityItemType } from '@/features/community/types/community.types'
 
 const TYPE_LABELS: Record<CommunityItemType, string> = {
@@ -56,6 +59,17 @@ export function CommunityModerationTab() {
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false)
   const [previewItem, setPreviewItem] = useState<CommunityItem | null>(null)
 
+  // Edit dialog
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<CommunityItem | null>(null)
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    description: '',
+    category: '',
+    tags: [] as string[],
+    content: {} as unknown,
+  })
+
   const fetchItems = useCallback(async () => {
     setLoading(true)
     try {
@@ -74,13 +88,13 @@ export function CommunityModerationTab() {
     fetchItems()
   }, [fetchItems])
 
-  const handleAction = async (action: string, itemId: string, reason?: string) => {
+  const handleAction = async (action: string, itemId: string, reason?: string, updates?: Record<string, unknown>) => {
     setActionLoading(itemId)
     try {
       const res = await fetch('/api/admin/community', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, itemId, reason }),
+        body: JSON.stringify({ action, itemId, reason, updates }),
       })
 
       if (!res.ok) {
@@ -113,6 +127,25 @@ export function CommunityModerationTab() {
   const openPreview = (item: CommunityItem) => {
     setPreviewItem(item)
     setPreviewDialogOpen(true)
+  }
+
+  const openEditDialog = (item: CommunityItem) => {
+    setEditingItem(item)
+    setEditFormData({
+      name: item.name,
+      description: item.description || '',
+      category: item.category,
+      tags: item.tags || [],
+      content: item.content,
+    })
+    setEditDialogOpen(true)
+  }
+
+  const saveEdit = async () => {
+    if (!editingItem) return
+    await handleAction('edit', editingItem.id, undefined, editFormData)
+    setEditDialogOpen(false)
+    setEditingItem(null)
   }
 
   // Stats
@@ -238,6 +271,16 @@ export function CommunityModerationTab() {
                               title="Preview"
                             >
                               <Eye className="w-4 h-4" />
+                            </Button>
+
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => openEditDialog(item)}
+                              className="h-8 w-8 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10"
+                              title="Edit"
+                            >
+                              <Pencil className="w-4 h-4" />
                             </Button>
 
                             {item.status === 'pending' && (
@@ -470,6 +513,98 @@ export function CommunityModerationTab() {
             )}
             <Button variant="outline" onClick={() => setPreviewDialogOpen(false)}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-white">Edit Community Item</DialogTitle>
+            <DialogDescription>
+              Editing: {editingItem?.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Name</Label>
+              <Input
+                id="edit-name"
+                value={editFormData.name}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+                className="bg-zinc-800 border-zinc-700"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editFormData.description}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="bg-zinc-800 border-zinc-700"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-category">Category</Label>
+              <Input
+                id="edit-category"
+                value={editFormData.category}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, category: e.target.value }))}
+                className="bg-zinc-800 border-zinc-700"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-tags">Tags (comma-separated)</Label>
+              <Input
+                id="edit-tags"
+                value={editFormData.tags.join(', ')}
+                onChange={(e) => setEditFormData(prev => ({
+                  ...prev,
+                  tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean)
+                }))}
+                className="bg-zinc-800 border-zinc-700"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-content">Content (JSON)</Label>
+              <Textarea
+                id="edit-content"
+                value={JSON.stringify(editFormData.content, null, 2)}
+                onChange={(e) => {
+                  try {
+                    const parsed = JSON.parse(e.target.value)
+                    setEditFormData(prev => ({ ...prev, content: parsed }))
+                  } catch {
+                    // Invalid JSON, don't update
+                  }
+                }}
+                className="bg-zinc-800 border-zinc-700 font-mono text-sm min-h-[200px]"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={saveEdit}
+              disabled={actionLoading !== null}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              {actionLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Check className="w-4 h-4 mr-2" />
+              )}
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
