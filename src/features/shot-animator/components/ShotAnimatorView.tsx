@@ -84,14 +84,18 @@ export function ShotAnimatorView() {
     if (selectedCount === 0) return 0
     const settings = modelSettings[selectedModel]
     const pricing = VIDEO_MODEL_PRICING[selectedModel]
-    const pricePerUnit = pricing[settings.resolution] ?? pricing['720p']
+
+    // Guard against undefined settings or pricing
+    if (!settings || !pricing) return 0
+
+    const pricePerUnit = pricing[settings.resolution] ?? pricing['720p'] ?? 0
 
     if (currentModelConfig.pricingType === 'per-video') {
       // Per-video models: fixed cost per video
       return selectedCount * pricePerUnit
     } else {
       // Per-second models: cost based on duration
-      return selectedCount * pricePerUnit * settings.duration
+      return selectedCount * pricePerUnit * (settings.duration ?? 5)
     }
   }, [selectedCount, selectedModel, modelSettings, currentModelConfig.pricingType])
 

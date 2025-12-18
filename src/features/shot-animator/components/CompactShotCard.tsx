@@ -92,17 +92,20 @@ const CompactShotCardComponent = ({
 
         {/* Larger checkbox touch target for mobile */}
         <div className="absolute top-2 left-2 z-10">
-          <button
+          <div
             onClick={handleToggleSelect}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-95 transition-transform"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-95 transition-transform cursor-pointer"
+            role="button"
+            tabIndex={0}
             aria-label={config.includeInBatch ? "Deselect shot" : "Select shot"}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleToggleSelect() }}
           >
             <Checkbox
               checked={config.includeInBatch}
               onCheckedChange={handleToggleSelect}
               className="bg-white/90 border-white w-6 h-6 sm:w-5 sm:h-5 pointer-events-none"
             />
-          </button>
+          </div>
         </div>
         {/* Video Status Badge - Top Right */}
         {config.generatedVideos && config.generatedVideos.length > 0 && (

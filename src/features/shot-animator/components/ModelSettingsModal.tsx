@@ -142,14 +142,16 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
   const pricing = VIDEO_MODEL_PRICING[model]
   const tier = MODEL_TIER_LABELS[model]
 
-  // Calculate estimated cost for preview
-  const pricePerUnit = pricing[settings.resolution] ?? pricing['720p']
-  const estimatedCost = modelConfig.pricingType === 'per-video'
+  // Calculate estimated cost for preview (with null guards)
+  const resolution = settings?.resolution ?? '720p'
+  const duration = settings?.duration ?? 5
+  const pricePerUnit = pricing?.[resolution] ?? pricing?.['720p'] ?? 0
+  const estimatedCost = modelConfig?.pricingType === 'per-video'
     ? pricePerUnit
-    : pricePerUnit * settings.duration
+    : pricePerUnit * duration
 
   // Check if duration is fixed for this model
-  const isFixedDuration = modelConfig.pricingType === 'per-video'
+  const isFixedDuration = modelConfig?.pricingType === 'per-video'
 
   return (
     <div className="space-y-6 p-4 sm:p-4 overflow-y-auto bg-card/50 rounded-lg border border-border">
@@ -158,9 +160,9 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="text-xs">{tier}</Badge>
           <span className="text-sm text-muted-foreground">
-            {modelConfig.pricingType === 'per-video'
+            {modelConfig?.pricingType === 'per-video'
               ? `${pricePerUnit} pts/video`
-              : `${pricePerUnit} pts/sec @ ${settings.resolution}`}
+              : `${pricePerUnit} pts/sec @ ${resolution}`}
           </span>
         </div>
         <div className="text-right">
@@ -174,26 +176,26 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
         <div className="flex items-center justify-between">
           <Label className="text-white">Duration</Label>
           <span className="text-sm text-muted-foreground">
-            {isFixedDuration ? `${modelConfig.maxDuration} sec (fixed)` : `${settings.duration} sec`}
+            {isFixedDuration ? `${modelConfig?.maxDuration ?? 5} sec (fixed)` : `${duration} sec`}
           </span>
         </div>
         {isFixedDuration ? (
           <div className="text-xs text-muted-foreground bg-secondary/30 rounded p-2">
-            This model has a fixed duration of {modelConfig.maxDuration} seconds per video.
+            This model has a fixed duration of {modelConfig?.maxDuration ?? 5} seconds per video.
           </div>
         ) : (
           <>
             <Slider
-              value={[settings.duration]}
+              value={[duration]}
               onValueChange={([value]) => onUpdate({ duration: value })}
               min={DURATION_CONSTRAINTS.min}
-              max={modelConfig.maxDuration}
+              max={modelConfig?.maxDuration ?? 10}
               step={1}
               className="w-full"
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>{DURATION_CONSTRAINTS.min} sec</span>
-              <span>{modelConfig.maxDuration} sec</span>
+              <span>{modelConfig?.maxDuration ?? 10} sec</span>
             </div>
           </>
         )}
@@ -203,12 +205,12 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
       <div className="space-y-3">
         <Label className="text-white">Resolution</Label>
         <RadioGroup
-          value={settings.resolution}
+          value={resolution}
           onValueChange={(value) => onUpdate({ resolution: value as '480p' | '720p' | '1080p' })}
           className="flex flex-col sm:flex-row gap-3 sm:gap-4"
         >
-          {modelConfig.supportedResolutions.map((res) => {
-            const resPrice = pricing[res] ?? pricing['720p']
+          {(modelConfig?.supportedResolutions ?? ['720p']).map((res) => {
+            const resPrice = pricing?.[res] ?? pricing?.['720p'] ?? 0
             return (
               <div key={res} className="flex items-center space-x-2 touch-manipulation min-h-[44px] sm:min-h-0">
                 <RadioGroupItem value={res} id={`${model}-${res}`} className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0" />

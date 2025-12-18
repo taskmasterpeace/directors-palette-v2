@@ -292,7 +292,7 @@ export function SidebarNavigation() {
             </div>
 
             {/* Footer Area */}
-            <div className="border-t border-border/50 p-2 space-y-2 bg-background/20">
+            <div className="border-t border-border/50 p-2 space-y-2 bg-background/80 backdrop-blur-sm relative z-10">
 
                 {/* Help Menu Item */}
                 <TooltipProvider>
@@ -408,7 +408,7 @@ export function SidebarNavigation() {
 
                 {/* User Profile */}
                 {user && (
-                    <div className={cn("flex items-center gap-3 p-2 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer", isCollapsed && "justify-center")} onClick={isCollapsed ? undefined : () => { }}>
+                    <div className={cn("flex items-center gap-3 p-2 rounded-lg bg-black/30 hover:bg-accent/50 transition-colors cursor-pointer", isCollapsed && "justify-center")} onClick={isCollapsed ? undefined : () => { }}>
                         <Avatar className="w-8 h-8 border border-border">
                             <AvatarImage src={user.avatar_url} />
                             <AvatarFallback className="bg-primary/10 text-primary text-xs">
@@ -419,8 +419,8 @@ export function SidebarNavigation() {
                         {!isCollapsed && (
                             <div className="flex-1 overflow-hidden flex flex-col justify-center">
                                 <AdminLink />
-                                <p className="text-sm font-medium truncate">{user.email?.split('@')[0]}</p>
-                                <p className="text-xs text-muted-foreground cursor-pointer hover:text-destructive transition-colors" onClick={(e) => {
+                                <p className="text-sm font-medium truncate text-white">{user.email?.split('@')[0]}</p>
+                                <p className="text-xs text-zinc-400 cursor-pointer hover:text-destructive transition-colors" onClick={(e) => {
                                     e.stopPropagation()
                                     handleSignOut()
                                 }}>Sign out</p>
