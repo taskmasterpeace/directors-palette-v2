@@ -438,7 +438,7 @@ function AdminLink() {
     if (!isAdmin) return null
 
     return (
-        <a href="/admin/coupons" className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-500 hover:text-amber-400 mb-1 transition-colors">
+        <a href="/admin" className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-500 hover:text-amber-400 mb-1 transition-colors">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
             Admin Panel
         </a>
@@ -456,7 +456,7 @@ function AdminNavItem({ isCollapsed }: { isCollapsed: boolean }) {
             <Tooltip>
                 <TooltipTrigger asChild>
                     <a
-                        href="/admin/coupons"
+                        href="/admin"
                         className={cn(
                             "w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all relative group text-amber-500 mb-2 font-medium overflow-hidden",
                             isCollapsed ? "justify-center px-0" : ""
@@ -543,7 +543,7 @@ function MobileNavigation({ open, onOpenChange, activeTab, onNavSelect, user, on
                             {/* Admin Panel Link (if admin) */}
                             {isAdmin && (
                                 <a
-                                    href="/admin/coupons"
+                                    href="/admin"
                                     className="w-full flex items-center gap-3 px-3 py-3 rounded-md transition-all text-amber-500 font-medium min-h-[48px] relative overflow-hidden group"
                                 >
                                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent" />
