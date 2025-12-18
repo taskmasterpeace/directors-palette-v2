@@ -34,14 +34,21 @@ export class CouponService {
             expires_at?: string
         }
     ): Promise<{ success: boolean; coupon?: Coupon; error?: string }> {
+        console.log('[CouponService] Creating coupon:', { adminEmail, data })
+
         // Double check admin permission
-        if (!await adminService.checkAdminEmailAsync(adminEmail)) {
+        const isAdmin = await adminService.checkAdminEmailAsync(adminEmail)
+        console.log('[CouponService] Admin check:', { adminEmail, isAdmin })
+
+        if (!isAdmin) {
             return { success: false, error: 'Unauthorized: Not an admin' }
         }
 
         const supabase = await getClient()
 
         try {
+            console.log('[CouponService] Inserting into coupons table...')
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data: coupon, error } = await (supabase as any)
                 .from('coupons')
@@ -55,17 +62,21 @@ export class CouponService {
                 .select()
                 .single()
 
+            console.log('[CouponService] Insert result:', { coupon, error })
+
             if (error) {
                 if (error.code === '23505') {
                     return { success: false, error: 'Coupon code already exists' }
                 }
-                throw error
+                console.error('[CouponService] Database error:', error)
+                return { success: false, error: error.message || 'Database error' }
             }
 
             return { success: true, coupon: coupon as Coupon }
         } catch (error) {
-            console.error('Error creating coupon:', error)
-            return { success: false, error: 'Failed to create coupon' }
+            console.error('[CouponService] Error creating coupon:', error)
+            const message = error instanceof Error ? error.message : 'Failed to create coupon'
+            return { success: false, error: message }
         }
     }
 

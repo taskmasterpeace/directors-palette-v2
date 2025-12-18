@@ -389,12 +389,20 @@ function CreateCouponDialog({ onSuccess }: { onSuccess: () => void }) {
                 expires_at: formData.expires_at || undefined
             }
 
+            console.log('[Coupon] Creating coupon:', payload)
+
             const res = await fetch('/api/coupons', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             })
-            if (!res.ok) throw new Error('Failed')
+
+            const data = await res.json()
+            console.log('[Coupon] Response:', res.status, data)
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to create coupon')
+            }
 
             toast.success("Coupon created!")
             setOpen(false)
@@ -402,8 +410,10 @@ function CreateCouponDialog({ onSuccess }: { onSuccess: () => void }) {
             setIsOneTime(false)
             setExpirationPreset('none')
             onSuccess()
-        } catch {
-            toast.error("Failed to create coupon")
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to create coupon'
+            console.error('[Coupon] Error:', message)
+            toast.error(message)
         } finally {
             setLoading(false)
         }
