@@ -15,8 +15,12 @@ import {
     Info,
     Key,
     Code,
-    Shuffle
+    Shuffle,
+    Video,
+    Clock,
+    Coins
 } from "lucide-react"
+import Image from "next/image"
 
 export function UserManual() {
     return (
@@ -36,6 +40,7 @@ export function UserManual() {
                     <a href="#recipes" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Recipes</a>
                     <a href="#syntax" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Prompt Syntax</a>
                     <a href="#gallery" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Gallery</a>
+                    <a href="#video-generation" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Video Generation</a>
                     <a href="#models" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">AI Models</a>
                     <a href="#api-access" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">API Access</a>
                 </nav>
@@ -417,6 +422,162 @@ export function UserManual() {
                                     <div className="space-y-2">
                                         <span className="font-semibold flex items-center gap-2 text-sm"><Grid className="w-4 h-4" /> Bulk Actions</span>
                                         <p className="text-xs text-muted-foreground">Select multiple shots to Move or Delete in one click.</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </section>
+
+                    {/* Video Generation */}
+                    <section id="video-generation" className="space-y-6 scroll-mt-20">
+                        <h2 className="text-2xl font-bold flex items-center gap-2">
+                            <Video className="w-6 h-6 text-red-500" /> Video Generation
+                        </h2>
+                        <p className="text-muted-foreground">
+                            Bring your storyboards to life with AI-powered video generation. Choose from 5 video models with different speed, quality, and pricing options.
+                        </p>
+
+                        {/* System Infographic */}
+                        <Card className="bg-gradient-to-br from-slate-950/50 to-background border-slate-800/50 overflow-hidden">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Info className="w-5 h-5 text-blue-400" /> Video Credit System Overview
+                                </CardTitle>
+                                <CardDescription>Visual guide to models, pricing, and storage limits</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex justify-center">
+                                <div className="relative w-full max-w-md aspect-[9/16] rounded-lg overflow-hidden border border-border/50 shadow-2xl">
+                                    <Image
+                                        src="/docs/video-system-infographic.png"
+                                        alt="Video Generation System Infographic - Models, Pricing, Storage Limits"
+                                        fill
+                                        className="object-contain"
+                                        priority
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Video Models Quick Reference */}
+                        <div className="grid gap-4">
+                            <Card className="bg-gradient-to-br from-green-950/20 to-background border-green-900/30">
+                                <CardHeader className="pb-2">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="text-lg">WAN 2.2-5B Fast</CardTitle>
+                                        <span className="px-2 py-1 text-xs font-bold rounded bg-green-500/20 text-green-400">1 PT/VIDEO</span>
+                                    </div>
+                                    <CardDescription>Budget • ~4 seconds • 720p max</CardDescription>
+                                </CardHeader>
+                                <CardContent className="text-sm text-muted-foreground">
+                                    Ultra-fast previews at minimal cost. Perfect for quick iterations.
+                                </CardContent>
+                            </Card>
+
+                            <Card className="bg-gradient-to-br from-blue-950/20 to-background border-blue-900/30">
+                                <CardHeader className="pb-2">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="text-lg">WAN 2.2 I2V Fast</CardTitle>
+                                        <span className="px-2 py-1 text-xs font-bold rounded bg-blue-500/20 text-blue-400">2-3 PTS/VIDEO</span>
+                                    </div>
+                                    <CardDescription>Budget+ • 5 seconds • Has Last Frame control</CardDescription>
+                                </CardHeader>
+                                <CardContent className="text-sm text-muted-foreground">
+                                    Control where your video ends with the Last Frame feature.
+                                </CardContent>
+                            </Card>
+
+                            <Card className="bg-gradient-to-br from-yellow-950/20 to-background border-yellow-900/30">
+                                <CardHeader className="pb-2">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="text-lg">Seedance Pro Fast</CardTitle>
+                                        <span className="px-2 py-1 text-xs font-bold rounded bg-yellow-500/20 text-yellow-400">2-9 PTS/SEC</span>
+                                    </div>
+                                    <CardDescription>Standard • Up to 12 seconds • 1080p</CardDescription>
+                                </CardHeader>
+                                <CardContent className="text-sm text-muted-foreground">
+                                    Fast generation for longer videos. Supports all resolutions.
+                                </CardContent>
+                            </Card>
+
+                            <Card className="bg-gradient-to-br from-orange-950/20 to-background border-orange-900/30">
+                                <CardHeader className="pb-2">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="text-lg">Seedance Lite</CardTitle>
+                                        <span className="px-2 py-1 text-xs font-bold rounded bg-orange-500/20 text-orange-400">3-11 PTS/SEC</span>
+                                    </div>
+                                    <CardDescription>Featured • Up to 12 seconds • Last Frame + Reference Images (1-4)</CardDescription>
+                                </CardHeader>
+                                <CardContent className="text-sm text-muted-foreground">
+                                    Full creative control with reference images and end frame control.
+                                </CardContent>
+                            </Card>
+
+                            <Card className="bg-gradient-to-br from-red-950/20 to-background border-red-900/30">
+                                <CardHeader className="pb-2">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="text-lg">Kling 2.5 Turbo Pro</CardTitle>
+                                        <span className="px-2 py-1 text-xs font-bold rounded bg-red-500/20 text-red-400">10 PTS/SEC</span>
+                                    </div>
+                                    <CardDescription>Premium • Up to 10 seconds • Best motion quality</CardDescription>
+                                </CardHeader>
+                                <CardContent className="text-sm text-muted-foreground">
+                                    Highest quality motion for final renders. Worth the premium.
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Pricing Formula */}
+                        <Card className="bg-muted/30 border-border/50">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Coins className="w-5 h-5 text-amber-400" /> Pricing Formula
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                                        <h4 className="font-semibold text-green-400 mb-2">Per-Video Models</h4>
+                                        <p className="text-sm text-muted-foreground">WAN models charge a flat rate regardless of duration.</p>
+                                        <code className="text-xs mt-2 block text-green-300">Cost = Flat Rate</code>
+                                    </div>
+                                    <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                        <h4 className="font-semibold text-amber-400 mb-2">Per-Second Models</h4>
+                                        <p className="text-sm text-muted-foreground">Seedance & Kling charge based on video duration.</p>
+                                        <code className="text-xs mt-2 block text-amber-300">Cost = Rate × Duration</code>
+                                    </div>
+                                </div>
+                                <div className="p-4 rounded-lg bg-muted/50 border border-border/50">
+                                    <p className="text-sm"><strong>Example:</strong> Seedance Lite @ 720p (5 pts/sec) × 8 seconds = <span className="text-amber-400 font-bold">40 points</span></p>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Storage Limits */}
+                        <Card className="bg-muted/30 border-border/50">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Clock className="w-5 h-5 text-blue-400" /> Storage Limits
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div className="p-4 rounded-lg bg-violet-500/10 border border-violet-500/20">
+                                        <h4 className="font-semibold text-violet-400 mb-2">Images</h4>
+                                        <ul className="text-sm text-muted-foreground space-y-1">
+                                            <li>• Maximum: <strong>500 images</strong> per account</li>
+                                            <li>• Warning at 400 (amber badge)</li>
+                                            <li>• Blocked at 500 (red badge)</li>
+                                            <li>• No expiration - permanent storage</li>
+                                        </ul>
+                                    </div>
+                                    <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                                        <h4 className="font-semibold text-blue-400 mb-2">Videos</h4>
+                                        <ul className="text-sm text-muted-foreground space-y-1">
+                                            <li>• No count limit</li>
+                                            <li>• <strong>Auto-expire after 7 days</strong></li>
+                                            <li>• Download videos you want to keep!</li>
+                                            <li>• Daily cleanup at 3 AM UTC</li>
+                                        </ul>
                                     </div>
                                 </div>
                             </CardContent>
