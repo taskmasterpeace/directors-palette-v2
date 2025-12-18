@@ -3,6 +3,8 @@ import { StorageService } from './storage.service';
 import { generationEventsService } from '@/features/admin/services/generation-events.service';
 import { creditsService } from '@/features/credits';
 import { isAdminEmail } from '@/features/admin/types/admin.types';
+import { VideoGenerationService } from '@/features/shot-animator/services/video-generation.service';
+import type { AnimationModel } from '@/features/shot-animator/types';
 import type { Database } from '../../../../supabase/database.types';
 
 // Lazy-load Supabase client to avoid build-time errors when env vars aren't available
@@ -209,10 +211,24 @@ export class WebhookService {
       const defaultModel = generationType === 'video' ? 'seedance-lite' : 'nano-banana';
       const model = (currentMetadata.model as string) || defaultModel;
 
+      // For video, calculate actual cost based on duration and resolution
+      let overrideAmount: number | undefined;
+      if (generationType === 'video') {
+        const duration = (currentMetadata.duration as number) || 5;
+        const resolution = (currentMetadata.resolution as '480p' | '720p' | '1080p') || '720p';
+        overrideAmount = VideoGenerationService.calculateCost(
+          model as AnimationModel,
+          duration,
+          resolution
+        );
+        console.log(`Video cost calculated: ${model} @ ${resolution} for ${duration}s = ${overrideAmount} pts`);
+      }
+
       const deductResult = await creditsService.deductCredits(galleryEntry.user_id, model, {
         generationType,
         predictionId: galleryEntry.prediction_id,
         description: `${generationType === 'video' ? 'Video' : 'Image'} generation (${model})`,
+        overrideAmount,  // Use calculated video cost
       });
 
       if (!deductResult.success) {

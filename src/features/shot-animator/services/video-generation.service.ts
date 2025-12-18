@@ -301,7 +301,8 @@ export class VideoGenerationService {
   static buildMetadata(input: VideoGenerationInput) {
     return {
       prompt: input.prompt,
-      model: this.getReplicateModelId(input.model),
+      model: input.model,  // Store internal model ID for credit deduction lookup
+      replicate_model: this.getReplicateModelId(input.model),  // Store Replicate ID for reference
       duration: input.modelSettings.duration,
       resolution: input.modelSettings.resolution,
       aspect_ratio: input.modelSettings.aspectRatio,

@@ -163,14 +163,16 @@ class CreditsService {
             generationType?: GenerationType
             predictionId?: string
             description?: string
+            overrideAmount?: number  // For video: calculated cost based on duration/resolution
         } = {}
     ): Promise<{ success: boolean; transaction?: CreditTransaction; error?: string; newBalance?: number }> {
-        const { generationType = 'image', predictionId, description } = options
+        const { generationType = 'image', predictionId, description, overrideAmount } = options
         const supabase = await getCreditsClient()
 
-        // Get pricing for this model
+        // Get pricing for this model (used for metadata, may be overridden for videos)
         const pricing = await this.getModelPricing(modelId)
-        const priceToDeduct = pricing?.price_cents ?? FALLBACK_PRICING[generationType].price_cents
+        // Use override amount if provided (for video duration-based pricing), otherwise use DB pricing
+        const priceToDeduct = overrideAmount ?? pricing?.price_cents ?? FALLBACK_PRICING[generationType].price_cents
         const modelName = pricing?.model_name ?? modelId
 
         // Build metadata for the transaction
