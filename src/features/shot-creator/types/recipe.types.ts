@@ -775,4 +775,49 @@ Maintain perfect character and style consistency. No text overlays.`,
     quickAccessLabel: 'PageVar',
     categoryId: 'scenes',
   },
+
+  // Wardrobe Variations - Character sheets with different outfit options
+  {
+    name: 'Wardrobe Variations',
+    description: 'Generate 6 character sheet variations with completely different outfits',
+    recipeNote: 'Attach your character reference or character sheet. Each tile shows a mini character sheet with a different luxury outfit.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Analyze the character in the reference image. This is @<<CHARACTER_NAME:name!>>.
+
+Create a 2x3 grid (2 rows, 3 columns) showing 6 MINI CHARACTER SHEETS of this EXACT same character.
+
+CRITICAL - MAINTAIN ACROSS ALL 6:
+- Identical face, facial features, expression style
+- Same hair style and color
+- Same body type and proportions
+- Same art style and rendering quality
+- Same age and overall appearance
+
+EACH TILE IS A MINI CHARACTER SHEET:
+- Solid <<BACKGROUND_COLOR:select(white,light gray,soft blue,cream,pale pink,mint green)!>> background
+- Full body view showing complete outfit
+- Small expression thumbnails in corner (happy, neutral, surprised)
+- Clean, production-ready layout
+
+THE 6 DIFFERENT LUXURY OUTFITS:
+1. Casual Elegant - Relaxed but refined everyday wear
+2. Formal Sophisticated - Event-ready upscale attire
+3. Adventure Ready - Stylish outdoor/exploration wear
+4. Cozy Comfort - Luxe loungewear or home attire
+5. Creative Expression - Artistic, bold fashion statement
+6. Classic Timeless - Traditional, never-goes-out-of-style look
+
+Each outfit should be COMPLETELY DIFFERENT in style, silhouette, and color palette.
+All outfits should feel premium and well-designed.
+No text labels - clean imagery only.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '3:2',
+    isQuickAccess: true,
+    quickAccessLabel: 'Wardrobe',
+    categoryId: 'characters',
+  },
 ]

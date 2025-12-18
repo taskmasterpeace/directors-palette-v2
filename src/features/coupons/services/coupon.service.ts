@@ -105,6 +105,41 @@ export class CouponService {
     }
 
     /**
+     * Delete a coupon (Admin only)
+     */
+    async deleteCoupon(
+        adminEmail: string,
+        couponId: string
+    ): Promise<{ success: boolean; error?: string }> {
+        // Double check admin permission
+        const isAdmin = await adminService.checkAdminEmailAsync(adminEmail)
+        if (!isAdmin) {
+            return { success: false, error: 'Unauthorized: Not an admin' }
+        }
+
+        const supabase = await getAPIClient()
+
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error } = await (supabase as any)
+                .from('coupons')
+                .delete()
+                .eq('id', couponId)
+
+            if (error) {
+                console.error('[CouponService] Delete error:', error)
+                return { success: false, error: error.message || 'Failed to delete coupon' }
+            }
+
+            return { success: true }
+        } catch (error) {
+            console.error('[CouponService] Error deleting coupon:', error)
+            const message = error instanceof Error ? error.message : 'Failed to delete coupon'
+            return { success: false, error: message }
+        }
+    }
+
+    /**
      * Redeem a coupon for a user
      */
     async redeemCoupon(

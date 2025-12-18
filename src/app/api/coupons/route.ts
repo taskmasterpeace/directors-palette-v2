@@ -86,3 +86,38 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: message }, { status: 400 })
     }
 }
+
+/**
+ * DELETE /api/coupons
+ * Delete a coupon (Admin only)
+ */
+export async function DELETE(request: NextRequest) {
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+
+    const userEmail = auth.user.email
+    if (!userEmail) {
+        return NextResponse.json({ error: 'User email not found' }, { status: 401 })
+    }
+
+    try {
+        const { searchParams } = new URL(request.url)
+        const couponId = searchParams.get('id')
+
+        if (!couponId) {
+            return NextResponse.json({ error: 'Coupon ID is required' }, { status: 400 })
+        }
+
+        const result = await couponService.deleteCoupon(userEmail, couponId)
+
+        if (!result.success) {
+            return NextResponse.json({ error: result.error }, { status: 400 })
+        }
+
+        return NextResponse.json({ success: true })
+    } catch (error) {
+        console.error('[CouponAPI] Delete exception:', error)
+        const message = error instanceof Error ? error.message : 'Failed to delete coupon'
+        return NextResponse.json({ error: message }, { status: 400 })
+    }
+}

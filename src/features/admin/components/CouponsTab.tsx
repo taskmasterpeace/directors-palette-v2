@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, Dialog
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
-import { Loader2, Plus, RefreshCw, Ticket } from "lucide-react"
+import { Loader2, Plus, RefreshCw, Ticket, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 interface Coupon {
@@ -25,6 +25,7 @@ interface Coupon {
 export function CouponsTab() {
     const [loading, setLoading] = useState(false)
     const [coupons, setCoupons] = useState<Coupon[]>([])
+    const [deletingId, setDeletingId] = useState<string | null>(null)
 
     const fetchCoupons = useCallback(async () => {
         setLoading(true)
@@ -40,6 +41,31 @@ export function CouponsTab() {
             setLoading(false)
         }
     }, [])
+
+    const handleDelete = async (coupon: Coupon) => {
+        if (!confirm(`Delete coupon "${coupon.code}"? This cannot be undone.`)) {
+            return
+        }
+
+        setDeletingId(coupon.id)
+        try {
+            const res = await fetch(`/api/coupons?id=${coupon.id}`, {
+                method: 'DELETE'
+            })
+            const data = await res.json()
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to delete coupon')
+            }
+
+            toast.success(`Coupon "${coupon.code}" deleted`)
+            fetchCoupons()
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Failed to delete coupon')
+        } finally {
+            setDeletingId(null)
+        }
+    }
 
     useEffect(() => {
         fetchCoupons()
@@ -81,18 +107,19 @@ export function CouponsTab() {
                                 <TableHead className="text-zinc-400">Uses</TableHead>
                                 <TableHead className="text-zinc-400">Status</TableHead>
                                 <TableHead className="text-zinc-400">Expires</TableHead>
+                                <TableHead className="text-zinc-400 w-16">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {loading ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-8">
+                                    <TableCell colSpan={6} className="text-center py-8">
                                         <Loader2 className="w-6 h-6 animate-spin mx-auto text-amber-500" />
                                     </TableCell>
                                 </TableRow>
                             ) : coupons.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-8 text-zinc-500">
+                                    <TableCell colSpan={6} className="text-center py-8 text-zinc-500">
                                         No coupons found. Create one to get started.
                                     </TableCell>
                                 </TableRow>
@@ -121,6 +148,21 @@ export function CouponsTab() {
                                         </TableCell>
                                         <TableCell className="text-zinc-500">
                                             {formatDate(coupon.expires_at)}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleDelete(coupon)}
+                                                disabled={deletingId === coupon.id}
+                                                className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                            >
+                                                {deletingId === coupon.id ? (
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                ) : (
+                                                    <Trash2 className="w-4 h-4" />
+                                                )}
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
                                 ))
