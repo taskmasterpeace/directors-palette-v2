@@ -1,20 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { BookOpen, FileText, Sparkles, ChevronDown, ChevronUp } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { BookOpen, FileText, Sparkles, ChevronDown, ChevronUp, LayoutGrid } from "lucide-react"
 import { cn } from "@/utils/utils"
 
 export function StoryInputStep() {
-  const { project, setStoryText, detectPages, createProject } = useStorybookStore()
+  const { project, setStoryText, setPages, createProject } = useStorybookStore()
   const [title, setTitle] = useState(project?.title || "")
   const [storyText, setLocalStoryText] = useState(project?.storyText || "")
+  const [pageCount, setPageCount] = useState<string>("auto")
   const [showPages, setShowPages] = useState(false)
+
+  // Sync with project state
+  useEffect(() => {
+    if (project?.title) setTitle(project.title)
+    if (project?.storyText) setLocalStoryText(project.storyText)
+  }, [project?.title, project?.storyText])
 
   const handleTextChange = (text: string) => {
     setLocalStoryText(text)
@@ -23,20 +31,87 @@ export function StoryInputStep() {
     }
   }
 
-  const handleDetectPages = () => {
+  // Smart page splitting that respects natural breaks
+  const splitIntoPages = (text: string, targetPages: number | 'auto'): string[] => {
+    // Clean up the text
+    const cleanText = text.trim()
+
+    // First, try to split by double newlines (explicit paragraph breaks)
+    const paragraphs = cleanText
+      .split(/\n\n+/)
+      .map(p => p.trim())
+      .filter(p => p.length > 0)
+
+    // If user selected auto and we have good paragraph breaks
+    if (targetPages === 'auto') {
+      if (paragraphs.length >= 3 && paragraphs.length <= 20) {
+        return paragraphs
+      }
+      // Default to 8-12 pages for longer stories
+      const wordCount = cleanText.split(/\s+/).length
+      const targetCount = Math.min(12, Math.max(6, Math.ceil(wordCount / 50)))
+      return splitTextEvenly(cleanText, targetCount)
+    }
+
+    // User specified a page count
+    return splitTextEvenly(cleanText, targetPages)
+  }
+
+  // Split text evenly into N pages, trying to break at sentence boundaries
+  const splitTextEvenly = (text: string, numPages: number): string[] => {
+    // Split by sentences
+    const sentences = text.match(/[^.!?]+[.!?]+\s*/g) || [text]
+
+    if (sentences.length <= numPages) {
+      // If we have fewer sentences than pages, combine what we can
+      return sentences.map(s => s.trim())
+    }
+
+    // Calculate target sentences per page
+    const sentencesPerPage = Math.ceil(sentences.length / numPages)
+    const pages: string[] = []
+
+    for (let i = 0; i < numPages; i++) {
+      const start = i * sentencesPerPage
+      const end = Math.min(start + sentencesPerPage, sentences.length)
+      const pageText = sentences.slice(start, end).join('').trim()
+      if (pageText) {
+        pages.push(pageText)
+      }
+    }
+
+    return pages
+  }
+
+  const handleSplitPages = () => {
+    // Create project if needed
     if (!project && storyText.trim()) {
       createProject(title || "Untitled Storybook", storyText)
     } else if (project) {
       setStoryText(storyText)
     }
-    // Small delay to ensure state is updated
+
+    // Split into pages
+    const targetPages = pageCount === 'auto' ? 'auto' : parseInt(pageCount, 10)
+    const pageTexts = splitIntoPages(storyText, targetPages)
+
+    // Create page objects
+    const pages = pageTexts.map((text, index) => ({
+      id: `page_${Date.now()}_${index}`,
+      pageNumber: index + 1,
+      text,
+      textPosition: 'bottom' as const,
+    }))
+
+    // Small delay to ensure project is created
     setTimeout(() => {
-      detectPages()
+      setPages(pages)
       setShowPages(true)
     }, 100)
   }
 
   const pages = project?.pages || []
+  const wordCount = storyText.split(/\s+/).filter(w => w).length
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -47,7 +122,7 @@ export function StoryInputStep() {
           Write Your Story
         </h2>
         <p className="text-zinc-400">
-          Paste your story or write it here. We&apos;ll automatically detect page breaks.
+          Paste your story below. Choose how many pages to split it into.
         </p>
       </div>
 
@@ -74,23 +149,46 @@ export function StoryInputStep() {
           value={storyText}
           onChange={(e) => handleTextChange(e.target.value)}
           placeholder="Once upon a time..."
-          className="min-h-[300px] bg-zinc-800/50 border-zinc-700 resize-none font-serif text-lg leading-relaxed"
+          className="min-h-[250px] bg-zinc-800/50 border-zinc-700 resize-none font-serif text-lg leading-relaxed"
         />
         <div className="flex justify-between items-center text-sm text-zinc-500">
-          <span>{storyText.split(/\s+/).filter(w => w).length} words</span>
-          <span>Use @CharacterName to tag characters (e.g., @Maya, @Jake)</span>
+          <span>{wordCount} words</span>
+          <span>Tip: Add blank lines between paragraphs for better page breaks</span>
         </div>
       </div>
 
-      {/* Detect Pages Button */}
+      {/* Page Count Selection */}
+      <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center gap-2">
+          <LayoutGrid className="w-4 h-4 text-zinc-400" />
+          <Label htmlFor="pageCount" className="text-zinc-300">Number of Pages:</Label>
+        </div>
+        <Select value={pageCount} onValueChange={setPageCount}>
+          <SelectTrigger className="w-[140px] bg-zinc-800/50 border-zinc-700">
+            <SelectValue placeholder="Select pages" />
+          </SelectTrigger>
+          <SelectContent className="bg-zinc-800 border-zinc-700">
+            <SelectItem value="auto">Auto Detect</SelectItem>
+            <SelectItem value="4">4 pages</SelectItem>
+            <SelectItem value="6">6 pages</SelectItem>
+            <SelectItem value="8">8 pages</SelectItem>
+            <SelectItem value="10">10 pages</SelectItem>
+            <SelectItem value="12">12 pages</SelectItem>
+            <SelectItem value="16">16 pages</SelectItem>
+            <SelectItem value="20">20 pages</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Split Pages Button */}
       <div className="flex justify-center">
         <Button
-          onClick={handleDetectPages}
+          onClick={handleSplitPages}
           disabled={!storyText.trim()}
           className="gap-2 bg-amber-500 hover:bg-amber-600 text-black"
         >
           <Sparkles className="w-4 h-4" />
-          Detect Pages
+          Split into Pages
         </Button>
       </div>
 

@@ -44,6 +44,7 @@ interface StorybookState {
   // Story actions
   setStoryText: (text: string) => void
   detectPages: () => void
+  setPages: (pages: StorybookPage[]) => void
 
   // Style actions
   setStyle: (style: StorybookStyle) => void
@@ -261,6 +262,19 @@ export const useStorybookStore = create<StorybookState>((set, get) => ({
     const { project } = get()
     if (project?.storyText) {
       const pages = parseStoryIntoPages(project.storyText)
+      set({
+        project: {
+          ...project,
+          pages,
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  setPages: (pages) => {
+    const { project } = get()
+    if (project) {
       set({
         project: {
           ...project,
