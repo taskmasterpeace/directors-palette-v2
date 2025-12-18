@@ -14,6 +14,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     defaultResolution: '720p',
     maxDuration: 4,
     supportedResolutions: ['480p', '720p'],
+    supportedAspectRatios: ['16:9', '9:16'],
     pricingType: 'per-video',
     restrictions: [
       'Fixed duration (~4 seconds)',
@@ -30,6 +31,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     defaultResolution: '720p',
     maxDuration: 5,
     supportedResolutions: ['480p', '720p'],
+    supportedAspectRatios: ['16:9', '9:16'],
     pricingType: 'per-video',
     restrictions: [
       'Fixed duration (5 seconds)',
@@ -45,6 +47,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     defaultResolution: '720p',
     maxDuration: 12,
     supportedResolutions: ['480p', '720p', '1080p'],
+    supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
     restrictions: [
       'No last frame support',
@@ -60,6 +63,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     defaultResolution: '720p',
     maxDuration: 12,
     supportedResolutions: ['480p', '720p', '1080p'],
+    supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
     restrictions: [
       'Reference images cannot be used with 1080p resolution'
@@ -74,6 +78,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     defaultResolution: '720p',
     maxDuration: 10,
     supportedResolutions: ['480p', '720p'],
+    supportedAspectRatios: ['16:9', '9:16', '1:1'],
     pricingType: 'per-second',
     restrictions: [
       'Max 720p resolution',
@@ -90,6 +95,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     defaultResolution: '1080p',
     maxDuration: 12,
     supportedResolutions: ['480p', '720p', '1080p'],
+    supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
     restrictions: []
   }

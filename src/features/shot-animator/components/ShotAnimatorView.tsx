@@ -201,6 +201,34 @@ export function ShotAnimatorView() {
     }
   }, [selectedModel, currentModelConfig.supportsLastFrame, currentModelConfig.displayName])
 
+  // Reset aspect ratio when switching to a model that doesn't support the current ratio
+  useEffect(() => {
+    const currentSettings = modelSettings[selectedModel]
+    if (!currentSettings) return
+
+    const currentAspectRatio = currentSettings.aspectRatio
+    const supportedRatios = currentModelConfig.supportedAspectRatios
+
+    // If current aspect ratio is not supported by the new model, reset to first supported
+    if (supportedRatios && !supportedRatios.includes(currentAspectRatio)) {
+      const newRatio = supportedRatios[0] || '16:9'
+      updateShotAnimatorSettings({
+        modelSettings: {
+          ...modelSettings,
+          [selectedModel]: {
+            ...currentSettings,
+            aspectRatio: newRatio
+          }
+        }
+      })
+
+      toast({
+        title: 'Aspect Ratio Changed',
+        description: `${currentModelConfig.displayName} doesn't support ${currentAspectRatio}. Changed to ${newRatio}.`,
+      })
+    }
+  }, [selectedModel, currentModelConfig.displayName, currentModelConfig.supportedAspectRatios])
+
   // Transform gallery images for the modal
   const transformedGalleryImages = useMemo(() => {
     return galleryImages

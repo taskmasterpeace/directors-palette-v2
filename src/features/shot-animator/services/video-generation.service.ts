@@ -17,6 +17,7 @@ export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
     defaultResolution: '720p',
     maxDuration: 4,
     supportedResolutions: ['480p', '720p'],
+    supportedAspectRatios: ['16:9', '9:16'],
     pricingType: 'per-video',
     restrictions: ['No last frame', 'Max 4 seconds', 'No 1080p'],
   },
@@ -29,6 +30,7 @@ export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
     defaultResolution: '720p',
     maxDuration: 5,
     supportedResolutions: ['480p', '720p'],
+    supportedAspectRatios: ['16:9', '9:16'],
     pricingType: 'per-video',
     restrictions: ['Max 5 seconds', 'No 1080p'],
   },
@@ -41,6 +43,7 @@ export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
     defaultResolution: '720p',
     maxDuration: 12,
     supportedResolutions: ['480p', '720p', '1080p'],
+    supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
     restrictions: ['No last frame', 'No reference images'],
   },
@@ -53,6 +56,7 @@ export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
     defaultResolution: '720p',
     maxDuration: 12,
     supportedResolutions: ['480p', '720p', '1080p'],
+    supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
     restrictions: ['Ref images not with 1080p or last frame'],
   },
@@ -65,6 +69,7 @@ export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
     defaultResolution: '720p',
     maxDuration: 10,
     supportedResolutions: ['720p'],
+    supportedAspectRatios: ['16:9', '9:16', '1:1'],
     pricingType: 'per-second',
     restrictions: ['720p only', 'No last frame'],
   },
@@ -77,6 +82,7 @@ export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
     defaultResolution: '1080p',
     maxDuration: 12,
     supportedResolutions: ['480p', '720p', '1080p'],
+    supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
   },
 }
@@ -134,6 +140,11 @@ export class VideoGenerationService {
     // Validate resolution
     if (!config.supportedResolutions.includes(input.modelSettings.resolution)) {
       errors.push(`${config.displayName} does not support ${input.modelSettings.resolution}`)
+    }
+
+    // Validate aspect ratio
+    if (!config.supportedAspectRatios?.includes(input.modelSettings.aspectRatio)) {
+      errors.push(`${config.displayName} does not support ${input.modelSettings.aspectRatio} aspect ratio`)
     }
 
     // Validate reference images

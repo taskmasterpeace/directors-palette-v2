@@ -232,7 +232,9 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
           onValueChange={(value) => onUpdate({ aspectRatio: value as '16:9' | '4:3' | '1:1' | '3:4' | '9:16' | '21:9' | '9:21' })}
           className="grid grid-cols-1 sm:grid-cols-2 gap-3"
         >
-          {ASPECT_RATIOS.map((ratio) => (
+          {ASPECT_RATIOS
+            .filter((ratio) => modelConfig.supportedAspectRatios?.includes(ratio.value as '16:9' | '4:3' | '1:1' | '3:4' | '9:16' | '21:9' | '9:21'))
+            .map((ratio) => (
             <div key={ratio.value} className="flex items-center space-x-2 touch-manipulation min-h-[44px] sm:min-h-0">
               <RadioGroupItem value={ratio.value} id={`${model}-${ratio.value}`} className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0" />
               <Label

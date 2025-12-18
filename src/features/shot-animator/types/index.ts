@@ -76,6 +76,7 @@ export interface ModelConfig {
   defaultResolution: '480p' | '720p' | '1080p'
   maxDuration: number // Max duration in seconds
   supportedResolutions: ('480p' | '720p' | '1080p')[]
+  supportedAspectRatios: ('16:9' | '4:3' | '1:1' | '3:4' | '9:16' | '21:9' | '9:21')[]
   pricingType: 'per-video' | 'per-second'
   restrictions?: string[]
 }
