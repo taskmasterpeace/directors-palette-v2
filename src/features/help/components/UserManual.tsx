@@ -18,7 +18,8 @@ import {
     Shuffle,
     Video,
     Clock,
-    Coins
+    Coins,
+    ImageIcon
 } from "lucide-react"
 import Image from "next/image"
 
@@ -41,7 +42,7 @@ export function UserManual() {
                     <a href="#syntax" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Prompt Syntax</a>
                     <a href="#gallery" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Gallery</a>
                     <a href="#video-generation" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Video Generation</a>
-                    <a href="#models" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">AI Models</a>
+                    <a href="#models" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Image Generation</a>
                     <a href="#api-access" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">API Access</a>
                 </nav>
 
@@ -587,9 +588,35 @@ export function UserManual() {
                     {/* AI Models */}
                     <section id="models" className="space-y-6 scroll-mt-20">
                         <h2 className="text-2xl font-bold flex items-center gap-2">
-                            <Sparkles className="w-6 h-6 text-amber-500" /> AI Models
+                            <ImageIcon className="w-6 h-6 text-purple-500" /> Image Generation
                         </h2>
                         <p className="text-muted-foreground">
+                            Create stunning images with AI. Choose from 7 models with different speed, quality, reference image support, and pricing options.
+                        </p>
+
+                        {/* Image System Infographic */}
+                        <Card className="bg-gradient-to-br from-purple-950/50 to-background border-purple-800/50 overflow-hidden">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Info className="w-5 h-5 text-purple-400" /> Image Credit System Overview
+                                </CardTitle>
+                                <CardDescription>Visual guide to models, pricing, and reference image support</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex justify-center">
+                                <div className="relative w-full max-w-md aspect-[9/16] rounded-lg overflow-hidden border border-border/50 shadow-2xl">
+                                    <Image
+                                        src="/docs/image-system-infographic.png"
+                                        alt="Image Generation System Infographic - Models, Pricing, Reference Images"
+                                        fill
+                                        className="object-contain"
+                                        priority
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <h3 className="text-xl font-semibold mt-8">Image Models</h3>
+                        <p className="text-muted-foreground text-sm">
                             Choose the right model for your workflow. Balance speed, quality, and cost.
                         </p>
 
