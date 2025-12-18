@@ -222,8 +222,8 @@ curl -s "https://api.replicate.com/v1/predictions/PREDICTION_ID" \
 ```
 
 ### Available Image Models
-- `google/imagen-3` - High quality (Nano Banana Pro equivalent)
-- `google/imagen-3-fast` - Fast generation
+- `google/nano-banana` - Nano Banana (fast, 8 pts) - good for quick iterations
+- `google/nano-banana-pro` - Nano Banana Pro (high quality, 20 pts) - best for production
 - `ideogram-ai/ideogram-v2` - Best for text rendering
 - `prunaai/qwen-image-fast` - Cheapest/fastest
 

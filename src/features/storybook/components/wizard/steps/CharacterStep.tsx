@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
+import { useStorybookGeneration } from "../../../hooks/useStorybookGeneration"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Users, Plus, Upload, Sparkles, Trash2, User } from "lucide-react"
+import { Users, Plus, Upload, Sparkles, Trash2, User, Loader2, ImageIcon } from "lucide-react"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
 
@@ -18,6 +19,16 @@ export function CharacterStep() {
     updateCharacter,
     detectCharacters,
   } = useStorybookStore()
+
+  const { generateCharacterSheet, isGenerating, progress, error } = useStorybookGeneration()
+
+  // Track which character is currently being generated
+  const [generatingCharacterId, setGeneratingCharacterId] = useState<string | null>(null)
+  // Track which character is uploading a photo
+  const [uploadingCharacterId, setUploadingCharacterId] = useState<string | null>(null)
+
+  // File input refs (one per character)
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   // Auto-detect characters when step loads
   useEffect(() => {
@@ -32,6 +43,66 @@ export function CharacterStep() {
     const name = `Character ${characters.length + 1}`
     addCharacter(name, `@${name.replace(/\s+/g, '')}`)
   }
+
+  // Handle photo upload for a character
+  const handlePhotoUpload = useCallback(async (characterId: string, file: File) => {
+    setUploadingCharacterId(characterId)
+
+    try {
+      // Create a FormData object to upload the image
+      const formData = new FormData()
+      formData.append('file', file)
+
+      // Upload to our upload endpoint
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to upload photo')
+      }
+
+      const data = await response.json()
+      const photoUrl = data.url
+
+      // Update the character with the source photo URL
+      updateCharacter(characterId, { sourcePhotoUrl: photoUrl })
+    } catch (err) {
+      console.error('Error uploading photo:', err)
+    } finally {
+      setUploadingCharacterId(null)
+    }
+  }, [updateCharacter])
+
+  // Handle file input change
+  const handleFileChange = useCallback((characterId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      handlePhotoUpload(characterId, file)
+    }
+    // Reset the input so the same file can be selected again
+    event.target.value = ''
+  }, [handlePhotoUpload])
+
+  // Trigger file input click
+  const triggerFileUpload = useCallback((characterId: string) => {
+    fileInputRefs.current[characterId]?.click()
+  }, [])
+
+  // Handle character sheet generation
+  const handleGenerateCharacterSheet = useCallback(async (characterId: string) => {
+    setGeneratingCharacterId(characterId)
+
+    try {
+      const result = await generateCharacterSheet(characterId)
+      if (!result.success) {
+        console.error('Generation failed:', result.error)
+      }
+    } finally {
+      setGeneratingCharacterId(null)
+    }
+  }, [generateCharacterSheet])
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -110,14 +181,63 @@ export function CharacterStep() {
                   />
                 </div>
 
-                {/* Character Sheet Preview / Upload */}
+                {/* Hidden file input */}
+                <input
+                  ref={(el) => { fileInputRefs.current[character.id] = el }}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleFileChange(character.id, e)}
+                />
+
+                {/* Source Photo Upload */}
+                <div className="space-y-2">
+                  <Label>Source Photo</Label>
+                  {character.sourcePhotoUrl ? (
+                    <div
+                      className="relative aspect-square w-32 rounded-lg overflow-hidden border border-zinc-700 cursor-pointer hover:border-amber-500/50 transition-colors"
+                      onClick={() => triggerFileUpload(character.id)}
+                    >
+                      <Image
+                        src={character.sourcePhotoUrl}
+                        alt={`${character.name} source photo`}
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <span className="text-xs text-white">Change</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className={cn(
+                        "aspect-square w-32 rounded-lg border-2 border-dashed border-zinc-700",
+                        "flex flex-col items-center justify-center gap-1",
+                        "hover:border-amber-500/50 transition-colors cursor-pointer",
+                        uploadingCharacterId === character.id && "opacity-50 pointer-events-none"
+                      )}
+                      onClick={() => triggerFileUpload(character.id)}
+                    >
+                      {uploadingCharacterId === character.id ? (
+                        <Loader2 className="w-6 h-6 text-zinc-500 animate-spin" />
+                      ) : (
+                        <>
+                          <Upload className="w-6 h-6 text-zinc-500" />
+                          <span className="text-xs text-zinc-500">Upload</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Character Sheet Preview */}
                 <div className="space-y-2">
                   <Label>Character Sheet</Label>
                   {character.characterSheetUrl ? (
-                    <div className="relative aspect-[21/9] rounded-lg overflow-hidden border border-zinc-700">
+                    <div className="relative aspect-[21/9] rounded-lg overflow-hidden border border-amber-500/50">
                       <Image
                         src={character.characterSheetUrl}
-                        alt={character.name}
+                        alt={`${character.name} character sheet`}
                         fill
                         className="object-cover"
                       />
@@ -125,24 +245,56 @@ export function CharacterStep() {
                   ) : (
                     <div
                       className={cn(
-                        "aspect-[21/9] rounded-lg border-2 border-dashed border-zinc-700",
-                        "flex flex-col items-center justify-center gap-2",
-                        "hover:border-amber-500/50 transition-colors cursor-pointer"
+                        "aspect-[21/9] rounded-lg border border-zinc-700 bg-zinc-800/30",
+                        "flex flex-col items-center justify-center gap-2"
                       )}
                     >
-                      <Upload className="w-8 h-8 text-zinc-500" />
-                      <span className="text-sm text-zinc-500">Upload photo or character sheet</span>
+                      {generatingCharacterId === character.id && isGenerating ? (
+                        <>
+                          <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+                          <span className="text-sm text-amber-400">{progress || 'Generating...'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <ImageIcon className="w-8 h-8 text-zinc-600" />
+                          <span className="text-sm text-zinc-500">
+                            {character.sourcePhotoUrl
+                              ? 'Ready to generate'
+                              : 'Upload a photo first'}
+                          </span>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
 
+                {/* Error message */}
+                {generatingCharacterId === character.id && error && (
+                  <p className="text-sm text-red-400">{error}</p>
+                )}
+
                 {/* Generate Button */}
                 <Button
                   className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-black"
-                  disabled={!character.sourcePhotoUrl && !character.characterSheetUrl}
+                  disabled={!character.sourcePhotoUrl || (isGenerating && generatingCharacterId === character.id)}
+                  onClick={() => handleGenerateCharacterSheet(character.id)}
                 >
-                  <Sparkles className="w-4 h-4" />
-                  Generate Character Sheet
+                  {generatingCharacterId === character.id && isGenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : character.characterSheetUrl ? (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Regenerate Character Sheet
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Generate Character Sheet
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>

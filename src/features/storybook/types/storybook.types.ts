@@ -60,7 +60,8 @@ export interface StorybookPage {
   text: string // The story text for this page
   sceneJSON?: SceneJSON // Parsed scene (generated automatically)
   imageUrl?: string // Selected variation image
-  variationUrls?: string[] // All 9 variations
+  gridImageUrl?: string // The 3x3 grid image before frame extraction
+  variationUrls?: string[] // All 9 variations (extracted from grid)
   selectedVariationIndex?: number // Which variation was selected (0-8)
   textPosition: TextPosition
 }
@@ -80,7 +81,9 @@ export interface StorybookCharacter {
 export interface StorybookStyle {
   id: string
   name: string
+  description?: string // Style description
   styleGuideUrl?: string // Generated or uploaded style guide image
+  previewUrl?: string // Preview thumbnail (same as styleGuideUrl usually)
   sourceImageUrl?: string // Source image used to create style
   isPreset?: boolean // Whether it's a preset style
   presetId?: string // ID of the preset if applicable
