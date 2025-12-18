@@ -131,7 +131,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
     const modelConfig = getModelConfig(model as ImageModel)
     if (!modelConfig) {
       return NextResponse.json(
-        { success: false, error: `Invalid model: ${model}. Use: nano-banana, nano-banana-pro, or z-image-turbo` },
+        { success: false, error: `Invalid model: ${model}. Use: nano-banana, nano-banana-pro, z-image-turbo, qwen-image-fast, gpt-image-low, gpt-image-medium, or gpt-image-high` },
         { status: 400 }
       )
     }

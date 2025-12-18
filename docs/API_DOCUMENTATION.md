@@ -49,7 +49,7 @@ Generate images from text prompts using various AI models.
 | `prompt` | string | Yes | - | Text description for image generation |
 | `model` | string | No | nano-banana | Model to use (see Models section) |
 | `aspectRatio` | string | No | 1:1 | Image aspect ratio |
-| `outputFormat` | string | No | jpg | Output format: jpg, png |
+| `outputFormat` | string | No | webp | Output format: webp, jpg, png |
 | `referenceImages` | string[] | No | [] | URLs of reference images for style matching |
 | `seed` | number | No | - | Seed for reproducible results |
 
@@ -67,6 +67,11 @@ Generate images from text prompts using various AI models.
 - `guidance`: 0-10 (default: 3) - Guidance scale
 - `num_inference_steps`: 10-50 (default: 30)
 - `negative_prompt`: string - Things to avoid
+
+**gpt-image-low / gpt-image-medium / gpt-image-high:**
+- `background`: "opaque" | "transparent" | "auto" (default: "opaque") - Background type
+- `numImages`: 1-10 (default: 1) - Number of images to generate (cost multiplied by count)
+- Note: Only supports aspect ratios 1:1, 3:2, 2:3
 
 #### Response
 
@@ -125,6 +130,33 @@ curl -X POST https://directorspalette.app/api/v1/images/generate \
 - **Reference Images:** Up to 14
 - **Resolution:** Up to 4K
 - **Best For:** Production-quality images, accurate text rendering, final assets
+
+### gpt-image-low (Fast Drafts)
+- **Speed:** Fast (~3 sec)
+- **Quality:** Good
+- **Cost:** 3 points ($0.03)
+- **Reference Images:** None
+- **Special Features:** Transparent PNG backgrounds, multi-image generation (1-10)
+- **Aspect Ratios:** 1:1, 3:2, 2:3 only
+- **Best For:** Quick iterations, compositing work, transparent backgrounds
+
+### gpt-image-medium (Standard)
+- **Speed:** Medium (~5 sec)
+- **Quality:** Very Good
+- **Cost:** 10 points ($0.10)
+- **Reference Images:** None
+- **Special Features:** Transparent PNG backgrounds, multi-image generation (1-10)
+- **Aspect Ratios:** 1:1, 3:2, 2:3 only
+- **Best For:** Balanced quality/speed, product images, text-heavy designs
+
+### gpt-image-high (Premium)
+- **Speed:** Slower (~8 sec)
+- **Quality:** Excellent
+- **Cost:** 27 points ($0.27)
+- **Reference Images:** None
+- **Special Features:** Transparent PNG backgrounds, multi-image generation (1-10)
+- **Aspect Ratios:** 1:1, 3:2, 2:3 only
+- **Best For:** Final renders, premium quality, professional assets
 
 ---
 
@@ -517,9 +549,12 @@ Credits are stored in cents (100 credits = $1.00). 1 point = 1 cent.
 | Model | Points per Image | Cost |
 |-------|------------------|------|
 | qwen-image-fast | 2 points | $0.02 |
+| gpt-image-low | 3 points | $0.03 |
 | z-image-turbo | 5 points | $0.05 |
 | nano-banana | 8 points | $0.08 |
+| gpt-image-medium | 10 points | $0.10 |
 | nano-banana-pro | 20 points | $0.20 |
+| gpt-image-high | 27 points | $0.27 |
 
 ---
 
