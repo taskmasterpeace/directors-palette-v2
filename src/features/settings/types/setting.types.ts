@@ -1,24 +1,24 @@
 
+// Model settings for shot animator
+interface ModelSettingsEntry {
+    duration: number
+    resolution: '480p' | '720p' | '1080p'
+    aspectRatio: '16:9' | '4:3' | '1:1' | '3:4' | '9:16' | '21:9' | '9:21'
+    fps: number
+    cameraFixed: boolean
+    seed?: number
+}
+
 // Settings configuration types
 export interface ShotAnimatorSettings {
     id?: string
     modelSettings?: {
-        'seedance-lite': {
-            duration: number
-            resolution: '480p' | '720p' | '1080p'
-            aspectRatio: '16:9' | '4:3' | '1:1' | '3:4' | '9:16' | '21:9' | '9:21'
-            fps: number
-            cameraFixed: boolean
-            seed?: number
-        }
-        'seedance-pro': {
-            duration: number
-            resolution: '480p' | '720p' | '1080p'
-            aspectRatio: '16:9' | '4:3' | '1:1' | '3:4' | '9:16' | '21:9' | '9:21'
-            fps: number
-            cameraFixed: boolean
-            seed?: number
-        }
+        'wan-2.2-5b-fast': ModelSettingsEntry
+        'wan-2.2-i2v-fast': ModelSettingsEntry
+        'seedance-pro-fast': ModelSettingsEntry
+        'seedance-lite': ModelSettingsEntry
+        'kling-2.5-turbo-pro': ModelSettingsEntry
+        'seedance-pro': ModelSettingsEntry  // Legacy
     }
 }
 

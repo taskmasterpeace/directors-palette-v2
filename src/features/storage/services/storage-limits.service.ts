@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js'
 const IMAGE_LIMIT = 500
 const IMAGE_WARNING_THRESHOLD = 400
 const VIDEO_EXPIRATION_DAYS = 7
+const STORAGE_BUCKET = 'directors-palette'
 
 // Lazy-load Supabase client
 let _supabase: ReturnType<typeof createClient> | null = null
@@ -81,18 +82,53 @@ export class StorageLimitsService {
 
   /**
    * Delete expired content (videos older than 7 days)
+   * Deletes both storage files and database entries
    * Should be called by a cron job or scheduled task
    */
   static async deleteExpiredContent(): Promise<number> {
-    const { data, error } = await getSupabase()
-      .rpc('delete_expired_content')
+    const supabase = getSupabase()
 
-    if (error) {
-      console.error('Error deleting expired content:', error)
+    // First, get all expired items with their storage paths
+    const { data: expiredItems, error: fetchError } = await supabase
+      .from('gallery')
+      .select('id, storage_path')
+      .not('expires_at', 'is', null)
+      .lt('expires_at', new Date().toISOString()) as { data: { id: string; storage_path: string | null }[] | null; error: unknown }
+
+    if (fetchError) {
+      console.error('Error fetching expired content:', fetchError)
       return 0
     }
 
-    return data || 0
+    if (!expiredItems || expiredItems.length === 0) {
+      return 0
+    }
+
+    // Delete storage files (filter out nulls)
+    const storagePaths = expiredItems
+      .map(item => item.storage_path)
+      .filter((path): path is string => path !== null)
+
+    if (storagePaths.length > 0) {
+      const { error: storageError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .remove(storagePaths)
+
+      if (storageError) {
+        console.error('Error deleting storage files:', storageError)
+        // Continue anyway to delete database entries
+      }
+    }
+
+    // Delete database entries using the RPC function
+    const { data, error } = await supabase.rpc('delete_expired_content')
+
+    if (error) {
+      console.error('Error deleting expired database entries:', error)
+      return 0
+    }
+
+    return data || expiredItems.length
   }
 
   /**
