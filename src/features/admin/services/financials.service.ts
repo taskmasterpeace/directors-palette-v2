@@ -24,6 +24,32 @@ const FALLBACK_COSTS: Record<string, number> = {
 
 class FinancialsService {
     /**
+     * Get admin user IDs to exclude from financial calculations
+     * Admins don't pay credits, so including them would skew customer economics
+     */
+    private async getAdminUserIds(): Promise<Set<string>> {
+        const supabase = await getAPIClient()
+
+        // Get admin emails from admin_users table
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: admins } = await (supabase as any)
+            .from('admin_users')
+            .select('email')
+
+        if (!admins || admins.length === 0) return new Set()
+
+        // Get user_ids for admin emails from generation_events
+        const adminEmails = admins.map((a: { email: string }) => a.email)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: events } = await (supabase as any)
+            .from('generation_events')
+            .select('user_id, user_email')
+            .in('user_email', adminEmails)
+
+        return new Set(events?.map((e: { user_id: string }) => e.user_id) || [])
+    }
+
+    /**
      * Calculate date range from period
      */
     private getDateRange(period: TimePeriod, customRange?: DateRange): DateRange {
@@ -54,8 +80,11 @@ class FinancialsService {
     /**
      * Get revenue metrics for a date range
      */
-    async getRevenueMetrics(dateRange: DateRange): Promise<RevenueMetrics> {
+    async getRevenueMetrics(dateRange: DateRange, adminUserIds?: Set<string>): Promise<RevenueMetrics> {
         const supabase = await getAPIClient()
+
+        // Get admin user IDs to exclude if not provided
+        const excludeUserIds = adminUserIds ?? await this.getAdminUserIds()
 
         // Get total revenue from credit_transactions (purchase type)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,14 +97,19 @@ class FinancialsService {
 
         const totalRevenue = purchases?.reduce((sum: number, tx: { amount: number }) => sum + (tx.amount || 0), 0) || 0
 
-        // Get all completed generations in date range
+        // Get all completed generations in date range (excluding admins)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: generations } = await (supabase as any)
             .from('generation_events')
-            .select('model_id, credits_cost, generation_type')
+            .select('model_id, credits_cost, generation_type, user_id')
             .eq('status', 'completed')
             .gte('created_at', dateRange.from)
             .lte('created_at', dateRange.to)
+
+        // Filter out admin generations client-side (more reliable than .not with array)
+        const customerGenerations = (generations || []).filter(
+            (g: { user_id: string }) => !excludeUserIds.has(g.user_id)
+        )
 
         // Get model pricing for cost calculation
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,11 +119,11 @@ class FinancialsService {
 
         const pricingMap = new Map<string, number>(pricing?.map((p: { model_id: string; cost_cents: number }) => [p.model_id, p.cost_cents]) || [])
 
-        // Calculate total API cost
+        // Calculate total API cost (excluding admin generations)
         let totalApiCost = 0
-        const totalGenerations = generations?.length || 0
+        const totalGenerations = customerGenerations.length
 
-        for (const gen of (generations || [])) {
+        for (const gen of customerGenerations) {
             const modelCost = pricingMap.get(gen.model_id)
                 ?? FALLBACK_COSTS[gen.generation_type as string]
                 ?? 15
@@ -195,16 +229,24 @@ class FinancialsService {
     /**
      * Get revenue breakdown by model
      */
-    async getModelBreakdown(dateRange: DateRange): Promise<ModelRevenueItem[]> {
+    async getModelBreakdown(dateRange: DateRange, adminUserIds?: Set<string>): Promise<ModelRevenueItem[]> {
         const supabase = await getAPIClient()
+
+        // Get admin user IDs to exclude if not provided
+        const excludeUserIds = adminUserIds ?? await this.getAdminUserIds()
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: generations } = await (supabase as any)
             .from('generation_events')
-            .select('model_id, model_name, generation_type, credits_cost')
+            .select('model_id, model_name, generation_type, credits_cost, user_id')
             .eq('status', 'completed')
             .gte('created_at', dateRange.from)
             .lte('created_at', dateRange.to)
+
+        // Filter out admin generations
+        const customerGenerations = (generations || []).filter(
+            (g: { user_id: string }) => !excludeUserIds.has(g.user_id)
+        )
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: pricing } = await (supabase as any)
@@ -222,7 +264,7 @@ class FinancialsService {
             cost: number
         }>()
 
-        for (const gen of (generations || [])) {
+        for (const gen of customerGenerations) {
             const existing = modelMap.get(gen.model_id) || {
                 model_name: gen.model_name || gen.model_id,
                 generation_type: (gen.generation_type || 'image') as 'image' | 'video',
@@ -260,16 +302,24 @@ class FinancialsService {
     /**
      * Get breakdown by generation type
      */
-    async getTypeBreakdown(dateRange: DateRange): Promise<GenerationTypeBreakdown> {
+    async getTypeBreakdown(dateRange: DateRange, adminUserIds?: Set<string>): Promise<GenerationTypeBreakdown> {
         const supabase = await getAPIClient()
+
+        // Get admin user IDs to exclude if not provided
+        const excludeUserIds = adminUserIds ?? await this.getAdminUserIds()
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: generations } = await (supabase as any)
             .from('generation_events')
-            .select('model_id, generation_type, credits_cost')
+            .select('model_id, generation_type, credits_cost, user_id')
             .eq('status', 'completed')
             .gte('created_at', dateRange.from)
             .lte('created_at', dateRange.to)
+
+        // Filter out admin generations
+        const customerGenerations = (generations || []).filter(
+            (g: { user_id: string }) => !excludeUserIds.has(g.user_id)
+        )
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: pricing } = await (supabase as any)
@@ -283,7 +333,7 @@ class FinancialsService {
             video: { count: 0, revenue_cents: 0, cost_cents: 0 }
         }
 
-        for (const gen of (generations || [])) {
+        for (const gen of customerGenerations) {
             const type = (gen.generation_type || 'image') as 'image' | 'video'
             const modelCost = pricingMap.get(gen.model_id) ?? FALLBACK_COSTS[type] ?? 15
 
@@ -306,12 +356,15 @@ class FinancialsService {
     ): Promise<FinancialStatsResponse> {
         const dateRange = this.getDateRange(period, customRange)
 
+        // Fetch admin user IDs once and pass to all methods
+        const adminUserIds = await this.getAdminUserIds()
+
         const [revenue, users, tokens, byModel, byType] = await Promise.all([
-            this.getRevenueMetrics(dateRange),
+            this.getRevenueMetrics(dateRange, adminUserIds),
             this.getUserEconomicsMetrics(),
             this.getTokenMetrics(),
-            this.getModelBreakdown(dateRange),
-            this.getTypeBreakdown(dateRange)
+            this.getModelBreakdown(dateRange, adminUserIds),
+            this.getTypeBreakdown(dateRange, adminUserIds)
         ])
 
         return {
