@@ -208,17 +208,17 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
   }
 
   // Toggle quick access
-  const toggleQuickAccess = (recipe: Recipe) => {
+  const toggleQuickAccess = async (recipe: Recipe) => {
     const existing = quickAccessItems.find((item) => item.recipeId === recipe.id)
     if (existing) {
-      removeFromQuickAccess(existing.id)
-      updateRecipe(recipe.id, { isQuickAccess: false, quickAccessLabel: undefined })
+      await removeFromQuickAccess(existing.id)
+      await updateRecipe(recipe.id, { isQuickAccess: false, quickAccessLabel: undefined })
     } else {
       const label = prompt('Enter a 1-word label for quick access:', recipe.name.split(' ')[0])
       if (label && label.trim()) {
-        const added = addToQuickAccess(recipe.id, label.trim().slice(0, 12))
+        const added = await addToQuickAccess(recipe.id, label.trim().slice(0, 12))
         if (added) {
-          updateRecipe(recipe.id, { isQuickAccess: true, quickAccessLabel: label.trim() })
+          await updateRecipe(recipe.id, { isQuickAccess: true, quickAccessLabel: label.trim() })
         }
       }
     }

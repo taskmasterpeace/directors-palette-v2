@@ -593,4 +593,186 @@ Arrange as a 2 row × 3 column grid. No labels or text overlays.<<STYLE:select(,
     quickAccessLabel: 'TimeOfDay',
     categoryId: 'scenes',
   },
+
+  // Photo to Character Sheet - 3-stage pipeline for storybook
+  {
+    name: 'Photo to Character Sheet',
+    description: 'Multi-stage: Extract character from photo → Apply art style → Generate character sheet',
+    recipeNote: 'Attach: 1) Full-body photo of person, 2) Style guide for target art style. The character sheet template is built-in.',
+    stages: [
+      // STAGE 1: Isolate character from photo
+      {
+        id: 'stage_0',
+        order: 0,
+        template: `Analyze the attached photo and extract the person as an isolated character.
+
+Create a clean, full-body portrait of this person on a simple neutral background.
+Preserve all identifying features: face, hair, body type, clothing, pose.
+Remove any busy background elements while keeping the person completely intact.
+Maintain natural lighting and proportions.`,
+        fields: [],
+        referenceImages: [],
+      },
+      // STAGE 2: Stylize the isolated character
+      {
+        id: 'stage_1',
+        order: 1,
+        template: `Transform the character from the previous image into <<ART_STYLE:select(claymation,watercolor,cartoon,anime,3D animated,illustrated,storybook,Disney-style,Pixar-style)!>> style.
+
+CRITICAL: Use the attached style guide as your visual reference for the art style.
+Match the style guide's:
+- Color palette and saturation
+- Line quality and rendering approach
+- Level of stylization
+- Lighting and shadow style
+
+Preserve the character's:
+- Facial features and expression
+- Hair style and color
+- Body proportions
+- Clothing and accessories
+
+Output: The same character, now rendered in the target art style, on a clean background.`,
+        fields: [],
+        referenceImages: [],
+      },
+      // STAGE 3: Generate character sheet
+      {
+        id: 'stage_2',
+        order: 2,
+        template: `Name/Tag: @<<CHARACTER_NAME:name!>>
+
+Using the styled character from the previous stage, create a professional character reference sheet.
+
+CHARACTER SHEET LAYOUT:
+TOP: Character name "@<<CHARACTER_NAME:name!>>" prominently displayed
+
+SIDE A - FULL BODY (left half):
+- Large neutral standing pose, front view
+- Show complete outfit and proportions
+- Optional: Small front/side/back turnaround views
+- Color swatches: skin, hair, main clothing colors
+
+SIDE B - EXPRESSIONS (right half):
+- 6 head/face close-ups arranged in grid:
+  - Neutral, Happy, Sad
+  - Surprised, Angry, Talking/Speaking
+- Consistent lighting across all expressions
+
+White/light background. Clean, production-ready layout.
+Maintain exact art style consistency from Stage 2.`,
+        fields: [],
+        referenceImages: [],
+      }
+    ],
+    suggestedAspectRatio: '3:2',
+    isQuickAccess: true,
+    quickAccessLabel: 'PhotoChar',
+    categoryId: 'characters',
+  },
+
+  // Book Cover Generator - 2-stage pipeline for storybook
+  {
+    name: 'Book Cover Generator',
+    description: 'Generate 9 book cover variations, select one, upscale to final quality',
+    recipeNote: 'Attach: 1) Style guide, 2) Main character sheet. Enter book title.',
+    stages: [
+      // STAGE 1: Generate 9 cover variations in grid
+      {
+        id: 'stage_0',
+        order: 0,
+        template: `Create a 3x3 grid of 9 children's book cover variations.
+
+BOOK TITLE: "<<BOOK_TITLE:text!>>"
+
+Use the attached style guide for art style consistency.
+Use the attached character sheet for the main character.
+
+Each cover variation should:
+- Feature the book title prominently
+- Show the main character in an engaging pose
+- Have a compelling background that hints at the story
+- Feel like a professional children's book cover
+
+VARIATION APPROACHES:
+1. Character close-up with title above
+2. Character in action scene
+3. Character with supporting elements
+4. Silhouette/dramatic lighting
+5. Character with environment focus
+6. Whimsical/playful composition
+7. Classic storybook layout
+8. Modern/minimalist design
+9. Dynamic/adventurous scene
+
+All 9 in the same aspect ratio: <<ASPECT_RATIO:select(2:3,3:4,1:1,4:5)!>>
+No mockup frames - just the cover art.`,
+        fields: [],
+        referenceImages: [],
+      },
+      // STAGE 2: Upscale selected cover
+      {
+        id: 'stage_1',
+        order: 1,
+        template: `Take this book cover and enhance it to publication quality.
+
+Improve:
+- Resolution and detail
+- Color vibrancy and contrast
+- Text readability
+- Edge sharpness
+
+Maintain:
+- Exact composition
+- Art style
+- Character appearance
+- All visual elements
+
+Output a single high-quality book cover ready for print/digital use.`,
+        fields: [],
+        referenceImages: [],
+      }
+    ],
+    suggestedAspectRatio: '2:3',
+    isQuickAccess: true,
+    quickAccessLabel: 'BookCover',
+    categoryId: 'scenes',
+  },
+
+  // Story Page Variations - for storybook page-by-page generation
+  {
+    name: 'Story Page Variations',
+    description: 'Generate 9 image variations for a single story page',
+    recipeNote: 'Attach character sheet(s) and style guide. Enter the page text.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `STORY PAGE:
+<<PAGE_TEXT:text!>>
+
+<<STYLE_NOTES:text>>
+<<CHARACTER_NOTES:text>>
+
+Create a 3x3 grid (9 variations) of this story moment for a children's book.
+
+Each tile illustrates the same scene with different compositions:
+1. Wide establishing shot
+2. Medium scene shot
+3. Character-focused
+4. Action moment
+5. Reaction/emotion focus
+6. Environmental detail
+7. Dynamic angle (low/high)
+8. Cozy/intimate framing
+9. Classic storybook composition
+
+Maintain perfect character and style consistency. No text overlays.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '1:1',
+    isQuickAccess: true,
+    quickAccessLabel: 'PageVar',
+    categoryId: 'scenes',
+  },
 ]
