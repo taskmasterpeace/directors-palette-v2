@@ -189,15 +189,10 @@ export function CreditsDisplay() {
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
-                <DialogContent className="bg-zinc-950/90 border-zinc-800 max-w-4xl p-0 overflow-hidden backdrop-blur-xl">
-                    {/* Glossy Background Effect */}
+                <DialogContent className="bg-zinc-950 border-zinc-800 max-w-5xl p-0 overflow-hidden">
+                    {/* Subtle Background */}
                     <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-black/90 z-10" />
-                        <img
-                            src="/landing/login-bg-1.png"
-                            alt=""
-                            className="w-full h-full object-cover opacity-30 blur-3xl scale-110"
-                        />
+                        <div className="absolute inset-0 bg-gradient-to-b from-zinc-900/50 to-zinc-950 z-10" />
                     </div>
 
                     <div className="relative z-10">
@@ -238,14 +233,24 @@ export function CreditsDisplay() {
                                     <p>No packages available right now</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {packages.map((pkg, index) => {
-                                        const isPopular = index === 1 // Creator pack is most popular (middle)
+                                        const isPopular = index === 1 // Creator pack
+                                        const isBestValue = index === 3 // Studio pack
                                         const colors = getTierColors(index, isPopular)
                                         const TierIcon = getTierIcon(index)
                                         const imgCount = estimateImages(pkg.total_credits)
                                         const videoSeconds = estimateVideoSeconds(pkg.total_credits)
                                         const isPurchasing = purchasingId === pkg.id
+                                        const hasBonus = pkg.bonus_credits > 0
+
+                                        // Tier-specific gradient backgrounds
+                                        const tierGradients = [
+                                            'bg-gradient-to-br from-zinc-800/80 to-zinc-900/80', // Starter
+                                            'bg-gradient-to-br from-amber-900/30 to-zinc-900/80', // Creator
+                                            'bg-gradient-to-br from-orange-900/30 to-zinc-900/80', // Pro
+                                            'bg-gradient-to-br from-rose-900/30 to-zinc-900/80', // Studio
+                                        ]
 
                                         return (
                                             <motion.div
@@ -255,16 +260,22 @@ export function CreditsDisplay() {
                                                 transition={{ delay: index * 0.1, duration: 0.4 }}
                                                 whileHover={{ y: -4 }}
                                                 className={cn(
-                                                    "relative rounded-2xl border transition-all duration-300 p-5 flex flex-col group",
+                                                    "relative rounded-2xl border transition-all duration-300 p-5 flex flex-col group overflow-hidden",
                                                     colors.border,
-                                                    colors.bg,
-                                                    isPopular ? "shadow-xl shadow-amber-900/20 bg-amber-900/10" : "bg-zinc-900/40 hover:bg-zinc-800/40"
+                                                    tierGradients[index] || tierGradients[0],
+                                                    isPopular && "shadow-xl shadow-amber-900/30 ring-1 ring-amber-500/20",
+                                                    isBestValue && "shadow-xl shadow-rose-900/30 ring-1 ring-rose-500/20"
                                                 )}
                                             >
-                                                {isPopular && (
-                                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 shadow-lg shadow-amber-500/20">
-                                                        <Badge className="px-3 py-1 text-[10px] font-bold bg-gradient-to-r from-amber-500 to-amber-600 text-black border-none uppercase tracking-wide">
-                                                            Most Popular
+                                                {/* Badge */}
+                                                {(isPopular || isBestValue) && (
+                                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                                                        <Badge className={cn(
+                                                            "px-3 py-1 text-[10px] font-bold border-none uppercase tracking-wide shadow-lg",
+                                                            isPopular && "bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-amber-500/30",
+                                                            isBestValue && "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-rose-500/30"
+                                                        )}>
+                                                            {isPopular ? "Most Popular" : "Best Value"}
                                                         </Badge>
                                                     </div>
                                                 )}
@@ -272,34 +283,37 @@ export function CreditsDisplay() {
                                                 {/* Hover Glow */}
                                                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
-                                                {/* Compact header */}
-                                                <div className="flex items-center gap-2.5 mb-4">
-                                                    <div className={cn("p-1.5 rounded-lg bg-black/30 backdrop-blur-md", colors.icon)}>
+                                                {/* Header */}
+                                                <div className="flex items-center gap-2.5 mb-3">
+                                                    <div className={cn("p-2 rounded-xl bg-black/40", colors.icon)}>
                                                         <TierIcon className="w-5 h-5" />
                                                     </div>
                                                     <span className="font-bold text-lg text-white tracking-tight">{pkg.name}</span>
                                                 </div>
 
                                                 {/* Price */}
-                                                <div className="mb-2">
-                                                    <span className="text-4xl font-bold text-white tracking-tighter">{pkg.formatted_price}</span>
+                                                <div className="mb-3">
+                                                    <span className="text-3xl font-bold text-white">{pkg.formatted_price}</span>
                                                 </div>
 
-                                                {/* Tokens */}
-                                                <div className="flex items-baseline gap-1.5 mb-6 pb-6 border-b border-white/10">
-                                                    <span className="text-xl font-bold font-mono text-amber-400">
-                                                        {formatTokens(pkg.total_credits)}
-                                                    </span>
-                                                    <span className="text-xs text-zinc-400 font-medium uppercase">tokens</span>
-                                                    {pkg.savings_percent > 0 && (
-                                                        <Badge className={cn("ml-auto text-[10px] py-0 border-0", colors.badge)}>
-                                                            SAVE {pkg.savings_percent}%
-                                                        </Badge>
+                                                {/* Tokens breakdown */}
+                                                <div className="mb-4 pb-4 border-b border-white/10">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-2xl font-bold font-mono text-amber-400">
+                                                            {formatTokens(pkg.total_credits)}
+                                                        </span>
+                                                        <span className="text-sm text-zinc-400">tokens</span>
+                                                    </div>
+                                                    {hasBonus && (
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <span className="text-xs text-zinc-500">{formatTokens(pkg.credits)} base</span>
+                                                            <span className="text-xs font-semibold text-green-400">+{formatTokens(pkg.bonus_credits)} bonus</span>
+                                                        </div>
                                                     )}
                                                 </div>
 
-                                                {/* Quick stat */}
-                                                <div className="space-y-2 mb-6 flex-1">
+                                                {/* Stats */}
+                                                <div className="space-y-2 mb-5 flex-1">
                                                     <div className="flex items-center gap-2 text-sm text-zinc-300">
                                                         <ImageIcon className="w-4 h-4 text-zinc-500" />
                                                         <span>~{imgCount} images</span>
@@ -308,16 +322,16 @@ export function CreditsDisplay() {
                                                         <Video className="w-4 h-4 text-zinc-500" />
                                                         <span>~{videoSeconds}s of video</span>
                                                     </div>
-                                                    <div className="flex items-center gap-2 text-xs text-zinc-500">
-                                                        <Zap className="w-3 h-3" />
-                                                        <span>Images + Videos</span>
-                                                    </div>
                                                 </div>
 
                                                 {/* Buy button */}
                                                 <Button
                                                     size="lg"
-                                                    className={cn("w-full font-bold shadow-lg transition-all duration-300", colors.button, "group-hover:scale-[1.02]")}
+                                                    className={cn(
+                                                        "w-full font-bold shadow-lg transition-all duration-300",
+                                                        colors.button,
+                                                        "group-hover:scale-[1.02]"
+                                                    )}
                                                     onClick={() => handlePurchase(pkg)}
                                                     disabled={isPurchasing}
                                                 >

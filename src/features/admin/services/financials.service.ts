@@ -83,7 +83,7 @@ class FinancialsService {
             .from('model_pricing')
             .select('model_id, cost_cents')
 
-        const pricingMap = new Map(pricing?.map((p: { model_id: string; cost_cents: number }) => [p.model_id, p.cost_cents]) || [])
+        const pricingMap = new Map<string, number>(pricing?.map((p: { model_id: string; cost_cents: number }) => [p.model_id, p.cost_cents]) || [])
 
         // Calculate total API cost
         let totalApiCost = 0
@@ -211,7 +211,7 @@ class FinancialsService {
             .from('model_pricing')
             .select('model_id, cost_cents')
 
-        const pricingMap = new Map(pricing?.map((p: { model_id: string; cost_cents: number }) => [p.model_id, p.cost_cents]) || [])
+        const pricingMap = new Map<string, number>(pricing?.map((p: { model_id: string; cost_cents: number }) => [p.model_id, p.cost_cents]) || [])
 
         // Aggregate by model
         const modelMap = new Map<string, {
@@ -276,7 +276,7 @@ class FinancialsService {
             .from('model_pricing')
             .select('model_id, cost_cents')
 
-        const pricingMap = new Map(pricing?.map((p: { model_id: string; cost_cents: number }) => [p.model_id, p.cost_cents]) || [])
+        const pricingMap = new Map<string, number>(pricing?.map((p: { model_id: string; cost_cents: number }) => [p.model_id, p.cost_cents]) || [])
 
         const result: GenerationTypeBreakdown = {
             image: { count: 0, revenue_cents: 0, cost_cents: 0 },

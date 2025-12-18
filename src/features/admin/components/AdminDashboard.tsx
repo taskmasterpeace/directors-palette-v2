@@ -155,7 +155,7 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
 
             {/* Tabs */}
             <Tabs defaultValue="users" className="space-y-6">
-                <TabsList className="bg-zinc-800">
+                <TabsList className="bg-zinc-800 flex-wrap h-auto gap-1 p-1">
                     <TabsTrigger value="users" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
                         <Users className="w-4 h-4 mr-2" />
                         Users
