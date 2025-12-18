@@ -310,6 +310,184 @@ function extractFramesFromImage(
 }
 
 /**
+ * Detect grid separators for any NxM grid
+ * Supports 2x2, 3x3, 2x3, etc.
+ */
+export async function detectGridSeparatorsNxM(
+  imageUrl: string,
+  rows: number,
+  cols: number
+): Promise<GridDetectionResult> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      const result = analyzeImageNxM(img, rows, cols);
+      resolve(result);
+    };
+
+    img.onerror = () => {
+      resolve({
+        detected: false,
+        confidence: 'low',
+        gutterX: 0,
+        gutterY: 0,
+        separatorPositions: { vertical: [], horizontal: [] }
+      });
+    };
+
+    img.src = imageUrl;
+  });
+}
+
+function analyzeImageNxM(img: HTMLImageElement, rows: number, cols: number): GridDetectionResult {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    return {
+      detected: false,
+      confidence: 'low',
+      gutterX: 0,
+      gutterY: 0,
+      separatorPositions: { vertical: [], horizontal: [] }
+    };
+  }
+
+  const width = img.width;
+  const height = img.height;
+
+  canvas.width = width;
+  canvas.height = height;
+  ctx.drawImage(img, 0, 0);
+
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const pixels = imageData.data;
+
+  function getPixelBrightness(x: number, y: number): number {
+    const idx = (y * width + x) * 4;
+    const r = pixels[idx];
+    const g = pixels[idx + 1];
+    const b = pixels[idx + 2];
+    return (r + g + b) / 3;
+  }
+
+  function getColumnBrightness(x: number): number {
+    let total = 0;
+    for (let y = 0; y < height; y++) {
+      total += getPixelBrightness(x, y);
+    }
+    return total / height;
+  }
+
+  function getRowBrightness(y: number): number {
+    let total = 0;
+    for (let x = 0; x < width; x++) {
+      total += getPixelBrightness(x, y);
+    }
+    return total / width;
+  }
+
+  function findSeparator(
+    expectedPos: number,
+    searchBand: number,
+    getBrightness: (pos: number) => number,
+    maxDimension: number
+  ): { position: number; width: number } | null {
+    const searchStart = Math.max(0, expectedPos - searchBand);
+    const searchEnd = Math.min(maxDimension - 1, expectedPos + searchBand);
+
+    let darkestPos = -1;
+    let darkestBrightness = 255;
+
+    for (let pos = searchStart; pos <= searchEnd; pos++) {
+      const brightness = getBrightness(pos);
+      if (brightness < darkestBrightness) {
+        darkestBrightness = brightness;
+        darkestPos = pos;
+      }
+    }
+
+    if (darkestBrightness >= 25 || darkestPos < 0) {
+      return null;
+    }
+
+    const darkThreshold = Math.min(40, darkestBrightness * 8);
+    let lineStart = darkestPos;
+    let lineEnd = darkestPos;
+
+    for (let i = 0; i < 15 && lineStart > 0; i++) {
+      if (getBrightness(lineStart - 1) >= darkThreshold) break;
+      lineStart--;
+    }
+
+    for (let i = 0; i < 15 && lineEnd < maxDimension - 1; i++) {
+      if (getBrightness(lineEnd + 1) >= darkThreshold) break;
+      lineEnd++;
+    }
+
+    return {
+      position: lineStart,
+      width: lineEnd - lineStart + 1
+    };
+  }
+
+  const searchBandX = Math.round(width * 0.05);
+  const searchBandY = Math.round(height * 0.05);
+
+  // Find vertical separators (cols - 1 separators for N columns)
+  const verticalLines: { position: number; width: number }[] = [];
+  for (let i = 1; i < cols; i++) {
+    const expectedPos = Math.round((width * i) / cols);
+    const separator = findSeparator(expectedPos, searchBandX, getColumnBrightness, width);
+    if (separator) {
+      verticalLines.push(separator);
+    }
+  }
+
+  // Find horizontal separators (rows - 1 separators for N rows)
+  const horizontalLines: { position: number; width: number }[] = [];
+  for (let i = 1; i < rows; i++) {
+    const expectedPos = Math.round((height * i) / rows);
+    const separator = findSeparator(expectedPos, searchBandY, getRowBrightness, height);
+    if (separator) {
+      horizontalLines.push(separator);
+    }
+  }
+
+  const gutterX = verticalLines.length > 0
+    ? Math.max(4, Math.min(...verticalLines.map(l => l.width)))
+    : 0;
+
+  const gutterY = horizontalLines.length > 0
+    ? Math.max(4, Math.min(...horizontalLines.map(l => l.width)))
+    : 0;
+
+  // Confidence based on how many separators we found
+  const expectedVertical = cols - 1;
+  const expectedHorizontal = rows - 1;
+  let confidence: 'high' | 'medium' | 'low' = 'low';
+
+  if (verticalLines.length === expectedVertical && horizontalLines.length === expectedHorizontal) {
+    confidence = 'high';
+  } else if (verticalLines.length >= expectedVertical / 2 && horizontalLines.length >= expectedHorizontal / 2) {
+    confidence = 'medium';
+  }
+
+  return {
+    detected: confidence !== 'low',
+    confidence,
+    gutterX,
+    gutterY,
+    separatorPositions: {
+      vertical: verticalLines.map(l => l.position),
+      horizontal: horizontalLines.map(l => l.position)
+    }
+  };
+}
+
+/**
  * Auto-extract frames with automatic grid detection
  * Best for storyboard composites with black separator lines
  */
@@ -322,7 +500,7 @@ export async function autoExtractFrames(
   frames: { dataUrl: string; row: number; col: number }[];
   detectedGutter: number;
 }> {
-  // First, detect the grid
+  // First, detect the grid (default 3x3)
   const detection = await detectGridSeparators(imageUrl);
 
   if (!detection.detected) {
@@ -352,5 +530,55 @@ export async function autoExtractFrames(
     confidence: detection.confidence,
     frames,
     detectedGutter: gutter
+  };
+}
+
+/**
+ * Auto-extract frames for any NxM grid with automatic detection
+ */
+export async function autoExtractFramesNxM(
+  imageUrl: string,
+  rows: number,
+  cols: number,
+  aspectRatio: '16:9' | '9:16' = '16:9'
+): Promise<{
+  success: boolean;
+  confidence: 'high' | 'medium' | 'low';
+  frames: { dataUrl: string; row: number; col: number }[];
+  detectedGutter: number;
+  gridSize: { rows: number; cols: number };
+}> {
+  // Detect the grid with specified dimensions
+  const detection = await detectGridSeparatorsNxM(imageUrl, rows, cols);
+
+  if (!detection.detected) {
+    return {
+      success: false,
+      confidence: 'low',
+      frames: [],
+      detectedGutter: 0,
+      gridSize: { rows, cols }
+    };
+  }
+
+  // Use detected gutter (max of X and Y)
+  const gutter = Math.max(detection.gutterX, detection.gutterY);
+
+  // Extract frames
+  const frames = await extractGridFrames(imageUrl, {
+    rows,
+    cols,
+    gutterX: gutter,
+    gutterY: gutter,
+    trim: 2,
+    aspectRatio
+  });
+
+  return {
+    success: true,
+    confidence: detection.confidence,
+    frames,
+    detectedGutter: gutter,
+    gridSize: { rows, cols }
   };
 }

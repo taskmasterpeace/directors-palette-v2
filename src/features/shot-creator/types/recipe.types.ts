@@ -464,13 +464,14 @@ Professional character sheet suitable for animation/illustration reference.`,
   {
     name: '9-Frame Cinematic',
     description: '3x3 cinematic contact sheet covering full shot range',
-    recipeNote: 'Attach a reference image. The model will create 9 different framings of the same subject.',
+    recipeNote: 'Attach a reference image. The model will create 9 different framings of the same subject with black grid lines for extraction.',
     stages: [{
       id: 'stage_0',
       order: 0,
       template: `Analyze the entire composition of the input image. Identify all key subjects present (single person, group, vehicle, or object) and their spatial relationship.
 
 Generate a cohesive 3x3 cinematic contact sheet featuring 9 distinct camera shots of exactly these subjects in the same environment.
+IMPORTANT: Separate each cell with a solid BLACK LINE (4-6 pixels wide) for clean extraction.
 
 ROW 1 - ENVIRONMENTAL CONTEXT:
 1. <<FRAME_1:select(Extreme Wide Shot,Wide Shot,Establishing Shot,Environmental Shot,Vista Shot)!>>
@@ -491,6 +492,7 @@ STRICT REQUIREMENTS:
 - Identical subjects, outfits, environment, lighting across all 9 frames
 - Coherent scene continuity
 - Depth of field becomes increasingly shallow as framing gets tighter
+- Black grid lines separating all 9 cells
 - No labels, text, overlays, icons, or shot-type captions
 - Only clean cinematic imagery
 - Professional photorealistic textures and cinematic color grading<<STYLE:select(,maintain claymation style,maintain anime style,maintain watercolor style,maintain oil painting style,maintain 3D render style)>>`,
@@ -606,11 +608,11 @@ Arrange as a 2 row × 3 column grid. No labels or text overlays.<<STYLE:select(,
     categoryId: 'scenes',
   },
 
-  // Photo to Character Sheet - 3-stage pipeline for storybook
+  // Photo to Character Sheet (Isolation) - 3-stage pipeline for storybook
   {
-    name: 'Photo to Character Sheet',
-    description: 'Multi-stage: Extract character from photo → Apply art style → Generate character sheet',
-    recipeNote: 'Attach: 1) Full-body photo of person, 2) Style guide for target art style. The character sheet template is built-in.',
+    name: 'Photo to Character Sheet (Isolation)',
+    description: 'Multi-stage: Extract character from photo → Apply art style → Generate character sheet. Best for single-photo input.',
+    recipeNote: 'Attach: 1) Full-body photo of person, 2) Style guide for target art style. This version isolates the character first - use "Multi-Ref" version if you have multiple reference angles.',
     stages: [
       // STAGE 1: Isolate character from photo
       {
@@ -618,10 +620,17 @@ Arrange as a 2 row × 3 column grid. No labels or text overlays.<<STYLE:select(,
         order: 0,
         template: `Analyze the attached photo and extract the person as an isolated character.
 
-Create a clean, full-body portrait of this person on a simple neutral background.
-Preserve all identifying features: face, hair, body type, clothing, pose.
-Remove any busy background elements while keeping the person completely intact.
-Maintain natural lighting and proportions.`,
+CRITICAL LIKENESS PRESERVATION:
+- Exact facial structure: bone structure, jaw shape, cheekbones, nose shape, eye shape and spacing
+- Exact skin tone and undertones
+- Exact hair: color, texture, style, length, hairline shape
+- Exact body proportions: height, build, posture
+- Exact distinguishing features: moles, freckles, scars, dimples, facial hair
+
+Create a clean, full-body portrait on a simple neutral background.
+Remove busy background elements while keeping the person COMPLETELY intact.
+Do NOT alter, enhance, or "improve" any facial features.
+The isolated character must be IDENTICAL to the input photo.`,
         fields: [],
         referenceImages: [],
       },
@@ -631,20 +640,23 @@ Maintain natural lighting and proportions.`,
         order: 1,
         template: `Transform the character from the previous image into <<ART_STYLE:select(claymation,watercolor,cartoon,anime,3D animated,illustrated,storybook,Disney-style,Pixar-style)!>> style.
 
-CRITICAL: Use the attached style guide as your visual reference for the art style.
-Match the style guide's:
-- Color palette and saturation
-- Line quality and rendering approach
-- Level of stylization
-- Lighting and shadow style
+CRITICAL - ABSOLUTE LIKENESS PRESERVATION:
+Even in stylized form, the character MUST be recognizable as the same person:
+- Maintain exact facial proportions and structure
+- Keep distinctive features (nose shape, eye spacing, jawline)
+- Preserve exact skin tone relationships
+- Keep exact hair style, texture, and color
+- Maintain body proportions and posture
 
-Preserve the character's:
-- Facial features and expression
-- Hair style and color
-- Body proportions
-- Clothing and accessories
+STYLE TRANSFER (use attached style guide):
+- Match the style guide's color palette and saturation
+- Match line quality and rendering approach
+- Match level of stylization (how simplified features become)
+- Match lighting and shadow style
+- Match edge treatment (sharp vs soft)
 
-Output: The same character, now rendered in the target art style, on a clean background.`,
+The result should look like THIS SPECIFIC PERSON drawn in the target art style.
+NOT a generic character that vaguely resembles them.`,
         fields: [],
         referenceImages: [],
       },
@@ -654,32 +666,107 @@ Output: The same character, now rendered in the target art style, on a clean bac
         order: 2,
         template: `Name/Tag: @<<CHARACTER_NAME:name!>>
 
-Using the styled character from the previous stage, create a professional character reference sheet.
+Create a professional character reference sheet maintaining PERFECT LIKENESS.
 
-CHARACTER SHEET LAYOUT:
+CRITICAL: Every view and expression must clearly be the SAME PERSON from previous stages.
+Facial structure, proportions, and distinctive features must remain IDENTICAL across all views.
+
+CHARACTER SHEET LAYOUT (21:9 aspect ratio):
+
+LEFT SECTION - FULL BODY:
+- Large neutral standing pose, front view (primary)
+- Smaller side profile view
+- Smaller back view (if space permits)
+- Color palette strip: skin tone, hair color, eye color, main clothing colors
+
+RIGHT SECTION - EXPRESSIONS (2 rows × 5 columns):
+Row 1: Neutral, Happy, Sad, Angry, Surprised
+Row 2: Speaking, Shouting, Whispering, Smug/Confident, Scared
+
 TOP: Character name "@<<CHARACTER_NAME:name!>>" prominently displayed
 
-SIDE A - FULL BODY (left half):
-- Large neutral standing pose, front view
-- Show complete outfit and proportions
-- Optional: Small front/side/back turnaround views
-- Color swatches: skin, hair, main clothing colors
-
-SIDE B - EXPRESSIONS (right half):
-- 6 head/face close-ups arranged in grid:
-  - Neutral, Happy, Sad
-  - Surprised, Angry, Talking/Speaking
-- Consistent lighting across all expressions
-
-White/light background. Clean, production-ready layout.
+All expressions must maintain the SAME face - only the expression changes, not the underlying structure.
+White/light gray background. Clean, production-ready layout.
 Maintain exact art style consistency from Stage 2.`,
         fields: [],
         referenceImages: [],
       }
     ],
-    suggestedAspectRatio: '3:2',
+    suggestedAspectRatio: '21:9',
     isQuickAccess: true,
     quickAccessLabel: 'PhotoChar',
+    categoryId: 'characters',
+  },
+
+  // Photo to Character Sheet (Multi-Reference) - For multiple reference angles
+  {
+    name: 'Photo to Character Sheet (Multi-Ref)',
+    description: 'Generate character sheet from multiple reference photos. Better likeness from multiple angles.',
+    recipeNote: 'Attach: Multiple photos of the same person from different angles + style guide. More references = better likeness.',
+    stages: [
+      // STAGE 1: Analyze all references and stylize
+      {
+        id: 'stage_0',
+        order: 0,
+        template: `You have multiple reference photos of the SAME person from different angles.
+
+CRITICAL: Analyze ALL attached reference images to build a complete understanding of this person:
+- Study facial structure from every available angle
+- Note how features look from front, side, 3/4 view
+- Identify consistent skin tone, hair texture, body proportions
+- Catalog distinguishing features: moles, freckles, facial hair, scars
+
+Now transform this person into <<ART_STYLE:select(claymation,watercolor,cartoon,anime,3D animated,illustrated,storybook,Disney-style,Pixar-style)!>> style.
+
+ABSOLUTE LIKENESS PRESERVATION:
+Even in stylized form, someone who knows this person should recognize them instantly.
+Maintain ALL distinctive features in stylized form.
+Use the multiple angles to ensure 3D-consistent stylization.
+
+STYLE TRANSFER (use attached style guide):
+- Match style guide's color palette and saturation
+- Match line quality and rendering approach
+- Match level of stylization
+- Match lighting and shadow style
+
+Output: The character in stylized form, full body, clean background.`,
+        fields: [],
+        referenceImages: [],
+      },
+      // STAGE 2: Generate character sheet
+      {
+        id: 'stage_1',
+        order: 1,
+        template: `Name/Tag: @<<CHARACTER_NAME:name!>>
+
+Create a professional character reference sheet.
+
+CRITICAL: Maintain PERFECT LIKENESS across all views - this must clearly be the same person from every angle.
+Use your understanding from the multiple reference photos.
+
+CHARACTER SHEET LAYOUT (21:9 aspect ratio):
+
+LEFT SECTION - FULL BODY:
+- Large neutral standing pose, front view (primary)
+- Smaller side profile view
+- Smaller back view (if space permits)
+- Color palette strip: skin tone, hair color, eye color, main clothing colors
+
+RIGHT SECTION - EXPRESSIONS (2 rows × 5 columns):
+Row 1: Neutral, Happy, Sad, Angry, Surprised
+Row 2: Speaking, Shouting, Whispering, Smug/Confident, Scared
+
+TOP: Character name "@<<CHARACTER_NAME:name!>>" prominently displayed
+
+CONSISTENCY CHECK: All 10 expressions + all body views = SAME recognizable person.
+White/light gray background. Clean, production-ready layout.`,
+        fields: [],
+        referenceImages: [],
+      }
+    ],
+    suggestedAspectRatio: '21:9',
+    isQuickAccess: false,
+    quickAccessLabel: 'MultiRef',
     categoryId: 'characters',
   },
 
@@ -694,31 +781,47 @@ Maintain exact art style consistency from Stage 2.`,
         id: 'stage_0',
         order: 0,
         template: `Create a 3x3 grid of 9 children's book cover variations.
+IMPORTANT: Separate each cell with a solid BLACK LINE (4-6 pixels wide) for clean extraction.
 
 BOOK TITLE: "<<BOOK_TITLE:text!>>"
 
-Use the attached style guide for art style consistency.
-Use the attached character sheet for the main character.
+CRITICAL - MAINTAIN EXACT ART STYLE:
+Use the attached style guide as your ABSOLUTE visual reference:
+- Match color palette EXACTLY (same saturation, same hues)
+- Match rendering style (painterly, flat, textured, 3D, etc.)
+- Match line quality (thick outlines, thin lines, no outlines)
+- Match lighting approach (soft, dramatic, flat)
+- Match level of detail and stylization
 
-Each cover variation should:
-- Feature the book title prominently
-- Show the main character in an engaging pose
-- Have a compelling background that hints at the story
-- Feel like a professional children's book cover
+CRITICAL - MAINTAIN CHARACTER LIKENESS:
+Use the attached character sheet for the main character:
+- Same facial structure and proportions
+- Same clothing/outfit style
+- Same color scheme for character
+- Character must be RECOGNIZABLE across all 9 covers
 
-VARIATION APPROACHES:
-1. Character close-up with title above
-2. Character in action scene
-3. Character with supporting elements
-4. Silhouette/dramatic lighting
-5. Character with environment focus
-6. Whimsical/playful composition
-7. Classic storybook layout
-8. Modern/minimalist design
-9. Dynamic/adventurous scene
+CHILDREN'S BOOK COVER BEST PRACTICES:
+- Title should be LARGE, READABLE, and positioned strategically
+- Title font should match the book's tone (playful, adventurous, cozy)
+- Character should be the FOCAL POINT and emotionally engaging
+- Use bright, appealing colors that attract children
+- Create visual hierarchy: Title → Character → Background
+- Leave breathing room around the title
+- Background should support the story mood without overwhelming
 
-All 9 in the same aspect ratio: <<ASPECT_RATIO:select(2:3,3:4,1:1,4:5)!>>
-No mockup frames - just the cover art.`,
+9 VARIATION APPROACHES:
+1. Character close-up with expressive face, title above
+2. Character in action pose, title integrated into scene
+3. Character with story-relevant props/elements
+4. Dramatic silhouette with glowing/magical elements
+5. Character in their world/environment
+6. Whimsical/playful composition with fun angles
+7. Classic centered composition with decorative border
+8. Modern bold design with strong shapes
+9. Adventure/journey feel with dynamic perspective
+
+All 9 in <<ASPECT_RATIO:select(2:3,3:4,1:1,4:5)!>> aspect ratio.
+NO mockup frames - just the cover art with BLACK GRID LINES separating cells.`,
         fields: [],
         referenceImages: [],
       },
@@ -728,19 +831,21 @@ No mockup frames - just the cover art.`,
         order: 1,
         template: `Take this book cover and enhance it to publication quality.
 
-Improve:
-- Resolution and detail
+MAINTAIN EXACTLY:
+- The exact composition - do not crop or reframe
+- The exact art style from the style guide
+- The exact character likeness
+- The title text and positioning
+- All visual elements and their relationships
+
+ENHANCE:
+- Resolution and fine detail
 - Color vibrancy and contrast
-- Text readability
-- Edge sharpness
+- Title text clarity and readability
+- Edge definition and sharpness
+- Texture detail in character and environment
 
-Maintain:
-- Exact composition
-- Art style
-- Character appearance
-- All visual elements
-
-Output a single high-quality book cover ready for print/digital use.`,
+Output a single high-quality children's book cover ready for print (300 DPI equivalent quality).`,
         fields: [],
         referenceImages: [],
       }
@@ -754,31 +859,50 @@ Output a single high-quality book cover ready for print/digital use.`,
   // Story Page Variations - for storybook page-by-page generation
   {
     name: 'Story Page Variations',
-    description: 'Generate 9 image variations for a single story page',
-    recipeNote: 'Attach character sheet(s) and style guide. Enter the page text.',
+    description: 'Generate 9 image variations for a single story page. Attach character sheet(s) and style guide.',
+    recipeNote: 'Attach: 1) Character sheet(s), 2) Style guide. The 9 variations will be in a 3x3 grid with black separator lines for easy extraction.',
     stages: [{
       id: 'stage_0',
       order: 0,
-      template: `STORY PAGE:
+      template: `STORY MOMENT:
 <<PAGE_TEXT:text!>>
+
+Create a 3x3 grid (9 variations) illustrating this story moment for a children's book.
+IMPORTANT: Separate each cell with a solid BLACK LINE (4-6 pixels wide) for clean extraction.
+
+CRITICAL - ABSOLUTE STYLE CONSISTENCY:
+Match the attached style guide EXACTLY across all 9 cells:
+- Same color palette and saturation
+- Same rendering approach (painterly, flat, 3D, etc.)
+- Same line quality and edge treatment
+- Same lighting style and mood
+- Same level of detail and stylization
+
+CRITICAL - ABSOLUTE CHARACTER CONSISTENCY:
+Match the attached character sheet(s) EXACTLY:
+- Same facial structure and proportions
+- Same body type and posture style
+- Same clothing and color scheme
+- Same hair style and color
+- Character must be INSTANTLY RECOGNIZABLE in all 9 cells
 
 <<STYLE_NOTES:text>>
 <<CHARACTER_NOTES:text>>
 
-Create a 3x3 grid (9 variations) of this story moment for a children's book.
+THE 9 COMPOSITION VARIATIONS:
+1. WIDE ESTABLISHING - Full environment, characters smaller in scene
+2. MEDIUM SCENE - Characters at medium distance, context visible
+3. CHARACTER FOCUS - Close on character(s), emotion clear
+4. ACTION MOMENT - Peak of action, dynamic energy
+5. REACTION SHOT - Character's emotional response
+6. ENVIRONMENT DETAIL - Focus on setting/props that matter to story
+7. LOW ANGLE - Looking up, adds drama or wonder
+8. HIGH ANGLE - Looking down, shows spatial relationship
+9. CLASSIC STORYBOOK - Centered, balanced, traditional composition
 
-Each tile illustrates the same scene with different compositions:
-1. Wide establishing shot
-2. Medium scene shot
-3. Character-focused
-4. Action moment
-5. Reaction/emotion focus
-6. Environmental detail
-7. Dynamic angle (low/high)
-8. Cozy/intimate framing
-9. Classic storybook composition
-
-Maintain perfect character and style consistency. No text overlays.`,
+Each cell shows the SAME story moment, just framed differently.
+NO text overlays in the images.
+Black grid lines between all cells.`,
       fields: [],
       referenceImages: [],
     }],
