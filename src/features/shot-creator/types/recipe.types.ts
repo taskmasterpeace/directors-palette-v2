@@ -1150,4 +1150,165 @@ No text labels - clean imagery only.`,
     quickAccessLabel: 'Wardrobe',
     categoryId: 'characters',
   },
+
+  // Eye Level Grid - Standard eye-level shots with user-selected sizes
+  {
+    name: 'Eye Level Grid',
+    description: '3x3 grid with your image centered. All shots at eye level. Choose 8 shot sizes for surrounding frames.',
+    recipeNote: 'Attach a reference image. It goes in the center. Pick sizes for the 8 surrounding frames - all at eye level.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Create a 3x3 cinematic contact sheet with the attached image as CENTER reference.
+
+CAMERA ANGLE: EYE LEVEL (straight on, neutral perspective) - LOCKED for all 8 frames
+IMPORTANT: Separate each cell with solid BLACK LINE (4-6 pixels wide).
+
+THE 8 FRAMES (all eye level, only size varies):
+1. Top-Left: <<FRAME_1:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+2. Top-Center: <<FRAME_2:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+3. Top-Right: <<FRAME_3:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+4. Middle-Left: <<FRAME_4:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+5. Middle-Right: <<FRAME_5:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+6. Bottom-Left: <<FRAME_6:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+7. Bottom-Center: <<FRAME_7:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+8. Bottom-Right: <<FRAME_8:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+
+CENTER: Use attached reference image as-is
+
+REQUIREMENTS:
+- ALL 8 frames: EYE LEVEL (camera at subject's eye height, straight on)
+- Identical subject, outfit, environment, lighting
+- Depth of field: shallower for tighter shots
+- Black grid lines between all 9 cells
+- No labels or text overlays`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '1:1',
+    isQuickAccess: true,
+    quickAccessLabel: 'EyeLevel',
+    categoryId: 'scenes',
+  },
+
+  // Low Angle Grid - All shots looking up at subject
+  {
+    name: 'Low Angle Grid',
+    description: '3x3 grid with your image centered. All shots from low angle looking UP. Choose 8 shot sizes.',
+    recipeNote: 'Attach a reference image. It goes in the center. Pick sizes for the 8 surrounding frames - all looking UP at subject.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Create a 3x3 cinematic contact sheet with the attached image as CENTER reference.
+
+CAMERA ANGLE: LOW ANGLE (worm's eye, looking UP at subject) - LOCKED for all 8 frames
+IMPORTANT: Separate each cell with solid BLACK LINE (4-6 pixels wide).
+
+THE 8 FRAMES (all low angle, only size varies):
+1. Top-Left: <<FRAME_1:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+2. Top-Center: <<FRAME_2:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+3. Top-Right: <<FRAME_3:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+4. Middle-Left: <<FRAME_4:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+5. Middle-Right: <<FRAME_5:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+6. Bottom-Left: <<FRAME_6:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+7. Bottom-Center: <<FRAME_7:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+8. Bottom-Right: <<FRAME_8:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+
+CENTER: Use attached reference image as-is
+
+REQUIREMENTS:
+- ALL 8 frames: LOW ANGLE (camera below, looking up at subject - heroic/powerful perspective)
+- Identical subject, outfit, environment, lighting
+- Depth of field: shallower for tighter shots
+- Black grid lines between all 9 cells
+- No labels or text overlays`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '1:1',
+    isQuickAccess: true,
+    quickAccessLabel: 'LowAngle',
+    categoryId: 'scenes',
+  },
+
+  // High Angle Grid - All shots looking down at subject
+  {
+    name: 'High Angle Grid',
+    description: '3x3 grid with your image centered. All shots from high angle looking DOWN. Choose 8 shot sizes.',
+    recipeNote: 'Attach a reference image. It goes in the center. Pick sizes for the 8 surrounding frames - all looking DOWN at subject.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Create a 3x3 cinematic contact sheet with the attached image as CENTER reference.
+
+CAMERA ANGLE: HIGH ANGLE (bird's eye, looking DOWN at subject) - LOCKED for all 8 frames
+IMPORTANT: Separate each cell with solid BLACK LINE (4-6 pixels wide).
+
+THE 8 FRAMES (all high angle, only size varies):
+1. Top-Left: <<FRAME_1:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+2. Top-Center: <<FRAME_2:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+3. Top-Right: <<FRAME_3:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+4. Middle-Left: <<FRAME_4:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+5. Middle-Right: <<FRAME_5:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+6. Bottom-Left: <<FRAME_6:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+7. Bottom-Center: <<FRAME_7:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+8. Bottom-Right: <<FRAME_8:select(Extreme Close-Up,Big Close-Up,Close-Up,Medium Close-Up,Medium Shot,Medium Wide Shot,Wide Shot,Extreme Wide Shot)!>>
+
+CENTER: Use attached reference image as-is
+
+REQUIREMENTS:
+- ALL 8 frames: HIGH ANGLE (camera above, looking down at subject - diminishing/overview perspective)
+- Identical subject, outfit, environment, lighting
+- Depth of field: shallower for tighter shots
+- Black grid lines between all 9 cells
+- No labels or text overlays`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '1:1',
+    isQuickAccess: true,
+    quickAccessLabel: 'HighAngle',
+    categoryId: 'scenes',
+  },
+
+  // Wide Shot Grid - Environmental focus with wider shots
+  {
+    name: 'Wide Shot Grid',
+    description: '3x3 grid with your image centered. Environmental focus with wider shot options. Choose 8 shot sizes.',
+    recipeNote: 'Attach a reference image. It goes in the center. Pick sizes for the 8 surrounding frames - biased toward establishing/environmental shots.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Create a 3x3 cinematic contact sheet with the attached image as CENTER reference.
+
+CAMERA ANGLE: EYE LEVEL (environmental/establishing focus) - LOCKED for all 8 frames
+IMPORTANT: Separate each cell with solid BLACK LINE (4-6 pixels wide).
+
+THE 8 FRAMES (eye level, wide shot bias, only size varies):
+1. Top-Left: <<FRAME_1:select(Extreme Wide Shot,Wide Shot,Medium Wide Shot,Medium Shot,Full Body Shot,Establishing Shot,Environmental Shot,Vista Shot)!>>
+2. Top-Center: <<FRAME_2:select(Extreme Wide Shot,Wide Shot,Medium Wide Shot,Medium Shot,Full Body Shot,Establishing Shot,Environmental Shot,Vista Shot)!>>
+3. Top-Right: <<FRAME_3:select(Extreme Wide Shot,Wide Shot,Medium Wide Shot,Medium Shot,Full Body Shot,Establishing Shot,Environmental Shot,Vista Shot)!>>
+4. Middle-Left: <<FRAME_4:select(Extreme Wide Shot,Wide Shot,Medium Wide Shot,Medium Shot,Full Body Shot,Establishing Shot,Environmental Shot,Vista Shot)!>>
+5. Middle-Right: <<FRAME_5:select(Extreme Wide Shot,Wide Shot,Medium Wide Shot,Medium Shot,Full Body Shot,Establishing Shot,Environmental Shot,Vista Shot)!>>
+6. Bottom-Left: <<FRAME_6:select(Extreme Wide Shot,Wide Shot,Medium Wide Shot,Medium Shot,Full Body Shot,Establishing Shot,Environmental Shot,Vista Shot)!>>
+7. Bottom-Center: <<FRAME_7:select(Extreme Wide Shot,Wide Shot,Medium Wide Shot,Medium Shot,Full Body Shot,Establishing Shot,Environmental Shot,Vista Shot)!>>
+8. Bottom-Right: <<FRAME_8:select(Extreme Wide Shot,Wide Shot,Medium Wide Shot,Medium Shot,Full Body Shot,Establishing Shot,Environmental Shot,Vista Shot)!>>
+
+CENTER: Use attached reference image as-is
+
+REQUIREMENTS:
+- ALL 8 frames: Show MORE ENVIRONMENT than subject
+- Establish context, location, atmosphere
+- Identical subject, outfit, environment, lighting
+- Deeper depth of field to show environmental detail
+- Black grid lines between all 9 cells
+- No labels or text overlays`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '1:1',
+    isQuickAccess: true,
+    quickAccessLabel: 'WideShots',
+    categoryId: 'scenes',
+  },
 ]
