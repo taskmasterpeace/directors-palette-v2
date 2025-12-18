@@ -912,6 +912,53 @@ Black grid lines between all cells.`,
     categoryId: 'scenes',
   },
 
+  // Character Generator - Generate 9 unique character designs from basic traits
+  {
+    name: 'Character Generator',
+    description: 'Generate 9 unique character designs from basic traits. Pick your favorite to become your main character.',
+    recipeNote: 'Attach your style guide. Enter character traits (age, gender, distinctive features). Get 9 unique designs to choose from!',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Generate a 3x3 grid of 9 COMPLETELY UNIQUE character designs for a children's book.
+IMPORTANT: Separate each cell with a solid BLACK LINE (4-6 pixels wide) for clean extraction.
+
+CRITICAL - MATCH THE ATTACHED STYLE GUIDE EXACTLY:
+- Same color palette and saturation
+- Same rendering style (painterly, flat, 3D, claymation, etc.)
+- Same line quality and edge treatment
+- Same level of stylization
+- Same lighting approach
+
+ALL 9 CHARACTERS MUST SHARE THESE TRAITS:
+- Gender: <<GENDER:select(girl,boy,non-binary)!>>
+- Age: <<AGE:select(toddler (2-4),young child (5-7),older child (8-10),preteen (11-13))!>>
+- Ethnicity: <<ETHNICITY:select(Black,White,Asian,Hispanic/Latino,South Asian,Middle Eastern,Mixed/Multiracial,Indigenous,any)!>>
+<<DISTINCTIVE_FEATURES:text>>
+
+BUT EACH CHARACTER MUST BE COMPLETELY DIFFERENT IN:
+- Face shape and features (round, oval, angular, etc.)
+- Hair style (braids, locs, curly, straight, short, long, ponytail, etc.)
+- Hair color (if appropriate for ethnicity)
+- Body type (tall, short, thin, chubby, athletic)
+- Clothing style (casual, sporty, dressy, artistic, etc.)
+- Personality expressed through pose/expression (shy, confident, curious, playful, etc.)
+
+LAYOUT: Each cell shows ONE character in a full-body pose with clean background.
+Show personality through pose and expression.
+Make each character instantly distinguishable from the others.
+These should feel like 9 different main characters, not variations of the same person.
+
+No text labels. Black grid lines between cells.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '1:1',
+    isQuickAccess: true,
+    quickAccessLabel: 'CharGen',
+    categoryId: 'characters',
+  },
+
   // Wardrobe Variations - Character in different outfits (user specifies each)
   {
     name: 'Wardrobe Variations',
