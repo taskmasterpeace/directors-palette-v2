@@ -4,13 +4,31 @@ This document provides comprehensive details about all video generation models a
 
 ## Quick Reference
 
-| Model | Tier | Pricing Type | Max Duration | Resolutions | Key Features |
-|-------|------|--------------|--------------|-------------|--------------|
-| **WAN 2.2-5B Fast** | Budget | Per-video | ~4s (fixed) | 480p, 720p | Ultra-low cost, quick previews |
-| **WAN 2.2 I2V Fast** | Budget+ | Per-video | 5s (fixed) | 480p, 720p | Last frame control |
-| **Seedance Pro Fast** | Standard | Per-second | 3-12s | 480p, 720p, 1080p | Fast generation, variable duration |
-| **Seedance Lite** | Featured | Per-second | 3-12s | 480p, 720p, 1080p | Reference images + last frame |
-| **Kling 2.5 Turbo Pro** | Premium | Per-second | 3-10s | 720p | Best motion quality |
+| Model | Tier | Pricing Type | Max Duration | Resolutions | Aspect Ratios | Key Features |
+|-------|------|--------------|--------------|-------------|---------------|--------------|
+| **WAN 2.2-5B Fast** | Budget | Per-video | ~4s (fixed) | 480p, 720p | 16:9, 9:16 | Ultra-low cost, quick previews |
+| **WAN 2.2 I2V Fast** | Budget+ | Per-video | 5s (fixed) | 480p, 720p | 16:9, 9:16 | Last frame control |
+| **Seedance Pro Fast** | Standard | Per-second | 3-12s | 480p, 720p, 1080p | All 7 | Fast generation, variable duration |
+| **Seedance Lite** | Featured | Per-second | 3-12s | 480p, 720p, 1080p | All 7 | Reference images + last frame |
+| **Kling 2.5 Turbo Pro** | Premium | Per-second | 3-10s | 720p | 16:9, 9:16, 1:1 | Best motion quality |
+
+## Input Image Requirements
+
+All video models require a **start image** (image-to-video). Support for additional inputs varies:
+
+| Model | Start Image | Last Frame | Reference Images | Max Refs |
+|-------|:-----------:|:----------:|:----------------:|:--------:|
+| **WAN 2.2-5B Fast** | ✅ Required | ❌ | ❌ | 0 |
+| **WAN 2.2 I2V Fast** | ✅ Required | ✅ | ❌ | 0 |
+| **Seedance Pro Fast** | ✅ Required | ❌ | ❌ | 0 |
+| **Seedance Lite** | ✅ Required | ✅ | ✅ | 4 |
+| **Kling 2.5 Turbo Pro** | ✅ Required | ❌ | ❌ | 0 |
+
+**Notes:**
+- **Start Image**: The initial frame that the video animates from (required for all models)
+- **Last Frame**: Optional end frame for keyframe-style animation control
+- **Reference Images**: Style/subject reference for consistency (Seedance Lite only)
+- Seedance Lite: Reference images cannot be used with 1080p or with last frame
 
 ---
 
@@ -34,6 +52,11 @@ This document provides comprehensive details about all video generation models a
 - 720p (1280x720)
 - Default: 720p
 
+**Aspect Ratios:**
+- 16:9 (Landscape)
+- 9:16 (Vertical)
+- Note: Limited aspect ratio support compared to Seedance models
+
 **Features:**
 - Start frame (image-to-video)
 - No last frame control
@@ -45,6 +68,7 @@ This document provides comprehensive details about all video generation models a
 - No last frame support
 - Maximum 720p resolution
 - No reference images
+- Only 16:9 and 9:16 aspect ratios
 
 **Best For:**
 - Quick previews and testing
@@ -78,6 +102,11 @@ This document provides comprehensive details about all video generation models a
 - 720p (1280x720)
 - Default: 720p
 
+**Aspect Ratios:**
+- 16:9 (Landscape)
+- 9:16 (Vertical)
+- Note: Limited aspect ratio support compared to Seedance models
+
 **Features:**
 - Start frame (image-to-video)
 - Last frame control (keyframe animation)
@@ -88,6 +117,7 @@ This document provides comprehensive details about all video generation models a
 - Fixed 5 second duration
 - Maximum 720p resolution
 - No reference images
+- Only 16:9 and 9:16 aspect ratios
 
 **Best For:**
 - Budget videos with precise end state
@@ -126,11 +156,21 @@ This document provides comprehensive details about all video generation models a
 - 1080p (1920x1080)
 - Default: 720p
 
+**Aspect Ratios (All 7 supported):**
+- 16:9 (Landscape)
+- 4:3 (Standard)
+- 1:1 (Square)
+- 3:4 (Portrait)
+- 9:16 (Vertical)
+- 21:9 (Ultrawide)
+- 9:21 (Vertical Ultra)
+
 **Features:**
 - Start frame (image-to-video)
 - Variable duration (3-12s)
 - Fast generation speed
 - All resolution options
+- All aspect ratio options
 
 **Restrictions:**
 - No last frame support
@@ -142,6 +182,7 @@ This document provides comprehensive details about all video generation models a
 - Standard quality projects
 - Flexible duration needs
 - High-resolution output
+- Any aspect ratio requirement
 
 **Example Cost:**
 ```
@@ -175,12 +216,22 @@ This document provides comprehensive details about all video generation models a
 - 1080p (1920x1080)
 - Default: 720p
 
+**Aspect Ratios (All 7 supported):**
+- 16:9 (Landscape)
+- 4:3 (Standard)
+- 1:1 (Square)
+- 3:4 (Portrait)
+- 9:16 (Vertical)
+- 21:9 (Ultrawide)
+- 9:21 (Vertical Ultra)
+
 **Features:**
 - Start frame (image-to-video)
 - Last frame control (keyframe animation)
 - Reference images (1-4 images)
 - Variable duration (3-12s)
 - Full creative control
+- All aspect ratio options
 
 **Restrictions:**
 - Reference images CANNOT be used with 1080p resolution
@@ -192,6 +243,7 @@ This document provides comprehensive details about all video generation models a
 - Style consistency (reference images)
 - Keyframe animations (last frame)
 - Professional productions
+- Any aspect ratio requirement
 
 **Example Cost:**
 ```
@@ -231,6 +283,12 @@ This document provides comprehensive details about all video generation models a
 - 720p (1280x720) only
 - Default: 720p
 
+**Aspect Ratios (3 supported):**
+- 16:9 (Landscape)
+- 9:16 (Vertical)
+- 1:1 (Square)
+- Note: Limited compared to Seedance models (no 4:3, 3:4, 21:9, 9:21)
+
 **Features:**
 - Start frame (image-to-video)
 - Premium motion quality
@@ -242,6 +300,7 @@ This document provides comprehensive details about all video generation models a
 - No last frame support
 - No reference images
 - Higher cost per second
+- Only 16:9, 9:16, and 1:1 aspect ratios
 
 **Best For:**
 - High-quality final renders
@@ -356,14 +415,24 @@ Batch of 5 @ 720p = 15 points
 | 720p | 1280×720 | 16:9 |
 | 1080p | 1920×1080 | 16:9 |
 
-**Supported Aspect Ratios:**
-- 16:9 (Landscape)
-- 4:3 (Standard)
-- 1:1 (Square)
-- 3:4 (Portrait)
-- 9:16 (Vertical)
-- 21:9 (Ultrawide)
-- 9:21 (Vertical Ultra)
+**Aspect Ratios Per Model:**
+
+| Model | Supported Aspect Ratios |
+|-------|------------------------|
+| WAN 2.2-5B Fast | 16:9, 9:16 |
+| WAN 2.2 I2V Fast | 16:9, 9:16 |
+| Seedance Pro Fast | 16:9, 4:3, 1:1, 3:4, 9:16, 21:9, 9:21 (All 7) |
+| Seedance Lite | 16:9, 4:3, 1:1, 3:4, 9:16, 21:9, 9:21 (All 7) |
+| Kling 2.5 Turbo Pro | 16:9, 9:16, 1:1 |
+
+**All Available Aspect Ratios:**
+- 16:9 (Landscape) - YouTube, standard video
+- 4:3 (Standard) - Classic TV format
+- 1:1 (Square) - Instagram, social media
+- 3:4 (Portrait) - Portrait photos
+- 9:16 (Vertical) - TikTok, Reels, Stories
+- 21:9 (Ultrawide) - Cinematic widescreen
+- 9:21 (Vertical Ultra) - Tall vertical content
 
 **Fixed Settings:**
 - FPS: 24 (all models)
@@ -490,7 +559,7 @@ This model is kept for backwards compatibility but should not be used for new pr
 
 ## Updates and Versioning
 
-**Last Updated:** December 17, 2024
+**Last Updated:** December 18, 2025
 
 **Model Versions:**
 - WAN 2.2 (current)
@@ -498,6 +567,33 @@ This model is kept for backwards compatibility but should not be used for new pr
 - Kling 2.5 (current)
 
 For the latest pricing and model availability, check the Replicate API documentation or the source code configuration files listed above.
+
+---
+
+## Industry Leaderboard Context
+
+How our models compare to the broader AI video generation landscape (December 2025):
+
+### Artificial Analysis Video Arena Rankings
+
+| Rank | Model | ELO Score | Notes |
+|:----:|-------|:---------:|-------|
+| #1 | Runway Gen-4.5 | 1247 | Top overall |
+| #2 | Google Veo 3 | ~1200 | Strong competitor |
+| #9 | **Kling AI** | 1171 | Best for image-to-video |
+| #10 | Alibaba WAN v2.2 | 1130 | Budget-friendly |
+| #11 | **Seedance Lite** | 1098 | Full-featured |
+| #12 | OpenAI Sora | 1078 | Text-to-video focused |
+| #14 | Pika v2.2 | 1007 | Creative effects |
+
+**Our Models' Strengths:**
+- **Kling 2.5 Turbo Pro**: #1 for image-to-video quality
+- **Seedance Lite**: Most features (refs + last frame) at reasonable cost
+- **WAN 2.2**: Best budget option for quick iterations
+
+**Sources:**
+- [AIBase Text-to-Video Leaderboard](https://model.aibase.com/leaderboard/text-to-vedio)
+- [Pixazo AI Video Comparison](https://www.pixazo.ai/blog/ai-video-generation-models-comparison-t2v)
 
 ---
 
