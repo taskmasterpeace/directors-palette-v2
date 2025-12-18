@@ -141,6 +141,35 @@ const CompactShotCardComponent = ({
             <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
           </Button>
         </div>
+
+        {/* Last Frame Thumbnail - Bottom Left */}
+        {supportsLastFrame && config.lastFrameImage && (
+          <div className="absolute bottom-2 left-2 z-10 group/lastframe">
+            <div className="relative w-12 h-12 sm:w-10 sm:h-10 rounded border-2 border-amber-500 overflow-hidden bg-black/50 cursor-pointer hover:scale-110 transition-transform">
+              <img
+                src={config.lastFrameImage}
+                alt="Last frame"
+                className="w-full h-full object-cover"
+                onClick={onManageLastFrame}
+              />
+              {/* Remove button overlay */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onUpdate({ ...config, lastFrameImage: undefined })
+                }}
+                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-xs font-bold opacity-0 group-hover/lastframe:opacity-100 transition-opacity"
+                aria-label="Remove last frame"
+              >
+                ×
+              </button>
+              {/* Label */}
+              <div className="absolute bottom-0 left-0 right-0 bg-amber-500/90 text-[8px] text-black font-bold text-center py-0.5">
+                END
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Card Content */}
@@ -179,21 +208,19 @@ const CompactShotCardComponent = ({
             )}
           </div>
 
-          {/* Last Frame Button */}
+          {/* Last Frame Button - Only show when no last frame is set */}
           <div className="w-1/2">
-            {supportsLastFrame && (
+            {supportsLastFrame && !config.lastFrameImage && (
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={onManageLastFrame}
                 className="min-h-[44px] h-11 sm:h-8 px-3 sm:px-2 w-full text-sm sm:text-xs bg-secondary/50 hover:bg-secondary active:bg-muted text-primary border border-primary/30 touch-manipulation active:scale-95 transition-transform"
-                aria-label="Manage last frame"
+                aria-label="Add last frame"
               >
                 <Film className="w-4 h-4 sm:w-3 sm:h-3 mr-1" />
-                Last Frame
-                {config.lastFrameImage && (
-                  <Badge className="ml-1 h-5 px-1.5 sm:h-4 sm:px-1 text-xs bg-primary">1</Badge>
-                )}
+                <span className="hidden sm:inline">+ End Frame</span>
+                <span className="sm:hidden">+ Last Frame</span>
               </Button>
             )}
           </div>
@@ -223,6 +250,7 @@ export const CompactShotCard = memo(CompactShotCardComponent, (prevProps, nextPr
     prevProps.config.imageUrl === nextProps.config.imageUrl &&
     prevProps.config.referenceImages.length === nextProps.config.referenceImages.length &&
     prevProps.config.generatedVideos.length === nextProps.config.generatedVideos.length &&
+    prevProps.config.lastFrameImage === nextProps.config.lastFrameImage &&
     prevProps.maxReferenceImages === nextProps.maxReferenceImages &&
     prevProps.supportsLastFrame === nextProps.supportsLastFrame
   )

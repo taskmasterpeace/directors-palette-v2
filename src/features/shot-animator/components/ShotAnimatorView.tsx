@@ -39,6 +39,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { toast } from '@/hooks/use-toast'
 import VideoPreviewsModal from "./VideoPreviewsModal"
 
 export function ShotAnimatorView() {
@@ -177,6 +178,28 @@ export function ShotAnimatorView() {
       }
     }
   }, [shotConfigs, user, setShotConfigs])
+
+  // Clear last frame images when switching to a model that doesn't support it
+  useEffect(() => {
+    if (!currentModelConfig.supportsLastFrame) {
+      // Check if any shots have last frame images
+      const shotsWithLastFrame = shotConfigs.filter(shot => shot.lastFrameImage)
+
+      if (shotsWithLastFrame.length > 0) {
+        // Clear last frame from all shots
+        const updatedConfigs = shotConfigs.map(shot => ({
+          ...shot,
+          lastFrameImage: undefined
+        }))
+        setShotConfigs(updatedConfigs)
+
+        toast({
+          title: 'Last Frame Removed',
+          description: `${currentModelConfig.displayName} doesn't support last frame. Last frame images have been removed from ${shotsWithLastFrame.length} shot(s).`,
+        })
+      }
+    }
+  }, [selectedModel, currentModelConfig.supportsLastFrame, currentModelConfig.displayName])
 
   // Transform gallery images for the modal
   const transformedGalleryImages = useMemo(() => {
