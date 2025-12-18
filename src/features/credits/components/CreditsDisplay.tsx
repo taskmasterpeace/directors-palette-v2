@@ -18,7 +18,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Coins, Plus, Loader2, Sparkles, Zap, Star, Crown, Image as ImageIcon, Gift } from 'lucide-react'
+import { Coins, Plus, Loader2, Sparkles, Zap, Star, Crown, Image as ImageIcon, Gift, Video } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { RedeemUsageDialog } from './RedeemUsageDialog'
 
@@ -48,7 +48,7 @@ function formatTokens(tokens: number): string {
 
 // Get tier icon based on package index
 function getTierIcon(index: number) {
-    const icons = [Zap, Star, Crown]
+    const icons = [Zap, Star, Crown, Sparkles]
     return icons[index] || Sparkles
 }
 
@@ -67,6 +67,7 @@ function getTierColors(index: number, isPopular: boolean) {
         { border: 'border-zinc-700 hover:border-zinc-600', bg: 'bg-zinc-800/50', icon: 'text-zinc-400', badge: 'bg-zinc-700 text-zinc-300', button: 'bg-zinc-700 hover:bg-zinc-600 text-white' },
         { border: 'border-amber-600/40 hover:border-amber-600/60', bg: 'bg-amber-900/20', icon: 'text-amber-500', badge: 'bg-amber-600/20 text-amber-400', button: 'bg-amber-600 hover:bg-amber-500 text-black' },
         { border: 'border-orange-500/40 hover:border-orange-500/60', bg: 'bg-orange-900/20', icon: 'text-orange-400', badge: 'bg-orange-500/20 text-orange-400', button: 'bg-orange-500 hover:bg-orange-400 text-black' },
+        { border: 'border-rose-500/40 hover:border-rose-500/60', bg: 'bg-rose-900/20', icon: 'text-rose-400', badge: 'bg-rose-500/20 text-rose-400', button: 'bg-rose-500 hover:bg-rose-400 text-white' },
     ]
     return colors[index] || colors[0]
 }
@@ -74,6 +75,11 @@ function getTierColors(index: number, isPopular: boolean) {
 // Estimate images from tokens (20 tokens per image avg)
 function estimateImages(tokens: number): number {
     return Math.floor(tokens / 20)
+}
+
+// Estimate video seconds from tokens (5 tokens per second at 720p for Seedance Lite)
+function estimateVideoSeconds(tokens: number): number {
+    return Math.floor(tokens / 5)
 }
 
 export function CreditsDisplay() {
@@ -99,11 +105,11 @@ export function CreditsDisplay() {
             const res = await fetch('/api/credits/packages')
             if (res.ok) {
                 const data = await res.json()
-                // Only take first 3 unique packages by name
+                // Get all unique packages by name (sorted by sort_order from API)
                 const uniquePackages: CreditPackage[] = []
                 const seenNames = new Set<string>()
                 for (const pkg of data.packages || []) {
-                    if (!seenNames.has(pkg.name) && uniquePackages.length < 3) {
+                    if (!seenNames.has(pkg.name)) {
                         seenNames.add(pkg.name)
                         uniquePackages.push(pkg)
                     }
@@ -232,12 +238,13 @@ export function CreditsDisplay() {
                                     <p>No packages available right now</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                     {packages.map((pkg, index) => {
                                         const isPopular = index === 1 // Creator pack is most popular (middle)
                                         const colors = getTierColors(index, isPopular)
                                         const TierIcon = getTierIcon(index)
                                         const imgCount = estimateImages(pkg.total_credits)
+                                        const videoSeconds = estimateVideoSeconds(pkg.total_credits)
                                         const isPurchasing = purchasingId === pkg.id
 
                                         return (
@@ -292,14 +299,18 @@ export function CreditsDisplay() {
                                                 </div>
 
                                                 {/* Quick stat */}
-                                                <div className="space-y-3 mb-6 flex-1">
+                                                <div className="space-y-2 mb-6 flex-1">
                                                     <div className="flex items-center gap-2 text-sm text-zinc-300">
                                                         <ImageIcon className="w-4 h-4 text-zinc-500" />
-                                                        <span>Generates ~{imgCount} images</span>
+                                                        <span>~{imgCount} images</span>
                                                     </div>
                                                     <div className="flex items-center gap-2 text-sm text-zinc-300">
-                                                        <Zap className="w-4 h-4 text-zinc-500" />
-                                                        <span>Priority Generation</span>
+                                                        <Video className="w-4 h-4 text-zinc-500" />
+                                                        <span>~{videoSeconds}s of video</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                                        <Zap className="w-3 h-3" />
+                                                        <span>Images + Videos</span>
                                                     </div>
                                                 </div>
 

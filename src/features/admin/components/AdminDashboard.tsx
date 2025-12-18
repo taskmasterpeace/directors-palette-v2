@@ -9,12 +9,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
-import { Users, DollarSign, TrendingUp, Gift, Search, RefreshCw, Shield, Loader2, Sparkles, Ticket, FileText, UsersRound, Key } from 'lucide-react'
+import { Users, DollarSign, TrendingUp, Gift, Search, RefreshCw, Shield, Loader2, Sparkles, Ticket, FileText, UsersRound, Key, Banknote } from 'lucide-react'
 import { GenerationsTable } from './GenerationsTable'
 import { GenerationStats } from './GenerationStats'
 import { CouponsTab } from './CouponsTab'
 import { CommunityModerationTab } from './CommunityModerationTab'
 import { ApiUsageTab } from './ApiUsageTab'
+import { FinancialsTab } from './FinancialsTab'
 import { PromptTemplateEditor } from '@/features/prompt-templates'
 
 // Cost per image generation in cents (matches FALLBACK_PRICING.image.price_cents)
@@ -178,6 +179,10 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                     <TabsTrigger value="api" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
                         <Key className="w-4 h-4 mr-2" />
                         API
+                    </TabsTrigger>
+                    <TabsTrigger value="financials" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
+                        <Banknote className="w-4 h-4 mr-2" />
+                        Financials
                     </TabsTrigger>
                 </TabsList>
 
@@ -350,6 +355,11 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                 {/* API Tab */}
                 <TabsContent value="api" className="space-y-6">
                     <ApiUsageTab />
+                </TabsContent>
+
+                {/* Financials Tab */}
+                <TabsContent value="financials" className="space-y-6">
+                    <FinancialsTab />
                 </TabsContent>
             </Tabs>
 
