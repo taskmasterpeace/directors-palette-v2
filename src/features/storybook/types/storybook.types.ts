@@ -226,6 +226,11 @@ export interface StorybookProject {
   // Book configuration
   pageCount?: number // 4, 6, 8, 10, or 12
   sentencesPerPage?: number // 1-6
+  // Customization options (NEW - Parent Power Features)
+  storySetting?: string // e.g., 'park', 'beach', 'fantasy-castle'
+  customSetting?: string // Free-text custom setting
+  customElements?: string[] // e.g., ['dinosaurs', 'unicorns', 'magic']
+  customNotes?: string // Free-text notes from parent
   // Story generation
   selectedApproach?: string // The approach ID selected by user
   selectedApproachTitle?: string

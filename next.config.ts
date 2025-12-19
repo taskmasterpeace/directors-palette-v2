@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'api.replicate.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: '*.supabase.co',
       },
       {

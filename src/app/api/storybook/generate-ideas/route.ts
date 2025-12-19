@@ -11,6 +11,10 @@ interface GenerateIdeasRequest {
   characterAge: number
   category: string
   topic: string
+  // Customization options
+  setting?: string
+  customElements?: string[]
+  customNotes?: string
 }
 
 interface StoryIdea {
@@ -67,11 +71,26 @@ function buildSystemPrompt(
   topicName: string,
   topicDescription: string,
   topicKeywords: string[],
-  approaches: { id: string; name: string; description: string }[]
+  approaches: { id: string; name: string; description: string }[],
+  setting?: string,
+  customElements?: string[],
+  customNotes?: string
 ): string {
   const approachList = approaches
     .map((a, i) => `${i + 1}. ${a.name}: ${a.description}`)
     .join('\n')
+
+  // Build customization section
+  let customization = ''
+  if (setting) {
+    customization += `\nSETTING: The story takes place in/at: ${setting}`
+  }
+  if (customElements && customElements.length > 0) {
+    customization += `\nINCLUDE THESE ELEMENTS: ${customElements.join(', ')}`
+  }
+  if (customNotes) {
+    customization += `\nSPECIAL REQUESTS: ${customNotes}`
+  }
 
   return `You are a creative children's book author specializing in educational content.
 
@@ -80,7 +99,7 @@ Generate 4 different story ideas for a children's book about "${topicName}" (${t
 MAIN CHARACTER: ${characterName}, age ${characterAge}
 CATEGORY: ${categoryName}
 TOPIC: ${topicName} - ${topicDescription}
-KEYWORDS TO INCORPORATE: ${topicKeywords.join(', ')}
+KEYWORDS TO INCORPORATE: ${topicKeywords.join(', ')}${customization}
 
 CREATE 4 DIFFERENT STORY IDEAS using these approaches (in this order):
 ${approachList}
@@ -89,7 +108,7 @@ REQUIREMENTS FOR EACH IDEA:
 - Title: Catchy, memorable, age-appropriate (5-8 words max)
 - Summary: 2-3 sentences explaining the story premise
 - Feature ${characterName} as the main character
-- Naturally incorporate the topic (${topicName}) into the plot
+- Naturally incorporate the topic (${topicName}) into the plot${setting ? `\n- Set the story in/at: ${setting}` : ''}${customElements && customElements.length > 0 ? `\n- Include these fun elements: ${customElements.join(', ')}` : ''}${customNotes ? `\n- Honor this special request: ${customNotes}` : ''}
 - Make it engaging and fun for a ${characterAge}-year-old
 - Each approach should feel distinctly different
 
@@ -104,7 +123,7 @@ Be creative! Each story should take a unique angle on teaching ${topicName}.`
 export async function POST(request: NextRequest) {
   try {
     const body: GenerateIdeasRequest = await request.json()
-    const { characterName, characterAge, category, topic } = body
+    const { characterName, characterAge, category, topic, setting, customElements, customNotes } = body
 
     // Validate inputs
     if (!characterName?.trim()) {
@@ -150,7 +169,10 @@ export async function POST(request: NextRequest) {
       topicData.name,
       topicData.description,
       topicData.promptKeywords,
-      approaches
+      approaches,
+      setting,
+      customElements,
+      customNotes
     )
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {

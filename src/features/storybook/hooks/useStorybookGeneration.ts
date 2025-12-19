@@ -90,17 +90,23 @@ CRITICAL: Separate each cell with a SOLID BLACK LINE (4-6 pixels wide).
 
 ${styleDescription ? `STYLE DESCRIPTION: ${styleDescription}\n\n` : ''}THE 6 TILES (2x3 grid):
 
-1. CHARACTER CLOSE-UP: A character headshot, warm studio lighting, 3/4 view
+1. CHARACTER CLOSE-UP: A child character headshot, warm studio lighting, 3/4 view
 
-2. ACTION SCENE: Character in dynamic pose, motion blur background
+2. ACTION SCENE: A different character in dynamic pose, motion blur background
 
 3. ENVIRONMENT DETAIL: Interior scene, afternoon light through windows
 
-4. CHARACTER INTERACTION: Two characters in conversation
+4. CHARACTER INTERACTION: Two diverse characters (different ethnicities/appearances) in conversation
 
 5. DYNAMIC POSE: Character in athletic stance, dramatic angle
 
-6. SET/LOCATION DESIGN: Exterior establishing shot
+6. SET/LOCATION DESIGN: Exterior establishing shot with background characters of varied appearances
+
+DIVERSITY REQUIREMENTS:
+- Use diverse characters with different ethnicities, skin tones, and appearances
+- Show variety in hair colors, styles, and physical features
+- Include both male and female characters across the tiles
+- Make each character visually distinct and unique
 
 Output a 16:9 image with exactly 6 tiles (2 rows x 3 columns) separated by black lines.
 ${styleName} style throughout all tiles.`
@@ -202,15 +208,18 @@ LEFT SIDE - FULL BODY:
 - Large neutral standing pose, front view
 - Show complete outfit and proportions
 - Color palette swatches for skin, hair, clothing
+- Character should have unique distinguishing features that make them memorable
 
-RIGHT SIDE - EXPRESSIONS (3x3 grid):
-- Neutral, Happy, Angry
-- Speaking, Smug/Confident, Sad
-- Surprised, Shouting, Whispering
+RIGHT SIDE - EXPRESSIONS (3x3 grid with VARIED poses and emotions):
+- Neutral (relaxed), Genuinely Happy/Laughing, Frustrated/Angry
+- Speaking/Explaining, Smug/Confident pose, Sad/Disappointed
+- Surprised/Amazed, Shouting/Excited, Whispering/Secretive
 
 CRITICAL REQUIREMENTS:
-- Maintain EXACT likeness from reference photo
-- All expressions must be the SAME character
+- Maintain EXACT likeness from reference photo throughout all expressions
+- Show 9 distinctly DIFFERENT expressions and poses (not subtle variations)
+- Each expression should be recognizably unique from the others
+- Vary body language and hand gestures across expressions
 - ${styleName} art style throughout
 - Clean white/light background
 - Character name "@${character.tag || character.name.replace(/\s+/g, '')}" at top
@@ -304,23 +313,30 @@ PAGE TEXT:
 CRITICAL: Separate each cell with a SOLID BLACK LINE (4-6 pixels wide).
 
 STYLE: ${styleName}
-CHARACTERS: ${characterTags.length > 0 ? characterTags.join(', ') : 'No named characters'}
+MAIN CHARACTERS: ${characterTags.length > 0 ? characterTags.join(', ') : 'No named characters'}
 
 THE 9 VARIATIONS (different compositions of the same scene):
-1. Wide establishing shot
+1. Wide establishing shot with diverse background characters
 2. Medium scene shot
 3. Character-focused close-up
 4. Action moment
 5. Reaction/emotion focus
-6. Environmental detail
+6. Environmental detail with background activity
 7. Dynamic angle (low or high)
 8. Cozy/intimate framing
-9. Classic storybook composition
+9. Classic storybook composition with supporting characters
 
-REQUIREMENTS:
+DIVERSITY REQUIREMENTS:
+- Include diverse background characters with different ethnicities and appearances
+- Vary character poses, expressions, and body language across frames
+- Each frame should feel unique while maintaining style consistency
+- Background characters should represent various ages, genders, and appearances
+- Make the world feel populated with a diverse community
+
+TECHNICAL REQUIREMENTS:
 - All 9 tiles show the SAME story moment
 - Each tile uses a DIFFERENT camera angle/composition
-- Maintain character consistency using attached character sheets
+- Maintain MAIN character consistency using attached character sheets
 - Match style guide exactly
 - No text overlays on images
 - 1:1 aspect ratio (square grid)

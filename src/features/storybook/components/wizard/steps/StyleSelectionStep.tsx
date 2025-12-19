@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
 import { useStorybookGeneration } from "../../../hooks/useStorybookGeneration"
 import { Button } from "@/components/ui/button"
@@ -8,9 +8,15 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Palette, Check, Plus, Sparkles, Loader2, X, Upload } from "lucide-react"
+import { Palette, Check, Plus, Sparkles, Loader2, X, Upload, Wand2, RefreshCw } from "lucide-react"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
+
+interface ExpandedStyle {
+  originalStyle: string
+  expandedStyle: string
+  keywords: string[]
+}
 
 // Preset styles (can be expanded)
 const PRESET_STYLES = [
@@ -52,6 +58,65 @@ export function StyleSelectionStep() {
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // LLM Style Expansion state
+  const [expandedStyle, setExpandedStyle] = useState<ExpandedStyle | null>(null)
+  const [isExpanding, setIsExpanding] = useState(false)
+  const [expandError, setExpandError] = useState<string | null>(null)
+  const [useExpandedDescription, setUseExpandedDescription] = useState(true)
+
+  // Expand style using LLM
+  const handleExpandStyle = useCallback(async () => {
+    if (!customStyleName.trim()) return
+
+    setIsExpanding(true)
+    setExpandError(null)
+
+    try {
+      const response = await fetch('/api/storybook/expand-style', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          styleName: customStyleName.trim(),
+          characterAge: project?.mainCharacterAge || 5
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to expand style')
+      }
+
+      const data: ExpandedStyle = await response.json()
+      setExpandedStyle(data)
+
+      // Auto-fill the description if user hasn't typed anything
+      if (!customStyleDescription.trim()) {
+        setCustomStyleDescription(data.expandedStyle)
+      }
+    } catch (err) {
+      console.error('Error expanding style:', err)
+      setExpandError('Failed to expand style. You can still use your description.')
+    } finally {
+      setIsExpanding(false)
+    }
+  }, [customStyleName, customStyleDescription, project?.mainCharacterAge])
+
+  // Auto-expand when style name changes (with debounce)
+  useEffect(() => {
+    if (!customStyleName.trim() || customStyleName.length < 3) {
+      setExpandedStyle(null)
+      return
+    }
+
+    const timer = setTimeout(() => {
+      // Only auto-expand if we don't have an expansion yet or the name changed
+      if (!expandedStyle || expandedStyle.originalStyle !== customStyleName.trim()) {
+        handleExpandStyle()
+      }
+    }, 800) // Debounce 800ms
+
+    return () => clearTimeout(timer)
+  }, [customStyleName]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Handle reference image upload
   const handlePhotoUpload = useCallback(async (file: File) => {
     setIsUploading(true)
@@ -89,9 +154,14 @@ export function StyleSelectionStep() {
   const handleGenerateCustomStyle = useCallback(async () => {
     if (!customStyleName.trim()) return
 
+    // Use expanded description if available and user wants it, otherwise use custom description
+    const descriptionToUse = useExpandedDescription && expandedStyle?.expandedStyle
+      ? expandedStyle.expandedStyle
+      : customStyleDescription.trim() || undefined
+
     const result = await generateStyleGuide(
       customStyleName.trim(),
-      customStyleDescription.trim() || undefined,
+      descriptionToUse,
       referenceImageUrl || undefined
     )
 
@@ -99,8 +169,9 @@ export function StyleSelectionStep() {
       setSelectedStyleId('custom')
       setShowCustomForm(false)
       setReferenceImageUrl(null) // Reset after successful generation
+      setExpandedStyle(null) // Reset expanded style
     }
-  }, [customStyleName, customStyleDescription, referenceImageUrl, generateStyleGuide])
+  }, [customStyleName, customStyleDescription, referenceImageUrl, generateStyleGuide, useExpandedDescription, expandedStyle])
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -184,23 +255,106 @@ export function StyleSelectionStep() {
 
             <div className="space-y-2">
               <Label htmlFor="styleName">Style Name</Label>
-              <Input
-                id="styleName"
-                placeholder="e.g., Whimsical Forest, Retro Comic, Cozy Cottage"
-                value={customStyleName}
-                onChange={(e) => setCustomStyleName(e.target.value)}
-                className="bg-zinc-800/50 border-zinc-700"
-                disabled={isGenerating}
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="styleName"
+                  placeholder="e.g., LEGO, Watercolor, Pixar, Anime"
+                  value={customStyleName}
+                  onChange={(e) => setCustomStyleName(e.target.value)}
+                  className="bg-zinc-800/50 border-zinc-700 flex-1"
+                  disabled={isGenerating}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleExpandStyle}
+                  disabled={isExpanding || isGenerating || !customStyleName.trim()}
+                  className="shrink-0"
+                  title="Expand style with AI"
+                >
+                  {isExpanding ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Wand2 className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+              {isExpanding && (
+                <p className="text-xs text-amber-400 animate-pulse">Expanding style with AI...</p>
+              )}
             </div>
 
+            {/* Expanded Style Preview */}
+            {expandedStyle && !isExpanding && (
+              <div className="space-y-3 p-4 bg-zinc-800/30 rounded-lg border border-amber-500/20">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Wand2 className="w-4 h-4 text-amber-400" />
+                    <span className="text-sm font-medium text-amber-400">AI-Enhanced Description</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleExpandStyle}
+                    disabled={isExpanding}
+                    className="h-6 text-xs"
+                  >
+                    <RefreshCw className="w-3 h-3 mr-1" />
+                    Regenerate
+                  </Button>
+                </div>
+
+                <p className="text-sm text-zinc-300 leading-relaxed">
+                  {expandedStyle.expandedStyle}
+                </p>
+
+                {expandedStyle.keywords.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {expandedStyle.keywords.map((keyword, i) => (
+                      <span
+                        key={i}
+                        className="px-2 py-0.5 bg-zinc-700/50 text-zinc-300 text-xs rounded-full"
+                      >
+                        {keyword}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={useExpandedDescription}
+                    onChange={(e) => setUseExpandedDescription(e.target.checked)}
+                    className="rounded border-zinc-600 bg-zinc-700 text-amber-500 focus:ring-amber-500"
+                  />
+                  <span className="text-xs text-zinc-400">Use AI-enhanced description for generation</span>
+                </label>
+              </div>
+            )}
+
+            {expandError && (
+              <p className="text-xs text-amber-400">{expandError}</p>
+            )}
+
             <div className="space-y-2">
-              <Label htmlFor="styleDescription">Style Description (Optional)</Label>
+              <Label htmlFor="styleDescription">
+                Custom Description {expandedStyle ? '(Optional - override AI)' : '(Optional)'}
+              </Label>
               <Textarea
                 id="styleDescription"
-                placeholder="Describe the visual characteristics: color palette, mood, texture..."
+                placeholder={expandedStyle
+                  ? "Leave empty to use AI-enhanced description, or type your own..."
+                  : "Describe the visual characteristics: color palette, mood, texture..."
+                }
                 value={customStyleDescription}
-                onChange={(e) => setCustomStyleDescription(e.target.value)}
+                onChange={(e) => {
+                  setCustomStyleDescription(e.target.value)
+                  // If user types something, disable auto-use of expanded
+                  if (e.target.value.trim()) {
+                    setUseExpandedDescription(false)
+                  }
+                }}
                 className="bg-zinc-800/50 border-zinc-700 min-h-[80px]"
                 disabled={isGenerating}
               />
