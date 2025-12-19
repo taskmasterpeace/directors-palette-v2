@@ -2,7 +2,7 @@
 
 import { NANO_BANANA_PROMPTS } from "@/features/shot-creator/constants/prompt-library-presets"
 import { useEffect } from 'react'
-import { SavedPrompt, usePromptLibraryStore } from "../../store/prompt-library-store"
+import { usePromptLibraryStore } from "../../store/prompt-library-store"
 
 // Module-level singleton pattern with Promise-based initialization
 class PromptLoaderSingleton {

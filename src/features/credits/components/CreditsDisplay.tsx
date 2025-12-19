@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useCreditsStore } from '../store/credits.store'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
     Dialog,
     DialogContent,
@@ -52,22 +51,45 @@ function getTierIcon(index: number) {
     return icons[index] || Sparkles
 }
 
-// Get tier color classes - all amber/orange tones, no purple
-function getTierColors(index: number, isPopular: boolean) {
-    if (isPopular) {
-        return {
-            border: 'border-amber-500',
-            bg: 'bg-gradient-to-br from-amber-500/15 to-amber-600/5',
-            icon: 'text-amber-400',
-            badge: 'bg-amber-500 text-black',
-            button: 'bg-amber-500 hover:bg-amber-400 text-black',
-        }
-    }
+// Background images for each tier (lightweight, optimized)
+const TIER_BACKGROUNDS = [
+    '/credits/starter-bg.png',   // Starter - subtle energy/spark
+    '/credits/creator-bg.png',   // Creator - creative/artistic
+    '/credits/pro-bg.png',       // Pro - professional/dynamic
+    '/credits/studio-bg.png',    // Studio - premium/cinematic
+]
+
+// Get tier color classes - distinct colors for each tier
+function getTierColors(index: number) {
     const colors = [
-        { border: 'border-zinc-700 hover:border-zinc-600', bg: 'bg-zinc-800/50', icon: 'text-zinc-400', badge: 'bg-zinc-700 text-zinc-300', button: 'bg-zinc-700 hover:bg-zinc-600 text-white' },
-        { border: 'border-amber-600/40 hover:border-amber-600/60', bg: 'bg-amber-900/20', icon: 'text-amber-500', badge: 'bg-amber-600/20 text-amber-400', button: 'bg-amber-600 hover:bg-amber-500 text-black' },
-        { border: 'border-orange-500/40 hover:border-orange-500/60', bg: 'bg-orange-900/20', icon: 'text-orange-400', badge: 'bg-orange-500/20 text-orange-400', button: 'bg-orange-500 hover:bg-orange-400 text-black' },
-        { border: 'border-rose-500/40 hover:border-rose-500/60', bg: 'bg-rose-900/20', icon: 'text-rose-400', badge: 'bg-rose-500/20 text-rose-400', button: 'bg-rose-500 hover:bg-rose-400 text-white' },
+        {
+            border: 'border-zinc-600/50 hover:border-zinc-500',
+            glow: 'shadow-zinc-500/10',
+            icon: 'text-zinc-300',
+            button: 'bg-zinc-600 hover:bg-zinc-500 text-white',
+            accent: 'from-zinc-400/20 to-zinc-600/10',
+        },
+        {
+            border: 'border-amber-500/60 hover:border-amber-400',
+            glow: 'shadow-amber-500/20',
+            icon: 'text-amber-400',
+            button: 'bg-amber-500 hover:bg-amber-400 text-black font-semibold',
+            accent: 'from-amber-400/30 to-amber-600/10',
+        },
+        {
+            border: 'border-orange-500/60 hover:border-orange-400',
+            glow: 'shadow-orange-500/20',
+            icon: 'text-orange-400',
+            button: 'bg-orange-500 hover:bg-orange-400 text-black font-semibold',
+            accent: 'from-orange-400/30 to-orange-600/10',
+        },
+        {
+            border: 'border-rose-500/60 hover:border-rose-400',
+            glow: 'shadow-rose-500/20',
+            icon: 'text-rose-400',
+            button: 'bg-rose-500 hover:bg-rose-400 text-white font-semibold',
+            accent: 'from-rose-400/30 to-rose-600/10',
+        },
     ]
     return colors[index] || colors[0]
 }
@@ -233,114 +255,103 @@ export function CreditsDisplay() {
                                     <p>No packages available right now</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                     {packages.map((pkg, index) => {
-                                        const isPopular = index === 1 // Creator pack
-                                        const isBestValue = index === 3 // Studio pack
-                                        const colors = getTierColors(index, isPopular)
+                                        const colors = getTierColors(index)
                                         const TierIcon = getTierIcon(index)
                                         const imgCount = estimateImages(pkg.total_credits)
                                         const videoSeconds = estimateVideoSeconds(pkg.total_credits)
                                         const isPurchasing = purchasingId === pkg.id
                                         const hasBonus = pkg.bonus_credits > 0
-
-                                        // Tier-specific gradient backgrounds
-                                        const tierGradients = [
-                                            'bg-gradient-to-br from-zinc-800/80 to-zinc-900/80', // Starter
-                                            'bg-gradient-to-br from-amber-900/30 to-zinc-900/80', // Creator
-                                            'bg-gradient-to-br from-orange-900/30 to-zinc-900/80', // Pro
-                                            'bg-gradient-to-br from-rose-900/30 to-zinc-900/80', // Studio
-                                        ]
+                                        const bgImage = TIER_BACKGROUNDS[index]
 
                                         return (
                                             <motion.div
                                                 key={pkg.id}
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: index * 0.1, duration: 0.4 }}
-                                                whileHover={{ y: -4 }}
+                                                transition={{ delay: index * 0.08, duration: 0.3 }}
+                                                whileHover={{ y: -2, scale: 1.02 }}
                                                 className={cn(
-                                                    "relative rounded-2xl border transition-all duration-300 p-5 flex flex-col group overflow-hidden",
+                                                    "relative rounded-xl border transition-all duration-300 p-3 sm:p-4 flex flex-col group overflow-hidden",
                                                     colors.border,
-                                                    tierGradients[index] || tierGradients[0],
-                                                    isPopular && "shadow-xl shadow-amber-900/30 ring-1 ring-amber-500/20",
-                                                    isBestValue && "shadow-xl shadow-rose-900/30 ring-1 ring-rose-500/20"
+                                                    "bg-zinc-900/90 backdrop-blur-sm",
+                                                    `shadow-lg ${colors.glow}`,
+                                                    "hover:shadow-xl"
                                                 )}
                                             >
-                                                {/* Badge */}
-                                                {(isPopular || isBestValue) && (
-                                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                                                        <Badge className={cn(
-                                                            "px-3 py-1 text-[10px] font-bold border-none uppercase tracking-wide shadow-lg",
-                                                            isPopular && "bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-amber-500/30",
-                                                            isBestValue && "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-rose-500/30"
-                                                        )}>
-                                                            {isPopular ? "Most Popular" : "Best Value"}
-                                                        </Badge>
-                                                    </div>
-                                                )}
-
-                                                {/* Hover Glow */}
-                                                <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-
-                                                {/* Header */}
-                                                <div className="flex items-center gap-2.5 mb-3">
-                                                    <div className={cn("p-2 rounded-xl bg-black/40", colors.icon)}>
-                                                        <TierIcon className="w-5 h-5" />
-                                                    </div>
-                                                    <span className="font-bold text-lg text-white tracking-tight">{pkg.name}</span>
+                                                {/* Background Image with Gradient Overlay */}
+                                                <div className="absolute inset-0 z-0">
+                                                    <div
+                                                        className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity"
+                                                        style={{ backgroundImage: `url(${bgImage})` }}
+                                                    />
+                                                    <div className={cn(
+                                                        "absolute inset-0 bg-gradient-to-t",
+                                                        colors.accent,
+                                                        "to-zinc-900/95"
+                                                    )} />
                                                 </div>
 
-                                                {/* Price */}
-                                                <div className="mb-3">
-                                                    <span className="text-3xl font-bold text-white">{pkg.formatted_price}</span>
-                                                </div>
-
-                                                {/* Tokens breakdown */}
-                                                <div className="mb-4 pb-4 border-b border-white/10">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-2xl font-bold font-mono text-amber-400">
-                                                            {formatTokens(pkg.total_credits)}
-                                                        </span>
-                                                        <span className="text-sm text-zinc-400">tokens</span>
-                                                    </div>
-                                                    {hasBonus && (
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <span className="text-xs text-zinc-500">{formatTokens(pkg.credits)} base</span>
-                                                            <span className="text-xs font-semibold text-green-400">+{formatTokens(pkg.bonus_credits)} bonus</span>
+                                                {/* Content */}
+                                                <div className="relative z-10 flex flex-col h-full">
+                                                    {/* Header with Icon */}
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <div className={cn("p-1.5 rounded-lg bg-black/50 backdrop-blur-sm", colors.icon)}>
+                                                            <TierIcon className="w-4 h-4" />
                                                         </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Stats */}
-                                                <div className="space-y-2 mb-5 flex-1">
-                                                    <div className="flex items-center gap-2 text-sm text-zinc-300">
-                                                        <ImageIcon className="w-4 h-4 text-zinc-500" />
-                                                        <span>~{imgCount} images</span>
+                                                        <span className="font-bold text-sm text-white tracking-tight">{pkg.name}</span>
                                                     </div>
-                                                    <div className="flex items-center gap-2 text-sm text-zinc-300">
-                                                        <Video className="w-4 h-4 text-zinc-500" />
-                                                        <span>~{videoSeconds}s of video</span>
-                                                    </div>
-                                                </div>
 
-                                                {/* Buy button */}
-                                                <Button
-                                                    size="lg"
-                                                    className={cn(
-                                                        "w-full font-bold shadow-lg transition-all duration-300",
-                                                        colors.button,
-                                                        "group-hover:scale-[1.02]"
-                                                    )}
-                                                    onClick={() => handlePurchase(pkg)}
-                                                    disabled={isPurchasing}
-                                                >
-                                                    {isPurchasing ? (
-                                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                                    ) : (
-                                                        "Buy Now"
-                                                    )}
-                                                </Button>
+                                                    {/* Price - prominent */}
+                                                    <div className="mb-2">
+                                                        <span className="text-xl sm:text-2xl font-bold text-white">{pkg.formatted_price}</span>
+                                                    </div>
+
+                                                    {/* Tokens */}
+                                                    <div className="mb-2 sm:mb-3 pb-2 sm:pb-3 border-b border-white/10">
+                                                        <div className="flex items-baseline gap-1.5">
+                                                            <span className="text-lg sm:text-xl font-bold font-mono text-amber-400">
+                                                                {formatTokens(pkg.total_credits)}
+                                                            </span>
+                                                            <span className="text-[10px] sm:text-xs text-zinc-400">tokens</span>
+                                                        </div>
+                                                        {hasBonus && (
+                                                            <div className="text-[10px] text-green-400 font-medium mt-0.5">
+                                                                +{formatTokens(pkg.bonus_credits)} bonus
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Stats - compact */}
+                                                    <div className="space-y-1 mb-3 flex-1 text-[10px] sm:text-xs text-zinc-400">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <ImageIcon className="w-3 h-3" />
+                                                            <span>~{imgCount} images</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Video className="w-3 h-3" />
+                                                            <span>~{videoSeconds}s video</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Buy button */}
+                                                    <Button
+                                                        size="sm"
+                                                        className={cn(
+                                                            "w-full shadow-md transition-all duration-200",
+                                                            colors.button
+                                                        )}
+                                                        onClick={() => handlePurchase(pkg)}
+                                                        disabled={isPurchasing}
+                                                    >
+                                                        {isPurchasing ? (
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                        ) : (
+                                                            "Buy"
+                                                        )}
+                                                    </Button>
+                                                </div>
                                             </motion.div>
                                         )
                                     })}
