@@ -372,6 +372,18 @@ export const HOLIDAY_OPTIONS = [
 ]
 
 /**
+ * System template URLs from Supabase Storage
+ * These are used as layout reference images for recipes
+ */
+const SUPABASE_URL = 'https://tarohelkwuurakbxjyxm.supabase.co'
+
+const SYSTEM_TEMPLATE_URLS = {
+  characterSheetBasic: `${SUPABASE_URL}/storage/v1/object/public/templates/system/character-sheets/charactersheet-basic.png`,
+  characterSheetAdvanced: `${SUPABASE_URL}/storage/v1/object/public/templates/system/character-sheets/charactersheet-advanced.webp`,
+  wardrobeGrid: `${SUPABASE_URL}/storage/v1/object/public/templates/system/grids/wardrobe-2x3.png`,
+}
+
+/**
  * Sample recipes for initial setup
  */
 export const SAMPLE_RECIPES: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>[] = [
@@ -473,7 +485,14 @@ Clean, production-ready layout. No busy backgrounds.
 Consistent lighting and rendering across all views.
 Professional character sheet suitable for animation/illustration reference.`,
       fields: [],
-      referenceImages: [],
+      referenceImages: [
+        {
+          id: 'template_charsheet_advanced',
+          url: SYSTEM_TEMPLATE_URLS.characterSheetAdvanced,
+          name: 'Character Sheet Layout Template',
+          aspectRatio: '21:9',
+        },
+      ],
     }],
     suggestedAspectRatio: '21:9',
     isQuickAccess: true,
@@ -1143,7 +1162,14 @@ If any outfit field is empty, generate a creative luxury outfit variation.
 Each outfit should be COMPLETELY DIFFERENT in style, silhouette, and color palette.
 No text labels - clean imagery only.`,
       fields: [],
-      referenceImages: [],
+      referenceImages: [
+        {
+          id: 'template_wardrobe_grid',
+          url: SYSTEM_TEMPLATE_URLS.wardrobeGrid,
+          name: 'Wardrobe 2x3 Grid Layout',
+          aspectRatio: '16:9',
+        },
+      ],
     }],
     suggestedAspectRatio: '16:9',
     isQuickAccess: true,
