@@ -63,6 +63,7 @@ export interface Recipe {
   stages: RecipeStage[]         // Multi-stage support (separated by |)
   suggestedAspectRatio?: string // Suggested aspect ratio (user can change)
   suggestedResolution?: string  // Suggested resolution
+  suggestedModel?: string       // Suggested model (auto-selects when recipe applied)
   quickAccessLabel?: string     // 1-word label for quick access bar
   isQuickAccess: boolean        // Whether it's in quick access
   categoryId?: string           // Optional category
@@ -289,15 +290,36 @@ export function buildStagePrompt(
 }
 
 /**
+ * Result of building recipe prompts - includes both prompts and reference images
+ */
+export interface RecipePromptResult {
+  prompts: string[]
+  referenceImages: string[]
+}
+
+/**
  * Build all stage prompts from a recipe
  * Uses deduplicated fields so same field name = same value across stages
+ * Also collects all reference images from all stages
  */
 export function buildRecipePrompts(
   stages: RecipeStage[],
   values: RecipeFieldValues
-): string[] {
+): RecipePromptResult {
   const uniqueFields = getAllFields(stages)
-  return stages.map(stage => buildStagePrompt(stage.template, stage.fields, values, uniqueFields))
+  const prompts = stages.map(stage => buildStagePrompt(stage.template, stage.fields, values, uniqueFields))
+
+  // Collect all reference images from all stages (deduplicated)
+  const referenceImages: string[] = []
+  for (const stage of stages) {
+    for (const ref of stage.referenceImages || []) {
+      if (ref.url && !referenceImages.includes(ref.url)) {
+        referenceImages.push(ref.url)
+      }
+    }
+  }
+
+  return { prompts, referenceImages }
 }
 
 /**

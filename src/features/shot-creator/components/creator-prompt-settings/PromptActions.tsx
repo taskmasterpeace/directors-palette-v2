@@ -310,19 +310,47 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     // Handle applying a recipe's generated prompts
     // For multi-stage recipes, we use the first stage prompt for now
     // Full pipe execution will be handled in the image generation service
-    const handleApplyRecipePrompt = useCallback((prompts: string[]) => {
+    const handleApplyRecipePrompt = useCallback((prompts: string[], recipeReferenceImages: string[]) => {
         // Get the active recipe info before closing
         const recipe = getActiveRecipe()
         if (recipe) {
             setLastUsedRecipe({ recipeId: recipe.id, recipeName: recipe.name })
+
+            // Apply suggested model if recipe specifies one
+            if (recipe.suggestedModel) {
+                // Cast to ModelId type - recipe should use valid model IDs
+                updateSettings({ model: recipe.suggestedModel as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-fast' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' })
+            }
+
+            // Apply suggested aspect ratio if recipe specifies one
+            if (recipe.suggestedAspectRatio) {
+                updateSettings({ aspectRatio: recipe.suggestedAspectRatio })
+            }
         }
 
         // Use first stage prompt for the main prompt field
         if (prompts.length > 0) {
             setShotCreatorPrompt(prompts[0])
         }
+
+        // Add recipe reference images (deduplicated with existing ones)
+        if (recipeReferenceImages.length > 0) {
+            setShotCreatorReferenceImages((prev: ShotCreatorReferenceImage[]) => {
+                const newRefs: ShotCreatorReferenceImage[] = recipeReferenceImages
+                    .filter(url => !prev.some(ref => ref.url === url))
+                    .map((url, idx) => ({
+                        id: `recipe_ref_${Date.now()}_${idx}`,
+                        url,
+                        preview: url, // Use URL as preview
+                        tags: [], // Empty tags by default
+                        detectedAspectRatio: '1:1' // Default, could be improved
+                    }))
+                return [...prev, ...newRefs]
+            })
+        }
+
         setActiveRecipe(null)
-    }, [setShotCreatorPrompt, setActiveRecipe, getActiveRecipe])
+    }, [setShotCreatorPrompt, setActiveRecipe, getActiveRecipe, updateSettings, setShotCreatorReferenceImages])
 
     // Calculate dropdown position based on cursor
     const calculateDropdownPosition = useCallback(() => {

@@ -7,6 +7,7 @@ import {
   RecipeCategory,
   RecipeReferenceImage,
   RecipeValidation,
+  RecipePromptResult,
   DEFAULT_RECIPE_CATEGORIES,
   parseStageTemplate,
   buildRecipePrompts,
@@ -59,7 +60,7 @@ interface RecipeState {
   clearFieldValues: () => void
   getActiveRecipe: () => Recipe | null
   getActiveValidation: () => RecipeValidation | null
-  buildActivePrompts: () => string[] | null
+  buildActivePrompts: () => RecipePromptResult | null
 
   // Actions - Categories (local only for now)
   addCategory: (name: string, icon: string) => RecipeCategory
