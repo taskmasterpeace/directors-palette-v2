@@ -278,114 +278,116 @@ export interface StepInfo {
 }
 
 // Step configuration for GENERATE mode (educational flow)
+// Background images feature diverse children in whimsical watercolor illustrations
 export const GENERATE_WIZARD_STEPS: StepInfo[] = [
   {
     id: 'character-setup',
     label: 'Character',
     description: 'Create your main character',
-    backgroundImage: '/storybook/step-story.webp',
+    backgroundImage: '/storybook/step-character.webp', // Black girl + Asian boy reading in treehouse
     icon: 'User',
   },
   {
     id: 'category',
     label: 'Category',
     description: 'What should they learn?',
-    backgroundImage: '/storybook/step-story.webp',
+    backgroundImage: '/storybook/step-category.webp', // Diverse kids exploring with telescope/magnifying glass
     icon: 'Grid3X3',
   },
   {
     id: 'topic',
     label: 'Topic',
     description: 'Pick a specific topic',
-    backgroundImage: '/storybook/step-story.webp',
+    backgroundImage: '/storybook/step-topic.webp', // Black girl with braids discovering forest animals
     icon: 'Target',
   },
   {
     id: 'settings',
     label: 'Settings',
     description: 'Configure your book',
-    backgroundImage: '/storybook/step-story.webp',
+    backgroundImage: '/storybook/step-settings.webp', // Mixed-race child at magical desk
     icon: 'Settings',
   },
   {
     id: 'approach',
     label: 'Approach',
     description: 'Choose your story idea',
-    backgroundImage: '/storybook/step-story.webp',
+    backgroundImage: '/storybook/step-approach.webp', // Asian girl + Black boy brainstorming ideas
     icon: 'Lightbulb',
   },
   {
     id: 'review',
     label: 'Review',
     description: 'Edit your story',
-    backgroundImage: '/storybook/step-story.webp',
+    backgroundImage: '/storybook/step-review.webp', // Black girl reading glowing book
     icon: 'FileText',
   },
   {
     id: 'style',
     label: 'Style',
     description: 'Choose your art style',
-    backgroundImage: '/storybook/step-style.webp',
+    backgroundImage: '/storybook/step-style.webp', // Diverse children painting at easels
     icon: 'Palette',
   },
   {
     id: 'characters',
     label: 'Characters',
     description: 'Create character sheets',
-    backgroundImage: '/storybook/step-characters.webp',
+    backgroundImage: '/storybook/step-characters-new.webp', // Black boy designing character on tablet
     icon: 'Users',
   },
   {
     id: 'pages',
     label: 'Pages',
     description: 'Generate page illustrations',
-    backgroundImage: '/storybook/step-pages.webp',
+    backgroundImage: '/storybook/step-pages.webp', // Asian girl + mixed-race boy with flying pages
     icon: 'Images',
   },
   {
     id: 'preview',
     label: 'Preview',
     description: 'Review and export',
-    backgroundImage: '/storybook/step-preview.webp',
+    backgroundImage: '/storybook/step-preview.webp', // Diverse group holding finished storybook
     icon: 'BookCheck',
   },
 ]
 
 // Step configuration for PASTE mode (original flow)
+// Background images feature diverse children in whimsical watercolor illustrations
 export const PASTE_WIZARD_STEPS: StepInfo[] = [
   {
     id: 'story',
     label: 'Story',
     description: 'Write or paste your story',
-    backgroundImage: '/storybook/step-story.webp',
+    backgroundImage: '/storybook/step-review.webp', // Black girl reading glowing book
     icon: 'BookOpen',
   },
   {
     id: 'style',
     label: 'Style',
     description: 'Choose your art style',
-    backgroundImage: '/storybook/step-style.webp',
+    backgroundImage: '/storybook/step-style.webp', // Diverse children painting at easels
     icon: 'Palette',
   },
   {
     id: 'characters',
     label: 'Characters',
     description: 'Create character sheets',
-    backgroundImage: '/storybook/step-characters.webp',
+    backgroundImage: '/storybook/step-characters-new.webp', // Black boy designing character on tablet
     icon: 'Users',
   },
   {
     id: 'pages',
     label: 'Pages',
     description: 'Generate page illustrations',
-    backgroundImage: '/storybook/step-pages.webp',
+    backgroundImage: '/storybook/step-pages.webp', // Asian girl + mixed-race boy with flying pages
     icon: 'Images',
   },
   {
     id: 'preview',
     label: 'Preview',
     description: 'Review and export',
-    backgroundImage: '/storybook/step-preview.webp',
+    backgroundImage: '/storybook/step-preview.webp', // Diverse group holding finished storybook
     icon: 'BookCheck',
   },
 ]
