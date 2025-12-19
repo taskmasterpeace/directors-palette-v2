@@ -12,6 +12,7 @@ import type {
   SubmitItemRequest,
   UserLibraryItem,
   UserLibraryItemRow,
+  RecipeContent,
 } from '../types/community.types'
 
 function getSupabaseClient() {
@@ -257,7 +258,7 @@ class CommunityService {
       throw new Error('Community item not found')
     }
 
-    // Upsert - overwrite if exists with same name
+    // Upsert to user_library_items - overwrite if exists with same name
     const { data, error } = await this.supabase
       .from('user_library_items')
       .upsert({
@@ -278,6 +279,46 @@ class CommunityService {
     if (error) {
       console.error('Error adding to library:', error)
       throw error
+    }
+
+    // For recipes, also add to user_recipes table so they appear in Shot Creator
+    if (item.type === 'recipe') {
+      const recipeContent = item.content as RecipeContent
+
+      // Build recipe for user_recipes table
+      const recipeData = {
+        user_id: userId,
+        name: item.name,
+        description: item.description || null,
+        recipe_note: recipeContent.recipeNote || null,
+        stages: recipeContent.stages.map((stage, index) => ({
+          id: stage.id || `stage_${index}_${Date.now()}`,
+          order: stage.order ?? index,
+          template: stage.template,
+          fields: [], // Fields are parsed on read, not stored
+          referenceImages: stage.referenceImages || [],
+        })),
+        suggested_aspect_ratio: recipeContent.suggestedAspectRatio || null,
+        suggested_resolution: null,
+        quick_access_label: null,
+        is_quick_access: false,
+        category_id: item.category || null,
+        is_system: false,
+      }
+
+      // Upsert to user_recipes - use name as conflict key
+      const { error: recipeError } = await this.supabase
+        .from('user_recipes')
+        .upsert(recipeData, {
+          onConflict: 'user_id,name',
+          ignoreDuplicates: false,
+        })
+
+      if (recipeError) {
+        console.error('Error adding recipe to user_recipes:', recipeError)
+        // Don't throw - the library item was added successfully
+        // Just log the error for recipes table sync
+      }
     }
 
     const row = data as UserLibraryItemRow
