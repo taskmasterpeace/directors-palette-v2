@@ -150,62 +150,82 @@ export function BookSettingsStep() {
 
       {/* Settings Cards */}
       <div className="flex-1 space-y-6">
-        {/* Page Count */}
-        <Card className="bg-zinc-900/50 border-zinc-800">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-white">Page Count</CardTitle>
-            <p className="text-sm text-muted-foreground">How many pages should your book have?</p>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-3">
-              {PAGE_COUNT_OPTIONS.map((count) => (
-                <Button
-                  key={count}
-                  variant="outline"
-                  onClick={() => setPageCount(count)}
-                  className={cn(
-                    "flex-1 h-14 text-lg font-semibold transition-all",
-                    pageCount === count
-                      ? "bg-amber-500/20 border-amber-500 text-amber-400 hover:bg-amber-500/30 hover:text-amber-300"
-                      : "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-white"
-                  )}
-                >
-                  {count}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Page Count - Compact inline */}
+        <div className="flex items-center gap-4 p-4 bg-zinc-900/50 rounded-lg border border-zinc-800">
+          <span className="text-sm font-medium text-white whitespace-nowrap">Pages:</span>
+          <div className="flex gap-2 flex-1">
+            {PAGE_COUNT_OPTIONS.map((count) => (
+              <Button
+                key={count}
+                variant="outline"
+                size="sm"
+                onClick={() => setPageCount(count)}
+                className={cn(
+                  "flex-1 h-9 font-semibold transition-all",
+                  pageCount === count
+                    ? "bg-amber-500/20 border-amber-500 text-amber-400 hover:bg-amber-500/30"
+                    : "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700"
+                )}
+              >
+                {count}
+              </Button>
+            ))}
+          </div>
+        </div>
 
-        {/* Sentences Per Page */}
+        {/* Sentences Per Page with Live Preview */}
         <Card className="bg-zinc-900/50 border-zinc-800">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg text-white">Sentences Per Page</CardTitle>
             <p className="text-sm text-muted-foreground">
-              More sentences = denser text, better for older children
+              Click to see how each page will look
             </p>
           </CardHeader>
-          <CardContent>
-            <div className="flex gap-3">
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
               {SENTENCES_PER_PAGE_OPTIONS.map((count) => (
                 <Button
                   key={count}
                   variant="outline"
+                  size="sm"
                   onClick={() => setSentencesPerPage(count)}
                   className={cn(
-                    "flex-1 h-14 text-lg font-semibold transition-all",
+                    "flex-1 h-9 font-semibold transition-all",
                     sentencesPerPage === count
-                      ? "bg-amber-500/20 border-amber-500 text-amber-400 hover:bg-amber-500/30 hover:text-amber-300"
-                      : "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 hover:text-white"
+                      ? "bg-amber-500/20 border-amber-500 text-amber-400 hover:bg-amber-500/30"
+                      : "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700"
                   )}
                 >
                   {count}
                 </Button>
               ))}
             </div>
-            <div className="mt-4 flex justify-between text-xs text-muted-foreground">
-              <span>← Simple (toddlers)</span>
-              <span>Dense (early readers) →</span>
+
+            {/* Live Sample Preview */}
+            <div className="p-4 bg-zinc-800/50 rounded-lg border border-zinc-700/50">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-medium text-amber-400">Sample Page Preview</span>
+                <span className="text-xs text-muted-foreground">({sentencesPerPage} sentence{sentencesPerPage > 1 ? 's' : ''})</span>
+              </div>
+              <div className="text-sm text-zinc-300 leading-relaxed">
+                {(() => {
+                  const name = project?.mainCharacterName || 'Emma'
+                  const sampleSentences = [
+                    `${name} looked up at the sky.`,
+                    `The stars were twinkling bright.`,
+                    `"I wonder what's out there," ${name} said.`,
+                    `A shooting star zoomed past!`,
+                    `${name} made a special wish.`,
+                    `It was the best night ever.`,
+                  ]
+                  return sampleSentences.slice(0, sentencesPerPage).join(' ')
+                })()}
+              </div>
+            </div>
+
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>← Simple (ages 2-4)</span>
+              <span>Dense (ages 6+) →</span>
             </div>
           </CardContent>
         </Card>
