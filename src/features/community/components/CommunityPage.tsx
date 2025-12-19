@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useMemo } from 'react'
-import { RefreshCw, Star, Sparkles, Database } from 'lucide-react'
+import React, { useMemo, useState } from 'react'
+import { RefreshCw, Star, Sparkles, Database, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CommunityFilters } from './CommunityFilters'
 import { CommunityGrid } from './CommunityGrid'
@@ -9,7 +9,13 @@ import { CommunityCard } from './CommunityCard'
 import { useCommunity } from '../hooks/useCommunity'
 import { useToast } from '@/hooks/use-toast'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import type { CommunityItemType } from '../types/community.types'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { useAdminAuth } from '@/features/admin/hooks/useAdminAuth'
+import type { CommunityItem, CommunityItemType } from '../types/community.types'
 
 const TYPE_LABELS: Record<CommunityItemType, string> = {
   wildcard: 'Wildcard',
@@ -20,6 +26,7 @@ const TYPE_LABELS: Record<CommunityItemType, string> = {
 
 export function CommunityPage() {
   const { toast } = useToast()
+  const { isAdmin } = useAdminAuth()
   const {
     items,
     filters,
@@ -37,6 +44,17 @@ export function CommunityPage() {
     setSortBy,
     clearError,
   } = useCommunity()
+
+  // Admin edit/delete state
+  const [editingItem, setEditingItem] = useState<CommunityItem | null>(null)
+  const [deletingItem, setDeletingItem] = useState<CommunityItem | null>(null)
+  const [actionLoading, setActionLoading] = useState(false)
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    description: '',
+    category: '',
+    tags: [] as string[],
+  })
 
   // Separate featured items by type
   const featuredByType = useMemo(() => {
@@ -84,6 +102,95 @@ export function CommunityPage() {
       })
     }
     return success
+  }
+
+  // Admin: Open edit dialog
+  const handleOpenEdit = (item: CommunityItem) => {
+    setEditingItem(item)
+    setEditFormData({
+      name: item.name,
+      description: item.description || '',
+      category: item.category,
+      tags: item.tags || [],
+    })
+  }
+
+  // Admin: Save edit
+  const handleSaveEdit = async () => {
+    if (!editingItem) return
+    setActionLoading(true)
+    try {
+      const res = await fetch('/api/admin/community', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'edit',
+          itemId: editingItem.id,
+          updates: editFormData,
+        }),
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to save')
+      }
+
+      toast({
+        title: 'Item Updated',
+        description: 'Community item has been updated successfully.',
+      })
+      setEditingItem(null)
+      refresh()
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to update item',
+        variant: 'destructive',
+      })
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  // Admin: Open delete confirmation
+  const handleOpenDelete = (item: CommunityItem) => {
+    setDeletingItem(item)
+  }
+
+  // Admin: Confirm delete
+  const handleConfirmDelete = async () => {
+    if (!deletingItem) return
+    setActionLoading(true)
+    try {
+      const res = await fetch('/api/admin/community', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete',
+          itemId: deletingItem.id,
+        }),
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        throw new Error(error.error || 'Failed to delete')
+      }
+
+      toast({
+        title: 'Item Deleted',
+        description: 'Community item has been permanently deleted.',
+      })
+      setDeletingItem(null)
+      refresh()
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to delete item',
+        variant: 'destructive',
+      })
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   // Check if it's a schema cache error (tables not available)
@@ -199,6 +306,9 @@ export function CommunityPage() {
                       userRating={getUserRating(item.id)}
                       onAdd={() => handleAdd(item.id)}
                       onRate={(rating) => handleRate(item.id, rating)}
+                      isAdmin={isAdmin}
+                      onEdit={() => handleOpenEdit(item)}
+                      onDelete={() => handleOpenDelete(item)}
                     />
                   </div>
                 )
@@ -219,6 +329,9 @@ export function CommunityPage() {
             getUserRating={getUserRating}
             onAdd={handleAdd}
             onRate={handleRate}
+            isAdmin={isAdmin}
+            onEdit={handleOpenEdit}
+            onDelete={handleOpenDelete}
           />
         </div>
       </div>
@@ -229,6 +342,117 @@ export function CommunityPage() {
           {items.length} item{items.length !== 1 ? 's' : ''} in community
         </p>
       </div>
+
+      {/* Admin Edit Dialog */}
+      <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-white">Edit Community Item</DialogTitle>
+            <DialogDescription>
+              Editing: {editingItem?.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Name</Label>
+              <Input
+                id="edit-name"
+                value={editFormData.name}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+                className="bg-zinc-800 border-zinc-700"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editFormData.description}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="bg-zinc-800 border-zinc-700"
+                rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-category">Category</Label>
+              <Input
+                id="edit-category"
+                value={editFormData.category}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, category: e.target.value }))}
+                className="bg-zinc-800 border-zinc-700"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-tags">Tags (comma-separated)</Label>
+              <Input
+                id="edit-tags"
+                value={editFormData.tags.join(', ')}
+                onChange={(e) => setEditFormData(prev => ({
+                  ...prev,
+                  tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean)
+                }))}
+                className="bg-zinc-800 border-zinc-700"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditingItem(null)}
+              disabled={actionLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={actionLoading}
+              className="bg-blue-500 hover:bg-blue-600"
+            >
+              {actionLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Admin Delete Confirmation */}
+      <AlertDialog open={!!deletingItem} onOpenChange={(open) => !open && setDeletingItem(null)}>
+        <AlertDialogContent className="bg-zinc-900 border-zinc-800">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">Delete &quot;{deletingItem?.name}&quot;?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this {deletingItem?.type} from the community.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={actionLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={actionLoading}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              {actionLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

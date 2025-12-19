@@ -14,6 +14,10 @@ interface CommunityGridProps {
   onAdd: (itemId: string) => Promise<boolean>
   onRate: (itemId: string, rating: number) => Promise<boolean>
   onItemClick?: (item: CommunityItem) => void
+  // Admin controls
+  isAdmin?: boolean
+  onEdit?: (item: CommunityItem) => void
+  onDelete?: (item: CommunityItem) => void
 }
 
 export function CommunityGrid({
@@ -24,6 +28,9 @@ export function CommunityGrid({
   onAdd,
   onRate,
   onItemClick,
+  isAdmin,
+  onEdit,
+  onDelete,
 }: CommunityGridProps) {
   if (isLoading) {
     return (
@@ -55,6 +62,9 @@ export function CommunityGrid({
             onAdd={() => onAdd(item.id)}
             onRate={(rating) => onRate(item.id, rating)}
             onClick={() => onItemClick?.(item)}
+            isAdmin={isAdmin}
+            onEdit={() => onEdit?.(item)}
+            onDelete={() => onDelete?.(item)}
           />
         ))}
       </AnimatePresence>

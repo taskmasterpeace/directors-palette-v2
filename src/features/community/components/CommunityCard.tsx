@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Check, User, Tag, Layers, BookOpen, MessageSquare, Film } from 'lucide-react'
+import { Plus, Check, User, Tag, Layers, BookOpen, MessageSquare, Film, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +23,10 @@ interface CommunityCardProps {
   onAdd: () => Promise<boolean>
   onRate: (rating: number) => Promise<boolean>
   onClick?: () => void
+  // Admin controls
+  isAdmin?: boolean
+  onEdit?: () => void
+  onDelete?: () => void
 }
 
 const TYPE_COLORS: Record<CommunityItemType, string> = {
@@ -46,6 +50,9 @@ export function CommunityCard({
   onAdd,
   onRate,
   onClick,
+  isAdmin,
+  onEdit,
+  onDelete,
 }: CommunityCardProps) {
   const [isAdding, setIsAdding] = useState(false)
   const [justAdded, setJustAdded] = useState(false)
@@ -145,6 +152,44 @@ export function CommunityCard({
         'hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200'
       )}
     >
+      {/* Admin Controls - visible on hover, admin only */}
+      {isAdmin && (
+        <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          {/* Edit Button */}
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={(e) => { e.stopPropagation(); onEdit?.() }}
+            className={cn(
+              "h-7 w-7 rounded-full transition-all",
+              "bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white",
+              "border border-blue-500/30 hover:border-blue-500"
+            )}
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </Button>
+
+          {/* Delete Button - with animated trash lid */}
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={(e) => { e.stopPropagation(); onDelete?.() }}
+            className={cn(
+              "h-7 w-7 rounded-full transition-all group/trash",
+              "bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white",
+              "border border-red-500/30 hover:border-red-500"
+            )}
+          >
+            <div className="relative w-3.5 h-3.5">
+              {/* Trash lid that rotates on hover */}
+              <div className="absolute -top-[1px] left-[2px] w-[10px] h-[3px] bg-current rounded-t-sm origin-left group-hover/trash:rotate-[-30deg] transition-transform duration-200" />
+              {/* Trash body */}
+              <Trash2 className="w-3.5 h-3.5" />
+            </div>
+          </Button>
+        </div>
+      )}
+
       {/* Type Badge */}
       <div className="flex items-center justify-between mb-2">
         <Badge
