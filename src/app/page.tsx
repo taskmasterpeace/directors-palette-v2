@@ -71,7 +71,9 @@ export default function Home() {
               <TabsContent key="storybook" value="storybook" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
                 <PageTransition>
                   <SectionHeader section="storybook" />
-                  <Storybook />
+                  <div className="flex-1 overflow-hidden">
+                    <Storybook />
+                  </div>
                 </PageTransition>
               </TabsContent>
             )}
@@ -145,7 +147,7 @@ function PageTransition({ children }: { children: React.ReactNode }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -10, scale: 0.99 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className="flex-1 h-full w-full"
+      className="flex-1 h-full w-full flex flex-col"
     >
       {children}
     </motion.div>

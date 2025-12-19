@@ -293,8 +293,8 @@ export function SidebarNavigation() {
                 </TooltipProvider>
             </div>
 
-            {/* Footer Area */}
-            <div className="border-t border-border/50 p-2 space-y-2 bg-background/80 backdrop-blur-sm relative z-10">
+            {/* Footer Area - Always visible */}
+            <div className="flex-shrink-0 border-t border-border/50 p-2 space-y-2 bg-background/95 backdrop-blur-sm relative z-10">
 
                 {/* Help Menu Item */}
                 <TooltipProvider>
@@ -410,7 +410,7 @@ export function SidebarNavigation() {
 
                 {/* User Profile */}
                 {user && (
-                    <div className={cn("flex items-center gap-3 p-2 rounded-lg bg-black/30 hover:bg-accent/50 transition-colors cursor-pointer", isCollapsed && "justify-center")} onClick={isCollapsed ? undefined : () => { }}>
+                    <div className={cn("flex items-center gap-3 p-2 rounded-lg bg-zinc-900/90 hover:bg-accent/50 transition-colors cursor-pointer border border-zinc-800/50", isCollapsed && "justify-center")} onClick={isCollapsed ? undefined : () => { }}>
                         <Avatar className="w-8 h-8 border border-border">
                             <AvatarImage src={user.avatar_url} />
                             <AvatarFallback className="bg-primary/10 text-primary text-xs">

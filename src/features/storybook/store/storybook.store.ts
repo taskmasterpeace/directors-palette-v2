@@ -150,17 +150,44 @@ function parseStoryIntoPages(storyText: string): StorybookPage[] {
   return pages
 }
 
+// Common words to exclude from character detection
+const COMMON_WORDS = new Set([
+  // Articles and conjunctions
+  'The', 'And', 'But', 'Then', 'When', 'Where', 'What', 'How', 'This', 'That', 'There', 'Here',
+  'Or', 'So', 'Yet', 'For', 'Nor', 'If', 'As', 'With', 'At', 'From', 'Into', 'During', 'Before',
+  'After', 'Above', 'Below', 'To', 'Of', 'In', 'On', 'By', 'About', 'Against', 'Between', 'Through',
+  // Pronouns
+  'She', 'He', 'Her', 'His', 'Him', 'They', 'Them', 'Their', 'We', 'Us', 'Our', 'You', 'Your',
+  'It', 'Its', 'My', 'Me', 'I',
+  // Common sentence starters
+  'One', 'Once', 'Some', 'Sometimes', 'Soon', 'Still', 'Such', 'Sure', 'Suddenly',
+  'Now', 'Next', 'Never', 'New', 'No', 'Not', 'Nothing', 'Just', 'Each', 'Every', 'Even',
+  'First', 'Finally', 'Far', 'Few', 'Well', 'While', 'Who', 'Why', 'Will', 'Would', 'Was', 'Were',
+  // Common verbs at start
+  'Being', 'Having', 'Going', 'Coming', 'Looking', 'Making', 'Taking', 'Seeing', 'Getting',
+  'Feeling', 'Thinking', 'Knowing', 'Running', 'Walking', 'Sitting', 'Standing',
+  // Time-related
+  'Today', 'Tomorrow', 'Yesterday', 'Morning', 'Night', 'Day', 'Week', 'Month', 'Year',
+  // Common descriptors
+  'Little', 'Big', 'Small', 'Large', 'Long', 'Short', 'Good', 'Bad', 'Best', 'Worst',
+  'Old', 'Young', 'All', 'Any', 'Many', 'Most', 'Much', 'More', 'Less', 'Very', 'Really',
+  // Other common words
+  'Maybe', 'Perhaps', 'However', 'Although', 'Because', 'Since', 'Until', 'Unless',
+  'Another', 'Both', 'Other', 'Others', 'Either', 'Neither', 'Everything', 'Something',
+  'Anything', 'Someone', 'Anyone', 'Everyone', 'Nobody', 'Everybody', 'Always', 'Usually'
+])
+
 // Extract character names from story text (looking for @mentions or capitalized names)
 function extractCharacterNames(storyText: string): { name: string; tag: string }[] {
   const characters: { name: string; tag: string }[] = []
   const seen = new Set<string>()
 
-  // Look for @mentions first
+  // Look for @mentions first (highest priority)
   const mentionRegex = /@(\w+)/g
   let match
   while ((match = mentionRegex.exec(storyText)) !== null) {
     const name = match[1]
-    if (!seen.has(name.toLowerCase())) {
+    if (!seen.has(name.toLowerCase()) && !COMMON_WORDS.has(name)) {
       seen.add(name.toLowerCase())
       characters.push({
         name: name.charAt(0).toUpperCase() + name.slice(1),
@@ -169,21 +196,21 @@ function extractCharacterNames(storyText: string): { name: string; tag: string }
     }
   }
 
-  // If no @mentions, look for common name patterns
+  // If no @mentions, look for proper names
   if (characters.length === 0) {
     // Look for capitalized words that appear multiple times (likely character names)
-    const nameRegex = /\b([A-Z][a-z]+)\b/g
+    // But exclude words at the start of sentences (after . ! ? or at text start)
+    const nameRegex = /(?<=[a-z,;:]\s+)([A-Z][a-z]{2,})\b/g
     const nameCounts = new Map<string, number>()
     while ((match = nameRegex.exec(storyText)) !== null) {
       const name = match[1]
-      // Skip common words that might be capitalized
-      const commonWords = ['The', 'And', 'But', 'Then', 'When', 'Where', 'What', 'How', 'This', 'That', 'There', 'Here']
-      if (!commonWords.includes(name)) {
+      // Skip common words and short words (likely not names)
+      if (!COMMON_WORDS.has(name) && name.length >= 3) {
         nameCounts.set(name, (nameCounts.get(name) || 0) + 1)
       }
     }
 
-    // Add names that appear more than once
+    // Add names that appear at least twice
     for (const [name, count] of nameCounts) {
       if (count >= 2 && !seen.has(name.toLowerCase())) {
         seen.add(name.toLowerCase())

@@ -84,13 +84,13 @@ export function WizardContainer() {
       {/* Step Content */}
       <StepCard
         backgroundImage={currentStepInfo.backgroundImage}
-        className="flex-1"
+        className="flex-1 min-h-0"
       >
         {renderStepContent()}
       </StepCard>
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-between items-center px-2">
+      {/* Navigation Buttons - Always visible at bottom */}
+      <div className="flex-shrink-0 flex justify-between items-center px-2 py-3 bg-zinc-950/90 border-t border-zinc-800">
         <Button
           variant="outline"
           onClick={previousStep}

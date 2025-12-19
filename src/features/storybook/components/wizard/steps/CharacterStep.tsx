@@ -30,12 +30,39 @@ export function CharacterStep() {
   // File input refs (one per character)
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
-  // Auto-detect characters when step loads
+  // State for LLM-based detection
+  const [isDetecting, setIsDetecting] = useState(false)
+
+  // Auto-detect characters using LLM API when step loads
   useEffect(() => {
-    if (project?.storyText && project.characters.length === 0) {
-      detectCharacters()
+    const detectWithLLM = async () => {
+      if (project?.storyText && project.characters.length === 0 && !isDetecting) {
+        setIsDetecting(true)
+        try {
+          const response = await fetch('/api/storybook/detect-characters', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ storyText: project.storyText })
+          })
+          if (response.ok) {
+            const data = await response.json()
+            if (data.characters?.length > 0) {
+              data.characters.forEach((c: { name: string; tag: string }) => {
+                addCharacter(c.name, c.tag)
+              })
+            }
+          }
+        } catch (err) {
+          console.error('Error detecting characters:', err)
+          // Fallback to regex-based detection
+          detectCharacters()
+        } finally {
+          setIsDetecting(false)
+        }
+      }
     }
-  }, [project?.storyText, project?.characters.length, detectCharacters])
+    detectWithLLM()
+  }, [project?.storyText, project?.characters.length, addCharacter, detectCharacters, isDetecting])
 
   const characters = project?.characters || []
 
@@ -54,7 +81,7 @@ export function CharacterStep() {
       formData.append('file', file)
 
       // Upload to our upload endpoint
-      const response = await fetch('/api/upload', {
+      const response = await fetch('/api/upload-file', {
         method: 'POST',
         body: formData,
       })
@@ -121,11 +148,43 @@ export function CharacterStep() {
       <div className="flex justify-center gap-4">
         <Button
           variant="outline"
-          onClick={detectCharacters}
+          onClick={async () => {
+            setIsDetecting(true)
+            try {
+              const response = await fetch('/api/storybook/detect-characters', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ storyText: project?.storyText || '' })
+              })
+              if (response.ok) {
+                const data = await response.json()
+                if (data.characters?.length > 0) {
+                  data.characters.forEach((c: { name: string; tag: string }) => {
+                    addCharacter(c.name, c.tag)
+                  })
+                }
+              }
+            } catch (err) {
+              console.error('Error detecting characters:', err)
+              detectCharacters() // Fallback
+            } finally {
+              setIsDetecting(false)
+            }
+          }}
+          disabled={isDetecting || !project?.storyText}
           className="gap-2"
         >
-          <Sparkles className="w-4 h-4" />
-          Detect Characters from Story
+          {isDetecting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Detecting...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4" />
+              Detect Characters from Story
+            </>
+          )}
         </Button>
         <Button
           variant="outline"

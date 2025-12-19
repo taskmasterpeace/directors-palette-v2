@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
 import { useStorybookGeneration } from "../../../hooks/useStorybookGeneration"
 import { Button } from "@/components/ui/button"
@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Palette, Check, Plus, Sparkles, Loader2, X } from "lucide-react"
+import { Palette, Check, Plus, Sparkles, Loader2, X, Upload } from "lucide-react"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
 
@@ -48,6 +48,32 @@ export function StyleSelectionStep() {
   const [showCustomForm, setShowCustomForm] = useState(false)
   const [customStyleName, setCustomStyleName] = useState('')
   const [customStyleDescription, setCustomStyleDescription] = useState('')
+  const [referenceImageUrl, setReferenceImageUrl] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Handle reference image upload
+  const handlePhotoUpload = useCallback(async (file: File) => {
+    setIsUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const response = await fetch('/api/upload-file', { method: 'POST', body: formData })
+      if (!response.ok) throw new Error('Upload failed')
+      const data = await response.json()
+      setReferenceImageUrl(data.url)
+    } catch (err) {
+      console.error('Error uploading reference image:', err)
+    } finally {
+      setIsUploading(false)
+    }
+  }, [])
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handlePhotoUpload(file)
+    e.target.value = ''
+  }, [handlePhotoUpload])
 
   const handleSelectStyle = useCallback((style: typeof PRESET_STYLES[0]) => {
     setSelectedStyleId(style.id)
@@ -65,14 +91,16 @@ export function StyleSelectionStep() {
 
     const result = await generateStyleGuide(
       customStyleName.trim(),
-      customStyleDescription.trim() || undefined
+      customStyleDescription.trim() || undefined,
+      referenceImageUrl || undefined
     )
 
     if (result.success) {
       setSelectedStyleId('custom')
       setShowCustomForm(false)
+      setReferenceImageUrl(null) // Reset after successful generation
     }
-  }, [customStyleName, customStyleDescription, generateStyleGuide])
+  }, [customStyleName, customStyleDescription, referenceImageUrl, generateStyleGuide])
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -176,6 +204,54 @@ export function StyleSelectionStep() {
                 className="bg-zinc-800/50 border-zinc-700 min-h-[80px]"
                 disabled={isGenerating}
               />
+            </div>
+
+            {/* Reference Image Upload */}
+            <div className="space-y-2">
+              <Label>Reference Image (Optional)</Label>
+              <p className="text-xs text-zinc-500">Upload an image to match its visual style</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+              {referenceImageUrl ? (
+                <div
+                  className="relative w-32 h-32 rounded-lg overflow-hidden border border-zinc-700 cursor-pointer hover:border-amber-500/50 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Image
+                    src={referenceImageUrl}
+                    alt="Reference image"
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <span className="text-xs text-white">Change</span>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className={cn(
+                    "w-32 h-32 rounded-lg border-2 border-dashed border-zinc-700",
+                    "flex flex-col items-center justify-center gap-1",
+                    "hover:border-amber-500/50 transition-colors cursor-pointer",
+                    isUploading && "opacity-50 pointer-events-none"
+                  )}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {isUploading ? (
+                    <Loader2 className="w-6 h-6 text-zinc-500 animate-spin" />
+                  ) : (
+                    <>
+                      <Upload className="w-6 h-6 text-zinc-500" />
+                      <span className="text-xs text-zinc-500">Upload</span>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             {error && (

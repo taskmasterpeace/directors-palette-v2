@@ -219,6 +219,29 @@ export function StoryInputStep() {
         />
       </div>
 
+      {/* Target Age Slider - Right under title */}
+      <div className="space-y-3 p-4 bg-zinc-900/50 rounded-lg border border-zinc-800">
+        <div className="flex items-center justify-between">
+          <Label className="flex items-center gap-2 text-zinc-300">
+            <Baby className="w-4 h-4 text-amber-400" />
+            Target Age
+          </Label>
+          <span className="text-lg font-bold text-amber-400">{targetAge} years old</span>
+        </div>
+        <Slider
+          value={[targetAge]}
+          onValueChange={([value]) => setTargetAge(value)}
+          min={3}
+          max={12}
+          step={1}
+          className="w-full"
+        />
+        <div className="flex justify-between text-xs text-zinc-500">
+          <span>3 yrs (simple)</span>
+          <span>12 yrs (advanced)</span>
+        </div>
+      </div>
+
       {/* Story Text Area */}
       <div className="space-y-2">
         <Label htmlFor="story" className="flex items-center gap-2">
@@ -232,9 +255,38 @@ export function StoryInputStep() {
           placeholder="Once upon a time..."
           className="min-h-[250px] bg-zinc-800/50 border-zinc-700 resize-none font-serif text-lg leading-relaxed"
         />
-        <div className="flex justify-between items-center text-sm text-zinc-500">
-          <span>{wordCount} words</span>
-          <span>Tip: Add blank lines between paragraphs for better page breaks</span>
+        {/* Bottom row: word count left, page controls right */}
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-zinc-500">{wordCount} words</span>
+          <div className="flex items-center gap-4">
+            {/* Page Count */}
+            <div className="flex items-center gap-2">
+              <LayoutGrid className="w-4 h-4 text-zinc-400" />
+              <Select value={pageCount} onValueChange={setPageCount}>
+                <SelectTrigger className="w-[120px] h-8 text-xs bg-zinc-800/50 border-zinc-700">
+                  <SelectValue placeholder="Pages" />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-800 border-zinc-700">
+                  <SelectItem value="auto">Auto</SelectItem>
+                  <SelectItem value="4">4 pages</SelectItem>
+                  <SelectItem value="6">6 pages</SelectItem>
+                  <SelectItem value="8">8 pages</SelectItem>
+                  <SelectItem value="10">10 pages</SelectItem>
+                  <SelectItem value="12">12 pages</SelectItem>
+                  <SelectItem value="16">16 pages</SelectItem>
+                  <SelectItem value="20">20 pages</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {/* Keep Exact Words */}
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-zinc-400">Keep exact words</Label>
+              <Switch
+                checked={keepExactWords}
+                onCheckedChange={setKeepExactWords}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -270,8 +322,8 @@ export function StoryInputStep() {
                         isSelected ? "border-amber-400" : "border-zinc-600"
                       )}
                       style={{
-                        width: format === 'square' ? '64px' : format === 'portrait' ? '48px' : format === 'wide' ? '80px' : '72px',
-                        height: format === 'square' ? '64px' : format === 'portrait' ? '64px' : format === 'wide' ? '45px' : '54px',
+                        width: format === 'square' ? '80px' : format === 'portrait' ? '60px' : format === 'wide' ? '100px' : '90px',
+                        height: format === 'square' ? '80px' : format === 'portrait' ? '80px' : format === 'wide' ? '56px' : '68px',
                       }}
                     >
                       <Image
@@ -279,7 +331,7 @@ export function StoryInputStep() {
                         alt={`${config.name} format example`}
                         fill
                         className="object-cover"
-                        sizes="80px"
+                        sizes="100px"
                       />
                     </div>
                   </div>
@@ -330,76 +382,6 @@ export function StoryInputStep() {
         </CardContent>
       </Card>
 
-      {/* Enhancement Options */}
-      <Card className="bg-zinc-900/50 border-zinc-800">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-zinc-300">Story Enhancement Options</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Target Age Slider */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="flex items-center gap-2 text-zinc-300">
-                <Baby className="w-4 h-4 text-amber-400" />
-                Target Age
-              </Label>
-              <span className="text-lg font-bold text-amber-400">{targetAge} years old</span>
-            </div>
-            <Slider
-              value={[targetAge]}
-              onValueChange={([value]) => setTargetAge(value)}
-              min={3}
-              max={12}
-              step={1}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs text-zinc-500">
-              <span>3 yrs (simple)</span>
-              <span>12 yrs (advanced)</span>
-            </div>
-          </div>
-
-          {/* Page Count Selection */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <LayoutGrid className="w-4 h-4 text-zinc-400" />
-              <Label htmlFor="pageCount" className="text-zinc-300">Number of Pages</Label>
-            </div>
-            <Select value={pageCount} onValueChange={setPageCount}>
-              <SelectTrigger className="w-[140px] bg-zinc-800/50 border-zinc-700">
-                <SelectValue placeholder="Select pages" />
-              </SelectTrigger>
-              <SelectContent className="bg-zinc-800 border-zinc-700">
-                <SelectItem value="auto">Auto Detect</SelectItem>
-                <SelectItem value="4">4 pages</SelectItem>
-                <SelectItem value="6">6 pages</SelectItem>
-                <SelectItem value="8">8 pages</SelectItem>
-                <SelectItem value="10">10 pages</SelectItem>
-                <SelectItem value="12">12 pages</SelectItem>
-                <SelectItem value="16">16 pages</SelectItem>
-                <SelectItem value="20">20 pages</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Keep Exact Words Toggle */}
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-zinc-300">Keep Exact Words</Label>
-              <p className="text-xs text-zinc-500">
-                {keepExactWords
-                  ? "Story will be split as-is without vocabulary changes"
-                  : "AI will adapt vocabulary for the target age"}
-              </p>
-            </div>
-            <Switch
-              checked={keepExactWords}
-              onCheckedChange={setKeepExactWords}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Polish & Split Button */}
       <div className="flex flex-col items-center gap-2">
         <Button
@@ -426,49 +408,52 @@ export function StoryInputStep() {
 
       {/* Pages Preview */}
       {pages.length > 0 && (
-        <Card className="bg-zinc-900/50 border-zinc-800">
-          <CardHeader
-            className="cursor-pointer"
-            onClick={() => setShowPages(!showPages)}
-          >
-            <CardTitle className="text-lg flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-amber-400" />
-                {pages.length} Pages Detected
-              </span>
-              {showPages ? (
-                <ChevronUp className="w-5 h-5 text-zinc-500" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-zinc-500" />
-              )}
-            </CardTitle>
-          </CardHeader>
-          {showPages && (
-            <CardContent className="space-y-3">
-              {pages.map((page, index) => (
-                <div
-                  key={page.id}
-                  className={cn(
-                    "p-3 rounded-lg bg-zinc-800/50 border border-zinc-700",
-                    "hover:border-amber-500/50 transition-colors"
-                  )}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-bold text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded">
-                      Page {index + 1}
-                    </span>
-                    <span className="text-xs text-zinc-500">
-                      {page.text.split(/\s+/).length} words
-                    </span>
+        <>
+          <Card className="bg-zinc-900/50 border-zinc-800">
+            <CardHeader
+              className="cursor-pointer"
+              onClick={() => setShowPages(!showPages)}
+            >
+              <CardTitle className="text-lg flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-amber-400" />
+                  {pages.length} Pages Created
+                </span>
+                {showPages ? (
+                  <ChevronUp className="w-5 h-5 text-zinc-500" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-zinc-500" />
+                )}
+              </CardTitle>
+            </CardHeader>
+            {showPages && (
+              <CardContent className="space-y-3">
+                {pages.map((page, index) => (
+                  <div
+                    key={page.id}
+                    className={cn(
+                      "p-3 rounded-lg bg-zinc-800/50 border border-zinc-700",
+                      "hover:border-amber-500/50 transition-colors"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-bold text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded">
+                        Page {index + 1}
+                      </span>
+                      <span className="text-xs text-zinc-500">
+                        {page.text.split(/\s+/).length} words
+                      </span>
+                    </div>
+                    <p className="text-sm text-zinc-300 line-clamp-3">
+                      {page.text}
+                    </p>
                   </div>
-                  <p className="text-sm text-zinc-300 line-clamp-3">
-                    {page.text}
-                  </p>
-                </div>
-              ))}
-            </CardContent>
-          )}
-        </Card>
+                ))}
+              </CardContent>
+            )}
+          </Card>
+
+        </>
       )}
     </div>
   )

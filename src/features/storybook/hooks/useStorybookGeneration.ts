@@ -119,7 +119,7 @@ ${styleName} style throughout all tiles.`
           referenceImages,
           modelSettings: {
             aspectRatio: '16:9',
-            outputFormat: 'webp',
+            outputFormat: 'png', // nano-banana-pro only supports jpg/png
           },
         }),
       })
@@ -227,7 +227,7 @@ Separate expression cells with thin black lines.`
           referenceImages,
           modelSettings: {
             aspectRatio: '21:9',
-            outputFormat: 'webp',
+            outputFormat: 'png', // nano-banana-pro only supports jpg/png
           },
         }),
       })
@@ -336,7 +336,7 @@ Output a perfect 3x3 grid with black separator lines.`
           referenceImages,
           modelSettings: {
             aspectRatio: '1:1',
-            outputFormat: 'webp',
+            outputFormat: 'png', // nano-banana-pro only supports jpg/png
           },
         }),
       })
