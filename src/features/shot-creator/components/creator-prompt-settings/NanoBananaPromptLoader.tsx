@@ -45,17 +45,18 @@ class PromptLoaderSingleton {
       const store = usePromptLibraryStore.getState()
       const existingPrompts = store.prompts
 
-      // Add only prompts that don't already exist
+      // ONLY seed defaults if user has NO prompts (fresh account)
+      // This ensures deleted prompts stay deleted
+      if (existingPrompts.length > 0) {
+        console.log('📚 User has existing prompts, skipping default seeding')
+        this.hasInitialized = true
+        return
+      }
+
+      console.log('📚 First time user - seeding default prompts...')
+
+      // Add all default prompts for new users
       for (const preset of NANO_BANANA_PROMPTS) {
-        // Check if this specific prompt already exists
-        const promptExists = existingPrompts.some((p: SavedPrompt) =>
-          p.title === preset.title && p.categoryId === preset.categoryId
-        )
-
-        if (promptExists) {
-          continue // Skip this prompt, it already exists
-        }
-
         try {
           await store.addPrompt({
             title: preset.title,
@@ -75,6 +76,7 @@ class PromptLoaderSingleton {
         }
       }
 
+      console.log(`📚 Seeded ${NANO_BANANA_PROMPTS.length} default prompts`)
       this.hasInitialized = true
 
     } catch (error) {
