@@ -1,13 +1,14 @@
 "use client"
 
 import { cn } from "@/utils/utils"
-import type { WizardStep, StepInfo } from "../../types/storybook.types"
+import type { WizardStep, StepInfo, StoryMode } from "../../types/storybook.types"
 import { getStepIndex } from "../../types/storybook.types"
-import { BookOpen, Palette, Users, Images, BookCheck, Check } from "lucide-react"
+import { BookOpen, Palette, Users, Images, BookCheck, Check, User, Grid3X3, Target, Settings, Lightbulb, FileText } from "lucide-react"
 
 interface StepIndicatorProps {
   steps: StepInfo[]
   currentStep: WizardStep
+  storyMode?: StoryMode
   onStepClick?: (step: WizardStep) => void
 }
 
@@ -17,10 +18,16 @@ const stepIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   Users,
   Images,
   BookCheck,
+  User,
+  Grid3X3,
+  Target,
+  Settings,
+  Lightbulb,
+  FileText,
 }
 
-export function StepIndicator({ steps, currentStep, onStepClick }: StepIndicatorProps) {
-  const currentIndex = getStepIndex(currentStep)
+export function StepIndicator({ steps, currentStep, storyMode = 'generate', onStepClick }: StepIndicatorProps) {
+  const currentIndex = getStepIndex(currentStep, storyMode)
 
   return (
     <div className="flex items-center justify-center gap-2">

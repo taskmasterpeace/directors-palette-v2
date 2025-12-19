@@ -118,6 +118,7 @@ export function WizardContainer() {
       <StepIndicator
         steps={wizardSteps}
         currentStep={currentStep}
+        storyMode={storyMode}
         onStepClick={(step) => {
           // Only allow clicking on completed steps
           const stepIndex = getStepIndex(step, storyMode)
