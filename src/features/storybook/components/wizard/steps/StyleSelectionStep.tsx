@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Palette, Check, Plus, Sparkles, Loader2, X, Upload, Wand2, RefreshCw } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
 
@@ -64,6 +65,20 @@ export function StyleSelectionStep() {
   const [expandError, setExpandError] = useState<string | null>(null)
   const [useExpandedDescription, setUseExpandedDescription] = useState(true)
 
+  // Auto-expand toggle (persisted in localStorage)
+  const [autoExpandEnabled, setAutoExpandEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('storybook-auto-expand')
+      return saved !== 'false' // Default to true
+    }
+    return true
+  })
+
+  // Persist toggle state
+  useEffect(() => {
+    localStorage.setItem('storybook-auto-expand', autoExpandEnabled.toString())
+  }, [autoExpandEnabled])
+
   // Expand style using LLM
   const handleExpandStyle = useCallback(async () => {
     if (!customStyleName.trim()) return
@@ -100,8 +115,9 @@ export function StyleSelectionStep() {
     }
   }, [customStyleName, customStyleDescription, project?.mainCharacterAge])
 
-  // Auto-expand when style name changes (with debounce)
+  // Auto-expand when style name changes (with debounce) - only if enabled
   useEffect(() => {
+    if (!autoExpandEnabled) return // Respect toggle
     if (!customStyleName.trim() || customStyleName.length < 3) {
       setExpandedStyle(null)
       return
@@ -115,7 +131,7 @@ export function StyleSelectionStep() {
     }, 800) // Debounce 800ms
 
     return () => clearTimeout(timer)
-  }, [customStyleName]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [customStyleName, autoExpandEnabled]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle reference image upload
   const handlePhotoUpload = useCallback(async (file: File) => {
@@ -251,6 +267,23 @@ export function StyleSelectionStep() {
               >
                 <X className="w-4 h-4" />
               </Button>
+            </div>
+
+            {/* AI Style Assistant Toggle */}
+            <div className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-lg border border-zinc-700/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-500/10 rounded-lg">
+                  <Wand2 className="w-4 h-4 text-amber-400" />
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-white">AI Style Assistant</span>
+                  <p className="text-xs text-zinc-500">Auto-expands style names as you type</p>
+                </div>
+              </div>
+              <Switch
+                checked={autoExpandEnabled}
+                onCheckedChange={setAutoExpandEnabled}
+              />
             </div>
 
             <div className="space-y-2">

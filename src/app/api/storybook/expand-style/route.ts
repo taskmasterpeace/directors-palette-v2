@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         'X-Title': 'Directors Palette - Style Expansion'
       },
       body: JSON.stringify({
-        model: 'openai/gpt-4o-mini',
+        model: 'meta-llama/llama-3.2-3b-instruct', // 3.5x faster, 8x cheaper than GPT-4o-mini
         messages: [
           { role: 'system', content: systemPrompt },
           {
