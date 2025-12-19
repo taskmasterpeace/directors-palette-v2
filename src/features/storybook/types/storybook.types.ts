@@ -113,8 +113,24 @@ export const PAGE_LAYOUTS: Record<PageLayout, {
   }
 }
 
-// Wizard step
-export type WizardStep = 'story' | 'style' | 'characters' | 'pages' | 'preview'
+// Wizard step - expanded for educational flow
+// Original flow: story -> style -> characters -> pages -> preview
+// New flow: character-setup -> category -> topic -> settings -> approach -> review -> style -> characters -> pages -> preview
+export type WizardStep =
+  | 'character-setup'  // NEW: Name, age, photo
+  | 'category'         // NEW: Select educational category
+  | 'topic'            // NEW: Select specific topic
+  | 'settings'         // NEW: Page count, sentences per page
+  | 'approach'         // NEW: Choose from 4 story ideas
+  | 'review'           // NEW: Review generated story
+  | 'story'            // EXISTING: For "paste your own" mode
+  | 'style'            // EXISTING: Art style selection
+  | 'characters'       // EXISTING: Character sheets
+  | 'pages'            // EXISTING: Page generation
+  | 'preview'          // EXISTING: Final preview
+
+// Story creation mode
+export type StoryMode = 'generate' | 'paste'
 
 // Character in a scene
 export interface SceneCharacter {
@@ -197,6 +213,46 @@ export interface StorybookProject {
   bookFormat: BookFormat // square, landscape, portrait, wide
   defaultLayout: PageLayout // Default layout for new pages
   targetAge: number // Target reader age (3-12)
+
+  // Education mode settings (NEW)
+  storyMode: StoryMode // 'generate' or 'paste'
+  // Main character (for generate mode)
+  mainCharacterName?: string
+  mainCharacterAge?: number
+  mainCharacterPhotoUrl?: string
+  // Educational category and topic
+  educationCategory?: string // e.g., 'math', 'narrative', 'reading'
+  educationTopic?: string // e.g., 'counting-10', 'honesty'
+  // Book configuration
+  pageCount?: number // 4, 6, 8, 10, or 12
+  sentencesPerPage?: number // 1-6
+  // Story generation
+  selectedApproach?: string // The approach ID selected by user
+  selectedApproachTitle?: string
+  selectedApproachSummary?: string
+  generatedStory?: {
+    title: string
+    summary: string
+    pages: Array<{
+      pageNumber: number
+      text: string
+      sceneDescription: string
+      learningNote?: string
+    }>
+  }
+  // Extracted elements for reference images
+  extractedCharacters?: Array<{
+    name: string
+    description: string
+    appearances: number[]
+    role: 'main' | 'supporting'
+    photoUrl?: string
+  }>
+  extractedLocations?: Array<{
+    name: string
+    description: string
+    appearances: number[]
+  }>
 }
 
 // Wizard state
@@ -216,8 +272,82 @@ export interface StepInfo {
   icon: string
 }
 
-// Step configuration
-export const WIZARD_STEPS: StepInfo[] = [
+// Step configuration for GENERATE mode (educational flow)
+export const GENERATE_WIZARD_STEPS: StepInfo[] = [
+  {
+    id: 'character-setup',
+    label: 'Character',
+    description: 'Create your main character',
+    backgroundImage: '/storybook/step-story.webp',
+    icon: 'User',
+  },
+  {
+    id: 'category',
+    label: 'Category',
+    description: 'What should they learn?',
+    backgroundImage: '/storybook/step-story.webp',
+    icon: 'Grid3X3',
+  },
+  {
+    id: 'topic',
+    label: 'Topic',
+    description: 'Pick a specific topic',
+    backgroundImage: '/storybook/step-story.webp',
+    icon: 'Target',
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    description: 'Configure your book',
+    backgroundImage: '/storybook/step-story.webp',
+    icon: 'Settings',
+  },
+  {
+    id: 'approach',
+    label: 'Approach',
+    description: 'Choose your story idea',
+    backgroundImage: '/storybook/step-story.webp',
+    icon: 'Lightbulb',
+  },
+  {
+    id: 'review',
+    label: 'Review',
+    description: 'Edit your story',
+    backgroundImage: '/storybook/step-story.webp',
+    icon: 'FileText',
+  },
+  {
+    id: 'style',
+    label: 'Style',
+    description: 'Choose your art style',
+    backgroundImage: '/storybook/step-style.webp',
+    icon: 'Palette',
+  },
+  {
+    id: 'characters',
+    label: 'Characters',
+    description: 'Create character sheets',
+    backgroundImage: '/storybook/step-characters.webp',
+    icon: 'Users',
+  },
+  {
+    id: 'pages',
+    label: 'Pages',
+    description: 'Generate page illustrations',
+    backgroundImage: '/storybook/step-pages.webp',
+    icon: 'Images',
+  },
+  {
+    id: 'preview',
+    label: 'Preview',
+    description: 'Review and export',
+    backgroundImage: '/storybook/step-preview.webp',
+    icon: 'BookCheck',
+  },
+]
+
+// Step configuration for PASTE mode (original flow)
+export const PASTE_WIZARD_STEPS: StepInfo[] = [
   {
     id: 'story',
     label: 'Story',
@@ -255,25 +385,36 @@ export const WIZARD_STEPS: StepInfo[] = [
   },
 ]
 
-// Get step index
-export function getStepIndex(step: WizardStep): number {
-  return WIZARD_STEPS.findIndex(s => s.id === step)
+// Legacy alias for backwards compatibility
+export const WIZARD_STEPS = PASTE_WIZARD_STEPS
+
+// Get steps for a given mode
+export function getWizardSteps(mode: StoryMode): StepInfo[] {
+  return mode === 'generate' ? GENERATE_WIZARD_STEPS : PASTE_WIZARD_STEPS
 }
 
-// Get next step
-export function getNextStep(step: WizardStep): WizardStep | null {
-  const index = getStepIndex(step)
-  if (index < WIZARD_STEPS.length - 1) {
-    return WIZARD_STEPS[index + 1].id
+// Get step index for a mode
+export function getStepIndex(step: WizardStep, mode: StoryMode = 'paste'): number {
+  const steps = getWizardSteps(mode)
+  return steps.findIndex(s => s.id === step)
+}
+
+// Get next step for a mode
+export function getNextStep(step: WizardStep, mode: StoryMode = 'paste'): WizardStep | null {
+  const steps = getWizardSteps(mode)
+  const index = steps.findIndex(s => s.id === step)
+  if (index >= 0 && index < steps.length - 1) {
+    return steps[index + 1].id
   }
   return null
 }
 
-// Get previous step
-export function getPreviousStep(step: WizardStep): WizardStep | null {
-  const index = getStepIndex(step)
+// Get previous step for a mode
+export function getPreviousStep(step: WizardStep, mode: StoryMode = 'paste'): WizardStep | null {
+  const steps = getWizardSteps(mode)
+  const index = steps.findIndex(s => s.id === step)
   if (index > 0) {
-    return WIZARD_STEPS[index - 1].id
+    return steps[index - 1].id
   }
   return null
 }

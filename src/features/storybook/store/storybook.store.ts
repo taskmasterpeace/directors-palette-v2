@@ -18,12 +18,15 @@ import type {
   TextPosition,
   BookFormat,
   PageLayout,
+  StoryMode,
 } from '../types/storybook.types'
 import { getNextStep, getPreviousStep } from '../types/storybook.types'
+import type { StoryIdea, GeneratedStory, ExtractedElements } from '../types/education.types'
 
 interface StorybookState {
   // Wizard state
   currentStep: WizardStep
+  storyMode: StoryMode
   isGenerating: boolean
   error: string | null
 
@@ -33,18 +36,33 @@ interface StorybookState {
   // Current page being edited (in page generation step)
   currentPageIndex: number
 
+  // Story ideas (for generate mode)
+  storyIdeas: StoryIdea[]
+
   // Actions
   setStep: (step: WizardStep) => void
   nextStep: () => void
   previousStep: () => void
+  setStoryMode: (mode: StoryMode) => void
 
   // Project actions
   createProject: (title: string, storyText: string, bookFormat?: BookFormat, targetAge?: number) => void
+  createGenerateProject: (characterName: string, characterAge: number) => void
   updateProject: (updates: Partial<StorybookProject>) => void
   resetProject: () => void
   setBookFormat: (format: BookFormat) => void
   setTargetAge: (age: number) => void
   setDefaultLayout: (layout: PageLayout) => void
+
+  // Education actions (NEW)
+  setMainCharacter: (name: string, age: number, photoUrl?: string) => void
+  setEducationCategory: (category: string) => void
+  setEducationTopic: (topic: string) => void
+  setBookSettings: (pageCount: number, sentencesPerPage: number) => void
+  setStoryIdeas: (ideas: StoryIdea[]) => void
+  selectStoryApproach: (id: string, title: string, summary: string) => void
+  setGeneratedStory: (story: GeneratedStory) => void
+  setExtractedElements: (elements: ExtractedElements) => void
 
   // Story actions
   setStoryText: (text: string) => void
@@ -71,7 +89,7 @@ interface StorybookState {
   setError: (error: string | null) => void
 }
 
-// Create initial project
+// Create initial project for paste mode
 function createInitialProject(
   title: string,
   storyText: string,
@@ -93,6 +111,34 @@ function createInitialProject(
     bookFormat,
     defaultLayout: 'image-with-text' as PageLayout,
     targetAge,
+    storyMode: 'paste',
+  }
+}
+
+// Create initial project for generate mode (educational)
+function createGenerateProject(
+  characterName: string,
+  characterAge: number,
+  bookFormat: BookFormat = 'square'
+): StorybookProject {
+  return {
+    id: generateId(),
+    title: `${characterName}'s Story`,
+    storyText: '',
+    pages: [],
+    characters: [],
+    style: undefined,
+    coverImageUrl: undefined,
+    status: 'draft',
+    creditsUsed: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    bookFormat,
+    defaultLayout: 'image-with-text' as PageLayout,
+    targetAge: characterAge,
+    storyMode: 'generate',
+    mainCharacterName: characterName,
+    mainCharacterAge: characterAge,
   }
 }
 
@@ -227,35 +273,47 @@ function extractCharacterNames(storyText: string): { name: string; tag: string }
 
 export const useStorybookStore = create<StorybookState>((set, get) => ({
   // Initial state
-  currentStep: 'story',
+  currentStep: 'character-setup',
+  storyMode: 'generate',
   isGenerating: false,
   error: null,
   project: null,
   currentPageIndex: 0,
+  storyIdeas: [],
 
   // Step navigation
   setStep: (step) => set({ currentStep: step }),
 
   nextStep: () => {
-    const { currentStep } = get()
-    const next = getNextStep(currentStep)
+    const { currentStep, storyMode } = get()
+    const next = getNextStep(currentStep, storyMode)
     if (next) {
       set({ currentStep: next })
     }
   },
 
   previousStep: () => {
-    const { currentStep } = get()
-    const prev = getPreviousStep(currentStep)
+    const { currentStep, storyMode } = get()
+    const prev = getPreviousStep(currentStep, storyMode)
     if (prev) {
       set({ currentStep: prev })
     }
   },
 
+  setStoryMode: (mode) => {
+    const newStep = mode === 'generate' ? 'character-setup' : 'story'
+    set({ storyMode: mode, currentStep: newStep })
+  },
+
   // Project actions
   createProject: (title, storyText, bookFormat = 'square', targetAge = 7) => {
     const project = createInitialProject(title, storyText, bookFormat, targetAge)
-    set({ project, currentStep: 'story' })
+    set({ project, currentStep: 'story', storyMode: 'paste' })
+  },
+
+  createGenerateProject: (characterName, characterAge) => {
+    const project = createGenerateProject(characterName, characterAge)
+    set({ project, currentStep: 'category', storyMode: 'generate' })
   },
 
   updateProject: (updates) => {
@@ -505,4 +563,132 @@ export const useStorybookStore = create<StorybookState>((set, get) => ({
   // Generation state
   setGenerating: (isGenerating) => set({ isGenerating }),
   setError: (error) => set({ error }),
+
+  // Education actions (NEW)
+  setMainCharacter: (name, age, photoUrl) => {
+    const { project } = get()
+    if (project) {
+      set({
+        project: {
+          ...project,
+          mainCharacterName: name,
+          mainCharacterAge: age,
+          mainCharacterPhotoUrl: photoUrl,
+          title: `${name}'s Story`,
+          targetAge: age,
+          updatedAt: new Date(),
+        },
+      })
+    } else {
+      // Create new project for generate mode
+      const newProject = createGenerateProject(name, age)
+      newProject.mainCharacterPhotoUrl = photoUrl
+      set({ project: newProject })
+    }
+  },
+
+  setEducationCategory: (category) => {
+    const { project } = get()
+    if (project) {
+      set({
+        project: {
+          ...project,
+          educationCategory: category,
+          educationTopic: undefined, // Clear topic when category changes
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  setEducationTopic: (topic) => {
+    const { project } = get()
+    if (project) {
+      set({
+        project: {
+          ...project,
+          educationTopic: topic,
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  setBookSettings: (pageCount, sentencesPerPage) => {
+    const { project } = get()
+    if (project) {
+      set({
+        project: {
+          ...project,
+          pageCount,
+          sentencesPerPage,
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  setStoryIdeas: (ideas) => set({ storyIdeas: ideas }),
+
+  selectStoryApproach: (id, title, summary) => {
+    const { project } = get()
+    if (project) {
+      set({
+        project: {
+          ...project,
+          selectedApproach: id,
+          selectedApproachTitle: title,
+          selectedApproachSummary: summary,
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  setGeneratedStory: (story) => {
+    const { project } = get()
+    if (project) {
+      // Convert generated story to storybook pages
+      const pages: StorybookPage[] = story.pages.map((page, index) => ({
+        id: generateId(),
+        pageNumber: index + 1,
+        text: page.text,
+        textPosition: 'bottom' as TextPosition,
+        // Store scene description for image generation
+      }))
+
+      set({
+        project: {
+          ...project,
+          title: story.title,
+          storyText: story.pages.map(p => p.text).join('\n\n'),
+          generatedStory: story,
+          pages,
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  setExtractedElements: (elements) => {
+    const { project } = get()
+    if (project) {
+      // Add extracted characters as storybook characters
+      const newCharacters: StorybookCharacter[] = elements.characters.map(char => ({
+        id: generateId(),
+        name: char.name,
+        tag: `@${char.name.replace(/\s+/g, '')}`,
+      }))
+
+      set({
+        project: {
+          ...project,
+          extractedCharacters: elements.characters,
+          extractedLocations: elements.locations,
+          characters: newCharacters,
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
 }))
