@@ -58,6 +58,7 @@ function dbRecipeToRecipe(dbRecipe: DbRecipe): Recipe {
     quickAccessLabel: dbRecipe.quick_access_label || undefined,
     isQuickAccess: dbRecipe.is_quick_access,
     categoryId: dbRecipe.category_id || undefined,
+    isSystem: dbRecipe.is_system,
     createdAt: new Date(dbRecipe.created_at).getTime(),
     updatedAt: new Date(dbRecipe.updated_at).getTime(),
   }

@@ -66,6 +66,7 @@ export interface Recipe {
   quickAccessLabel?: string     // 1-word label for quick access bar
   isQuickAccess: boolean        // Whether it's in quick access
   categoryId?: string           // Optional category
+  isSystem?: boolean            // System recipes are read-only, must be duplicated to edit
   createdAt: number
   updatedAt: number
 }
@@ -1393,5 +1394,381 @@ Black grid lines between all cells. No dialogue or captions.`,
     isQuickAccess: true,
     quickAccessLabel: '5MinLater',
     categoryId: 'time-based',
+  },
+
+  // ============================================================================
+  // NEW RECIPES FROM NANO BANANA PRO COMMUNITY
+  // ============================================================================
+
+  // Professional Headshot - Transform any photo into polished headshot
+  {
+    name: 'Professional Headshot',
+    description: 'Transform any photo into a polished professional headshot for LinkedIn, websites, or corporate use',
+    recipeNote: 'Upload a photo of the person. Choose style, lighting, and background options.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Keep facial features EXACTLY consistent with reference image.
+Preserve: face shape, eye color, skin tone, distinctive features, facial structure.
+
+STYLE: <<STYLE:select(Corporate LinkedIn,Creative Industry,Executive Portrait,Casual Professional,Academic/Research,Tech Startup,Real Estate Agent,Healthcare Professional)!>>
+
+LIGHTING: <<LIGHTING:select(Bright Studio (clean/corporate),Soft Natural Window Light,Dramatic Rim Light,High Key (bright/airy),Golden Hour Warmth,Split Light (artistic),Loop Lighting (classic portrait))!>>
+
+BACKGROUND: <<BACKGROUND:select(Pure White,Soft Gray Gradient,Blurred Office Environment,Gradient Blue (professional),Dark Professional,Natural Bokeh,Architectural Elements)!>>
+
+FRAMING: Professional headshot framing
+- Shoulders up, centered composition
+- Head occupies 60-70% of vertical frame
+- Eyes at upper third intersection
+- Slight negative space above head
+
+QUALITY REQUIREMENTS:
+- Shot on professional camera with 85mm f/1.4 lens equivalent
+- High-resolution, tack sharp focus on eyes
+- Natural skin texture, subtle retouching
+- Professional color grading
+- Clean, polished final look suitable for business use`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '1:1',
+    isQuickAccess: true,
+    quickAccessLabel: 'Headshot',
+    categoryId: 'characters',
+  },
+
+  // Virtual Try-On - See yourself in different clothing
+  {
+    name: 'Virtual Try-On',
+    description: 'Composite clothing onto a person - perfect for fashion visualization',
+    recipeNote: 'Attach: 1) Photo of person (full body or upper body), 2) Photo of garment/clothing item. The AI will dress the person in the garment.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `VIRTUAL TRY-ON TASK:
+Dress the person in the provided garment while maintaining their exact identity.
+
+CRITICAL - PRESERVE EXACTLY:
+- Face: identical facial features, expression, skin tone
+- Body: same body type, proportions, pose (adjust naturally for clothing)
+- Hair: identical style, color, and arrangement
+- Accessories: keep any jewelry, glasses, watches unless they conflict with garment
+
+GARMENT APPLICATION:
+- Fit the garment naturally to the person's body type
+- Maintain garment's original color, texture, and details
+- Add realistic fabric physics (draping, folding, stretching)
+- Match lighting on garment to scene lighting
+- Add appropriate shadows where garment meets body
+
+<<FIT_STYLE:select(True to size,Slightly oversized,Fitted/tailored,Loose/relaxed)>>
+<<SETTING:select(Keep original background,Clean studio white,Fashion editorial backdrop,Casual lifestyle setting,E-commerce product shot)!>>
+
+OUTPUT: Photorealistic image of the person wearing the garment.
+Should look like an actual photo, not a composite.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '3:4',
+    isQuickAccess: true,
+    quickAccessLabel: 'TryOn',
+    categoryId: 'products',
+  },
+
+  // Magazine Cover - Create editorial magazine covers
+  {
+    name: 'Magazine Cover',
+    description: 'Transform a photo into a professional magazine cover with titles and layouts',
+    recipeNote: 'Attach a photo of the subject. Enter magazine name and headline. Choose a color scheme.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Create a professional magazine cover featuring the subject from the reference image.
+
+MAGAZINE: "<<MAGAZINE_NAME:text!>>"
+HEADLINE: "<<HEADLINE:text!>>"
+<<SUBHEADLINES:text>>
+
+SUBJECT TREATMENT:
+- Keep subject's exact likeness
+- Frame as hero/cover shot (typically chest-up or 3/4 body)
+- Add editorial-quality lighting and color grading
+- High fashion/editorial styling feel
+
+LAYOUT STYLE: <<LAYOUT:select(Classic Fashion (Vogue style),Modern Minimalist,Bold Typography,Luxury Lifestyle,Entertainment Weekly style,Business/Forbes style,Sports Illustrated style)!>>
+
+COLOR SCHEME: <<COLORS:select(Classic White/Black,Bold Red Accent,Luxury Gold,Cool Blues,Warm Neutrals,Vibrant Pop Colors,Monochromatic)!>>
+
+TYPOGRAPHY:
+- Magazine title prominently at top
+- Main headline as largest text
+- 2-3 smaller subheadlines/teasers
+- Text should NOT obscure the subject's face
+- Professional editorial typography
+
+QUALITY: High-end glossy magazine finish, ready for print.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '2:3',
+    isQuickAccess: true,
+    quickAccessLabel: 'Magazine',
+    categoryId: 'products',
+  },
+
+  // Infographic Generator - Visual explanation of any topic
+  {
+    name: 'Infographic Generator',
+    description: 'Generate a visual infographic explaining any topic with icons and illustrations',
+    recipeNote: 'Enter the topic to explain. The AI will create a visual infographic with icons, illustrations, and clear visual hierarchy.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Create an engaging visual infographic about: <<TOPIC:text!>>
+
+<<ADDITIONAL_DETAILS:text>>
+
+STYLE: <<STYLE:select(Modern Flat Design,Isometric 3D,Hand-Drawn Sketch,Corporate Professional,Playful/Fun,Technical/Scientific,Retro/Vintage)!>>
+
+COLOR SCHEME: <<COLORS:select(Corporate Blues,Nature Greens,Warm Sunset,Monochrome,Vibrant Rainbow,Pastel Soft,Dark Mode)!>>
+
+INFOGRAPHIC REQUIREMENTS:
+- Clear visual hierarchy (most important info largest)
+- Icons and illustrations to represent concepts
+- Data visualization if applicable (charts, graphs)
+- Visual flow that guides the eye top-to-bottom or left-to-right
+- Consistent icon style throughout
+- Balanced white space
+- Easy to understand at a glance
+
+SECTIONS TO INCLUDE:
+1. Title/Header with main topic
+2. Key statistics or facts (3-5 main points)
+3. Visual representations of processes or relationships
+4. Supporting icons and illustrations
+5. Conclusion or call-to-action
+
+TEXT: Include minimal, essential text labels.
+The visuals should communicate the core ideas even without reading.
+
+Output a single cohesive infographic image.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '9:16',
+    isQuickAccess: true,
+    quickAccessLabel: 'Infograph',
+    categoryId: 'custom',
+  },
+
+  // Product Photography - Professional product shots
+  {
+    name: 'Product Photography',
+    description: 'Transform product photos into professional e-commerce/advertising quality shots',
+    recipeNote: 'Attach a photo of the product. Choose lighting, background, and styling options.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Create a professional product photograph of the item in the reference image.
+
+PRODUCT PRESERVATION:
+- Maintain exact product shape, colors, textures, and branding
+- Keep all logos, text, and details sharp and readable
+- Preserve material properties (glossy, matte, metallic, etc.)
+
+LIGHTING STYLE: <<LIGHTING:select(Soft Box Studio,Hard Light Dramatic,Natural Window Light,Gradient Sweep,Rim/Edge Lighting,High Key Bright,Low Key Moody,Golden Hour)!>>
+
+BACKGROUND: <<BACKGROUND:select(Pure White (e-commerce),Gradient Gray,Contextual Lifestyle,Solid Color Pop,Textured Surface,Floating/Shadow Only,Environmental Setting)!>>
+
+ANGLE/COMPOSITION: <<ANGLE:select(Hero Front View,45-Degree Beauty Shot,Top-Down Flat Lay,Side Profile,3/4 Perspective,Detail Close-Up)!>>
+
+STYLING: <<STYLING:select(Minimal Clean,Props and Accessories,Lifestyle Context,Luxury Premium,Playful and Fun,Technical/Industrial)>>
+
+QUALITY REQUIREMENTS:
+- Advertising/e-commerce quality
+- Sharp focus throughout product
+- Professional color accuracy
+- Clean, distraction-free composition
+- Ready for print or web use`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '1:1',
+    isQuickAccess: true,
+    quickAccessLabel: 'Product',
+    categoryId: 'products',
+  },
+
+  // Split View 3D Render - Realistic vs technical visualization
+  {
+    name: 'Split View 3D',
+    description: 'Create a split-view image showing realistic render on one side and wireframe/technical on the other',
+    recipeNote: 'Attach an image of an object, character, or scene. The AI will create a dramatic split showing photorealistic vs technical view.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Create a SPLIT VIEW visualization of the subject from the reference image.
+
+SPLIT STYLE: <<SPLIT:select(Left Realistic / Right Wireframe,Top Realistic / Bottom Technical,Diagonal Split,Center Explode View,Fade Transition)!>>
+
+LEFT/TOP SIDE - PHOTOREALISTIC:
+- Fully rendered photorealistic visualization
+- Proper materials, textures, and lighting
+- Studio-quality rendering
+- Complete, finished look
+
+RIGHT/BOTTOM SIDE - TECHNICAL: <<TECHNICAL_STYLE:select(Wireframe Mesh,Blueprint Schematic,X-Ray/Cutaway,Construction Lines,Low-Poly Geometric,Technical Drawing,Exploded Components)!>>
+
+SUBJECT TREATMENT:
+- Both views show the SAME subject from the SAME angle
+- Seamless transition at the split point
+- Technical side should reveal internal structure or construction
+- Maintain consistent lighting direction across both halves
+
+COLOR SCHEME FOR TECHNICAL SIDE: <<TECH_COLORS:select(Classic Blue Blueprint,Green Matrix/Tech,Orange Wireframe,White on Black,Cyan/Magenta,Gradient Neon)!>>
+
+OUTPUT: Single image with dramatic split visualization.
+Professional quality suitable for portfolio, presentation, or advertising.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '16:9',
+    isQuickAccess: true,
+    quickAccessLabel: 'SplitView',
+    categoryId: 'products',
+  },
+
+  // Viral Thumbnail - Eye-catching video thumbnails
+  {
+    name: 'Viral Thumbnail',
+    description: 'Create eye-catching YouTube/TikTok thumbnails with dramatic expressions and text',
+    recipeNote: 'Attach a photo of the person. Enter the video title/hook. Choose an emotion style.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Create a viral-worthy video thumbnail for: "<<VIDEO_TITLE:text!>>"
+
+SUBJECT FROM REFERENCE IMAGE:
+- Keep exact facial features and identity
+- AMPLIFY the expression for thumbnail impact
+
+EXPRESSION/EMOTION: <<EMOTION:select(Shocked/Surprised (wide eyes open mouth),Excited/Hyped,Curious/Intrigued,Angry/Frustrated,Laughing/Joy,Mind-Blown,Skeptical/Side-Eye,Crying/Emotional)!>>
+
+THUMBNAIL STYLE: <<STYLE:select(YouTube Classic (bold text + face),MrBeast Style (extreme expression),Tech Review (clean + product),Vlog Style (lifestyle),Educational (professional),Gaming/Reaction,Clickbait Maximum)!>>
+
+TEXT TREATMENT:
+- Title or hook text: LARGE, BOLD, READABLE
+- Maximum 3-5 words visible
+- High contrast against background
+- Slight outline/shadow for readability
+
+VISUAL ELEMENTS: <<ELEMENTS:select(Arrows and circles pointing at something,Emoji overlays,Before/After split,Money/Numbers,Red X or Green Checkmark,Fire or Explosion effects,Question marks)>>
+
+BACKGROUND: <<BACKGROUND:select(Blurred context,Solid bright color,Gradient,Scene from video,Abstract pattern)!>>
+
+REQUIREMENTS:
+- MUST be readable at small size (mobile feed)
+- Maximum visual impact in 1 second
+- Face should occupy 40-60% of frame
+- Text should not cover eyes
+- Bright, saturated colors`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '16:9',
+    isQuickAccess: true,
+    quickAccessLabel: 'Thumbnail',
+    categoryId: 'custom',
+  },
+
+  // Same Face Different Scenes - Consistent character across locations
+  {
+    name: 'Same Face Different Scenes',
+    description: 'Generate 9 images of the same person in completely different scenes/locations while maintaining perfect likeness',
+    recipeNote: 'Attach a photo of the person. The AI will place them in 9 different environments while keeping their face identical.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Analyze the person in the reference image. Generate a 3x3 grid showing this EXACT SAME PERSON in 9 completely different scenes.
+IMPORTANT: Separate each cell with a solid BLACK LINE (4-6 pixels wide) for clean extraction.
+
+CRITICAL - ABSOLUTE FACE CONSISTENCY:
+- IDENTICAL facial features in every single frame
+- Same face shape, eye color, nose, mouth, skin tone
+- Same hair color and general style (can be styled differently)
+- This must CLEARLY be the same person in all 9 images
+- Age consistency - same person, same age throughout
+
+THE 9 SCENES:
+
+ROW 1 - URBAN/MODERN:
+1. Coffee Shop: Cozy café setting, warm lighting, casual atmosphere
+2. City Street: Urban environment, modern architecture, street style
+3. Office/Workspace: Professional setting, clean modern office
+
+ROW 2 - NATURE/OUTDOOR:
+4. Beach: Ocean in background, golden hour lighting, relaxed vibe
+5. Forest/Mountain: Natural setting, adventure feel, outdoor clothing
+6. Garden/Park: Flowers or greenery, peaceful, natural light
+
+ROW 3 - DRAMATIC/SPECIAL:
+7. Studio Portrait: Clean background, professional lighting, editorial quality
+8. Night Scene: City lights, dramatic lighting, evening atmosphere
+9. Fantasy/Creative: <<CREATIVE_SCENE:select(Futuristic sci-fi,Medieval castle,Underwater,Space station,Magical forest,Art gallery,Red carpet event,Sports arena)!>>
+
+CLOTHING: Appropriate for each scene but consistent with person's style.
+LIGHTING: Natural and appropriate for each environment.
+QUALITY: High-resolution, professional photography quality.
+
+Black grid lines between all 9 cells. No text labels.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '1:1',
+    isQuickAccess: true,
+    quickAccessLabel: 'SameFace',
+    categoryId: 'characters',
+  },
+
+  // Action Figure Box - Turn anyone into a collectible figure
+  {
+    name: 'Action Figure Box',
+    description: 'Transform a person into a collectible action figure in retail packaging',
+    recipeNote: 'Attach a photo of the person. Enter their name/title. The AI will create a realistic action figure in packaging.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Transform the person from the reference image into a collectible action figure in retail packaging.
+
+FIGURE NAME: "<<FIGURE_NAME:text!>>"
+<<TAGLINE:text>>
+
+PACKAGING STYLE: <<STYLE:select(Classic Action Figure (Hasbro/Mattel style),Funko Pop! Style,Premium Collector Edition,Vintage 80s/90s Retro,Japanese Import (anime style),Designer Art Toy,Sports Card + Figure,Barbie/Fashion Doll Style)!>>
+
+FIGURE REQUIREMENTS:
+- Face is a miniature version of the reference person (stylized appropriately)
+- Full body figure in dynamic or signature pose
+- Realistic figure materials (plastic, vinyl, articulation points visible)
+- Detailed accessories and props that suit the character
+
+PACKAGING ELEMENTS:
+- Clear plastic bubble/window showing figure
+- Cardboard backing with artwork and branding
+- Name prominently displayed
+- Age rating, brand logo, collector series info
+- 2-3 accessories visible in package
+
+BACKGROUND/SETTING: <<SETTING:select(Retail shelf with other toys,Clean product photography white,Collector display case,Toy store environment,Dramatic spotlight)!>>
+
+QUALITY: Photorealistic render of actual product packaging.
+Should look like a real toy you could buy in stores.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '3:4',
+    isQuickAccess: true,
+    quickAccessLabel: 'ActionFig',
+    categoryId: 'products',
   },
 ]

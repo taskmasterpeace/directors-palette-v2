@@ -677,6 +677,114 @@ export const NANO_BANANA_PROMPTS: PromptPreset[] = [
     categoryId: 'styles',
     tags: ['photorealistic', 'hyperreal', 'detailed', 'accurate'],
     isQuickAccess: false
+  },
+
+  // ==================== NEW PROMPTS FROM NANO BANANA PRO COMMUNITY ====================
+
+  // PROMPTS WITH REFERENCE IMAGES
+  {
+    id: 'ref-01',
+    title: '1990s Camera Flash Portrait',
+    prompt: 'Keep facial features exactly consistent with reference. 1990s disposable camera aesthetic, direct flash harsh lighting, red-eye effect, slight overexposure, warm tungsten color cast, film grain, slightly out of focus edges, authentic vintage snapshot feel, party or candid moment vibe',
+    categoryId: 'styles',
+    tags: ['90s', 'flash', 'vintage', 'film', 'portrait'],
+    isQuickAccess: true,
+    reference: 'Upload a portrait photo - face will be preserved with vintage flash effect'
+  },
+  {
+    id: 'ref-02',
+    title: 'Studio Ghibli Portrait',
+    prompt: 'Keep facial features consistent with reference, transformed into Studio Ghibli anime style. Hayao Miyazaki character design, soft watercolor backgrounds, expressive anime eyes, gentle color palette, hand-drawn animation quality, whimsical fantasy atmosphere, Spirited Away or Howl\'s Moving Castle aesthetic',
+    categoryId: 'styles',
+    tags: ['ghibli', 'anime', 'miyazaki', 'portrait', 'japanese'],
+    isQuickAccess: true,
+    reference: 'Upload a portrait - will be transformed into Ghibli anime style'
+  },
+  {
+    id: 'ref-03',
+    title: 'Pop Art Portrait (Warhol Style)',
+    prompt: 'Keep facial features consistent with reference, transformed into Andy Warhol pop art style. Bold flat colors, high contrast, halftone dot pattern, screen print aesthetic, 4-panel color variations, iconic pop art portrait, Marilyn Monroe series inspired, vibrant complementary colors',
+    categoryId: 'styles',
+    tags: ['pop art', 'warhol', 'colorful', 'portrait', 'iconic'],
+    isQuickAccess: true,
+    reference: 'Upload a portrait - will become iconic Warhol-style pop art'
+  },
+  {
+    id: 'ref-04',
+    title: 'Passport Photo (Official)',
+    prompt: 'Keep facial features exactly consistent with reference. Official passport/ID photo format, plain white or light gray background, neutral expression, eyes open and visible, no glasses glare, shoulders visible, even lighting with no harsh shadows, front-facing centered composition, compliant with official photo requirements',
+    categoryId: 'characters',
+    tags: ['passport', 'id', 'official', 'portrait', 'document'],
+    isQuickAccess: true,
+    reference: 'Upload any photo - will be converted to official passport format'
+  },
+  {
+    id: 'ref-05',
+    title: 'Pet Portrait Royalty',
+    prompt: 'Keep the pet\'s features exactly consistent with reference. Transform pet into royal Renaissance portrait, wearing ornate royal robes and crown, sitting on throne, dramatic oil painting style, rich velvet textures, gold embroidery details, regal pose, classical portrait composition, museum-quality painting aesthetic, funny yet dignified',
+    categoryId: 'characters',
+    tags: ['pet', 'royal', 'renaissance', 'portrait', 'funny'],
+    isQuickAccess: true,
+    reference: 'Upload pet photo - your pet becomes royalty!'
+  },
+  {
+    id: 'ref-06',
+    title: 'Claymation Character',
+    prompt: 'Keep facial features consistent with reference. Transform into Aardman-style claymation character (Wallace & Gromit, Shaun the Sheep), exaggerated features, visible clay texture, fingerprint impressions in clay, stop-motion animation aesthetic, plasticine material quality, warm studio lighting, whimsical personality',
+    categoryId: 'styles',
+    tags: ['claymation', 'aardman', 'wallace', 'animation', '3d'],
+    isQuickAccess: true,
+    reference: 'Upload a portrait - become a claymation character'
+  },
+
+  // CREATIVE PROMPTS (NO REFERENCE NEEDED)
+  {
+    id: 'creative-01',
+    title: 'Recursive iPad Cat',
+    prompt: 'A cat sitting at a table looking at an iPad. On the iPad screen is the same image of a cat looking at an iPad. The iPad screen shows the same scene recursively, creating an infinite recursion effect. Droste effect, mise en abyme, photorealistic rendering, cozy home setting, warm lighting, humorous and surreal',
+    categoryId: 'effects',
+    tags: ['recursive', 'cat', 'iPad', 'droste', 'surreal', 'funny'],
+    isQuickAccess: true
+  },
+  {
+    id: 'creative-02',
+    title: 'Whiteboard Marker Art',
+    prompt: 'Drawing created with whiteboard markers on a transparent glass whiteboard, from behind the glass so text appears correctly. Office setting visible through glass, hand-drawn diagrams and doodles, colorful dry-erase markers, casual sketch style, brainstorming aesthetic, startup vibes, educational',
+    categoryId: 'styles',
+    tags: ['whiteboard', 'sketch', 'office', 'diagram', 'brainstorm'],
+    isQuickAccess: false
+  },
+  {
+    id: 'creative-03',
+    title: 'How Engineers See (Technical)',
+    prompt: 'Split visualization showing how engineers see the world: left side shows normal everyday object, right side shows same object as exploded technical diagram with measurements, specifications, material callouts, engineering annotations, CAD wireframe overlay, structural analysis, patent drawing style, technical illustration',
+    categoryId: 'effects',
+    tags: ['engineering', 'technical', 'diagram', 'split view', 'funny'],
+    isQuickAccess: true
+  },
+  {
+    id: 'creative-04',
+    title: 'Isometric Room Diorama',
+    prompt: 'Detailed isometric 3D cutaway of a cozy room, miniature diorama style, tilt-shift effect, every small object perfectly detailed, warm lighting from windows, tiny furniture and decorations, architectural cross-section, video game art style, The Sims aesthetic, charming and intricate',
+    categoryId: 'environments',
+    tags: ['isometric', 'diorama', 'room', 'miniature', 'cozy'],
+    isQuickAccess: true
+  },
+  {
+    id: 'creative-05',
+    title: 'Rare.jpg Meme Style',
+    prompt: 'rare.jpg meme format, absurdist humor, surreal impossible object or situation, deep-fried aesthetic elements, intentionally bizarre combination, internet culture, cursed image aesthetic, "why does this exist" energy, strangely compelling, slightly unnerving yet funny',
+    categoryId: 'effects',
+    tags: ['meme', 'rare', 'absurd', 'surreal', 'internet'],
+    isQuickAccess: false
+  },
+  {
+    id: 'creative-06',
+    title: 'Office Team Silly Photo',
+    prompt: 'Corporate office team photo but everyone is doing something silly and unprofessional, breaking the formal photo expectation, one person in costume, someone with props, funny poses, genuine laughter, candid chaos, subverting corporate culture, wholesome humor, office comedy vibes, The Office energy',
+    categoryId: 'moods',
+    tags: ['office', 'team', 'funny', 'corporate', 'group'],
+    isQuickAccess: false
   }
 ]
 

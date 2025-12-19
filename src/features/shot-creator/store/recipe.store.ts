@@ -38,6 +38,7 @@ interface RecipeState {
   updateRecipe: (id: string, updates: Partial<Omit<Recipe, 'id' | 'createdAt'>>) => Promise<void>
   deleteRecipe: (id: string) => Promise<void>
   getRecipe: (id: string) => Recipe | undefined
+  duplicateRecipe: (recipeId: string, newName?: string) => Promise<Recipe | null>
 
   // Actions - Recipe Stages
   addStageToRecipe: (recipeId: string) => Promise<void>
@@ -243,6 +244,56 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
 
   getRecipe: (id) => {
     return get().recipes.find((r) => r.id === id)
+  },
+
+  // Duplicate a recipe (makes a user-owned copy of a system recipe)
+  duplicateRecipe: async (recipeId, newName) => {
+    const userId = get().currentUserId
+    if (!userId) {
+      console.error('Cannot duplicate recipe: No user ID')
+      return null
+    }
+
+    const recipe = get().getRecipe(recipeId)
+    if (!recipe) {
+      console.error('Cannot duplicate recipe: Recipe not found')
+      return null
+    }
+
+    // Create a duplicate with new IDs for stages
+    const duplicatedStages = recipe.stages.map((stage, index) => ({
+      ...stage,
+      id: `stage_${index}_${Date.now()}`,
+      fields: parseStageTemplate(stage.template, index),
+    }))
+
+    const duplicated = {
+      name: newName || `${recipe.name} (Copy)`,
+      description: recipe.description,
+      recipeNote: recipe.recipeNote,
+      stages: duplicatedStages,
+      suggestedAspectRatio: recipe.suggestedAspectRatio,
+      suggestedResolution: recipe.suggestedResolution,
+      categoryId: recipe.categoryId,
+      isQuickAccess: false, // Don't auto-add to quick access
+      quickAccessLabel: undefined,
+      // isSystem is NOT set - this becomes a user recipe
+    }
+
+    // Create in database
+    const newRecipe = await recipeService.createRecipe(duplicated, userId)
+    if (!newRecipe) {
+      console.error('Failed to duplicate recipe in database')
+      return null
+    }
+
+    // Update local state
+    set((state) => ({
+      recipes: [newRecipe, ...state.recipes],
+    }))
+
+    console.log(`📋 Duplicated recipe: ${recipe.name} → ${newRecipe.name}`)
+    return newRecipe
   },
 
   // Stage Management

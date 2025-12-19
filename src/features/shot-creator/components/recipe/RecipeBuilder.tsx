@@ -36,6 +36,8 @@ import {
   ChevronUp,
   Layers,
   Settings,
+  Copy,
+  Lock,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -72,6 +74,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
     addRecipe,
     updateRecipe,
     deleteRecipe,
+    duplicateRecipe,
     addToQuickAccess,
     removeFromQuickAccess,
     setActiveRecipe,
@@ -204,6 +207,25 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
   const handleDelete = (recipe: Recipe) => {
     if (confirm(`Delete recipe "${recipe.name}"?`)) {
       deleteRecipe(recipe.id)
+    }
+  }
+
+  // Handle duplicate (for system recipes - creates editable copy)
+  const handleDuplicate = async (recipe: Recipe) => {
+    const newRecipe = await duplicateRecipe(recipe.id)
+    if (newRecipe) {
+      toast({
+        title: 'Recipe Duplicated',
+        description: `"${newRecipe.name}" created. You can now edit it.`,
+      })
+      // Open the edit dialog for the new recipe
+      openEdit(newRecipe)
+    } else {
+      toast({
+        title: 'Duplicate Failed',
+        description: 'Could not duplicate recipe. Please try again.',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -366,6 +388,12 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
                         <h4 className="font-medium text-white text-sm truncate">
                           {recipe.name}
                         </h4>
+                        {recipe.isSystem && (
+                          <Badge variant="secondary" className="text-xs bg-blue-500/20 text-blue-400">
+                            <Lock className="w-3 h-3 mr-1" />
+                            System
+                          </Badge>
+                        )}
                         {isInQuickAccess(recipe.id) && (
                           <Badge variant="secondary" className="text-xs bg-amber-500/20 text-amber-400">
                             Quick
@@ -457,23 +485,45 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
                         </Tooltip>
                       </TooltipProvider>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEdit(recipe)}
-                        className="h-7 w-7 p-0 text-muted-foreground hover:text-white"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </Button>
+                      {recipe.isSystem ? (
+                        // System recipes: Show duplicate button instead of edit/delete
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDuplicate(recipe)}
+                                className="h-7 w-7 p-0 text-blue-400 hover:text-blue-300"
+                              >
+                                <Copy className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Duplicate to My Recipes</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        // User recipes: Show edit and delete buttons
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEdit(recipe)}
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-white"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </Button>
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(recipe)}
-                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(recipe)}
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
