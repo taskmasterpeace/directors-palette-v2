@@ -8,15 +8,21 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, FileText, Sparkles, ChevronDown, ChevronUp, LayoutGrid } from "lucide-react"
+import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
+import { BookOpen, FileText, Sparkles, ChevronDown, ChevronUp, LayoutGrid, Baby, Loader2 } from "lucide-react"
 import { cn } from "@/utils/utils"
 
 export function StoryInputStep() {
-  const { project, setStoryText, setPages, createProject } = useStorybookStore()
+  const { project, setStoryText, setPages, createProject, addCharacter } = useStorybookStore()
   const [title, setTitle] = useState(project?.title || "")
   const [storyText, setLocalStoryText] = useState(project?.storyText || "")
   const [pageCount, setPageCount] = useState<string>("auto")
   const [showPages, setShowPages] = useState(false)
+  const [targetAge, setTargetAge] = useState(7)
+  const [keepExactWords, setKeepExactWords] = useState(false)
+  const [isPolishing, setIsPolishing] = useState(false)
+  const [polishError, setPolishError] = useState<string | null>(null)
 
   // Sync with project state
   useEffect(() => {
@@ -83,7 +89,9 @@ export function StoryInputStep() {
     return pages
   }
 
-  const handleSplitPages = () => {
+  const handlePolishAndSplit = async () => {
+    setPolishError(null)
+
     // Create project if needed
     if (!project && storyText.trim()) {
       createProject(title || "Untitled Storybook", storyText)
@@ -91,23 +99,85 @@ export function StoryInputStep() {
       setStoryText(storyText)
     }
 
-    // Split into pages
-    const targetPages = pageCount === 'auto' ? 'auto' : parseInt(pageCount, 10)
-    const pageTexts = splitIntoPages(storyText, targetPages)
+    const targetPages = pageCount === 'auto' ? 8 : parseInt(pageCount, 10)
 
-    // Create page objects
-    const pages = pageTexts.map((text, index) => ({
-      id: `page_${Date.now()}_${index}`,
-      pageNumber: index + 1,
-      text,
-      textPosition: 'bottom' as const,
-    }))
+    // If keeping exact words, use local splitting
+    if (keepExactWords) {
+      const pageTexts = splitIntoPages(storyText, pageCount === 'auto' ? 'auto' : targetPages)
+      const pages = pageTexts.map((text, index) => ({
+        id: `page_${Date.now()}_${index}`,
+        pageNumber: index + 1,
+        text,
+        textPosition: 'bottom' as const,
+      }))
+      setTimeout(() => {
+        setPages(pages)
+        setShowPages(true)
+      }, 100)
+      return
+    }
 
-    // Small delay to ensure project is created
-    setTimeout(() => {
-      setPages(pages)
-      setShowPages(true)
-    }, 100)
+    // Use AI to polish and split
+    setIsPolishing(true)
+    try {
+      const response = await fetch('/api/storybook/polish-story', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storyText,
+          targetAge,
+          pageCount: targetPages,
+          keepExactWords,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to polish story')
+      }
+
+      const result = await response.json()
+
+      // Create page objects from polished text
+      const pages = result.pages.map((text: string, index: number) => ({
+        id: `page_${Date.now()}_${index}`,
+        pageNumber: index + 1,
+        text,
+        textPosition: 'bottom' as const,
+      }))
+
+      // Add detected characters to the store
+      if (result.mainCharacter) {
+        addCharacter(result.mainCharacter.name, result.mainCharacter.tag)
+      }
+      if (result.supportingCharacters) {
+        for (const char of result.supportingCharacters) {
+          addCharacter(char.name, `@${char.name.toLowerCase().replace(/\s+/g, '_')}`)
+        }
+      }
+
+      setTimeout(() => {
+        setPages(pages)
+        setShowPages(true)
+      }, 100)
+    } catch (error) {
+      console.error('Error polishing story:', error)
+      setPolishError(error instanceof Error ? error.message : 'Failed to polish story')
+      // Fallback to local splitting
+      const pageTexts = splitIntoPages(storyText, pageCount === 'auto' ? 'auto' : targetPages)
+      const pages = pageTexts.map((text, index) => ({
+        id: `page_${Date.now()}_${index}`,
+        pageNumber: index + 1,
+        text,
+        textPosition: 'bottom' as const,
+      }))
+      setTimeout(() => {
+        setPages(pages)
+        setShowPages(true)
+      }, 100)
+    } finally {
+      setIsPolishing(false)
+    }
   }
 
   const pages = project?.pages || []
@@ -157,39 +227,98 @@ export function StoryInputStep() {
         </div>
       </div>
 
-      {/* Page Count Selection */}
-      <div className="flex items-center justify-center gap-4">
-        <div className="flex items-center gap-2">
-          <LayoutGrid className="w-4 h-4 text-zinc-400" />
-          <Label htmlFor="pageCount" className="text-zinc-300">Number of Pages:</Label>
-        </div>
-        <Select value={pageCount} onValueChange={setPageCount}>
-          <SelectTrigger className="w-[140px] bg-zinc-800/50 border-zinc-700">
-            <SelectValue placeholder="Select pages" />
-          </SelectTrigger>
-          <SelectContent className="bg-zinc-800 border-zinc-700">
-            <SelectItem value="auto">Auto Detect</SelectItem>
-            <SelectItem value="4">4 pages</SelectItem>
-            <SelectItem value="6">6 pages</SelectItem>
-            <SelectItem value="8">8 pages</SelectItem>
-            <SelectItem value="10">10 pages</SelectItem>
-            <SelectItem value="12">12 pages</SelectItem>
-            <SelectItem value="16">16 pages</SelectItem>
-            <SelectItem value="20">20 pages</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Enhancement Options */}
+      <Card className="bg-zinc-900/50 border-zinc-800">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium text-zinc-300">Story Enhancement Options</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Target Age Slider */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-2 text-zinc-300">
+                <Baby className="w-4 h-4 text-amber-400" />
+                Target Age
+              </Label>
+              <span className="text-lg font-bold text-amber-400">{targetAge} years old</span>
+            </div>
+            <Slider
+              value={[targetAge]}
+              onValueChange={([value]) => setTargetAge(value)}
+              min={3}
+              max={12}
+              step={1}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-zinc-500">
+              <span>3 yrs (simple)</span>
+              <span>12 yrs (advanced)</span>
+            </div>
+          </div>
 
-      {/* Split Pages Button */}
-      <div className="flex justify-center">
+          {/* Page Count Selection */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <LayoutGrid className="w-4 h-4 text-zinc-400" />
+              <Label htmlFor="pageCount" className="text-zinc-300">Number of Pages</Label>
+            </div>
+            <Select value={pageCount} onValueChange={setPageCount}>
+              <SelectTrigger className="w-[140px] bg-zinc-800/50 border-zinc-700">
+                <SelectValue placeholder="Select pages" />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-800 border-zinc-700">
+                <SelectItem value="auto">Auto Detect</SelectItem>
+                <SelectItem value="4">4 pages</SelectItem>
+                <SelectItem value="6">6 pages</SelectItem>
+                <SelectItem value="8">8 pages</SelectItem>
+                <SelectItem value="10">10 pages</SelectItem>
+                <SelectItem value="12">12 pages</SelectItem>
+                <SelectItem value="16">16 pages</SelectItem>
+                <SelectItem value="20">20 pages</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Keep Exact Words Toggle */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-zinc-300">Keep Exact Words</Label>
+              <p className="text-xs text-zinc-500">
+                {keepExactWords
+                  ? "Story will be split as-is without vocabulary changes"
+                  : "AI will adapt vocabulary for the target age"}
+              </p>
+            </div>
+            <Switch
+              checked={keepExactWords}
+              onCheckedChange={setKeepExactWords}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Polish & Split Button */}
+      <div className="flex flex-col items-center gap-2">
         <Button
-          onClick={handleSplitPages}
-          disabled={!storyText.trim()}
+          onClick={handlePolishAndSplit}
+          disabled={!storyText.trim() || isPolishing}
           className="gap-2 bg-amber-500 hover:bg-amber-600 text-black"
         >
-          <Sparkles className="w-4 h-4" />
-          Split into Pages
+          {isPolishing ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Polishing Story...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4" />
+              {keepExactWords ? "Split into Pages" : "Polish & Split into Pages"}
+            </>
+          )}
         </Button>
+        {polishError && (
+          <p className="text-sm text-red-400">{polishError}</p>
+        )}
       </div>
 
       {/* Pages Preview */}

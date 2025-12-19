@@ -9,19 +9,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
-  Volume2,
-  VolumeX,
-  Play,
-  Pause,
 } from "lucide-react"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
+import { AudioPlayer } from "../../AudioPlayer"
 
 export function PreviewStep() {
-  const { project } = useStorybookStore()
+  const { project, updatePage } = useStorybookStore()
   const [currentPreviewPage, setCurrentPreviewPage] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
 
   const pages = project?.pages || []
   const currentPage = pages[currentPreviewPage]
@@ -38,9 +33,8 @@ export function PreviewStep() {
     }
   }
 
-  const togglePlayback = () => {
-    setIsPlaying(!isPlaying)
-    // TODO: Implement auto-advance and narration
+  const handleAudioGenerated = (pageId: string, audioUrl: string) => {
+    updatePage(pageId, { audioUrl })
   }
 
   return (
@@ -159,39 +153,24 @@ export function PreviewStep() {
         ))}
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center justify-center gap-4">
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={togglePlayback}
-          className="gap-2"
-        >
-          {isPlaying ? (
-            <>
-              <Pause className="w-5 h-5" />
-              Pause
-            </>
-          ) : (
-            <>
-              <Play className="w-5 h-5" />
-              Play Slideshow
-            </>
-          )}
-        </Button>
-
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setIsMuted(!isMuted)}
-        >
-          {isMuted ? (
-            <VolumeX className="w-5 h-5" />
-          ) : (
-            <Volume2 className="w-5 h-5" />
-          )}
-        </Button>
-      </div>
+      {/* Audio Player */}
+      <Card className="bg-zinc-900/50 border-zinc-800">
+        <CardContent className="p-4">
+          <h3 className="font-semibold text-white mb-4">Narration</h3>
+          <AudioPlayer
+            pages={pages.map(p => ({
+              id: p.id,
+              text: p.text,
+              audioUrl: p.audioUrl,
+            }))}
+            currentPageIndex={currentPreviewPage}
+            onPageChange={setCurrentPreviewPage}
+            projectId={project?.id}
+            autoAdvance={true}
+            onAudioGenerated={handleAudioGenerated}
+          />
+        </CardContent>
+      </Card>
 
       {/* Download Options */}
       <Card className="bg-zinc-900/50 border-zinc-800">

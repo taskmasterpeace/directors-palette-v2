@@ -64,6 +64,7 @@ export interface StorybookPage {
   variationUrls?: string[] // All 9 variations (extracted from grid)
   selectedVariationIndex?: number // Which variation was selected (0-8)
   textPosition: TextPosition
+  audioUrl?: string // Generated narration audio URL
 }
 
 // A character in the storybook
