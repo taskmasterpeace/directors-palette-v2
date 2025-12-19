@@ -35,7 +35,7 @@ export function CharacterSetupStep() {
       const formData = new FormData()
       formData.append("file", file)
 
-      const response = await fetch("/api/upload", {
+      const response = await fetch("/api/upload-file", {
         method: "POST",
         body: formData,
       })
@@ -203,7 +203,7 @@ export function CharacterSetupStep() {
         <Button
           variant="ghost"
           onClick={handlePasteMode}
-          className="text-muted-foreground hover:text-white gap-2"
+          className="text-red-500 hover:text-red-400 hover:bg-red-500/10 gap-2"
         >
           <FileText className="w-4 h-4" />
           I have my own story

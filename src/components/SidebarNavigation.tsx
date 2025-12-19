@@ -166,7 +166,7 @@ export function SidebarNavigation() {
                     >
                         {/* App Icon */}
                         <div className="w-8 h-8 flex items-center justify-center">
-                            <img src="/favicon.ico" alt="App Icon" className="w-full h-full object-contain filter grayscale brightness-200" />
+                            <img src="/favicon.ico" alt="App Icon" className="w-full h-full object-contain" />
                         </div>
                         <span>Director&apos;s Palette</span>
                     </motion.div>
@@ -532,7 +532,7 @@ function MobileNavigation({ open, onOpenChange, activeTab, onNavSelect, user, on
                         <div className="flex items-center gap-2">
                             <img
                                 src="/favicon.ico"
-                                className="w-7 h-7 object-contain filter grayscale brightness-200"
+                                className="w-7 h-7 object-contain"
                                 alt="Logo"
                             />
                             <SheetTitle className="text-lg font-bold">Director&apos;s Palette</SheetTitle>

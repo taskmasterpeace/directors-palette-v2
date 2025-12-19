@@ -23,10 +23,10 @@ export function StepCard({ backgroundImage, children, className }: StepCardProps
           src={backgroundImage}
           alt=""
           fill
-          className="object-cover opacity-20"
+          className="object-cover opacity-40"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-zinc-900/80 via-zinc-900/90 to-zinc-900/95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-zinc-900/60 via-zinc-900/70 to-zinc-900/85" />
       </div>
 
       {/* Content */}
