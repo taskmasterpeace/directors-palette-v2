@@ -12,14 +12,25 @@ import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { BookOpen, FileText, Sparkles, ChevronDown, ChevronUp, LayoutGrid, Baby, Loader2 } from "lucide-react"
 import { cn } from "@/utils/utils"
+import { BOOK_FORMATS, type BookFormat } from "../../../types/storybook.types"
+import Image from "next/image"
+
+// Example images for each book format
+const FORMAT_EXAMPLES: Record<BookFormat, string> = {
+  square: '/storybook/format-examples/square.jpg',
+  landscape: '/storybook/format-examples/landscape.jpg',
+  portrait: '/storybook/format-examples/portrait.jpg',
+  wide: '/storybook/format-examples/wide.jpg',
+}
 
 export function StoryInputStep() {
-  const { project, setStoryText, setPages, createProject, addCharacter } = useStorybookStore()
+  const { project, setStoryText, setPages, createProject, addCharacter, setBookFormat: storeSetBookFormat } = useStorybookStore()
   const [title, setTitle] = useState(project?.title || "")
   const [storyText, setLocalStoryText] = useState(project?.storyText || "")
   const [pageCount, setPageCount] = useState<string>("auto")
   const [showPages, setShowPages] = useState(false)
-  const [targetAge, setTargetAge] = useState(7)
+  const [targetAge, setTargetAge] = useState(project?.targetAge || 7)
+  const [bookFormat, setBookFormat] = useState<BookFormat>(project?.bookFormat || "square")
   const [keepExactWords, setKeepExactWords] = useState(false)
   const [isPolishing, setIsPolishing] = useState(false)
   const [polishError, setPolishError] = useState<string | null>(null)
@@ -226,6 +237,98 @@ export function StoryInputStep() {
           <span>Tip: Add blank lines between paragraphs for better page breaks</span>
         </div>
       </div>
+
+      {/* Book Format Selection */}
+      <Card className="bg-zinc-900/50 border-zinc-800">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium text-zinc-300">Book Format</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {(Object.keys(BOOK_FORMATS) as BookFormat[]).map((format) => {
+              const config = BOOK_FORMATS[format]
+              const isSelected = bookFormat === format
+              return (
+                <button
+                  key={format}
+                  onClick={() => {
+                    setBookFormat(format)
+                    if (project) storeSetBookFormat(format)
+                  }}
+                  className={cn(
+                    "relative p-4 rounded-lg border-2 transition-all text-left",
+                    isSelected
+                      ? "border-amber-500 bg-amber-500/10"
+                      : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-500"
+                  )}
+                >
+                  {/* Example Image Preview */}
+                  <div className="flex justify-center mb-3">
+                    <div
+                      className={cn(
+                        "relative rounded overflow-hidden border-2",
+                        isSelected ? "border-amber-400" : "border-zinc-600"
+                      )}
+                      style={{
+                        width: format === 'square' ? '64px' : format === 'portrait' ? '48px' : format === 'wide' ? '80px' : '72px',
+                        height: format === 'square' ? '64px' : format === 'portrait' ? '64px' : format === 'wide' ? '45px' : '54px',
+                      }}
+                    >
+                      <Image
+                        src={FORMAT_EXAMPLES[format]}
+                        alt={`${config.name} format example`}
+                        fill
+                        className="object-cover"
+                        sizes="80px"
+                      />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className={cn("font-medium text-sm", isSelected ? "text-amber-400" : "text-zinc-300")}>
+                      {config.name}
+                    </div>
+                    <div className="text-xs text-zinc-500 mt-0.5">{config.aspectRatio}</div>
+                    <div className="text-xs text-zinc-500">{config.dimensions}</div>
+                  </div>
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-400" />
+                  )}
+                </button>
+              )
+            })}
+          </div>
+          {/* Format Info with Larger Preview */}
+          <div className="mt-4 p-3 bg-zinc-800/50 rounded-lg flex gap-4">
+            {/* Larger Example Preview */}
+            <div
+              className="relative rounded-lg overflow-hidden border border-zinc-600 flex-shrink-0"
+              style={{
+                width: bookFormat === 'square' ? '120px' : bookFormat === 'portrait' ? '96px' : bookFormat === 'wide' ? '160px' : '144px',
+                height: bookFormat === 'square' ? '120px' : bookFormat === 'portrait' ? '128px' : bookFormat === 'wide' ? '90px' : '108px',
+              }}
+            >
+              <Image
+                src={FORMAT_EXAMPLES[bookFormat]}
+                alt={`${BOOK_FORMATS[bookFormat].name} format example`}
+                fill
+                className="object-cover"
+                sizes="160px"
+              />
+            </div>
+            {/* Format Description */}
+            <div className="flex-1">
+              <div className="text-sm text-zinc-300">
+                <span className="font-medium text-amber-400">{BOOK_FORMATS[bookFormat].name}:</span> {BOOK_FORMATS[bookFormat].description}
+              </div>
+              <div className="text-xs text-zinc-500 mt-2">
+                <p><strong>Best for:</strong> {BOOK_FORMATS[bookFormat].bestFor}</p>
+                <p><strong>Words per page:</strong> {BOOK_FORMATS[bookFormat].wordsPerPage.min}-{BOOK_FORMATS[bookFormat].wordsPerPage.max} recommended</p>
+                <p><strong>Dimensions:</strong> {BOOK_FORMATS[bookFormat].dimensions}</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Enhancement Options */}
       <Card className="bg-zinc-900/50 border-zinc-800">

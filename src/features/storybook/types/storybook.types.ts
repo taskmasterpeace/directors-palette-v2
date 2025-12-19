@@ -26,6 +26,93 @@ export type CameraAngle = 'eye-level' | 'low-angle' | 'high-angle' | 'birds-eye'
 // Text overlay position
 export type TextPosition = 'top' | 'bottom' | 'left' | 'right' | 'none'
 
+// Book format/aspect ratio
+export type BookFormat = 'square' | 'landscape' | 'portrait' | 'wide'
+
+// Page layout type
+export type PageLayout =
+  | 'image-with-text'      // Image fills page, text overlays
+  | 'image-left-text-right' // Image on left page, text on right (spread)
+  | 'text-left-image-right' // Text on left page, image on right (spread)
+  | 'image-only'           // Full bleed image, no text
+  | 'text-only'            // Text page with decorative border
+
+// Book format configurations
+export const BOOK_FORMATS: Record<BookFormat, {
+  name: string
+  description: string
+  aspectRatio: string
+  dimensions: string
+  wordsPerPage: { min: number; max: number }
+  bestFor: string
+}> = {
+  square: {
+    name: 'Square',
+    description: 'Classic picture book format',
+    aspectRatio: '1:1',
+    dimensions: '8.5" x 8.5"',
+    wordsPerPage: { min: 20, max: 50 },
+    bestFor: 'Bedtime stories, character-focused tales'
+  },
+  landscape: {
+    name: 'Landscape',
+    description: 'Wide format for scenic illustrations',
+    aspectRatio: '4:3',
+    dimensions: '10" x 8"',
+    wordsPerPage: { min: 25, max: 60 },
+    bestFor: 'Adventure stories, nature scenes'
+  },
+  portrait: {
+    name: 'Portrait',
+    description: 'Tall format for character illustrations',
+    aspectRatio: '3:4',
+    dimensions: '8" x 10"',
+    wordsPerPage: { min: 30, max: 70 },
+    bestFor: 'Character stories, fairy tales'
+  },
+  wide: {
+    name: 'Wide Cinematic',
+    description: 'Panoramic spreads for epic scenes',
+    aspectRatio: '16:9',
+    dimensions: '11" x 6.2"',
+    wordsPerPage: { min: 15, max: 40 },
+    bestFor: 'Action scenes, environmental storytelling'
+  }
+}
+
+// Page layout configurations
+export const PAGE_LAYOUTS: Record<PageLayout, {
+  name: string
+  description: string
+  icon: string
+}> = {
+  'image-with-text': {
+    name: 'Image + Text',
+    description: 'Text overlaid on illustration',
+    icon: 'ImageIcon'
+  },
+  'image-left-text-right': {
+    name: 'Image | Text',
+    description: 'Image on left, text on right',
+    icon: 'LayoutPanelLeft'
+  },
+  'text-left-image-right': {
+    name: 'Text | Image',
+    description: 'Text on left, image on right',
+    icon: 'LayoutPanelRight'
+  },
+  'image-only': {
+    name: 'Full Image',
+    description: 'Full bleed illustration',
+    icon: 'Image'
+  },
+  'text-only': {
+    name: 'Text Only',
+    description: 'Decorative text page',
+    icon: 'Type'
+  }
+}
+
 // Wizard step
 export type WizardStep = 'story' | 'style' | 'characters' | 'pages' | 'preview'
 
@@ -65,6 +152,8 @@ export interface StorybookPage {
   selectedVariationIndex?: number // Which variation was selected (0-8)
   textPosition: TextPosition
   audioUrl?: string // Generated narration audio URL
+  layout?: PageLayout // How text and image are arranged
+  isSpread?: boolean // True if this page spans two physical pages
 }
 
 // A character in the storybook
@@ -104,6 +193,10 @@ export interface StorybookProject {
   createdAt: Date
   updatedAt: Date
   expiresAt?: Date // 30 days from creation
+  // Book format settings
+  bookFormat: BookFormat // square, landscape, portrait, wide
+  defaultLayout: PageLayout // Default layout for new pages
+  targetAge: number // Target reader age (3-12)
 }
 
 // Wizard state

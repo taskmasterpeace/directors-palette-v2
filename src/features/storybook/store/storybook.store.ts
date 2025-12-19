@@ -16,6 +16,8 @@ import type {
   StorybookCharacter,
   StorybookStyle,
   TextPosition,
+  BookFormat,
+  PageLayout,
 } from '../types/storybook.types'
 import { getNextStep, getPreviousStep } from '../types/storybook.types'
 
@@ -37,9 +39,12 @@ interface StorybookState {
   previousStep: () => void
 
   // Project actions
-  createProject: (title: string, storyText: string) => void
+  createProject: (title: string, storyText: string, bookFormat?: BookFormat, targetAge?: number) => void
   updateProject: (updates: Partial<StorybookProject>) => void
   resetProject: () => void
+  setBookFormat: (format: BookFormat) => void
+  setTargetAge: (age: number) => void
+  setDefaultLayout: (layout: PageLayout) => void
 
   // Story actions
   setStoryText: (text: string) => void
@@ -67,7 +72,12 @@ interface StorybookState {
 }
 
 // Create initial project
-function createInitialProject(title: string, storyText: string): StorybookProject {
+function createInitialProject(
+  title: string,
+  storyText: string,
+  bookFormat: BookFormat = 'square',
+  targetAge: number = 7
+): StorybookProject {
   return {
     id: generateId(),
     title,
@@ -80,6 +90,9 @@ function createInitialProject(title: string, storyText: string): StorybookProjec
     creditsUsed: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
+    bookFormat,
+    defaultLayout: 'image-with-text' as PageLayout,
+    targetAge,
   }
 }
 
@@ -213,8 +226,8 @@ export const useStorybookStore = create<StorybookState>((set, get) => ({
   },
 
   // Project actions
-  createProject: (title, storyText) => {
-    const project = createInitialProject(title, storyText)
+  createProject: (title, storyText, bookFormat = 'square', targetAge = 7) => {
+    const project = createInitialProject(title, storyText, bookFormat, targetAge)
     set({ project, currentStep: 'story' })
   },
 
@@ -238,6 +251,45 @@ export const useStorybookStore = create<StorybookState>((set, get) => ({
       currentPageIndex: 0,
       error: null,
     })
+  },
+
+  setBookFormat: (format) => {
+    const { project } = get()
+    if (project) {
+      set({
+        project: {
+          ...project,
+          bookFormat: format,
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  setTargetAge: (age) => {
+    const { project } = get()
+    if (project) {
+      set({
+        project: {
+          ...project,
+          targetAge: age,
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  setDefaultLayout: (layout) => {
+    const { project } = get()
+    if (project) {
+      set({
+        project: {
+          ...project,
+          defaultLayout: layout,
+          updatedAt: new Date(),
+        },
+      })
+    }
   },
 
   // Story actions

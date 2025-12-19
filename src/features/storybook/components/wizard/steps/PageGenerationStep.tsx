@@ -20,10 +20,16 @@ import {
   X,
   Loader2,
   Grid3X3,
+  LayoutTemplate,
+  PanelLeft,
+  PanelRight,
+  ImageIcon,
+  Type,
 } from "lucide-react"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
-import type { TextPosition } from "../../../types/storybook.types"
+import type { TextPosition, PageLayout } from "../../../types/storybook.types"
+import { PAGE_LAYOUTS } from "../../../types/storybook.types"
 
 export function PageGenerationStep() {
   const {
@@ -160,6 +166,41 @@ export function PageGenerationStep() {
                   onChange={(e) => updatePage(currentPage.id, { text: e.target.value })}
                   className="min-h-[150px] bg-zinc-800/50 border-zinc-700 font-serif"
                 />
+              </div>
+
+              {/* Page Layout */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <LayoutTemplate className="w-4 h-4 text-amber-400" />
+                  Page Layout
+                </Label>
+                <div className="grid grid-cols-5 gap-2">
+                  {([
+                    { layout: 'image-with-text' as PageLayout, icon: ImageIcon, label: 'Image+Text' },
+                    { layout: 'image-left-text-right' as PageLayout, icon: PanelLeft, label: 'Img | Text' },
+                    { layout: 'text-left-image-right' as PageLayout, icon: PanelRight, label: 'Text | Img' },
+                    { layout: 'image-only' as PageLayout, icon: ImageIcon, label: 'Image Only' },
+                    { layout: 'text-only' as PageLayout, icon: Type, label: 'Text Only' },
+                  ] as const).map(({ layout, icon: Icon, label }) => (
+                    <Button
+                      key={layout}
+                      variant={(currentPage.layout || 'image-with-text') === layout ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => updatePage(currentPage.id, { layout })}
+                      className={cn(
+                        "flex-col h-auto py-2 gap-1",
+                        (currentPage.layout || 'image-with-text') === layout && "bg-amber-500 text-black"
+                      )}
+                      title={PAGE_LAYOUTS[layout].description}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span className="text-[10px]">{label}</span>
+                    </Button>
+                  ))}
+                </div>
+                <p className="text-xs text-zinc-500">
+                  {PAGE_LAYOUTS[currentPage.layout || 'image-with-text'].description}
+                </p>
               </div>
 
               {/* Text Position */}
