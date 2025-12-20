@@ -23,6 +23,10 @@ import type { CommunityItem, CommunityItemType, RecipeContent } from '../types/c
 import type { RecipeStage, RecipeReferenceImage } from '@/features/shot-creator/types/recipe.types'
 import { parseStageTemplate } from '@/features/shot-creator/types/recipe.types'
 import { cn } from '@/utils/utils'
+// Store imports for refreshing after adding community items
+import { useRecipeStore } from '@/features/shot-creator/store/recipe.store'
+import { useWildCardStore } from '@/features/shot-creator/store/wildcard.store'
+import { useDirectorStore } from '@/features/music-lab/store/director.store'
 
 const TYPE_LABELS: Record<CommunityItemType, string> = {
   wildcard: 'Wildcard',
@@ -89,6 +93,26 @@ export function CommunityPage() {
   const handleAdd = async (itemId: string): Promise<boolean> => {
     const success = await addToLibrary(itemId)
     if (success) {
+      // Find item to refresh appropriate store
+      const item = items.find(i => i.id === itemId)
+      if (item) {
+        try {
+          switch (item.type) {
+            case 'recipe':
+              await useRecipeStore.getState().refreshRecipes()
+              break
+            case 'wildcard':
+              await useWildCardStore.getState().loadWildCards()
+              break
+            case 'director':
+              await useDirectorStore.getState().refreshDirectors()
+              break
+            // prompts use settings JSON - handled separately
+          }
+        } catch (e) {
+          console.error('Failed to refresh store after add:', e)
+        }
+      }
       toast({
         title: 'Added to Library',
         description: 'Item has been added to your library.',

@@ -4,32 +4,42 @@ Last Updated: December 2024
 
 ---
 
-## Community Recipes
+## Community Items - Add to Library
 
-### [CRITICAL] Added Community Recipes Don't Appear in Prompt Tools
-- **Status:** Open
+### [FIXED] Added Community Items Don't Appear in UI
+- **Status:** Fixed
 - **Reported:** December 2024
-- **Impact:** High - Users think the "Add" feature is broken
+- **Fixed:** December 2024
+- **Impact:** High - Users thought the "Add" feature was broken for all item types
 
-**Description:**
-When a user clicks "Add" on a community recipe, the UI shows success (toast + "Added" badge), but the recipe never appears in the Prompt Tools > Recipes tab.
+**Problem:**
+When users clicked "Add" on community items (recipes, wildcards, directors), the UI showed success but items never appeared in their respective locations (Prompt Tools, Wildcard Manager, Music Lab).
 
 **Root Cause:**
-The Recipe Store (`useRecipeStore`) is not refreshed after adding a recipe via community. The data is written to `user_recipes` table but the store still has stale data.
+1. Items were only written to `user_library_items` table, not their type-specific tables
+2. UI stores were never refreshed after add, so stale data was displayed
 
-**Technical Details:**
-- `community.service.ts:addToLibrary()` writes to `user_recipes` correctly (lines 285-322)
-- `community.store.ts:addToLibrary()` updates `libraryItemIds` but doesn't refresh recipe store (lines 88-110)
-- `RecipeBuilder` reads from `useRecipeStore.recipes` which is never invalidated
+**Solution Implemented:**
+1. **Dual-table writes**: `community.service.ts:addToLibrary()` now writes to BOTH `user_library_items` AND type-specific tables:
+   - Recipes → `user_recipes`
+   - Wildcards → `wildcards`
+   - Directors → `user_directors` (new table created)
 
-**Fix Required:**
-1. Import `useRecipeStore` in community store/actions
-2. Call `useRecipeStore.getState().fetchRecipes()` after successful add
-3. Or trigger a store invalidation that causes refetch on next visit
+2. **Store refresh after add**: `CommunityPage.tsx:handleAdd()` now refreshes the appropriate Zustand store after successful add:
+   - `useRecipeStore.getState().refreshRecipes()`
+   - `useWildCardStore.getState().loadWildCards()`
+   - `useDirectorStore.getState().refreshDirectors()`
 
-**Affected Files:**
-- `src/features/community/store/community.store.ts`
-- `src/features/shot-creator/hooks/useRecipeStore.ts`
+3. **New Director infrastructure**:
+   - Created `user_directors` table in Supabase with RLS
+   - Created `director.service.ts` for CRUD operations
+   - Created `director.store.ts` Zustand store for state management
+
+**Files Modified:**
+- `src/features/community/services/community.service.ts` - Added type-specific writes
+- `src/features/community/components/CommunityPage.tsx` - Added store refresh calls
+- `src/features/music-lab/services/director.service.ts` - NEW
+- `src/features/music-lab/store/director.store.ts` - NEW
 
 ---
 

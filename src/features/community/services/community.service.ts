@@ -13,6 +13,8 @@ import type {
   UserLibraryItem,
   UserLibraryItemRow,
   RecipeContent,
+  WildcardContent,
+  DirectorContent,
 } from '../types/community.types'
 
 function getSupabaseClient() {
@@ -281,11 +283,15 @@ class CommunityService {
       throw error
     }
 
-    // For recipes, also add to user_recipes table so they appear in Shot Creator
+    // =========================================================================
+    // TYPE-SPECIFIC TABLE WRITES
+    // Each type needs to be written to its specific table so it appears in UI
+    // =========================================================================
+
+    // RECIPES: Also add to user_recipes table so they appear in Shot Creator
     if (item.type === 'recipe') {
       const recipeContent = item.content as RecipeContent
 
-      // Build recipe for user_recipes table
       const recipeData = {
         user_id: userId,
         name: item.name,
@@ -306,7 +312,6 @@ class CommunityService {
         is_system: false,
       }
 
-      // Upsert to user_recipes - use name as conflict key
       const { error: recipeError } = await this.supabase
         .from('user_recipes')
         .upsert(recipeData, {
@@ -316,10 +321,61 @@ class CommunityService {
 
       if (recipeError) {
         console.error('Error adding recipe to user_recipes:', recipeError)
-        // Don't throw - the library item was added successfully
-        // Just log the error for recipes table sync
       }
     }
+
+    // WILDCARDS: Also add to wildcards table so they appear in Wildcard Manager
+    if (item.type === 'wildcard') {
+      const wildcardContent = item.content as WildcardContent
+
+      const wildcardData = {
+        user_id: userId,
+        name: item.name,
+        entries: wildcardContent.entries,
+        is_shared: false,
+      }
+
+      const { error: wildcardError } = await this.supabase
+        .from('wildcards')
+        .upsert(wildcardData, {
+          onConflict: 'user_id,name',
+          ignoreDuplicates: false,
+        })
+
+      if (wildcardError) {
+        console.error('Error adding wildcard to wildcards table:', wildcardError)
+      }
+    }
+
+    // DIRECTORS: Also add to user_directors table so they appear in Music Lab
+    if (item.type === 'director') {
+      const directorContent = item.content as DirectorContent
+
+      const directorData = {
+        user_id: userId,
+        name: item.name,
+        description: item.description || null,
+        fingerprint: directorContent.fingerprint,
+        community_item_id: communityItemId,
+        is_modified: false,
+        avatar_url: directorContent.avatarUrl || null,
+      }
+
+      const { error: directorError } = await this.supabase
+        .from('user_directors')
+        .upsert(directorData, {
+          onConflict: 'user_id,name',
+          ignoreDuplicates: false,
+        })
+
+      if (directorError) {
+        console.error('Error adding director to user_directors table:', directorError)
+      }
+    }
+
+    // PROMPTS: For prompts, we don't have a separate table yet
+    // They use user_settings.config.prompt_library (JSON settings)
+    // TODO: Consider creating a user_prompts table for consistency
 
     const row = data as UserLibraryItemRow
     return {
