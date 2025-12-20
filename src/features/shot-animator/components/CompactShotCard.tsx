@@ -75,13 +75,12 @@ const CompactShotCardComponent = ({
       className={`h-full flex flex-col bg-card/50 border-2 transition-all hover:border-border touch-manipulation ${config.includeInBatch ? 'border-primary' : 'border-border'
         }`}
     >
-      {/* Image with Checkbox Overlay */}
-      <div className="relative aspect-square bg-background group">
+      {/* Image with Checkbox Overlay - Constrained height on mobile */}
+      <div className="relative aspect-square max-h-[180px] sm:max-h-none bg-background group overflow-hidden">
         <Image
           src={config.imageUrl}
           alt={config.imageName}
-          width={400}
-          height={400}
+          fill
           className="object-cover"
         />
 
@@ -172,20 +171,20 @@ const CompactShotCardComponent = ({
         )}
       </div>
 
-      {/* Card Content */}
-      <div className="px-3 space-y-2">
+      {/* Card Content - Tighter spacing on mobile */}
+      <div className="px-2 sm:px-3 py-1 sm:py-0 space-y-1 sm:space-y-2">
         <p className="text-xs text-foreground truncate font-medium">
           {config.imageName}
         </p>
-        {/* Prompt Textarea - Enhanced for mobile */}
+        {/* Prompt Textarea - Compact on mobile */}
         <Textarea
           value={config.prompt}
           onChange={(e) => onUpdate({ ...config, prompt: e.target.value })}
           placeholder="Describe the animation..."
-          className="bg-secondary text-white text-sm sm:text-xs min-h-[120px] sm:min-h-[100px] resize-none touch-manipulation focus:ring-2 focus:ring-ring transition-shadow p-3 sm:p-2"
+          className="bg-secondary text-white text-sm sm:text-xs min-h-[80px] sm:min-h-[100px] resize-none touch-manipulation focus:ring-2 focus:ring-ring transition-shadow p-2"
         />
-        {/* Action Buttons - Enhanced for mobile touch */}
-        <div className="flex w-full items-center gap-2 sm:gap-2">
+        {/* Action Buttons - Compact on mobile */}
+        <div className="flex w-full items-center gap-1 sm:gap-2 pb-2">
           {/* Reference Images Button */}
           <div className="w-1/2">
             {maxReferenceImages > 0 && (
@@ -193,14 +192,13 @@ const CompactShotCardComponent = ({
                 size="sm"
                 variant="ghost"
                 onClick={onManageReferences}
-                className="min-h-[44px] h-11 sm:h-8 px-3 sm:px-2 w-full text-sm sm:text-xs bg-secondary/50 hover:bg-secondary active:bg-muted text-primary border border-primary/30 touch-manipulation active:scale-95 transition-transform"
+                className="min-h-[36px] h-9 sm:h-8 px-2 w-full text-xs bg-secondary/50 hover:bg-secondary active:bg-muted text-primary border border-primary/30 touch-manipulation active:scale-95 transition-transform"
                 aria-label="Manage reference images"
               >
-                <ImageIcon className="w-4 h-4 sm:w-3 sm:h-3 mr-1" />
-                <span className="hidden sm:inline">Refs</span>
-                <span className="sm:hidden">References</span>
+                <ImageIcon className="w-3 h-3 mr-1" />
+                <span>Refs</span>
                 {config.referenceImages.length > 0 && (
-                  <Badge className="ml-1 h-5 px-1.5 sm:h-4 sm:px-1 text-xs bg-primary">
+                  <Badge className="ml-1 h-4 px-1 text-[10px] bg-primary">
                     {config.referenceImages.length}
                   </Badge>
                 )}
@@ -215,12 +213,11 @@ const CompactShotCardComponent = ({
                 size="sm"
                 variant="ghost"
                 onClick={onManageLastFrame}
-                className="min-h-[44px] h-11 sm:h-8 px-3 sm:px-2 w-full text-sm sm:text-xs bg-secondary/50 hover:bg-secondary active:bg-muted text-primary border border-primary/30 touch-manipulation active:scale-95 transition-transform"
+                className="min-h-[36px] h-9 sm:h-8 px-2 w-full text-xs bg-secondary/50 hover:bg-secondary active:bg-muted text-primary border border-primary/30 touch-manipulation active:scale-95 transition-transform"
                 aria-label="Add last frame"
               >
-                <Film className="w-4 h-4 sm:w-3 sm:h-3 mr-1" />
-                <span className="hidden sm:inline">+ End Frame</span>
-                <span className="sm:hidden">+ Last Frame</span>
+                <Film className="w-3 h-3 mr-1" />
+                <span>+ End</span>
               </Button>
             )}
           </div>

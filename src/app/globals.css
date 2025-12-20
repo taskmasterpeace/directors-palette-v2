@@ -447,3 +447,18 @@
     -webkit-tap-highlight-color: transparent;
   }
 }
+
+/* Safe Area Utility Classes */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Mobile scroll optimization */
+.mobile-scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}

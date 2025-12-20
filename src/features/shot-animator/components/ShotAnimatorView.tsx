@@ -445,146 +445,215 @@ export function ShotAnimatorView() {
     <div className="w-full h-full flex flex-col bg-background">
       {/* Top Toolbar */}
       <div className="border-b border-border bg-background/50">
-        {/* Model Selection & Settings */}
-        <div className="px-2 sm:px-4 py-2 flex flex-col gap-3">
-          {/* Model Selection */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-            <Label className="text-muted-foreground text-sm whitespace-nowrap">Model:</Label>
-            <Select
-              value={selectedModel}
-              onValueChange={(value) => setSelectedModel(value as AnimationModel)}
-            >
-              <SelectTrigger className="w-full sm:w-[320px] h-10 bg-card border-border text-white">
-                <SelectValue placeholder="Select a model" />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border">
-                {ACTIVE_VIDEO_MODELS.map((modelId) => {
-                  const config = ANIMATION_MODELS[modelId]
-                  const pricing = VIDEO_MODEL_PRICING[modelId]
-                  const tierLabel = MODEL_TIER_LABELS[modelId]
-                  const priceDisplay = config.pricingType === 'per-video'
-                    ? `${pricing['720p']} pts/video`
-                    : `${pricing['720p']} pts/sec`
+        {/* MOBILE: Compact single-row toolbar */}
+        <div className="flex sm:hidden items-center gap-2 px-2 py-2">
+          {/* Model selector - compact */}
+          <Select
+            value={selectedModel}
+            onValueChange={(value) => setSelectedModel(value as AnimationModel)}
+          >
+            <SelectTrigger className="h-10 w-28 flex-shrink-0 bg-card border-border text-white text-xs">
+              <SelectValue placeholder="Model" />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border">
+              {ACTIVE_VIDEO_MODELS.map((modelId) => {
+                const config = ANIMATION_MODELS[modelId]
+                const tierLabel = MODEL_TIER_LABELS[modelId]
+                return (
+                  <SelectItem key={modelId} value={modelId} className="cursor-pointer text-sm">
+                    <div className="flex items-center gap-1">
+                      <span>{config.displayName}</span>
+                      <Badge variant="outline" className="text-[9px] px-1 py-0">{tierLabel}</Badge>
+                    </div>
+                  </SelectItem>
+                )
+              })}
+            </SelectContent>
+          </Select>
 
-                  return (
-                    <SelectItem key={modelId} value={modelId} className="cursor-pointer">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{config.displayName}</span>
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                          {tierLabel}
-                        </Badge>
-                        <span className="text-muted-foreground text-xs">
-                          {priceDisplay}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  )
-                })}
-              </SelectContent>
-            </Select>
-            {/* Model Info Badge */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {currentModelConfig.supportsLastFrame && (
-                <Badge variant="secondary" className="text-[10px]">Last Frame</Badge>
-              )}
-              {currentModelConfig.maxReferenceImages > 0 && (
-                <Badge variant="secondary" className="text-[10px]">Ref Images</Badge>
-              )}
-              <Badge variant="outline" className="text-[10px]">
-                Max {currentModelConfig.maxDuration}s
-              </Badge>
-            </div>
+          {/* Action buttons - horizontal scroll */}
+          <div className="flex gap-1.5 flex-shrink-0 overflow-x-auto">
+            {/* Upload */}
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              className="h-10 w-10 flex-shrink-0 border-border text-white hover:bg-card"
+              onClick={() => document.getElementById("file-upload-toolbar")?.click()}
+            >
+              <Upload className="w-4 h-4" />
+            </Button>
+
+            {/* Video Gallery */}
+            <Button
+              size="icon"
+              onClick={() => setIsVideoModalOpen(true)}
+              className="h-10 w-10 flex-shrink-0 bg-secondary hover:bg-muted"
+            >
+              <VideoIcon className="w-4 h-4" />
+            </Button>
+
+            {/* Image Gallery */}
+            <Button
+              size="icon"
+              onClick={() => setIsGalleryModalOpen(true)}
+              className="h-10 w-10 flex-shrink-0 bg-secondary hover:bg-muted"
+            >
+              <ImageIcon className="w-4 h-4" />
+            </Button>
+
+            {/* Settings - Mobile compact */}
+            <ModelSettingsModal settings={modelSettings} onSave={handleSaveModelSettings} />
           </div>
 
-          {/* Action Buttons - Responsive Layout */}
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            {/* Search - Full width on mobile, auto on desktop */}
-            <div className="relative w-full sm:w-auto order-1">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              <Input
-                placeholder="Search images..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 h-10 sm:h-8 w-full sm:w-48 bg-card border-border text-white text-sm touch-manipulation"
-              />
+          {/* Selected count badge */}
+          {selectedCount > 0 && (
+            <Badge variant="secondary" className="ml-auto text-xs flex-shrink-0">
+              {selectedCount} sel
+            </Badge>
+          )}
+        </div>
+
+        {/* DESKTOP: Full toolbar */}
+        <div className="hidden sm:block">
+          {/* Model Selection & Settings */}
+          <div className="px-4 py-2 flex flex-col gap-3">
+            {/* Model Selection */}
+            <div className="flex flex-row gap-2 items-center">
+              <Label className="text-muted-foreground text-sm whitespace-nowrap">Model:</Label>
+              <Select
+                value={selectedModel}
+                onValueChange={(value) => setSelectedModel(value as AnimationModel)}
+              >
+                <SelectTrigger className="w-[320px] h-10 bg-card border-border text-white">
+                  <SelectValue placeholder="Select a model" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border">
+                  {ACTIVE_VIDEO_MODELS.map((modelId) => {
+                    const config = ANIMATION_MODELS[modelId]
+                    const pricing = VIDEO_MODEL_PRICING[modelId]
+                    const tierLabel = MODEL_TIER_LABELS[modelId]
+                    const priceDisplay = config.pricingType === 'per-video'
+                      ? `${pricing['720p']} pts/video`
+                      : `${pricing['720p']} pts/sec`
+
+                    return (
+                      <SelectItem key={modelId} value={modelId} className="cursor-pointer">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{config.displayName}</span>
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                            {tierLabel}
+                          </Badge>
+                          <span className="text-muted-foreground text-xs">
+                            {priceDisplay}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    )
+                  })}
+                </SelectContent>
+              </Select>
+              {/* Model Info Badge */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {currentModelConfig.supportsLastFrame && (
+                  <Badge variant="secondary" className="text-[10px]">Last Frame</Badge>
+                )}
+                {currentModelConfig.maxReferenceImages > 0 && (
+                  <Badge variant="secondary" className="text-[10px]">Ref Images</Badge>
+                )}
+                <Badge variant="outline" className="text-[10px]">
+                  Max {currentModelConfig.maxDuration}s
+                </Badge>
+              </div>
             </div>
 
-            {/* Button Group - Grid on mobile for equal spacing */}
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-2 order-2">
-              {/* Upload */}
-              <label htmlFor="file-upload-toolbar" className="contents">
+            {/* Action Buttons */}
+            <div className="flex flex-row items-center justify-between">
+              {/* Search */}
+              <div className="relative w-auto">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  placeholder="Search images..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 h-8 w-48 bg-card border-border text-white text-sm"
+                />
+              </div>
+
+              {/* Button Group */}
+              <div className="flex items-center gap-2">
+                {/* Upload */}
                 <Button
                   type="button"
                   size="sm"
                   variant="outline"
-                  className="h-10 sm:h-8 w-full sm:w-auto min-h-[44px] sm:min-h-0 border-border text-white hover:bg-card touch-manipulation justify-center"
+                  className="h-8 border-border text-white hover:bg-card"
                   onClick={() => document.getElementById("file-upload-toolbar")?.click()}
                 >
-                  <Upload className="w-4 h-4 sm:mr-1" />
-                  <span className="hidden sm:inline ml-1">Upload</span>
+                  <Upload className="w-4 h-4 mr-1" />
+                  Upload
                 </Button>
-              </label>
-              <input
-                id="file-upload-toolbar"
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleFileUpload}
-                className="hidden"
-              />
 
-              {/* Video Gallery */}
-              <Button
-                onClick={() => setIsVideoModalOpen(true)}
-                size="sm"
-                className="h-10 sm:h-8 w-full sm:w-auto min-h-[44px] sm:min-h-0 bg-secondary hover:bg-muted touch-manipulation justify-center"
-              >
-                <VideoIcon className="w-4 h-4 sm:mr-1" />
-                <span className="hidden sm:inline ml-1">Video</span>
-              </Button>
+                {/* Video Gallery */}
+                <Button
+                  onClick={() => setIsVideoModalOpen(true)}
+                  size="sm"
+                  className="h-8 bg-secondary hover:bg-muted"
+                >
+                  <VideoIcon className="w-4 h-4 mr-1" />
+                  Video
+                </Button>
 
-              {/* Image Gallery */}
-              <Button
-                onClick={() => setIsGalleryModalOpen(true)}
-                size="sm"
-                className="h-10 sm:h-8 w-full sm:w-auto min-h-[44px] sm:min-h-0 bg-secondary hover:bg-muted touch-manipulation justify-center"
-              >
-                <ImageIcon className="w-4 h-4 sm:mr-1" />
-                <span className="hidden sm:inline ml-1">Gallery</span>
-              </Button>
+                {/* Image Gallery */}
+                <Button
+                  onClick={() => setIsGalleryModalOpen(true)}
+                  size="sm"
+                  className="h-8 bg-secondary hover:bg-muted"
+                >
+                  <ImageIcon className="w-4 h-4 mr-1" />
+                  Gallery
+                </Button>
 
-              {/* Settings */}
-              <div className="w-full sm:w-auto">
+                {/* Settings */}
                 <ModelSettingsModal settings={modelSettings} onSave={handleSaveModelSettings} />
+              </div>
+            </div>
+          </div>
+
+          {/* Selection Controls - Desktop only */}
+          <div className="px-4 py-2 flex flex-row items-center justify-between border-t border-border/50">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDeselectAll}
+                className="h-7 text-xs text-muted-foreground hover:text-white"
+              >
+                Deselect All
+              </Button>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="show-selected"
+                  checked={showOnlySelected}
+                  onCheckedChange={(checked) => setShowOnlySelected(checked as boolean)}
+                />
+                <Label htmlFor="show-selected" className="text-xs text-muted-foreground cursor-pointer whitespace-nowrap">
+                  Show only selected
+                </Label>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Selection Controls */}
-        <div className="px-2 sm:px-4 py-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 border-t border-border/50">
-          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleDeselectAll}
-              className="h-8 sm:h-7 text-xs text-muted-foreground hover:text-white min-h-[44px] sm:min-h-0 touch-manipulation"
-            >
-              Deselect All
-            </Button>
-            <div className="flex items-center gap-2 min-h-[44px] sm:min-h-0">
-              <Checkbox
-                id="show-selected"
-                checked={showOnlySelected}
-                onCheckedChange={(checked) => setShowOnlySelected(checked as boolean)}
-                className="min-h-[20px] min-w-[20px]"
-              />
-              <Label htmlFor="show-selected" className="text-xs text-muted-foreground cursor-pointer whitespace-nowrap">
-                Show only selected
-              </Label>
-            </div>
-          </div>
-        </div>
+        {/* Hidden file input */}
+        <input
+          id="file-upload-toolbar"
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleFileUpload}
+          className="hidden"
+        />
       </div>
 
       {/* Main Content - Two Column Layout */}
