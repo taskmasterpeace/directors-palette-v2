@@ -288,6 +288,26 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
     setFormStages(formStages.filter((_, i) => i !== index).map((s, i) => ({ ...s, order: i })))
   }
 
+  const moveStageUp = (index: number) => {
+    if (index <= 0) return
+    const newStages = [...formStages]
+    const temp = newStages[index]
+    newStages[index] = newStages[index - 1]
+    newStages[index - 1] = temp
+    // Update order fields
+    setFormStages(newStages.map((s, i) => ({ ...s, order: i })))
+  }
+
+  const moveStageDown = (index: number) => {
+    if (index >= formStages.length - 1) return
+    const newStages = [...formStages]
+    const temp = newStages[index]
+    newStages[index] = newStages[index + 1]
+    newStages[index + 1] = temp
+    // Update order fields
+    setFormStages(newStages.map((s, i) => ({ ...s, order: i })))
+  }
+
   const updateStageTemplate = (index: number, template: string) => {
     setFormStages(formStages.map((s, i) =>
       i === index ? { ...s, template, fields: parseStageTemplate(template, i) } : s
@@ -568,6 +588,8 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
             onAspectRatioChange={setFormAspectRatio}
             onAddStage={addStage}
             onRemoveStage={removeStage}
+            onMoveStageUp={moveStageUp}
+            onMoveStageDown={moveStageDown}
             onUpdateStageTemplate={updateStageTemplate}
             onAddReferenceImage={addReferenceImage}
             onRemoveReferenceImage={removeReferenceImage}
@@ -614,6 +636,8 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
             onAspectRatioChange={setFormAspectRatio}
             onAddStage={addStage}
             onRemoveStage={removeStage}
+            onMoveStageUp={moveStageUp}
+            onMoveStageDown={moveStageDown}
             onUpdateStageTemplate={updateStageTemplate}
             onAddReferenceImage={addReferenceImage}
             onRemoveReferenceImage={removeReferenceImage}
@@ -772,6 +796,8 @@ interface RecipeFormProps {
   onAspectRatioChange: (v: string) => void
   onAddStage: () => void
   onRemoveStage: (index: number) => void
+  onMoveStageUp: (index: number) => void
+  onMoveStageDown: (index: number) => void
   onUpdateStageTemplate: (index: number, template: string) => void
   onAddReferenceImage: (stageIndex: number, file: File) => void
   onRemoveReferenceImage: (stageIndex: number, imageId: string) => void
@@ -796,6 +822,8 @@ function RecipeForm({
   onAspectRatioChange,
   onAddStage,
   onRemoveStage,
+  onMoveStageUp,
+  onMoveStageDown,
   onUpdateStageTemplate,
   onAddReferenceImage,
   onRemoveReferenceImage,
@@ -909,9 +937,12 @@ function RecipeForm({
             key={stage.id}
             stage={stage}
             index={index}
+            totalStages={stages.length}
             canRemove={stages.length > 1}
             onTemplateChange={(template) => onUpdateStageTemplate(index, template)}
             onRemove={() => onRemoveStage(index)}
+            onMoveUp={() => onMoveStageUp(index)}
+            onMoveDown={() => onMoveStageDown(index)}
             onAddImage={(file) => onAddReferenceImage(index, file)}
             onRemoveImage={(imageId) => onRemoveReferenceImage(index, imageId)}
           />
@@ -954,9 +985,12 @@ function RecipeForm({
 interface StageSectionProps {
   stage: RecipeStage
   index: number
+  totalStages: number
   canRemove: boolean
   onTemplateChange: (template: string) => void
   onRemove: () => void
+  onMoveUp: () => void
+  onMoveDown: () => void
   onAddImage: (file: File) => void
   onRemoveImage: (imageId: string) => void
 }
@@ -964,9 +998,12 @@ interface StageSectionProps {
 function StageSection({
   stage,
   index,
+  totalStages,
   canRemove,
   onTemplateChange,
   onRemove,
+  onMoveUp,
+  onMoveDown,
   onAddImage,
   onRemoveImage,
 }: StageSectionProps) {
@@ -1016,19 +1053,53 @@ function StageSection({
                 </Badge>
               )}
             </div>
-            {canRemove && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onRemove()
-                }}
-                className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            )}
+            <div className="flex items-center gap-1">
+              {/* Move Up/Down buttons - only show when there are multiple stages */}
+              {totalStages > 1 && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onMoveUp()
+                    }}
+                    disabled={index === 0}
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-primary disabled:opacity-30"
+                    title="Move stage up"
+                  >
+                    <ChevronUp className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onMoveDown()
+                    }}
+                    disabled={index === totalStages - 1}
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-primary disabled:opacity-30"
+                    title="Move stage down"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </>
+              )}
+              {/* Delete button */}
+              {canRemove && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onRemove()
+                  }}
+                  className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </CollapsibleTrigger>
 

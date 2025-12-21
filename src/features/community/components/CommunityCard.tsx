@@ -96,8 +96,11 @@ export function CommunityCard({
       case 'recipe': {
         const content = item.content as RecipeContent
         const fieldCount = content.stages.reduce((acc, s) => acc + s.fields.length, 0)
+        // Collect all reference images from all stages
+        const allRefImages = content.stages.flatMap(s => s.referenceImages || []).slice(0, 4)
         return (
           <div className="space-y-2">
+            {/* Template URL if exists */}
             {content.templateUrl && (
               <div className="relative aspect-video rounded overflow-hidden bg-muted/20 mb-2">
                 <img
@@ -107,10 +110,37 @@ export function CommunityCard({
                 />
               </div>
             )}
+            {/* Stage Reference Images Gallery */}
+            {allRefImages.length > 0 && (
+              <div className="flex gap-1.5 flex-wrap mb-2">
+                {allRefImages.map((img, idx) => (
+                  <div key={img.id || idx} className="relative w-10 h-10 rounded overflow-hidden bg-muted/20 border border-border/50">
+                    <img
+                      src={img.url}
+                      alt={img.name || `Reference ${idx + 1}`}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                ))}
+                {content.stages.flatMap(s => s.referenceImages || []).length > 4 && (
+                  <div className="w-10 h-10 rounded bg-muted/30 border border-border/50 flex items-center justify-center">
+                    <span className="text-[10px] text-muted-foreground">
+                      +{content.stages.flatMap(s => s.referenceImages || []).length - 4}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span>{content.stages.length} stage{content.stages.length > 1 ? 's' : ''}</span>
               <span className="text-muted-foreground/30">|</span>
               <span>{fieldCount} field{fieldCount > 1 ? 's' : ''}</span>
+              {allRefImages.length > 0 && (
+                <>
+                  <span className="text-muted-foreground/30">|</span>
+                  <span className="text-blue-400">{content.stages.flatMap(s => s.referenceImages || []).length} ref image{content.stages.flatMap(s => s.referenceImages || []).length > 1 ? 's' : ''}</span>
+                </>
+              )}
             </div>
           </div>
         )
