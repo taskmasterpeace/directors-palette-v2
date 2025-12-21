@@ -46,6 +46,7 @@ export function useRecipes() {
     addRecipe: store.addRecipe,
     updateRecipe: store.updateRecipe,
     deleteRecipe: store.deleteRecipe,
+    duplicateRecipe: store.duplicateRecipe,
     getRecipe: store.getRecipe,
     refreshRecipes: store.refreshRecipes,
 

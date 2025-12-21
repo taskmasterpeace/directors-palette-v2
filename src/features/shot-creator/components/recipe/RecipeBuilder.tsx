@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { useRecipeStore } from '../../store/recipe.store'
+import { useRecipes } from '../../hooks/useRecipes'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -81,7 +81,8 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
     addCategory,
     updateCategory,
     deleteCategory,
-  } = useRecipeStore()
+    isLoading: _isLoading,
+  } = useRecipes()
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
@@ -136,7 +137,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
   }
 
   // Handle create
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!formName.trim() || formStages.every(s => !s.template.trim())) return
 
     // Parse fields for each stage
@@ -149,7 +150,8 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
 
     const totalImages = stagesWithFields.reduce((acc, s) => acc + s.referenceImages.length, 0)
 
-    addRecipe({
+    // Await and check result
+    const newRecipe = await addRecipe({
       name: formName.trim(),
       description: formDescription.trim() || undefined,
       recipeNote: formRecipeNote.trim() || undefined,
@@ -160,13 +162,20 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
       isQuickAccess: formIsQuickAccess && !!formQuickLabel.trim(),
     })
 
-    toast({
-      title: 'Recipe Created',
-      description: `"${formName.trim()}" saved with ${stagesWithFields.length} stage(s)${totalImages > 0 ? ` and ${totalImages} image(s)` : ''}.`,
-    })
-
-    setIsCreateOpen(false)
-    resetForm()
+    if (newRecipe) {
+      toast({
+        title: 'Recipe Created',
+        description: `"${formName.trim()}" saved with ${stagesWithFields.length} stage(s)${totalImages > 0 ? ` and ${totalImages} image(s)` : ''}.`,
+      })
+      setIsCreateOpen(false)
+      resetForm()
+    } else {
+      toast({
+        title: 'Failed to Create Recipe',
+        description: 'Please try again. Check console for details.',
+        variant: 'destructive',
+      })
+    }
   }
 
   // Handle update
