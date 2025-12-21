@@ -201,7 +201,7 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
 export function useImageGeneration() {
     const { toast } = useToast()
     const [_progress, setProgress] = useState<GenerationProgress>({ status: 'idle' })
-    const { setShotCreatorProcessing, settings } = useShotCreatorStore()
+    const { setShotCreatorProcessing, settings, stageReferenceImages } = useShotCreatorStore()
     const { wildcards, loadWildCards } = useWildCardStore()
     const { fetchBalance } = useCreditsStore()
     const [activeGalleryId, setActiveGalleryId] = useState<string | null>(null)
@@ -518,17 +518,37 @@ export function useImageGeneration() {
                 const variationPrompt = variations[i]
                 const isFirstStep = i === 0
                 const isLastStep = i === variations.length - 1
-                // Use uploaded HTTPS URLs instead of original data URLs
-                // For pipe chaining: first step uses user refs, subsequent steps use generated image from prior step
-                const inputImages = isPipeChaining
-                    ? (isFirstStep ? (uploadedReferenceImages.length > 0 ? uploadedReferenceImages : undefined) : previousImageUrl ? [previousImageUrl] : undefined)
-                    : (uploadedReferenceImages.length > 0 ? uploadedReferenceImages : undefined)
+
+                // Get stage-specific reference images (for recipe pipe chaining)
+                const stageRefs = stageReferenceImages?.[i] || []
+
+                // Determine input images for this step
+                // For pipe chaining: combine previous output + this stage's specific references
+                // For non-pipe: use uploaded references
+                let inputImages: string[] | undefined
+                if (isPipeChaining) {
+                    if (isFirstStep) {
+                        // First step: use stage 0's refs, or fall back to uploaded refs
+                        inputImages = stageRefs.length > 0
+                            ? stageRefs
+                            : (uploadedReferenceImages.length > 0 ? uploadedReferenceImages : undefined)
+                    } else {
+                        // Subsequent steps: combine previous output + this stage's refs
+                        const refs: string[] = []
+                        if (previousImageUrl) refs.push(previousImageUrl)
+                        refs.push(...stageRefs)
+                        inputImages = refs.length > 0 ? refs : undefined
+                    }
+                } else {
+                    inputImages = uploadedReferenceImages.length > 0 ? uploadedReferenceImages : undefined
+                }
 
                 // Debug logging for pipe chaining
                 if (isPipeChaining) {
                     console.log(`[Pipe Chain] Step ${i + 1}/${variations.length}:`, {
                         isFirstStep,
                         previousImageUrl: previousImageUrl || '(none)',
+                        stageRefs: stageRefs.length ? `${stageRefs.length} stage ref(s)` : '(none)',
                         inputImages: inputImages?.length ? `${inputImages.length} image(s)` : '(none)',
                         prompt: variationPrompt.slice(0, 50)
                     })

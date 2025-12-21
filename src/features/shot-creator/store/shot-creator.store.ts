@@ -14,6 +14,7 @@ export const DEFAULT_SETTINGS: ShotCreatorSettings = {
 export interface ShotCreatorStore {
     // ---- State ----
     shotCreatorReferenceImages: ShotCreatorReferenceImage[];
+    stageReferenceImages: string[][];  // Per-stage refs for recipe pipe chaining
     shotCreatorPrompt: string;
     settings: ShotCreatorSettings;
     shotCreatorGenerations: ShotCreatorGeneration[];
@@ -33,6 +34,7 @@ export interface ShotCreatorStore {
     // ---- Actions ----
     setSettings: (updater: ShotCreatorSettings | ((prev: ShotCreatorSettings) => ShotCreatorSettings)) => void
     setShotCreatorReferenceImages: (images: ShotCreatorReferenceImage[] | ((prev: ShotCreatorReferenceImage[]) => ShotCreatorReferenceImage[])) => void;
+    setStageReferenceImages: (refs: string[][]) => void;
     setShotCreatorPrompt: (prompt: string) => void;
     setShotCreatorGenerations: (generations: ShotCreatorGeneration[]) => void;
     setShotCreatorProcessing: (processing: boolean) => void;
@@ -59,6 +61,7 @@ export interface ShotCreatorStore {
 
 export const useShotCreatorStore = create<ShotCreatorStore>()((set) => ({
     shotCreatorReferenceImages: [],
+    stageReferenceImages: [],
     shotCreatorPrompt: "",
     shotCreatorGenerations: [],
     shotCreatorProcessing: false,
@@ -76,6 +79,7 @@ export const useShotCreatorStore = create<ShotCreatorStore>()((set) => ({
         set((state) => ({
             shotCreatorReferenceImages: typeof images === 'function' ? images(state.shotCreatorReferenceImages) : images
         })),
+    setStageReferenceImages: (refs) => set({ stageReferenceImages: refs }),
     setGeneratedShotIds: (ids) => set({ generatedShotIds: ids }),
     setShotCreatorPrompt: (prompt) => set({ shotCreatorPrompt: prompt }),
     setShotCreatorGenerations: (generations) => set({ shotCreatorGenerations: generations }),
@@ -87,6 +91,7 @@ export const useShotCreatorStore = create<ShotCreatorStore>()((set) => ({
     resetStore: () =>
         set({
             shotCreatorReferenceImages: [],
+            stageReferenceImages: [],
             shotCreatorPrompt: "",
             shotCreatorGenerations: [],
             shotCreatorProcessing: false,

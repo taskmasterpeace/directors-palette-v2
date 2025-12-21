@@ -17,7 +17,7 @@ import { cn } from '@/utils/utils'
 import { RecipeField, getAllFields } from '../../types/recipe.types'
 
 interface RecipeFormFieldsProps {
-  onApplyPrompt: (prompts: string[], referenceImages: string[]) => void
+  onApplyPrompt: (prompts: string[], referenceImages: string[], stageReferenceImages?: string[][]) => void
   className?: string
 }
 
@@ -42,7 +42,7 @@ export function RecipeFormFields({
   const handleApply = () => {
     const result = buildActivePrompts()
     if (result && result.prompts.length > 0) {
-      onApplyPrompt(result.prompts, result.referenceImages)
+      onApplyPrompt(result.prompts, result.referenceImages, result.stageReferenceImages)
       setActiveRecipe(null) // Close the form
     }
   }

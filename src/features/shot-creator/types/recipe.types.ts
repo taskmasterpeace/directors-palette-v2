@@ -294,7 +294,8 @@ export function buildStagePrompt(
  */
 export interface RecipePromptResult {
   prompts: string[]
-  referenceImages: string[]
+  referenceImages: string[]           // All refs flattened (backward compat)
+  stageReferenceImages: string[][]    // Per-stage refs indexed by stage order
 }
 
 /**
@@ -309,7 +310,7 @@ export function buildRecipePrompts(
   const uniqueFields = getAllFields(stages)
   const prompts = stages.map(stage => buildStagePrompt(stage.template, stage.fields, values, uniqueFields))
 
-  // Collect all reference images from all stages (deduplicated)
+  // Collect all reference images from all stages (deduplicated) for backward compatibility
   const referenceImages: string[] = []
   for (const stage of stages) {
     for (const ref of stage.referenceImages || []) {
@@ -319,7 +320,14 @@ export function buildRecipePrompts(
     }
   }
 
-  return { prompts, referenceImages }
+  // Collect reference images per stage (indexed by stage order) for pipe chaining
+  const stageReferenceImages: string[][] = stages.map(stage =>
+    (stage.referenceImages || [])
+      .map(ref => ref.url)
+      .filter((url): url is string => Boolean(url))
+  )
+
+  return { prompts, referenceImages, stageReferenceImages }
 }
 
 /**

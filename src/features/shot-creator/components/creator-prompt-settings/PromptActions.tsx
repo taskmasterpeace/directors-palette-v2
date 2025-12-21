@@ -39,6 +39,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         shotCreatorReferenceImages,
         setShotCreatorPrompt,
         setShotCreatorReferenceImages,
+        setStageReferenceImages,
     } = useShotCreatorStore()
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
     const { generateImage, isGenerating } = useImageGeneration()
@@ -308,9 +309,12 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     }, [setActiveRecipe])
 
     // Handle applying a recipe's generated prompts
-    // For multi-stage recipes, we use the first stage prompt for now
-    // Full pipe execution will be handled in the image generation service
-    const handleApplyRecipePrompt = useCallback((prompts: string[], recipeReferenceImages: string[]) => {
+    // Multi-stage recipes use pipe chaining with stage-specific reference images
+    const handleApplyRecipePrompt = useCallback((
+        prompts: string[],
+        recipeReferenceImages: string[],
+        stageReferenceImages?: string[][]
+    ) => {
         // Get the active recipe info before closing
         const recipe = getActiveRecipe()
         if (recipe) {
@@ -335,7 +339,15 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             setShotCreatorPrompt(fullPrompt)
         }
 
-        // Add recipe reference images (deduplicated with existing ones)
+        // Store stage-specific reference images for pipe chaining
+        // These are used by useImageGeneration to inject the right refs at each stage
+        if (stageReferenceImages && stageReferenceImages.length > 0) {
+            setStageReferenceImages(stageReferenceImages)
+        } else {
+            setStageReferenceImages([])
+        }
+
+        // Add recipe reference images (deduplicated with existing ones) for preview/fallback
         if (recipeReferenceImages.length > 0) {
             setShotCreatorReferenceImages((prev: ShotCreatorReferenceImage[]) => {
                 const newRefs: ShotCreatorReferenceImage[] = recipeReferenceImages
@@ -352,7 +364,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         }
 
         setActiveRecipe(null)
-    }, [setShotCreatorPrompt, setActiveRecipe, getActiveRecipe, updateSettings, setShotCreatorReferenceImages])
+    }, [setShotCreatorPrompt, setActiveRecipe, getActiveRecipe, updateSettings, setShotCreatorReferenceImages, setStageReferenceImages])
 
     // Calculate dropdown position based on cursor
     const calculateDropdownPosition = useCallback(() => {
