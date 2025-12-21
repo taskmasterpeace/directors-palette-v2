@@ -405,35 +405,28 @@ function parseBracketsAndPipes(
         }
     }
 
-    // Generate all combinations (flatten the cross-product)
-    // Note: We don't actually use this cartesian product - see flatPrompts below
-    const _allPrompts = cartesianProductStrings(expandedSegments).map(combo => combo.join(' | '))
-
-    // Actually, we want each combination to be a separate prompt, not joined by |
-    // Let me reconsider - each "row" of the cartesian product is one complete prompt set
-    // Actually for generation, we want ALL the individual prompts
-    const flatPrompts: string[] = []
-    for (const segment of expandedSegments) {
-        flatPrompts.push(...segment)
-    }
+    // Generate cross-product: each combination is a complete pipe chain
+    // Example: [red, blue] car | [fast, slow] bike
+    // → "red car | fast bike", "red car | slow bike", "blue car | fast bike", "blue car | slow bike"
+    const allPrompts = cartesianProductStrings(expandedSegments).map(combo => combo.join(' | '))
 
     return {
         isValid: true,
         hasBrackets: true,
         hasPipes: true,
         hasWildCards: context.hasWildCards,
-        expandedPrompts: flatPrompts,
+        expandedPrompts: allPrompts,
         originalPrompt: context.originalPrompt,
         wildCardNames: context.hasWildCards ? context.wildCardNames : undefined,
-        previewCount: Math.min(flatPrompts.length, config.maxPreview),
-        totalCount: flatPrompts.length,
+        previewCount: Math.min(allPrompts.length, config.maxPreview),
+        totalCount: allPrompts.length,
         warnings: [
             ...context.wildCardWarnings,
-            `📸 Generating ${flatPrompts.length} images (${creditCost} credits)`
+            `📸 Generating ${allPrompts.length} pipe chains (${creditCost} credits)`
         ],
         isCrossCombination: true,
         creditCost,
-        imageBreakdown: `${pipeSegments.length} pipe segments with brackets = ${flatPrompts.length} images`
+        imageBreakdown: `${pipeSegments.length} pipe segments with brackets = ${allPrompts.length} chains`
     }
 }
 

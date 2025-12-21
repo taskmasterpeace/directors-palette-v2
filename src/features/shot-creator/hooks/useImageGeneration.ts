@@ -442,6 +442,22 @@ export function useImageGeneration() {
                     disableBracketSyntax: settings.disableBracketSyntax,
                     disableWildcardSyntax: settings.disableWildcardSyntax
                 }, wildcards)
+
+                // Check validity and abort gracefully with user feedback (e.g., missing wildcards)
+                if (!promptResult.isValid) {
+                    setShotCreatorProcessing(false)
+                    const errorMessage = promptResult.warnings?.join('. ') || 'Invalid prompt syntax'
+                    toast({
+                        title: 'Cannot Generate',
+                        description: errorMessage,
+                        variant: 'destructive',
+                    })
+                    return {
+                        success: false,
+                        error: errorMessage,
+                    }
+                }
+
                 variations = promptResult.expandedPrompts
                 totalVariations = promptResult.totalCount
                 isPipeChaining = promptResult.hasPipes

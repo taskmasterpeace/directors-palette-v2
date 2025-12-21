@@ -328,9 +328,11 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             }
         }
 
-        // Use first stage prompt for the main prompt field
+        // Join all stage prompts with pipe separator for multi-stage execution
+        // The pipe chaining system in useImageGeneration handles sequential execution
         if (prompts.length > 0) {
-            setShotCreatorPrompt(prompts[0])
+            const fullPrompt = prompts.join(' | ')
+            setShotCreatorPrompt(fullPrompt)
         }
 
         // Add recipe reference images (deduplicated with existing ones)
