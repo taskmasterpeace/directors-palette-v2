@@ -146,6 +146,33 @@ export interface DirectorFingerprint {
         swappableSections: string[]
         styleExcluded: boolean
     }
+
+    // Director Questions (optional - for interactive refinement)
+    questions?: DirectorQuestion[]
+}
+
+// =============================================================================
+// DIRECTOR QUESTIONS
+// =============================================================================
+
+export interface DirectorQuestionOption {
+    label: string           // What user sees (short)
+    value: string           // Identifier for the answer
+    description?: string    // Optional longer explanation
+    isDefault?: boolean     // Pre-selected option
+}
+
+export interface DirectorQuestion {
+    id: string
+    questionText: string    // The question the director asks
+    options: DirectorQuestionOption[]
+    category: 'emotional' | 'visual' | 'narrative' | 'spectacle'
+}
+
+// User's answers to director questions
+export interface DirectorQuestionAnswers {
+    directorId: string
+    answers: Record<string, string>  // questionId -> selected value
 }
 
 // =============================================================================

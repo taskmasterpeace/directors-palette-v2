@@ -158,7 +158,43 @@ export const DIRECTORS: DirectorFingerprint[] = [
             ],
             swappableSections: ['cameraMotionProfile'],
             styleExcluded: true
-        }
+        },
+
+        questions: [
+            {
+                id: 'coogler_stakes',
+                questionText: 'What does this moment cost the character?',
+                category: 'emotional',
+                options: [
+                    { label: 'Their reputation', value: 'reputation', description: 'Standing in the community is at risk' },
+                    { label: 'A relationship', value: 'relationship', description: 'Someone they love may be lost', isDefault: true },
+                    { label: 'Their identity', value: 'identity', description: 'Who they thought they were is shattered' },
+                    { label: 'Everything', value: 'everything', description: 'Total loss - career, family, future' }
+                ]
+            },
+            {
+                id: 'coogler_witness',
+                questionText: 'Who is watching this story unfold?',
+                category: 'narrative',
+                options: [
+                    { label: 'Ancestors', value: 'ancestors', description: 'The weight of legacy and lineage', isDefault: true },
+                    { label: 'The community', value: 'community', description: 'Neighbors, friends, the collective' },
+                    { label: 'A rival', value: 'rival', description: 'Someone who wants them to fail' },
+                    { label: 'Only themselves', value: 'internal', description: 'The hardest judge is within' }
+                ]
+            },
+            {
+                id: 'coogler_legacy',
+                questionText: 'What inheritance shapes this moment?',
+                category: 'narrative',
+                options: [
+                    { label: 'Cultural traditions', value: 'culture', description: 'Customs passed down through generations', isDefault: true },
+                    { label: 'Unfinished business', value: 'unfinished', description: 'Something left undone by those before' },
+                    { label: 'Unchosen responsibility', value: 'responsibility', description: 'A burden they never asked for' },
+                    { label: 'Breaking the cycle', value: 'breaking', description: 'Choosing a new path entirely' }
+                ]
+            }
+        ]
     },
 
     // ---------------------------------------------------------------------------
@@ -297,7 +333,32 @@ export const DIRECTORS: DirectorFingerprint[] = [
             ],
             swappableSections: ['cameraMotionProfile'],
             styleExcluded: true
-        }
+        },
+
+        questions: [
+            {
+                id: 'eastwood_necessary',
+                questionText: "What's truly necessary in this scene?",
+                category: 'visual',
+                options: [
+                    { label: 'Character and landscape', value: 'landscape', description: 'Just the person against the world', isDefault: true },
+                    { label: 'One meaningful object', value: 'object', description: 'A single detail that says everything' },
+                    { label: 'The weight of choice', value: 'choice', description: 'A decision hanging in the air' },
+                    { label: 'Silence and space', value: 'silence', description: 'Let the emptiness speak' }
+                ]
+            },
+            {
+                id: 'eastwood_consequence',
+                questionText: 'What moral weight does this carry?',
+                category: 'emotional',
+                options: [
+                    { label: 'Past catching up', value: 'past', description: 'Old mistakes demanding payment' },
+                    { label: 'The harder right', value: 'right', description: 'Choosing principle over comfort', isDefault: true },
+                    { label: 'Irreversible decision', value: 'irreversible', description: 'Living with what cannot be undone' },
+                    { label: 'Quiet acceptance', value: 'acceptance', description: 'Making peace with fate' }
+                ]
+            }
+        ]
     },
 
     // ---------------------------------------------------------------------------
@@ -441,7 +502,43 @@ export const DIRECTORS: DirectorFingerprint[] = [
             ],
             swappableSections: ['cameraMotionProfile'],
             styleExcluded: true
-        }
+        },
+
+        questions: [
+            {
+                id: 'fincher_system',
+                questionText: 'What system is pressing on the character?',
+                category: 'narrative',
+                options: [
+                    { label: 'Corporate power', value: 'corporate', description: 'Institutional machinery grinding them down', isDefault: true },
+                    { label: 'Social conformity', value: 'social', description: 'The weight of expectations' },
+                    { label: 'Their own patterns', value: 'obsession', description: 'Trapped by their own compulsions' },
+                    { label: 'Technology', value: 'technology', description: 'Surveillance, data, digital control' }
+                ]
+            },
+            {
+                id: 'fincher_control',
+                questionText: 'Where is control slipping?',
+                category: 'emotional',
+                options: [
+                    { label: 'Information escaping', value: 'information', description: 'Secrets leaking out' },
+                    { label: 'Emotions breaking through', value: 'emotions', description: 'The mask is cracking', isDefault: true },
+                    { label: 'The plan falling apart', value: 'plan', description: 'Careful schemes unraveling' },
+                    { label: 'Reality distorting', value: 'reality', description: "Can't trust what they see" }
+                ]
+            },
+            {
+                id: 'fincher_dread',
+                questionText: "What's the source of tension?",
+                category: 'emotional',
+                options: [
+                    { label: 'Something approaching', value: 'inevitable', description: 'An unstoppable force coming', isDefault: true },
+                    { label: 'A secret surfacing', value: 'secret', description: 'Truth about to be exposed' },
+                    { label: 'Losing grip', value: 'sanity', description: 'Sanity slipping away' },
+                    { label: 'Being watched', value: 'watched', description: 'Eyes everywhere, judging' }
+                ]
+            }
+        ]
     },
     // ---------------------------------------------------------------------------
     // WES SANDERSON (Parody of Wes Anderson) - Whimsy & Symmetry
@@ -580,7 +677,32 @@ export const DIRECTORS: DirectorFingerprint[] = [
             ],
             swappableSections: ['cameraMotionProfile'],
             styleExcluded: true
-        }
+        },
+
+        questions: [
+            {
+                id: 'anderson_composition',
+                questionText: 'How should this be framed?',
+                category: 'visual',
+                options: [
+                    { label: 'Perfect symmetry', value: 'symmetry', description: 'Centered, balanced, mathematical', isDefault: true },
+                    { label: 'Detailed tableau', value: 'tableau', description: 'A stage filled with curated objects' },
+                    { label: 'Cross-section view', value: 'crosssection', description: 'Like a dollhouse, revealing layers' },
+                    { label: 'Top-down arrangement', value: 'topdown', description: "Bird's eye, everything in its place" }
+                ]
+            },
+            {
+                id: 'anderson_emotion',
+                questionText: "What's the emotional flavor?",
+                category: 'emotional',
+                options: [
+                    { label: 'Melancholy whimsy', value: 'melancholy', description: 'Sadness wrapped in pretty colors', isDefault: true },
+                    { label: 'Deadpan hiding pain', value: 'deadpan', description: 'Flat faces, deep feelings' },
+                    { label: 'Nostalgic longing', value: 'nostalgic', description: 'Aching for a past that may not exist' },
+                    { label: 'Family dysfunction', value: 'family', description: 'Love expressed through tension' }
+                ]
+            }
+        ]
     },
 
     // ---------------------------------------------------------------------------
@@ -722,7 +844,43 @@ export const DIRECTORS: DirectorFingerprint[] = [
             ],
             swappableSections: [],
             styleExcluded: false
-        }
+        },
+
+        questions: [
+            {
+                id: 'hype_gloss',
+                questionText: 'How shiny should this be?',
+                category: 'visual',
+                options: [
+                    { label: 'Maximum gloss', value: 'maximum', description: 'Reflections everywhere, dripping luxury', isDefault: true },
+                    { label: 'Strategic shine', value: 'strategic', description: 'Key elements catch the light' },
+                    { label: 'Matte and metallic', value: 'mixed', description: 'Contrast between surfaces' },
+                    { label: 'Gritty sparkle', value: 'gritty', description: 'Raw with occasional flash' }
+                ]
+            },
+            {
+                id: 'hype_energy',
+                questionText: "What's the energy level?",
+                category: 'spectacle',
+                options: [
+                    { label: 'Through the roof', value: 'maximum', description: 'Constant hype, never stops', isDefault: true },
+                    { label: 'Building explosions', value: 'building', description: 'Tension and release cycles' },
+                    { label: 'Cool confidence', value: 'cool', description: 'Controlled swagger' },
+                    { label: 'Chaotic', value: 'chaotic', description: 'Unpredictable and wild' }
+                ]
+            },
+            {
+                id: 'hype_lens',
+                questionText: 'How distorted is the perspective?',
+                category: 'visual',
+                options: [
+                    { label: 'Full fisheye', value: 'fisheye', description: 'Warped reality, curved edges', isDefault: true },
+                    { label: 'Wide with distortion', value: 'wide', description: 'Subtle but noticeable warp' },
+                    { label: 'Extreme contrasts', value: 'extreme', description: 'Very close or very far, nothing between' },
+                    { label: 'Stylized normal', value: 'normal', description: 'Relatively straight with stylized moments' }
+                ]
+            }
+        ]
     }
 ]
 

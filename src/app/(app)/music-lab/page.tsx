@@ -20,14 +20,21 @@ import {
 } from '@/features/music-lab'
 import { ProposalList } from '@/features/music-lab/components/ProposalList'
 import { Timeline } from '@/features/music-lab/components/Timeline'
+import { DirectorQuestionsDialog } from '@/features/music-lab/components/DirectorQuestionsDialog'
 import { useTimelineStore } from '@/features/music-lab/store/timeline.store'
-import type { DirectorProposal } from '@/features/music-lab/types/director.types'
+import type { DirectorFingerprint, DirectorProposal } from '@/features/music-lab/types/director.types'
 import type { SongAnalysisInput } from '@/features/music-lab/types/timeline.types'
 import { PRESET_STYLES } from '@/features/storyboard/types/storyboard.types'
+import { getDirectorById } from '@/features/music-lab/data/directors.data'
 
 export default function MusicLabPage() {
     const { project, setStyle, setStatus } = useMusicLabStore()
     const [isAnalyzing, setIsAnalyzing] = useState(false)
+
+    // Director questions state
+    const [pendingProposal, setPendingProposal] = useState<DirectorProposal | null>(null)
+    const [pendingDirector, setPendingDirector] = useState<DirectorFingerprint | null>(null)
+    const [showQuestionsDialog, setShowQuestionsDialog] = useState(false)
 
     const canAnalyze = (project.audioUrl || project.manualLyrics) &&
         project.genreSelection?.genre
@@ -50,7 +57,24 @@ export default function MusicLabPage() {
         }
     }
 
+    // Called when user clicks "Greenlight This Vision"
     const handleSelectProposal = (proposal: DirectorProposal) => {
+        // Get the director's fingerprint to check for questions
+        const director = getDirectorById(proposal.directorId)
+
+        if (director && director.questions && director.questions.length > 0) {
+            // Director has questions - show dialog before proceeding
+            setPendingProposal(proposal)
+            setPendingDirector(director)
+            setShowQuestionsDialog(true)
+        } else {
+            // No questions - proceed directly
+            finalizeProposal(proposal)
+        }
+    }
+
+    // Called after questions are answered or skipped
+    const finalizeProposal = (proposal: DirectorProposal, answers?: Record<string, string>) => {
         const timelineStore = useTimelineStore.getState()
 
         // Import song data if not already there
@@ -61,11 +85,75 @@ export default function MusicLabPage() {
             timelineStore.setAudioUrl(project.audioUrl)
         }
 
+        // Refine proposal if we have answers
+        const refinedProposal = answers
+            ? refineProposalWithAnswers(proposal, answers)
+            : proposal
+
         // Import proposal shots
-        timelineStore.importProposal(proposal, project.songAnalysis as SongAnalysisInput)
+        timelineStore.importProposal(refinedProposal, project.songAnalysis as SongAnalysisInput)
+
+        // Clear question state
+        setPendingProposal(null)
+        setPendingDirector(null)
+        setShowQuestionsDialog(false)
 
         // Move to building phase
         setStatus('building')
+    }
+
+    // Handle questions submitted
+    const handleQuestionsSubmit = (answers: Record<string, string>) => {
+        if (pendingProposal) {
+            finalizeProposal(pendingProposal, answers)
+        }
+    }
+
+    // Handle questions skipped
+    const handleQuestionsSkip = () => {
+        if (pendingProposal) {
+            finalizeProposal(pendingProposal)
+        }
+    }
+
+    // Refine proposal based on user's answers to director questions
+    const refineProposalWithAnswers = (
+        proposal: DirectorProposal,
+        answers: Record<string, string>
+    ): DirectorProposal => {
+        // Clone the proposal
+        const refined = { ...proposal }
+
+        // Build answer context string for enhancing prompts
+        const answerDescriptions = Object.entries(answers).map(([questionId, value]) => {
+            const director = getDirectorById(proposal.directorId)
+            const question = director?.questions?.find(q => q.id === questionId)
+            const option = question?.options.find(o => o.value === value)
+            if (question && option) {
+                return `${question.questionText} → ${option.label}${option.description ? ` (${option.description})` : ''}`
+            }
+            return null
+        }).filter(Boolean)
+
+        const answerContext = answerDescriptions.join('. ')
+
+        // Enhance key shots with answer context
+        if (answerContext && refined.keyShots) {
+            refined.keyShots = refined.keyShots.map(shot => ({
+                ...shot,
+                basePrompt: `${shot.basePrompt}. Director's vision: ${answerContext}`,
+                directorNotes: shot.directorNotes
+                    ? `${shot.directorNotes} | User choices: ${answerContext}`
+                    : `User choices: ${answerContext}`
+            }))
+        }
+
+        // Enhance concept overview
+        if (answerContext && refined.conceptOverview) {
+            refined.conceptOverview = `${refined.conceptOverview}\n\nRefined by director questions: ${answerContext}`
+        }
+
+        return refined
     }
 
     return (
@@ -199,6 +287,17 @@ export default function MusicLabPage() {
                     </div>
                     <Timeline className="border rounded-lg p-4 bg-background" />
                 </div>
+            )}
+
+            {/* Director Questions Dialog */}
+            {pendingDirector && (
+                <DirectorQuestionsDialog
+                    open={showQuestionsDialog}
+                    onOpenChange={setShowQuestionsDialog}
+                    director={pendingDirector}
+                    onSubmit={handleQuestionsSubmit}
+                    onSkip={handleQuestionsSkip}
+                />
             )}
         </div>
     )
