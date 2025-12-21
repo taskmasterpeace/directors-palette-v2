@@ -308,8 +308,6 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     }, [setActiveRecipe])
 
     // Handle applying a recipe's generated prompts
-    // For multi-stage recipes, we use the first stage prompt for now
-    // Full pipe execution will be handled in the image generation service
     const handleApplyRecipePrompt = useCallback((prompts: string[], recipeReferenceImages: string[]) => {
         // Get the active recipe info before closing
         const recipe = getActiveRecipe()
@@ -328,8 +326,12 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             }
         }
 
-        // Use first stage prompt for the main prompt field
-        if (prompts.length > 0) {
+        // If the recipe has multiple stages, chain them using pipe syntax so the generator
+        // runs sequentially and feeds each output into the next stage.
+        // Single-stage recipes just use the single prompt.
+        if (prompts.length > 1) {
+            setShotCreatorPrompt(prompts.join(' | '))
+        } else if (prompts.length === 1) {
             setShotCreatorPrompt(prompts[0])
         }
 

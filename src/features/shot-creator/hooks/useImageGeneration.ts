@@ -442,9 +442,24 @@ export function useImageGeneration() {
                     disableBracketSyntax: settings.disableBracketSyntax,
                     disableWildcardSyntax: settings.disableWildcardSyntax
                 }, wildcards)
+
+                // If parsing failed (e.g., missing wildcards), surface the warning and abort
+                if (!promptResult.isValid) {
+                    const warning = promptResult.warnings?.[0] || 'Prompt syntax is invalid'
+                    setShotCreatorProcessing(false)
+                    setProgress({ status: 'failed', error: warning })
+                    toast({
+                        title: 'Invalid Prompt',
+                        description: warning,
+                        variant: 'destructive',
+                    })
+                    return
+                }
+
                 variations = promptResult.expandedPrompts
                 totalVariations = promptResult.totalCount
-                isPipeChaining = promptResult.hasPipes
+                // Only chain when we truly have a pipe-based sequential flow (not cross-product combos)
+                isPipeChaining = promptResult.hasPipes && !promptResult.isCrossCombination
 
                 // Log wildcard usage
                 if (promptResult.hasWildCards) {
