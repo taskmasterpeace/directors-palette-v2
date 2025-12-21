@@ -23,14 +23,14 @@ export function useRecipes() {
     if (!authLoading && user?.id && !store.isInitialized) {
       store.initialize(user.id)
     }
-  }, [authLoading, user?.id, store.isInitialized, store])
+  }, [authLoading, user?.id, store.isInitialized, store.initialize])
 
   // Re-initialize if user changes
   useEffect(() => {
     if (user?.id && store.currentUserId && user.id !== store.currentUserId) {
       store.initialize(user.id)
     }
-  }, [user?.id, store.currentUserId, store])
+  }, [user?.id, store.currentUserId, store.initialize])
 
   return {
     // State
@@ -109,7 +109,7 @@ export function useQuickAccess() {
     if (!authLoading && user?.id && !store.isInitialized) {
       store.initialize(user.id)
     }
-  }, [authLoading, user?.id, store.isInitialized, store])
+  }, [authLoading, user?.id, store.isInitialized, store.initialize])
 
   return {
     quickAccessItems: store.quickAccessItems,
