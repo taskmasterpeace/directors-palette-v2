@@ -17,12 +17,10 @@ import { cn } from '@/utils/utils'
 import { RecipeField, getAllFields } from '../../types/recipe.types'
 
 interface RecipeFormFieldsProps {
-  onApplyPrompt: (prompts: string[], referenceImages: string[], stageReferenceImages?: string[][]) => void
   className?: string
 }
 
 export function RecipeFormFields({
-  onApplyPrompt,
   className,
 }: RecipeFormFieldsProps) {
   const {
@@ -32,22 +30,12 @@ export function RecipeFormFields({
     setActiveRecipe,
     getActiveRecipe,
     getActiveValidation,
-    buildActivePrompts,
   } = useRecipeStore()
 
   const activeRecipe = getActiveRecipe()
   const validation = getActiveValidation()
 
-  // Handle applying the recipe
-  const handleApply = () => {
-    const result = buildActivePrompts()
-    if (result && result.prompts.length > 0) {
-      onApplyPrompt(result.prompts, result.referenceImages, result.stageReferenceImages)
-      setActiveRecipe(null) // Close the form
-    }
-  }
-
-  // Handle cancel
+  // Handle cancel (deselect recipe)
   const handleCancel = () => {
     setActiveRecipe(null)
   }
@@ -114,7 +102,7 @@ export function RecipeFormFields({
             onChange={(e) => setFieldValue(field.id, e.target.value)}
             placeholder={field.placeholder}
             className={cn(
-              'min-h-[60px] text-sm bg-card border-border resize-y',
+              'min-h-[36px] text-sm bg-card border-border resize-y',
               isMissing && 'border-amber-500/50 ring-1 ring-amber-500/30'
             )}
           />
@@ -178,7 +166,7 @@ export function RecipeFormFields({
         </div>
       )}
 
-      {/* Footer: Validation, Aspect Ratio, & Apply */}
+      {/* Footer: Validation status & Aspect Ratio */}
       <div className="flex items-center justify-between pt-2 border-t border-border gap-2">
         <div className="flex items-center gap-3">
           {validation && !validation.isValid ? (
@@ -189,28 +177,17 @@ export function RecipeFormFields({
           ) : (
             <div className="flex items-center gap-1 text-xs text-green-400">
               <Check className="w-3 h-3" />
-              Ready
+              Ready to Generate
             </div>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Suggested Aspect Ratio - Near Apply */}
-          {activeRecipe.suggestedAspectRatio && (
-            <span className="text-xs text-muted-foreground">
-              <span className="text-amber-400">{activeRecipe.suggestedAspectRatio}</span>
-            </span>
-          )}
-
-          <Button
-            size="sm"
-            onClick={handleApply}
-            disabled={validation ? !validation.isValid : false}
-            className="h-8 px-6 text-sm bg-amber-500 hover:bg-amber-600 text-black font-medium"
-          >
-            Apply Recipe
-          </Button>
-        </div>
+        {/* Suggested Aspect Ratio */}
+        {activeRecipe.suggestedAspectRatio && (
+          <span className="text-xs text-muted-foreground">
+            Aspect: <span className="text-amber-400">{activeRecipe.suggestedAspectRatio}</span>
+          </span>
+        )}
       </div>
     </div>
   )

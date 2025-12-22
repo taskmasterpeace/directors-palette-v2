@@ -45,7 +45,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     const { generateImage, isGenerating } = useImageGeneration()
     const { libraryItems } = useLibraryStore()
     const { wildcards } = useWildCardStore()
-    const { activeRecipeId, setActiveRecipe, getActiveRecipe } = useRecipeStore()
+    const { activeRecipeId, setActiveRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts } = useRecipeStore()
 
     // Calculate generation cost
     const generationCost = React.useMemo(() => {
@@ -112,7 +112,19 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     } = autocomplete
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
 
-    const canGenerate = shotCreatorPrompt.length > 0 && shotCreatorReferenceImages.length > 0
+    // Can generate: either regular mode (prompt + refs) OR recipe mode (valid recipe)
+    const canGenerate = React.useMemo(() => {
+        const activeRecipe = getActiveRecipe()
+        if (activeRecipe) {
+            const validation = getActiveValidation()
+            // Recipe mode: valid fields + has refs (user's OR recipe's built-in)
+            const hasRefs = shotCreatorReferenceImages.length > 0 ||
+                activeRecipe.stages.some(s => (s.referenceImages?.length || 0) > 0)
+            return (validation?.isValid ?? false) && hasRefs
+        }
+        // Regular mode: needs prompt and refs
+        return shotCreatorPrompt.length > 0 && shotCreatorReferenceImages.length > 0
+    }, [shotCreatorPrompt, shotCreatorReferenceImages, getActiveRecipe, getActiveValidation])
 
     // Get references grouped by category from library items
     const getReferencesGroupedByCategory = useCallback(() => {
@@ -276,95 +288,92 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         return baseSettings
     }, [shotCreatorSettings])
 
-    // Handle generation
+    // Handle generation - processes recipe at generation time (no separate Apply step)
     const handleGenerate = useCallback(async () => {
-        if (canGenerate && !isGenerating) {
-            const model = shotCreatorSettings.model || 'nano-banana'
+        if (!canGenerate || isGenerating) return
 
-            // Extract reference image URLs
-            const referenceUrls = shotCreatorReferenceImages
+        const activeRecipe = getActiveRecipe()
+        const validation = getActiveValidation()
+
+        // Recipe mode: process recipe fields and generate
+        if (activeRecipe) {
+            // Validate recipe fields
+            if (!validation?.isValid) {
+                console.warn('Recipe validation failed:', validation?.missingFields)
+                return
+            }
+
+            // Build prompts from recipe fields
+            const result = buildActivePrompts()
+            if (!result || result.prompts.length === 0) {
+                console.error('Failed to build prompts from recipe')
+                return
+            }
+
+            // Apply suggested settings from recipe
+            if (activeRecipe.suggestedModel) {
+                updateSettings({ model: activeRecipe.suggestedModel as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-fast' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' })
+            }
+            if (activeRecipe.suggestedAspectRatio) {
+                updateSettings({ aspectRatio: activeRecipe.suggestedAspectRatio })
+            }
+
+            // Build full prompt (pipe-separated for multi-stage execution)
+            const fullPrompt = result.prompts.join(' | ')
+
+            // Set stage-specific reference images for pipe chaining
+            if (result.stageReferenceImages && result.stageReferenceImages.length > 0) {
+                setStageReferenceImages(result.stageReferenceImages)
+            } else {
+                setStageReferenceImages([])
+            }
+
+            // Combine user refs + recipe refs (deduplicated)
+            const userRefs = shotCreatorReferenceImages
                 .map(ref => ref.url || ref.preview)
                 .filter((url): url is string => Boolean(url))
+            const allRefs = [...new Set([...userRefs, ...result.referenceImages])]
 
-            // Build model-specific settings
+            // Build model settings
+            const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-fast' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high'
             const modelSettings = buildModelSettings()
 
-            // Call the generation API with recipe info if available
+            // Generate with recipe data
             await generateImage(
                 model,
-                shotCreatorPrompt,
-                referenceUrls,
+                fullPrompt,
+                allRefs,
                 modelSettings,
-                lastUsedRecipe || undefined
+                { recipeId: activeRecipe.id, recipeName: activeRecipe.name }
             )
 
-            // Clear recipe tracking after generation
-            setLastUsedRecipe(null)
+            // Keep recipe selected for re-generation (don't close form)
+            return
         }
-    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe])
+
+        // Regular mode: use prompt and refs as-is
+        const model = shotCreatorSettings.model || 'nano-banana'
+        const referenceUrls = shotCreatorReferenceImages
+            .map(ref => ref.url || ref.preview)
+            .filter((url): url is string => Boolean(url))
+        const modelSettings = buildModelSettings()
+
+        await generateImage(
+            model,
+            shotCreatorPrompt,
+            referenceUrls,
+            modelSettings,
+            lastUsedRecipe || undefined
+        )
+
+        // Clear recipe tracking after generation
+        setLastUsedRecipe(null)
+    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages])
 
     // Handle selecting a recipe
     const handleSelectRecipe = useCallback((recipeId: string) => {
         setActiveRecipe(recipeId)
     }, [setActiveRecipe])
-
-    // Handle applying a recipe's generated prompts
-    // Multi-stage recipes use pipe chaining with stage-specific reference images
-    const handleApplyRecipePrompt = useCallback((
-        prompts: string[],
-        recipeReferenceImages: string[],
-        stageReferenceImages?: string[][]
-    ) => {
-        // Get the active recipe info before closing
-        const recipe = getActiveRecipe()
-        if (recipe) {
-            setLastUsedRecipe({ recipeId: recipe.id, recipeName: recipe.name })
-
-            // Apply suggested model if recipe specifies one
-            if (recipe.suggestedModel) {
-                // Cast to ModelId type - recipe should use valid model IDs
-                updateSettings({ model: recipe.suggestedModel as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-fast' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' })
-            }
-
-            // Apply suggested aspect ratio if recipe specifies one
-            if (recipe.suggestedAspectRatio) {
-                updateSettings({ aspectRatio: recipe.suggestedAspectRatio })
-            }
-        }
-
-        // Join all stage prompts with pipe separator for multi-stage execution
-        // The pipe chaining system in useImageGeneration handles sequential execution
-        if (prompts.length > 0) {
-            const fullPrompt = prompts.join(' | ')
-            setShotCreatorPrompt(fullPrompt)
-        }
-
-        // Store stage-specific reference images for pipe chaining
-        // These are used by useImageGeneration to inject the right refs at each stage
-        if (stageReferenceImages && stageReferenceImages.length > 0) {
-            setStageReferenceImages(stageReferenceImages)
-        } else {
-            setStageReferenceImages([])
-        }
-
-        // Add recipe reference images (deduplicated with existing ones) for preview/fallback
-        if (recipeReferenceImages.length > 0) {
-            setShotCreatorReferenceImages((prev: ShotCreatorReferenceImage[]) => {
-                const newRefs: ShotCreatorReferenceImage[] = recipeReferenceImages
-                    .filter(url => !prev.some(ref => ref.url === url))
-                    .map((url, idx) => ({
-                        id: `recipe_ref_${Date.now()}_${idx}`,
-                        url,
-                        preview: url, // Use URL as preview
-                        tags: [], // Empty tags by default
-                        detectedAspectRatio: '1:1' // Default, could be improved
-                    }))
-                return [...prev, ...newRefs]
-            })
-        }
-
-        setActiveRecipe(null)
-    }, [setShotCreatorPrompt, setActiveRecipe, getActiveRecipe, updateSettings, setShotCreatorReferenceImages, setStageReferenceImages])
 
     // Calculate dropdown position based on cursor
     const calculateDropdownPosition = useCallback(() => {
@@ -526,10 +535,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         <Fragment>
             {/* Recipe Form Fields - Shows when a recipe is active */}
             {activeRecipeId && (
-                <RecipeFormFields
-                    onApplyPrompt={handleApplyRecipePrompt}
-                    className="mb-3"
-                />
+                <RecipeFormFields className="mb-3" />
             )}
 
             {/* Mobile: Prompts & Recipes Toggle Bar */}
