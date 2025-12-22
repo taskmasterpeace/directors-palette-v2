@@ -52,6 +52,43 @@ async function processReferenceImages(
     const url = typeof ref === 'string' ? ref : ref.url;
     const weight = typeof ref === 'object' ? ref.weight : undefined;
 
+    // Handle base64 data URIs (from file uploads)
+    if (url.startsWith('data:image/')) {
+      console.log(`[Image Generation API] Processing base64 data URI (${url.slice(0, 50)}...)`);
+
+      try {
+        // Parse the data URI: data:image/png;base64,<data>
+        const matches = url.match(/^data:image\/(\w+);base64,(.+)$/);
+        if (!matches) {
+          console.error('[Image Generation API] Invalid base64 data URI format');
+          continue;
+        }
+
+        const [, format, base64Data] = matches;
+        const imageBuffer = Buffer.from(base64Data, 'base64');
+        const mimeType = `image/${format}`;
+        const ext = format === 'jpeg' ? 'jpg' : format;
+
+        // Upload to Replicate
+        const uint8Array = new Uint8Array(imageBuffer);
+        const file = new File([uint8Array], `reference.${ext}`, { type: mimeType });
+        const uploadedFile = await replicateClient.files.create(file);
+        const uploadedUrl = uploadedFile.urls.get;
+
+        console.log(`[Image Generation API] Base64 uploaded to Replicate: ${uploadedUrl}`);
+
+        // Preserve weight if present
+        if (weight !== undefined) {
+          processed.push({ url: uploadedUrl, weight });
+        } else {
+          processed.push(uploadedUrl);
+        }
+      } catch (error) {
+        console.error('[Image Generation API] Error processing base64 data URI:', error);
+      }
+      continue;
+    }
+
     // If it's already a public URL, keep as-is
     if (isPublicUrl(url)) {
       processed.push(ref);
