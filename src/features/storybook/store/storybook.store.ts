@@ -23,6 +23,15 @@ import type {
 import { getNextStep, getPreviousStep } from '../types/storybook.types'
 import type { StoryIdea, GeneratedStory, ExtractedElements } from '../types/education.types'
 
+// Saved project summary type (from API)
+export interface SavedProjectSummary {
+  id: string
+  title: string
+  status: string
+  createdAt: string
+  updatedAt: string
+}
+
 interface StorybookState {
   // Wizard state
   currentStep: WizardStep
@@ -38,6 +47,11 @@ interface StorybookState {
 
   // Story ideas (for generate mode)
   storyIdeas: StoryIdea[]
+
+  // Project persistence state
+  savedProjectId: string | null
+  isSaving: boolean
+  savedProjects: SavedProjectSummary[]
 
   // Actions
   setStep: (step: WizardStep) => void
@@ -88,6 +102,13 @@ interface StorybookState {
   // Generation state
   setGenerating: (isGenerating: boolean) => void
   setError: (error: string | null) => void
+
+  // Project persistence actions
+  saveProject: () => Promise<void>
+  loadProject: (projectId: string) => Promise<void>
+  fetchSavedProjects: () => Promise<void>
+  deleteSavedProject: (projectId: string) => Promise<void>
+  clearProject: () => void
 }
 
 // Create initial project for paste mode
@@ -281,6 +302,11 @@ export const useStorybookStore = create<StorybookState>((set, get) => ({
   project: null,
   currentPageIndex: 0,
   storyIdeas: [],
+
+  // Project persistence state
+  savedProjectId: null,
+  isSaving: false,
+  savedProjects: [],
 
   // Step navigation
   setStep: (step) => set({ currentStep: step }),
@@ -707,5 +733,131 @@ export const useStorybookStore = create<StorybookState>((set, get) => ({
         },
       })
     }
+  },
+
+  // Project persistence actions
+  saveProject: async () => {
+    const { project, savedProjectId } = get()
+    if (!project) {
+      set({ error: 'No project to save' })
+      return
+    }
+
+    set({ isSaving: true, error: null })
+
+    try {
+      const response = await fetch('/api/storybook/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: savedProjectId, // If exists, will update instead of create
+          title: project.title || 'Untitled Storybook',
+          status: project.status,
+          projectData: project,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to save project')
+      }
+
+      const data = await response.json()
+      set({
+        savedProjectId: data.project.id,
+        isSaving: false,
+      })
+
+      // Refresh saved projects list
+      get().fetchSavedProjects()
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to save project',
+        isSaving: false,
+      })
+    }
+  },
+
+  loadProject: async (projectId) => {
+    set({ isGenerating: true, error: null })
+
+    try {
+      const response = await fetch(`/api/storybook/projects/${projectId}`)
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to load project')
+      }
+
+      const data = await response.json()
+      const projectData = data.project.projectData as StorybookProject
+
+      set({
+        project: projectData,
+        savedProjectId: projectId,
+        currentStep: projectData.status === 'completed' ? 'preview' : 'story',
+        storyMode: projectData.mainCharacterName ? 'generate' : 'paste',
+        isGenerating: false,
+      })
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to load project',
+        isGenerating: false,
+      })
+    }
+  },
+
+  fetchSavedProjects: async () => {
+    try {
+      const response = await fetch('/api/storybook/projects')
+
+      if (!response.ok) {
+        console.error('Failed to fetch saved projects')
+        return
+      }
+
+      const data = await response.json()
+      set({ savedProjects: data.projects || [] })
+    } catch (error) {
+      console.error('Error fetching saved projects:', error)
+    }
+  },
+
+  deleteSavedProject: async (projectId) => {
+    try {
+      const response = await fetch(`/api/storybook/projects/${projectId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to delete project')
+      }
+
+      // Clear current project if it's the one being deleted
+      const { savedProjectId } = get()
+      if (savedProjectId === projectId) {
+        get().clearProject()
+      }
+
+      // Refresh saved projects list
+      get().fetchSavedProjects()
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to delete project',
+      })
+    }
+  },
+
+  clearProject: () => {
+    set({
+      project: null,
+      savedProjectId: null,
+      currentStep: 'character-setup',
+      storyMode: 'generate',
+      currentPageIndex: 0,
+      storyIdeas: [],
+      error: null,
+    })
   },
 }))

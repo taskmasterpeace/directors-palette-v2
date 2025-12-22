@@ -1,6 +1,7 @@
 "use client"
 
-import { useStorybookStore } from "../../store/storybook.store"
+import { useEffect, useState } from "react"
+import { useStorybookStore, type SavedProjectSummary } from "../../store/storybook.store"
 import { getWizardSteps, getStepIndex } from "../../types/storybook.types"
 import { StepIndicator } from "./StepIndicator"
 import { StepCard } from "./StepCard"
@@ -19,7 +20,15 @@ import { CharacterStep } from "./steps/CharacterStep"
 import { PageGenerationStep } from "./steps/PageGenerationStep"
 import { PreviewStep } from "./steps/PreviewStep"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Loader2, Save, FolderOpen, FilePlus, Trash2, Check } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export function WizardContainer() {
   const {
@@ -28,7 +37,23 @@ export function WizardContainer() {
     isGenerating,
     nextStep,
     previousStep,
+    // Project persistence
+    savedProjectId,
+    isSaving,
+    savedProjects,
+    saveProject,
+    loadProject,
+    clearProject,
+    fetchSavedProjects,
+    deleteSavedProject,
   } = useStorybookStore()
+
+  const [showSaved, setShowSaved] = useState(false)
+
+  // Fetch saved projects on mount
+  useEffect(() => {
+    fetchSavedProjects()
+  }, [fetchSavedProjects])
 
   // Get the appropriate wizard steps based on story mode
   const storyMode = project?.storyMode || 'generate'
@@ -114,19 +139,116 @@ export function WizardContainer() {
 
   return (
     <div className="h-full flex flex-col p-4 space-y-4">
-      {/* Step Indicator */}
-      <StepIndicator
-        steps={wizardSteps}
-        currentStep={currentStep}
-        storyMode={storyMode}
-        onStepClick={(step) => {
-          // Only allow clicking on completed steps
-          const stepIndex = getStepIndex(step, storyMode)
-          if (stepIndex < currentStepIndex) {
-            useStorybookStore.getState().setStep(step)
-          }
-        }}
-      />
+      {/* Header with Project Actions */}
+      <div className="flex items-center justify-between gap-4">
+        {/* Step Indicator */}
+        <div className="flex-1">
+          <StepIndicator
+            steps={wizardSteps}
+            currentStep={currentStep}
+            storyMode={storyMode}
+            onStepClick={(step) => {
+              // Only allow clicking on completed steps
+              const stepIndex = getStepIndex(step, storyMode)
+              if (stepIndex < currentStepIndex) {
+                useStorybookStore.getState().setStep(step)
+              }
+            }}
+          />
+        </div>
+
+        {/* Project Actions */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Save Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => saveProject()}
+            disabled={!project || isSaving}
+            className="gap-2"
+            title={savedProjectId ? "Update saved project" : "Save project"}
+          >
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : savedProjectId ? (
+              <Check className="w-4 h-4 text-green-500" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            {savedProjectId ? "Saved" : "Save"}
+          </Button>
+
+          {/* Load/Projects Dropdown */}
+          <DropdownMenu open={showSaved} onOpenChange={setShowSaved}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <FolderOpen className="w-4 h-4" />
+                Load
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuLabel>Saved Projects</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {savedProjects.length === 0 ? (
+                <div className="px-2 py-4 text-sm text-zinc-500 text-center">
+                  No saved projects yet
+                </div>
+              ) : (
+                savedProjects.map((proj: SavedProjectSummary) => (
+                  <DropdownMenuItem
+                    key={proj.id}
+                    className="flex items-center justify-between group cursor-pointer"
+                    onClick={() => {
+                      loadProject(proj.id)
+                      setShowSaved(false)
+                    }}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{proj.title}</div>
+                      <div className="text-xs text-zinc-500">
+                        {new Date(proj.updatedAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (confirm("Delete this project?")) {
+                          deleteSavedProject(proj.id)
+                        }
+                      }}
+                    >
+                      <Trash2 className="w-3 h-3 text-red-500" />
+                    </Button>
+                  </DropdownMenuItem>
+                ))
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* New/Clear Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (project && !savedProjectId) {
+                if (confirm("Discard unsaved changes and start fresh?")) {
+                  clearProject()
+                }
+              } else {
+                clearProject()
+              }
+            }}
+            className="gap-2"
+            title="Start a new project"
+          >
+            <FilePlus className="w-4 h-4" />
+            New
+          </Button>
+        </div>
+      </div>
 
       {/* Step Content */}
       <StepCard
