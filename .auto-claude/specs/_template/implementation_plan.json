@@ -1,0 +1,247 @@
+{
+  "feature": "Feature Name",
+  "workflow_type": "feature",
+  "workflow_rationale": "Implementing new functionality with multiple components",
+  "phases": [
+    {
+      "id": "phase-1-setup",
+      "name": "Setup & Types",
+      "type": "setup",
+      "description": "Define types and set up basic structure",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Define TypeScript types and Zod schemas",
+          "service": "frontend",
+          "files_to_create": [
+            "src/features/[feature]/types/[feature].types.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "src/features/shot-creator/types/shot-library.types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run build",
+            "expected": "Build succeeds with no type errors"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-backend",
+      "name": "Backend Implementation",
+      "type": "implementation",
+      "description": "Create API endpoints and services",
+      "depends_on": ["phase-1-setup"],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create service layer with business logic",
+          "service": "frontend",
+          "files_to_create": [
+            "src/features/[feature]/services/[feature].service.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "src/features/shot-creator/services/prompt-library.service.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run build",
+            "expected": "Build succeeds"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Create API route handler",
+          "service": "frontend",
+          "files_to_create": [
+            "src/app/api/[feature]/route.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "src/app/api/credits/route.ts"
+          ],
+          "verification": {
+            "type": "api",
+            "method": "GET",
+            "url": "http://localhost:3000/api/[feature]",
+            "expected_status": 200
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-frontend",
+      "name": "Frontend Implementation",
+      "type": "implementation",
+      "description": "Create UI components and hooks",
+      "depends_on": ["phase-2-backend"],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create Zustand store for state management",
+          "service": "frontend",
+          "files_to_create": [
+            "src/features/[feature]/store/[feature].store.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "src/features/shot-creator/store/shot-library.store.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run build",
+            "expected": "Build succeeds"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Create custom React hook",
+          "service": "frontend",
+          "files_to_create": [
+            "src/features/[feature]/hooks/use[Feature].ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "src/features/shot-creator/hooks/usePromptFilters.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run build",
+            "expected": "Build succeeds"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Create main UI component",
+          "service": "frontend",
+          "files_to_create": [
+            "src/features/[feature]/components/[Feature].tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "src/features/shot-creator/components/prompt-library/PromptLibrary.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/[page]",
+            "expected": "Component renders without errors"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-integration",
+      "name": "Integration & Testing",
+      "type": "integration",
+      "description": "Integrate with existing features and add tests",
+      "depends_on": ["phase-3-frontend"],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Integrate into main page/layout",
+          "service": "frontend",
+          "files_to_modify": [
+            "src/app/[page]/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/[page]",
+            "expected": "Feature accessible and functional"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Add barrel exports",
+          "service": "frontend",
+          "files_to_create": [
+            "src/features/[feature]/index.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "src/features/shot-creator/index.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run build",
+            "expected": "Build succeeds"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-qa",
+      "name": "QA & Cleanup",
+      "type": "cleanup",
+      "description": "Final verification and cleanup",
+      "depends_on": ["phase-4-integration"],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Run full test suite",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm run build && npm run lint",
+            "expected": "All checks pass"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 5,
+    "total_subtasks": 8,
+    "services_involved": ["frontend"],
+    "parallelism": {
+      "max_parallel_phases": 1,
+      "recommended_workers": 1,
+      "parallel_groups": []
+    }
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_types_required": ["build", "lint"],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "verification_steps": [
+      "Run npm run build to verify TypeScript",
+      "Run npm run lint to check code quality",
+      "Manually verify feature in browser"
+    ]
+  },
+  "qa_acceptance": {
+    "unit_tests": [],
+    "integration_tests": [],
+    "browser_verification": [
+      {
+        "url": "http://localhost:3000/[page]",
+        "checks": ["Feature renders", "Functionality works"]
+      }
+    ],
+    "database_checks": []
+  }
+}
