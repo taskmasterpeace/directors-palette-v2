@@ -27,6 +27,15 @@ export interface GenerationSettings {
     resolution: '1K' | '2K' | '4K'
 }
 
+// Global generation progress state (moved from local component state)
+export interface GenerationProgress {
+    isGenerating: boolean
+    current: number
+    total: number
+    currentShotSequence?: number
+    aborted?: boolean
+}
+
 export interface StoryboardStore {
     // ---- Storyboard State ----
     storyboards: Storyboard[]
@@ -115,6 +124,9 @@ export interface StoryboardStore {
 
     // ---- Save Indicator ----
     lastSavedAt: number | null  // Timestamp of last save
+
+    // ---- Global Generation Progress (moved from local state) ----
+    generationProgress: GenerationProgress | null
 
     // ---- Storyboard Actions ----
     setStoryboards: (storyboards: Storyboard[]) => void
@@ -227,6 +239,13 @@ export interface StoryboardStore {
     setShotNote: (sequence: number, note: string) => void
     clearShotNotes: () => void
 
+    // ---- Generation Progress Actions ----
+    setGenerationProgress: (progress: GenerationProgress | null) => void
+    updateGenerationProgress: (updates: Partial<GenerationProgress>) => void
+    startGeneration: (total: number) => void
+    completeGeneration: () => void
+    abortGeneration: () => void
+
     // ---- Reset ----
     resetStoryboard: () => void
 
@@ -306,7 +325,10 @@ const initialState = {
     shotNotes: {},
 
     // Save indicator
-    lastSavedAt: null
+    lastSavedAt: null,
+
+    // Generation progress (global state)
+    generationProgress: null
 }
 
 // Fields to persist (user's work-in-progress)
@@ -649,6 +671,30 @@ export const useStoryboardStore = create<StoryboardStore>()(
             })),
             clearShotNotes: () => set({ shotNotes: {}, lastSavedAt: Date.now() }),
 
+            // ---- Generation Progress Actions ----
+            setGenerationProgress: (progress) => set({ generationProgress: progress }),
+            updateGenerationProgress: (updates) => set((state) => ({
+                generationProgress: state.generationProgress
+                    ? { ...state.generationProgress, ...updates }
+                    : null
+            })),
+            startGeneration: (total) => set({
+                generationProgress: {
+                    isGenerating: true,
+                    current: 0,
+                    total,
+                    aborted: false
+                }
+            }),
+            completeGeneration: () => set({
+                generationProgress: null
+            }),
+            abortGeneration: () => set((state) => ({
+                generationProgress: state.generationProgress
+                    ? { ...state.generationProgress, isGenerating: false, aborted: true }
+                    : null
+            })),
+
             // ---- Reset ----
             resetStoryboard: () => set({
                 ...initialState,
@@ -708,14 +754,71 @@ export const useStoryboardStore = create<StoryboardStore>()(
                             window.dispatchEvent(new CustomEvent('storyboard-saved', { detail: Date.now() }))
                         }
                     } catch (e) {
-                        // QuotaExceededError - clear and retry once
+                        // QuotaExceededError - selective cleanup, preserve user's core work
                         if (e instanceof Error && e.name === 'QuotaExceededError') {
-                            console.warn('localStorage quota exceeded, clearing storyboard storage')
+                            console.warn('localStorage quota exceeded, attempting selective cleanup')
+
                             try {
-                                localStorage.removeItem(name)
-                                localStorage.setItem(name, JSON.stringify(value))
-                            } catch {
-                                console.error('Failed to save to localStorage even after clearing')
+                                // Get the current value being saved (it's the state object)
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                const stateToSave = typeof value === 'object' ? (value as any).state || value : value
+
+                                // Create a reduced state that preserves user's core work
+                                // but clears large regenerable data
+                                const reducedState = {
+                                    ...stateToSave,
+                                    // Keep user's original input (their work)
+                                    storyText: stateToSave.storyText,
+                                    breakdownLevel: stateToSave.breakdownLevel,
+                                    // Keep first 10 characters/locations (can be large with images)
+                                    characters: stateToSave.characters?.slice?.(0, 10) || [],
+                                    locations: stateToSave.locations?.slice?.(0, 10) || [],
+                                    // Keep style settings (small)
+                                    selectedPresetStyle: stateToSave.selectedPresetStyle,
+                                    currentStyleGuide: stateToSave.currentStyleGuide,
+                                    // Keep generation settings (small)
+                                    generationSettings: stateToSave.generationSettings,
+                                    globalPromptPrefix: stateToSave.globalPromptPrefix,
+                                    globalPromptSuffix: stateToSave.globalPromptSuffix,
+                                    // Clear large regenerable data
+                                    extractionResult: null,
+                                    shotNotes: {},
+                                }
+
+                                // Build proper persist structure
+                                const reducedValue = typeof value === 'object' && 'state' in (value as object)
+                                    ? { ...value, state: reducedState }
+                                    : reducedState
+
+                                localStorage.setItem(name, JSON.stringify(reducedValue))
+
+                                // Notify user via custom event (can be caught by UI)
+                                if (typeof window !== 'undefined') {
+                                    window.dispatchEvent(new CustomEvent('storyboard-quota-warning', {
+                                        detail: {
+                                            message: 'Storage limit reached. Some data was cleared but your story and core settings are preserved.',
+                                            timestamp: Date.now()
+                                        }
+                                    }))
+                                }
+                                console.warn('Storage limit reached. Cleared regenerable data to preserve user work.')
+                            } catch (retryError) {
+                                // Last resort: try to clear completely and save minimal
+                                console.error('Failed to save even after selective cleanup:', retryError)
+                                try {
+                                    localStorage.removeItem(name)
+                                    // Dispatch error event
+                                    if (typeof window !== 'undefined') {
+                                        window.dispatchEvent(new CustomEvent('storyboard-quota-error', {
+                                            detail: {
+                                                message: 'Storage full. Unable to save progress. Please export your work.',
+                                                timestamp: Date.now()
+                                            }
+                                        }))
+                                    }
+                                } catch {
+                                    // Complete failure, nothing we can do
+                                }
                             }
                         } else {
                             console.warn('Failed to write to localStorage:', e)

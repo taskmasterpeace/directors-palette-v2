@@ -6,13 +6,17 @@ import { Badge } from '@/components/ui/badge'
 import { useStoryboardStore } from '../../store'
 import { breakdownStory } from '../../services/shot-breakdown.service'
 import type { BreakdownLevel } from '../../types/storyboard.types'
+import { toast } from 'sonner'
 
 export function GranularitySelect() {
     const {
         storyText,
         breakdownLevel,
         setBreakdownLevel,
-        setBreakdownResult
+        setBreakdownResult,
+        generatedPrompts,
+        clearGeneratedPrompts,
+        clearGeneratedImages
     } = useStoryboardStore()
 
     // Calculate breakdown whenever level or text changes
@@ -29,7 +33,23 @@ export function GranularitySelect() {
     }, [breakdown, setBreakdownResult])
 
     const handleChange = (value: string) => {
-        setBreakdownLevel(Number(value) as BreakdownLevel)
+        const newLevel = Number(value) as BreakdownLevel
+
+        // If prompts exist, warn user before clearing
+        if (generatedPrompts.length > 0) {
+            const confirmed = confirm(
+                `Changing granularity will clear ${generatedPrompts.length} generated prompt(s) and any generated images.\n\nThis is because the shot breakdown will change, making existing prompts misaligned.\n\nContinue?`
+            )
+            if (!confirmed) {
+                return
+            }
+            // Clear prompts and images
+            clearGeneratedPrompts()
+            clearGeneratedImages()
+            toast.info('Prompts and images cleared due to granularity change')
+        }
+
+        setBreakdownLevel(newLevel)
     }
 
     const options = [

@@ -4,9 +4,20 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Loader2, Sparkles, FileText, AlertCircle, Trash2 } from 'lucide-react'
 import { useStoryboardStore } from '../../store'
 import { LLMModelSelector } from '../settings/LLMModelSelector'
+import { toast } from 'sonner'
 
 export function StoryInput() {
     const {
@@ -18,10 +29,15 @@ export function StoryInput() {
         setIsExtracting,
         selectedModel,
         setInternalTab,
-        resetStoryboard
+        resetStoryboard,
+        characters,
+        locations,
+        generatedPrompts,
+        generatedImages
     } = useStoryboardStore()
 
     const [error, setError] = useState<string | null>(null)
+    const [showClearConfirmation, setShowClearConfirmation] = useState(false)
 
     const handleExtract = async () => {
         if (!storyText.trim()) {
@@ -50,7 +66,17 @@ export function StoryInput() {
             const result = await response.json()
             setExtractionResult(result)
 
-            // Auto-navigate to entities tab
+            // Handle 0 results case - don't auto-navigate to empty tab
+            if (result.characters.length === 0 && result.locations.length === 0) {
+                toast.warning(
+                    'No characters or locations detected. You can add them manually in the Entities tab.',
+                    { duration: 5000 }
+                )
+                return
+            }
+
+            // Show success and auto-navigate to entities tab
+            toast.success(`Found ${result.characters.length} characters and ${result.locations.length} locations`)
             setInternalTab('entities')
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Extraction failed')
@@ -151,9 +177,7 @@ Marcus walked into the courtroom, his footsteps echoing against the marble floor
                     {(storyText || extractionResult) && (
                         <Button
                             variant="outline"
-                            onClick={() => {
-                                resetStoryboard()
-                            }}
+                            onClick={() => setShowClearConfirmation(true)}
                             className="w-full"
                             disabled={isExtracting}
                         >
@@ -163,6 +187,41 @@ Marcus walked into the courtroom, his footsteps echoing against the marble floor
                     )}
                 </CardContent>
             </Card>
+
+            {/* Clear Confirmation Dialog */}
+            <AlertDialog open={showClearConfirmation} onOpenChange={setShowClearConfirmation}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Clear all storyboard data?</AlertDialogTitle>
+                        <AlertDialogDescription asChild>
+                            <div className="space-y-2">
+                                <p>This will permanently delete:</p>
+                                <ul className="list-disc list-inside text-sm space-y-1">
+                                    {storyText && <li>Your story text ({storyText.split(/\s+/).length} words)</li>}
+                                    {characters.length > 0 && <li>{characters.length} character(s)</li>}
+                                    {locations.length > 0 && <li>{locations.length} location(s)</li>}
+                                    {generatedPrompts.length > 0 && <li>{generatedPrompts.length} generated prompt(s)</li>}
+                                    {Object.keys(generatedImages).length > 0 && <li>{Object.keys(generatedImages).length} generated image(s)</li>}
+                                </ul>
+                                <p className="text-destructive font-medium">This action cannot be undone.</p>
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                resetStoryboard()
+                                setShowClearConfirmation(false)
+                                toast.success('Storyboard cleared')
+                            }}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Clear Everything
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }

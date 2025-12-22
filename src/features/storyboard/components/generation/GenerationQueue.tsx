@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
-import { Play, CheckCircle, AlertCircle, Loader2, SplitSquareVertical, Wand2, CheckSquare, Square, Sparkles } from 'lucide-react'
+import { Play, CheckCircle, AlertCircle, Loader2, SplitSquareVertical, Wand2, CheckSquare, Square, Sparkles, X } from 'lucide-react'
 import { useStoryboardStore } from '../../store'
 import { storyboardGenerationService } from '../../services/storyboard-generation.service'
 import { PRESET_STYLES } from '../../types/storyboard.types'
@@ -24,6 +24,8 @@ import {
     getAvailableWildcards
 } from '../../services/wildcard-integration.service'
 import { HighlightedPrompt } from '../shared'
+import { useCreditsStore } from '@/features/credits/store/credits.store'
+import { toast } from 'sonner'
 
 interface GenerationResult {
     shotNumber: number
@@ -104,11 +106,17 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
         )
     }, [generatedPrompts, chapters, chapterIndex])
 
+    // Credits for pre-generation check
+    const { balance, fetchBalance } = useCreditsStore()
+
     const [isGenerating, setIsGenerating] = useState(false)
     const [progress, setProgress] = useState({ current: 0, total: 0 })
     const [results, setResults] = useState<GenerationResult[]>([])
     const [selectedShots, setSelectedShots] = useState<Set<number>>(new Set())
     const [showPrefixSuffix, setShowPrefixSuffix] = useState(false)
+
+    // Abort controller for cancellation
+    const abortControllerRef = useRef<AbortController | null>(null)
 
     // Use persisted settings from store
     const { aspectRatio, resolution } = generationSettings
@@ -163,6 +171,30 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
         initWildcards()
     }, [wildcardsInitialized])
 
+    // Page unload warning during generation
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (isGenerating) {
+                e.preventDefault()
+                e.returnValue = 'Image generation is in progress. Are you sure you want to leave? Your progress will be lost.'
+                return e.returnValue
+            }
+        }
+
+        window.addEventListener('beforeunload', handleBeforeUnload)
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+    }, [isGenerating])
+
+    // Cancel generation handler
+    const handleCancelGeneration = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort()
+            abortControllerRef.current = null
+            setIsGenerating(false)
+            toast.info('Generation cancelled')
+        }
+    }
+
     const toggleShot = (sequence: number) => {
         setSelectedShots(prev => {
             const next = new Set(prev)
@@ -203,6 +235,30 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
         // Require generated prompts and selection before generation
         if (!promptsGenerated || !generatedPrompts.length || selectedShots.size === 0) return
 
+        // Credit check before generation
+        const costPerShot = 20  // cents for nano-banana-pro
+        const totalCost = selectedShots.size * costPerShot
+
+        try {
+            await fetchBalance()
+        } catch {
+            // Continue anyway, API will catch it
+        }
+
+        if (balance < totalCost) {
+            toast.error(
+                `Insufficient credits. You need ${totalCost} tokens but only have ${balance}. Purchase more credits to continue.`,
+                { duration: 5000 }
+            )
+            return
+        }
+
+        // Confirm generation cost
+        const confirmed = confirm(
+            `Generate ${selectedShots.size} images for approximately ${totalCost} tokens?\n\nYour balance: ${balance} tokens\nRemaining after: ${balance - totalCost} tokens`
+        )
+        if (!confirmed) return
+
         // Filter to only selected shots
         let shotsToGenerate = generatedPrompts.filter(p => selectedShots.has(p.sequence))
 
@@ -218,6 +274,9 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                 prompt: `${globalPromptPrefix}${shot.prompt}${globalPromptSuffix}`.trim()
             }))
         }
+
+        // Set up abort controller for cancellation
+        abortControllerRef.current = new AbortController()
 
         setIsGenerating(true)
         setResults([])
@@ -285,9 +344,16 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                 setTimeout(() => setInternalTab('gallery'), 500)
             }
         } catch (error) {
-            console.error('Generation failed:', error)
+            // Check if it was cancelled
+            if (error instanceof Error && error.name === 'AbortError') {
+                toast.info('Generation was cancelled')
+            } else {
+                console.error('Generation failed:', error)
+                toast.error('Generation failed. Please try again.')
+            }
         } finally {
             setIsGenerating(false)
+            abortControllerRef.current = null
         }
     }
 
@@ -567,29 +633,42 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                     </ScrollArea>
 
                     {/* Actions */}
-                    <Button
-                        onClick={handleStartGeneration}
-                        disabled={isGenerating || selectedShots.size === 0}
-                        className="w-full"
-                        size="default"
-                    >
-                        {isGenerating ? (
-                            <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Generating {progress.current}/{progress.total}...
-                            </>
-                        ) : selectedShots.size === 0 ? (
-                            <>
-                                <Play className="w-4 h-4 mr-2" />
-                                Select shots to generate
-                            </>
-                        ) : (
-                            <>
-                                <Play className="w-4 h-4 mr-2" />
-                                Generate {selectedShots.size} Selected Shots (~{estimatedCost} tokens)
-                            </>
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={handleStartGeneration}
+                            disabled={isGenerating || selectedShots.size === 0}
+                            className="flex-1"
+                            size="default"
+                        >
+                            {isGenerating ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Generating {progress.current}/{progress.total}...
+                                </>
+                            ) : selectedShots.size === 0 ? (
+                                <>
+                                    <Play className="w-4 h-4 mr-2" />
+                                    Select shots to generate
+                                </>
+                            ) : (
+                                <>
+                                    <Play className="w-4 h-4 mr-2" />
+                                    Generate {selectedShots.size} Selected Shots (~{estimatedCost} tokens)
+                                </>
+                            )}
+                        </Button>
+                        {isGenerating && (
+                            <Button
+                                variant="destructive"
+                                size="default"
+                                onClick={handleCancelGeneration}
+                                className="flex-shrink-0"
+                            >
+                                <X className="w-4 h-4 mr-2" />
+                                Cancel
+                            </Button>
                         )}
-                    </Button>
+                    </div>
                 </CardContent>
             </Card>
         </div>
