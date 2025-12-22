@@ -1,0 +1,135 @@
+{
+  "project_name": "Director's Palette v2",
+  "project_type": "web-app",
+  "tech_stack": {
+    "primary_language": "TypeScript",
+    "frameworks": [
+      "Next.js 15.5",
+      "React 19.1.0",
+      "Tailwind CSS v4",
+      "Capacitor (mobile)"
+    ],
+    "key_dependencies": [
+      "Supabase (Auth, Database, Storage)",
+      "Stripe (Payments)",
+      "Replicate (AI Image Generation)",
+      "Zustand (State Management)",
+      "shadcn/ui (Component Library)",
+      "Playwright (E2E Testing)",
+      "Framer Motion (Animations)",
+      "Fabric.js (Canvas/Annotation)"
+    ]
+  },
+  "target_audience": {
+    "primary_persona": "Visual storytellers and content creators who need to generate large batches of consistent AI images for narrative projects (comic artists, storyboard artists, visual novel creators)",
+    "secondary_personas": [
+      "Film pre-visualization teams needing to plan shots and camera angles",
+      "Concept artists exploring visual directions quickly",
+      "Independent game developers creating character sprites and backgrounds",
+      "Educators and children's book illustrators creating consistent characters"
+    ],
+    "pain_points": [
+      "Generating 100+ images while maintaining character consistency across shots",
+      "Managing visual style consistency throughout a project",
+      "Spending too much time on repetitive prompt writing for similar scenes",
+      "Difficulty organizing and managing large batches of generated images",
+      "Lack of professional workflow tools for AI-assisted visual storytelling"
+    ],
+    "goals": [
+      "Create complete visual stories with consistent characters and settings",
+      "Reduce time from story idea to visual storyboard",
+      "Maintain artistic control while leveraging AI generation power",
+      "Efficiently batch-generate images with systematic variations",
+      "Build reusable character and style references for future projects"
+    ],
+    "usage_context": "Used in studio or home office settings during creative project development phases - from initial concept exploration through full storyboard production. Typically used for extended sessions when planning visual narratives."
+  },
+  "product_vision": {
+    "one_liner": "Turn stories into images - Professional AI image generation with advanced prompt engineering for visual storytelling",
+    "problem_statement": "Creating visual narratives with AI image generation is painful because maintaining character, location, and style consistency across 100+ images requires repetitive prompt work and lacks professional workflow tools. Existing AI image generators are designed for single-image creation, not batch storytelling.",
+    "value_proposition": "Director's Palette provides a powerful prompting language (brackets for variations, pipes for sequences, wildcards for randomization, @references for character consistency) combined with a complete storyboard workflow that transforms AI image generation from single-shot novelty into professional visual storytelling production tool.",
+    "success_metrics": [
+      "Number of images generated per project (target: 50+ average per storyboard)",
+      "User retention and return usage rates",
+      "Credits purchased per active user",
+      "Time to complete a full storyboard workflow",
+      "Community recipe sharing and adoption rates"
+    ]
+  },
+  "current_state": {
+    "maturity": "mvp",
+    "existing_features": [
+      "Shot Creator with 6 AI models (Nano Banana, Seedream-4, Gen4 Image, Gen4 Turbo, Qwen Image, Qwen Edit)",
+      "Advanced prompting syntax (brackets, pipes, wildcards, @references)",
+      "6-step Storyboard workflow (Story → Style → Characters → Shots → Generate → Results)",
+      "Shot Animator for image-to-video conversion",
+      "Layout & Annotation tool with Fabric.js canvas",
+      "Gallery with search, filter, batch operations, and folders",
+      "Community features for sharing and discovering recipes/styles",
+      "Pay-as-you-go credits system with Stripe integration",
+      "Admin dashboard for user management and credit granting",
+      "Music Lab feature",
+      "Educational Storybook wizard",
+      "Prompt templates and tools",
+      "Dynamic wildcards system",
+      "Director questions system for enhanced prompt generation",
+      "Mobile-optimized responsive UI with Capacitor support",
+      "Reference image management with tagging"
+    ],
+    "known_gaps": [
+      "Reference image persistence to Supabase needs completion",
+      "User prompts table for better prompt organization not yet implemented",
+      "Actual count for reference library autocomplete not connected",
+      "Mobile native app not fully released (Capacitor configured but in development)"
+    ],
+    "technical_debt": [
+      "Some TODO comments for Supabase integration in reference image manager",
+      "Community service has pending consideration for user_prompts table",
+      "Reference library count placeholder in autocomplete"
+    ]
+  },
+  "competitive_context": {
+    "alternatives": [
+      "Midjourney - Popular AI image generation with Discord interface",
+      "DALL-E 3 / ChatGPT - OpenAI's image generation with natural language",
+      "Stable Diffusion WebUI - Open-source with extensive customization",
+      "Leonardo.AI - Web-based with character consistency features",
+      "Scenario.gg - Game asset generation with training capabilities",
+      "Storyboard That - Traditional storyboard tool without AI generation"
+    ],
+    "differentiators": [
+      "Advanced prompting syntax (brackets, pipes, wildcards) unavailable in competitors",
+      "Built-in character sheet generation for multi-angle consistency",
+      "Complete storyboard workflow from script to final export",
+      "Reference image tagging with @mention syntax for easy reuse",
+      "Custom style creation with attached reference images",
+      "Community recipe sharing for workflow templates",
+      "Pay-as-you-go pricing without monthly subscriptions"
+    ],
+    "market_position": "Professional-tier AI image generation tool positioned between consumer apps (like basic ChatGPT image gen) and enterprise solutions (like Runway). Targets the underserved niche of narrative visual content creators who need batch consistency rather than single striking images.",
+    "competitor_pain_points": [],
+    "competitor_analysis_available": false
+  },
+  "constraints": {
+    "technical": [
+      "Dependent on Replicate API availability and model performance",
+      "Supabase storage limits and database performance",
+      "API rate limits from various AI providers (Replicate, OpenRouter, ElevenLabs)",
+      "Browser-based canvas limitations for complex annotation features",
+      "Mobile deployment via Capacitor adds testing/maintenance overhead"
+    ],
+    "resources": [
+      "Appears to be solo developer or small team project based on git history",
+      "Pay-as-you-go model means revenue scales with usage costs",
+      "Need to balance feature development with infrastructure maintenance"
+    ],
+    "dependencies": [
+      "Replicate API for image generation (critical path)",
+      "Supabase for authentication, database, and file storage",
+      "Stripe for payment processing",
+      "Vercel for deployment and hosting",
+      "Various AI API providers (OpenRouter, Google Generative AI, ElevenLabs)"
+    ]
+  },
+  "created_at": "2025-12-22T11:37:00Z"
+}

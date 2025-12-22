@@ -1,0 +1,908 @@
+{
+  "id": "roadmap-2025-12-22T12-00-00Z",
+  "project_name": "Director's Palette v2",
+  "version": "1.0",
+  "vision": "Turn stories into images - Professional AI image generation with advanced prompt engineering for visual storytelling",
+  "target_audience": {
+    "primary": "Visual storytellers and content creators who need to generate large batches of consistent AI images for narrative projects (comic artists, storyboard artists, visual novel creators)",
+    "secondary": [
+      "Film pre-visualization teams needing to plan shots and camera angles",
+      "Concept artists exploring visual directions quickly",
+      "Independent game developers creating character sprites and backgrounds",
+      "Educators and children's book illustrators creating consistent characters"
+    ]
+  },
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Foundation & Core Fixes",
+      "description": "Complete critical infrastructure gaps and improve core reliability for production use",
+      "order": 1,
+      "status": "planned",
+      "features": [
+        "feature-1",
+        "feature-2",
+        "feature-3",
+        "feature-4"
+      ],
+      "milestones": [
+        {
+          "id": "milestone-1-1",
+          "title": "Reference System Complete",
+          "description": "Users can reliably save, organize, and reuse reference images across sessions",
+          "features": [
+            "feature-1",
+            "feature-3"
+          ],
+          "status": "planned"
+        },
+        {
+          "id": "milestone-1-2",
+          "title": "Prompt Management Live",
+          "description": "Users can save, organize, and reuse prompts with folders and search",
+          "features": [
+            "feature-2",
+            "feature-4"
+          ],
+          "status": "planned"
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Character & Style Mastery",
+      "description": "Strengthen the core differentiator of character consistency and expand style management capabilities",
+      "order": 2,
+      "status": "planned",
+      "features": [
+        "feature-5",
+        "feature-6",
+        "feature-7",
+        "feature-8"
+      ],
+      "milestones": [
+        {
+          "id": "milestone-2-1",
+          "title": "Advanced Character Sheets",
+          "description": "Users can generate comprehensive character sheets with multiple poses and expressions in one workflow",
+          "features": [
+            "feature-5",
+            "feature-6"
+          ],
+          "status": "planned"
+        },
+        {
+          "id": "milestone-2-2",
+          "title": "Style Library System",
+          "description": "Users can save, share, and one-click apply style presets with consistent results",
+          "features": [
+            "feature-7",
+            "feature-8"
+          ],
+          "status": "planned"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Workflow & Productivity",
+      "description": "Enhance batch generation capabilities and streamline professional production workflows",
+      "order": 3,
+      "status": "planned",
+      "features": [
+        "feature-9",
+        "feature-10",
+        "feature-11",
+        "feature-12",
+        "feature-13"
+      ],
+      "milestones": [
+        {
+          "id": "milestone-3-1",
+          "title": "Smart Batch System",
+          "description": "Users can queue, prioritize, and manage large batch generations with intelligent scheduling",
+          "features": [
+            "feature-9",
+            "feature-10"
+          ],
+          "status": "planned"
+        },
+        {
+          "id": "milestone-3-2",
+          "title": "Export Pipeline Complete",
+          "description": "Users can export storyboards in multiple professional formats (PDF, print-ready, video storyboard)",
+          "features": [
+            "feature-11",
+            "feature-12",
+            "feature-13"
+          ],
+          "status": "planned"
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Community & Collaboration",
+      "description": "Build network effects through community features and enable team collaboration",
+      "order": 4,
+      "status": "planned",
+      "features": [
+        "feature-14",
+        "feature-15",
+        "feature-16",
+        "feature-17"
+      ],
+      "milestones": [
+        {
+          "id": "milestone-4-1",
+          "title": "Recipe Marketplace Launch",
+          "description": "Users can browse, rate, and purchase community-created recipes and style packs",
+          "features": [
+            "feature-14",
+            "feature-15"
+          ],
+          "status": "planned"
+        },
+        {
+          "id": "milestone-4-2",
+          "title": "Team Collaboration",
+          "description": "Teams can collaborate on storyboards with real-time updates and role-based permissions",
+          "features": [
+            "feature-16",
+            "feature-17"
+          ],
+          "status": "planned"
+        }
+      ]
+    },
+    {
+      "id": "phase-5",
+      "name": "AI-Powered Intelligence",
+      "description": "Leverage AI to automate tedious tasks and provide intelligent creative assistance",
+      "order": 5,
+      "status": "planned",
+      "features": [
+        "feature-18",
+        "feature-19",
+        "feature-20",
+        "feature-21"
+      ],
+      "milestones": [
+        {
+          "id": "milestone-5-1",
+          "title": "Script-to-Storyboard AI",
+          "description": "AI can automatically break down scripts into shot suggestions with camera angles and compositions",
+          "features": [
+            "feature-18",
+            "feature-19"
+          ],
+          "status": "planned"
+        },
+        {
+          "id": "milestone-5-2",
+          "title": "Creative AI Assistant",
+          "description": "AI proactively suggests improvements, continuity fixes, and creative alternatives",
+          "features": [
+            "feature-20",
+            "feature-21"
+          ],
+          "status": "planned"
+        }
+      ]
+    },
+    {
+      "id": "phase-6",
+      "name": "Platform Expansion",
+      "description": "Expand to mobile native apps and enterprise features for broader market reach",
+      "order": 6,
+      "status": "planned",
+      "features": [
+        "feature-22",
+        "feature-23",
+        "feature-24"
+      ],
+      "milestones": [
+        {
+          "id": "milestone-6-1",
+          "title": "Mobile Apps Live",
+          "description": "Native iOS and Android apps available in app stores with offline capabilities",
+          "features": [
+            "feature-22"
+          ],
+          "status": "planned"
+        },
+        {
+          "id": "milestone-6-2",
+          "title": "Enterprise Ready",
+          "description": "Enterprise features including SSO, team management, and usage analytics",
+          "features": [
+            "feature-23",
+            "feature-24"
+          ],
+          "status": "planned"
+        }
+      ]
+    }
+  ],
+  "features": [
+    {
+      "id": "feature-1",
+      "title": "Complete Reference Image Persistence to Supabase",
+      "description": "Finish the Supabase integration for reference images so users can reliably save, organize, and access their reference images across sessions and devices. Currently marked as TODO in the codebase.",
+      "rationale": "Reference images are critical for character consistency - the #1 differentiator. Without reliable persistence, users lose their work and the @reference syntax becomes unreliable. This addresses competitor pain points where users struggle with character consistency (Midjourney pain-1-2, DALL-E pain-3-2).",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "phase_id": "phase-1",
+      "dependencies": [],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Reference images are uploaded to Supabase Storage on save",
+        "Reference images persist across browser sessions",
+        "Reference images sync across devices for logged-in users",
+        "Reference image URLs are valid and accessible in prompts",
+        "Deleted references are cleaned up from storage"
+      ],
+      "user_stories": [
+        "As a comic artist, I want my character references to persist so that I can continue my project across multiple sessions",
+        "As a visual storyteller, I want to access my references from any device so that I can work from my home and office"
+      ],
+      "competitor_insight_ids": [
+        "pain-1-2",
+        "pain-2-1",
+        "pain-3-2"
+      ]
+    },
+    {
+      "id": "feature-2",
+      "title": "User Prompts Organization System",
+      "description": "Implement the user_prompts table and UI for saving, organizing, and reusing prompts. Allow users to create folders, add tags, and quickly search their prompt library.",
+      "rationale": "Power users create hundreds of prompts during a project. Without organization, they waste time recreating prompts or searching through history. This addresses the repetitive prompt work pain point shared across all competitors (pain-1-4, pain-3-4).",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "phase_id": "phase-1",
+      "dependencies": [],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Users can save prompts with custom names and descriptions",
+        "Users can organize prompts into folders",
+        "Users can add tags to prompts for filtering",
+        "Quick search finds prompts by name, content, or tags",
+        "One-click loads saved prompt into Shot Creator"
+      ],
+      "user_stories": [
+        "As a storyboard artist, I want to save my best prompts so that I can reuse them for similar scenes",
+        "As a comic creator, I want to organize prompts by project so that I can quickly find the right prompt for each series"
+      ],
+      "competitor_insight_ids": [
+        "pain-1-4",
+        "pain-3-4",
+        "pain-4-4"
+      ]
+    },
+    {
+      "id": "feature-3",
+      "title": "Reference Library Autocomplete with Real Counts",
+      "description": "Connect the reference library autocomplete to show actual counts and real-time availability of references. Currently showing placeholder data.",
+      "rationale": "Users need accurate feedback when using @reference syntax. Showing wrong counts or unavailable references breaks the workflow and causes failed generations, wasting credits.",
+      "priority": "must",
+      "complexity": "low",
+      "impact": "medium",
+      "phase_id": "phase-1",
+      "dependencies": [
+        "feature-1"
+      ],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Autocomplete shows real count of available references",
+        "Unavailable or deleted references are not shown",
+        "Autocomplete updates in real-time as references are added/removed",
+        "Performance remains fast with 100+ references"
+      ],
+      "user_stories": [
+        "As a user, I want to see accurate reference counts so that I know what's available to use",
+        "As a creator, I want autocomplete to only show valid references so that my generations don't fail"
+      ],
+      "competitor_insight_ids": []
+    },
+    {
+      "id": "feature-4",
+      "title": "Prompt Templates with Variables",
+      "description": "Create a prompt template system that allows users to define reusable prompt structures with placeholder variables like {character}, {action}, {setting} that can be quickly filled in for each generation.",
+      "rationale": "Reduces repetitive prompt writing - a major pain point. Templates with variables enable faster batch creation while maintaining consistency. Competitors lack this capability entirely (pain-1-4, pain-2-4).",
+      "priority": "should",
+      "complexity": "medium",
+      "impact": "high",
+      "phase_id": "phase-1",
+      "dependencies": [
+        "feature-2"
+      ],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Users can create templates with {variable} placeholders",
+        "Variables can have default values and descriptions",
+        "Applying a template prompts for variable values",
+        "Templates can use @references and bracket syntax",
+        "Template library is searchable and categorized"
+      ],
+      "user_stories": [
+        "As a storyboard artist, I want prompt templates so that I can quickly create consistent scene descriptions",
+        "As a comic creator, I want to define character action templates so that each panel is described consistently"
+      ],
+      "competitor_insight_ids": [
+        "pain-1-4",
+        "pain-2-4",
+        "pain-3-4"
+      ]
+    },
+    {
+      "id": "feature-5",
+      "title": "Multi-Pose Character Sheet Generator",
+      "description": "Enhance the character sheet feature to generate comprehensive reference sheets with multiple poses, expressions, angles, and outfit variations in a single optimized batch workflow.",
+      "rationale": "Character consistency is THE #1 unsolved problem for narrative creators (gap-1). A robust character sheet generator that creates all needed references upfront eliminates the need for competitors' model training approach (pain-2-1) and solves Midjourney's core weakness (pain-1-2).",
+      "priority": "must",
+      "complexity": "high",
+      "impact": "high",
+      "phase_id": "phase-2",
+      "dependencies": [
+        "feature-1"
+      ],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Users can select from preset pose libraries (front, side, back, action poses)",
+        "Users can select expression sets (neutral, happy, angry, surprised, etc.)",
+        "All poses/expressions generate in a single batch with consistency",
+        "Generated sheets are automatically tagged and organized as references",
+        "One-click creates @reference for entire character sheet"
+      ],
+      "user_stories": [
+        "As a comic artist, I want to generate a complete character sheet so that I have consistent references for all angles",
+        "As a visual novel creator, I want expression sheets so that my characters have consistent emotional variations"
+      ],
+      "competitor_insight_ids": [
+        "pain-1-2",
+        "pain-2-1",
+        "pain-3-2",
+        "gap-1"
+      ]
+    },
+    {
+      "id": "feature-6",
+      "title": "Character Relationship & Group Shots",
+      "description": "Enable defining relationships between characters and generate consistent group shots with multiple characters maintaining their individual consistency.",
+      "rationale": "Narrative projects require multiple characters interacting. Current AI tools struggle with multi-character consistency. This unique feature would be a significant differentiator.",
+      "priority": "should",
+      "complexity": "high",
+      "impact": "high",
+      "phase_id": "phase-2",
+      "dependencies": [
+        "feature-5"
+      ],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Users can define character relationships (height differences, groupings)",
+        "Group shot prompts can include multiple @references",
+        "Relative positioning and scaling is maintained",
+        "Characters maintain individual consistency in group shots",
+        "Relationship presets for common compositions (dialogue, action, crowd)"
+      ],
+      "user_stories": [
+        "As a comic artist, I want to generate scenes with my hero and villain together so that they look consistent in confrontation panels",
+        "As a children's book illustrator, I want group shots of my character family so that they appear consistent together"
+      ],
+      "competitor_insight_ids": [
+        "pain-1-2",
+        "pain-3-2",
+        "gap-1"
+      ]
+    },
+    {
+      "id": "feature-7",
+      "title": "Style Presets Library",
+      "description": "Create a comprehensive style preset system where users can save, share, and one-click apply complete style configurations including model settings, style prompts, and reference images.",
+      "rationale": "Maintaining style consistency across a project is a major pain point. Style presets allow users to lock in a visual direction and apply it consistently. This also enables community sharing of popular styles.",
+      "priority": "should",
+      "complexity": "medium",
+      "impact": "high",
+      "phase_id": "phase-2",
+      "dependencies": [
+        "feature-1"
+      ],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Users can save current style settings as a preset",
+        "Presets include model, parameters, style prompt, and reference images",
+        "One-click applies entire preset to Shot Creator",
+        "Presets can be shared publicly or kept private",
+        "Built-in starter presets for common styles (comic book, anime, cinematic, etc.)"
+      ],
+      "user_stories": [
+        "As a visual storyteller, I want to save my project style so that every shot matches my established look",
+        "As a concept artist, I want to try community styles so that I can explore different visual directions quickly"
+      ],
+      "competitor_insight_ids": [
+        "pain-3-3",
+        "gap-3"
+      ]
+    },
+    {
+      "id": "feature-8",
+      "title": "Style Lock for Projects",
+      "description": "Allow users to lock a style for an entire project so that all new generations automatically inherit the locked style settings unless explicitly overridden.",
+      "rationale": "During production, artists need consistency without manually reapplying settings for each generation. Style lock prevents accidental style drift and speeds up workflow.",
+      "priority": "should",
+      "complexity": "low",
+      "impact": "medium",
+      "phase_id": "phase-2",
+      "dependencies": [
+        "feature-7"
+      ],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Users can lock a style preset to a storyboard project",
+        "New shots inherit locked style automatically",
+        "Visual indicator shows when style is locked",
+        "Users can override locked style for specific shots",
+        "Unlocking style requires confirmation to prevent accidents"
+      ],
+      "user_stories": [
+        "As a storyboard artist, I want to lock my project style so that I don't accidentally change it mid-production",
+        "As a comic creator, I want consistent style across all panels without manually setting it each time"
+      ],
+      "competitor_insight_ids": [
+        "gap-3"
+      ]
+    },
+    {
+      "id": "feature-9",
+      "title": "Batch Generation Queue Manager",
+      "description": "Create a visual queue management system for batch generations where users can see pending jobs, reorder priorities, pause/resume, and get notifications on completion.",
+      "rationale": "Large storyboard projects may queue 50+ generations. Without queue management, users can't prioritize urgent shots or monitor progress. This directly addresses batch processing pain (pain-1-4, pain-3-4).",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "phase_id": "phase-3",
+      "dependencies": [],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Visual queue shows all pending, in-progress, and completed generations",
+        "Users can drag to reorder priority",
+        "Users can pause/resume queue processing",
+        "Browser notifications on batch completion",
+        "Queue persists across page refreshes",
+        "Clear indicators of estimated completion time"
+      ],
+      "user_stories": [
+        "As a storyboard artist, I want to see my generation queue so that I know when my priority shots will complete",
+        "As a creator, I want to reorder my queue so that I get the most important shots first"
+      ],
+      "competitor_insight_ids": [
+        "pain-1-4",
+        "pain-3-4",
+        "gap-2"
+      ]
+    },
+    {
+      "id": "feature-10",
+      "title": "Smart Variation Suggestions",
+      "description": "AI-powered suggestions for prompt variations based on the current prompt and project context. Suggests camera angles, lighting changes, emotional variations, and alternative compositions.",
+      "rationale": "Reduces creative burden and speeds up iteration. Instead of manually writing every variation, users get intelligent suggestions they can accept, modify, or reject.",
+      "priority": "should",
+      "complexity": "medium",
+      "impact": "medium",
+      "phase_id": "phase-3",
+      "dependencies": [],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "AI suggests 3-5 variations for current prompt",
+        "Suggestions include camera angle changes",
+        "Suggestions include lighting/mood variations",
+        "One-click adds suggestion to generation queue",
+        "Suggestions improve based on user selections over time"
+      ],
+      "user_stories": [
+        "As a storyboard artist, I want variation suggestions so that I can quickly explore different angles for a scene",
+        "As a concept artist, I want AI suggestions so that I discover compositions I wouldn't have thought of"
+      ],
+      "competitor_insight_ids": [
+        "pain-1-4",
+        "gap-2"
+      ]
+    },
+    {
+      "id": "feature-11",
+      "title": "PDF Storyboard Export",
+      "description": "Export complete storyboards as professionally formatted PDF documents with customizable layouts, shot annotations, dialogue/action notes, and print-ready resolution.",
+      "rationale": "Storyboards need to be shared with teams, clients, and stakeholders. PDF export with professional formatting enables Director's Palette to integrate into real production workflows.",
+      "priority": "must",
+      "complexity": "medium",
+      "impact": "high",
+      "phase_id": "phase-3",
+      "dependencies": [],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Export storyboard as multi-page PDF",
+        "Multiple layout options (grid, single shot per page, presentation)",
+        "Include shot numbers, descriptions, and annotations",
+        "High-resolution output suitable for printing",
+        "Custom branding/watermark options"
+      ],
+      "user_stories": [
+        "As a film pre-viz artist, I want PDF exports so that I can share storyboards with the director",
+        "As a freelance storyboard artist, I want professional PDF output so that I can deliver to clients"
+      ],
+      "competitor_insight_ids": [
+        "pain-1-1",
+        "pain-3-5",
+        "gap-3"
+      ]
+    },
+    {
+      "id": "feature-12",
+      "title": "Video Storyboard Export",
+      "description": "Export storyboards as video files with configurable timing per shot, transitions, and optional audio track support for animatic-style presentations.",
+      "rationale": "Film and animation workflows often require animatic versions. Video export bridges the gap between static storyboard and full animation/film, enabling better stakeholder communication.",
+      "priority": "should",
+      "complexity": "high",
+      "impact": "medium",
+      "phase_id": "phase-3",
+      "dependencies": [
+        "feature-11"
+      ],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Export storyboard as MP4 video",
+        "Configurable timing per shot",
+        "Basic transition options (cut, fade, dissolve)",
+        "Optional audio track import",
+        "Export resolution options (720p, 1080p, 4K)"
+      ],
+      "user_stories": [
+        "As a film pre-viz artist, I want video exports so that I can create rough animatics for timing review",
+        "As an animation director, I want to add rough audio to my storyboard video so that I can pitch the project"
+      ],
+      "competitor_insight_ids": [
+        "gap-3",
+        "gap-4"
+      ]
+    },
+    {
+      "id": "feature-13",
+      "title": "Print-Ready Comic Panel Export",
+      "description": "Export comic pages with proper bleed, margins, and print-ready specifications for common comic formats (US comic, manga, European album).",
+      "rationale": "Comic artists are a primary target audience. Professional print export eliminates the need for additional software to prepare files for printing, completing the end-to-end workflow.",
+      "priority": "should",
+      "complexity": "medium",
+      "impact": "medium",
+      "phase_id": "phase-3",
+      "dependencies": [],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Export with standard comic page dimensions",
+        "Proper bleed and safe area markings",
+        "CMYK color space option for print",
+        "Multiple page export for full issues",
+        "Print-ready PDF with proper embedded fonts"
+      ],
+      "user_stories": [
+        "As a comic artist, I want print-ready exports so that I can send directly to print-on-demand services",
+        "As a manga creator, I want proper manga page dimensions so that my work prints correctly"
+      ],
+      "competitor_insight_ids": [
+        "gap-3"
+      ]
+    },
+    {
+      "id": "feature-14",
+      "title": "Recipe Marketplace with Ratings",
+      "description": "Expand the community recipes feature into a full marketplace where creators can share, rate, review, and optionally sell their recipes, style packs, and character templates.",
+      "rationale": "Community sharing creates network effects that competitors lack. A marketplace incentivizes quality content creation and helps new users get started quickly with proven recipes.",
+      "priority": "should",
+      "complexity": "high",
+      "impact": "high",
+      "phase_id": "phase-4",
+      "dependencies": [
+        "feature-7"
+      ],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Users can publish recipes to marketplace",
+        "Star ratings and written reviews",
+        "Download/usage counts displayed",
+        "Categories and search/filter",
+        "Optional paid recipes with revenue share",
+        "Creator profiles with portfolio"
+      ],
+      "user_stories": [
+        "As a style creator, I want to share my recipes so that others can benefit from my work",
+        "As a new user, I want to browse popular recipes so that I can learn best practices quickly"
+      ],
+      "competitor_insight_ids": [
+        "gap-5"
+      ]
+    },
+    {
+      "id": "feature-15",
+      "title": "Style Transfer from Community",
+      "description": "Enable one-click style transfer where users can apply a community creator's style to their own characters while maintaining character consistency.",
+      "rationale": "Discovering a great style is just the start - applying it to existing characters is the challenge. Style transfer bridges community inspiration and personal projects.",
+      "priority": "could",
+      "complexity": "high",
+      "impact": "medium",
+      "phase_id": "phase-4",
+      "dependencies": [
+        "feature-14",
+        "feature-7"
+      ],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Preview style on own characters before applying",
+        "Character consistency maintained after style transfer",
+        "Adjustable style strength slider",
+        "Batch apply to multiple characters",
+        "Attribution to original style creator"
+      ],
+      "user_stories": [
+        "As a visual storyteller, I want to try community styles on my characters so that I can find the perfect look",
+        "As a creator, I want to preview styles before committing so that I don't waste credits"
+      ],
+      "competitor_insight_ids": []
+    },
+    {
+      "id": "feature-16",
+      "title": "Real-Time Collaborative Storyboard",
+      "description": "Enable multiple users to work on the same storyboard simultaneously with real-time updates, cursor presence, and conflict resolution.",
+      "rationale": "Film and animation teams collaborate on storyboards. Real-time collaboration eliminates version conflicts and enables remote creative sessions, opening up team/studio market segments.",
+      "priority": "could",
+      "complexity": "high",
+      "impact": "medium",
+      "phase_id": "phase-4",
+      "dependencies": [],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Multiple users can edit same storyboard simultaneously",
+        "Cursor presence shows who is working where",
+        "Changes sync in real-time across all clients",
+        "Conflict resolution for simultaneous edits",
+        "Activity feed shows recent changes",
+        "Comments and @mentions for discussion"
+      ],
+      "user_stories": [
+        "As a storyboard supervisor, I want to review and comment while artists work so that we can iterate faster",
+        "As a remote team, we want to collaborate on storyboards so that we don't have version conflicts"
+      ],
+      "competitor_insight_ids": [
+        "gap-3"
+      ]
+    },
+    {
+      "id": "feature-17",
+      "title": "Team Workspaces with Roles",
+      "description": "Create team workspace functionality with shared projects, role-based permissions (admin, editor, viewer), and unified billing for studios and teams.",
+      "rationale": "Studios and teams are a key growth market. Team workspaces enable enterprise sales and create stickier accounts with higher lifetime value.",
+      "priority": "could",
+      "complexity": "high",
+      "impact": "medium",
+      "phase_id": "phase-4",
+      "dependencies": [
+        "feature-16"
+      ],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Create and manage team workspaces",
+        "Invite members with specific roles",
+        "Shared project library within team",
+        "Unified credit pool for team",
+        "Admin dashboard with usage analytics",
+        "SSO integration for enterprise"
+      ],
+      "user_stories": [
+        "As a studio owner, I want team billing so that I can manage costs across my artists",
+        "As a team lead, I want role-based access so that I can control who can edit vs view"
+      ],
+      "competitor_insight_ids": []
+    },
+    {
+      "id": "feature-18",
+      "title": "Script-to-Shot AI Breakdown",
+      "description": "AI-powered feature that analyzes a written script or story text and automatically suggests shot breakdowns with scene descriptions, camera angles, and character positioning.",
+      "rationale": "The biggest time sink in storyboarding is translating script to shots. AI automation of this step dramatically accelerates the workflow and addresses the complete storyboard workflow gap (gap-3).",
+      "priority": "should",
+      "complexity": "high",
+      "impact": "high",
+      "phase_id": "phase-5",
+      "dependencies": [],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Paste script text and get shot suggestions",
+        "AI identifies scenes, characters, and actions",
+        "Suggested camera angles for each shot",
+        "Suggested compositions and framing",
+        "One-click creates storyboard from suggestions",
+        "Manual editing/refinement of AI suggestions"
+      ],
+      "user_stories": [
+        "As a screenwriter, I want to quickly visualize my script so that I can see how scenes will flow",
+        "As a director, I want AI shot suggestions so that I can focus on creative decisions rather than technical setup"
+      ],
+      "competitor_insight_ids": [
+        "gap-3",
+        "pain-1-1"
+      ]
+    },
+    {
+      "id": "feature-19",
+      "title": "Automatic Camera Angle Suggestions",
+      "description": "Based on scene context and narrative beats, AI suggests optimal camera angles, shot types (wide, medium, close-up), and compositions for maximum emotional impact.",
+      "rationale": "Not all users are trained in cinematography. AI guidance helps beginners create more professional storyboards while giving experts a starting point to refine.",
+      "priority": "could",
+      "complexity": "medium",
+      "impact": "medium",
+      "phase_id": "phase-5",
+      "dependencies": [
+        "feature-18"
+      ],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "AI analyzes scene context and suggests angles",
+        "Explains why each angle is suggested (e.g., 'low angle for power')",
+        "Multiple options for each scene",
+        "Learn from user preferences over time",
+        "Educational tooltips about cinematography principles"
+      ],
+      "user_stories": [
+        "As a beginner, I want camera suggestions so that my storyboards look professional",
+        "As a director, I want quick angle options so that I can compare compositions faster"
+      ],
+      "competitor_insight_ids": []
+    },
+    {
+      "id": "feature-20",
+      "title": "Continuity Checker",
+      "description": "AI-powered review of storyboard sequences that flags potential continuity issues like character positioning, lighting consistency, and prop placement across shots.",
+      "rationale": "Continuity errors are embarrassing and costly in production. Catching them at the storyboard stage saves significant time and money down the line.",
+      "priority": "could",
+      "complexity": "high",
+      "impact": "medium",
+      "phase_id": "phase-5",
+      "dependencies": [],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "AI analyzes shot sequences for continuity",
+        "Flags character position jumps",
+        "Flags lighting/time-of-day inconsistencies",
+        "Flags missing or appearing props",
+        "Provides fix suggestions",
+        "Learn from user corrections"
+      ],
+      "user_stories": [
+        "As a storyboard artist, I want continuity checking so that directors don't find errors in my work",
+        "As a film student, I want to learn about continuity so that I improve my skills"
+      ],
+      "competitor_insight_ids": [
+        "gap-3"
+      ]
+    },
+    {
+      "id": "feature-21",
+      "title": "Smart Prompt Enhancement",
+      "description": "AI assistant that reviews prompts and suggests improvements for better results - adding missing details, fixing common issues, and optimizing for the selected model.",
+      "rationale": "Prompt engineering is a skill barrier. AI assistance helps users get better results without deep prompt knowledge, reducing frustration and credit waste on poor generations.",
+      "priority": "should",
+      "complexity": "medium",
+      "impact": "medium",
+      "phase_id": "phase-5",
+      "dependencies": [],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "Analyze prompt and suggest improvements",
+        "Explain what each suggestion improves",
+        "Model-specific optimizations",
+        "One-click apply suggestions",
+        "Track which suggestions lead to better results"
+      ],
+      "user_stories": [
+        "As a beginner, I want prompt suggestions so that I get better results without deep knowledge",
+        "As an experienced user, I want quick optimizations so that I don't miss obvious improvements"
+      ],
+      "competitor_insight_ids": [
+        "pain-3-3",
+        "pain-4-1"
+      ]
+    },
+    {
+      "id": "feature-22",
+      "title": "Native Mobile Apps (iOS & Android)",
+      "description": "Complete the Capacitor mobile app development and release native iOS and Android apps to the App Store and Play Store with full feature parity and offline capabilities.",
+      "rationale": "Mobile app extends reach and enables on-the-go creativity. Currently Capacitor is configured but not fully released. Mobile apps also command higher perceived value.",
+      "priority": "should",
+      "complexity": "high",
+      "impact": "high",
+      "phase_id": "phase-6",
+      "dependencies": [],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "iOS app in App Store",
+        "Android app in Play Store",
+        "Offline viewing of generated images",
+        "Camera integration for reference photos",
+        "Push notifications for generation completion",
+        "Biometric authentication"
+      ],
+      "user_stories": [
+        "As a creator on the go, I want a mobile app so that I can review storyboards and queue generations",
+        "As a location scout, I want to take reference photos directly into the app so that I can use them immediately"
+      ],
+      "competitor_insight_ids": [
+        "pain-1-1"
+      ]
+    },
+    {
+      "id": "feature-23",
+      "title": "Enterprise SSO & Admin Dashboard",
+      "description": "Enterprise features including Single Sign-On (SAML/OIDC), centralized admin dashboard, usage analytics, and compliance controls for studio/enterprise customers.",
+      "rationale": "Enterprise market represents significant revenue opportunity. SSO is often a requirement for studio IT departments, and admin controls are needed for managing large teams.",
+      "priority": "could",
+      "complexity": "high",
+      "impact": "medium",
+      "phase_id": "phase-6",
+      "dependencies": [
+        "feature-17"
+      ],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "SAML 2.0 and OIDC SSO support",
+        "Admin dashboard with usage analytics",
+        "User provisioning via SCIM",
+        "Audit logs for compliance",
+        "Custom data retention policies",
+        "Dedicated support channel"
+      ],
+      "user_stories": [
+        "As an IT admin, I want SSO so that I can manage access through our identity provider",
+        "As a studio manager, I want usage analytics so that I can optimize our creative pipeline"
+      ],
+      "competitor_insight_ids": []
+    },
+    {
+      "id": "feature-24",
+      "title": "API Access for Developers",
+      "description": "Provide a public API that allows developers and power users to integrate Director's Palette generation capabilities into their own tools and workflows.",
+      "rationale": "API access enables custom integrations, automation, and expands the platform's reach. This addresses a Midjourney weakness (pain-1-5) and attracts technical power users.",
+      "priority": "could",
+      "complexity": "high",
+      "impact": "medium",
+      "phase_id": "phase-6",
+      "dependencies": [],
+      "status": "under_review",
+      "acceptance_criteria": [
+        "RESTful API with authentication",
+        "Endpoints for image generation, reference management, project management",
+        "Rate limiting and usage quotas",
+        "Webhooks for generation completion",
+        "API documentation and SDK",
+        "Usage dashboard for API consumers"
+      ],
+      "user_stories": [
+        "As a developer, I want API access so that I can build custom integrations with my creative tools",
+        "As a studio, I want to automate storyboard generation so that we can integrate with our production pipeline"
+      ],
+      "competitor_insight_ids": [
+        "pain-1-5"
+      ]
+    }
+  ],
+  "metadata": {
+    "created_at": "2025-12-22T12:00:00Z",
+    "updated_at": "2025-12-22T17:10:38.449Z",
+    "generated_by": "roadmap_features agent",
+    "prioritization_framework": "MoSCoW",
+    "competitor_analysis_used": true,
+    "source_files": [
+      "roadmap_discovery.json",
+      "project_index.json",
+      "competitor_analysis.json"
+    ]
+  }
+}

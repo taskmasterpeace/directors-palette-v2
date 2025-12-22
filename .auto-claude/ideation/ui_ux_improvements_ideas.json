@@ -1,0 +1,105 @@
+{
+  "ui_ux_improvements": [
+    {
+      "id": "uiux-001",
+      "type": "ui_ux_improvements",
+      "title": "Standardize Auth Form Input Styling",
+      "description": "Update authentication forms (SignInForm, ForgotPasswordForm, ResetPasswordForm) to use the standard Input component instead of custom inline styling",
+      "rationale": "Auth forms use custom inline focus styles (focus:ring-2 focus:ring-blue-500 or focus:ring-amber-500) that don't match the design system's Input component. This creates visual inconsistency and maintenance burden.",
+      "category": "visual",
+      "affected_components": [
+        "src/features/auth/components/SignInForm.tsx",
+        "src/features/auth/components/ForgotPasswordForm.tsx",
+        "src/features/auth/components/ResetPasswordForm.tsx"
+      ],
+      "screenshots": [],
+      "current_state": "Auth forms use raw <input> elements with custom Tailwind classes like 'bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500' instead of the standard Input component",
+      "proposed_change": "Replace all raw <input> elements in auth forms with the <Input /> component from '@/components/ui/input', which has consistent focus:visible:border-ring focus:visible:ring-ring/50 styling matching the design system",
+      "user_benefit": "Consistent visual experience across the application, making the auth flow feel polished and professional. Better accessibility with standardized focus states.",
+      "status": "draft",
+      "created_at": "2025-12-22T12:15:00.000Z"
+    },
+    {
+      "id": "uiux-002",
+      "type": "ui_ux_improvements",
+      "title": "Fix Footer Version Display",
+      "description": "Update the footer version from hardcoded 'v0.8' to dynamically read from package.json or update to match current version 0.95.0",
+      "rationale": "The footer displays 'v0.8' but the actual application version in package.json is '0.95.0'. This misleads users about the current version and looks unprofessional.",
+      "category": "usability",
+      "affected_components": [
+        "src/app/layout.tsx"
+      ],
+      "screenshots": [],
+      "current_state": "Footer hardcodes '<span>v0.8</span>' in layout.tsx line 73, which is significantly out of date compared to package.json version 0.95.0",
+      "proposed_change": "Either: (1) Import version from package.json and display dynamically, or (2) Update the hardcoded version to 'v0.95.0'. Recommended approach is dynamic import for automatic updates: import { version } from '../../package.json' then use {version}",
+      "user_benefit": "Users see accurate version information, which is important for bug reports and knowing they're on the latest version. Maintains trust in the application's professionalism.",
+      "status": "draft",
+      "created_at": "2025-12-22T12:15:00.000Z"
+    },
+    {
+      "id": "uiux-003",
+      "type": "ui_ux_improvements",
+      "title": "Add Keyboard Shortcut Hints to Sidebar",
+      "description": "Display keyboard shortcut indicators for the sidebar collapse toggle (Ctrl+B) so users can discover this feature",
+      "rationale": "The sidebar has a useful Ctrl+B keyboard shortcut for collapsing/expanding, but users have no way to discover this feature. Making shortcuts visible improves power user efficiency.",
+      "category": "usability",
+      "affected_components": [
+        "src/components/SidebarNavigation.tsx"
+      ],
+      "screenshots": [],
+      "current_state": "The collapse button shows ChevronLeft or Menu icon but provides no hint about the Ctrl+B shortcut. Code at line 87-96 listens for the shortcut but it's invisible to users.",
+      "proposed_change": "Add a tooltip to the collapse button showing 'Toggle sidebar (Ctrl+B)' or add a small <kbd> style hint below the button when sidebar is expanded: <TooltipContent>Toggle sidebar<kbd className='ml-2 px-1 text-xs bg-muted rounded'>Ctrl+B</kbd></TooltipContent>",
+      "user_benefit": "Power users can discover and use keyboard shortcuts for faster navigation. Improves efficiency for users who work with the app frequently.",
+      "status": "draft",
+      "created_at": "2025-12-22T12:15:00.000Z"
+    },
+    {
+      "id": "uiux-004",
+      "type": "ui_ux_improvements",
+      "title": "Improve Help Button Touch Target in SectionHeader",
+      "description": "Increase the help button size in SectionHeader to meet minimum touch target guidelines of 44x44 pixels for mobile accessibility",
+      "rationale": "The help icon button uses 'p-1.5' padding creating approximately a 28x28px touch target, which is below the recommended 44x44px minimum for mobile. This makes it hard to tap accurately on touch devices.",
+      "category": "accessibility",
+      "affected_components": [
+        "src/components/SectionHeader.tsx"
+      ],
+      "screenshots": [],
+      "current_state": "Help button at line 135-137 uses 'className=\"p-1.5 rounded-full bg-background/50\"' with a 4x4 icon, resulting in approximately 28x28px touch target. Also missing aria-label for screen readers.",
+      "proposed_change": "Change button styling to 'className=\"p-2.5 -m-1 rounded-full bg-background/50 hover:bg-background/80 transition-colors\" aria-label=\"Help for this section\"'. The increased padding creates a 44x44 target while negative margin keeps visual alignment. Add aria-label for accessibility.",
+      "user_benefit": "Mobile users can accurately tap the help button without frustration. Screen reader users get clear announcement of button purpose. Complies with WCAG 2.5.5 Target Size guidelines.",
+      "status": "draft",
+      "created_at": "2025-12-22T12:15:00.000Z"
+    },
+    {
+      "id": "uiux-005",
+      "type": "ui_ux_improvements",
+      "title": "Standardize Loading Spinner Component",
+      "description": "Create a unified LoadingSpinner component and replace inconsistent loading indicators throughout the app",
+      "rationale": "Different components use varying loading indicators - some use Loader2 with amber color, others use custom border-based spinners with purple, and some have different sizes. This creates visual inconsistency.",
+      "category": "visual",
+      "affected_components": [
+        "src/components/ui/loading-spinner.tsx (new)",
+        "src/features/community/components/CommunityGrid.tsx",
+        "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx",
+        "src/features/credits/components/CreditsDisplay.tsx"
+      ],
+      "screenshots": [],
+      "current_state": "CommunityGrid uses '<Loader2 className=\"w-8 h-8 animate-spin text-muted-foreground\"/>'. UnifiedImageGallery uses '<div className=\"w-12 h-12 ... border-t-purple-500 rounded-full animate-spin\"/>'. CreditsDisplay uses '<Loader2 className=\"w-8 h-8 animate-spin text-amber-500\"/>'. No consistent size/color scheme.",
+      "proposed_change": "Create a new LoadingSpinner component: export function LoadingSpinner({ size = 'md', className }: { size?: 'sm'|'md'|'lg', className?: string }) with predefined sizes (sm=4, md=8, lg=12) and use the app's amber/orange brand colors consistently. Replace all instances with <LoadingSpinner />",
+      "user_benefit": "Consistent loading experience across the app feels polished and professional. Users recognize the loading state immediately regardless of which feature they're using.",
+      "status": "draft",
+      "created_at": "2025-12-22T12:15:00.000Z"
+    }
+  ],
+  "metadata": {
+    "generated_at": "2025-12-22T12:15:00.000Z",
+    "analysis_type": "static_code_review",
+    "project": "Directors Palette",
+    "version": "0.95.0",
+    "tech_stack": {
+      "framework": "Next.js 15.5.4",
+      "ui_library": "shadcn/ui with Radix primitives",
+      "styling": "Tailwind CSS v4"
+    }
+  }
+}

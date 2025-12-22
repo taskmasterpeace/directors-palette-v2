@@ -1,0 +1,46 @@
+{
+  "existing_features": [],
+  "tech_stack": [],
+  "target_audience": "Visual storytellers and content creators who need to generate large batches of consistent AI images for narrative projects (comic artists, storyboard artists, visual novel creators)",
+  "planned_features": [
+    "Batch Generation Queue Manager",
+    "Automatic Camera Angle Suggestions",
+    "Recipe Marketplace with Ratings",
+    "Team Workspaces with Roles",
+    "Native Mobile Apps (iOS & Android)",
+    "User Prompts Organization System",
+    "Multi-Pose Character Sheet Generator",
+    "Enterprise SSO & Admin Dashboard",
+    "Specification: Audit Storyboard Functionality and Identify Issues",
+    "Script-to-Shot AI Breakdown",
+    "Style Presets Library",
+    "Complete Reference Image Persistence to Supabase",
+    "PDF Storyboard Export",
+    "Prompt Templates with Variables",
+    "Video Storyboard Export",
+    "Smart Variation Suggestions",
+    "Style Transfer from Community",
+    "Fix Recipe Apply Button and File Handling",
+    "Continuity Checker",
+    "Real-Time Collaborative Storyboard",
+    "Specification: [Task Name]",
+    "Character Relationship & Group Shots",
+    "Smart Prompt Enhancement",
+    "Reference Library Autocomplete with Real Counts",
+    "Specification: Storybook Feature Audit and Investigation",
+    "API Access for Developers",
+    "Style Lock for Projects",
+    "Print-Ready Comic Panel Export"
+  ],
+  "graph_hints": {},
+  "config": {
+    "enabled_types": [
+      "code_improvements",
+      "ui_ux_improvements"
+    ],
+    "include_roadmap_context": true,
+    "include_kanban_context": true,
+    "max_ideas_per_type": 5
+  },
+  "created_at": "2025-12-22T12:11:15.633050"
+}

@@ -1,0 +1,108 @@
+{
+  "code_improvements": [
+    {
+      "id": "ci-001",
+      "type": "code_improvements",
+      "title": "Recipe Import/Export Functionality",
+      "description": "Add import and export capability for recipes, allowing users to backup, share, and restore their recipe configurations as JSON files with version control and validation.",
+      "rationale": "The import/export pattern is already well-established in usePromptImportExport.ts with JSON export including versioning/timestamps, file download via blob URLs, import validation with duplicate checking, and toast notifications for feedback. Recipes are valuable user-created assets that would benefit from the same portability.",
+      "builds_upon": ["usePromptImportExport.ts pattern", "recipe.service.ts CRUD operations"],
+      "estimated_effort": "small",
+      "affected_files": [
+        "src/features/shot-creator/hooks/useRecipeImportExport.ts",
+        "src/features/shot-creator/services/recipe.service.ts",
+        "src/features/shot-creator/types/recipe.types.ts"
+      ],
+      "existing_patterns": [
+        "src/features/shot-creator/hooks/usePromptImportExport.ts - exact pattern to follow",
+        "Recipe type definitions and validation already exist"
+      ],
+      "implementation_approach": "Create useRecipeImportExport hook following the exact structure of usePromptImportExport: exportRecipes() creates JSON blob with version, exportDate, and recipes array; importRecipes() validates file format, checks for duplicates by name, and uses existing addRecipe from recipe store. Include recipe stages and reference image metadata in export.",
+      "status": "draft",
+      "created_at": "2025-12-22T12:15:00.000Z"
+    },
+    {
+      "id": "ci-002",
+      "type": "code_improvements",
+      "title": "Video Gallery Search and Filtering",
+      "description": "Add search functionality to the video gallery (shot-animator) matching the existing search capability in the image gallery, allowing users to find videos by prompt text.",
+      "rationale": "The searchQuery pattern exists in shot-creator's gallery service (gallery.service.ts lines 50-64) and the unified GalleryService already supports searchQuery in loadUserGalleryPaginated. The VideoGalleryService wrapper simply doesn't pass through this parameter yet.",
+      "builds_upon": ["shot-creator gallery search pattern", "unified GalleryService.loadUserGalleryPaginated"],
+      "estimated_effort": "trivial",
+      "affected_files": [
+        "src/features/shot-animator/services/gallery.service.ts",
+        "src/features/shot-animator/hooks/useGallery.ts",
+        "src/features/shot-animator/store/shot-animator.store.ts"
+      ],
+      "existing_patterns": [
+        "src/features/shot-creator/services/gallery.service.ts - loadUserGalleryPaginated with searchQuery option",
+        "src/lib/services/gallery.service.ts - unified service already supports search"
+      ],
+      "implementation_approach": "Update VideoGalleryService.loadUserVideosPaginated() to accept optional searchQuery parameter, pass it through to GalleryService.loadUserGalleryPaginated(). Add searchQuery state to shot-animator store. The unified service already handles the search filtering logic.",
+      "status": "draft",
+      "created_at": "2025-12-22T12:15:00.000Z"
+    },
+    {
+      "id": "ci-003",
+      "type": "code_improvements",
+      "title": "Recipe Editor Autosave",
+      "description": "Implement autosave for recipe editing sessions using localStorage, preventing loss of unsaved recipe changes when navigating away or browser crashes.",
+      "rationale": "The draft autosave pattern is well-established in useDraftAutosave.ts for story-creator with 30-second interval saves, change detection via snapshot comparison, 24-hour expiry, and clear/load functions. Recipe editing involves complex multi-stage configurations that take time to build.",
+      "builds_upon": ["useDraftAutosave.ts pattern", "recipe.store.ts state management"],
+      "estimated_effort": "small",
+      "affected_files": [
+        "src/features/shot-creator/hooks/useRecipeAutosave.ts",
+        "src/features/shot-creator/store/recipe.store.ts"
+      ],
+      "existing_patterns": [
+        "src/features/story-creator/hooks/useDraftAutosave.ts - exact autosave pattern with interval, change detection, expiry"
+      ],
+      "implementation_approach": "Create useRecipeAutosave hook following useDraftAutosave pattern: store recipe draft in localStorage with key 'recipe-editor-draft', snapshot current state every 30 seconds if changed, include recipe ID and timestamp in draft. Add loadRecipeDraft() and clearRecipeDraft() functions. Integrate with recipe store to detect editing sessions.",
+      "status": "draft",
+      "created_at": "2025-12-22T12:15:00.000Z"
+    },
+    {
+      "id": "ci-004",
+      "type": "code_improvements",
+      "title": "Video Gallery Bulk Download",
+      "description": "Enable bulk download of selected videos from the shot-animator gallery as a ZIP file, using the existing BulkDownloadService pattern.",
+      "rationale": "BulkDownloadService already exists with full ZIP generation capability including progress callbacks, filename extraction, and error handling. The pattern is complete and battle-tested for images. Videos in the gallery have the same URL-based structure.",
+      "builds_upon": ["BulkDownloadService", "shot-animator gallery selection"],
+      "estimated_effort": "small",
+      "affected_files": [
+        "src/features/shot-creator/services/bulk-download.service.ts",
+        "src/features/shot-animator/hooks/useGallery.ts",
+        "src/features/shot-animator/components/VideoGallery.tsx"
+      ],
+      "existing_patterns": [
+        "src/features/shot-creator/services/bulk-download.service.ts - complete ZIP download implementation with progress tracking"
+      ],
+      "implementation_approach": "Update BulkDownloadService.downloadAsZip() to handle video file extensions (mp4, webm). Add selection state to shot-animator gallery (checkbox pattern from shot-creator). Wire up download button that calls BulkDownloadService with selected video URLs. Reuse exact progress UI pattern from image gallery.",
+      "status": "draft",
+      "created_at": "2025-12-22T12:15:00.000Z"
+    },
+    {
+      "id": "ci-005",
+      "type": "code_improvements",
+      "title": "Personal Credit Usage Statistics",
+      "description": "Add a user-facing credit usage statistics view showing generation counts by type, spending trends over time, and model usage breakdown - extending the existing admin stats pattern to personal dashboards.",
+      "rationale": "The credits service already tracks full transaction history with metadata (model, generation type, cost). Admin endpoints (admin/stats, admin/financials) demonstrate the aggregation patterns. The transaction data model supports rich analytics.",
+      "builds_upon": ["credits.service.ts transaction history", "admin stats patterns"],
+      "estimated_effort": "medium",
+      "affected_files": [
+        "src/features/credits/services/credits.service.ts",
+        "src/features/credits/hooks/useCreditStats.ts",
+        "src/app/api/credits/stats/route.ts",
+        "src/features/settings/components/CreditUsageStats.tsx"
+      ],
+      "existing_patterns": [
+        "src/features/credits/services/credits.service.ts - getTransactionHistory with pagination",
+        "src/app/api/admin/stats/route.ts - aggregation query patterns",
+        "src/features/admin/services/financials.service.ts - financial analytics patterns"
+      ],
+      "implementation_approach": "Add getCreditStats(userId) method to credits.service.ts that aggregates transactions by: generation type counts (image/video/audio), model usage breakdown, daily/weekly spending trends. Create /api/credits/stats endpoint following admin pattern but scoped to authenticated user. Build useCreditStats hook and simple stats component for settings page.",
+      "status": "draft",
+      "created_at": "2025-12-22T12:15:00.000Z"
+    }
+  ]
+}

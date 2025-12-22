@@ -1,0 +1,203 @@
+{
+  "project": {
+    "name": "Directors Palette",
+    "version": "0.95.0",
+    "description": "AI-powered image and video generation platform for directors, artists, and creators. Create concept art, storyboards, character sheets, and animations using various AI models.",
+    "type": "web-application",
+    "status": "production"
+  },
+  "tech_stack": {
+    "framework": "Next.js 15.5.4",
+    "runtime": "Node.js",
+    "language": "TypeScript (strict mode)",
+    "react_version": "19.1.0",
+    "build_tool": "Turbopack",
+    "styling": "Tailwind CSS v4",
+    "state_management": "Zustand",
+    "database": "Supabase (PostgreSQL)",
+    "authentication": "Supabase Auth",
+    "payments": "Stripe",
+    "ai_services": ["Replicate API", "Google Gemini"],
+    "testing": {
+      "e2e": "Playwright",
+      "unit": "Vitest"
+    }
+  },
+  "services": {
+    "frontend": {
+      "port": 3000,
+      "start_command": "npm run dev",
+      "build_command": "npm run build",
+      "test_command": "npm run test",
+      "description": "Next.js App Router frontend with React 19"
+    },
+    "database": {
+      "provider": "Supabase",
+      "project_id": "tarohelkwuurakbxjyxm",
+      "url": "https://tarohelkwuurakbxjyxm.supabase.co",
+      "tables": [
+        "auth.users",
+        "user_credits",
+        "generation_events",
+        "admin_users",
+        "api_keys",
+        "coupons",
+        "community_items",
+        "recipes"
+      ]
+    },
+    "ai_generation": {
+      "provider": "Replicate",
+      "capabilities": ["image_generation", "video_generation", "background_removal", "vocal_isolation"],
+      "image_models": [
+        "google/nano-banana",
+        "google/nano-banana-pro",
+        "ideogram-ai/ideogram-v2",
+        "prunaai/qwen-image-fast"
+      ],
+      "video_models": [
+        "bytedance/seedance-1-lite",
+        "bytedance/seedance-1-pro-fast",
+        "wan-video/wan-2.2-i2v-fast",
+        "kwaivgi/kling-v2.5-turbo-pro"
+      ]
+    }
+  },
+  "directory_structure": {
+    "src/app": "Next.js App Router pages and API routes",
+    "src/app/api": "Backend API endpoints",
+    "src/features": "Feature modules following domain-driven design",
+    "src/features/shot-creator": "Main image generation feature",
+    "src/features/shot-animator": "Video generation from images",
+    "src/features/story-creator": "AI-assisted story/storyboard generation",
+    "src/features/layout-annotation": "Canvas-based image annotation and composition",
+    "src/features/auth": "Authentication hooks and utilities",
+    "src/features/settings": "User settings and preferences",
+    "src/features/generation": "Core generation services",
+    "src/components": "Shared UI components (shadcn/ui based)",
+    "src/lib": "Utility libraries and configurations",
+    "tests": "Playwright E2E tests"
+  },
+  "feature_modules": {
+    "shot-creator": {
+      "description": "Image generation with prompt library, references, and wildcards",
+      "components": "src/features/shot-creator/components",
+      "hooks": "src/features/shot-creator/hooks",
+      "services": "src/features/shot-creator/services",
+      "store": "src/features/shot-creator/store",
+      "types": "src/features/shot-creator/types"
+    },
+    "shot-animator": {
+      "description": "Video generation from reference images",
+      "components": "src/features/shot-animator/components",
+      "hooks": "src/features/shot-animator/hooks",
+      "services": "src/features/shot-animator/services",
+      "store": "src/features/shot-animator/store"
+    },
+    "story-creator": {
+      "description": "AI-powered story and storyboard generation",
+      "components": "src/features/story-creator/components",
+      "services": "src/features/story-creator/services",
+      "store": "src/features/story-creator/store",
+      "types": "src/features/story-creator/types"
+    },
+    "layout-annotation": {
+      "description": "Fabric.js canvas for image composition and annotation",
+      "components": "src/features/layout-annotation/components",
+      "hooks": "src/features/layout-annotation/hooks",
+      "store": "src/features/layout-annotation/store",
+      "types": "src/features/layout-annotation/types"
+    }
+  },
+  "api_endpoints": {
+    "generation": {
+      "/api/generation/image": "Image generation with Replicate",
+      "/api/generation/video": "Video generation",
+      "/api/generation/inpaint": "Image inpainting",
+      "/api/generation/status/[predictionId]": "Check generation status"
+    },
+    "credits": {
+      "/api/credits": "User credit balance",
+      "/api/credits/usage": "Credit usage history",
+      "/api/credits/packages": "Available credit packages",
+      "/api/credits/pricing": "Model pricing information"
+    },
+    "admin": {
+      "/api/admin/check": "Admin authorization check",
+      "/api/admin/users": "User management",
+      "/api/admin/stats": "Platform statistics",
+      "/api/admin/generations": "Generation logs",
+      "/api/admin/grant-credits": "Grant credits to users"
+    },
+    "community": {
+      "/api/community": "Community gallery items",
+      "/api/community/add": "Submit to community",
+      "/api/community/rate": "Rate community items"
+    },
+    "recipes": {
+      "/api/v1/recipes": "Recipe CRUD operations",
+      "/api/v1/recipes/execute": "Execute recipe generation"
+    },
+    "webhooks": {
+      "/api/webhooks/replicate": "Replicate prediction webhooks",
+      "/api/webhooks/stripe": "Stripe payment webhooks"
+    }
+  },
+  "key_files": {
+    "config": [
+      "package.json",
+      "next.config.ts",
+      "tailwind.config.ts",
+      "tsconfig.json",
+      ".env.local"
+    ],
+    "layouts": [
+      "src/app/layout.tsx",
+      "src/app/(app)/layout.tsx"
+    ],
+    "entry_points": [
+      "src/app/page.tsx",
+      "src/app/gallery/page.tsx"
+    ]
+  },
+  "environment_variables": {
+    "required": [
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "REPLICATE_API_TOKEN",
+      "STRIPE_SECRET_KEY",
+      "STRIPE_WEBHOOK_SECRET"
+    ],
+    "optional": [
+      "GOOGLE_API_KEY",
+      "NEXT_PUBLIC_APP_URL"
+    ]
+  },
+  "commands": {
+    "dev": "npm run dev",
+    "build": "npm run build",
+    "start": "npm start",
+    "lint": "npm run lint",
+    "test": "npm run test",
+    "test:unit": "npm run test:unit",
+    "test:ui": "npm run test:ui"
+  },
+  "conventions": {
+    "component_max_lines": 70,
+    "use_typescript_strict": true,
+    "state_management": "Zustand stores in feature/store folders",
+    "api_pattern": "Next.js Route Handlers",
+    "styling": "Tailwind CSS utility classes",
+    "forms": "react-hook-form with zod validation",
+    "ui_components": "shadcn/ui (Radix primitives)",
+    "feature_structure": {
+      "pattern": "src/features/[name]/{components,hooks,services,store,types}",
+      "components": "UI components < 70 lines",
+      "hooks": "React state and effects",
+      "services": "Business logic and API calls",
+      "store": "Zustand state management",
+      "types": "TypeScript type definitions"
+    }
+  }
+}

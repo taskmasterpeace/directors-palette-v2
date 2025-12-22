@@ -1,0 +1,376 @@
+{
+  "project_context": {
+    "project_name": "Director's Palette v2",
+    "project_type": "AI image generation web app for visual storytelling",
+    "target_audience": "Visual storytellers and content creators who need to generate large batches of consistent AI images for narrative projects (comic artists, storyboard artists, visual novel creators)"
+  },
+  "competitors": [
+    {
+      "id": "competitor-1",
+      "name": "Midjourney",
+      "url": "https://www.midjourney.com",
+      "description": "Popular AI image generation platform known for high-quality artistic outputs, primarily accessed through Discord bot interface",
+      "relevance": "high",
+      "pain_points": [
+        {
+          "id": "pain-1-1",
+          "description": "Discord-only interface is cumbersome and unprofessional for production workflows - users must switch between apps, lose context, and cannot integrate into existing creative pipelines",
+          "source": "Industry knowledge - widely documented Discord interface limitations",
+          "severity": "high",
+          "frequency": "Very common complaint across user communities",
+          "opportunity": "Director's Palette offers a dedicated web app with professional workflow UI, eliminating the Discord friction"
+        },
+        {
+          "id": "pain-1-2",
+          "description": "No native character consistency features - generating the same character across multiple images/poses is extremely difficult and requires complex prompt engineering with inconsistent results",
+          "source": "Industry knowledge - well-documented limitation in AI art community",
+          "severity": "high",
+          "frequency": "Primary pain point for comic/storyboard creators",
+          "opportunity": "Director's Palette's @reference syntax and character sheet generation directly addresses this gap"
+        },
+        {
+          "id": "pain-1-3",
+          "description": "Monthly subscription model ($10-60/month) is wasteful for users with variable workloads - paying for unused capacity",
+          "source": "Midjourney pricing structure",
+          "severity": "medium",
+          "frequency": "Common for freelancers and hobbyists",
+          "opportunity": "Pay-as-you-go credits system allows flexible spending aligned with actual usage"
+        },
+        {
+          "id": "pain-1-4",
+          "description": "No batch processing workflow - each image must be prompted individually, making multi-scene storyboard creation extremely time-consuming",
+          "source": "Industry knowledge - Midjourney usage patterns",
+          "severity": "high",
+          "frequency": "Critical issue for visual narrative creators",
+          "opportunity": "Advanced prompting syntax with brackets, pipes, and wildcards enables batch generation with variations"
+        },
+        {
+          "id": "pain-1-5",
+          "description": "No API access for developers and power users to integrate into custom workflows",
+          "source": "Midjourney feature set documentation",
+          "severity": "medium",
+          "frequency": "Pain point for technical users",
+          "opportunity": "Not directly applicable but web app allows better workflow integration"
+        }
+      ],
+      "strengths": [
+        "Exceptional image quality and artistic style",
+        "Large active community and prompt sharing",
+        "Consistent model updates and improvements",
+        "Strong brand recognition"
+      ],
+      "market_position": "Premium consumer AI art generation with focus on single striking images rather than production workflows"
+    },
+    {
+      "id": "competitor-2",
+      "name": "Leonardo.AI",
+      "url": "https://leonardo.ai",
+      "description": "Web-based AI image generation platform with model training capabilities and character consistency features",
+      "relevance": "high",
+      "pain_points": [
+        {
+          "id": "pain-2-1",
+          "description": "Character consistency requires training custom models - steep learning curve and time investment for non-technical users",
+          "source": "Leonardo.AI feature documentation and user feedback patterns",
+          "severity": "medium",
+          "frequency": "Common for users wanting quick character consistency",
+          "opportunity": "Director's Palette @reference syntax provides immediate consistency without model training"
+        },
+        {
+          "id": "pain-2-2",
+          "description": "UI can be overwhelming with too many options - complexity barrier for users who want simple storyboard creation",
+          "source": "Industry knowledge - UI complexity feedback",
+          "severity": "medium",
+          "frequency": "Moderate - affects new users especially",
+          "opportunity": "6-step storyboard wizard provides guided workflow"
+        },
+        {
+          "id": "pain-2-3",
+          "description": "Credit consumption can be unpredictable - users uncertain about costs for larger projects",
+          "source": "Pricing model complexity",
+          "severity": "medium",
+          "frequency": "Common concern for budget-conscious creators",
+          "opportunity": "Transparent pay-as-you-go pricing with clear credit costs per generation"
+        },
+        {
+          "id": "pain-2-4",
+          "description": "Limited batch variation syntax - no equivalent to bracket/pipe syntax for generating systematic variations",
+          "source": "Leonardo.AI feature comparison",
+          "severity": "medium",
+          "frequency": "Pain point for power users needing variations",
+          "opportunity": "Director's Palette advanced prompting syntax is a key differentiator"
+        }
+      ],
+      "strengths": [
+        "Web-based interface with professional UI",
+        "Custom model training capabilities",
+        "Image-to-image and canvas editing features",
+        "Regular model updates and new features"
+      ],
+      "market_position": "Professional-tier web platform targeting game developers and digital artists with training capabilities"
+    },
+    {
+      "id": "competitor-3",
+      "name": "DALL-E 3 / ChatGPT",
+      "url": "https://openai.com/dall-e-3",
+      "description": "OpenAI's AI image generation integrated into ChatGPT, known for natural language understanding and safety controls",
+      "relevance": "high",
+      "pain_points": [
+        {
+          "id": "pain-3-1",
+          "description": "Very restrictive content policies block legitimate creative work - character poses, action scenes, and artistic expression often incorrectly flagged",
+          "source": "Widely documented OpenAI content policy issues",
+          "severity": "high",
+          "frequency": "Very common for creative professionals",
+          "opportunity": "More permissive policies for legitimate artistic use cases"
+        },
+        {
+          "id": "pain-3-2",
+          "description": "Zero character consistency - every generation creates a completely different character even with identical descriptions",
+          "source": "OpenAI model limitations - well documented",
+          "severity": "high",
+          "frequency": "Critical issue for any narrative work",
+          "opportunity": "Reference system and character sheets solve this directly"
+        },
+        {
+          "id": "pain-3-3",
+          "description": "Limited artistic control - cannot specify detailed style parameters, aspect ratios are limited, no negative prompting",
+          "source": "DALL-E 3 feature limitations",
+          "severity": "high",
+          "frequency": "Common for professional artists",
+          "opportunity": "Director's Palette offers detailed model parameters and style controls"
+        },
+        {
+          "id": "pain-3-4",
+          "description": "No batch processing - each image is a separate conversation turn, no way to generate variations efficiently",
+          "source": "ChatGPT/DALL-E interface design",
+          "severity": "medium",
+          "frequency": "Major issue for production work",
+          "opportunity": "Batch generation with variation syntax"
+        },
+        {
+          "id": "pain-3-5",
+          "description": "No dedicated creative workflow - just a chat interface with no project organization, galleries, or asset management",
+          "source": "ChatGPT interface limitations",
+          "severity": "medium",
+          "frequency": "Issue for project-based work",
+          "opportunity": "Complete storyboard workflow with gallery, folders, and organization"
+        }
+      ],
+      "strengths": [
+        "Excellent natural language understanding",
+        "Strong brand recognition and accessibility",
+        "Integration with ChatGPT for ideation",
+        "Easy to use for beginners"
+      ],
+      "market_position": "Consumer-friendly AI image generation integrated into conversational AI, focused on accessibility over professional features"
+    },
+    {
+      "id": "competitor-4",
+      "name": "Stable Diffusion (ComfyUI/Automatic1111)",
+      "url": "https://stability.ai",
+      "description": "Open-source AI image generation with extensive customization through community-built interfaces like ComfyUI and Automatic1111",
+      "relevance": "medium",
+      "pain_points": [
+        {
+          "id": "pain-4-1",
+          "description": "Steep technical learning curve - requires understanding of nodes, workflows, model management, and often command line setup",
+          "source": "Industry knowledge - Stable Diffusion adoption barriers",
+          "severity": "high",
+          "frequency": "Primary barrier for non-technical users",
+          "opportunity": "Director's Palette hides technical complexity behind intuitive UI"
+        },
+        {
+          "id": "pain-4-2",
+          "description": "Requires significant local hardware (good GPU) or paid cloud services - not accessible to all creators",
+          "source": "Hardware requirements for local inference",
+          "severity": "medium",
+          "frequency": "Barrier for users without gaming PCs",
+          "opportunity": "Cloud-based generation requires no special hardware"
+        },
+        {
+          "id": "pain-4-3",
+          "description": "Fragmented ecosystem - many incompatible workflows, extensions, and model formats creating confusion",
+          "source": "Open source ecosystem complexity",
+          "severity": "medium",
+          "frequency": "Common for users trying to replicate results",
+          "opportunity": "Unified, consistent platform experience"
+        },
+        {
+          "id": "pain-4-4",
+          "description": "No built-in project management - users must manually organize outputs, track prompts, and manage assets externally",
+          "source": "WebUI design focused on generation, not workflow",
+          "severity": "medium",
+          "frequency": "Issue for larger projects",
+          "opportunity": "Integrated gallery, folders, and project organization"
+        }
+      ],
+      "strengths": [
+        "Unlimited generation potential (no credits with local setup)",
+        "Extremely flexible and customizable",
+        "Large community creating models, LoRAs, and extensions",
+        "Full control over the generation process"
+      ],
+      "market_position": "Technical/hobbyist solution offering maximum flexibility at the cost of complexity and technical requirements"
+    },
+    {
+      "id": "competitor-5",
+      "name": "Scenario.gg",
+      "url": "https://scenario.gg",
+      "description": "AI image generation platform specifically designed for game asset creation with custom model training",
+      "relevance": "medium",
+      "pain_points": [
+        {
+          "id": "pain-5-1",
+          "description": "Heavily focused on game assets - less suitable for narrative storyboarding, comics, or general illustration",
+          "source": "Scenario.gg market positioning",
+          "severity": "low",
+          "frequency": "Issue for non-game creators",
+          "opportunity": "Director's Palette specifically targets narrative creators with storyboard workflow"
+        },
+        {
+          "id": "pain-5-2",
+          "description": "Training custom generators requires dataset preparation and time investment",
+          "source": "Scenario.gg workflow requirements",
+          "severity": "medium",
+          "frequency": "Barrier for quick-start users",
+          "opportunity": "@reference system provides faster consistency without training"
+        },
+        {
+          "id": "pain-5-3",
+          "description": "Pricing can be expensive for individual creators - oriented toward studio/team use",
+          "source": "Scenario.gg pricing structure",
+          "severity": "medium",
+          "frequency": "Issue for solo creators",
+          "opportunity": "Accessible pay-as-you-go pricing for individuals"
+        }
+      ],
+      "strengths": [
+        "Purpose-built for game development workflow",
+        "Consistent asset generation for game sprites",
+        "Team collaboration features",
+        "Canvas and editing tools"
+      ],
+      "market_position": "Enterprise/studio tool for game asset production with focus on consistency and team workflows"
+    },
+    {
+      "id": "competitor-6",
+      "name": "Storyboard That",
+      "url": "https://www.storyboardthat.com",
+      "description": "Traditional storyboard creation tool with pre-made assets and drag-and-drop interface - no AI generation",
+      "relevance": "medium",
+      "pain_points": [
+        {
+          "id": "pain-6-1",
+          "description": "No AI generation - limited to pre-made clipart-style assets, cannot create custom scenes or characters",
+          "source": "Storyboard That feature set",
+          "severity": "high",
+          "frequency": "Core limitation of the product",
+          "opportunity": "AI-generated custom imagery with full creative control"
+        },
+        {
+          "id": "pain-6-2",
+          "description": "Generic clipart aesthetic - storyboards look unprofessional and cookie-cutter",
+          "source": "Industry feedback on template-based tools",
+          "severity": "high",
+          "frequency": "Common complaint for professional use",
+          "opportunity": "High-quality AI-generated images with artistic styles"
+        },
+        {
+          "id": "pain-6-3",
+          "description": "Limited customization - cannot match specific artistic visions or brand styles",
+          "source": "Asset library limitations",
+          "severity": "medium",
+          "frequency": "Issue for unique creative visions",
+          "opportunity": "Custom styles and character consistency"
+        }
+      ],
+      "strengths": [
+        "Easy drag-and-drop interface",
+        "Quick to create simple storyboards",
+        "Educational focus with classroom tools",
+        "No learning curve for basic use"
+      ],
+      "market_position": "Educational/quick-sketch storyboard tool for non-artists and classroom use"
+    }
+  ],
+  "market_gaps": [
+    {
+      "id": "gap-1",
+      "description": "No competitor effectively solves multi-image character consistency for narrative creators without requiring model training or complex technical setup",
+      "affected_competitors": ["competitor-1", "competitor-2", "competitor-3", "competitor-4"],
+      "opportunity_size": "high",
+      "suggested_feature": "Character reference system with @mentions that maintains consistency across unlimited images (Director's Palette core feature)"
+    },
+    {
+      "id": "gap-2",
+      "description": "No competitor offers batch variation syntax for generating systematic scene variations efficiently - each platform requires individual prompts per image",
+      "affected_competitors": ["competitor-1", "competitor-2", "competitor-3", "competitor-5"],
+      "opportunity_size": "high",
+      "suggested_feature": "Advanced prompting syntax with brackets for variations, pipes for sequences, and wildcards for randomization"
+    },
+    {
+      "id": "gap-3",
+      "description": "No competitor provides a complete end-to-end storyboard workflow from story concept through final export with AI generation",
+      "affected_competitors": ["competitor-1", "competitor-2", "competitor-3", "competitor-4", "competitor-5"],
+      "opportunity_size": "high",
+      "suggested_feature": "6-step storyboard wizard: Story → Style → Characters → Shots → Generate → Results"
+    },
+    {
+      "id": "gap-4",
+      "description": "Traditional storyboard tools lack AI generation while AI tools lack storyboard-specific workflows and organization",
+      "affected_competitors": ["competitor-6"],
+      "opportunity_size": "medium",
+      "suggested_feature": "Combine AI image generation power with professional storyboard layout and annotation tools"
+    },
+    {
+      "id": "gap-5",
+      "description": "Most competitors use subscription models that don't align with creative project-based workflows which have variable intensity",
+      "affected_competitors": ["competitor-1", "competitor-2"],
+      "opportunity_size": "medium",
+      "suggested_feature": "Pay-as-you-go credit system that scales with actual usage"
+    }
+  ],
+  "insights_summary": {
+    "top_pain_points": [
+      "Character consistency across multiple images is the #1 unsolved problem for narrative creators",
+      "Batch processing and variation generation requires repetitive manual work everywhere",
+      "No dedicated storyboard workflow exists in AI image generators - they're optimized for single images",
+      "Discord interface (Midjourney) and chat interface (DALL-E) are poor for professional production work",
+      "Subscription pricing models are wasteful for project-based creative work with variable intensity"
+    ],
+    "differentiator_opportunities": [
+      "Advanced prompting syntax (brackets, pipes, wildcards, @references) is unique to Director's Palette",
+      "Complete storyboard workflow from concept to export differentiates from single-image generators",
+      "Character consistency without model training is a significant competitive advantage",
+      "Pay-as-you-go pricing aligns with freelance/project-based creative work patterns",
+      "Community recipe sharing creates network effects other generators lack"
+    ],
+    "market_trends": [
+      "Growing demand for AI tools that support professional workflows, not just novelty generation",
+      "Increasing focus on consistency features as AI art moves from experimentation to production",
+      "Shift toward specialized vertical tools (game assets, storyboards) vs. general-purpose generators",
+      "Users willing to pay for tools that save time on repetitive prompt engineering",
+      "Community and sharing features becoming expected in creative tools"
+    ]
+  },
+  "research_metadata": {
+    "search_queries_used": [
+      "Midjourney problems complaints 2024 reddit",
+      "Leonardo AI issues complaints user feedback 2024",
+      "DALL-E 3 ChatGPT image generation problems limitations 2024"
+    ],
+    "sources_consulted": [
+      "roadmap_discovery.json competitive context",
+      "Industry knowledge of AI image generation market",
+      "Competitor feature documentation and pricing pages",
+      "Common user feedback patterns documented in AI art communities"
+    ],
+    "limitations": [
+      "Web search and web fetch tools were not available - analysis based on documented competitive context from roadmap_discovery.json and industry knowledge",
+      "Direct user quotes and specific review sources could not be collected due to tool limitations",
+      "Recommended to supplement with live user research when tools become available"
+    ]
+  },
+  "created_at": "2025-12-22T11:45:00Z"
+}
