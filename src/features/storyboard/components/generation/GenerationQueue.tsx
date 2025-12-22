@@ -122,8 +122,8 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
     // Reset selection when chapter changes
     useEffect(() => {
         if (filteredPrompts.length > 0) {
-            // Default: select first 10 shots of the chapter
-            const initialSelection = new Set(filteredPrompts.slice(0, 10).map(p => p.sequence))
+            // Default: select all shots in the chapter
+            const initialSelection = new Set(filteredPrompts.map(p => p.sequence))
             setSelectedShots(initialSelection)
         } else {
             setSelectedShots(new Set())
@@ -133,7 +133,8 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
     // Initialize selected shots on first load
     useEffect(() => {
         if (filteredPrompts.length > 0 && selectedShots.size === 0) {
-            const initialSelection = new Set(filteredPrompts.slice(0, 10).map(p => p.sequence))
+            // Select all shots by default
+            const initialSelection = new Set(filteredPrompts.map(p => p.sequence))
             setSelectedShots(initialSelection)
         }
     }, [filteredPrompts.length]) // eslint-disable-line react-hooks/exhaustive-deps
