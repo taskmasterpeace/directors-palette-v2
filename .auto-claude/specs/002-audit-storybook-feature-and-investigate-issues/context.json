@@ -1,0 +1,63 @@
+{
+  "task_description": "Audit the Storybook feature for functionality issues and missing capabilities. Investigate image upload persistence bug, character sheet generation block, narration functionality, and metadata handling for recipe integration.",
+  "scoped_services": ["main"],
+  "files_to_modify": [],
+  "files_to_reference": [
+    "src/features/storybook/components/wizard/steps/CharacterSetupStep.tsx",
+    "src/features/storybook/components/wizard/steps/CharacterStep.tsx",
+    "src/features/storybook/store/storybook.store.ts",
+    "src/app/api/upload-file/route.ts",
+    "src/app/api/storybook/synthesize/route.ts",
+    "src/features/storybook/hooks/useStorybookGeneration.ts",
+    "src/features/storybook/components/AudioPlayer.tsx",
+    "src/features/storybook/components/wizard/steps/PreviewStep.tsx",
+    "src/features/storybook/services/elevenlabs.service.ts",
+    "src/features/storybook/types/storybook.types.ts"
+  ],
+  "patterns": {
+    "state_management": "Zustand store in src/features/storybook/store/storybook.store.ts - in-memory only, no DB persistence",
+    "file_upload": "Uses Replicate temporary URLs via /api/upload-file - URLs may expire",
+    "narration": "ElevenLabs TTS via /api/storybook/synthesize - audio stored in Supabase Storage when projectId provided",
+    "wizard_steps": "Two modes: generate (10 steps) and paste (5 steps) - defined in storybook.types.ts",
+    "character_sheets": "Generated via useStorybookGeneration hook, requires sourcePhotoUrl",
+    "component_pattern": "Client components with 'use client', Zustand hooks for state"
+  },
+  "existing_implementations": {
+    "description": "Full Storybook wizard implementation exists with story generation, character sheets, page variations, and narration",
+    "relevant_files": [
+      "src/features/storybook/components/Storybook.tsx",
+      "src/features/storybook/components/wizard/WizardContainer.tsx"
+    ]
+  },
+  "investigation_findings": {
+    "issue_1_image_persistence": {
+      "root_cause": "CharacterSetupStep uses local useState for photoUrl, only syncs to store on Continue click. upload-file/route.ts uses Replicate temporary URLs that may expire.",
+      "evidence": "CharacterSetupStep.tsx line 25: useState initialized from project?.mainCharacterPhotoUrl. Line 45: setPhotoUrl(url) - local state only. Line 67: setMainCharacter called only on Continue.",
+      "affected_files": [
+        "src/features/storybook/components/wizard/steps/CharacterSetupStep.tsx",
+        "src/app/api/upload-file/route.ts"
+      ]
+    },
+    "issue_2_character_sheet_blocked": {
+      "root_cause": "CharacterStep.tsx requires sourcePhotoUrl to enable generate button. No fallback for text-based generation.",
+      "evidence": "CharacterStep.tsx line 338: disabled={!character.sourcePhotoUrl || ...}. Lines 320-323: Shows 'Upload a photo first' when no sourcePhotoUrl.",
+      "affected_files": [
+        "src/features/storybook/components/wizard/steps/CharacterStep.tsx"
+      ]
+    },
+    "issue_3_metadata_persistence": {
+      "root_cause": "Zustand store is in-memory only. generatedStory object contains learning notes but isn't persisted to database.",
+      "evidence": "storybook.store.ts uses create() from zustand without persist middleware. No Supabase calls in store.",
+      "affected_files": [
+        "src/features/storybook/store/storybook.store.ts"
+      ]
+    },
+    "working_functionality": {
+      "narration": "ElevenLabs integration works - synthesize endpoint tested, AudioPlayer fully implemented",
+      "story_generation": "Generate mode flow works with category, topic, approach selection",
+      "page_generation": "9-variation grid generation works with style guide and character sheets"
+    }
+  },
+  "created_at": "2025-12-22T11:42:59.979277",
+  "updated_at": "2025-12-22T12:00:00.000000"
+}

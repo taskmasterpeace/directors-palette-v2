@@ -1,0 +1,136 @@
+{
+  "complexity": "standard",
+  "workflow_type": "investigation",
+  "confidence": 0.85,
+  "reasoning": "This is an investigation/audit task for an existing, extensive Storybook feature. The codebase already has ~45 files including wizard components, API routes, services (ElevenLabs for narration), and stores. Key tasks are auditing existing functionality, debugging an image persistence bug, assessing character sheet generation gap, and researching metadata handling for future recipes integration. No new external integrations or infrastructure changes needed.",
+
+  "analysis": {
+    "scope": {
+      "estimated_files": 35,
+      "estimated_services": 2,
+      "is_cross_cutting": false,
+      "notes": "Storybook feature is well-contained with ~45 files. Investigation will focus on wizard steps, store state management, and API routes. Also need to assess connection between storybook and existing character-sheet.service.ts in storyboard feature."
+    },
+    "integrations": {
+      "external_services": ["ElevenLabs (existing)"],
+      "new_dependencies": [],
+      "research_needed": false,
+      "notes": "ElevenLabs integration already exists for TTS/narration. No new integrations needed. Character sheet service uses existing nano-banana-pro image generation."
+    },
+    "infrastructure": {
+      "docker_changes": false,
+      "database_changes": false,
+      "config_changes": false,
+      "notes": "No infrastructure changes needed for this audit. Database schema for storyboard already exists (20251210000000_create_storyboard_schema.sql)."
+    },
+    "knowledge": {
+      "patterns_exist": true,
+      "research_required": false,
+      "unfamiliar_tech": [],
+      "notes": "All patterns exist in codebase. Need to understand existing Zustand store state management, wizard flow, and how metadata is currently captured. CharacterSheetService exists but may not be connected to Storybook wizard."
+    },
+    "risk": {
+      "level": "low",
+      "concerns": [
+        "Image persistence bug may affect user experience",
+        "Character sheet generation gap needs assessment",
+        "Metadata handling needs documentation for future recipes integration"
+      ],
+      "notes": "Investigation task with low risk. Any fixes identified will be well-scoped. Main concern is ensuring thorough audit coverage of the extensive feature."
+    }
+  },
+
+  "recommended_phases": [
+    "discovery",
+    "requirements",
+    "context",
+    "spec_writing",
+    "planning",
+    "validation"
+  ],
+
+  "flags": {
+    "needs_research": false,
+    "needs_self_critique": false,
+    "needs_infrastructure_setup": false
+  },
+
+  "validation_recommendations": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "minimal_mode": false,
+    "test_types_required": ["unit", "integration"],
+    "security_scan_required": false,
+    "staging_deployment_required": false,
+    "reasoning": "Investigation task with potential bug fixes. If image persistence fix is implemented, unit tests for store state and integration tests for upload flow will be needed. No security-sensitive changes anticipated."
+  },
+
+  "investigation_focus": {
+    "primary_issues": [
+      {
+        "issue": "Image persistence bug",
+        "location": "CharacterSetupStep.tsx / storybook.store.ts",
+        "hypothesis": "Local photoUrl state is set after upload but may not persist if user navigates away before clicking Continue. State only syncs to store on handleContinue()."
+      },
+      {
+        "issue": "Character sheet generation gap",
+        "location": "character-sheet.service.ts exists in storyboard feature",
+        "hypothesis": "Service exists but is not wired to Storybook wizard. May need integration or UI to trigger character sheet generation."
+      },
+      {
+        "issue": "Metadata handling for recipes",
+        "location": "storybook.store.ts / API routes",
+        "hypothesis": "Need to document what metadata is currently captured (generatedStory, extractedElements, characters, pages) and how it should be structured for future recipes processing."
+      }
+    ],
+    "audit_areas": [
+      "Wizard flow completeness (all 10+ steps)",
+      "Story generation API endpoints functionality",
+      "Narration/TTS integration with ElevenLabs",
+      "Page generation and image creation",
+      "Character detection and management",
+      "Style selection and application",
+      "Preview and export capabilities"
+    ]
+  },
+
+  "existing_assets": {
+    "wizard_steps": [
+      "CharacterSetupStep",
+      "CategorySelectionStep",
+      "TopicSelectionStep",
+      "BookSettingsStep",
+      "StoryApproachStep",
+      "StoryReviewStep",
+      "StoryInputStep",
+      "CharacterStep",
+      "StyleSelectionStep",
+      "PageGenerationStep",
+      "PreviewStep"
+    ],
+    "api_routes": [
+      "/api/storybook/generate-story",
+      "/api/storybook/generate-ideas",
+      "/api/storybook/detect-characters",
+      "/api/storybook/extract-elements",
+      "/api/storybook/expand-style",
+      "/api/storybook/polish-story",
+      "/api/storybook/synthesize",
+      "/api/storybook/sound-effects"
+    ],
+    "services": [
+      "elevenlabs.service.ts (TTS/sound effects)",
+      "template.service.ts",
+      "character-sheet.service.ts (in storyboard feature)"
+    ],
+    "tests": [
+      "storybook.spec.ts",
+      "storybook-wizard-test.spec.ts",
+      "storybook-api-e2e.spec.ts",
+      "storybook-e2e-flow.spec.ts",
+      "storybook-mobile-check.spec.ts"
+    ]
+  },
+
+  "created_at": "2025-01-21T12:00:00.000Z"
+}

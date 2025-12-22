@@ -1,0 +1,17 @@
+{
+  "task_description": "Fix recipe apply button behavior so reference images stay hidden from UI while still being available for generation stages. Recipe reference images should only flow through stageReferenceImages for internal use, not appear in the visible carousel.",
+  "scoped_services": ["main"],
+  "files_to_modify": [
+    "src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx"
+  ],
+  "files_to_reference": [],
+  "patterns": {
+    "state_management": "Recipe reference images should use setStageReferenceImages() for internal pipeline, not setShotCreatorReferenceImages() for visible UI"
+  },
+  "service_contexts": {
+    "main": {
+      "description": "Main frontend application containing shot creator and recipe functionality"
+    }
+  },
+  "created_at": "2025-01-06T12:00:00Z"
+}

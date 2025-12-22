@@ -1,0 +1,66 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Director's Palette v2 - Storyboard Audit
+Spec: 003-audit-storyboard-functionality-and-identify-issues
+Started: 2025-12-22
+
+Workflow Type: investigation
+Rationale: Read-only audit to identify bugs, missing implementations, and broken functionality. No code changes during this phase - only documentation of issues.
+
+Session 1 (Planner):
+- Completed deep codebase investigation of storyboard feature
+- Found 50+ related files across components, services, store, types, API routes, tests
+- Documented patterns: Zustand store with localStorage, OpenRouter for LLM, Replicate for images
+- Created implementation_plan.json with 7 phases and 22 subtasks
+- Updated context.json with discovered patterns
+- Created init.sh for environment setup
+
+Phase Summary:
+1. Environment Setup & Baseline: 3 subtasks, depends on []
+   - Start dev server, run E2E tests, create AUDIT_REPORT.md
+2. 6-Tab Workflow Audit: 6 subtasks, depends on [phase-1-setup]
+   - Audit each of the 6 workflow tabs (Story, Style, Characters, Shots, Generate, Results)
+3. API Endpoint Audit: 3 subtasks, depends on [phase-1-setup]
+   - Test /api/storyboard/extract, generate-prompts, broll endpoints
+4. Service Layer Audit: 5 subtasks, depends on [phase-1-setup]
+   - Review openrouter, shot-breakdown, generation, chapter-detection, and other services
+5. State Management Audit: 1 subtask, depends on [phase-1-setup]
+   - Audit Zustand store, localStorage handling, persistence
+6. Edge Case Testing: 6 subtasks, depends on [phase-2-tab-audit]
+   - Test empty input, long stories, no characters, API failures, refresh, chapters
+7. Finalize Audit Report: 1 subtask, depends on [all previous phases]
+   - Compile AUDIT_REPORT.md with severity levels and recommendations
+
+Services Involved:
+- main: Next.js frontend with storyboard feature (port 3000)
+
+Parallelism Analysis:
+- Max parallel phases: 3 (phases 3, 4, 5 can run in parallel after phase 1)
+- Recommended workers: 1 (investigation workflow best done sequentially)
+- Reason: Investigation requires consistent methodology and human judgment
+
+Key Files to Audit:
+- Components: 11 major components under src/features/storyboard/components/
+- Services: 12 service files under src/features/storyboard/services/
+- Store: src/features/storyboard/store/storyboard.store.ts
+- Types: src/features/storyboard/types/storyboard.types.ts
+- API Routes: 3 endpoints under src/app/api/storyboard/
+- Tests: tests/storyboard.spec.ts
+
+Known Architectural Concerns:
+- localStorage quota issues (~5MB limit) with many shots
+- breakdownResult and generatedPrompts explicitly NOT persisted due to size
+- Complex feature interactions (Shot Lab, chapters, wildcards, directors)
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 003 --parallel 1
+
+Or start manually:
+  npm run dev
+  # Open http://localhost:3000/test-storyboard
+  # Run: npx playwright test tests/storyboard.spec.ts
+
+=== END SESSION 1 ===

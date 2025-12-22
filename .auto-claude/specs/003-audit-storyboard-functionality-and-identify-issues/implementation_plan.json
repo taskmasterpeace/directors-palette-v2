@@ -1,0 +1,805 @@
+{
+  "feature": "Audit Storyboard Functionality and Identify Issues",
+  "workflow_type": "investigation",
+  "workflow_rationale": "This is a read-only audit task to thoroughly investigate the storyboard feature, identify bugs, missing implementations, and broken functionality. No code changes will be made - only documentation of issues.",
+  "phases": [
+    {
+      "id": "phase-1-setup",
+      "name": "Environment Setup & Baseline",
+      "type": "setup",
+      "description": "Set up the development environment, verify services are running, and establish what 'working' should look like for the storyboard feature",
+      "depends_on": [],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Start development server and verify storyboard test page is accessible",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/test-storyboard",
+            "checks": [
+              "Page loads without errors",
+              "6 workflow tabs visible"
+            ]
+          },
+          "status": "completed",
+          "notes": "Development server started successfully on port 3003 (port 3000 was in use). Test storyboard page at http://localhost:3003/test-storyboard loads without errors. All 6 workflow tabs are visible: Story (input), Style, Characters (entities), Shots, Generate (generation), Results (gallery). No code changes made - this is an audit verification task.",
+          "updated_at": "2025-12-22T16:55:04.436062+00:00"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Run existing E2E tests and document initial pass/fail status",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "tests/storyboard.spec.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx playwright test tests/storyboard.spec.ts --reporter=list",
+            "expected": "Test results captured"
+          },
+          "status": "completed",
+          "notes": "Ran E2E tests across 5 browser configs. Results: 54 passed, 6 failed (90% pass rate). All failures on mobile viewports due to tab navigation not being accessible. Documented BUG-001: Mobile Tab Navigation Broken.",
+          "updated_at": "2025-12-22T17:00:40.031317+00:00"
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Create AUDIT_REPORT.md file to document all findings",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            ".auto-claude/specs/003-audit-storyboard-functionality-and-identify-issues/AUDIT_REPORT.md"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "test -f .auto-claude/specs/003-audit-storyboard-functionality-and-identify-issues/AUDIT_REPORT.md && echo 'OK'",
+            "expected": "OK"
+          },
+          "status": "completed",
+          "notes": "Created comprehensive AUDIT_REPORT.md with: Executive summary, E2E test results (54 passed, 6 failed - 90% pass rate), BUG-001 documented (Mobile Tab Navigation broken), placeholder sections for all 6 tabs, 3 API endpoints, 5 services, state management, and 6 edge cases. Progress tracker shows 2/25 subtasks complete (8%). File verified to exist.",
+          "updated_at": "2025-12-22T17:03:06.912803+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-tab-audit",
+      "name": "6-Tab Workflow Audit",
+      "type": "investigation",
+      "description": "Manually test each of the 6 workflow tabs (Story, Style, Characters, Shots, Generate, Results) for functionality issues",
+      "depends_on": [
+        "phase-1-setup"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Audit Tab 1: Story Input - test text input, character extraction, model selection, error handling",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/features/storyboard/components/story-input/StoryInput.tsx"
+          ],
+          "investigation_areas": [
+            "Text input persistence across tab changes",
+            "Extract Characters button behavior with various inputs",
+            "Empty input handling",
+            "Very long story handling (localStorage quota)",
+            "Model selector functionality",
+            "Loading states during extraction",
+            "Error messages for API failures"
+          ],
+          "expected_output": "Documented issues for Story Input tab",
+          "verification": {
+            "type": "manual",
+            "instructions": "Document all issues found in Tab 1 with reproduction steps"
+          },
+          "status": "completed",
+          "notes": "Completed comprehensive audit of Tab 1: Story Input. All 7 investigation areas audited. Core functionality works well (text persistence, loading states, error handling, model selection, localStorage quota handling). Found 4 low-severity UX issues (no success toast, no length warning, unclear reset scope, model selector display) and 1 code quality issue (debug console.log). Updated AUDIT_REPORT.md with detailed findings.",
+          "updated_at": "2025-12-22T17:07:12.576006+00:00"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Audit Tab 2: Style Guide - test preset styles, custom styles, reference images",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/features/storyboard/components/style-guides/StyleGuideEditor.tsx",
+            "src/features/storyboard/components/style-guides/StyleGuideGenerator.tsx",
+            "src/features/storyboard/components/style-guides/PresetStyleSelector.tsx"
+          ],
+          "investigation_areas": [
+            "Preset style selection (Claymation, Muppet, Comic, Action Figure)",
+            "Preset style images loading correctly",
+            "Custom style guide creation",
+            "Style guide persistence",
+            "Style generator functionality",
+            "Reference image assignment"
+          ],
+          "expected_output": "Documented issues for Style Guide tab",
+          "verification": {
+            "type": "manual",
+            "instructions": "Document all issues found in Tab 2 with reproduction steps"
+          },
+          "status": "completed",
+          "notes": "Completed comprehensive audit of Tab 2: Style Guide. All 6 investigation areas audited. Found 8 new issues: 4 Low-severity UX issues (UX-004 through UX-007), 1 Medium-severity bug (BUG-003: empty user_id), 1 Low-severity bug (BUG-004: null/undefined inconsistency), 1 Medium-severity missing feature (MISSING-001: no custom style guide library), and 1 Info observation (INFO-002: dual deselection). Core functionality (preset selection, persistence, generation) works correctly. All preset style images confirmed present in public folder.",
+          "updated_at": "2025-12-22T17:10:23.763770+00:00"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Audit Tab 3: Characters/Entities - test character list, location list, reference images, CRUD operations",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/features/storyboard/components/entities/CharacterList.tsx",
+            "src/features/storyboard/components/entities/LocationList.tsx",
+            "src/features/storyboard/components/entities/CharacterSheetGenerator.tsx"
+          ],
+          "investigation_areas": [
+            "Auto-extracted characters display after extraction",
+            "Manual character addition",
+            "Character editing and deletion",
+            "Reference image assignment from gallery",
+            "Character description editing",
+            "Location list functionality",
+            "Character sheet generator",
+            "Empty state handling (no characters extracted)"
+          ],
+          "expected_output": "Documented issues for Characters/Entities tab",
+          "verification": {
+            "type": "manual",
+            "instructions": "Document all issues found in Tab 3 with reproduction steps"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-4",
+          "description": "Audit Tab 4: Shots - test granularity slider, shot breakdown, prompt generation, chapter detection, director commission",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/features/storyboard/components/shot-list/ShotBreakdown.tsx",
+            "src/features/storyboard/components/shot-list/ShotTextPreview.tsx",
+            "src/features/storyboard/components/shot-list/GranularitySelect.tsx",
+            "src/features/storyboard/components/chapter-view/ChapterTabs.tsx"
+          ],
+          "investigation_areas": [
+            "Granularity slider (3 levels) functionality",
+            "Color-coded text preview accuracy",
+            "Shot breakdown generation",
+            "Prompt editing",
+            "Generate Shot Prompts button",
+            "Chapter detection for multi-chapter stories",
+            "Chapter tabs navigation",
+            "Director commission feature",
+            "Preview collapse/expand functionality"
+          ],
+          "expected_output": "Documented issues for Shots tab",
+          "verification": {
+            "type": "manual",
+            "instructions": "Document all issues found in Tab 4 with reproduction steps"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-5",
+          "description": "Audit Tab 5: Generate - test shot selection, generation queue, progress tracking, wildcards, error handling",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/features/storyboard/components/generation/GenerationQueue.tsx"
+          ],
+          "investigation_areas": [
+            "Shot selection (individual, all, ranges)",
+            "Generation settings (aspect ratio, resolution)",
+            "Wildcard toggle functionality",
+            "Prompt prefix/suffix feature",
+            "Generation queue processing",
+            "Progress tracking during generation",
+            "Error handling and retry",
+            "Style guide application",
+            "Estimated token cost display"
+          ],
+          "expected_output": "Documented issues for Generate tab",
+          "verification": {
+            "type": "manual",
+            "instructions": "Document all issues found in Tab 5 with reproduction steps"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-6",
+          "description": "Audit Tab 6: Results/Gallery - test image display, metadata, Shot Lab integration, contact sheet",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/features/storyboard/components/gallery/StoryboardGallery.tsx",
+            "src/features/storyboard/components/ShotLab/ShotLab.tsx",
+            "src/features/storyboard/components/contact-sheet/ContactSheetModal.tsx"
+          ],
+          "investigation_areas": [
+            "Gallery image display",
+            "Image metadata display",
+            "Shot Lab modal opening",
+            "Shot Lab canvas functionality",
+            "VFX Bay features",
+            "Blocking Canvas features",
+            "Contact sheet generation",
+            "Chapter filtering in gallery"
+          ],
+          "expected_output": "Documented issues for Results/Gallery tab",
+          "verification": {
+            "type": "manual",
+            "instructions": "Document all issues found in Tab 6 with reproduction steps"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-api-audit",
+      "name": "API Endpoint Audit",
+      "type": "investigation",
+      "description": "Test all storyboard-related API endpoints for correct behavior, error handling, and response formats",
+      "depends_on": [
+        "phase-1-setup"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Audit /api/storyboard/extract endpoint - character/location extraction",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/app/api/storyboard/extract/route.ts"
+          ],
+          "investigation_areas": [
+            "Request validation (missing storyText)",
+            "OpenRouter API key handling",
+            "Response format correctness",
+            "Error response structure",
+            "Character extraction accuracy",
+            "Location extraction accuracy",
+            "Model selection handling"
+          ],
+          "expected_output": "Documented issues for extract API",
+          "verification": {
+            "type": "api",
+            "method": "POST",
+            "url": "http://localhost:3000/api/storyboard/extract",
+            "body": {
+              "storyText": "Test story"
+            },
+            "expected_status": 200
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Audit /api/storyboard/generate-prompts endpoint - batch prompt generation",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/app/api/storyboard/generate-prompts/route.ts"
+          ],
+          "investigation_areas": [
+            "Batch processing logic (15 shots per batch)",
+            "Request validation",
+            "Style prompt integration",
+            "Character description handling",
+            "Story context truncation",
+            "Error handling per batch",
+            "Response format with shot types"
+          ],
+          "expected_output": "Documented issues for generate-prompts API",
+          "verification": {
+            "type": "api",
+            "method": "POST",
+            "url": "http://localhost:3000/api/storyboard/generate-prompts",
+            "body": {
+              "segments": [
+                {
+                  "text": "Test",
+                  "sequence": 1
+                }
+              ]
+            },
+            "expected_status": 200
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Audit /api/storyboard/broll endpoint - B-roll generation",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/app/api/storyboard/broll/route.ts"
+          ],
+          "investigation_areas": [
+            "Context handling",
+            "B-roll prompt quality",
+            "Error handling",
+            "Response format"
+          ],
+          "expected_output": "Documented issues for broll API",
+          "verification": {
+            "type": "manual",
+            "instructions": "Test B-roll API endpoint and document issues"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-service-audit",
+      "name": "Service Layer Audit",
+      "type": "investigation",
+      "description": "Review all storyboard services for logic errors, edge cases, and potential issues",
+      "depends_on": [
+        "phase-1-setup"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Audit OpenRouter service - LLM integration, tool calling, error handling",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/features/storyboard/services/openrouter.service.ts"
+          ],
+          "investigation_areas": [
+            "Tool calling schema correctness",
+            "Response parsing robustness",
+            "API error handling",
+            "Rate limiting considerations",
+            "Model selection",
+            "Visual description extraction quality"
+          ],
+          "expected_output": "Documented issues for OpenRouter service",
+          "verification": {
+            "type": "manual",
+            "instructions": "Review code and test service functionality"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Audit Shot Breakdown service - text segmentation logic",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/features/storyboard/services/shot-breakdown.service.ts"
+          ],
+          "investigation_areas": [
+            "Granularity level logic",
+            "Sentence detection accuracy",
+            "Special character handling",
+            "Empty segment handling",
+            "Index calculation correctness"
+          ],
+          "expected_output": "Documented issues for shot breakdown service",
+          "verification": {
+            "type": "manual",
+            "instructions": "Test breakdown with various text inputs"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-3",
+          "description": "Audit Storyboard Generation service - image generation orchestration",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/features/storyboard/services/storyboard-generation.service.ts"
+          ],
+          "investigation_areas": [
+            "Prompt building logic",
+            "Reference image collection",
+            "Progress tracking",
+            "Error handling per shot",
+            "Rate limiting (500ms delay)",
+            "Style guide application",
+            "Character reference matching"
+          ],
+          "expected_output": "Documented issues for generation service",
+          "verification": {
+            "type": "manual",
+            "instructions": "Review code and test generation flow"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-4",
+          "description": "Audit Chapter Detection service - multi-chapter story handling",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/features/storyboard/services/chapter-detection.service.ts"
+          ],
+          "investigation_areas": [
+            "Chapter marker detection (Chapter X, ---, etc.)",
+            "Segment-to-chapter mapping",
+            "Edge cases (no chapters, single chapter)",
+            "Detection accuracy"
+          ],
+          "expected_output": "Documented issues for chapter detection",
+          "verification": {
+            "type": "manual",
+            "instructions": "Test with stories containing various chapter markers"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-5",
+          "description": "Audit remaining services - wildcard, style, contact sheet, director",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/features/storyboard/services/wildcard-integration.service.ts",
+            "src/features/storyboard/services/style-generator.service.ts",
+            "src/features/storyboard/services/contact-sheet.service.ts",
+            "src/features/storyboard/services/story-director.service.ts"
+          ],
+          "investigation_areas": [
+            "Wildcard expansion and preset creation",
+            "Style generation from reference",
+            "Contact sheet angle variations",
+            "Director pitch and enhancement logic"
+          ],
+          "expected_output": "Documented issues for auxiliary services",
+          "verification": {
+            "type": "manual",
+            "instructions": "Review code and test each service"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-state-audit",
+      "name": "State Management Audit",
+      "type": "investigation",
+      "description": "Audit the Zustand store for state management issues, persistence problems, and data integrity",
+      "depends_on": [
+        "phase-1-setup"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Audit Zustand store - state shape, actions, persistence, localStorage handling",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/features/storyboard/store/storyboard.store.ts"
+          ],
+          "investigation_areas": [
+            "localStorage quota handling",
+            "Persisted vs non-persisted fields",
+            "State reset functionality",
+            "Significant text change detection",
+            "Chapter state management",
+            "Generated prompts handling",
+            "Shot Lab UI state",
+            "Generation settings persistence",
+            "Custom storage error handling"
+          ],
+          "expected_output": "Documented issues for state management",
+          "verification": {
+            "type": "manual",
+            "instructions": "Test state persistence across page refreshes and verify localStorage handling"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-6-edge-cases",
+      "name": "Edge Case Testing",
+      "type": "investigation",
+      "description": "Test all identified edge cases from the spec to ensure robust error handling",
+      "depends_on": [
+        "phase-2-tab-audit"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Test edge case: Empty story text handling",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "investigation_areas": [
+            "Empty input validation",
+            "Button disabled states",
+            "Error messages"
+          ],
+          "expected_output": "Documented behavior for empty input",
+          "verification": {
+            "type": "manual",
+            "instructions": "Try to extract from empty text and document behavior"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-2",
+          "description": "Test edge case: Very long story (localStorage quota)",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "investigation_areas": [
+            "Storage quota error handling",
+            "Data truncation behavior",
+            "User notification"
+          ],
+          "expected_output": "Documented behavior for long stories",
+          "verification": {
+            "type": "manual",
+            "instructions": "Paste very long story (10K+ characters) and test workflow"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-3",
+          "description": "Test edge case: No characters extracted from story",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "investigation_areas": [
+            "Empty character list handling",
+            "UI empty states",
+            "Prompt generation without characters"
+          ],
+          "expected_output": "Documented behavior when no characters found",
+          "verification": {
+            "type": "manual",
+            "instructions": "Use story text without clear character names"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-4",
+          "description": "Test edge case: API failures (mock or network errors)",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "investigation_areas": [
+            "Error display to user",
+            "Retry functionality",
+            "State recovery",
+            "Graceful degradation"
+          ],
+          "expected_output": "Documented API error handling",
+          "verification": {
+            "type": "manual",
+            "instructions": "Test with invalid API key or offline mode"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-5",
+          "description": "Test edge case: Mid-generation browser refresh",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "investigation_areas": [
+            "State preservation",
+            "In-progress generation handling",
+            "Queue recovery"
+          ],
+          "expected_output": "Documented refresh behavior",
+          "verification": {
+            "type": "manual",
+            "instructions": "Start generation and refresh page mid-process"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-6",
+          "description": "Test edge case: Multiple chapters with explicit markers",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "investigation_areas": [
+            "Chapter detection accuracy",
+            "Tab navigation",
+            "Per-chapter filtering"
+          ],
+          "expected_output": "Documented chapter detection behavior",
+          "verification": {
+            "type": "manual",
+            "instructions": "Use story with Chapter 1, Chapter 2 markers and --- dividers"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-7-report",
+      "name": "Finalize Audit Report",
+      "type": "cleanup",
+      "description": "Compile all findings into a comprehensive audit report with severity levels and recommendations",
+      "depends_on": [
+        "phase-2-tab-audit",
+        "phase-3-api-audit",
+        "phase-4-service-audit",
+        "phase-5-state-audit",
+        "phase-6-edge-cases"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-7-1",
+          "description": "Compile AUDIT_REPORT.md with all findings, categorized by severity (Critical/High/Medium/Low)",
+          "service": "main",
+          "files_to_modify": [
+            ".auto-claude/specs/003-audit-storyboard-functionality-and-identify-issues/AUDIT_REPORT.md"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "report_sections": [
+            "Executive Summary",
+            "Test Environment",
+            "E2E Test Results",
+            "Tab-by-Tab Audit Results",
+            "API Endpoint Audit Results",
+            "Service Layer Audit Results",
+            "State Management Audit Results",
+            "Edge Case Test Results",
+            "Issue Inventory (by severity)",
+            "Recommendations for Fix Priority",
+            "Appendix: Console Errors/Warnings"
+          ],
+          "expected_output": "Complete audit report document",
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify report is comprehensive and all sections complete"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 7,
+    "total_subtasks": 22,
+    "services_involved": [
+      "main"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 3,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-3-api-audit",
+            "phase-4-service-audit",
+            "phase-5-state-audit"
+          ],
+          "reason": "All depend only on phase-1-setup, independent investigation areas"
+        }
+      ],
+      "recommended_workers": 1,
+      "speedup_estimate": "N/A - investigation workflow best done sequentially for consistency"
+    },
+    "startup_command": "source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 003 --parallel 1"
+  },
+  "verification_strategy": {
+    "risk_level": "trivial",
+    "skip_validation": true,
+    "test_creation_phase": "none",
+    "test_types_required": [],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "All 6 workflow tabs have been audited",
+      "All 3 API endpoints have been tested",
+      "All services have been reviewed",
+      "State management has been validated",
+      "Edge cases have been tested",
+      "Comprehensive AUDIT_REPORT.md created with issue inventory"
+    ],
+    "verification_steps": [
+      {
+        "name": "Run E2E Tests",
+        "command": "npx playwright test tests/storyboard.spec.ts",
+        "expected_outcome": "Test results documented (pass/fail)",
+        "type": "test",
+        "required": true,
+        "blocking": false
+      },
+      {
+        "name": "Check Audit Report Exists",
+        "command": "test -f .auto-claude/specs/003-audit-storyboard-functionality-and-identify-issues/AUDIT_REPORT.md && cat .auto-claude/specs/003-audit-storyboard-functionality-and-identify-issues/AUDIT_REPORT.md | head -50",
+        "expected_outcome": "Report file exists with content",
+        "type": "documentation",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "This is a read-only audit task. No code changes are made, so testing of code is not needed. The deliverable is a comprehensive audit report documenting all issues found."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": true,
+      "commands": [
+        "npx playwright test tests/storyboard.spec.ts"
+      ],
+      "flows": [
+        "story-input",
+        "tab-navigation",
+        "responsive-design"
+      ]
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/test-storyboard",
+          "checks": [
+            "renders",
+            "6-tabs-visible",
+            "no-console-errors"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": false,
+      "checks": []
+    },
+    "audit_report_verification": {
+      "required": true,
+      "checks": [
+        "Executive Summary present",
+        "All 6 tabs audited",
+        "Issue inventory with severity levels",
+        "Recommendations provided"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "human_review",
+  "planStatus": "review",
+  "updated_at": "2025-12-22T16:51:53.718Z",
+  "last_updated": "2025-12-22T17:10:23.763778+00:00"
+}

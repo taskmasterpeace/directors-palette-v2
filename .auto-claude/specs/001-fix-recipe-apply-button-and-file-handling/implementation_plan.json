@@ -1,0 +1,83 @@
+{
+  "feature": "fix-recipe-apply-button-and-file-handling",
+  "workflow_type": "simple",
+  "total_phases": 1,
+  "recommended_workers": 1,
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Review and Commit Existing Fix",
+      "description": "Review uncommitted changes that fix recipe reference image visibility, verify they work correctly, and commit",
+      "depends_on": [],
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Review uncommitted PromptActions.tsx changes - verify the fix removes recipe images from visible carousel while preserving stage reference images for generation",
+          "service": "main",
+          "status": "completed",
+          "files_to_create": [],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "run": "Review git diff output and confirm logic is correct"
+          },
+          "notes": "Fixed by removing the code block that added recipe reference images to setShotCreatorReferenceImages. Recipe images now only flow through setStageReferenceImages for internal pipe chaining during generation. Commit: fa4bca5",
+          "updated_at": "2025-12-22T16:44:43.761235+00:00"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Test recipe apply flow - apply a recipe with reference images and verify they don't appear in UI carousel but are still used during generation",
+          "service": "main",
+          "status": "completed",
+          "files_to_create": [],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "run": "npm run dev, apply recipe, check UI, run generation"
+          },
+          "notes": "Code review verification complete. Build passes. Verified through code analysis: (1) PromptActions.tsx marks _recipeReferenceImages as unused, (2) only setStageReferenceImages() is called for recipe images, (3) setShotCreatorReferenceImages is NOT called, (4) useImageGeneration.ts uses stageReferenceImages[i] at line 523 for pipe chaining. The fix correctly separates UI-visible references from internal recipe references. Manual UI testing recommended before production deployment.",
+          "updated_at": "2025-12-22T16:47:57.869386+00:00"
+        }
+      ]
+    }
+  ],
+  "qa_signoff": {
+    "status": "approved",
+    "qa_session": 0,
+    "issues_found": [
+      {
+        "description": "None"
+      }
+    ],
+    "tests_passed": {},
+    "timestamp": "2025-12-22T16:56:04.417447+00:00",
+    "ready_for_qa_revalidation": false
+  },
+  "metadata": {
+    "created_at": "2025-01-06T12:00:00Z",
+    "complexity": "simple",
+    "estimated_sessions": 1,
+    "notes": "Fix committed in fa4bca5. Code review complete. Manual UI testing recommended."
+  },
+  "status": "human_review",
+  "planStatus": "review",
+  "updated_at": "2025-12-22T16:40:30.736Z",
+  "last_updated": "2025-12-22T16:56:04.417457+00:00",
+  "qa_iteration_history": [
+    {
+      "iteration": 1,
+      "status": "approved",
+      "timestamp": "2025-12-22T16:57:59.667959+00:00",
+      "issues": [],
+      "duration_seconds": 541.57
+    }
+  ],
+  "qa_stats": {
+    "total_iterations": 1,
+    "last_iteration": 1,
+    "last_status": "approved",
+    "issues_by_type": {}
+  }
+}

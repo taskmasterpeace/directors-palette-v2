@@ -1,0 +1,56 @@
+{
+  "task_description": "Audit the storyboard functionality comprehensively - look under every rock, identify all issues, but do NOT make fixes. This is a read-only investigation.",
+  "scoped_services": ["main"],
+  "files_to_modify": [],
+  "files_to_reference": [
+    "src/features/storyboard/components/Storyboard.tsx",
+    "src/features/storyboard/components/story-input/StoryInput.tsx",
+    "src/features/storyboard/components/style-guides/StyleGuideEditor.tsx",
+    "src/features/storyboard/components/entities/CharacterList.tsx",
+    "src/features/storyboard/components/entities/LocationList.tsx",
+    "src/features/storyboard/components/shot-list/ShotBreakdown.tsx",
+    "src/features/storyboard/components/shot-list/ShotTextPreview.tsx",
+    "src/features/storyboard/components/generation/GenerationQueue.tsx",
+    "src/features/storyboard/components/gallery/StoryboardGallery.tsx",
+    "src/features/storyboard/components/ShotLab/ShotLab.tsx",
+    "src/features/storyboard/store/storyboard.store.ts",
+    "src/features/storyboard/services/openrouter.service.ts",
+    "src/features/storyboard/services/shot-breakdown.service.ts",
+    "src/features/storyboard/services/storyboard-generation.service.ts",
+    "src/features/storyboard/types/storyboard.types.ts",
+    "src/app/api/storyboard/extract/route.ts",
+    "src/app/api/storyboard/generate-prompts/route.ts",
+    "tests/storyboard.spec.ts"
+  ],
+  "patterns": {
+    "component_pattern": "All storyboard components are client components ('use client') using Zustand for state management",
+    "service_pattern": "Services are organized by responsibility with clear separation: openrouter for LLM, shot-breakdown for text processing, generation for image orchestration",
+    "store_pattern": "Zustand store with localStorage persistence, partialize to select persisted fields, custom storage with quota error handling",
+    "api_pattern": "Next.js route handlers with POST methods, OpenRouter API integration with tool calling for structured outputs",
+    "workflow_pattern": "6-step wizard workflow: Story -> Style -> Characters -> Shots -> Generate -> Results"
+  },
+  "existing_implementations": {
+    "description": "Comprehensive storyboard feature with 50+ files including UI components, services, state management, types, API routes, and E2E tests",
+    "architecture": "Feature-based organization under src/features/storyboard with components/, services/, store/, types/ subdirectories",
+    "key_technologies": [
+      "Next.js 15+ with TypeScript",
+      "Zustand for state management with localStorage persistence",
+      "OpenRouter for LLM API calls (extraction, prompt generation)",
+      "Replicate for image generation",
+      "Radix UI components with Tailwind CSS",
+      "Playwright for E2E testing"
+    ],
+    "known_concerns": [
+      "localStorage quota issues (~5MB limit) with large story data",
+      "breakdownResult and generatedPrompts explicitly not persisted due to size",
+      "Complex feature interactions (Shot Lab, chapters, wildcards)"
+    ]
+  },
+  "deliverable": {
+    "type": "audit_report",
+    "output_file": ".auto-claude/specs/003-audit-storyboard-functionality-and-identify-issues/AUDIT_REPORT.md",
+    "format": "Issue inventory with severity levels (Critical/High/Medium/Low), reproduction steps, and recommendations"
+  },
+  "created_at": "2025-12-22T11:42:20.476058",
+  "updated_at": "2025-12-22T12:00:00.000000"
+}

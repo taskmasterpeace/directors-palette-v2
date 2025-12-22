@@ -1,0 +1,4 @@
+{
+  "task_description": "Check into the Storybook feature to make sure that it is working as intended. I want you to audit it completely. The Storybook feature is going to require some research. Uh, you're supposed to be able to generate an entire story book and also have it narrated. Um. And we're also going to want to save the meta data because we're going to want to process that metadata somewhere else as well. We're going to be using recipes once we resolve it, but I just want you to take a look and see what we have right now, 'cause right now we don't have a way to generate the character sheet from anything. Also, when you upload a image, like when you add an image of a character, let's say, it doesn't stay displayed in the UI as it should.",
+  "workflow_type": "feature"
+}
