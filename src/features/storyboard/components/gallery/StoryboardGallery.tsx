@@ -7,10 +7,13 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
-import { Images, Film, Grid3X3, CheckCircle, AlertCircle, Loader2, Eye, Download, Info, Clock } from 'lucide-react'
+import { Images, Film, Grid3X3, CheckCircle, AlertCircle, Loader2, Eye, Download, Info, Clock, RefreshCw } from 'lucide-react'
 import { useStoryboardStore } from '../../store'
+import { useCreditsStore } from '@/features/credits/store/credits.store'
 import { BRollGenerator } from '../broll/BRollGenerator'
 import { ContactSheetModal } from '../contact-sheet/ContactSheetModal'
+import { storyboardGenerationService } from '../../services/storyboard-generation.service'
+import { toast } from 'sonner'
 import type { GeneratedShotPrompt } from '../../types/storyboard.types'
 
 interface StoryboardGalleryProps {
@@ -25,8 +28,17 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
         generatedImages,
         generatedPrompts,
         chapters,
-        setInternalTab
+        setInternalTab,
+        setGeneratedImage,
+        currentStyleGuide,
+        characters,
+        locations,
+        generationSettings
     } = useStoryboardStore()
+
+    const { balance, fetchBalance } = useCreditsStore()
+    const [regeneratingShots, setRegeneratingShots] = useState<Set<number>>(new Set())
+    const [isRegeneratingFailed, setIsRegeneratingFailed] = useState(false)
 
     // Filter segments by chapter
     // chapterIndex of -1 means "All Chapters" view - show all segments
@@ -56,6 +68,143 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
         if (shot) {
             setSelectedShot(shot)
             setContactSheetOpen(true)
+        }
+    }
+
+    // Regenerate a single shot
+    const handleRegenerateSingleShot = async (sequence: number) => {
+        const shot = generatedPrompts.find(p => p.sequence === sequence)
+        if (!shot) return
+
+        // Credit check
+        const costPerShot = 20
+        try {
+            await fetchBalance()
+        } catch {
+            // Continue anyway
+        }
+
+        if (balance < costPerShot) {
+            toast.error(`Insufficient credits. Need ${costPerShot} tokens.`)
+            return
+        }
+
+        setRegeneratingShots(prev => new Set(prev).add(sequence))
+        setGeneratedImage(sequence, { ...generatedImages[sequence], status: 'generating', error: undefined })
+
+        try {
+            const results = await storyboardGenerationService.generateShotsFromPrompts(
+                [shot],
+                {
+                    model: 'nano-banana-pro',
+                    ...generationSettings
+                },
+                currentStyleGuide || undefined,
+                characters,
+                locations
+            )
+
+            const result = results[0]
+            if (result) {
+                setGeneratedImage(sequence, {
+                    predictionId: result.predictionId,
+                    imageUrl: result.imageUrl,
+                    status: result.error ? 'failed' : 'completed',
+                    error: result.error,
+                    generationTimestamp: new Date().toISOString()
+                })
+                if (!result.error) {
+                    toast.success(`Shot ${sequence} regenerated successfully`)
+                }
+            }
+        } catch (error) {
+            setGeneratedImage(sequence, {
+                ...generatedImages[sequence],
+                status: 'failed',
+                error: error instanceof Error ? error.message : 'Regeneration failed'
+            })
+            toast.error(`Failed to regenerate shot ${sequence}`)
+        } finally {
+            setRegeneratingShots(prev => {
+                const next = new Set(prev)
+                next.delete(sequence)
+                return next
+            })
+        }
+    }
+
+    // Regenerate all failed shots
+    const handleRegenerateFailedShots = async () => {
+        const failedShots = generatedPrompts.filter(
+            p => generatedImages[p.sequence]?.status === 'failed'
+        )
+
+        if (failedShots.length === 0) {
+            toast.info('No failed shots to regenerate')
+            return
+        }
+
+        // Credit check
+        const totalCost = failedShots.length * 20
+        try {
+            await fetchBalance()
+        } catch {
+            // Continue anyway
+        }
+
+        if (balance < totalCost) {
+            toast.error(`Insufficient credits. Need ${totalCost} tokens for ${failedShots.length} shots.`)
+            return
+        }
+
+        const confirmed = confirm(
+            `Regenerate ${failedShots.length} failed shots for approximately ${totalCost} tokens?`
+        )
+        if (!confirmed) return
+
+        setIsRegeneratingFailed(true)
+
+        for (const shot of failedShots) {
+            setGeneratedImage(shot.sequence, { ...generatedImages[shot.sequence], status: 'generating', error: undefined })
+
+            try {
+                const results = await storyboardGenerationService.generateShotsFromPrompts(
+                    [shot],
+                    {
+                        model: 'nano-banana-pro',
+                        ...generationSettings
+                    },
+                    currentStyleGuide || undefined,
+                    characters,
+                    locations
+                )
+
+                const result = results[0]
+                if (result) {
+                    setGeneratedImage(shot.sequence, {
+                        predictionId: result.predictionId,
+                        imageUrl: result.imageUrl,
+                        status: result.error ? 'failed' : 'completed',
+                        error: result.error,
+                        generationTimestamp: new Date().toISOString()
+                    })
+                }
+            } catch (error) {
+                setGeneratedImage(shot.sequence, {
+                    ...generatedImages[shot.sequence],
+                    status: 'failed',
+                    error: error instanceof Error ? error.message : 'Regeneration failed'
+                })
+            }
+        }
+
+        setIsRegeneratingFailed(false)
+
+        const stillFailed = Object.values(generatedImages).filter(img => img.status === 'failed').length
+        if (stillFailed === 0) {
+            toast.success('All shots regenerated successfully!')
+        } else {
+            toast.warning(`${stillFailed} shots still failed`)
         }
     }
 
@@ -125,10 +274,31 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
                                         </span>
                                     )}
                                     {failedCount > 0 && (
-                                        <span className="flex items-center gap-1 text-red-600">
-                                            <AlertCircle className="w-4 h-4" />
-                                            {failedCount}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="flex items-center gap-1 text-red-600">
+                                                <AlertCircle className="w-4 h-4" />
+                                                {failedCount}
+                                            </span>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={handleRegenerateFailedShots}
+                                                disabled={isRegeneratingFailed}
+                                                className="h-7 text-xs border-red-300 text-red-600 hover:bg-red-50"
+                                            >
+                                                {isRegeneratingFailed ? (
+                                                    <>
+                                                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                                        Retrying...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <RefreshCw className="w-3 h-3 mr-1" />
+                                                        Retry Failed
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </div>
                                     )}
                                 </div>
                             </CardTitle>
@@ -227,6 +397,34 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
 
                                                 {/* Hover Actions */}
                                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex flex-col items-center justify-center gap-2 p-2">
+                                                    {/* Retry button for failed shots */}
+                                                    {generatedImage?.status === 'failed' && (
+                                                        <Button
+                                                            variant="destructive"
+                                                            size="sm"
+                                                            className="w-full"
+                                                            onClick={() => handleRegenerateSingleShot(segment.sequence)}
+                                                            disabled={regeneratingShots.has(segment.sequence)}
+                                                        >
+                                                            {regeneratingShots.has(segment.sequence) ? (
+                                                                <>
+                                                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                                                    Retrying...
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <RefreshCw className="w-4 h-4 mr-1" />
+                                                                    Retry Shot
+                                                                </>
+                                                            )}
+                                                        </Button>
+                                                    )}
+                                                    {/* Error message display */}
+                                                    {generatedImage?.status === 'failed' && generatedImage?.error && (
+                                                        <p className="text-xs text-red-300 text-center px-2">
+                                                            {generatedImage.error}
+                                                        </p>
+                                                    )}
                                                     {generatedImage?.imageUrl && (
                                                         <Button
                                                             variant="secondary"

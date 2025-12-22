@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { FileText, Users, Palette, SplitSquareVertical, Play, Images, Clapperboard, Check } from "lucide-react"
+import { FileText, Users, Palette, SplitSquareVertical, Play, Images, Clapperboard, Check, CheckCircle2 } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
 import { useStoryboardStore } from "../store"
 import { StoryInput } from "./story-input/StoryInput"
 import { CharacterList } from "./entities/CharacterList"
@@ -39,8 +40,57 @@ export function Storyboard() {
         isShotLabOpen,
         activeLabShotSequence,
         closeShotLab,
-        updateGeneratedShot
+        updateGeneratedShot,
+        // For tab completion indicators
+        storyText,
+        characters,
+        locations,
+        currentStyleGuide,
+        selectedPresetStyle,
+        generatedImages
     } = useStoryboardStore()
+
+    // Calculate tab completion states
+    const tabStates = useMemo(() => ({
+        input: {
+            completed: !!storyText && storyText.trim().length > 0,
+            enabled: true,
+            tooltip: storyText?.trim() ? `${storyText.split(/\s+/).length} words` : 'Enter your story'
+        },
+        style: {
+            completed: !!(currentStyleGuide || selectedPresetStyle),
+            enabled: true,
+            tooltip: currentStyleGuide?.name || (selectedPresetStyle ? 'Preset style selected' : 'Choose a visual style')
+        },
+        entities: {
+            completed: characters.length > 0 || locations.length > 0,
+            enabled: true,
+            tooltip: characters.length > 0 || locations.length > 0
+                ? `${characters.length} characters, ${locations.length} locations`
+                : 'Add characters and locations'
+        },
+        shots: {
+            completed: promptsGenerated && generatedPrompts.length > 0,
+            enabled: !!storyText?.trim(),
+            tooltip: promptsGenerated
+                ? `${generatedPrompts.length} shot prompts generated`
+                : 'Generate shot prompts'
+        },
+        generation: {
+            completed: Object.keys(generatedImages).length > 0,
+            enabled: promptsGenerated && generatedPrompts.length > 0,
+            tooltip: Object.keys(generatedImages).length > 0
+                ? `${Object.keys(generatedImages).length} images generated`
+                : 'Generate images from prompts'
+        },
+        gallery: {
+            completed: Object.values(generatedImages).some(img => img.status === 'completed'),
+            enabled: Object.keys(generatedImages).length > 0,
+            tooltip: Object.values(generatedImages).filter(img => img.status === 'completed').length > 0
+                ? `${Object.values(generatedImages).filter(img => img.status === 'completed').length} completed images`
+                : 'View generated images'
+        }
+    }), [storyText, currentStyleGuide, selectedPresetStyle, characters, locations, promptsGenerated, generatedPrompts, generatedImages])
 
     // Derived active shot for Shot Lab
     const activeShot = activeLabShotSequence !== null ? generatedPrompts.find(s => s.sequence === activeLabShotSequence) : null
@@ -86,38 +136,105 @@ export function Storyboard() {
                     <StoryboardHelp />
                     <SaveIndicator />
                 </div>
-                <TabsList className="grid grid-cols-6 w-full h-auto p-1">
-                    <TabsTrigger value="input" className="flex items-center gap-1 py-1.5 px-2">
-                        <span className="flex items-center justify-center w-4 h-4 rounded-full bg-primary/20 text-[10px] font-bold">1</span>
-                        <FileText className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline text-xs">Story</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="style" className="flex items-center gap-1 py-1.5 px-2">
-                        <span className="flex items-center justify-center w-4 h-4 rounded-full bg-primary/20 text-[10px] font-bold">2</span>
-                        <Palette className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline text-xs">Style</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="entities" className="flex items-center gap-1 py-1.5 px-2">
-                        <span className="flex items-center justify-center w-4 h-4 rounded-full bg-primary/20 text-[10px] font-bold">3</span>
-                        <Users className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline text-xs">Characters</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="shots" className="flex items-center gap-1 py-1.5 px-2">
-                        <span className="flex items-center justify-center w-4 h-4 rounded-full bg-primary/20 text-[10px] font-bold">4</span>
-                        <SplitSquareVertical className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline text-xs">Shots</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="generation" className="flex items-center gap-1 py-1.5 px-2">
-                        <span className="flex items-center justify-center w-4 h-4 rounded-full bg-primary/20 text-[10px] font-bold">5</span>
-                        <Play className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline text-xs">Generate</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="gallery" className="flex items-center gap-1 py-1.5 px-2">
-                        <span className="flex items-center justify-center w-4 h-4 rounded-full bg-primary/20 text-[10px] font-bold">6</span>
-                        <Images className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline text-xs">Results</span>
-                    </TabsTrigger>
-                </TabsList>
+                <TooltipProvider>
+                    <TabsList className="grid grid-cols-6 w-full h-auto p-1">
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <TabsTrigger value="input" className="flex items-center gap-1 py-1.5 px-2 relative">
+                                    <span className={`flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold ${tabStates.input.completed ? 'bg-green-500 text-white' : 'bg-primary/20'}`}>
+                                        {tabStates.input.completed ? <CheckCircle2 className="w-3 h-3" /> : '1'}
+                                    </span>
+                                    <FileText className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline text-xs">Story</span>
+                                </TabsTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="text-xs">{tabStates.input.tooltip}</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <TabsTrigger value="style" className="flex items-center gap-1 py-1.5 px-2 relative">
+                                    <span className={`flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold ${tabStates.style.completed ? 'bg-green-500 text-white' : 'bg-primary/20'}`}>
+                                        {tabStates.style.completed ? <CheckCircle2 className="w-3 h-3" /> : '2'}
+                                    </span>
+                                    <Palette className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline text-xs">Style</span>
+                                </TabsTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="text-xs">{tabStates.style.tooltip}</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <TabsTrigger value="entities" className="flex items-center gap-1 py-1.5 px-2 relative">
+                                    <span className={`flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold ${tabStates.entities.completed ? 'bg-green-500 text-white' : 'bg-primary/20'}`}>
+                                        {tabStates.entities.completed ? <CheckCircle2 className="w-3 h-3" /> : '3'}
+                                    </span>
+                                    <Users className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline text-xs">Characters</span>
+                                </TabsTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="text-xs">{tabStates.entities.tooltip}</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <TabsTrigger
+                                    value="shots"
+                                    disabled={!tabStates.shots.enabled}
+                                    className="flex items-center gap-1 py-1.5 px-2 relative"
+                                >
+                                    <span className={`flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold ${tabStates.shots.completed ? 'bg-green-500 text-white' : 'bg-primary/20'}`}>
+                                        {tabStates.shots.completed ? <CheckCircle2 className="w-3 h-3" /> : '4'}
+                                    </span>
+                                    <SplitSquareVertical className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline text-xs">Shots</span>
+                                </TabsTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="text-xs">
+                                {!tabStates.shots.enabled ? 'Enter story text first' : tabStates.shots.tooltip}
+                            </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <TabsTrigger
+                                    value="generation"
+                                    disabled={!tabStates.generation.enabled}
+                                    className="flex items-center gap-1 py-1.5 px-2 relative"
+                                >
+                                    <span className={`flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold ${tabStates.generation.completed ? 'bg-green-500 text-white' : 'bg-primary/20'}`}>
+                                        {tabStates.generation.completed ? <CheckCircle2 className="w-3 h-3" /> : '5'}
+                                    </span>
+                                    <Play className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline text-xs">Generate</span>
+                                </TabsTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="text-xs">
+                                {!tabStates.generation.enabled ? 'Generate shot prompts first' : tabStates.generation.tooltip}
+                            </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <TabsTrigger
+                                    value="gallery"
+                                    disabled={!tabStates.gallery.enabled}
+                                    className="flex items-center gap-1 py-1.5 px-2 relative"
+                                >
+                                    <span className={`flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold ${tabStates.gallery.completed ? 'bg-green-500 text-white' : 'bg-primary/20'}`}>
+                                        {tabStates.gallery.completed ? <CheckCircle2 className="w-3 h-3" /> : '6'}
+                                    </span>
+                                    <Images className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline text-xs">Results</span>
+                                </TabsTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="text-xs">
+                                {!tabStates.gallery.enabled ? 'Generate images first' : tabStates.gallery.tooltip}
+                            </TooltipContent>
+                        </Tooltip>
+                    </TabsList>
+                </TooltipProvider>
 
                 {/* Story Input Tab */}
                 <TabsContent value="input" className="mt-2">
