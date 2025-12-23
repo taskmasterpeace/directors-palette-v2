@@ -194,13 +194,31 @@ class RecipeService {
       }))
     }
 
-    const { data, error } = await supabase
+    // Add missing field mappings
+    if (updates.suggestedModel !== undefined) updateData.suggested_model = updates.suggestedModel || null
+    if (updates.isSystem !== undefined) updateData.is_system = updates.isSystem
+    if (updates.isSystemOnly !== undefined) updateData.is_system_only = updates.isSystemOnly
+
+    // First check if this is a system recipe (admin can edit system recipes)
+    const { data: existing } = await supabase
+      .from('user_recipes')
+      .select('is_system, user_id')
+      .eq('id', recipeId)
+      .single()
+
+    let query = supabase
       .from('user_recipes')
       .update(updateData)
       .eq('id', recipeId)
-      .eq('user_id', userId) // Only owner can update
-      .select()
-      .single()
+
+    // Allow update if: user owns it OR it's a system recipe (admin only)
+    if (!existing?.is_system) {
+      // User recipe - require user_id match
+      query = query.eq('user_id', userId)
+    }
+    // System recipes have no user_id filter - admin can update
+
+    const { data, error } = await query.select().single()
 
     if (error) {
       console.error('Error updating recipe:', error)
