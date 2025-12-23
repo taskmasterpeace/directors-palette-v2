@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { ImageIcon } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { useReferenceNamePrompt } from '@/components/providers/PromptProvider'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { useToast } from '@/hooks/use-toast'
 import { autoExtractFrames } from '@/features/layout-annotation/services/grid-detector'
 import { LoadMoreButton } from './LoadMoreButton'
@@ -105,6 +106,9 @@ export function UnifiedImageGallery({
         handleDeleteFolder,
         handleMoveImages,
     } = useFolderManager()
+
+    // Mobile detection for responsive scroll behavior
+    const isMobile = useIsMobile()
 
     // Local UI state
     const [isMobileFolderMenuOpen, setIsMobileFolderMenuOpen] = useState(false)
@@ -544,7 +548,7 @@ export function UnifiedImageGallery({
             />
 
             {/* Main Gallery Layout */}
-            <div className="flex h-full w-full">
+            <div className="flex flex-col md:flex-row md:h-full w-full">
                 {/* Desktop Folder Sidebar */}
                 <div className="hidden md:block">
                     <FolderSidebar
@@ -563,7 +567,7 @@ export function UnifiedImageGallery({
                 </div>
 
                 {/* Gallery Content */}
-                <Card className={cn("flex-1 h-full flex flex-col", className)}>
+                <Card className={cn("flex-1 md:h-full flex flex-col", className)}>
                     <GalleryHeader
                         totalImages={totalImages}
                         totalDatabaseCount={totalDatabaseCount}
@@ -599,7 +603,7 @@ export function UnifiedImageGallery({
                         onCreateFolder={openCreateModal}
                     />
 
-                    <CardContent className="flex-1 flex flex-col overflow-hidden">
+                    <CardContent className="flex-1 flex flex-col md:overflow-hidden">
                         {isLoading ? (
                             <div className="text-center py-12">
                                 <div className="w-12 h-12 mx-auto mb-4 border-4 border-border border-t-purple-500 rounded-full animate-spin" />
@@ -615,8 +619,8 @@ export function UnifiedImageGallery({
                             </div>
                         ) : (
                             <>
-                                <ScrollArea className="flex-1">
-                                    <div className={cn("grid gap-4", getGridClasses(gridSize))}>
+                                {isMobile ? (
+                                    <div className={cn("grid gap-4 pb-4", getGridClasses(gridSize))}>
                                         {paginatedImages.map((image: GeneratedImage) => (
                                             <ImageCard
                                                 key={image.id}
@@ -646,7 +650,6 @@ export function UnifiedImageGallery({
                                                 }}
                                                 onAddToLibrary={() => {
                                                     if (onSendToLibrary) {
-                                                        // Pass gallery ID along with the image URL
                                                         onSendToLibrary(image.url, image.id)
                                                     }
                                                 }}
@@ -664,7 +667,57 @@ export function UnifiedImageGallery({
                                             />
                                         ))}
                                     </div>
-                                </ScrollArea>
+                                ) : (
+                                    <ScrollArea className="flex-1">
+                                        <div className={cn("grid gap-4", getGridClasses(gridSize))}>
+                                            {paginatedImages.map((image: GeneratedImage) => (
+                                                <ImageCard
+                                                    key={image.id}
+                                                    image={image}
+                                                    isSelected={selectedImages.includes(image.url)}
+                                                    onSelect={() => handleImageSelect(image.url)}
+                                                    onZoom={() => setFullscreenImage(image)}
+                                                    onCopy={() => handleCopyImage(image.url)}
+                                                    onDownload={() => handleDownloadImage(image.url)}
+                                                    onDelete={() => handleDeleteImage(image.url)}
+                                                    onSendTo={currentTab ? (target) => handleSendTo(image.url, target) : undefined}
+                                                    onSetReference={async () => {
+                                                        const newRef = await showReferenceNamePrompt()
+                                                        if (newRef) {
+                                                            await updateImageReference(image.id, newRef)
+                                                        }
+                                                    }}
+                                                    onEditReference={async () => {
+                                                        const newRef = await showReferenceNamePrompt(image.reference)
+                                                        if (newRef !== null) {
+                                                            await updateImageReference(image.id, newRef)
+                                                            toast({
+                                                                title: newRef ? "Reference Updated" : "Reference Cleared",
+                                                                description: newRef ? `Image tagged as ${newRef}` : "Reference tag removed"
+                                                            })
+                                                        }
+                                                    }}
+                                                    onAddToLibrary={() => {
+                                                        if (onSendToLibrary) {
+                                                            onSendToLibrary(image.url, image.id)
+                                                        }
+                                                    }}
+                                                    onMoveToFolder={(folderId) => handleMoveToFolder(image.id, folderId)}
+                                                    onExtractFrames={() => handleExtractFrames(image.url)}
+                                                    onExtractFramesToGallery={() => handleExtractFramesToGallery(image.url, image.id)}
+                                                    onRemoveBackground={() => handleRemoveBackground(image)}
+                                                    isRemovingBackground={removingBackgroundId === image.id}
+                                                    currentFolderId={image.folderId}
+                                                    folders={folders}
+                                                    showActions={true}
+                                                    useNativeAspectRatio={useNativeAspectRatio}
+                                                    gridSize={gridSize}
+                                                    onRetry={() => handleRetryGeneration(image)}
+                                                />
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                )}
 
                                 {hasMore && (
                                     <div className="flex justify-center py-8">
