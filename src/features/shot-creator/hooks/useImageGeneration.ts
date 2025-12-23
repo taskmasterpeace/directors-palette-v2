@@ -540,6 +540,19 @@ export function useImageGeneration() {
                 // Get stage-specific reference images (for recipe pipe chaining)
                 const stageRefs = stageReferenceImages?.[i] || []
 
+                // CRITICAL: Convert stage refs to HTTPS URLs that Replicate can access
+                // Stage refs could be data URLs, local paths, or blob URLs - Replicate can't use these
+                let preparedStageRefs: string[] = []
+                if (stageRefs.length > 0) {
+                    try {
+                        preparedStageRefs = await prepareReferenceImagesForAPI(stageRefs)
+                        console.log(`[Pipe Chain] Stage ${i} refs prepared: ${preparedStageRefs.length} images uploaded`)
+                    } catch (uploadError) {
+                        console.error(`[Pipe Chain] Failed to prepare stage ${i} refs:`, uploadError)
+                        // Continue without stage refs rather than failing entirely
+                    }
+                }
+
                 // Determine input images for this step
                 // For pipe chaining: combine previous output + this stage's specific references
                 // For non-pipe: use uploaded references
@@ -547,14 +560,14 @@ export function useImageGeneration() {
                 if (isPipeChaining) {
                     if (isFirstStep) {
                         // First step: use stage 0's refs, or fall back to uploaded refs
-                        inputImages = stageRefs.length > 0
-                            ? stageRefs
+                        inputImages = preparedStageRefs.length > 0
+                            ? preparedStageRefs
                             : (uploadedReferenceImages.length > 0 ? uploadedReferenceImages : undefined)
                     } else {
                         // Subsequent steps: combine previous output + this stage's refs
                         const refs: string[] = []
                         if (previousImageUrl) refs.push(previousImageUrl)
-                        refs.push(...stageRefs)
+                        refs.push(...preparedStageRefs)
                         inputImages = refs.length > 0 ? refs : undefined
                     }
                 } else {
@@ -566,7 +579,8 @@ export function useImageGeneration() {
                     console.log(`[Pipe Chain] Step ${i + 1}/${variations.length}:`, {
                         isFirstStep,
                         previousImageUrl: previousImageUrl || '(none)',
-                        stageRefs: stageRefs.length ? `${stageRefs.length} stage ref(s)` : '(none)',
+                        rawStageRefs: stageRefs.length ? `${stageRefs.length} raw ref(s)` : '(none)',
+                        preparedStageRefs: preparedStageRefs.length ? `${preparedStageRefs.length} prepared ref(s)` : '(none)',
                         inputImages: inputImages?.length ? `${inputImages.length} image(s)` : '(none)',
                         prompt: variationPrompt.slice(0, 50)
                     })
