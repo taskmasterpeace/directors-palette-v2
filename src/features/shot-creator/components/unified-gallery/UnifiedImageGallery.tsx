@@ -603,7 +603,7 @@ export function UnifiedImageGallery({
                         onCreateFolder={openCreateModal}
                     />
 
-                    <CardContent className="flex-1 flex flex-col md:overflow-hidden">
+                    <CardContent className="flex-1 flex flex-col overflow-y-auto md:overflow-hidden">
                         {isLoading ? (
                             <div className="text-center py-12">
                                 <div className="w-12 h-12 mx-auto mb-4 border-4 border-border border-t-purple-500 rounded-full animate-spin" />

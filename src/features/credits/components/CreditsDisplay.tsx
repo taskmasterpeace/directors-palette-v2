@@ -242,6 +242,20 @@ export function CreditsDisplay() {
                             </div>
                         </div>
 
+                        {/* Coupon Redemption - Mobile Accessible */}
+                        <div className="px-6 pt-4 pb-2 border-b border-white/5">
+                            <RedeemUsageDialog>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full gap-2 bg-black/20 border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+                                >
+                                    <Gift className="w-4 h-4" />
+                                    Have a code? Redeem it here
+                                </Button>
+                            </RedeemUsageDialog>
+                        </div>
+
                         {/* Wide 3-column packages */}
                         <div className="p-6">
                             {loadingPackages ? (
@@ -283,7 +297,7 @@ export function CreditsDisplay() {
                                                 {/* Background Image with Gradient Overlay */}
                                                 <div className="absolute inset-0 z-0">
                                                     <div
-                                                        className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity"
+                                                        className="absolute inset-0 bg-cover bg-center opacity-50 group-hover:opacity-60 transition-opacity"
                                                         style={{ backgroundImage: `url(${bgImage})` }}
                                                     />
                                                     <div className={cn(
@@ -323,8 +337,8 @@ export function CreditsDisplay() {
                                                         )}
                                                     </div>
 
-                                                    {/* Stats - compact */}
-                                                    <div className="space-y-1 mb-3 flex-1 text-[10px] sm:text-xs text-zinc-400">
+                                                    {/* Stats - compact (hidden on mobile for space) */}
+                                                    <div className="hidden sm:block space-y-1 mb-3 flex-1 text-[10px] sm:text-xs text-zinc-400">
                                                         <div className="flex items-center gap-1.5">
                                                             <ImageIcon className="w-3 h-3" />
                                                             <span>~{imgCount} images</span>
@@ -363,20 +377,6 @@ export function CreditsDisplay() {
                                 <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-zinc-600" /> Secure checkout</span>
                                 <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-zinc-600" /> Tokens never expire</span>
                                 <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-zinc-600" /> Instant delivery</span>
-                            </div>
-
-                            {/* Redemption Section */}
-                            <div className="mt-6 pt-4 border-t border-white/5 text-center flex justify-center">
-                                <RedeemUsageDialog>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="gap-2 bg-black/20 border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300"
-                                    >
-                                        <Gift className="w-4 h-4" />
-                                        Have a code? Redeem it here
-                                    </Button>
-                                </RedeemUsageDialog>
                             </div>
                         </div>
                     </div>

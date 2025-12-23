@@ -59,6 +59,9 @@ async function globalSetup(config: FullConfig) {
         await page.goto(`${baseURL}/auth/signin`)
         await page.waitForLoadState('networkidle')
 
+        // Wait for form to be ready
+        await page.waitForSelector('#email', { timeout: 30000 })
+
         // Fill in credentials
         await page.fill('#email', email)
         await page.fill('#password', password)
