@@ -28,6 +28,7 @@ export interface DbRecipe {
   is_quick_access: boolean
   category_id: string | null
   is_system: boolean
+  is_system_only: boolean
   created_at: string
   updated_at: string
 }
@@ -59,6 +60,7 @@ function dbRecipeToRecipe(dbRecipe: DbRecipe): Recipe {
     isQuickAccess: dbRecipe.is_quick_access,
     categoryId: dbRecipe.category_id || undefined,
     isSystem: dbRecipe.is_system,
+    isSystemOnly: dbRecipe.is_system_only,
     createdAt: new Date(dbRecipe.created_at).getTime(),
     updatedAt: new Date(dbRecipe.updated_at).getTime(),
   }
@@ -86,7 +88,8 @@ function recipeToDbRecipe(
     quick_access_label: recipe.quickAccessLabel || null,
     is_quick_access: recipe.isQuickAccess,
     category_id: recipe.categoryId || null,
-    is_system: false,
+    is_system: recipe.isSystem || false,
+    is_system_only: recipe.isSystemOnly || false,
   }
 }
 
@@ -464,6 +467,7 @@ class RecipeService {
         is_quick_access: sample.isQuickAccess,
         category_id: sample.categoryId || null,
         is_system: true,
+        is_system_only: sample.isSystemOnly || false,
       }
 
       const { error } = await supabase
