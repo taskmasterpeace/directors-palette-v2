@@ -548,7 +548,7 @@ export function UnifiedImageGallery({
             />
 
             {/* Main Gallery Layout */}
-            <div className="flex flex-col md:flex-row md:h-full w-full">
+            <div className="md:flex md:flex-row md:h-full w-full">
                 {/* Desktop Folder Sidebar */}
                 <div className="hidden md:block">
                     <FolderSidebar
@@ -567,7 +567,7 @@ export function UnifiedImageGallery({
                 </div>
 
                 {/* Gallery Content */}
-                <Card className={cn("flex-1 md:h-full flex flex-col", className)}>
+                <Card className={cn("md:flex-1 md:h-full flex flex-col", className)}>
                     <GalleryHeader
                         totalImages={totalImages}
                         totalDatabaseCount={totalDatabaseCount}
@@ -603,7 +603,7 @@ export function UnifiedImageGallery({
                         onCreateFolder={openCreateModal}
                     />
 
-                    <CardContent className="flex-1 flex flex-col overflow-y-auto md:overflow-hidden">
+                    <CardContent className="flex-1 flex flex-col md:overflow-hidden">
                         {isLoading ? (
                             <div className="text-center py-12">
                                 <div className="w-12 h-12 mx-auto mb-4 border-4 border-border border-t-purple-500 rounded-full animate-spin" />
