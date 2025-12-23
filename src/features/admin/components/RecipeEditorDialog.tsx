@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, Plus, Trash2, Image as ImageIcon } from "lucide-react"
+import { Loader2, Plus, Trash2, Upload, X } from "lucide-react"
 import type { Recipe, RecipeCategory, RecipeField } from "@/features/shot-creator/types/recipe.types"
 import { parseStageTemplate } from "@/features/shot-creator/types/recipe.types"
 
@@ -50,6 +50,10 @@ export function RecipeEditorDialog({
     const [isSystem, setIsSystem] = useState(false)
     const [isSystemOnly, setIsSystemOnly] = useState(false)
     const [stages, setStages] = useState<EditableStage[]>([])
+    const [uploadingStageIndex, setUploadingStageIndex] = useState<number | null>(null)
+
+    // File input refs (one per stage)
+    const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({})
 
     // Reset form when recipe changes
     useEffect(() => {
@@ -117,6 +121,77 @@ export function RecipeEditorDialog({
             setActiveStageTab(String(Math.max(0, stageIndex - 1)))
         }
     }, [stages.length, activeStageTab])
+
+    // Handle reference image upload for a stage
+    const handleImageUpload = useCallback(async (stageIndex: number, file: File) => {
+        setUploadingStageIndex(stageIndex)
+
+        try {
+            const formData = new FormData()
+            formData.append('file', file)
+
+            const response = await fetch('/api/upload-file', {
+                method: 'POST',
+                body: formData,
+            })
+
+            if (!response.ok) {
+                throw new Error('Failed to upload image')
+            }
+
+            const data = await response.json()
+            const imageUrl = data.url
+            const imageName = file.name
+
+            // Add the image to the stage
+            setStages(prev => {
+                const newStages = [...prev]
+                newStages[stageIndex] = {
+                    ...newStages[stageIndex],
+                    referenceImages: [
+                        ...newStages[stageIndex].referenceImages,
+                        {
+                            id: `img_${Date.now()}`,
+                            url: imageUrl,
+                            name: imageName,
+                        }
+                    ],
+                }
+                return newStages
+            })
+        } catch (err) {
+            console.error('Error uploading image:', err)
+        } finally {
+            setUploadingStageIndex(null)
+        }
+    }, [])
+
+    // Handle file input change
+    const handleFileChange = useCallback((stageIndex: number, event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (file) {
+            handleImageUpload(stageIndex, file)
+        }
+        // Reset the input so the same file can be selected again
+        event.target.value = ''
+    }, [handleImageUpload])
+
+    // Trigger file input click
+    const triggerFileUpload = useCallback((stageIndex: number) => {
+        fileInputRefs.current[stageIndex]?.click()
+    }, [])
+
+    // Remove a reference image from a stage
+    const removeReferenceImage = useCallback((stageIndex: number, imageId: string) => {
+        setStages(prev => {
+            const newStages = [...prev]
+            newStages[stageIndex] = {
+                ...newStages[stageIndex],
+                referenceImages: newStages[stageIndex].referenceImages.filter(img => img.id !== imageId),
+            }
+            return newStages
+        })
+    }, [])
 
     const handleSave = async () => {
         if (!name.trim()) {
@@ -351,23 +426,70 @@ Example: A portrait of <<CHARACTER_NAME:name!>> in <<STYLE:text>> style."
 
                                         {/* Reference Images */}
                                         <div className="space-y-2">
-                                            <Label className="text-zinc-400">Reference Images:</Label>
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-zinc-400">Reference Images:</Label>
+                                                <div>
+                                                    {/* Hidden file input */}
+                                                    <input
+                                                        ref={(el) => { fileInputRefs.current[idx] = el }}
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={(e) => handleFileChange(idx, e)}
+                                                    />
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => triggerFileUpload(idx)}
+                                                        disabled={uploadingStageIndex === idx}
+                                                        className="text-xs"
+                                                    >
+                                                        {uploadingStageIndex === idx ? (
+                                                            <>
+                                                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                                                Uploading...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Upload className="w-3 h-3 mr-1" />
+                                                                Add Image
+                                                            </>
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            </div>
                                             {stage.referenceImages && stage.referenceImages.length > 0 ? (
                                                 <div className="flex flex-wrap gap-2">
-                                                    {stage.referenceImages.map((img, imgIdx) => (
+                                                    {stage.referenceImages.map((img) => (
                                                         <div
-                                                            key={img.id || imgIdx}
-                                                            className="flex items-center gap-2 bg-zinc-900 rounded px-2 py-1 border border-zinc-700"
+                                                            key={img.id}
+                                                            className="group relative flex items-center gap-2 bg-zinc-900 rounded px-2 py-1 border border-zinc-700"
                                                         >
-                                                            <ImageIcon className="w-4 h-4 text-zinc-500" />
-                                                            <span className="text-xs text-zinc-400 max-w-[150px] truncate">
+                                                            {/* Thumbnail preview */}
+                                                            {img.url && (
+                                                                <img
+                                                                    src={img.url}
+                                                                    alt={img.name}
+                                                                    className="w-8 h-8 object-cover rounded"
+                                                                />
+                                                            )}
+                                                            <span className="text-xs text-zinc-400 max-w-[120px] truncate">
                                                                 {img.name || img.url.split('/').pop()}
                                                             </span>
+                                                            {/* Remove button */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removeReferenceImage(idx, img.id)}
+                                                                className="ml-1 text-zinc-500 hover:text-red-400 transition-colors"
+                                                                title="Remove image"
+                                                            >
+                                                                <X className="w-3 h-3" />
+                                                            </button>
                                                         </div>
                                                     ))}
                                                 </div>
                                             ) : (
-                                                <p className="text-xs text-zinc-600">No reference images</p>
+                                                <p className="text-xs text-zinc-600">No reference images - click &quot;Add Image&quot; to upload</p>
                                             )}
                                         </div>
                                     </div>

@@ -143,7 +143,7 @@ export function CharacterStep() {
     try {
       // Check if we have the "Storybook Character Sheet" system recipe
       const systemRecipes = getSystemOnlyRecipes()
-      const storybookRecipe = systemRecipes.find(r => r.name === 'Photo to Character Sheet')
+      const storybookRecipe = systemRecipes.find(r => r.name === 'Photo to Character Sheet (Isolation)')
 
       if (storybookRecipe && project?.style?.styleGuideUrl) {
         // Use recipe-based generation (new 3-stage pipeline)

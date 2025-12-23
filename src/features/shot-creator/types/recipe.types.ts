@@ -785,7 +785,7 @@ The isolated character must be IDENTICAL to the input photo.`,
       {
         id: 'stage_1',
         order: 1,
-        template: `Transform the character from the previous image into <<ART_STYLE:select(claymation,watercolor,cartoon,anime,3D animated,illustrated,storybook,Disney-style,Pixar-style)!>> style.
+        template: `Transform this character into <<STYLE_NAME:text!>> style.
 
 CRITICAL - ABSOLUTE LIKENESS PRESERVATION:
 Even in stylized form, the character MUST be recognizable as the same person:
@@ -795,7 +795,8 @@ Even in stylized form, the character MUST be recognizable as the same person:
 - Keep exact hair style, texture, and color
 - Maintain body proportions and posture
 
-STYLE TRANSFER (use attached style guide):
+STYLE TRANSFER (use attached style guide reference image):
+- Follow the style guide reference EXACTLY - it is the definitive visual
 - Match the style guide's color palette and saturation
 - Match line quality and rendering approach
 - Match level of stylization (how simplified features become)
@@ -843,6 +844,7 @@ Maintain exact art style consistency from Stage 2.`,
     isQuickAccess: true,
     quickAccessLabel: 'PhotoChar',
     categoryId: 'characters',
+    isSystemOnly: true,  // Hidden from users, used internally by storybook
   },
 
   // Photo to Character Sheet (Multi-Reference) - For multiple reference angles
