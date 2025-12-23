@@ -91,11 +91,18 @@ async function waitForImageCompletion(
                     return
                 }
 
-                // Check for successful completion
+                // Check for successful completion - must be Supabase URL (not temporary Replicate URL)
                 if (data.public_url) {
-                    cleanup()
-                    resolve(data.public_url)
-                    return
+                    // Only resolve if it's a permanent Supabase URL, not a temporary Replicate URL
+                    const isSupabaseUrl = data.public_url.includes('supabase.co')
+                    if (isSupabaseUrl) {
+                        cleanup()
+                        resolve(data.public_url)
+                        return
+                    } else {
+                        // Replicate URL found - keep waiting for Supabase upload to complete
+                        console.log('[Pipe Chain] Found temporary Replicate URL, waiting for Supabase upload...')
+                    }
                 }
 
                 // Check for failure
@@ -140,10 +147,14 @@ async function waitForImageCompletion(
                         metadata?: { error?: string }
                     }
 
-                    // Check if image is ready
+                    // Check if image is ready - must be Supabase URL (not temporary Replicate URL)
                     if (updatedRecord.public_url) {
-                        cleanup()
-                        resolve(updatedRecord.public_url)
+                        const isSupabaseUrl = updatedRecord.public_url.includes('supabase.co')
+                        if (isSupabaseUrl) {
+                            cleanup()
+                            resolve(updatedRecord.public_url)
+                        }
+                        // If Replicate URL, keep waiting for Supabase upload
                     } else if (updatedRecord.status === 'failed') {
                         cleanup()
                         const errorMsg = updatedRecord.error_message || updatedRecord.metadata?.error || 'Generation failed'
