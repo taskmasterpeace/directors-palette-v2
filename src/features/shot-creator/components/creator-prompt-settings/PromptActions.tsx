@@ -42,7 +42,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         setStageReferenceImages,
     } = useShotCreatorStore()
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
-    const { generateImage, isGenerating } = useImageGeneration()
+    const { generateImage, isGenerating, cancelGeneration, currentPredictionId } = useImageGeneration()
     const { libraryItems } = useLibraryStore()
     const { wildcards } = useWildCardStore()
     const { activeRecipeId, setActiveRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts } = useRecipeStore()
@@ -554,62 +554,66 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         className="flex-shrink-0"
                     />
 
-                    {/* Right: Controls */}
-                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                        {/* Size toggle buttons */}
-                        <div className="flex items-center gap-1 bg-card/50 rounded p-0.5">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setTextareaSize('small')}
-                                className={cn(
-                                    "h-7 w-7 p-0 hover:bg-secondary",
-                                    textareaSize === 'small' ? "bg-secondary text-white" : "text-muted-foreground"
-                                )}
-                                title="Small (1 line)"
-                            >
-                                <Minimize2 className="w-3 h-3" />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setTextareaSize('medium')}
-                                className={cn(
-                                    "h-7 w-7 p-0 hover:bg-secondary",
-                                    textareaSize === 'medium' ? "bg-secondary text-white" : "text-muted-foreground"
-                                )}
-                                title="Medium (2 lines)"
-                            >
-                                <Square className="w-3 h-3" />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setTextareaSize('large')}
-                                className={cn(
-                                    "h-7 w-7 p-0 hover:bg-secondary",
-                                    textareaSize === 'large' ? "bg-secondary text-white" : "text-muted-foreground"
-                                )}
-                                title="Large (5+ lines)"
-                            >
-                                <Maximize2 className="w-3 h-3" />
-                            </Button>
+                    {/* Right: Controls - Hidden in recipe mode */}
+                    {!activeRecipeId && (
+                        <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                            {/* Size toggle buttons */}
+                            <div className="flex items-center gap-1 bg-card/50 rounded p-0.5">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setTextareaSize('small')}
+                                    className={cn(
+                                        "h-7 w-7 p-0 hover:bg-secondary",
+                                        textareaSize === 'small' ? "bg-secondary text-white" : "text-muted-foreground"
+                                    )}
+                                    title="Small (1 line)"
+                                >
+                                    <Minimize2 className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setTextareaSize('medium')}
+                                    className={cn(
+                                        "h-7 w-7 p-0 hover:bg-secondary",
+                                        textareaSize === 'medium' ? "bg-secondary text-white" : "text-muted-foreground"
+                                    )}
+                                    title="Medium (2 lines)"
+                                >
+                                    <Square className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setTextareaSize('large')}
+                                    className={cn(
+                                        "h-7 w-7 p-0 hover:bg-secondary",
+                                        textareaSize === 'large' ? "bg-secondary text-white" : "text-muted-foreground"
+                                    )}
+                                    title="Large (5+ lines)"
+                                >
+                                    <Maximize2 className="w-3 h-3" />
+                                </Button>
+                            </div>
+                            <OrganizeButton
+                                prompt={shotCreatorPrompt}
+                                onApply={setShotCreatorPrompt}
+                            />
+                            <Badge variant="secondary" className="text-xs whitespace-nowrap hidden sm:inline-flex">
+                                @ refs
+                            </Badge>
+                            <Badge variant="secondary" className="text-xs whitespace-nowrap hidden sm:inline-flex">
+                                Ctrl+Enter
+                            </Badge>
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                {shotCreatorPrompt.length} chars
+                            </span>
                         </div>
-                        <OrganizeButton
-                            prompt={shotCreatorPrompt}
-                            onApply={setShotCreatorPrompt}
-                        />
-                        <Badge variant="secondary" className="text-xs whitespace-nowrap hidden sm:inline-flex">
-                            @ refs
-                        </Badge>
-                        <Badge variant="secondary" className="text-xs whitespace-nowrap hidden sm:inline-flex">
-                            Ctrl+Enter
-                        </Badge>
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">
-                            {shotCreatorPrompt.length} chars
-                        </span>
-                    </div>
+                    )}
                 </div>
+                {/* Textarea - Hidden in recipe mode */}
+                {!activeRecipeId && (
                 <div className="relative">
                     <Textarea
                         ref={textareaRef}
@@ -702,8 +706,10 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         />
                     )}
                 </div>
+                )}
 
-                {/* Prompt Syntax Feedback - Shows bracket/wildcard notifications */}
+                {/* Prompt Syntax Feedback - Hidden in recipe mode */}
+                {!activeRecipeId && (
                 <div className="space-y-2">
                     <PromptSyntaxFeedback
                         prompt={shotCreatorPrompt}
@@ -722,6 +728,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         <span>Use [option1, option2] for variations, _wildcard_ for dynamic content, or | for chaining</span>
                     </div>
                 </div>
+                )}
             </div>
 
             {/* Action Buttons - Moved to top for better UX */}
@@ -763,6 +770,17 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                             </>
                         )}
                     </Button>
+                    {/* Cancel Button - Shows when generating */}
+                    {isGenerating && currentPredictionId && (
+                        <Button
+                            variant="destructive"
+                            onClick={() => void cancelGeneration()}
+                            className="w-full mt-2"
+                        >
+                            <X className="w-4 h-4 mr-2" />
+                            Cancel Generation
+                        </Button>
+                    )}
                     {/* Cost Preview */}
                     {canGenerate && !isGenerating && (
                         <div className="text-xs text-center text-muted-foreground">

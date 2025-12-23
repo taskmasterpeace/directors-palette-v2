@@ -207,6 +207,8 @@ export function useImageGeneration() {
     const [activeGalleryId, setActiveGalleryId] = useState<string | null>(null)
     // Track when pipe chain is in progress (blocks concurrent generations)
     const [isPipeChaining, setIsPipeChaining] = useState(false)
+    // Track current prediction ID for cancel functionality
+    const [currentPredictionId, setCurrentPredictionId] = useState<string | null>(null)
 
     // Load wildcards on mount
     useEffect(() => {
@@ -436,9 +438,14 @@ export function useImageGeneration() {
                 isPipeChaining = false
             } else {
                 // Normal mode: parse brackets, pipes, and wildcards (respecting granular disable settings)
+                // Detect recipe mode: if stageReferenceImages has content, force pipe parsing enabled
+                const isRecipeMode = stageReferenceImages && Object.keys(stageReferenceImages).length > 0
+                if (isRecipeMode) {
+                    console.log('🍳 Recipe mode detected - forcing pipe syntax enabled')
+                }
                 console.log(`🎲 Parsing prompt with ${wildcards.length} available wildcards`)
                 const promptResult = parseDynamicPrompt(promptWithStyle, {
-                    disablePipeSyntax: settings.disablePipeSyntax,
+                    disablePipeSyntax: isRecipeMode ? false : settings.disablePipeSyntax,
                     disableBracketSyntax: settings.disableBracketSyntax,
                     disableWildcardSyntax: settings.disableWildcardSyntax
                 }, wildcards)
@@ -572,6 +579,11 @@ export function useImageGeneration() {
                 })
                 const response = await imageGenerationService.generateImage(request)
 
+                // Track current prediction for cancel functionality
+                if (response.predictionId) {
+                    setCurrentPredictionId(response.predictionId)
+                }
+
                 // Add pending placeholder to gallery immediately after API responds with galleryId
                 if (response.galleryId) {
                     useUnifiedGalleryStore.getState().addPendingPlaceholder(
@@ -675,11 +687,58 @@ export function useImageGeneration() {
     const resetProgress = useCallback(() => {
         setProgress({ status: 'idle' })
         setActiveGalleryId(null)
+        setCurrentPredictionId(null)
     }, [])
+
+    // Cancel the current generation
+    const cancelGeneration = useCallback(async () => {
+        if (!currentPredictionId) {
+            toast({
+                title: 'No Active Generation',
+                description: 'There is no generation to cancel.',
+                variant: 'destructive',
+            })
+            return { success: false, error: 'No active prediction' }
+        }
+
+        try {
+            const response = await fetch(`/api/generation/cancel/${currentPredictionId}`, {
+                method: 'POST',
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || 'Failed to cancel')
+            }
+
+            // Reset state
+            setShotCreatorProcessing(false)
+            setIsPipeChaining(false)
+            setCurrentPredictionId(null)
+            setProgress({ status: 'idle' })
+
+            toast({
+                title: 'Generation Canceled',
+                description: 'Your image generation has been stopped.',
+            })
+
+            return { success: true }
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to cancel'
+            toast({
+                title: 'Cancel Failed',
+                description: errorMessage,
+                variant: 'destructive',
+            })
+            return { success: false, error: errorMessage }
+        }
+    }, [currentPredictionId, toast, setShotCreatorProcessing])
 
     return {
         generateImage,
         resetProgress,
+        cancelGeneration,
+        currentPredictionId,
         // Only block during pipe chaining - regular generations can run concurrently
         isGenerating: isPipeChaining,
     }
