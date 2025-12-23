@@ -449,10 +449,13 @@ export function useImageGeneration() {
                 isPipeChaining = false
             } else {
                 // Normal mode: parse brackets, pipes, and wildcards (respecting granular disable settings)
-                // Detect recipe mode: if stageReferenceImages has content, force pipe parsing enabled
-                const isRecipeMode = stageReferenceImages && Object.keys(stageReferenceImages).length > 0
+                // Detect recipe mode: read FRESH from store to avoid stale closure value
+                // (stageReferenceImages is set just before generateImage is called, but the closure has the old value)
+                const freshStageRefs = useShotCreatorStore.getState().stageReferenceImages
+                const isRecipeMode = freshStageRefs && freshStageRefs.length > 0
                 if (isRecipeMode) {
                     console.log('🍳 Recipe mode detected - forcing pipe syntax enabled')
+                    console.log(`   Stage refs found: ${freshStageRefs.length} stages`)
                 }
                 console.log(`🎲 Parsing prompt with ${wildcards.length} available wildcards`)
                 const promptResult = parseDynamicPrompt(promptWithStyle, {
@@ -538,7 +541,9 @@ export function useImageGeneration() {
                 const isLastStep = i === variations.length - 1
 
                 // Get stage-specific reference images (for recipe pipe chaining)
-                const stageRefs = stageReferenceImages?.[i] || []
+                // CRITICAL: Read FRESH from store - closure value is stale when setStageReferenceImages is called just before generateImage
+                const freshStageRefs = useShotCreatorStore.getState().stageReferenceImages
+                const stageRefs = freshStageRefs?.[i] || []
 
                 // CRITICAL: Convert stage refs to HTTPS URLs that Replicate can access
                 // Stage refs could be data URLs, local paths, or blob URLs - Replicate can't use these
