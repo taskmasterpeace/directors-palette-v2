@@ -113,6 +113,9 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
 
     // Can generate: either regular mode (prompt + refs) OR recipe mode (valid recipe)
+    // Note: activeFieldValues is needed in deps to trigger recalc when recipe fields change,
+    // even though it's only used indirectly via getActiveValidation()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const canGenerate = React.useMemo(() => {
         const activeRecipe = getActiveRecipe()
         if (activeRecipe) {

@@ -212,7 +212,7 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
 export function useImageGeneration() {
     const { toast } = useToast()
     const [_progress, setProgress] = useState<GenerationProgress>({ status: 'idle' })
-    const { setShotCreatorProcessing, settings, stageReferenceImages } = useShotCreatorStore()
+    const { setShotCreatorProcessing, settings } = useShotCreatorStore()
     const { wildcards, loadWildCards } = useWildCardStore()
     const { fetchBalance } = useCreditsStore()
     const [activeGalleryId, setActiveGalleryId] = useState<string | null>(null)
