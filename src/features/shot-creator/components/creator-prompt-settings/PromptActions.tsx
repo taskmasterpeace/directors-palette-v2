@@ -45,7 +45,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     const { generateImage, isGenerating, cancelGeneration, currentPredictionId } = useImageGeneration()
     const { libraryItems } = useLibraryStore()
     const { wildcards } = useWildCardStore()
-    const { activeRecipeId, setActiveRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts } = useRecipeStore()
+    const { activeRecipeId, activeFieldValues, setActiveRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts } = useRecipeStore()
 
     // Calculate generation cost
     const generationCost = React.useMemo(() => {
@@ -124,7 +124,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         }
         // Regular mode: needs prompt and refs
         return shotCreatorPrompt.length > 0 && shotCreatorReferenceImages.length > 0
-    }, [shotCreatorPrompt, shotCreatorReferenceImages, getActiveRecipe, getActiveValidation])
+    }, [shotCreatorPrompt, shotCreatorReferenceImages, activeFieldValues, getActiveRecipe, getActiveValidation])
 
     // Get references grouped by category from library items
     const getReferencesGroupedByCategory = useCallback(() => {
