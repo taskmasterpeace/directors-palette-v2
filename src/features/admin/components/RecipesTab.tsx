@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -237,8 +237,8 @@ export function RecipesTab() {
                                 </TableRow>
                             ) : (
                                 filteredRecipes.map((recipe) => (
-                                    <>
-                                        <TableRow key={recipe.id} className="border-zinc-800">
+                                    <React.Fragment key={recipe.id}>
+                                        <TableRow className="border-zinc-800">
                                             <TableCell>
                                                 <Button
                                                     variant="ghost"
@@ -379,7 +379,7 @@ export function RecipesTab() {
                                                 </TableCell>
                                             </TableRow>
                                         )}
-                                    </>
+                                    </React.Fragment>
                                 ))
                             )}
                         </TableBody>
