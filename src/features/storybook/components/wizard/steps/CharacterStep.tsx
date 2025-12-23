@@ -172,7 +172,7 @@ export function CharacterStep() {
         })
 
         const result = await executeSystemRecipe(
-          'Storybook Character Sheet',
+          'Photo to Character Sheet (Isolation)',
           fieldValues,
           stageReferenceImages,
           {
