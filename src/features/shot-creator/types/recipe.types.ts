@@ -35,15 +35,38 @@ export interface RecipeField {
 export interface RecipeReferenceImage {
   id: string
   url: string                   // Image URL (can be data URL or public URL)
-  name: string                  // Display name
+  name?: string                 // Display name
   aspectRatio?: string          // Detected aspect ratio
+  isStatic?: boolean            // Static reference images are always included
 }
+
+// Stage type - generation (default) or tool
+export type RecipeStageType = 'generation' | 'tool'
+
+// Available tools that can be used in recipe stages
+export const RECIPE_TOOLS = {
+  'remove-background': {
+    id: 'remove-background',
+    name: 'Remove Background',
+    description: 'Removes background from image, outputs PNG with transparency',
+    icon: '✂️',
+    cost: 3,  // points
+    endpoint: '/api/tools/remove-background',
+  },
+  // Future tools can be added here:
+  // 'upscale': { ... },
+  // 'face-swap': { ... },
+} as const
+
+export type RecipeToolId = keyof typeof RECIPE_TOOLS
 
 // A single stage in a multi-pipe recipe
 export interface RecipeStage {
   id: string
   order: number                 // Stage order (0, 1, 2...)
-  template: string              // The prompt template for this stage
+  type?: RecipeStageType        // 'generation' (default) or 'tool'
+  template: string              // The prompt template for this stage (empty for tool stages)
+  toolId?: RecipeToolId         // For tool stages: which tool to use
   fields: RecipeField[]         // Parsed fields from this stage's template
   referenceImages: RecipeReferenceImage[]  // Fixed reference images for this stage
 }

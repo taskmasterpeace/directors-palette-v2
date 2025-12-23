@@ -11,8 +11,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Loader2, Plus, Trash2, Upload, X } from "lucide-react"
-import type { Recipe, RecipeCategory, RecipeField } from "@/features/shot-creator/types/recipe.types"
-import { parseStageTemplate } from "@/features/shot-creator/types/recipe.types"
+import type { Recipe, RecipeCategory, RecipeField, RecipeStageType, RecipeToolId } from "@/features/shot-creator/types/recipe.types"
+import { parseStageTemplate, RECIPE_TOOLS } from "@/features/shot-creator/types/recipe.types"
 
 interface RecipeEditorDialogProps {
     recipe: Recipe | null
@@ -25,7 +25,9 @@ interface RecipeEditorDialogProps {
 interface EditableStage {
     id: string
     order: number
+    type: RecipeStageType
     template: string
+    toolId?: RecipeToolId
     fields: RecipeField[]
     referenceImages: { id: string; url: string; name: string }[]
 }
@@ -69,7 +71,9 @@ export function RecipeEditorDialog({
             setStages(recipe.stages.map(s => ({
                 id: s.id,
                 order: s.order,
+                type: s.type || 'generation',
                 template: s.template,
+                toolId: s.toolId,
                 fields: s.fields || [],
                 referenceImages: (s.referenceImages || []).map(img => ({
                     id: img.id,
@@ -95,11 +99,41 @@ export function RecipeEditorDialog({
         })
     }, [])
 
+    // Update stage type (generation vs tool)
+    const updateStageType = useCallback((stageIndex: number, type: RecipeStageType) => {
+        setStages(prev => {
+            const newStages = [...prev]
+            newStages[stageIndex] = {
+                ...newStages[stageIndex],
+                type,
+                // Clear toolId if switching to generation, set default if switching to tool
+                toolId: type === 'tool' ? 'remove-background' : undefined,
+                // Clear template and fields if switching to tool
+                template: type === 'tool' ? '' : newStages[stageIndex].template,
+                fields: type === 'tool' ? [] : newStages[stageIndex].fields,
+            }
+            return newStages
+        })
+    }, [])
+
+    // Update stage toolId
+    const updateStageToolId = useCallback((stageIndex: number, toolId: RecipeToolId) => {
+        setStages(prev => {
+            const newStages = [...prev]
+            newStages[stageIndex] = {
+                ...newStages[stageIndex],
+                toolId,
+            }
+            return newStages
+        })
+    }, [])
+
     const addStage = useCallback(() => {
         const newStageIndex = stages.length
         setStages(prev => [...prev, {
             id: `stage_${newStageIndex}_${Date.now()}`,
             order: newStageIndex,
+            type: 'generation',
             template: "",
             fields: [],
             referenceImages: [],
@@ -212,7 +246,9 @@ export function RecipeEditorDialog({
                 stages: stages.map((s, i) => ({
                     id: s.id,
                     order: i,
+                    type: s.type,
                     template: s.template,
+                    toolId: s.toolId,
                     fields: s.fields,
                     referenceImages: s.referenceImages,
                 })),
@@ -389,21 +425,67 @@ export function RecipeEditorDialog({
                                             )}
                                         </div>
 
-                                        {/* Template */}
+                                        {/* Stage Type Selector */}
                                         <div className="space-y-2">
-                                            <Label>Template</Label>
-                                            <Textarea
-                                                value={stage.template}
-                                                onChange={(e) => updateStageTemplate(idx, e.target.value)}
-                                                className="bg-zinc-900 border-zinc-700 font-mono text-sm min-h-[200px]"
-                                                placeholder="Enter your prompt template here. Use <<FIELD_NAME:type!>> for required fields or <<FIELD_NAME:type>> for optional fields.
-
-Example: A portrait of <<CHARACTER_NAME:name!>> in <<STYLE:text>> style."
-                                            />
+                                            <Label>Stage Type</Label>
+                                            <Select
+                                                value={stage.type}
+                                                onValueChange={(value) => updateStageType(idx, value as RecipeStageType)}
+                                            >
+                                                <SelectTrigger className="bg-zinc-900 border-zinc-700 w-[200px]">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-zinc-800 border-zinc-700">
+                                                    <SelectItem value="generation">🎨 Image Generation</SelectItem>
+                                                    <SelectItem value="tool">🔧 Tool</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
 
-                                        {/* Extracted Fields Preview */}
-                                        {stage.fields && stage.fields.length > 0 && (
+                                        {/* Tool Selection (only for tool stages) */}
+                                        {stage.type === 'tool' && (
+                                            <div className="space-y-2">
+                                                <Label>Select Tool</Label>
+                                                <Select
+                                                    value={stage.toolId || 'remove-background'}
+                                                    onValueChange={(value) => updateStageToolId(idx, value as RecipeToolId)}
+                                                >
+                                                    <SelectTrigger className="bg-zinc-900 border-zinc-700 w-[300px]">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="bg-zinc-800 border-zinc-700">
+                                                        {Object.values(RECIPE_TOOLS).map(tool => (
+                                                            <SelectItem key={tool.id} value={tool.id}>
+                                                                {tool.icon} {tool.name} ({tool.cost} pts)
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                {stage.toolId && RECIPE_TOOLS[stage.toolId] && (
+                                                    <p className="text-xs text-zinc-500">
+                                                        {RECIPE_TOOLS[stage.toolId].description}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Template (only for generation stages) */}
+                                        {stage.type !== 'tool' && (
+                                            <div className="space-y-2">
+                                                <Label>Template</Label>
+                                                <Textarea
+                                                    value={stage.template}
+                                                    onChange={(e) => updateStageTemplate(idx, e.target.value)}
+                                                    className="bg-zinc-900 border-zinc-700 font-mono text-sm min-h-[200px]"
+                                                    placeholder="Enter your prompt template here. Use <<FIELD_NAME:type!>> for required fields or <<FIELD_NAME:type>> for optional fields.
+
+Example: A portrait of <<CHARACTER_NAME:name!>> in <<STYLE:text>> style."
+                                                />
+                                            </div>
+                                        )}
+
+                                        {/* Extracted Fields Preview (only for generation stages) */}
+                                        {stage.type !== 'tool' && stage.fields && stage.fields.length > 0 && (
                                             <div className="space-y-2">
                                                 <Label className="text-zinc-400">Detected Fields:</Label>
                                                 <div className="flex flex-wrap gap-2">

@@ -79,7 +79,9 @@ function recipeToDbRecipe(
     stages: recipe.stages.map(stage => ({
       id: stage.id,
       order: stage.order,
+      type: stage.type || 'generation',
       template: stage.template,
+      toolId: stage.toolId,
       fields: [], // Fields are parsed on read, not stored
       referenceImages: stage.referenceImages,
     })),
@@ -188,7 +190,9 @@ class RecipeService {
       updateData.stages = updates.stages.map(stage => ({
         id: stage.id,
         order: stage.order,
+        type: stage.type || 'generation',
         template: stage.template,
+        toolId: stage.toolId,
         fields: [],
         referenceImages: stage.referenceImages,
       }))

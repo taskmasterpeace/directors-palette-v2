@@ -10,6 +10,8 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import {
   Recipe,
   RecipeFieldValues,
+  RecipeStage,
+  RECIPE_TOOLS,
   buildRecipePrompts,
 } from '@/features/shot-creator/types/recipe.types'
 import { imageGenerationService } from '@/features/shot-creator/services/image-generation.service'
@@ -211,10 +213,104 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
 }
 
 /**
+ * Execute a tool stage (like remove-background)
+ * Returns the URL of the processed image
+ */
+async function executeToolStage(
+  stage: RecipeStage,
+  inputImageUrl: string,
+  onProgress?: (message: string) => void
+): Promise<string> {
+  if (!stage.toolId) {
+    throw new Error('Tool stage missing toolId')
+  }
+
+  const tool = RECIPE_TOOLS[stage.toolId]
+  if (!tool) {
+    throw new Error(`Unknown tool: ${stage.toolId}`)
+  }
+
+  onProgress?.(`Running ${tool.name}...`)
+  console.log(`[Recipe Execution] Executing tool: ${tool.name} on ${inputImageUrl}`)
+
+  // Call the tool API
+  const response = await fetch(tool.endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageUrl: inputImageUrl }),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(`Tool ${tool.name} failed: ${errorData.error || response.statusText}`)
+  }
+
+  const data = await response.json()
+
+  // Tool returns either direct URL or prediction ID to poll
+  if (data.imageUrl) {
+    console.log(`[Recipe Execution] Tool completed immediately:`, data.imageUrl)
+    return data.imageUrl
+  }
+
+  if (data.predictionId) {
+    // Need to poll for completion
+    console.log(`[Recipe Execution] Tool started, polling for completion...`)
+    const resultUrl = await pollToolCompletion(data.predictionId)
+    console.log(`[Recipe Execution] Tool completed:`, resultUrl)
+    return resultUrl
+  }
+
+  throw new Error(`Tool ${tool.name} returned unexpected response`)
+}
+
+/**
+ * Poll for tool completion (remove-background uses Replicate which needs polling)
+ */
+async function pollToolCompletion(predictionId: string, maxWaitTime: number = 60000): Promise<string> {
+  const startTime = Date.now()
+
+  while (Date.now() - startTime < maxWaitTime) {
+    const response = await fetch(`/api/tools/status/${predictionId}`)
+
+    if (!response.ok) {
+      // If status endpoint doesn't exist, try direct Replicate API
+      const replicateResponse = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
+        headers: { 'Authorization': `Bearer ${process.env.REPLICATE_API_TOKEN}` }
+      })
+
+      if (replicateResponse.ok) {
+        const data = await replicateResponse.json()
+        if (data.status === 'succeeded' && data.output) {
+          return typeof data.output === 'string' ? data.output : data.output[0]
+        }
+        if (data.status === 'failed') {
+          throw new Error(`Tool failed: ${data.error || 'Unknown error'}`)
+        }
+      }
+    } else {
+      const data = await response.json()
+      if (data.status === 'succeeded' && data.output) {
+        return data.output
+      }
+      if (data.status === 'failed') {
+        throw new Error(`Tool failed: ${data.error || 'Unknown error'}`)
+      }
+    }
+
+    // Wait 1 second before next poll
+    await new Promise(resolve => setTimeout(resolve, 1000))
+  }
+
+  throw new Error('Tool timed out')
+}
+
+/**
  * Execute a multi-stage recipe with pipe chaining
  *
  * Each stage's output becomes the input for the next stage.
  * Stage reference images are combined with the previous output.
+ * Supports both generation stages and tool stages.
  */
 export async function executeRecipe(options: RecipeExecutionOptions): Promise<RecipeExecutionResult> {
   const {
@@ -246,9 +342,11 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
 
     // Execute each stage sequentially (pipe chaining)
     for (let i = 0; i < totalStages; i++) {
+      const stage = recipe.stages[i]
       const stagePrompt = prompts[i]
       const isFirstStage = i === 0
       const isLastStage = i === totalStages - 1
+      const isToolStage = stage.type === 'tool'
 
       onProgress?.(i, totalStages, `Processing stage ${i + 1}...`)
 
@@ -280,46 +378,71 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
       }
 
       console.log(`[Recipe Execution] Stage ${i + 1}/${totalStages}:`, {
+        type: isToolStage ? 'tool' : 'generation',
+        toolId: stage.toolId || '(none)',
         isFirstStage,
         previousImageUrl: previousImageUrl || '(none)',
         preparedStageRefs: preparedStageRefs.length ? `${preparedStageRefs.length} ref(s)` : '(none)',
         inputImages: inputImages?.length ? `${inputImages.length} image(s)` : '(none)',
-        prompt: stagePrompt.slice(0, 50) + '...'
+        prompt: isToolStage ? '(tool stage)' : stagePrompt.slice(0, 50) + '...'
       })
 
-      // Build request
-      const modelSettings: ImageModelSettings = {
-        aspectRatio: isLastStage ? aspectRatio : '1:1', // Final stage uses target aspect, intermediates use 1:1
-        outputFormat: 'png',
-      }
+      // Handle tool stages differently from generation stages
+      if (isToolStage) {
+        // Tool stage: call tool API with input image
+        const inputImageUrl = inputImages?.[0]
+        if (!inputImageUrl) {
+          throw new Error(`Stage ${i + 1} (tool): No input image provided`)
+        }
 
-      const request: ImageGenerationRequest = {
-        model,
-        prompt: stagePrompt,
-        referenceImages: inputImages,
-        modelSettings,
-        recipeId: recipe.id,
-        recipeName: recipe.name,
-      }
+        try {
+          const toolOutputUrl = await executeToolStage(
+            stage,
+            inputImageUrl,
+            (msg) => onProgress?.(i, totalStages, msg)
+          )
+          imageUrls.push(toolOutputUrl)
+          previousImageUrl = toolOutputUrl
+          console.log(`[Recipe Execution] Stage ${i + 1} (tool) completed:`, toolOutputUrl)
+        } catch (toolError) {
+          const errorMsg = toolError instanceof Error ? toolError.message : 'Unknown error'
+          throw new Error(`Stage ${i + 1} (tool) failed: ${errorMsg}`)
+        }
+      } else {
+        // Generation stage: use image generation service
+        const modelSettings: ImageModelSettings = {
+          aspectRatio: isLastStage ? aspectRatio : '1:1', // Final stage uses target aspect, intermediates use 1:1
+          outputFormat: 'png',
+        }
 
-      // Generate image
-      const response = await imageGenerationService.generateImage(request)
+        const request: ImageGenerationRequest = {
+          model,
+          prompt: stagePrompt,
+          referenceImages: inputImages,
+          modelSettings,
+          recipeId: recipe.id,
+          recipeName: recipe.name,
+        }
 
-      if (!response.galleryId) {
-        throw new Error(`Stage ${i + 1} failed: No gallery ID returned`)
-      }
+        // Generate image
+        const response = await imageGenerationService.generateImage(request)
 
-      onProgress?.(i, totalStages, `Waiting for stage ${i + 1} to complete...`)
+        if (!response.galleryId) {
+          throw new Error(`Stage ${i + 1} failed: No gallery ID returned`)
+        }
 
-      // Wait for completion (get permanent Supabase URL)
-      try {
-        const imageUrl = await waitForImageCompletion(supabase, response.galleryId)
-        imageUrls.push(imageUrl)
-        previousImageUrl = imageUrl
-        console.log(`[Recipe Execution] Stage ${i + 1} completed:`, imageUrl)
-      } catch (waitError) {
-        const errorMsg = waitError instanceof Error ? waitError.message : 'Unknown error'
-        throw new Error(`Stage ${i + 1} failed: ${errorMsg}`)
+        onProgress?.(i, totalStages, `Waiting for stage ${i + 1} to complete...`)
+
+        // Wait for completion (get permanent Supabase URL)
+        try {
+          const imageUrl = await waitForImageCompletion(supabase, response.galleryId)
+          imageUrls.push(imageUrl)
+          previousImageUrl = imageUrl
+          console.log(`[Recipe Execution] Stage ${i + 1} completed:`, imageUrl)
+        } catch (waitError) {
+          const errorMsg = waitError instanceof Error ? waitError.message : 'Unknown error'
+          throw new Error(`Stage ${i + 1} failed: ${errorMsg}`)
+        }
       }
     }
 
