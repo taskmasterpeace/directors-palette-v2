@@ -1,0 +1,402 @@
+"use client"
+
+import { useState, useEffect, useCallback } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Loader2, Plus, Trash2, Image as ImageIcon } from "lucide-react"
+import type { Recipe, RecipeCategory, RecipeField } from "@/features/shot-creator/types/recipe.types"
+import { parseStageTemplate } from "@/features/shot-creator/types/recipe.types"
+
+interface RecipeEditorDialogProps {
+    recipe: Recipe | null
+    categories: RecipeCategory[]
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    onSave: (updates: Partial<Recipe>) => Promise<void>
+}
+
+interface EditableStage {
+    id: string
+    order: number
+    template: string
+    fields: RecipeField[]
+    referenceImages: { id: string; url: string; name: string }[]
+}
+
+export function RecipeEditorDialog({
+    recipe,
+    categories,
+    open,
+    onOpenChange,
+    onSave,
+}: RecipeEditorDialogProps) {
+    const [saving, setSaving] = useState(false)
+    const [activeStageTab, setActiveStageTab] = useState("0")
+
+    // Form state
+    const [name, setName] = useState("")
+    const [description, setDescription] = useState("")
+    const [recipeNote, setRecipeNote] = useState("")
+    const [categoryId, setCategoryId] = useState("")
+    const [suggestedAspectRatio, setSuggestedAspectRatio] = useState("")
+    const [suggestedModel, setSuggestedModel] = useState("")
+    const [isSystem, setIsSystem] = useState(false)
+    const [isSystemOnly, setIsSystemOnly] = useState(false)
+    const [stages, setStages] = useState<EditableStage[]>([])
+
+    // Reset form when recipe changes
+    useEffect(() => {
+        if (recipe) {
+            setName(recipe.name)
+            setDescription(recipe.description || "")
+            setRecipeNote(recipe.recipeNote || "")
+            setCategoryId(recipe.categoryId || "")
+            setSuggestedAspectRatio(recipe.suggestedAspectRatio || "")
+            setSuggestedModel(recipe.suggestedModel || "")
+            setIsSystem(recipe.isSystem || false)
+            setIsSystemOnly(recipe.isSystemOnly || false)
+            setStages(recipe.stages.map(s => ({
+                id: s.id,
+                order: s.order,
+                template: s.template,
+                fields: s.fields || [],
+                referenceImages: (s.referenceImages || []).map(img => ({
+                    id: img.id,
+                    url: img.url,
+                    name: img.name || img.url.split('/').pop() || 'image'
+                })),
+            })))
+            setActiveStageTab("0")
+        }
+    }, [recipe])
+
+    // Parse fields when template changes
+    const updateStageTemplate = useCallback((stageIndex: number, template: string) => {
+        setStages(prev => {
+            const newStages = [...prev]
+            const fields = parseStageTemplate(template, stageIndex)
+            newStages[stageIndex] = {
+                ...newStages[stageIndex],
+                template,
+                fields,
+            }
+            return newStages
+        })
+    }, [])
+
+    const addStage = useCallback(() => {
+        const newStageIndex = stages.length
+        setStages(prev => [...prev, {
+            id: `stage_${newStageIndex}_${Date.now()}`,
+            order: newStageIndex,
+            template: "",
+            fields: [],
+            referenceImages: [],
+        }])
+        setActiveStageTab(String(newStageIndex))
+    }, [stages.length])
+
+    const removeStage = useCallback((stageIndex: number) => {
+        if (stages.length <= 1) {
+            return // Don't remove the last stage
+        }
+        setStages(prev => {
+            const newStages = prev.filter((_, i) => i !== stageIndex)
+            // Re-order remaining stages
+            return newStages.map((s, i) => ({ ...s, order: i }))
+        })
+        // Switch to previous tab if removing current
+        if (activeStageTab === String(stageIndex)) {
+            setActiveStageTab(String(Math.max(0, stageIndex - 1)))
+        }
+    }, [stages.length, activeStageTab])
+
+    const handleSave = async () => {
+        if (!name.trim()) {
+            return
+        }
+
+        setSaving(true)
+        try {
+            await onSave({
+                name: name.trim(),
+                description: description.trim() || undefined,
+                recipeNote: recipeNote.trim() || undefined,
+                categoryId,
+                suggestedAspectRatio: suggestedAspectRatio || undefined,
+                suggestedModel: suggestedModel || undefined,
+                isSystem,
+                isSystemOnly,
+                stages: stages.map((s, i) => ({
+                    id: s.id,
+                    order: i,
+                    template: s.template,
+                    fields: s.fields,
+                    referenceImages: s.referenceImages,
+                })),
+            })
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    if (!recipe) return null
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="bg-zinc-900 border-zinc-800 max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle className="text-white">Edit Recipe</DialogTitle>
+                    <DialogDescription>
+                        Modify recipe settings and stage templates. Fields are automatically extracted from templates.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-6 py-4">
+                    {/* Basic Info */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Recipe Name</Label>
+                            <Input
+                                id="name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="bg-zinc-800 border-zinc-700"
+                                placeholder="My Recipe"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="category">Category</Label>
+                            <Select value={categoryId} onValueChange={setCategoryId}>
+                                <SelectTrigger className="bg-zinc-800 border-zinc-700">
+                                    <SelectValue placeholder="Select category" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-800 border-zinc-700">
+                                    {categories.map(cat => (
+                                        <SelectItem key={cat.id} value={cat.id}>
+                                            {cat.icon} {cat.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                            id="description"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            className="bg-zinc-800 border-zinc-700 h-20"
+                            placeholder="A short description of what this recipe does..."
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="recipeNote">Recipe Note (shown to user)</Label>
+                        <Textarea
+                            id="recipeNote"
+                            value={recipeNote}
+                            onChange={(e) => setRecipeNote(e.target.value)}
+                            className="bg-zinc-800 border-zinc-700 h-16"
+                            placeholder="Tips or instructions for the user..."
+                        />
+                    </div>
+
+                    {/* Settings Row */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="aspectRatio">Suggested Aspect Ratio</Label>
+                            <Select value={suggestedAspectRatio || "none"} onValueChange={(v) => setSuggestedAspectRatio(v === "none" ? "" : v)}>
+                                <SelectTrigger className="bg-zinc-800 border-zinc-700">
+                                    <SelectValue placeholder="Not set" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-800 border-zinc-700">
+                                    <SelectItem value="none">Not set</SelectItem>
+                                    <SelectItem value="1:1">1:1 (Square)</SelectItem>
+                                    <SelectItem value="16:9">16:9 (Widescreen)</SelectItem>
+                                    <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
+                                    <SelectItem value="21:9">21:9 (Ultrawide)</SelectItem>
+                                    <SelectItem value="4:3">4:3 (Classic)</SelectItem>
+                                    <SelectItem value="3:4">3:4 (Portrait Classic)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="model">Suggested Model</Label>
+                            <Select value={suggestedModel || "none"} onValueChange={(v) => setSuggestedModel(v === "none" ? "" : v)}>
+                                <SelectTrigger className="bg-zinc-800 border-zinc-700">
+                                    <SelectValue placeholder="Default" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-800 border-zinc-700">
+                                    <SelectItem value="none">Default</SelectItem>
+                                    <SelectItem value="nano-banana">Nano Banana (fast)</SelectItem>
+                                    <SelectItem value="nano-banana-pro">Nano Banana Pro (quality)</SelectItem>
+                                    <SelectItem value="ideogram-v2">Ideogram v2 (text)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Flags */}
+                    <div className="flex gap-6">
+                        <div className="flex items-center gap-2">
+                            <Checkbox
+                                id="isSystem"
+                                checked={isSystem}
+                                onCheckedChange={(checked) => setIsSystem(checked === true)}
+                            />
+                            <Label htmlFor="isSystem" className="text-sm">
+                                System Recipe
+                                <span className="text-zinc-500 ml-1">(built-in)</span>
+                            </Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Checkbox
+                                id="isSystemOnly"
+                                checked={isSystemOnly}
+                                onCheckedChange={(checked) => setIsSystemOnly(checked === true)}
+                            />
+                            <Label htmlFor="isSystemOnly" className="text-sm">
+                                System-Only
+                                <span className="text-zinc-500 ml-1">(hidden from users)</span>
+                            </Label>
+                        </div>
+                    </div>
+
+                    {/* Stages */}
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <Label>Stages ({stages.length})</Label>
+                            <Button variant="outline" size="sm" onClick={addStage}>
+                                <Plus className="w-4 h-4 mr-1" />
+                                Add Stage
+                            </Button>
+                        </div>
+
+                        <Tabs value={activeStageTab} onValueChange={setActiveStageTab}>
+                            <TabsList className="bg-zinc-800 flex-wrap h-auto">
+                                {stages.map((_, idx) => (
+                                    <TabsTrigger
+                                        key={idx}
+                                        value={String(idx)}
+                                        className="data-[state=active]:bg-amber-500 data-[state=active]:text-black"
+                                    >
+                                        Stage {idx + 1}
+                                    </TabsTrigger>
+                                ))}
+                            </TabsList>
+
+                            {stages.map((stage, idx) => (
+                                <TabsContent key={idx} value={String(idx)} className="mt-4">
+                                    <div className="space-y-4 p-4 bg-zinc-950 rounded-lg border border-zinc-800">
+                                        {/* Stage Header */}
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-amber-400 font-medium">Stage {idx + 1}</span>
+                                            {stages.length > 1 && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => removeStage(idx)}
+                                                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                                >
+                                                    <Trash2 className="w-4 h-4 mr-1" />
+                                                    Remove
+                                                </Button>
+                                            )}
+                                        </div>
+
+                                        {/* Template */}
+                                        <div className="space-y-2">
+                                            <Label>Template</Label>
+                                            <Textarea
+                                                value={stage.template}
+                                                onChange={(e) => updateStageTemplate(idx, e.target.value)}
+                                                className="bg-zinc-900 border-zinc-700 font-mono text-sm min-h-[200px]"
+                                                placeholder="Enter your prompt template here. Use <<FIELD_NAME:type!>> for required fields or <<FIELD_NAME:type>> for optional fields.
+
+Example: A portrait of <<CHARACTER_NAME:name!>> in <<STYLE:text>> style."
+                                            />
+                                        </div>
+
+                                        {/* Extracted Fields Preview */}
+                                        {stage.fields && stage.fields.length > 0 && (
+                                            <div className="space-y-2">
+                                                <Label className="text-zinc-400">Detected Fields:</Label>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {stage.fields.map(field => (
+                                                        <Badge
+                                                            key={field.id}
+                                                            className={field.required
+                                                                ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                                                                : "bg-zinc-700/50 text-zinc-400 border-zinc-600"
+                                                            }
+                                                        >
+                                                            {field.name}
+                                                            <span className="ml-1 text-xs opacity-60">({field.type})</span>
+                                                            {field.required && <span className="ml-1 text-red-400">*</span>}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Reference Images */}
+                                        <div className="space-y-2">
+                                            <Label className="text-zinc-400">Reference Images:</Label>
+                                            {stage.referenceImages && stage.referenceImages.length > 0 ? (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {stage.referenceImages.map((img, imgIdx) => (
+                                                        <div
+                                                            key={img.id || imgIdx}
+                                                            className="flex items-center gap-2 bg-zinc-900 rounded px-2 py-1 border border-zinc-700"
+                                                        >
+                                                            <ImageIcon className="w-4 h-4 text-zinc-500" />
+                                                            <span className="text-xs text-zinc-400 max-w-[150px] truncate">
+                                                                {img.name || img.url.split('/').pop()}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-xs text-zinc-600">No reference images</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </TabsContent>
+                            ))}
+                        </Tabs>
+                    </div>
+                </div>
+
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleSave}
+                        disabled={saving || !name.trim()}
+                        className="bg-amber-500 text-black hover:bg-amber-600"
+                    >
+                        {saving ? (
+                            <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            'Save Changes'
+                        )}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}

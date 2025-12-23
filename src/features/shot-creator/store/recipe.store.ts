@@ -22,6 +22,7 @@ interface RecipeState {
   isLoading: boolean
   isInitialized: boolean
   currentUserId: string | null
+  isAdmin: boolean  // Whether current user is admin (for filtering system-only recipes)
 
   // Quick Access (up to 9 items)
   quickAccessItems: QuickAccessItem[]
@@ -31,8 +32,14 @@ interface RecipeState {
   activeFieldValues: RecipeFieldValues
 
   // Actions - Initialize & Sync
-  initialize: (userId: string) => Promise<void>
+  initialize: (userId: string, isAdmin?: boolean) => Promise<void>
   refreshRecipes: () => Promise<void>
+  setIsAdmin: (isAdmin: boolean) => void
+
+  // Getters - Filtered for visibility (hides system-only from non-admins)
+  getVisibleRecipes: () => Recipe[]
+  getVisibleCategories: () => RecipeCategory[]
+  getSystemOnlyRecipes: () => Recipe[]  // Admin only - get system-only recipes
 
   // Actions - Recipes
   addRecipe: (recipe: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Recipe | null>
@@ -88,13 +95,18 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
   isLoading: false,
   isInitialized: false,
   currentUserId: null,
+  isAdmin: false,
 
   // Initialize store with user's recipes from database
-  initialize: async (userId: string) => {
+  initialize: async (userId: string, isAdmin?: boolean) => {
     const state = get()
 
     // Skip if already initialized for this user
     if (state.isInitialized && state.currentUserId === userId) {
+      // But update isAdmin if provided
+      if (isAdmin !== undefined) {
+        set({ isAdmin })
+      }
       return
     }
 
@@ -113,6 +125,7 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
         isLoading: false,
         isInitialized: true,
         currentUserId: userId,
+        isAdmin: isAdmin ?? false,
       })
 
       console.log(`📚 Loaded ${recipes.length} recipes for user`)
@@ -120,6 +133,35 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
       console.error('Error initializing recipe store:', error)
       set({ isLoading: false })
     }
+  },
+
+  // Set admin status (for filtering system-only recipes)
+  setIsAdmin: (isAdmin: boolean) => {
+    set({ isAdmin })
+  },
+
+  // Get recipes visible to current user (filters out isSystemOnly unless admin)
+  getVisibleRecipes: () => {
+    const { recipes, isAdmin } = get()
+    if (isAdmin) {
+      return recipes
+    }
+    return recipes.filter(r => !r.isSystemOnly)
+  },
+
+  // Get categories visible to current user (filters out isSystemOnly unless admin)
+  getVisibleCategories: () => {
+    const { categories, isAdmin } = get()
+    if (isAdmin) {
+      return categories
+    }
+    return categories.filter(c => !c.isSystemOnly)
+  },
+
+  // Get system-only recipes (for internal use / storybook integration)
+  getSystemOnlyRecipes: () => {
+    const { recipes } = get()
+    return recipes.filter(r => r.isSystemOnly === true)
   },
 
   // Refresh recipes from database

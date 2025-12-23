@@ -68,6 +68,7 @@ export interface Recipe {
   isQuickAccess: boolean        // Whether it's in quick access
   categoryId?: string           // Optional category
   isSystem?: boolean            // System recipes are read-only, must be duplicated to edit
+  isSystemOnly?: boolean        // If true, only visible to admin users (hidden from regular users)
   createdAt: number
   updatedAt: number
 }
@@ -94,6 +95,7 @@ export interface RecipeCategory {
   name: string
   icon: string
   isDefault?: boolean           // Built-in categories can't be deleted
+  isSystemOnly?: boolean        // If true, only visible to admin users
 }
 
 // Default recipe categories
@@ -103,6 +105,8 @@ export const DEFAULT_RECIPE_CATEGORIES: RecipeCategory[] = [
   { id: 'styles', name: 'Style Transfers', icon: '🎨', isDefault: true },
   { id: 'products', name: 'Products', icon: '📦', isDefault: true },
   { id: 'custom', name: 'Custom', icon: '✨', isDefault: true },
+  // System-only categories (visible only to admin users)
+  { id: 'storybook', name: 'Storybook', icon: '📖', isDefault: true, isSystemOnly: true },
 ]
 
 // Common select options for convenience
@@ -1800,5 +1804,122 @@ Should look like a real toy you could buy in stores.`,
     isQuickAccess: true,
     quickAccessLabel: 'ActionFig',
     categoryId: 'products',
+  },
+
+  // =============================================================================
+  // STORYBOOK SYSTEM RECIPES (hidden from regular users, used internally)
+  // =============================================================================
+
+  // Storybook Character Sheet - 3-stage pipeline for generating character sheets
+  // Stage 0: Isolate character from photo
+  // Stage 1: Transform to custom art style
+  // Stage 2: Generate character sheet with expressions
+  {
+    name: 'Storybook Character Sheet',
+    description: 'Generate character sheet from photo for storybook using 3-stage pipeline: isolate, stylize, sheet generation',
+    recipeNote: 'This recipe is used internally by the Storybook feature. Requires: source photo, style guide image, and character sheet template.',
+    stages: [
+      // STAGE 0: Isolate character on white background
+      {
+        id: 'stage_0',
+        order: 0,
+        template: `Extract the person from this photo as a clean, isolated character portrait.
+
+CRITICAL LIKENESS PRESERVATION:
+- Exact facial structure: bone structure, jaw shape, cheekbones, nose shape, eye shape and spacing
+- Exact skin tone and undertones
+- Exact hair: color, texture, style, length, hairline shape
+- Exact body proportions: height, build, posture
+- Exact distinguishing features: moles, freckles, scars, dimples, facial hair
+
+OUTPUT:
+- Full-body standing pose on clean WHITE background
+- Neutral expression, relaxed posture
+- Soft studio lighting
+- Remove all background elements completely
+- Do NOT alter, enhance, or "improve" any facial features
+- The isolated character must be IDENTICAL to the input photo`,
+        fields: [],
+        referenceImages: [],
+      },
+      // STAGE 1: Transform to custom art style
+      {
+        id: 'stage_1',
+        order: 1,
+        template: `Transform this isolated character into <<STYLE_NAME:text!>> style.
+
+CRITICAL INSTRUCTIONS:
+- Follow the attached style guide reference EXACTLY
+- Do NOT deviate from the style shown in the reference
+- The style guide is the definitive visual reference - words are open to interpretation, images are not
+
+ABSOLUTE LIKENESS PRESERVATION (even in stylized form):
+- Maintain exact facial proportions and structure
+- Keep distinctive features (nose shape, eye spacing, jawline)
+- Preserve exact skin tone relationships
+- Keep exact hair style, texture, and color
+- Maintain body proportions and posture
+
+STYLE TRANSFER FROM REFERENCE:
+- Match the color palette and saturation exactly
+- Match line quality and rendering approach
+- Match level of stylization (how simplified features become)
+- Match lighting and shadow style
+- Match edge treatment (sharp vs soft)
+
+The result should look like THIS SPECIFIC PERSON drawn in the <<STYLE_NAME:text!>> style.
+NOT a generic character that vaguely resembles them.
+Output on clean white background.`,
+        fields: [],
+        referenceImages: [],
+      },
+      // STAGE 2: Generate character sheet with expressions
+      {
+        id: 'stage_2',
+        order: 2,
+        template: `CHARACTER: @<<CHARACTER_NAME:name!>>
+
+Create a professional character reference sheet matching the attached template layout.
+
+CRITICAL: Every view and expression must clearly be the SAME PERSON from previous stages.
+Facial structure, proportions, and distinctive features must remain IDENTICAL across all views.
+
+CHARACTER SHEET LAYOUT (21:9 aspect ratio):
+
+LEFT SECTION - FULL BODY:
+- Large neutral standing pose, front view (primary reference)
+- Smaller side profile view
+- Smaller back view (if space permits)
+- Color palette strip: skin tone, hair color, eye color, main clothing colors
+
+RIGHT SECTION - EXPRESSIONS (2 rows × 5 columns):
+Row 1: Neutral, Happy, Sad, Angry, Surprised
+Row 2: Speaking, Shouting, Whispering, Smug/Confident, Scared
+
+TOP: Character name "@<<CHARACTER_NAME:name!>>" prominently displayed
+
+CRITICAL REQUIREMENTS:
+- All expressions maintain the SAME face structure - only expression changes
+- Maintain EXACT art style from previous stage
+- Clean white/light gray background
+- Black separator lines between expression cells (4-6 pixels)
+- Production-ready layout following the template reference`,
+        fields: [],
+        referenceImages: [
+          {
+            id: 'template_charsheet_advanced',
+            url: SYSTEM_TEMPLATE_URLS.characterSheetAdvanced,
+            name: 'Character Sheet Layout Template',
+            aspectRatio: '21:9',
+          }
+        ],
+      },
+    ],
+    suggestedAspectRatio: '21:9',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: false,
+    categoryId: 'storybook',
+    isSystem: true,
+    isSystemOnly: true,  // Hidden from regular users - used internally by Storybook
   },
 ]

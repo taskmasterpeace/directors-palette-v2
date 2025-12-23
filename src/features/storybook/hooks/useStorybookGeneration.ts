@@ -40,6 +40,7 @@ export function useStorybookGeneration() {
 
   /**
    * Poll for generation completion
+   * Waits for permanent Supabase URL (not temporary Replicate URL)
    */
   const pollForCompletion = useCallback(async (
     predictionId: string,
@@ -52,8 +53,26 @@ export function useStorybookGeneration() {
         const data = await response.json()
 
         if (data.status === 'succeeded' && data.output) {
-          // Return the image URL
-          const output = Array.isArray(data.output) ? data.output[0] : data.output
+          // Prefer persistedUrl (permanent Supabase URL) over raw output
+          // The status endpoint uploads to Supabase and returns persistedUrl
+          const imageUrl = data.persistedUrl || data.output
+          const output = Array.isArray(imageUrl) ? imageUrl[0] : imageUrl
+
+          // Verify we have a permanent URL (contains supabase.co)
+          // If not, it's a temporary Replicate URL that will expire
+          if (output && output.includes('supabase.co')) {
+            return output
+          }
+
+          // If we got succeeded but no Supabase URL yet, continue polling
+          // The status endpoint should have uploaded it, but give it a bit more time
+          if (i < maxAttempts - 1) {
+            await new Promise(resolve => setTimeout(resolve, intervalMs))
+            continue
+          }
+
+          // Last attempt - return whatever we have (may be temporary)
+          console.warn('Storybook: Returning non-Supabase URL, may expire:', output)
           return output
         }
 

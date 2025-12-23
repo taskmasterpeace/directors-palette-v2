@@ -16,6 +16,7 @@ import { CouponsTab } from './CouponsTab'
 import { CommunityModerationTab } from './CommunityModerationTab'
 import { ApiUsageTab } from './ApiUsageTab'
 import { FinancialsTab } from './FinancialsTab'
+import { RecipesTab } from './RecipesTab'
 import { PromptTemplateEditor } from '@/features/prompt-templates'
 
 // Cost per image generation in cents (matches FALLBACK_PRICING.image.price_cents)
@@ -183,6 +184,10 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                     <TabsTrigger value="financials" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
                         <Banknote className="w-4 h-4 mr-2" />
                         Financials
+                    </TabsTrigger>
+                    <TabsTrigger value="recipes" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Recipes
                     </TabsTrigger>
                 </TabsList>
 
@@ -360,6 +365,11 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                 {/* Financials Tab */}
                 <TabsContent value="financials" className="space-y-6">
                     <FinancialsTab />
+                </TabsContent>
+
+                {/* Recipes Tab */}
+                <TabsContent value="recipes" className="space-y-6">
+                    <RecipesTab />
                 </TabsContent>
             </Tabs>
 

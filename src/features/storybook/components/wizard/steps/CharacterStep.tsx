@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState, useCallback } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
 import { useStorybookGeneration } from "../../../hooks/useStorybookGeneration"
+import { useRecipeExecution } from "@/features/shared/hooks/useRecipeExecution"
+import { useRecipeStore } from "@/features/shot-creator/store/recipe.store"
+import { SYSTEM_TEMPLATES } from "../../../services/template.service"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -20,7 +23,17 @@ export function CharacterStep() {
     detectCharacters,
   } = useStorybookStore()
 
-  const { generateCharacterSheet, isGenerating, progress, error } = useStorybookGeneration()
+  // Legacy generation (fallback)
+  const { generateCharacterSheet: legacyGenerateCharacterSheet, isGenerating: legacyIsGenerating, progress: legacyProgress, error: legacyError } = useStorybookGeneration()
+
+  // Recipe-based generation (new)
+  const { executeSystemRecipe, isExecuting: recipeIsExecuting, progress: recipeProgress, error: recipeError } = useRecipeExecution()
+  const { getSystemOnlyRecipes } = useRecipeStore()
+
+  // Use recipe-based generation if available, fall back to legacy
+  const isGenerating = recipeIsExecuting || legacyIsGenerating
+  const progress = recipeIsExecuting ? recipeProgress : legacyProgress
+  const error = recipeError || legacyError
 
   // Track which character is currently being generated
   const [generatingCharacterId, setGeneratingCharacterId] = useState<string | null>(null)
@@ -117,19 +130,82 @@ export function CharacterStep() {
     fileInputRefs.current[characterId]?.click()
   }, [])
 
-  // Handle character sheet generation
+  // Handle character sheet generation using recipe-based pipeline
   const handleGenerateCharacterSheet = useCallback(async (characterId: string) => {
+    const character = project?.characters.find(c => c.id === characterId)
+    if (!character) {
+      console.error('Character not found:', characterId)
+      return
+    }
+
     setGeneratingCharacterId(characterId)
 
     try {
-      const result = await generateCharacterSheet(characterId)
-      if (!result.success) {
-        console.error('Generation failed:', result.error)
+      // Check if we have the "Storybook Character Sheet" system recipe
+      const systemRecipes = getSystemOnlyRecipes()
+      const storybookRecipe = systemRecipes.find(r => r.name === 'Storybook Character Sheet')
+
+      if (storybookRecipe && project?.style?.styleGuideUrl) {
+        // Use recipe-based generation (new 3-stage pipeline)
+        console.log('[CharacterStep] Using recipe-based generation')
+
+        // Auto-populate field values from storybook data
+        const fieldValues = {
+          CHARACTER_NAME: character.tag || character.name.replace(/\s+/g, ''),
+          STYLE_NAME: project.style.name || 'illustrated',
+        }
+
+        // Build stage reference images
+        // Stage 0: User's uploaded photo (isolate character)
+        // Stage 1: User's custom style guide (transform to style)
+        // Stage 2: Character sheet template (generate sheet)
+        const stageReferenceImages: string[][] = [
+          character.sourcePhotoUrl ? [character.sourcePhotoUrl] : [],
+          project.style.styleGuideUrl ? [project.style.styleGuideUrl] : [],
+          [SYSTEM_TEMPLATES.characterSheet.advanced],
+        ]
+
+        console.log('[CharacterStep] Recipe execution:', {
+          recipeName: storybookRecipe.name,
+          fieldValues,
+          stageRefs: stageReferenceImages.map((refs, i) => `Stage ${i}: ${refs.length} refs`),
+        })
+
+        const result = await executeSystemRecipe(
+          'Storybook Character Sheet',
+          fieldValues,
+          stageReferenceImages,
+          {
+            model: 'nano-banana-pro',
+            aspectRatio: '21:9',
+          }
+        )
+
+        if (result.success && result.finalImageUrl) {
+          // Update character with the generated sheet
+          updateCharacter(characterId, { characterSheetUrl: result.finalImageUrl })
+          console.log('[CharacterStep] Recipe generation succeeded:', result.finalImageUrl)
+        } else {
+          console.error('[CharacterStep] Recipe generation failed:', result.error)
+          // Fall back to legacy generation
+          console.log('[CharacterStep] Falling back to legacy generation')
+          const legacyResult = await legacyGenerateCharacterSheet(characterId)
+          if (!legacyResult.success) {
+            console.error('Legacy generation also failed:', legacyResult.error)
+          }
+        }
+      } else {
+        // Fall back to legacy generation if recipe not available
+        console.log('[CharacterStep] Recipe not found or style guide missing, using legacy generation')
+        const result = await legacyGenerateCharacterSheet(characterId)
+        if (!result.success) {
+          console.error('Generation failed:', result.error)
+        }
       }
     } finally {
       setGeneratingCharacterId(null)
     }
-  }, [generateCharacterSheet])
+  }, [project, getSystemOnlyRecipes, executeSystemRecipe, legacyGenerateCharacterSheet, updateCharacter])
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
