@@ -12,13 +12,7 @@ import {
   type GeneratedStory,
   type GeneratedStoryPage
 } from '@/features/storybook/types/education.types'
-
-interface StoryCharacterInput {
-  name: string
-  role: string
-  relationship?: string
-  description?: string
-}
+import type { StoryCharacterInput } from '@/features/storybook/types/storybook.types'
 
 interface GenerateStoryRequest {
   characterName: string

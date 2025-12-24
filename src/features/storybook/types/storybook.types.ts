@@ -146,6 +146,9 @@ export interface StoryCharacter {
   description?: string  // If no photo: "A fluffy golden retriever"
 }
 
+// API input type for story characters (without id)
+export type StoryCharacterInput = Omit<StoryCharacter, 'id'>
+
 // Role configurations for UI
 export const CHARACTER_ROLES: Array<{
   id: CharacterRole

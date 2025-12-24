@@ -5,13 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getCategoryById, getTopicById, getRandomApproaches } from '@/features/storybook/types/education.types'
-
-interface StoryCharacterInput {
-  name: string
-  role: string
-  relationship?: string
-  description?: string
-}
+import type { StoryCharacterInput } from '@/features/storybook/types/storybook.types'
 
 interface GenerateIdeasRequest {
   characterName: string

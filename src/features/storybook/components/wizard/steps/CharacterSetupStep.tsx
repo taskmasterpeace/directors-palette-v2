@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { User, Camera, X, ArrowRight, FileText, Plus, Trash2 } from "lucide-react"
+import { User, Camera, X, ArrowRight, FileText, Trash2 } from "lucide-react"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
 import { CHARACTER_ROLES, type CharacterRole } from "../../../types/storybook.types"

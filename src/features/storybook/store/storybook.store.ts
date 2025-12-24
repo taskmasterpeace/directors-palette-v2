@@ -167,6 +167,7 @@ function createGenerateProject(
     storyMode: 'generate',
     mainCharacterName: characterName,
     mainCharacterAge: characterAge,
+    storyCharacters: [], // Initialize empty array for additional characters
   }
 }
 

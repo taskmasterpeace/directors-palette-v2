@@ -68,8 +68,8 @@ export function StoryApproachStep() {
           customNotes: isCustomStory ? undefined : project?.customNotes,
           // For custom stories, pass the story idea
           customStoryIdea: isCustomStory ? project?.customNotes : undefined,
-          // Pass additional story characters
-          storyCharacters: project?.storyCharacters
+          // Pass additional story characters (default to empty array)
+          storyCharacters: project?.storyCharacters || []
         })
       })
 
@@ -131,8 +131,8 @@ export function StoryApproachStep() {
           customElements: project?.customElements,
           customNotes: isCustomStory ? undefined : project?.customNotes,
           customStoryIdea: isCustomStory ? project?.customNotes : undefined,
-          // Pass additional story characters
-          storyCharacters: project?.storyCharacters
+          // Pass additional story characters (default to empty array)
+          storyCharacters: project?.storyCharacters || []
         })
       })
 
