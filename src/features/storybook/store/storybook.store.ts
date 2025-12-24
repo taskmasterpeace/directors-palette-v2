@@ -744,25 +744,31 @@ export const useStorybookStore = create<StorybookState>((set, get) => ({
 
   // Story character actions (siblings, friends, pets at setup)
   addStoryCharacter: (character) => {
-    const { project } = get()
-    if (project) {
-      const newCharacter: StoryCharacter = {
-        ...character,
-        id: generateId(),
-      }
-      const existingCharacters = project.storyCharacters || []
-      // Limit to 3 additional characters
-      if (existingCharacters.length >= 3) {
-        return
-      }
-      set({
-        project: {
-          ...project,
-          storyCharacters: [...existingCharacters, newCharacter],
-          updatedAt: new Date(),
-        },
-      })
+    let { project } = get()
+
+    // Create a default project if one doesn't exist yet
+    // This allows adding characters before clicking Continue
+    if (!project) {
+      project = createGenerateProject('', 5)
+      set({ project })
     }
+
+    const newCharacter: StoryCharacter = {
+      ...character,
+      id: generateId(),
+    }
+    const existingCharacters = project.storyCharacters || []
+    // Limit to 3 additional characters
+    if (existingCharacters.length >= 3) {
+      return
+    }
+    set({
+      project: {
+        ...project,
+        storyCharacters: [...existingCharacters, newCharacter],
+        updatedAt: new Date(),
+      },
+    })
   },
 
   updateStoryCharacter: (id, updates) => {
