@@ -19,6 +19,7 @@ import type {
   BookFormat,
   PageLayout,
   StoryMode,
+  StoryCharacter,
 } from '../types/storybook.types'
 import { getNextStep, getPreviousStep } from '../types/storybook.types'
 import type { StoryIdea, GeneratedStory, ExtractedElements } from '../types/education.types'
@@ -78,6 +79,11 @@ interface StorybookState {
   selectStoryApproach: (id: string, title: string, summary: string) => void
   setGeneratedStory: (story: GeneratedStory) => void
   setExtractedElements: (elements: ExtractedElements) => void
+
+  // Story character actions (siblings, friends, pets at setup)
+  addStoryCharacter: (character: Omit<StoryCharacter, 'id'>) => void
+  updateStoryCharacter: (id: string, updates: Partial<StoryCharacter>) => void
+  removeStoryCharacter: (id: string) => void
 
   // Story actions
   setStoryText: (text: string) => void
@@ -729,6 +735,57 @@ export const useStorybookStore = create<StorybookState>((set, get) => ({
           extractedCharacters: elements.characters,
           extractedLocations: elements.locations,
           characters: newCharacters,
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  // Story character actions (siblings, friends, pets at setup)
+  addStoryCharacter: (character) => {
+    const { project } = get()
+    if (project) {
+      const newCharacter: StoryCharacter = {
+        ...character,
+        id: generateId(),
+      }
+      const existingCharacters = project.storyCharacters || []
+      // Limit to 3 additional characters
+      if (existingCharacters.length >= 3) {
+        return
+      }
+      set({
+        project: {
+          ...project,
+          storyCharacters: [...existingCharacters, newCharacter],
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  updateStoryCharacter: (id, updates) => {
+    const { project } = get()
+    if (project && project.storyCharacters) {
+      set({
+        project: {
+          ...project,
+          storyCharacters: project.storyCharacters.map(c =>
+            c.id === id ? { ...c, ...updates } : c
+          ),
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  removeStoryCharacter: (id) => {
+    const { project } = get()
+    if (project && project.storyCharacters) {
+      set({
+        project: {
+          ...project,
+          storyCharacters: project.storyCharacters.filter(c => c.id !== id),
           updatedAt: new Date(),
         },
       })

@@ -13,6 +13,13 @@ import {
   type GeneratedStoryPage
 } from '@/features/storybook/types/education.types'
 
+interface StoryCharacterInput {
+  name: string
+  role: string
+  relationship?: string
+  description?: string
+}
+
 interface GenerateStoryRequest {
   characterName: string
   characterAge: number
@@ -29,6 +36,8 @@ interface GenerateStoryRequest {
   customNotes?: string
   // For custom stories
   customStoryIdea?: string
+  // Additional story characters
+  storyCharacters?: StoryCharacterInput[]
 }
 
 // Tool schema for structured output
@@ -95,7 +104,8 @@ function buildSystemPrompt(
   approachSummary?: string,
   setting?: string,
   customElements?: string[],
-  customNotes?: string
+  customNotes?: string,
+  storyCharacters?: StoryCharacterInput[]
 ): string {
   // Category-specific guidance
   let categoryGuidance = ''
@@ -183,9 +193,21 @@ CREATIVITY REQUIREMENTS:
     customizationSection += `\nSPECIAL REQUESTS FROM PARENT: ${customNotes}`
   }
 
+  // Build additional characters section
+  let charactersSection = ''
+  if (storyCharacters && storyCharacters.length > 0) {
+    const characterDescriptions = storyCharacters.map(c => {
+      let desc = `- ${c.name} (${c.role})`
+      if (c.relationship) desc += `: ${c.relationship}`
+      if (c.description) desc += ` - ${c.description}`
+      return desc
+    }).join('\n')
+    charactersSection = `\n\nADDITIONAL CHARACTERS (must appear in the story):\n${characterDescriptions}\nMake sure each additional character plays a meaningful role in at least 2-3 pages.`
+  }
+
   return `You are an expert children's book author creating educational content.
 
-MAIN CHARACTER: ${characterName}, age ${characterAge}
+MAIN CHARACTER: ${characterName}, age ${characterAge}${charactersSection}
 CATEGORY: ${categoryName}
 TOPIC: ${topicName} - ${topicDescription}
 KEYWORDS: ${topicKeywords.join(', ')}
@@ -227,7 +249,8 @@ function buildCustomSystemPrompt(
   approachTitle?: string,
   approachSummary?: string,
   setting?: string,
-  customElements?: string[]
+  customElements?: string[],
+  storyCharacters?: StoryCharacterInput[]
 ): string {
   // Vocabulary guidance based on age
   let vocabularyGuidance = ''
@@ -254,9 +277,21 @@ function buildCustomSystemPrompt(
     customizationSection += `\nINCLUDE THESE ELEMENTS: ${customElements.join(', ')} - weave these into the story naturally`
   }
 
+  // Build additional characters section
+  let charactersSection = ''
+  if (storyCharacters && storyCharacters.length > 0) {
+    const characterDescriptions = storyCharacters.map(c => {
+      let desc = `- ${c.name} (${c.role})`
+      if (c.relationship) desc += `: ${c.relationship}`
+      if (c.description) desc += ` - ${c.description}`
+      return desc
+    }).join('\n')
+    charactersSection = `\n\nADDITIONAL CHARACTERS (must appear in the story):\n${characterDescriptions}\nMake sure each additional character plays a meaningful role in at least 2-3 pages.`
+  }
+
   return `You are a creative children's book author who writes magical, engaging stories.
 
-MAIN CHARACTER: ${characterName}, age ${characterAge}
+MAIN CHARACTER: ${characterName}, age ${characterAge}${charactersSection}
 ${storyContext}${customizationSection}
 
 STORY STRUCTURE:
@@ -300,7 +335,8 @@ export async function POST(request: NextRequest) {
       setting,
       customElements,
       customNotes,
-      customStoryIdea
+      customStoryIdea,
+      storyCharacters
     } = body
 
     // Validate inputs
@@ -360,7 +396,8 @@ export async function POST(request: NextRequest) {
         approachTitle,
         approachSummary,
         setting,
-        customElements
+        customElements,
+        storyCharacters
       )
       userMessage = `Generate a ${pageCount}-page custom story for ${characterName}. Each page should have exactly ${sentencesPerPage} sentence(s).`
     } else {
@@ -390,7 +427,8 @@ export async function POST(request: NextRequest) {
         approachSummary,
         setting,
         customElements,
-        customNotes
+        customNotes,
+        storyCharacters
       )
       userMessage = `Generate a ${pageCount}-page story for ${characterName} about ${topicData.name}. Each page should have exactly ${sentencesPerPage} sentence(s).`
     }

@@ -132,6 +132,36 @@ export type WizardStep =
 // Story creation mode
 export type StoryMode = 'generate' | 'paste'
 
+// Character role types for story characters added at setup
+export type CharacterRole = 'sibling' | 'friend' | 'pet' | 'grandparent' | 'parent' | 'teacher' | 'other'
+
+// Story character (added at setup, before story generation)
+export interface StoryCharacter {
+  id: string
+  name: string
+  role: CharacterRole
+  relationship?: string  // e.g., "Emma's little brother", "Best friend"
+  age?: number
+  photoUrl?: string
+  description?: string  // If no photo: "A fluffy golden retriever"
+}
+
+// Role configurations for UI
+export const CHARACTER_ROLES: Array<{
+  id: CharacterRole
+  name: string
+  icon: string
+  placeholder: string
+}> = [
+  { id: 'sibling', name: 'Sibling', icon: '👧', placeholder: "e.g., Emma's little brother" },
+  { id: 'friend', name: 'Best Friend', icon: '🤝', placeholder: "e.g., School friend" },
+  { id: 'pet', name: 'Pet', icon: '🐕', placeholder: "e.g., A fluffy golden retriever" },
+  { id: 'grandparent', name: 'Grandparent', icon: '👴', placeholder: "e.g., Grandma who loves baking" },
+  { id: 'parent', name: 'Parent', icon: '👨', placeholder: "e.g., Dad who works at the fire station" },
+  { id: 'teacher', name: 'Teacher', icon: '👩‍🏫', placeholder: "e.g., Kind kindergarten teacher" },
+  { id: 'other', name: 'Other', icon: '✨', placeholder: "Describe the character" },
+]
+
 // Character in a scene
 export interface SceneCharacter {
   name: string // @CharacterName format
@@ -220,6 +250,8 @@ export interface StorybookProject {
   mainCharacterName?: string
   mainCharacterAge?: number
   mainCharacterPhotoUrl?: string
+  // Additional story characters (siblings, friends, pets, etc.)
+  storyCharacters?: StoryCharacter[]
   // Educational category and topic
   educationCategory?: string // e.g., 'math', 'narrative', 'reading'
   educationTopic?: string // e.g., 'counting-10', 'honesty'

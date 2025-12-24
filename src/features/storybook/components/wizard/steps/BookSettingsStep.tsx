@@ -152,7 +152,9 @@ export function BookSettingsStep() {
           // Also pass customization options
           setting: settingName,
           customElements: elementNames,
-          customNotes: isCustomCategory ? undefined : customNotes.trim() || undefined
+          customNotes: isCustomCategory ? undefined : customNotes.trim() || undefined,
+          // Pass additional story characters
+          storyCharacters: project.storyCharacters
         })
       })
 

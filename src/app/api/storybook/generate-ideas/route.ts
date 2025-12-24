@@ -6,6 +6,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCategoryById, getTopicById, getRandomApproaches } from '@/features/storybook/types/education.types'
 
+interface StoryCharacterInput {
+  name: string
+  role: string
+  relationship?: string
+  description?: string
+}
+
 interface GenerateIdeasRequest {
   characterName: string
   characterAge: number
@@ -17,6 +24,8 @@ interface GenerateIdeasRequest {
   setting?: string
   customElements?: string[]
   customNotes?: string
+  // Additional story characters
+  storyCharacters?: StoryCharacterInput[]
 }
 
 interface StoryIdea {
@@ -76,7 +85,8 @@ function buildSystemPrompt(
   approaches: { id: string; name: string; description: string }[],
   setting?: string,
   customElements?: string[],
-  customNotes?: string
+  customNotes?: string,
+  storyCharacters?: StoryCharacterInput[]
 ): string {
   const approachList = approaches
     .map((a, i) => `${i + 1}. ${a.name}: ${a.description}`)
@@ -94,11 +104,23 @@ function buildSystemPrompt(
     customization += `\nSPECIAL REQUESTS: ${customNotes}`
   }
 
+  // Build additional characters section
+  let charactersSection = ''
+  if (storyCharacters && storyCharacters.length > 0) {
+    const characterDescriptions = storyCharacters.map(c => {
+      let desc = `- ${c.name} (${c.role})`
+      if (c.relationship) desc += `: ${c.relationship}`
+      if (c.description) desc += ` - ${c.description}`
+      return desc
+    }).join('\n')
+    charactersSection = `\n\nADDITIONAL CHARACTERS TO INCLUDE:\n${characterDescriptions}`
+  }
+
   return `You are a creative children's book author specializing in educational content.
 
 Generate 4 different story ideas for a children's book about "${topicName}" (${topicDescription}).
 
-MAIN CHARACTER: ${characterName}, age ${characterAge}
+MAIN CHARACTER: ${characterName}, age ${characterAge}${charactersSection}
 CATEGORY: ${categoryName}
 TOPIC: ${topicName} - ${topicDescription}
 KEYWORDS TO INCORPORATE: ${topicKeywords.join(', ')}${customization}
@@ -109,7 +131,7 @@ ${approachList}
 REQUIREMENTS FOR EACH IDEA:
 - Title: Catchy, memorable, age-appropriate (5-8 words max)
 - Summary: 2-3 sentences explaining the story premise
-- Feature ${characterName} as the main character
+- Feature ${characterName} as the main character${storyCharacters && storyCharacters.length > 0 ? `\n- Include the additional characters listed above in meaningful ways` : ''}
 - Naturally incorporate the topic (${topicName}) into the plot${setting ? `\n- Set the story in/at: ${setting}` : ''}${customElements && customElements.length > 0 ? `\n- Include these fun elements: ${customElements.join(', ')}` : ''}${customNotes ? `\n- Honor this special request: ${customNotes}` : ''}
 - Make it engaging and fun for a ${characterAge}-year-old
 - Each approach should feel distinctly different
@@ -129,7 +151,8 @@ function buildCustomSystemPrompt(
   customStoryIdea: string,
   approaches: { id: string; name: string; description: string }[],
   setting?: string,
-  customElements?: string[]
+  customElements?: string[],
+  storyCharacters?: StoryCharacterInput[]
 ): string {
   const approachList = approaches
     .map((a, i) => `${i + 1}. ${a.name}: ${a.description}`)
@@ -144,12 +167,24 @@ function buildCustomSystemPrompt(
     customization += `\nINCLUDE THESE ELEMENTS: ${customElements.join(', ')}`
   }
 
+  // Build additional characters section
+  let charactersSection = ''
+  if (storyCharacters && storyCharacters.length > 0) {
+    const characterDescriptions = storyCharacters.map(c => {
+      let desc = `- ${c.name} (${c.role})`
+      if (c.relationship) desc += `: ${c.relationship}`
+      if (c.description) desc += ` - ${c.description}`
+      return desc
+    }).join('\n')
+    charactersSection = `\n\nADDITIONAL CHARACTERS TO INCLUDE:\n${characterDescriptions}`
+  }
+
   return `You are a creative children's book author who creates magical, engaging stories for children.
 
 Generate 4 different story ideas based on this custom story concept:
 "${customStoryIdea}"
 
-MAIN CHARACTER: ${characterName}, age ${characterAge}${customization}
+MAIN CHARACTER: ${characterName}, age ${characterAge}${charactersSection}${customization}
 
 CREATE 4 DIFFERENT STORY IDEAS using these approaches (in this order):
 ${approachList}
@@ -157,7 +192,7 @@ ${approachList}
 REQUIREMENTS FOR EACH IDEA:
 - Title: Catchy, memorable, age-appropriate (5-8 words max)
 - Summary: 2-3 sentences explaining the story premise
-- Feature ${characterName} as the main character
+- Feature ${characterName} as the main character${storyCharacters && storyCharacters.length > 0 ? `\n- Include the additional characters listed above in meaningful ways` : ''}
 - Base the story on the user's custom idea above${setting ? `\n- Set the story in/at: ${setting}` : ''}${customElements && customElements.length > 0 ? `\n- Include these fun elements: ${customElements.join(', ')}` : ''}
 - Make it engaging and fun for a ${characterAge}-year-old
 - Each approach should feel distinctly different
@@ -173,7 +208,7 @@ Be creative! Bring the user's story idea to life in 4 unique and exciting ways.`
 export async function POST(request: NextRequest) {
   try {
     const body: GenerateIdeasRequest = await request.json()
-    const { characterName, characterAge, category, topic, customStoryIdea, setting, customElements, customNotes } = body
+    const { characterName, characterAge, category, topic, customStoryIdea, setting, customElements, customNotes, storyCharacters } = body
 
     // Validate inputs
     if (!characterName?.trim()) {
@@ -238,7 +273,8 @@ export async function POST(request: NextRequest) {
         customStoryIdea!,
         approaches,
         setting,
-        customElements
+        customElements,
+        storyCharacters
       )
       userMessage = `Generate 4 story ideas for ${characterName}'s custom story: "${customStoryIdea}"`
     } else {
@@ -256,7 +292,8 @@ export async function POST(request: NextRequest) {
         approaches,
         setting,
         customElements,
-        customNotes
+        customNotes,
+        storyCharacters
       )
       userMessage = `Generate 4 story ideas for ${characterName}'s book about ${topicData.name}.`
     }

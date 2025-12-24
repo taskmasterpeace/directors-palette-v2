@@ -67,7 +67,9 @@ export function StoryApproachStep() {
           customElements: project?.customElements,
           customNotes: isCustomStory ? undefined : project?.customNotes,
           // For custom stories, pass the story idea
-          customStoryIdea: isCustomStory ? project?.customNotes : undefined
+          customStoryIdea: isCustomStory ? project?.customNotes : undefined,
+          // Pass additional story characters
+          storyCharacters: project?.storyCharacters
         })
       })
 
@@ -128,7 +130,9 @@ export function StoryApproachStep() {
           setting: project?.storySetting || project?.customSetting,
           customElements: project?.customElements,
           customNotes: isCustomStory ? undefined : project?.customNotes,
-          customStoryIdea: isCustomStory ? project?.customNotes : undefined
+          customStoryIdea: isCustomStory ? project?.customNotes : undefined,
+          // Pass additional story characters
+          storyCharacters: project?.storyCharacters
         })
       })
 
