@@ -75,4 +75,43 @@ test.describe('Admin Dashboard', () => {
             await expect(page.getByLabel('Amount (in cents)')).toBeVisible()
         }
     })
+
+    test('should have Recipes tab with Create Recipe button', async ({ page }) => {
+        // Click Recipes tab
+        await page.getByRole('tab', { name: 'Recipes' }).click()
+        await page.waitForTimeout(1000)
+
+        // Should show Create Recipe button
+        await expect(page.getByRole('button', { name: /Create Recipe/i })).toBeVisible()
+
+        // Should show Refresh button
+        await expect(page.getByRole('button', { name: /Refresh/i })).toBeVisible()
+
+        // Should have search input
+        await expect(page.getByPlaceholder(/Search recipes/i)).toBeVisible()
+    })
+
+    test('should open Create Recipe dialog', async ({ page }) => {
+        // Navigate to Recipes tab
+        await page.getByRole('tab', { name: 'Recipes' }).click()
+        await page.waitForTimeout(1000)
+
+        // Click Create Recipe button
+        await page.getByRole('button', { name: /Create Recipe/i }).click()
+        await page.waitForTimeout(500)
+
+        // Should open dialog with "Create Recipe" title
+        await expect(page.getByRole('heading', { name: 'Create Recipe' })).toBeVisible()
+
+        // Should have empty form fields
+        await expect(page.getByLabel('Recipe Name')).toBeVisible()
+        await expect(page.getByLabel('Category')).toBeVisible()
+        await expect(page.getByLabel('Description')).toBeVisible()
+
+        // Should have Stage Type selector in Stage 1
+        await expect(page.getByText('Stage Type')).toBeVisible()
+
+        // Should have Create Recipe button (not Save Changes)
+        await expect(page.getByRole('button', { name: 'Create Recipe' })).toBeVisible()
+    })
 })

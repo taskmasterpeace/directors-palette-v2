@@ -45,8 +45,11 @@ import {
   Recipe,
   RecipeStage,
   RecipeReferenceImage,
+  RecipeStageType,
+  RecipeToolId,
   parseStageTemplate,
   getAllFields,
+  RECIPE_TOOLS,
 } from '../../types/recipe.types'
 import {
   Tooltip,
@@ -100,8 +103,9 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
   const [formQuickLabel, setFormQuickLabel] = useState('')
   const [formIsQuickAccess, setFormIsQuickAccess] = useState(false)
   const [formAspectRatio, setFormAspectRatio] = useState('')
+  const [formSuggestedModel, setFormSuggestedModel] = useState('')
   const [formStages, setFormStages] = useState<RecipeStage[]>([
-    { id: 'stage_0', order: 0, template: '', fields: [], referenceImages: [] }
+    { id: 'stage_0', order: 0, type: 'generation', template: '', fields: [], referenceImages: [] }
   ])
 
   // Reset form
@@ -113,7 +117,8 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
     setFormQuickLabel('')
     setFormIsQuickAccess(false)
     setFormAspectRatio('')
-    setFormStages([{ id: 'stage_0', order: 0, template: '', fields: [], referenceImages: [] }])
+    setFormSuggestedModel('')
+    setFormStages([{ id: 'stage_0', order: 0, type: 'generation', template: '', fields: [], referenceImages: [] }])
   }
 
   // Open create dialog
@@ -132,20 +137,26 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
     setFormQuickLabel(recipe.quickAccessLabel || '')
     setFormIsQuickAccess(recipe.isQuickAccess)
     setFormAspectRatio(recipe.suggestedAspectRatio || '')
-    setFormStages(recipe.stages.map(s => ({ ...s })))
+    setFormSuggestedModel(recipe.suggestedModel || '')
+    setFormStages(recipe.stages.map(s => ({ ...s, type: s.type || 'generation' })))
     setIsEditOpen(true)
   }
 
   // Handle create
   const handleCreate = async () => {
-    if (!formName.trim() || formStages.every(s => !s.template.trim())) return
+    // For tool stages, template can be empty, so check both generation and tool stages
+    const hasValidStage = formStages.some(s =>
+      s.type === 'tool' ? !!s.toolId : s.template.trim()
+    )
+    if (!formName.trim() || !hasValidStage) return
 
     // Parse fields for each stage
     const stagesWithFields = formStages.map((stage, idx) => ({
       ...stage,
       id: `stage_${idx}_${Date.now()}`,
       order: idx,
-      fields: parseStageTemplate(stage.template, idx),
+      type: stage.type || 'generation',
+      fields: stage.type === 'tool' ? [] : parseStageTemplate(stage.template, idx),
     }))
 
     const totalImages = stagesWithFields.reduce((acc, s) => acc + s.referenceImages.length, 0)
@@ -157,6 +168,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
       recipeNote: formRecipeNote.trim() || undefined,
       stages: stagesWithFields,
       suggestedAspectRatio: formAspectRatio.trim() || undefined,
+      suggestedModel: formSuggestedModel.trim() || undefined,
       categoryId: formCategory || undefined,
       quickAccessLabel: formIsQuickAccess ? formQuickLabel.trim() : undefined,
       isQuickAccess: formIsQuickAccess && !!formQuickLabel.trim(),
@@ -180,13 +192,18 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
 
   // Handle update
   const handleUpdate = () => {
-    if (!editingRecipe || !formName.trim() || formStages.every(s => !s.template.trim())) return
+    // For tool stages, template can be empty, so check both generation and tool stages
+    const hasValidStage = formStages.some(s =>
+      s.type === 'tool' ? !!s.toolId : s.template.trim()
+    )
+    if (!editingRecipe || !formName.trim() || !hasValidStage) return
 
     // Parse fields for each stage
     const stagesWithFields = formStages.map((stage, idx) => ({
       ...stage,
       order: idx,
-      fields: parseStageTemplate(stage.template, idx),
+      type: stage.type || 'generation',
+      fields: stage.type === 'tool' ? [] : parseStageTemplate(stage.template, idx),
     }))
 
     const totalImages = stagesWithFields.reduce((acc, s) => acc + s.referenceImages.length, 0)
@@ -197,6 +214,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
       recipeNote: formRecipeNote.trim() || undefined,
       stages: stagesWithFields,
       suggestedAspectRatio: formAspectRatio.trim() || undefined,
+      suggestedModel: formSuggestedModel.trim() || undefined,
       categoryId: formCategory || undefined,
       quickAccessLabel: formIsQuickAccess ? formQuickLabel.trim() : undefined,
       isQuickAccess: formIsQuickAccess && !!formQuickLabel.trim(),
@@ -311,6 +329,26 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
   const updateStageTemplate = (index: number, template: string) => {
     setFormStages(formStages.map((s, i) =>
       i === index ? { ...s, template, fields: parseStageTemplate(template, i) } : s
+    ))
+  }
+
+  const updateStageType = (index: number, type: RecipeStageType) => {
+    setFormStages(formStages.map((s, i) =>
+      i === index ? {
+        ...s,
+        type,
+        // Clear toolId if switching to generation, set default if switching to tool
+        toolId: type === 'tool' ? 'remove-background' : undefined,
+        // Clear template and fields if switching to tool
+        template: type === 'tool' ? '' : s.template,
+        fields: type === 'tool' ? [] : s.fields,
+      } : s
+    ))
+  }
+
+  const updateStageToolId = (index: number, toolId: RecipeToolId) => {
+    setFormStages(formStages.map((s, i) =>
+      i === index ? { ...s, toolId } : s
     ))
   }
 
@@ -577,6 +615,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
             quickLabel={formQuickLabel}
             isQuickAccess={formIsQuickAccess}
             aspectRatio={formAspectRatio}
+            suggestedModel={formSuggestedModel}
             stages={formStages}
             categories={categories}
             onNameChange={setFormName}
@@ -586,11 +625,14 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
             onQuickLabelChange={setFormQuickLabel}
             onIsQuickAccessChange={setFormIsQuickAccess}
             onAspectRatioChange={setFormAspectRatio}
+            onSuggestedModelChange={setFormSuggestedModel}
             onAddStage={addStage}
             onRemoveStage={removeStage}
             onMoveStageUp={moveStageUp}
             onMoveStageDown={moveStageDown}
             onUpdateStageTemplate={updateStageTemplate}
+            onUpdateStageType={updateStageType}
+            onUpdateStageToolId={updateStageToolId}
             onAddReferenceImage={addReferenceImage}
             onRemoveReferenceImage={removeReferenceImage}
           />
@@ -601,7 +643,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
             </Button>
             <Button
               onClick={handleCreate}
-              disabled={!formName.trim() || formStages.every(s => !s.template.trim())}
+              disabled={!formName.trim() || !formStages.some(s => s.type === 'tool' ? !!s.toolId : s.template.trim())}
               className="bg-amber-500 hover:bg-amber-600 text-black"
             >
               Create Recipe
@@ -625,6 +667,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
             quickLabel={formQuickLabel}
             isQuickAccess={formIsQuickAccess}
             aspectRatio={formAspectRatio}
+            suggestedModel={formSuggestedModel}
             stages={formStages}
             categories={categories}
             onNameChange={setFormName}
@@ -634,11 +677,14 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
             onQuickLabelChange={setFormQuickLabel}
             onIsQuickAccessChange={setFormIsQuickAccess}
             onAspectRatioChange={setFormAspectRatio}
+            onSuggestedModelChange={setFormSuggestedModel}
             onAddStage={addStage}
             onRemoveStage={removeStage}
             onMoveStageUp={moveStageUp}
             onMoveStageDown={moveStageDown}
             onUpdateStageTemplate={updateStageTemplate}
+            onUpdateStageType={updateStageType}
+            onUpdateStageToolId={updateStageToolId}
             onAddReferenceImage={addReferenceImage}
             onRemoveReferenceImage={removeReferenceImage}
           />
@@ -649,7 +695,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
             </Button>
             <Button
               onClick={handleUpdate}
-              disabled={!formName.trim() || formStages.every(s => !s.template.trim())}
+              disabled={!formName.trim() || !formStages.some(s => s.type === 'tool' ? !!s.toolId : s.template.trim())}
               className="bg-amber-500 hover:bg-amber-600 text-black"
             >
               Save Changes
@@ -785,6 +831,7 @@ interface RecipeFormProps {
   quickLabel: string
   isQuickAccess: boolean
   aspectRatio: string
+  suggestedModel: string
   stages: RecipeStage[]
   categories: { id: string; name: string; icon: string }[]
   onNameChange: (v: string) => void
@@ -794,11 +841,14 @@ interface RecipeFormProps {
   onQuickLabelChange: (v: string) => void
   onIsQuickAccessChange: (v: boolean) => void
   onAspectRatioChange: (v: string) => void
+  onSuggestedModelChange: (v: string) => void
   onAddStage: () => void
   onRemoveStage: (index: number) => void
   onMoveStageUp: (index: number) => void
   onMoveStageDown: (index: number) => void
   onUpdateStageTemplate: (index: number, template: string) => void
+  onUpdateStageType: (index: number, type: RecipeStageType) => void
+  onUpdateStageToolId: (index: number, toolId: RecipeToolId) => void
   onAddReferenceImage: (stageIndex: number, file: File) => void
   onRemoveReferenceImage: (stageIndex: number, imageId: string) => void
 }
@@ -811,6 +861,7 @@ function RecipeForm({
   quickLabel,
   isQuickAccess,
   aspectRatio,
+  suggestedModel,
   stages,
   categories,
   onNameChange,
@@ -820,11 +871,14 @@ function RecipeForm({
   onQuickLabelChange,
   onIsQuickAccessChange,
   onAspectRatioChange,
+  onSuggestedModelChange,
   onAddStage,
   onRemoveStage,
   onMoveStageUp,
   onMoveStageDown,
   onUpdateStageTemplate,
+  onUpdateStageType,
+  onUpdateStageToolId,
   onAddReferenceImage,
   onRemoveReferenceImage,
 }: RecipeFormProps) {
@@ -879,22 +933,37 @@ function RecipeForm({
         />
       </div>
 
-      {/* Aspect Ratio */}
-      <div className="space-y-2">
-        <Label>Suggested Aspect Ratio (optional)</Label>
-        <Select value={aspectRatio} onValueChange={onAspectRatioChange}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select aspect ratio..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1:1">1:1 (Square)</SelectItem>
-            <SelectItem value="16:9">16:9 (Widescreen)</SelectItem>
-            <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
-            <SelectItem value="4:3">4:3 (Classic)</SelectItem>
-            <SelectItem value="3:2">3:2 (Photo)</SelectItem>
-            <SelectItem value="21:9">21:9 (Cinematic)</SelectItem>
-          </SelectContent>
-        </Select>
+      {/* Aspect Ratio & Suggested Model Row */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Suggested Aspect Ratio (optional)</Label>
+          <Select value={aspectRatio} onValueChange={onAspectRatioChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select aspect ratio..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1:1">1:1 (Square)</SelectItem>
+              <SelectItem value="16:9">16:9 (Widescreen)</SelectItem>
+              <SelectItem value="9:16">9:16 (Portrait)</SelectItem>
+              <SelectItem value="4:3">4:3 (Classic)</SelectItem>
+              <SelectItem value="3:2">3:2 (Photo)</SelectItem>
+              <SelectItem value="21:9">21:9 (Cinematic)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Suggested Model (optional)</Label>
+          <Select value={suggestedModel} onValueChange={onSuggestedModelChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Default" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="nano-banana">Nano Banana (fast)</SelectItem>
+              <SelectItem value="nano-banana-pro">Nano Banana Pro (quality)</SelectItem>
+              <SelectItem value="ideogram-v2">Ideogram v2 (text)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Stages */}
@@ -940,6 +1009,8 @@ function RecipeForm({
             totalStages={stages.length}
             canRemove={stages.length > 1}
             onTemplateChange={(template) => onUpdateStageTemplate(index, template)}
+            onTypeChange={(type) => onUpdateStageType(index, type)}
+            onToolIdChange={(toolId) => onUpdateStageToolId(index, toolId)}
             onRemove={() => onRemoveStage(index)}
             onMoveUp={() => onMoveStageUp(index)}
             onMoveDown={() => onMoveStageDown(index)}
@@ -988,6 +1059,8 @@ interface StageSectionProps {
   totalStages: number
   canRemove: boolean
   onTemplateChange: (template: string) => void
+  onTypeChange: (type: RecipeStageType) => void
+  onToolIdChange: (toolId: RecipeToolId) => void
   onRemove: () => void
   onMoveUp: () => void
   onMoveDown: () => void
@@ -1001,6 +1074,8 @@ function StageSection({
   totalStages,
   canRemove,
   onTemplateChange,
+  onTypeChange,
+  onToolIdChange,
   onRemove,
   onMoveUp,
   onMoveDown,
@@ -1105,7 +1180,67 @@ function StageSection({
 
         <CollapsibleContent>
           <div className="p-3 space-y-3 border-t border-border">
-            {/* Template */}
+            {/* Stage Type Selector */}
+            <div className="space-y-2">
+              <Label className="text-xs">Stage Type</Label>
+              <Select
+                value={stage.type || 'generation'}
+                onValueChange={(value) => onTypeChange(value as RecipeStageType)}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="generation">🎨 Image Generation</SelectItem>
+                  <SelectItem value="tool">🔧 Tool</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Tool Selection (only for tool stages) */}
+            {stage.type === 'tool' && (
+              <div className="space-y-2">
+                <Label className="text-xs">Select Tool</Label>
+                <Select
+                  value={stage.toolId || 'remove-background'}
+                  onValueChange={(value) => onToolIdChange(value as RecipeToolId)}
+                >
+                  <SelectTrigger className="w-[350px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(RECIPE_TOOLS).map(tool => (
+                      <SelectItem key={tool.id} value={tool.id}>
+                        <span className="flex items-center gap-2">
+                          <span>{tool.icon} {tool.name}</span>
+                          <span className="text-zinc-500">({tool.cost} pts)</span>
+                          {tool.outputType === 'multi' && 'outputCount' in tool && (
+                            <span className="text-xs text-amber-400 bg-amber-500/20 px-1.5 py-0.5 rounded">
+                              {tool.outputCount}x output
+                            </span>
+                          )}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {stage.toolId && RECIPE_TOOLS[stage.toolId] && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">
+                      {RECIPE_TOOLS[stage.toolId].description}
+                    </p>
+                    {RECIPE_TOOLS[stage.toolId].outputType === 'multi' && 'outputCount' in RECIPE_TOOLS[stage.toolId] && (
+                      <p className="text-xs text-amber-400">
+                        This tool produces {(RECIPE_TOOLS[stage.toolId] as { outputCount: number }).outputCount} separate images as output
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Template (only for generation stages) */}
+            {stage.type !== 'tool' && (
             <div className="space-y-2">
               <Label className="text-xs">Prompt Template</Label>
               <Textarea
@@ -1159,30 +1294,31 @@ function StageSection({
                   Style!
                 </Button>
               </div>
-            </div>
 
-            {/* Parsed Fields Preview */}
-            {stage.fields.length > 0 && (
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Detected Fields</Label>
-                <div className="flex gap-1 flex-wrap">
-                  {stage.fields.map((field) => (
-                    <Badge
-                      key={field.id}
-                      variant="outline"
-                      className={cn(
-                        'text-xs',
-                        field.required
-                          ? 'border-amber-500 text-amber-400'
-                          : 'border-border'
-                      )}
-                    >
-                      {field.label} ({field.type})
-                      {field.required && '!'}
-                    </Badge>
-                  ))}
+              {/* Parsed Fields Preview */}
+              {stage.fields.length > 0 && (
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Detected Fields</Label>
+                  <div className="flex gap-1 flex-wrap">
+                    {stage.fields.map((field) => (
+                      <Badge
+                        key={field.id}
+                        variant="outline"
+                        className={cn(
+                          'text-xs',
+                          field.required
+                            ? 'border-amber-500 text-amber-400'
+                            : 'border-border'
+                        )}
+                      >
+                        {field.label} ({field.type})
+                        {field.required && '!'}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
+            </div>
             )}
 
             {/* Reference Images */}
