@@ -29,8 +29,9 @@ export interface RecipeExecutionOptions {
 
 export interface RecipeExecutionResult {
   success: boolean
-  imageUrls: string[]      // URL for each stage
-  finalImageUrl?: string   // Last stage output
+  imageUrls: string[]      // URL for each stage (flattened)
+  finalImageUrl?: string   // Last stage output (first image if multi-output)
+  finalImageUrls?: string[] // Last stage outputs (for multi-output stages like grid-split)
   error?: string
 }
 
@@ -213,14 +214,15 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
 }
 
 /**
- * Execute a tool stage (like remove-background)
- * Returns the URL of the processed image
+ * Execute a tool stage (like remove-background, grid-split)
+ * Returns the URL(s) of the processed image(s)
+ * Multi-output tools (like grid-split) return an array of URLs
  */
 async function executeToolStage(
   stage: RecipeStage,
   inputImageUrl: string,
   onProgress?: (message: string) => void
-): Promise<string> {
+): Promise<string | string[]> {
   if (!stage.toolId) {
     throw new Error('Tool stage missing toolId')
   }
@@ -246,6 +248,12 @@ async function executeToolStage(
   }
 
   const data = await response.json()
+
+  // Handle multi-output tools (like grid-split that returns imageUrls array)
+  if (data.imageUrls && Array.isArray(data.imageUrls)) {
+    console.log(`[Recipe Execution] Tool completed with ${data.imageUrls.length} outputs`)
+    return data.imageUrls
+  }
 
   // Tool returns either direct URL or prediction ID to poll
   if (data.imageUrl) {
@@ -339,6 +347,7 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
 
     const imageUrls: string[] = []
     let previousImageUrl: string | undefined = undefined
+    let previousImageUrls: string[] | undefined = undefined // For multi-output stages
 
     // Execute each stage sequentially (pipe chaining)
     for (let i = 0; i < totalStages; i++) {
@@ -370,9 +379,14 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
         // First stage: use stage 0's refs
         inputImages = preparedStageRefs.length > 0 ? preparedStageRefs : undefined
       } else {
-        // Subsequent stages: combine previous output + this stage's refs
+        // Subsequent stages: combine previous output(s) + this stage's refs
         const refs: string[] = []
-        if (previousImageUrl) refs.push(previousImageUrl)
+        // Handle multi-output from previous stage (e.g., grid-split produced 9 images)
+        if (previousImageUrls && previousImageUrls.length > 0) {
+          refs.push(...previousImageUrls)
+        } else if (previousImageUrl) {
+          refs.push(previousImageUrl)
+        }
         refs.push(...preparedStageRefs)
         inputImages = refs.length > 0 ? refs : undefined
       }
@@ -396,14 +410,24 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
         }
 
         try {
-          const toolOutputUrl = await executeToolStage(
+          const toolOutput = await executeToolStage(
             stage,
             inputImageUrl,
             (msg) => onProgress?.(i, totalStages, msg)
           )
-          imageUrls.push(toolOutputUrl)
-          previousImageUrl = toolOutputUrl
-          console.log(`[Recipe Execution] Stage ${i + 1} (tool) completed:`, toolOutputUrl)
+
+          // Handle multi-output tools (like grid-split)
+          if (Array.isArray(toolOutput)) {
+            imageUrls.push(...toolOutput)
+            previousImageUrl = undefined // Reset single output
+            previousImageUrls = toolOutput // Track multi-output for next stage
+            console.log(`[Recipe Execution] Stage ${i + 1} (tool) completed with ${toolOutput.length} outputs`)
+          } else {
+            imageUrls.push(toolOutput)
+            previousImageUrl = toolOutput
+            previousImageUrls = undefined // Reset multi-output
+            console.log(`[Recipe Execution] Stage ${i + 1} (tool) completed:`, toolOutput)
+          }
         } catch (toolError) {
           const errorMsg = toolError instanceof Error ? toolError.message : 'Unknown error'
           throw new Error(`Stage ${i + 1} (tool) failed: ${errorMsg}`)
@@ -438,6 +462,7 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
           const imageUrl = await waitForImageCompletion(supabase, response.galleryId)
           imageUrls.push(imageUrl)
           previousImageUrl = imageUrl
+          previousImageUrls = undefined // Reset multi-output (generation stages produce single output)
           console.log(`[Recipe Execution] Stage ${i + 1} completed:`, imageUrl)
         } catch (waitError) {
           const errorMsg = waitError instanceof Error ? waitError.message : 'Unknown error'
@@ -448,10 +473,16 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
 
     onProgress?.(totalStages, totalStages, 'Recipe completed!')
 
+    // Determine final output(s)
+    // If last stage was multi-output, include finalImageUrls
+    const finalImageUrl = previousImageUrls ? previousImageUrls[0] : previousImageUrl
+    const finalImageUrls = previousImageUrls
+
     return {
       success: true,
       imageUrls,
-      finalImageUrl: imageUrls[imageUrls.length - 1],
+      finalImageUrl,
+      finalImageUrls,
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Recipe execution failed'

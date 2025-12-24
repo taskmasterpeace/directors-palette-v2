@@ -450,21 +450,36 @@ export function RecipeEditorDialog({
                                                     value={stage.toolId || 'remove-background'}
                                                     onValueChange={(value) => updateStageToolId(idx, value as RecipeToolId)}
                                                 >
-                                                    <SelectTrigger className="bg-zinc-900 border-zinc-700 w-[300px]">
+                                                    <SelectTrigger className="bg-zinc-900 border-zinc-700 w-[350px]">
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent className="bg-zinc-800 border-zinc-700">
                                                         {Object.values(RECIPE_TOOLS).map(tool => (
                                                             <SelectItem key={tool.id} value={tool.id}>
-                                                                {tool.icon} {tool.name} ({tool.cost} pts)
+                                                                <span className="flex items-center gap-2">
+                                                                    <span>{tool.icon} {tool.name}</span>
+                                                                    <span className="text-zinc-500">({tool.cost} pts)</span>
+                                                                    {tool.outputType === 'multi' && 'outputCount' in tool && (
+                                                                        <span className="text-xs text-amber-400 bg-amber-500/20 px-1.5 py-0.5 rounded">
+                                                                            {tool.outputCount}x output
+                                                                        </span>
+                                                                    )}
+                                                                </span>
                                                             </SelectItem>
                                                         ))}
                                                     </SelectContent>
                                                 </Select>
                                                 {stage.toolId && RECIPE_TOOLS[stage.toolId] && (
-                                                    <p className="text-xs text-zinc-500">
-                                                        {RECIPE_TOOLS[stage.toolId].description}
-                                                    </p>
+                                                    <div className="space-y-1">
+                                                        <p className="text-xs text-zinc-500">
+                                                            {RECIPE_TOOLS[stage.toolId].description}
+                                                        </p>
+                                                        {RECIPE_TOOLS[stage.toolId].outputType === 'multi' && 'outputCount' in RECIPE_TOOLS[stage.toolId] && (
+                                                            <p className="text-xs text-amber-400">
+                                                                This tool produces {(RECIPE_TOOLS[stage.toolId] as { outputCount: number }).outputCount} separate images as output
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </div>
                                         )}

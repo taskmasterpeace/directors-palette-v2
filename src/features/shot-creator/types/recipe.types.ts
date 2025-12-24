@@ -43,6 +43,9 @@ export interface RecipeReferenceImage {
 // Stage type - generation (default) or tool
 export type RecipeStageType = 'generation' | 'tool'
 
+// Tool output type
+export type RecipeToolOutputType = 'single' | 'multi'
+
 // Available tools that can be used in recipe stages
 export const RECIPE_TOOLS = {
   'remove-background': {
@@ -52,10 +55,27 @@ export const RECIPE_TOOLS = {
     icon: '✂️',
     cost: 3,  // points
     endpoint: '/api/tools/remove-background',
+    outputType: 'single' as RecipeToolOutputType,
   },
-  // Future tools can be added here:
-  // 'upscale': { ... },
-  // 'face-swap': { ... },
+  'cinematic-grid': {
+    id: 'cinematic-grid',
+    name: 'Cinematic Grid',
+    description: 'Generates 3x3 grid with 9 cinematic camera angles from reference image',
+    icon: '🎬',
+    cost: 20,  // Same as nano-banana-pro (uses it internally)
+    endpoint: '/api/tools/cinematic-grid',
+    outputType: 'single' as RecipeToolOutputType,
+  },
+  'grid-split': {
+    id: 'grid-split',
+    name: 'Grid Split (3x3)',
+    description: 'Splits a 3x3 grid image into 9 separate images',
+    icon: '🔲',
+    cost: 0,  // Server-side processing only, no API cost
+    endpoint: '/api/tools/grid-split',
+    outputType: 'multi' as RecipeToolOutputType,
+    outputCount: 9,
+  },
 } as const
 
 export type RecipeToolId = keyof typeof RECIPE_TOOLS
