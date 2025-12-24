@@ -24,6 +24,7 @@ export interface DbRecipe {
   stages: RecipeStage[]
   suggested_aspect_ratio: string | null
   suggested_resolution: string | null
+  suggested_model: string | null
   quick_access_label: string | null
   is_quick_access: boolean
   category_id: string | null
