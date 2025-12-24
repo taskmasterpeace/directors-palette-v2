@@ -11,6 +11,8 @@ interface GenerateIdeasRequest {
   characterAge: number
   category: string
   topic: string
+  // For custom stories
+  customStoryIdea?: string
   // Customization options
   setting?: string
   customElements?: string[]
@@ -120,10 +122,58 @@ VOCABULARY:
 Be creative! Each story should take a unique angle on teaching ${topicName}.`
 }
 
+// Build system prompt for CUSTOM stories (freeform, non-educational)
+function buildCustomSystemPrompt(
+  characterName: string,
+  characterAge: number,
+  customStoryIdea: string,
+  approaches: { id: string; name: string; description: string }[],
+  setting?: string,
+  customElements?: string[]
+): string {
+  const approachList = approaches
+    .map((a, i) => `${i + 1}. ${a.name}: ${a.description}`)
+    .join('\n')
+
+  // Build customization section
+  let customization = ''
+  if (setting) {
+    customization += `\nSETTING: The story takes place in/at: ${setting}`
+  }
+  if (customElements && customElements.length > 0) {
+    customization += `\nINCLUDE THESE ELEMENTS: ${customElements.join(', ')}`
+  }
+
+  return `You are a creative children's book author who creates magical, engaging stories for children.
+
+Generate 4 different story ideas based on this custom story concept:
+"${customStoryIdea}"
+
+MAIN CHARACTER: ${characterName}, age ${characterAge}${customization}
+
+CREATE 4 DIFFERENT STORY IDEAS using these approaches (in this order):
+${approachList}
+
+REQUIREMENTS FOR EACH IDEA:
+- Title: Catchy, memorable, age-appropriate (5-8 words max)
+- Summary: 2-3 sentences explaining the story premise
+- Feature ${characterName} as the main character
+- Base the story on the user's custom idea above${setting ? `\n- Set the story in/at: ${setting}` : ''}${customElements && customElements.length > 0 ? `\n- Include these fun elements: ${customElements.join(', ')}` : ''}
+- Make it engaging and fun for a ${characterAge}-year-old
+- Each approach should feel distinctly different
+
+VOCABULARY:
+- For ages 2-4: Very simple concepts and words
+- For ages 5-7: Simple but varied vocabulary
+- For ages 8-12: More complex themes allowed
+
+Be creative! Bring the user's story idea to life in 4 unique and exciting ways.`
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: GenerateIdeasRequest = await request.json()
-    const { characterName, characterAge, category, topic, setting, customElements, customNotes } = body
+    const { characterName, characterAge, category, topic, customStoryIdea, setting, customElements, customNotes } = body
 
     // Validate inputs
     if (!characterName?.trim()) {
@@ -133,22 +183,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!category || !topic) {
+    // Check if this is a custom story
+    const isCustomStory = category === 'custom'
+
+    // For custom stories, require customStoryIdea
+    if (isCustomStory && !customStoryIdea?.trim()) {
       return NextResponse.json(
-        { error: 'Category and topic are required' },
+        { error: 'Custom story idea is required for custom stories' },
         { status: 400 }
       )
     }
 
-    // Get category and topic details
-    const categoryData = getCategoryById(category)
-    const topicData = getTopicById(category, topic)
+    // For educational stories, require valid category and topic
+    if (!isCustomStory) {
+      if (!category || !topic) {
+        return NextResponse.json(
+          { error: 'Category and topic are required' },
+          { status: 400 }
+        )
+      }
 
-    if (!categoryData || !topicData) {
-      return NextResponse.json(
-        { error: 'Invalid category or topic' },
-        { status: 400 }
-      )
+      // Get category and topic details
+      const categoryData = getCategoryById(category)
+      const topicData = getTopicById(category, topic)
+
+      if (!categoryData || !topicData) {
+        return NextResponse.json(
+          { error: 'Invalid category or topic' },
+          { status: 400 }
+        )
+      }
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY
@@ -162,18 +226,40 @@ export async function POST(request: NextRequest) {
     // Get 4 random approaches for variety
     const approaches = getRandomApproaches(4)
 
-    const systemPrompt = buildSystemPrompt(
-      characterName,
-      characterAge,
-      categoryData.name,
-      topicData.name,
-      topicData.description,
-      topicData.promptKeywords,
-      approaches,
-      setting,
-      customElements,
-      customNotes
-    )
+    // Build appropriate system prompt based on story type
+    let systemPrompt: string
+    let userMessage: string
+
+    if (isCustomStory) {
+      // Custom story - freeform
+      systemPrompt = buildCustomSystemPrompt(
+        characterName,
+        characterAge,
+        customStoryIdea!,
+        approaches,
+        setting,
+        customElements
+      )
+      userMessage = `Generate 4 story ideas for ${characterName}'s custom story: "${customStoryIdea}"`
+    } else {
+      // Educational story
+      const categoryData = getCategoryById(category)!
+      const topicData = getTopicById(category, topic)!
+
+      systemPrompt = buildSystemPrompt(
+        characterName,
+        characterAge,
+        categoryData.name,
+        topicData.name,
+        topicData.description,
+        topicData.promptKeywords,
+        approaches,
+        setting,
+        customElements,
+        customNotes
+      )
+      userMessage = `Generate 4 story ideas for ${characterName}'s book about ${topicData.name}.`
+    }
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -187,10 +273,7 @@ export async function POST(request: NextRequest) {
         model: 'openai/gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content: `Generate 4 story ideas for ${characterName}'s book about ${topicData.name}.`
-          }
+          { role: 'user', content: userMessage }
         ],
         tools: [GENERATE_IDEAS_TOOL],
         tool_choice: { type: 'function', function: { name: 'generate_story_ideas' } }

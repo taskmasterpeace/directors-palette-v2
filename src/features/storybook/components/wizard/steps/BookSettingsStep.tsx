@@ -46,7 +46,7 @@ const QUICK_ELEMENTS = [
 ]
 
 export function BookSettingsStep() {
-  const { project, setBookSettings, setCustomization, setStoryIdeas, nextStep, previousStep } = useStorybookStore()
+  const { project, setBookSettings, setCustomization, setStoryIdeas, nextStep, previousStep, setStep } = useStorybookStore()
 
   const [pageCount, setPageCount] = useState<PageCount>((project?.pageCount as PageCount) || 8)
   const [sentencesPerPage, setSentencesPerPage] = useState<SentencesPerPage>((project?.sentencesPerPage as SentencesPerPage) || 3)
@@ -60,6 +60,9 @@ export function BookSettingsStep() {
   const [customNotes, setCustomNotes] = useState(project?.customNotes || '')
   const [showCustomSetting, setShowCustomSetting] = useState(false)
 
+  // Custom story idea (for custom category)
+  const [customStoryIdea, setCustomStoryIdea] = useState(project?.customNotes || '')
+
   const toggleElement = (elementId: string) => {
     setSelectedElements(prev =>
       prev.includes(elementId)
@@ -68,14 +71,28 @@ export function BookSettingsStep() {
     )
   }
 
+  const isCustomCategory = project?.educationCategory === 'custom'
   const category = project?.educationCategory ? getCategoryById(project.educationCategory) : null
   const topic = project?.educationCategory && project?.educationTopic
     ? getTopicById(project.educationCategory, project.educationTopic)
     : null
 
   const handleGenerateIdeas = async () => {
-    if (!project?.mainCharacterName || !project?.educationCategory || !project?.educationTopic) {
-      setError("Missing required information")
+    // Validate required fields
+    if (!project?.mainCharacterName) {
+      setError("Missing character name")
+      return
+    }
+
+    // For custom stories, require a story idea
+    if (isCustomCategory && !customStoryIdea.trim()) {
+      setError("Please describe what kind of story you'd like to create")
+      return
+    }
+
+    // For educational stories, require category and topic
+    if (!isCustomCategory && (!project?.educationCategory || !project?.educationTopic)) {
+      setError("Missing category or topic information")
       return
     }
 
@@ -88,11 +105,17 @@ export function BookSettingsStep() {
 
       // Save customization options
       const finalSetting = showCustomSetting ? customSetting : selectedSetting
+
+      // For custom stories, include the story idea in customNotes
+      const finalNotes = isCustomCategory
+        ? customStoryIdea.trim()
+        : customNotes.trim()
+
       setCustomization(
         finalSetting || undefined,
         showCustomSetting ? customSetting : undefined,
         selectedElements.length > 0 ? selectedElements : undefined,
-        customNotes.trim() || undefined
+        finalNotes || undefined
       )
 
       // Build customization data for API
@@ -111,12 +134,14 @@ export function BookSettingsStep() {
         body: JSON.stringify({
           characterName: project.mainCharacterName,
           characterAge: project.mainCharacterAge || 5,
-          category: project.educationCategory,
-          topic: project.educationTopic,
-          // NEW: Pass customization options
+          category: isCustomCategory ? 'custom' : project.educationCategory,
+          topic: isCustomCategory ? 'custom' : project.educationTopic,
+          // For custom stories, pass the story idea
+          customStoryIdea: isCustomCategory ? customStoryIdea.trim() : undefined,
+          // Also pass customization options
           setting: settingName,
           customElements: elementNames,
-          customNotes: customNotes.trim() || undefined
+          customNotes: isCustomCategory ? undefined : customNotes.trim() || undefined
         })
       })
 
@@ -144,12 +169,43 @@ export function BookSettingsStep() {
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white mb-2">Configure Your Book</h2>
         <p className="text-muted-foreground">
-          {category?.icon} {category?.name} → {topic?.icon} {topic?.name}
+          {isCustomCategory ? (
+            <>✨ Custom Story - Tell us what kind of story you want!</>
+          ) : (
+            <>{category?.icon} {category?.name} → {topic?.icon} {topic?.name}</>
+          )}
         </p>
       </div>
 
       {/* Settings Cards */}
-      <div className="flex-1 space-y-6">
+      <div className="flex-1 space-y-6 overflow-y-auto">
+        {/* Custom Story Idea (only for custom category) */}
+        {isCustomCategory && (
+          <Card className="bg-gradient-to-br from-purple-900/30 to-pink-900/20 border-purple-700/50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg text-white flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-purple-400" />
+                What&apos;s Your Story About?
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Describe the story you want to create. Be as creative as you like!
+              </p>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                placeholder={`Example ideas:\n• A magical adventure where ${project?.mainCharacterName || 'the character'} discovers they can talk to animals\n• A space journey to find a lost star\n• A mystery about a missing cookie in the kitchen\n• A story about making a new friend at the playground`}
+                value={customStoryIdea}
+                onChange={(e) => setCustomStoryIdea(e.target.value)}
+                className="bg-zinc-800/50 border-purple-700/50 min-h-[120px] text-white placeholder:text-zinc-500"
+              />
+              {!customStoryIdea.trim() && (
+                <p className="text-xs text-purple-400 mt-2">
+                  Required: Please describe what kind of story you&apos;d like to create
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
         {/* Page Count - Compact inline */}
         <div className="flex items-center gap-4 p-4 bg-zinc-900/50 rounded-lg border border-zinc-800">
           <span className="text-sm font-medium text-white whitespace-nowrap">Pages:</span>
@@ -336,7 +392,12 @@ export function BookSettingsStep() {
         </Card>
 
         {/* Preview Summary */}
-        <Card className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/20">
+        <Card className={cn(
+          "border",
+          isCustomCategory
+            ? "bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20"
+            : "bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/20"
+        )}>
           <CardContent className="p-6">
             <h3 className="font-semibold text-white mb-3">Book Preview</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
@@ -347,22 +408,35 @@ export function BookSettingsStep() {
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Learning</p>
-                <p className="text-white font-medium">{topic?.name}</p>
+                <p className="text-muted-foreground">{isCustomCategory ? 'Story Type' : 'Learning'}</p>
+                <p className="text-white font-medium">
+                  {isCustomCategory ? 'Custom Story' : topic?.name}
+                </p>
               </div>
               <div>
                 <p className="text-muted-foreground">Total Pages</p>
-                <p className="text-amber-400 font-medium">{pageCount} pages</p>
+                <p className={cn("font-medium", isCustomCategory ? "text-purple-400" : "text-amber-400")}>
+                  {pageCount} pages
+                </p>
               </div>
               <div>
                 <p className="text-muted-foreground">Est. Words</p>
-                <p className="text-amber-400 font-medium">~{estimatedWordCount} words</p>
+                <p className={cn("font-medium", isCustomCategory ? "text-purple-400" : "text-amber-400")}>
+                  ~{estimatedWordCount} words
+                </p>
               </div>
             </div>
             <div className="mt-4 p-3 bg-zinc-900/50 rounded-lg">
               <p className="text-sm text-muted-foreground">
-                {project?.mainCharacterName} will learn about {topic?.name?.toLowerCase()} in a
-                {pageCount}-page story with {sentencesPerPage} sentence{sentencesPerPage > 1 ? "s" : ""} per page.
+                {isCustomCategory ? (
+                  customStoryIdea.trim() ? (
+                    <>A custom story for {project?.mainCharacterName} - {pageCount} pages with {sentencesPerPage} sentence{sentencesPerPage > 1 ? "s" : ""} per page.</>
+                  ) : (
+                    <>Describe your story idea above to create a custom story for {project?.mainCharacterName}.</>
+                  )
+                ) : (
+                  <>{project?.mainCharacterName} will learn about {topic?.name?.toLowerCase()} in a {pageCount}-page story with {sentencesPerPage} sentence{sentencesPerPage > 1 ? "s" : ""} per page.</>
+                )}
               </p>
             </div>
           </CardContent>
@@ -380,7 +454,14 @@ export function BookSettingsStep() {
       <div className="mt-6 pt-4 border-t border-zinc-800 flex items-center justify-between">
         <Button
           variant="ghost"
-          onClick={previousStep}
+          onClick={() => {
+            // For custom stories, go back to category selection (skip topic)
+            if (isCustomCategory) {
+              setStep('category')
+            } else {
+              previousStep()
+            }
+          }}
           disabled={isGenerating}
           className="text-muted-foreground hover:text-white gap-2"
         >
@@ -390,8 +471,13 @@ export function BookSettingsStep() {
 
         <Button
           onClick={handleGenerateIdeas}
-          disabled={isGenerating}
-          className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black gap-2 px-6"
+          disabled={isGenerating || (isCustomCategory && !customStoryIdea.trim())}
+          className={cn(
+            "gap-2 px-6 text-black",
+            isCustomCategory
+              ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+              : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+          )}
         >
           {isGenerating ? (
             <>

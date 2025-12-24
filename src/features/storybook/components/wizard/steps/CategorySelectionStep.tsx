@@ -7,8 +7,16 @@ import { ArrowLeft, ArrowRight } from "lucide-react"
 import { cn } from "@/utils/utils"
 import { EDUCATION_CATEGORIES } from "../../../types/education.types"
 
+// Custom story option - allows freeform story creation
+const CUSTOM_CATEGORY = {
+  id: 'custom',
+  name: 'Custom Story',
+  icon: '✨',
+  description: 'Create any story you want',
+}
+
 export function CategorySelectionStep() {
-  const { project, setEducationCategory, nextStep, previousStep } = useStorybookStore()
+  const { project, setEducationCategory, setEducationTopic, setStep, previousStep } = useStorybookStore()
 
   const selectedCategory = project?.educationCategory
 
@@ -18,25 +26,34 @@ export function CategorySelectionStep() {
 
   const handleContinue = () => {
     if (selectedCategory) {
-      nextStep()
+      // If custom category, skip topic step and go directly to settings
+      if (selectedCategory === 'custom') {
+        setEducationTopic('custom') // Set a placeholder topic
+        setStep('settings')
+      } else {
+        setStep('topic')
+      }
     }
   }
+
+  // Combine custom option with educational categories
+  const allCategories = [CUSTOM_CATEGORY, ...EDUCATION_CATEGORIES]
 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white mb-2">
-          What should {project?.mainCharacterName || "they"} learn?
+          What kind of story for {project?.mainCharacterName || "your character"}?
         </h2>
         <p className="text-muted-foreground">
-          Choose an educational category for your storybook
+          Choose an educational category or create a custom story
         </p>
       </div>
 
       {/* Category Grid */}
       <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-4">
-        {EDUCATION_CATEGORIES.map((category) => (
+        {allCategories.map((category) => (
           <Card
             key={category.id}
             onClick={() => handleSelectCategory(category.id)}
@@ -44,7 +61,9 @@ export function CategorySelectionStep() {
               "p-4 cursor-pointer transition-all duration-200 hover:scale-[1.02]",
               selectedCategory === category.id
                 ? "bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/50"
-                : "bg-zinc-900/50 border-zinc-800 hover:border-zinc-700"
+                : category.id === 'custom'
+                  ? "bg-gradient-to-br from-purple-900/50 to-pink-900/30 border-purple-700/50 hover:border-purple-500/70"
+                  : "bg-zinc-900/50 border-zinc-800 hover:border-zinc-700"
             )}
           >
             <div className="text-center">
@@ -61,8 +80,11 @@ export function CategorySelectionStep() {
         <div className="mt-4 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20 text-center">
           <p className="text-sm text-amber-400">
             Selected: <span className="font-semibold">
-              {EDUCATION_CATEGORIES.find(c => c.id === selectedCategory)?.name}
+              {allCategories.find(c => c.id === selectedCategory)?.name}
             </span>
+            {selectedCategory === 'custom' && (
+              <span className="text-purple-400 ml-2">- You&apos;ll describe your story idea next</span>
+            )}
           </p>
         </div>
       )}
