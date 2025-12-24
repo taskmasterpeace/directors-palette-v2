@@ -23,6 +23,12 @@ interface GenerateStoryRequest {
   approach: string
   approachTitle?: string
   approachSummary?: string
+  // Customization options (from BookSettingsStep)
+  setting?: string
+  customElements?: string[]
+  customNotes?: string
+  // For custom stories
+  customStoryIdea?: string
 }
 
 // Tool schema for structured output
@@ -86,7 +92,10 @@ function buildSystemPrompt(
   sentencesPerPage: number,
   approach: string,
   approachTitle?: string,
-  approachSummary?: string
+  approachSummary?: string,
+  setting?: string,
+  customElements?: string[],
+  customNotes?: string
 ): string {
   // Category-specific guidance
   let categoryGuidance = ''
@@ -162,13 +171,25 @@ CREATIVITY REQUIREMENTS:
     ? `\nSTORY PREMISE (use this as your guide):\nTitle: ${approachTitle}\nPremise: ${approachSummary}`
     : `\nAPPROACH: ${approach}`
 
+  // Build customization section
+  let customizationSection = ''
+  if (setting) {
+    customizationSection += `\nSTORY SETTING: Set the story in/at: ${setting}`
+  }
+  if (customElements && customElements.length > 0) {
+    customizationSection += `\nINCLUDE THESE ELEMENTS: ${customElements.join(', ')} - weave these into the story naturally`
+  }
+  if (customNotes) {
+    customizationSection += `\nSPECIAL REQUESTS FROM PARENT: ${customNotes}`
+  }
+
   return `You are an expert children's book author creating educational content.
 
 MAIN CHARACTER: ${characterName}, age ${characterAge}
 CATEGORY: ${categoryName}
 TOPIC: ${topicName} - ${topicDescription}
 KEYWORDS: ${topicKeywords.join(', ')}
-${storyContext}
+${storyContext}${customizationSection}
 
 STORY STRUCTURE:
 - NUMBER OF PAGES: Exactly ${pageCount} pages
@@ -196,6 +217,73 @@ STORY STRUCTURE:
 Make the story engaging, fun, and educational for a ${characterAge}-year-old!`
 }
 
+// Build system prompt for CUSTOM stories (freeform, non-educational)
+function buildCustomSystemPrompt(
+  characterName: string,
+  characterAge: number,
+  pageCount: number,
+  sentencesPerPage: number,
+  customStoryIdea: string,
+  approachTitle?: string,
+  approachSummary?: string,
+  setting?: string,
+  customElements?: string[]
+): string {
+  // Vocabulary guidance based on age
+  let vocabularyGuidance = ''
+  if (characterAge <= 3) {
+    vocabularyGuidance = 'Use very simple words (1-2 syllables), short sentences, lots of repetition.'
+  } else if (characterAge <= 5) {
+    vocabularyGuidance = 'Use simple words with some variety. Short to medium sentences.'
+  } else if (characterAge <= 7) {
+    vocabularyGuidance = 'Use varied vocabulary. Medium-length sentences. Some challenge is good.'
+  } else {
+    vocabularyGuidance = 'Use richer vocabulary. Longer, more complex sentences allowed.'
+  }
+
+  const storyContext = approachTitle && approachSummary
+    ? `\nSTORY PREMISE (use this as your guide):\nTitle: ${approachTitle}\nPremise: ${approachSummary}`
+    : `\nSTORY CONCEPT: ${customStoryIdea}`
+
+  // Build customization section
+  let customizationSection = ''
+  if (setting) {
+    customizationSection += `\nSTORY SETTING: Set the story in/at: ${setting}`
+  }
+  if (customElements && customElements.length > 0) {
+    customizationSection += `\nINCLUDE THESE ELEMENTS: ${customElements.join(', ')} - weave these into the story naturally`
+  }
+
+  return `You are a creative children's book author who writes magical, engaging stories.
+
+MAIN CHARACTER: ${characterName}, age ${characterAge}
+${storyContext}${customizationSection}
+
+STORY STRUCTURE:
+- NUMBER OF PAGES: Exactly ${pageCount} pages
+- SENTENCES PER PAGE: Exactly ${sentencesPerPage} sentences per page
+- Total story length: ${pageCount * sentencesPerPage} sentences
+
+VOCABULARY GUIDANCE:
+${vocabularyGuidance}
+
+REQUIREMENTS FOR EACH PAGE:
+1. text: Exactly ${sentencesPerPage} sentence(s) of story content
+2. sceneDescription: Detailed visual description for AI image generation including:
+   - Character positions, expressions, actions
+   - Setting details (time of day, weather, environment)
+   - Key objects that should be visible
+   - Color palette suggestions
+3. learningNote (optional): Fun fact, question, or interactive prompt
+
+STORY STRUCTURE:
+- Beginning (first 1-2 pages): Introduce ${characterName} and the situation
+- Middle (${pageCount - 3} pages): The adventure unfolds
+- End (last 1-2 pages): Satisfying resolution
+
+Create a fun, imaginative story that a ${characterAge}-year-old will love!`
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: GenerateStoryRequest = await request.json()
@@ -208,20 +296,17 @@ export async function POST(request: NextRequest) {
       sentencesPerPage,
       approach,
       approachTitle,
-      approachSummary
+      approachSummary,
+      setting,
+      customElements,
+      customNotes,
+      customStoryIdea
     } = body
 
     // Validate inputs
     if (!characterName?.trim()) {
       return NextResponse.json(
         { error: 'Character name is required' },
-        { status: 400 }
-      )
-    }
-
-    if (!category || !topic) {
-      return NextResponse.json(
-        { error: 'Category and topic are required' },
         { status: 400 }
       )
     }
@@ -233,13 +318,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get category and topic details
-    const categoryData = getCategoryById(category)
-    const topicData = getTopicById(category, topic)
+    // Check if this is a custom story
+    const isCustomStory = category === 'custom'
 
-    if (!categoryData || !topicData) {
+    // For custom stories, require customStoryIdea
+    if (isCustomStory && !customStoryIdea?.trim() && !approachSummary) {
       return NextResponse.json(
-        { error: 'Invalid category or topic' },
+        { error: 'Custom story idea is required for custom stories' },
+        { status: 400 }
+      )
+    }
+
+    // For educational stories, require valid category and topic
+    if (!isCustomStory && (!category || !topic)) {
+      return NextResponse.json(
+        { error: 'Category and topic are required' },
         { status: 400 }
       )
     }
@@ -252,20 +345,55 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const systemPrompt = buildSystemPrompt(
-      characterName,
-      characterAge,
-      category,
-      categoryData.name,
-      topicData.name,
-      topicData.description,
-      topicData.promptKeywords,
-      pageCount,
-      sentencesPerPage,
-      approach,
-      approachTitle,
-      approachSummary
-    )
+    // Build appropriate system prompt and user message
+    let systemPrompt: string
+    let userMessage: string
+
+    if (isCustomStory) {
+      // Custom story - freeform
+      systemPrompt = buildCustomSystemPrompt(
+        characterName,
+        characterAge,
+        pageCount,
+        sentencesPerPage,
+        customStoryIdea || approachSummary || '',
+        approachTitle,
+        approachSummary,
+        setting,
+        customElements
+      )
+      userMessage = `Generate a ${pageCount}-page custom story for ${characterName}. Each page should have exactly ${sentencesPerPage} sentence(s).`
+    } else {
+      // Educational story
+      const categoryData = getCategoryById(category)
+      const topicData = getTopicById(category, topic)
+
+      if (!categoryData || !topicData) {
+        return NextResponse.json(
+          { error: 'Invalid category or topic' },
+          { status: 400 }
+        )
+      }
+
+      systemPrompt = buildSystemPrompt(
+        characterName,
+        characterAge,
+        category,
+        categoryData.name,
+        topicData.name,
+        topicData.description,
+        topicData.promptKeywords,
+        pageCount,
+        sentencesPerPage,
+        approach,
+        approachTitle,
+        approachSummary,
+        setting,
+        customElements,
+        customNotes
+      )
+      userMessage = `Generate a ${pageCount}-page story for ${characterName} about ${topicData.name}. Each page should have exactly ${sentencesPerPage} sentence(s).`
+    }
 
     // Use GPT-4o for better story quality (not mini)
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -280,10 +408,7 @@ export async function POST(request: NextRequest) {
         model: 'openai/gpt-4o', // Use full GPT-4o for better story quality
         messages: [
           { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content: `Generate a ${pageCount}-page story for ${characterName} about ${topicData.name}. Each page should have exactly ${sentencesPerPage} sentence(s).`
-          }
+          { role: 'user', content: userMessage }
         ],
         tools: [GENERATE_STORY_TOOL],
         tool_choice: { type: 'function', function: { name: 'generate_story' } }

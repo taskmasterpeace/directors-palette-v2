@@ -45,7 +45,10 @@ export function StoryApproachStep() {
       // Save selected approach
       selectStoryApproach(idea.id, idea.title, idea.summary)
 
-      // Generate full story
+      // Determine if this is a custom story
+      const isCustomStory = project?.educationCategory === 'custom'
+
+      // Generate full story with ALL customization options
       const storyResponse = await fetch("/api/storybook/generate-story", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -58,7 +61,13 @@ export function StoryApproachStep() {
           sentencesPerPage: project?.sentencesPerPage || 3,
           approach: idea.approach,
           approachTitle: idea.title,
-          approachSummary: idea.summary
+          approachSummary: idea.summary,
+          // Pass customization options (these were being ignored before!)
+          setting: project?.storySetting || project?.customSetting,
+          customElements: project?.customElements,
+          customNotes: isCustomStory ? undefined : project?.customNotes,
+          // For custom stories, pass the story idea
+          customStoryIdea: isCustomStory ? project?.customNotes : undefined
         })
       })
 
@@ -104,6 +113,8 @@ export function StoryApproachStep() {
     setIsRegenerating(true)
     setError(null)
 
+    const isCustomStory = project?.educationCategory === 'custom'
+
     try {
       const response = await fetch("/api/storybook/generate-ideas", {
         method: "POST",
@@ -112,7 +123,12 @@ export function StoryApproachStep() {
           characterName: project?.mainCharacterName,
           characterAge: project?.mainCharacterAge || 5,
           category: project?.educationCategory,
-          topic: project?.educationTopic
+          topic: project?.educationTopic,
+          // Include customization options
+          setting: project?.storySetting || project?.customSetting,
+          customElements: project?.customElements,
+          customNotes: isCustomStory ? undefined : project?.customNotes,
+          customStoryIdea: isCustomStory ? project?.customNotes : undefined
         })
       })
 
