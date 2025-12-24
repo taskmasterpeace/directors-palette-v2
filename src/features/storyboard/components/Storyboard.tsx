@@ -237,25 +237,25 @@ export function Storyboard() {
                 </TooltipProvider>
 
                 {/* Story Input Tab */}
-                <TabsContent value="input" className="mt-2">
+                <TabsContent value="input" className="mt-2 flex-1 overflow-auto">
                     <StoryInput />
                 </TabsContent>
 
                 {/* Style Tab */}
-                <TabsContent value="style" className="mt-2 space-y-3">
+                <TabsContent value="style" className="mt-2 flex-1 overflow-auto space-y-3">
                     <StyleGuideEditor />
                     <StyleGuideGenerator />
                 </TabsContent>
 
                 {/* Characters Tab */}
-                <TabsContent value="entities" className="mt-2 space-y-3">
+                <TabsContent value="entities" className="mt-2 flex-1 overflow-auto space-y-3">
                     <CharacterList />
                     <CharacterSheetGenerator />
                     <LocationList />
                 </TabsContent>
 
                 {/* Shots Tab */}
-                <TabsContent value="shots" className="mt-2 space-y-2">
+                <TabsContent value="shots" className="mt-2 flex-1 overflow-auto space-y-2">
                     {/* Compact Toolbar */}
                     <div className="flex items-center justify-between py-1 px-2 bg-muted/30 rounded-md">
                         <GranularitySelect />
@@ -336,7 +336,7 @@ export function Storyboard() {
                 </TabsContent>
 
                 {/* Generation Tab */}
-                <TabsContent value="generation" className="mt-2">
+                <TabsContent value="generation" className="mt-2 flex-1 overflow-auto">
                     <ChapterTabs>
                         {(chapterIndex) => (
                             <GenerationQueue chapterIndex={chapterIndex} />
@@ -345,7 +345,7 @@ export function Storyboard() {
                 </TabsContent>
 
                 {/* Gallery Tab */}
-                <TabsContent value="gallery" className="mt-2">
+                <TabsContent value="gallery" className="mt-2 flex-1 overflow-auto">
                     <ChapterTabs>
                         {(chapterIndex) => (
                             <StoryboardGallery chapterIndex={chapterIndex} />
