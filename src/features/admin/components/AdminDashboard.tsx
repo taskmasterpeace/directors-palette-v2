@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
-import { Users, DollarSign, TrendingUp, Gift, Search, RefreshCw, Shield, Loader2, Sparkles, Ticket, FileText, UsersRound, Key, Banknote } from 'lucide-react'
+import { Users, DollarSign, TrendingUp, Gift, Search, RefreshCw, Shield, Loader2, Sparkles, Ticket, FileText, UsersRound, Key, Banknote, Palette } from 'lucide-react'
 import { GenerationsTable } from './GenerationsTable'
 import { GenerationStats } from './GenerationStats'
 import { CouponsTab } from './CouponsTab'
@@ -17,6 +17,7 @@ import { CommunityModerationTab } from './CommunityModerationTab'
 import { ApiUsageTab } from './ApiUsageTab'
 import { FinancialsTab } from './FinancialsTab'
 import { RecipesTab } from './RecipesTab'
+import { StyleSheetsTab } from './StyleSheetsTab'
 import { PromptTemplateEditor } from '@/features/prompt-templates'
 
 // Cost per image generation in cents (matches FALLBACK_PRICING.image.price_cents)
@@ -188,6 +189,10 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                     <TabsTrigger value="recipes" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
                         <Sparkles className="w-4 h-4 mr-2" />
                         Recipes
+                    </TabsTrigger>
+                    <TabsTrigger value="styles" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black">
+                        <Palette className="w-4 h-4 mr-2" />
+                        Styles
                     </TabsTrigger>
                 </TabsList>
 
@@ -370,6 +375,11 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                 {/* Recipes Tab */}
                 <TabsContent value="recipes" className="space-y-6">
                     <RecipesTab />
+                </TabsContent>
+
+                {/* Styles Tab */}
+                <TabsContent value="styles" className="space-y-6">
+                    <StyleSheetsTab />
                 </TabsContent>
             </Tabs>
 
