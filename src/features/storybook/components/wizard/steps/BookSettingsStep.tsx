@@ -45,6 +45,16 @@ const QUICK_ELEMENTS = [
   { id: 'sports', name: 'Sports', icon: '⚽' },
 ]
 
+// Story theme quick-picks for custom stories
+const STORY_THEMES = [
+  { id: 'adventure', name: 'Adventure', icon: '🏔️', description: 'An exciting journey or quest' },
+  { id: 'friendship', name: 'Friendship', icon: '🤝', description: 'Making or keeping friends' },
+  { id: 'funny', name: 'Silly & Funny', icon: '😂', description: 'A hilarious, laugh-out-loud tale' },
+  { id: 'magical', name: 'Magical', icon: '✨', description: 'Enchanted worlds and wonder' },
+  { id: 'brave', name: 'Being Brave', icon: '🦁', description: 'Facing fears and challenges' },
+  { id: 'hero', name: 'Everyday Hero', icon: '🦸', description: 'Helping others and saving the day' },
+]
+
 export function BookSettingsStep() {
   const { project, setBookSettings, setCustomization, setStoryIdeas, nextStep, previousStep, setStep } = useStorybookStore()
 
@@ -62,6 +72,7 @@ export function BookSettingsStep() {
 
   // Custom story idea (for custom category)
   const [customStoryIdea, setCustomStoryIdea] = useState(project?.customNotes || '')
+  const [selectedTheme, setSelectedTheme] = useState<string | null>(null)
 
   const toggleElement = (elementId: string) => {
     setSelectedElements(prev =>
@@ -185,22 +196,72 @@ export function BookSettingsStep() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg text-white flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-purple-400" />
-                What&apos;s Your Story About?
+                What Kind of Story?
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Describe the story you want to create. Be as creative as you like!
+                Pick a theme or describe your own story idea
               </p>
             </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder={`Example ideas:\n• A magical adventure where ${project?.mainCharacterName || 'the character'} discovers they can talk to animals\n• A space journey to find a lost star\n• A mystery about a missing cookie in the kitchen\n• A story about making a new friend at the playground`}
-                value={customStoryIdea}
-                onChange={(e) => setCustomStoryIdea(e.target.value)}
-                className="bg-zinc-800/50 border-purple-700/50 min-h-[120px] text-white placeholder:text-zinc-500"
-              />
-              {!customStoryIdea.trim() && (
-                <p className="text-xs text-purple-400 mt-2">
-                  Required: Please describe what kind of story you&apos;d like to create
+            <CardContent className="space-y-4">
+              {/* Story Theme Quick-Picks */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {STORY_THEMES.map((theme) => (
+                  <button
+                    key={theme.id}
+                    onClick={() => {
+                      if (selectedTheme === theme.id) {
+                        setSelectedTheme(null)
+                        setCustomStoryIdea('')
+                      } else {
+                        setSelectedTheme(theme.id)
+                        setCustomStoryIdea(`A ${theme.name.toLowerCase()} story: ${theme.description}`)
+                      }
+                    }}
+                    className={cn(
+                      "p-3 rounded-lg border text-left transition-all hover:scale-[1.02]",
+                      selectedTheme === theme.id
+                        ? "bg-purple-500/30 border-purple-500 ring-2 ring-purple-500/50"
+                        : "bg-zinc-800/50 border-zinc-700 hover:border-purple-500/50"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">{theme.icon}</span>
+                      <div>
+                        <div className="font-medium text-white text-sm">{theme.name}</div>
+                        <div className="text-xs text-muted-foreground">{theme.description}</div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Custom Description */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-px bg-zinc-700" />
+                  <span className="text-xs text-muted-foreground">or describe your own</span>
+                  <div className="flex-1 h-px bg-zinc-700" />
+                </div>
+                <Textarea
+                  placeholder={`Examples:\n• ${project?.mainCharacterName || 'Emma'} discovers they can talk to animals\n• A space journey to find a lost star\n• A mystery about a missing cookie`}
+                  value={customStoryIdea}
+                  onChange={(e) => {
+                    setCustomStoryIdea(e.target.value)
+                    // Clear theme selection if user types custom text
+                    if (selectedTheme) {
+                      const themeText = STORY_THEMES.find(t => t.id === selectedTheme)
+                      if (themeText && !e.target.value.includes(themeText.description)) {
+                        setSelectedTheme(null)
+                      }
+                    }
+                  }}
+                  className="bg-zinc-800/50 border-purple-700/50 min-h-[80px] text-white placeholder:text-zinc-500"
+                />
+              </div>
+
+              {!customStoryIdea.trim() && !selectedTheme && (
+                <p className="text-xs text-purple-400">
+                  Select a theme above or describe your story idea
                 </p>
               )}
             </CardContent>
