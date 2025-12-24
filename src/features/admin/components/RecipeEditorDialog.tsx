@@ -57,9 +57,10 @@ export function RecipeEditorDialog({
     // File input refs (one per stage)
     const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({})
 
-    // Reset form when recipe changes
+    // Reset form when recipe changes or dialog opens
     useEffect(() => {
         if (recipe) {
+            // Edit mode - populate form with existing recipe
             setName(recipe.name)
             setDescription(recipe.description || "")
             setRecipeNote(recipe.recipeNote || "")
@@ -82,8 +83,27 @@ export function RecipeEditorDialog({
                 })),
             })))
             setActiveStageTab("0")
+        } else if (open) {
+            // Create mode - initialize empty form
+            setName("")
+            setDescription("")
+            setRecipeNote("")
+            setCategoryId("")
+            setSuggestedAspectRatio("")
+            setSuggestedModel("")
+            setIsSystem(false)
+            setIsSystemOnly(false)
+            setStages([{
+                id: `stage_0_${Date.now()}`,
+                order: 0,
+                type: 'generation',
+                template: "",
+                fields: [],
+                referenceImages: [],
+            }])
+            setActiveStageTab("0")
         }
-    }, [recipe])
+    }, [recipe, open])
 
     // Parse fields when template changes
     const updateStageTemplate = useCallback((stageIndex: number, template: string) => {
@@ -258,15 +278,17 @@ export function RecipeEditorDialog({
         }
     }
 
-    if (!recipe) return null
+    const isCreateMode = !recipe
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="bg-zinc-900 border-zinc-800 max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle className="text-white">Edit Recipe</DialogTitle>
+                    <DialogTitle className="text-white">{isCreateMode ? 'Create Recipe' : 'Edit Recipe'}</DialogTitle>
                     <DialogDescription>
-                        Modify recipe settings and stage templates. Fields are automatically extracted from templates.
+                        {isCreateMode
+                            ? 'Create a new recipe with stage templates. Fields are automatically extracted from templates.'
+                            : 'Modify recipe settings and stage templates. Fields are automatically extracted from templates.'}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -608,10 +630,10 @@ Example: A portrait of <<CHARACTER_NAME:name!>> in <<STYLE:text>> style."
                         {saving ? (
                             <>
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                Saving...
+                                {isCreateMode ? 'Creating...' : 'Saving...'}
                             </>
                         ) : (
-                            'Save Changes'
+                            isCreateMode ? 'Create Recipe' : 'Save Changes'
                         )}
                     </Button>
                 </DialogFooter>

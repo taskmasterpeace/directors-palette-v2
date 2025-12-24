@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, RefreshCw, Sparkles, Trash2, Copy, Pencil, Search, ChevronDown, ChevronUp } from "lucide-react"
+import { Loader2, RefreshCw, Sparkles, Trash2, Copy, Pencil, Search, ChevronDown, ChevronUp, Plus } from "lucide-react"
 import { toast } from "sonner"
 import { useRecipeStore } from "@/features/shot-creator/store/recipe.store"
 import { useAuth } from "@/features/auth/hooks/useAuth"
@@ -26,6 +26,7 @@ export function RecipesTab() {
         deleteRecipe,
         duplicateRecipe,
         updateRecipe,
+        addRecipe,
     } = useRecipeStore()
 
     const [searchQuery, setSearchQuery] = useState("")
@@ -84,16 +85,48 @@ export function RecipesTab() {
         setEditDialogOpen(true)
     }
 
-    const handleSaveEdit = async (updates: Partial<Recipe>) => {
-        if (!editingRecipe) return
+    const handleCreate = () => {
+        setEditingRecipe(null) // null = create mode
+        setEditDialogOpen(true)
+    }
 
+    const handleSaveEdit = async (updates: Partial<Recipe>) => {
         try {
-            await updateRecipe(editingRecipe.id, updates)
-            toast.success(`Recipe "${editingRecipe.name}" updated`)
+            if (editingRecipe) {
+                // Edit mode
+                await updateRecipe(editingRecipe.id, updates)
+                toast.success(`Recipe "${editingRecipe.name}" updated`)
+            } else {
+                // Create mode
+                const newRecipe = await addRecipe({
+                    name: updates.name || 'New Recipe',
+                    description: updates.description,
+                    recipeNote: updates.recipeNote,
+                    stages: updates.stages || [{
+                        id: 'stage_0',
+                        order: 0,
+                        type: 'generation',
+                        template: '',
+                        fields: [],
+                        referenceImages: [],
+                    }],
+                    suggestedAspectRatio: updates.suggestedAspectRatio,
+                    suggestedResolution: updates.suggestedResolution,
+                    suggestedModel: updates.suggestedModel,
+                    quickAccessLabel: updates.quickAccessLabel,
+                    isQuickAccess: updates.isQuickAccess || false,
+                    categoryId: updates.categoryId,
+                    isSystem: updates.isSystem || false,
+                    isSystemOnly: updates.isSystemOnly || false,
+                })
+                if (newRecipe) {
+                    toast.success(`Recipe "${newRecipe.name}" created`)
+                }
+            }
             setEditDialogOpen(false)
             setEditingRecipe(null)
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Failed to update recipe")
+            toast.error(error instanceof Error ? error.message : "Failed to save recipe")
         }
     }
 
@@ -156,10 +189,16 @@ export function RecipesTab() {
                         {filteredRecipes.length} / {recipes.length}
                     </Badge>
                 </div>
-                <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
-                    <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                    Refresh
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="default" size="sm" onClick={handleCreate}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Recipe
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
+                        <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                        Refresh
+                    </Button>
+                </div>
             </div>
 
             {/* Filters */}
