@@ -1,0 +1,106 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Director's Palette - Reference Image Persistence
+Spec: 005-complete-reference-image-persistence-to-supabase
+Workspace: C:\git\directors-palette-v2
+Started: 2025-12-25
+
+Workflow Type: bug_fix
+Rationale: Primary issue is a UI collision bug (dual autocomplete dropdowns). Investigation
+revealed that Supabase Storage persistence is ALREADY implemented - references link to gallery
+items which have Supabase Storage URLs. The main fix is removing duplicate autocomplete code.
+
+Session 1 (Planner):
+- Completed deep codebase investigation
+- Identified root cause of dual autocomplete bug
+- Verified reference persistence is already implemented via gallery items
+- Created implementation_plan.json
+- Phases: 3
+- Total subtasks: 10
+- Created init.sh
+
+=== INVESTIGATION FINDINGS ===
+
+1. DUAL AUTOCOMPLETE BUG (Root Cause Identified):
+   File: src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx
+
+   OLD SYSTEM (TO REMOVE):
+   - Lines 77-82: State variables (showAutocomplete, autocompleteSearch, autocompleteCursorPos)
+   - Lines 133-180: Helper memos (getReferencesGroupedByCategory, autocompleteSuggestions)
+   - Lines 183-268: Handlers (selectAutocompleteSuggestion, handleTextareaKeyUp, handleAutocompleteKeyDown)
+   - Lines 236-245: Navigation helpers (flatSuggestions, hasSuggestions)
+   - Lines 646-685: Inline dropdown JSX (the DUPLICATE wider dropdown)
+
+   NEW SYSTEM (TO KEEP):
+   - Line 100: usePromptAutocomplete() hook
+   - Lines 101-112: Destructured state from hook
+   - Lines 477-504: handleAutocompleteSelect callback
+   - Lines 702-710: <PromptAutocomplete> component (the CORRECT fixed-position dropdown)
+
+2. REFERENCE PERSISTENCE (Already Implemented!):
+   - Gallery images stored in Supabase Storage via storage.service.ts
+   - References stored in 'reference' table with gallery_id FK to 'gallery' table
+   - Gallery items have public_url (persistent) and storage_path
+   - References load via getReferencesPaginated() which queries Supabase
+   - NO NEW STORAGE CODE NEEDED
+
+3. STORAGE CLEANUP (Already Implemented!):
+   File: src/lib/services/gallery.service.ts (lines 228-263)
+   - deleteItem() already: deletes references, deletes storage file, deletes DB entry
+   - NO CHANGES NEEDED
+
+=== PHASE SUMMARY ===
+
+Phase 1: Remove Duplicate Autocomplete System (6 subtasks)
+- Remove old autocomplete state variables
+- Remove helper memos and callbacks
+- Remove old inline dropdown JSX
+- Update Textarea event handlers
+- Clean up unused imports
+Depends on: None
+
+Phase 2: Add New Autocomplete Keyboard Handling (1 subtask)
+- Add Arrow key navigation, Enter/Tab selection, Escape to close
+Depends on: Phase 1
+
+Phase 3: Testing and Validation (3 subtasks)
+- Verify single dropdown behavior
+- Verify reference persistence
+- Run TypeScript check and Playwright tests
+Depends on: Phase 2
+
+=== SERVICES INVOLVED ===
+
+- main (Next.js): Primary service - all changes in this spec
+
+=== PARALLELISM ANALYSIS ===
+
+- Max parallel phases: 1
+- Recommended workers: 1
+- Reason: Sequential dependency chain - each phase depends on previous
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 005 --parallel 1
+
+Or manually:
+
+  cd C:\git\directors-palette-v2
+  npm run dev
+
+Then test at: http://localhost:3000
+
+=== ACCEPTANCE CRITERIA ===
+
+1. [ ] Only ONE autocomplete dropdown appears when typing @
+2. [ ] Keyboard navigation works (Arrow Up/Down, Enter/Tab, Escape)
+3. [ ] Reference images persist across browser sessions
+4. [ ] Reference images sync across devices for logged-in users
+5. [ ] Reference image URLs are valid and accessible in prompts
+6. [ ] No console errors related to autocomplete
+7. [ ] No TypeScript errors
+8. [ ] Existing Playwright tests pass
+
+=== END SESSION 1 ===

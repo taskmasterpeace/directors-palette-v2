@@ -1,0 +1,214 @@
+{
+  "spec_id": "005-complete-reference-image-persistence-to-supabase",
+  "title": "Complete Reference Image Persistence to Supabase",
+  "description": "Fix dual autocomplete dropdown bug and verify Supabase Storage persistence for reference images. References already persist via gallery items - main work is removing duplicate autocomplete code.",
+  "status": "pending",
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Fix Duplicate Autocomplete Bug",
+      "description": "Remove the old inline autocomplete system from PromptActions.tsx, keeping only the new PromptAutocomplete component. Currently TWO dropdowns appear when typing @ - one narrow fixed-position dropdown and one wider inline dropdown.",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "1.1",
+          "title": "Remove old autocomplete state variables",
+          "description": "Remove showAutocomplete, autocompleteSearch, autocompleteCursorPos, and autocompleteRef state variables from PromptActions.tsx (lines 78-82). These power the OLD duplicate autocomplete system.",
+          "file": "src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx",
+          "status": "completed",
+          "notes": "Removed showAutocomplete, autocompleteSearch, autocompleteCursorPos, and autocompleteRef state variables. Build will fail until subsequent subtasks (1.2-1.9) remove the code that uses these variables. Committed as 9682f37.",
+          "updated_at": "2025-12-25T08:13:40.444137+00:00"
+        },
+        {
+          "id": "1.2",
+          "title": "Remove getReferencesGroupedByCategory callback",
+          "description": "Remove the getReferencesGroupedByCategory useCallback (lines 133-154) that is used only by the old autocomplete system.",
+          "file": "src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "id": "1.3",
+          "title": "Remove old autocompleteSuggestions memo",
+          "description": "Remove the autocompleteSuggestions useMemo (lines 157-180) that duplicates filtering logic for the old autocomplete.",
+          "file": "src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "id": "1.4",
+          "title": "Remove selectAutocompleteSuggestion callback",
+          "description": "Remove the selectAutocompleteSuggestion useCallback (lines 183-205) that handles selection in the old autocomplete system.",
+          "file": "src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "id": "1.5",
+          "title": "Remove handleTextareaKeyUp handler",
+          "description": "Remove handleTextareaKeyUp callback (lines 208-233) that detects @ symbol for the old autocomplete system.",
+          "file": "src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "id": "1.6",
+          "title": "Remove flatSuggestions and hasSuggestions",
+          "description": "Remove flatSuggestions useMemo (lines 236-242) and hasSuggestions variable (line 245) used for old autocomplete keyboard navigation.",
+          "file": "src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "id": "1.7",
+          "title": "Remove handleAutocompleteKeyDown handler",
+          "description": "Remove handleAutocompleteKeyDown callback (lines 248-268) that handles keyboard navigation for the old autocomplete.",
+          "file": "src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "id": "1.8",
+          "title": "Remove old inline autocomplete dropdown JSX",
+          "description": "Remove the duplicate inline autocomplete dropdown div (lines 646-685) that renders when showAutocomplete && hasSuggestions. This is the wider dropdown that conflicts with PromptAutocomplete.",
+          "file": "src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx",
+          "status": "pending",
+          "notes": ""
+        },
+        {
+          "id": "1.9",
+          "title": "Update textarea event handlers",
+          "description": "Remove onKeyUp={handleTextareaKeyUp} from textarea. The new autocomplete system uses handleAutocompleteTextChange in handlePromptChange. Keep onKeyDown for Ctrl+Enter generation.",
+          "file": "src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx",
+          "status": "pending",
+          "notes": "Keep the existing onKeyDown for Ctrl+Enter generation - no need to add new autocomplete keyboard handling as it's done in the PromptAutocomplete component"
+        },
+        {
+          "id": "1.10",
+          "title": "Clean up unused imports and variables",
+          "description": "Remove useLibraryStore import (only used for old autocomplete), remove Category import from CategorySelectDialog (if no longer used). Keep useUnifiedGalleryStore which is used by handlePromptChange.",
+          "file": "src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx",
+          "status": "pending",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Verify Reference Persistence Architecture",
+      "description": "Verify that reference images already persist via the existing gallery-based architecture. References link to gallery items which have Supabase Storage URLs.",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "2.1",
+          "title": "Analyze existing persistence architecture",
+          "description": "Verify: 1) References are stored in 'reference' table with gallery_id foreign key, 2) Gallery items have storage_path and public_url from Supabase Storage, 3) References load via getReferencesPaginated which joins to gallery table.",
+          "file": "src/features/shot-creator/services/reference-library.service.ts",
+          "status": "pending",
+          "notes": "Architecture review - likely no code changes needed for persistence itself"
+        },
+        {
+          "id": "2.2",
+          "title": "Verify deleteReference behavior",
+          "description": "Confirm deleteReference only removes the reference record, not the underlying gallery item or storage file. This is correct behavior - users may want to keep the generated image even if not using as reference.",
+          "file": "src/features/shot-creator/services/reference-library.service.ts",
+          "status": "pending",
+          "notes": "Current behavior is correct - reference deletion is lightweight"
+        },
+        {
+          "id": "2.3",
+          "title": "Verify gallery deletion cascades",
+          "description": "Confirm GalleryService.deleteItem already: 1) Deletes associated references first, 2) Deletes storage file, 3) Deletes gallery record. This handles orphan cleanup.",
+          "file": "src/lib/services/gallery.service.ts",
+          "status": "pending",
+          "notes": "Already implemented at lines 228-263 - no changes needed"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Testing and Verification",
+      "description": "Test all functionality to ensure autocomplete fix works and persistence is confirmed",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "3.1",
+          "title": "Build and start dev server",
+          "description": "Run npm run dev and verify no TypeScript errors after removing old autocomplete code.",
+          "file": "",
+          "status": "pending",
+          "notes": "Compilation must succeed"
+        },
+        {
+          "id": "3.2",
+          "title": "Test single autocomplete dropdown",
+          "description": "Type @ in the prompt textarea and verify only ONE autocomplete dropdown appears (the PromptAutocomplete component with fixed positioning).",
+          "file": "",
+          "status": "pending",
+          "notes": "Browser test at http://localhost:3000 - CRITICAL acceptance criteria"
+        },
+        {
+          "id": "3.3",
+          "title": "Test autocomplete keyboard navigation",
+          "description": "Test Arrow Up/Down to navigate, Enter/Tab to select, Escape to close. Verify selected reference is inserted correctly with trailing space.",
+          "file": "",
+          "status": "pending",
+          "notes": "Test both categories (@people, @places) and specific references"
+        },
+        {
+          "id": "3.4",
+          "title": "Test reference auto-attachment",
+          "description": "Type @referencename and verify the corresponding image is auto-attached to shotCreatorReferenceImages when a match exists.",
+          "file": "",
+          "status": "pending",
+          "notes": "This uses extractAtTags via handlePromptChange - should still work"
+        },
+        {
+          "id": "3.5",
+          "title": "Test reference persistence across sessions",
+          "description": "Add a reference to the library with tags, close the browser, reopen, and verify the reference is still visible with correct tags.",
+          "file": "",
+          "status": "pending",
+          "notes": "Test with authenticated user - confirms Supabase persistence works"
+        },
+        {
+          "id": "3.6",
+          "title": "Test edge cases",
+          "description": "Test: consecutive @@ symbols, @ at end of text, empty query showing all options, no matching references, special characters in reference names.",
+          "file": "",
+          "status": "pending",
+          "notes": "Verify graceful handling without console errors"
+        },
+        {
+          "id": "3.7",
+          "title": "Verify no console errors",
+          "description": "Open browser dev tools and check for any JavaScript errors or warnings related to autocomplete or storage during normal usage.",
+          "file": "",
+          "status": "pending",
+          "notes": "Check Console tab for errors, Network tab for failed requests"
+        },
+        {
+          "id": "3.8",
+          "title": "Run existing tests",
+          "description": "Run npm test (if tests exist) to ensure no regressions from the refactoring.",
+          "file": "",
+          "status": "pending",
+          "notes": "Fix any broken tests if needed"
+        }
+      ]
+    }
+  ],
+  "architecture_notes": {
+    "reference_persistence": "References already persist via gallery items. The 'reference' table has gallery_id FK linking to 'gallery' table. Gallery items have public_url (Supabase Storage URL) and storage_path. No additional storage code needed.",
+    "autocomplete_fix": "Two autocomplete systems exist: 1) OLD inline system with showAutocomplete state and manual JSX dropdown, 2) NEW PromptAutocomplete component using usePromptAutocomplete hook. We keep only the new system.",
+    "delete_behavior": "deleteReference() only removes reference record (correct - keeps gallery item). GalleryService.deleteItem() handles full cleanup including associated references and storage files."
+  },
+  "qa_signoff": {
+    "status": "pending",
+    "tests_passed": "",
+    "issues": ""
+  },
+  "created_at": "2025-12-25T07:51:32.482Z",
+  "updated_at": "2025-12-25T10:00:00.000Z",
+  "last_updated": "2025-12-25T08:13:40.444145+00:00"
+}
