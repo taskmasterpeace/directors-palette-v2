@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
+import packageJson from "./package.json";
 
 const nextConfig: NextConfig = {
+  // Expose package.json version as environment variable for client components
+  env: {
+    NEXT_PUBLIC_APP_VERSION: packageJson.version,
+  },
+
   /* config options here */
   images: {
     remotePatterns: [
