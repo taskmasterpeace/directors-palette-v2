@@ -43,8 +43,8 @@ interface RecipeState {
 
   // Actions - Recipes
   addRecipe: (recipe: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Recipe | null>
-  updateRecipe: (id: string, updates: Partial<Omit<Recipe, 'id' | 'createdAt'>>) => Promise<void>
-  deleteRecipe: (id: string) => Promise<void>
+  updateRecipe: (id: string, updates: Partial<Omit<Recipe, 'id' | 'createdAt'>>, isAdmin?: boolean) => Promise<void>
+  deleteRecipe: (id: string, isAdmin?: boolean) => Promise<void>
   getRecipe: (id: string) => Recipe | undefined
   duplicateRecipe: (recipeId: string, newName?: string) => Promise<Recipe | null>
 
@@ -225,9 +225,9 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
     return newRecipe
   },
 
-  updateRecipe: async (id, updates) => {
+  updateRecipe: async (id, updates, isAdmin = false) => {
     const userId = get().currentUserId
-    if (!userId) return
+    if (!userId) throw new Error('No user ID')
 
     // If stages are updated, re-parse fields
     const processedUpdates = {
@@ -240,11 +240,10 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
       })
     }
 
-    // Update in database
-    const updatedRecipe = await recipeService.updateRecipe(id, processedUpdates, userId)
+    // Update in database (use admin client for admin operations to bypass RLS)
+    const updatedRecipe = await recipeService.updateRecipe(id, processedUpdates, userId, isAdmin)
     if (!updatedRecipe) {
-      console.error('Failed to update recipe in database')
-      return
+      throw new Error('Failed to update recipe in database')
     }
 
     // Update local state
@@ -255,9 +254,9 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
     }))
   },
 
-  deleteRecipe: async (id) => {
+  deleteRecipe: async (id, isAdmin = false) => {
     const userId = get().currentUserId
-    if (!userId) return
+    if (!userId) throw new Error('No user ID')
 
     // Remove from quick access if present
     const quickAccessItem = get().quickAccessItems.find(
@@ -272,11 +271,10 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
       set({ activeRecipeId: null, activeFieldValues: {} })
     }
 
-    // Delete from database
-    const success = await recipeService.deleteRecipe(id, userId)
+    // Delete from database (use admin client for admin operations to bypass RLS)
+    const success = await recipeService.deleteRecipe(id, userId, isAdmin)
     if (!success) {
-      console.error('Failed to delete recipe from database')
-      return
+      throw new Error('Failed to delete recipe from database')
     }
 
     // Update local state

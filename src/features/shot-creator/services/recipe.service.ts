@@ -4,7 +4,7 @@
  * Recipes are stored in Supabase, not localStorage
  */
 
-import { getClient } from '@/lib/db/client'
+import { getClient, getAPIClient } from '@/lib/db/client'
 import type { Recipe, RecipeStage, RecipeReferenceImage } from '../types/recipe.types'
 import { parseStageTemplate, SAMPLE_RECIPES } from '../types/recipe.types'
 
@@ -167,13 +167,18 @@ class RecipeService {
 
   /**
    * Update an existing recipe
+   * @param useAdminClient - If true, uses service role client to bypass RLS (for admin operations on system recipes)
    */
   async updateRecipe(
     recipeId: string,
     updates: Partial<Omit<Recipe, 'id' | 'createdAt'>>,
-    userId: string
+    userId: string,
+    useAdminClient: boolean = false
   ): Promise<Recipe | null> {
-    const supabase = await getRecipeClient()
+    // Use service role client for admin operations (bypasses RLS)
+    const supabase = useAdminClient
+      ? await getAPIClient()
+      : await getRecipeClient()
 
     // Build update object
     const updateData: Partial<DbRecipe> = {
@@ -237,15 +242,29 @@ class RecipeService {
 
   /**
    * Delete a recipe
+   * @param useAdminClient - If true, uses service role client to bypass RLS (for admin operations on system recipes)
    */
-  async deleteRecipe(recipeId: string, userId: string): Promise<boolean> {
-    const supabase = await getRecipeClient()
+  async deleteRecipe(
+    recipeId: string,
+    userId: string,
+    useAdminClient: boolean = false
+  ): Promise<boolean> {
+    // Use service role client for admin operations (bypasses RLS)
+    const supabase = useAdminClient
+      ? await getAPIClient()
+      : await getRecipeClient()
 
-    const { error } = await supabase
+    // Build query - admin client can delete any recipe, regular client only user's own
+    let query = supabase
       .from('user_recipes')
       .delete()
       .eq('id', recipeId)
-      .eq('user_id', userId) // Only owner can delete
+
+    if (!useAdminClient) {
+      query = query.eq('user_id', userId) // Only owner can delete (non-admin path)
+    }
+
+    const { error } = await query
 
     if (error) {
       console.error('Error deleting recipe:', error)
@@ -257,12 +276,14 @@ class RecipeService {
 
   /**
    * Add a reference image to a recipe stage
+   * @param useAdminClient - If true, uses service role client to bypass RLS
    */
   async addReferenceImageToStage(
     recipeId: string,
     stageId: string,
     image: RecipeReferenceImage,
-    userId: string
+    userId: string,
+    useAdminClient: boolean = false
   ): Promise<Recipe | null> {
     // Get current recipe
     const recipe = await this.getRecipe(recipeId, userId)
@@ -279,17 +300,19 @@ class RecipeService {
       return stage
     })
 
-    return this.updateRecipe(recipeId, { stages: updatedStages }, userId)
+    return this.updateRecipe(recipeId, { stages: updatedStages }, userId, useAdminClient)
   }
 
   /**
    * Remove a reference image from a recipe stage
+   * @param useAdminClient - If true, uses service role client to bypass RLS
    */
   async removeReferenceImageFromStage(
     recipeId: string,
     stageId: string,
     imageId: string,
-    userId: string
+    userId: string,
+    useAdminClient: boolean = false
   ): Promise<Recipe | null> {
     // Get current recipe
     const recipe = await this.getRecipe(recipeId, userId)
@@ -306,7 +329,7 @@ class RecipeService {
       return stage
     })
 
-    return this.updateRecipe(recipeId, { stages: updatedStages }, userId)
+    return this.updateRecipe(recipeId, { stages: updatedStages }, userId, useAdminClient)
   }
 
   // ============================================================================

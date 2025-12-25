@@ -57,7 +57,8 @@ export function RecipesTab() {
 
         setDeletingId(recipe.id)
         try {
-            await deleteRecipe(recipe.id)
+            // Use admin client to bypass RLS for system recipes
+            await deleteRecipe(recipe.id, true)
             toast.success(`Recipe "${recipe.name}" deleted`)
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "Failed to delete recipe")
@@ -93,8 +94,8 @@ export function RecipesTab() {
     const handleSaveEdit = async (updates: Partial<Recipe>) => {
         try {
             if (editingRecipe) {
-                // Edit mode
-                await updateRecipe(editingRecipe.id, updates)
+                // Edit mode - use admin client to bypass RLS for system recipes
+                await updateRecipe(editingRecipe.id, updates, true)
                 toast.success(`Recipe "${editingRecipe.name}" updated`)
             } else {
                 // Create mode
