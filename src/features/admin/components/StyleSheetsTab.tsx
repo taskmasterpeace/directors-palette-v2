@@ -9,7 +9,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { Palette, Plus, Pencil, Trash2, Loader2, RefreshCw, Image as ImageIcon } from 'lucide-react'
+import { Palette, Plus, Pencil, Trash2, RefreshCw, Image as ImageIcon } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { createBrowserClient } from '@supabase/ssr'
 
 interface StyleSheet {
@@ -181,7 +182,7 @@ export function StyleSheetsTab() {
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              <LoadingSpinner color="muted" />
             </div>
           ) : styles.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -252,7 +253,7 @@ export function StyleSheetsTab() {
                           className="text-destructive hover:text-destructive"
                         >
                           {deleting === style.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <LoadingSpinner size="sm" color="current" />
                           ) : (
                             <Trash2 className="w-4 h-4" />
                           )}
@@ -345,7 +346,7 @@ export function StyleSheetsTab() {
             <Button onClick={handleSave} disabled={!name.trim() || saving}>
               {saving ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <LoadingSpinner size="sm" color="current" className="mr-2" />
                   Saving...
                 </>
               ) : editingStyle ? (

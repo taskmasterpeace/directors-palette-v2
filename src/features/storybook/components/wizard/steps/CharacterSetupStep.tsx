@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -164,7 +165,7 @@ export function CharacterSetupStep() {
                   </>
                 ) : isUploading ? (
                   <div className="text-center">
-                    <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                    <LoadingSpinner size="lg" className="mx-auto mb-2" />
                     <span className="text-xs text-muted-foreground">Uploading...</span>
                   </div>
                 ) : (

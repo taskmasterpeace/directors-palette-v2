@@ -1,0 +1,323 @@
+{
+  "feature": "Fix Gallery Load More Infinite Scroll Bug",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a bug fix that requires modifying state management logic to properly implement infinite scroll. The fix is well-scoped to 2 files and follows existing patterns.",
+  "phases": [
+    {
+      "id": "phase-1-store-fix",
+      "name": "Store State Management Fix",
+      "type": "implementation",
+      "description": "Add internal infiniteScrollPage counter and fix loadMoreImages to not trigger useGalleryLoader reload",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Add infiniteScrollPage state property to UnifiedGalleryState interface and initial state",
+          "service": "main",
+          "files_to_modify": ["src/features/shot-creator/store/unified-gallery-store.ts"],
+          "files_to_create": [],
+          "patterns_from": ["src/features/shot-creator/store/unified-gallery-store.ts"],
+          "verification": {
+            "type": "command",
+            "command": "grep -n 'infiniteScrollPage' src/features/shot-creator/store/unified-gallery-store.ts",
+            "expected": "infiniteScrollPage property found in state interface and initial state"
+          },
+          "status": "pending",
+          "implementation_notes": [
+            "Add 'infiniteScrollPage: number' to UnifiedGalleryState interface around line 73",
+            "Add 'infiniteScrollPage: 1' to initial state around line 153",
+            "This counter tracks API pagination for infinite scroll without triggering useGalleryLoader"
+          ]
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Modify loadMoreImages to use infiniteScrollPage instead of currentPage",
+          "service": "main",
+          "files_to_modify": ["src/features/shot-creator/store/unified-gallery-store.ts"],
+          "files_to_create": [],
+          "patterns_from": ["src/features/shot-creator/store/unified-gallery-store.ts"],
+          "verification": {
+            "type": "command",
+            "command": "grep -A5 'loadMoreImages' src/features/shot-creator/store/unified-gallery-store.ts | grep -v 'currentPage'",
+            "expected": "loadMoreImages no longer updates currentPage, uses infiniteScrollPage instead"
+          },
+          "status": "pending",
+          "implementation_notes": [
+            "Change 'const nextPage = state.currentPage + 1' to 'const nextPage = state.infiniteScrollPage + 1'",
+            "Change 'set({ currentPage: nextPage })' to 'set({ infiniteScrollPage: nextPage })'",
+            "Keep using appendImages for the actual image accumulation (already correct)",
+            "IMPORTANT: Do NOT modify currentPage - it's used by ExpandedGallery pagination"
+          ]
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Update resetInfiniteScroll to reset infiniteScrollPage",
+          "service": "main",
+          "files_to_modify": ["src/features/shot-creator/store/unified-gallery-store.ts"],
+          "files_to_create": [],
+          "patterns_from": ["src/features/shot-creator/store/unified-gallery-store.ts"],
+          "verification": {
+            "type": "command",
+            "command": "grep -A10 'resetInfiniteScroll' src/features/shot-creator/store/unified-gallery-store.ts | grep 'infiniteScrollPage'",
+            "expected": "infiniteScrollPage: 1 found in resetInfiniteScroll"
+          },
+          "status": "pending",
+          "implementation_notes": [
+            "Add 'infiniteScrollPage: 1' to the resetInfiniteScroll set() call",
+            "Keep currentPage: 1 reset as well for consistency",
+            "This ensures fresh start when folder/search changes"
+          ]
+        },
+        {
+          "id": "subtask-1-4",
+          "description": "Update refreshGallery to reset infiniteScrollPage",
+          "service": "main",
+          "files_to_modify": ["src/features/shot-creator/store/unified-gallery-store.ts"],
+          "files_to_create": [],
+          "patterns_from": ["src/features/shot-creator/store/unified-gallery-store.ts"],
+          "verification": {
+            "type": "command",
+            "command": "grep -A20 'refreshGallery' src/features/shot-creator/store/unified-gallery-store.ts | grep 'infiniteScrollPage'",
+            "expected": "infiniteScrollPage: 1 found in refreshGallery"
+          },
+          "status": "pending",
+          "implementation_notes": [
+            "Add 'infiniteScrollPage: 1' to the refreshGallery set() call at the end",
+            "This ensures refresh starts fresh with infinite scroll state"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-2-browser-verification",
+      "name": "Browser Verification",
+      "type": "integration",
+      "description": "Verify the fix works correctly in the browser with real user interactions",
+      "depends_on": ["phase-1-store-fix"],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Verify images accumulate on Load More clicks",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000",
+            "checks": [
+              "Note initial image count",
+              "Click 'Load More Images' button",
+              "Verify image count increased (not replaced)",
+              "Scroll up to confirm previous images still visible",
+              "Click 'Load More Images' again",
+              "Verify all three batches of images visible"
+            ]
+          },
+          "status": "pending",
+          "implementation_notes": [
+            "Start dev server with npm run dev",
+            "Login to application",
+            "Observe gallery behavior before and after clicking Load More"
+          ]
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Verify folder/search changes reset gallery correctly",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000",
+            "checks": [
+              "Load multiple pages of images using Load More",
+              "Change folder selection",
+              "Verify gallery resets to first page of new folder",
+              "Use search functionality",
+              "Verify gallery resets with search results only"
+            ]
+          },
+          "status": "pending",
+          "implementation_notes": [
+            "Test folder navigation in sidebar",
+            "Test search input functionality",
+            "Verify no stale images from previous context"
+          ]
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Verify end of gallery handling",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000",
+            "checks": [
+              "Click Load More until all images loaded",
+              "Verify 'All images loaded' message appears",
+              "Verify button is disabled",
+              "Verify no console errors"
+            ]
+          },
+          "status": "pending",
+          "implementation_notes": [
+            "May need test account with limited images to reach end easily",
+            "Check browser console for any errors during loading"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-3-regression-check",
+      "name": "Regression Testing",
+      "type": "integration",
+      "description": "Ensure ExpandedGallery pagination still works correctly",
+      "depends_on": ["phase-1-store-fix"],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Verify ExpandedGallery pagination still works",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/gallery",
+            "checks": [
+              "Navigate to expanded gallery page",
+              "Click page 2 in pagination controls",
+              "Verify page 2 images are shown (replaces page 1)",
+              "Click page 1",
+              "Verify page 1 images are shown",
+              "Verify pagination controls work correctly"
+            ]
+          },
+          "status": "pending",
+          "implementation_notes": [
+            "ExpandedGallery uses currentPage for traditional pagination",
+            "This should NOT be affected by infiniteScrollPage changes",
+            "Verify setCurrentPage still triggers useGalleryLoader correctly"
+          ]
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Run existing gallery tests",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm run test:folders",
+            "expected": "All gallery folder tests pass"
+          },
+          "status": "pending",
+          "implementation_notes": [
+            "Runs tests/gallery-folders.spec.ts",
+            "Verifies existing gallery functionality still works"
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 3,
+    "total_subtasks": 7,
+    "services_involved": ["main"],
+    "parallelism": {
+      "max_parallel_phases": 2,
+      "parallel_groups": [
+        {
+          "phases": ["phase-2-browser-verification", "phase-3-regression-check"],
+          "reason": "Both depend only on phase-1, different verification targets"
+        }
+      ],
+      "recommended_workers": 1,
+      "speedup_estimate": "N/A - single service, sequential preferred for state changes"
+    },
+    "startup_command": "source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 012 --parallel 1"
+  },
+  "verification_strategy": {
+    "risk_level": "low",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": ["unit", "integration"],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "Load More button appends images instead of replacing them",
+      "All previously loaded images remain visible after clicking Load More",
+      "Folder/search changes reset gallery to fresh state",
+      "End of gallery shows 'All images loaded' and disables button",
+      "ExpandedGallery pagination still works correctly",
+      "No console errors during gallery operations",
+      "Existing gallery tests pass"
+    ],
+    "verification_steps": [
+      {
+        "name": "Unit Tests",
+        "command": "npm run test:unit",
+        "expected_outcome": "All unit tests pass",
+        "type": "test",
+        "required": false,
+        "blocking": false
+      },
+      {
+        "name": "Gallery Folder Tests",
+        "command": "npm run test:folders",
+        "expected_outcome": "All gallery folder tests pass",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "TypeScript Check",
+        "command": "npx tsc --noEmit",
+        "expected_outcome": "No TypeScript errors",
+        "type": "lint",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Low risk UI behavior fix. Core changes are isolated to state management. Existing tests verify folder functionality. Browser verification confirms user-facing behavior."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": ["npm run test:unit"],
+      "minimum_coverage": null,
+      "notes": "Unit tests optional for this fix - behavior is best verified through integration tests"
+    },
+    "integration_tests": {
+      "required": true,
+      "commands": ["npm run test:folders"],
+      "services_to_test": ["main"]
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": ["npm run test"],
+      "flows": ["gallery-load-more"]
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {"url": "http://localhost:3000", "checks": ["load-more-accumulates", "no-console-errors"]},
+        {"url": "http://localhost:3000/gallery", "checks": ["pagination-works", "no-console-errors"]}
+      ]
+    },
+    "database_verification": {
+      "required": false,
+      "checks": [],
+      "notes": "No database changes in this fix"
+    }
+  },
+  "qa_signoff": null
+}

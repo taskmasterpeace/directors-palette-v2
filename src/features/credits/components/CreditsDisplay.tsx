@@ -17,7 +17,8 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Coins, Plus, Loader2, Sparkles, Zap, Star, Crown, Image as ImageIcon, Gift, Video } from 'lucide-react'
+import { Coins, Plus, Sparkles, Zap, Star, Crown, Image as ImageIcon, Gift, Video } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { cn } from '@/utils/utils'
 import { RedeemUsageDialog } from './RedeemUsageDialog'
 
@@ -197,7 +198,7 @@ export function CreditsDisplay() {
                                     <Sparkles className="w-4 h-4 text-amber-500" />
                                     <span className="font-mono text-amber-500 font-bold">
                                         {loading ? (
-                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                            <LoadingSpinner size="xs" color="current" />
                                         ) : (
                                             `${formatTokens(tokens)} tokens`
                                         )}
@@ -235,7 +236,7 @@ export function CreditsDisplay() {
                                 <div className="text-right">
                                     <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-1">Your Balance</div>
                                     <div className="text-3xl font-bold font-mono text-amber-400 drop-shadow-sm">
-                                        {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : formatTokens(tokens)}
+                                        {loading ? <LoadingSpinner size="md" color="current" /> : formatTokens(tokens)}
                                         <span className="text-sm text-zinc-500 ml-1 font-sans font-normal">tokens</span>
                                     </div>
                                 </div>
@@ -260,7 +261,7 @@ export function CreditsDisplay() {
                         <div className="p-6">
                             {loadingPackages ? (
                                 <div className="flex flex-col items-center justify-center py-12 gap-3 text-zinc-500">
-                                    <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+                                    <LoadingSpinner size="lg" />
                                     <p className="text-sm">Loading best offers...</p>
                                 </div>
                             ) : packages.length === 0 ? (
@@ -360,7 +361,7 @@ export function CreditsDisplay() {
                                                         disabled={isPurchasing}
                                                     >
                                                         {isPurchasing ? (
-                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                            <LoadingSpinner size="sm" color="current" />
                                                         ) : (
                                                             "Buy"
                                                         )}

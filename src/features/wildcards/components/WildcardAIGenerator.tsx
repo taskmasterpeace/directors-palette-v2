@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Sparkles, AlertCircle, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { useWildcardsBrowserStore } from '../store'
@@ -124,7 +125,7 @@ export function WildcardAIGenerator() {
                 >
                     {isGenerating ? (
                         <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                            <LoadingSpinner size="sm" color="current" className="mr-2" />
                             Generating...
                         </>
                     ) : (

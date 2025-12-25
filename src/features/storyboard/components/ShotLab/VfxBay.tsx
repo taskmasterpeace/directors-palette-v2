@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { Input } from "@/components/ui/input"
 import { GeneratedShotPrompt } from "../../types/storyboard.types"
-import { Eraser, Paintbrush, Undo2, Sparkles, Loader2, Wand2 } from "lucide-react"
+import { Eraser, Paintbrush, Undo2, Sparkles, Wand2 } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface VfxBayProps {
     shot: GeneratedShotPrompt
@@ -192,7 +193,7 @@ export function VfxBay({ shot, onUpdate: _onUpdate }: VfxBayProps) {
                         disabled={isProcessing || !instruction}
                         className="bg-purple-600 hover:bg-purple-700 text-white min-w-[120px]"
                     >
-                        {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Wand2 className="w-4 h-4 mr-2" />}
+                        {isProcessing ? <LoadingSpinner size="sm" color="current" className="mr-2" /> : <Wand2 className="w-4 h-4 mr-2" />}
                         Generate
                     </Button>
                 </div>

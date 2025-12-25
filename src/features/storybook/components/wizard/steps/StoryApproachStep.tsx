@@ -4,7 +4,8 @@ import { useState } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, RefreshCw, Loader2, BookOpen } from "lucide-react"
+import { ArrowLeft, RefreshCw, BookOpen } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { cn } from "@/utils/utils"
 import {
   getCategoryById,
@@ -202,7 +203,7 @@ export function StoryApproachStep() {
                         {idea.approach}
                       </span>
                       {isSelected && isGenerating && (
-                        <Loader2 className="w-3 h-3 animate-spin text-amber-400" />
+                        <LoadingSpinner size="xs" />
                       )}
                     </div>
                     <h3 className="font-semibold text-white text-lg mb-2 truncate">
@@ -217,7 +218,7 @@ export function StoryApproachStep() {
                 {isSelected && isGenerating && (
                   <div className="mt-4 pt-4 border-t border-amber-500/30">
                     <div className="flex items-center gap-2 text-amber-400">
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <LoadingSpinner size="sm" />
                       <span className="text-sm">Generating your story...</span>
                     </div>
                   </div>
@@ -265,7 +266,7 @@ export function StoryApproachStep() {
         >
           {isRegenerating ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <LoadingSpinner size="sm" color="current" />
               Regenerating...
             </>
           ) : (

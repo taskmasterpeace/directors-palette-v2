@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Users, Wand2, Loader2, CheckCircle, AlertCircle, Image as ImageIcon } from 'lucide-react'
+import { Users, Wand2, CheckCircle, AlertCircle, Image as ImageIcon } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { PromptEditor, type PromptVariable } from '../shared/PromptEditor'
 import { characterSheetService, DEFAULT_SIDE1_PROMPT, DEFAULT_SIDE2_PROMPT } from '../../services/character-sheet.service'
 import { useStoryboardStore } from '../../store'
@@ -292,7 +293,7 @@ export function CharacterSheetGenerator() {
                 >
                     {generationStatus === 'generating' ? (
                         <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            <LoadingSpinner size="sm" color="current" className="mr-2" />
                             Generating Character Sheets...
                         </>
                     ) : (

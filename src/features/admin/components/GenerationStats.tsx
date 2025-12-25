@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Image as ImageIcon, Sparkles, TrendingUp, Users } from 'lucide-react'
+import { Image as ImageIcon, Sparkles, TrendingUp, Users } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import type { GenerationStatsResponse } from '../types/generation-events.types'
 
 export function GenerationStats() {
@@ -31,7 +32,7 @@ export function GenerationStats() {
                 {[1, 2, 3, 4].map((i) => (
                     <Card key={i} className="bg-zinc-900 border-zinc-800">
                         <CardContent className="flex items-center justify-center py-8">
-                            <Loader2 className="w-6 h-6 animate-spin text-amber-500" />
+                            <LoadingSpinner />
                         </CardContent>
                     </Card>
                 ))}

@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search, RefreshCw, Loader2, CheckCircle, XCircle, Clock, Download } from 'lucide-react'
+import { Search, RefreshCw, CheckCircle, XCircle, Clock, Download } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import type { GenerationEvent, GenerationEventsListResponse } from '../types/generation-events.types'
 
 interface GenerationsTableProps {
@@ -123,7 +124,7 @@ export function GenerationsTable({ onExportLogs }: GenerationsTableProps) {
             <CardContent className="overflow-x-auto">
                 {loading ? (
                     <div className="flex items-center justify-center py-8">
-                        <Loader2 className="w-6 h-6 animate-spin text-amber-500" />
+                        <LoadingSpinner />
                     </div>
                 ) : (
                     <>

@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Plus, Upload, Trash2, Edit, FileText, Copy } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { toast } from '@/hooks/use-toast';
 import { parseTextFile, validateWildCardName, validateWildCardContent } from '../../services/wildcard.service';
 import { WildCard } from '../../helpers/wildcard/parser';
@@ -348,7 +349,7 @@ export function WildCardManager() {
             {/* Wildcards Grid */}
             {isLoading ? (
                 <div className="flex items-center justify-center py-12">
-                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                    <LoadingSpinner size="lg" />
                 </div>
             ) : wildcards.length === 0 ? (
                 <Card className="bg-card/50 border-border">

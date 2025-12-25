@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Wand2, Upload, X, Loader2, CheckCircle, AlertCircle, Image as ImageIcon } from 'lucide-react'
+import { Wand2, Upload, X, CheckCircle, AlertCircle, Image as ImageIcon } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { PromptEditor, type PromptVariable, applyVariablesToPrompt } from '../shared/PromptEditor'
 import { styleGeneratorService, DEFAULT_STYLE_GUIDE_PROMPT } from '../../services/style-generator.service'
 import { useStoryboardStore } from '../../store'
@@ -245,7 +246,7 @@ export function StyleGuideGenerator() {
                 >
                     {generationStatus === 'generating' ? (
                         <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            <LoadingSpinner size="sm" color="current" className="mr-2" />
                             Generating Style Guide...
                         </>
                     ) : (

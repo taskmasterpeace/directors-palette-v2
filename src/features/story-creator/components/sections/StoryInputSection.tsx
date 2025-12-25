@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
-import { Sparkles, Loader2, TestTube2 } from 'lucide-react'
+import { Sparkles, TestTube2 } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 const TEST_STORIES = [
     {
@@ -163,7 +164,7 @@ export default function StoryInputSection({
             {isExtracting && (
                 <div className="space-y-2 p-4 bg-card rounded-lg border border-border">
                     <div className="flex items-center gap-2 text-sm text-foreground">
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <LoadingSpinner size="sm" />
                         <span>Extracting shots from your story...</span>
                     </div>
                     <Progress value={extractionProgress} className="h-2" />
@@ -193,7 +194,7 @@ export default function StoryInputSection({
                 >
                     {isExtracting ? (
                         <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            <LoadingSpinner size="sm" color="current" className="mr-2" />
                             Extracting...
                         </>
                     ) : (

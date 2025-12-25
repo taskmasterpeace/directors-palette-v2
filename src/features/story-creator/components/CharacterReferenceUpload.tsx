@@ -2,7 +2,8 @@
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Upload, X, Loader2 } from 'lucide-react'
+import { Upload, X } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useState, useRef } from 'react'
 import { toast } from '@/hooks/use-toast'
 import { getClient } from '@/lib/db/client'
@@ -255,7 +256,7 @@ export function CharacterReferenceUpload({
                         >
                             {isUploading ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    <LoadingSpinner size="sm" color="current" className="mr-2" />
                                     Uploading...
                                 </>
                             ) : (

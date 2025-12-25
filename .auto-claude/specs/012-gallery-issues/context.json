@@ -1,0 +1,41 @@
+{
+  "task_description": "Fix gallery infinite scroll bug where 'Load More Images' button replaces images instead of appending them",
+  "scoped_services": ["main"],
+  "files_to_modify": {
+    "main": [
+      "src/features/shot-creator/store/unified-gallery-store.ts",
+      "src/features/shot-creator/hooks/useGalleryLoader.ts"
+    ]
+  },
+  "files_to_reference": [
+    "src/features/shot-creator/store/unified-gallery-store.ts",
+    "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx",
+    "src/features/shot-creator/components/unified-gallery/LoadMoreButton.tsx"
+  ],
+  "patterns": {
+    "zustand_store_pattern": "Uses functional updates with set((state) => ...) for atomic state changes",
+    "append_images_pattern": "appendImages function already exists with O(1) deduplication using Set",
+    "pagination_pattern": "currentPage triggers useGalleryLoader effect which calls loadImagesPaginated",
+    "infinite_scroll_pattern": "loadMoreImages should use appendImages without triggering useGalleryLoader"
+  },
+  "existing_implementations": {
+    "appendImages_function": {
+      "location": "unified-gallery-store.ts lines 472-487",
+      "description": "Existing function that properly appends images with deduplication - this should be used by loadMoreImages"
+    },
+    "loadMoreImages_function": {
+      "location": "unified-gallery-store.ts lines 489-525",
+      "description": "Current buggy implementation - sets currentPage which triggers reload"
+    },
+    "useGalleryLoader_effect": {
+      "location": "useGalleryLoader.ts lines 65-157",
+      "description": "Effect with currentPage in dependencies - triggers on currentPage change"
+    }
+  },
+  "root_cause": {
+    "bug": "loadMoreImages sets currentPage (line 512), which is in useGalleryLoader's dependency array (line 157), causing loadImagesPaginated to be called which REPLACES images instead of appending",
+    "fix": "Add separate infiniteScrollPage counter that useGalleryLoader doesn't observe"
+  },
+  "created_at": "2025-12-25T18:17:21.769036",
+  "updated_at": "2025-12-25T23:30:00.000Z"
+}

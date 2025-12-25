@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Loader2, Film, Sparkles, Trash2, Play, CheckCircle, AlertCircle } from 'lucide-react'
+import { Film, Sparkles, Trash2, Play, CheckCircle, AlertCircle } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
 import { toast } from 'sonner'
@@ -252,7 +253,7 @@ export function BRollGenerator() {
                         >
                             {isGenerating ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    <LoadingSpinner size="sm" color="current" className="mr-2" />
                                     Generating...
                                 </>
                             ) : (
@@ -295,7 +296,7 @@ export function BRollGenerator() {
                                 >
                                     {isGeneratingImages ? (
                                         <>
-                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            <LoadingSpinner size="sm" color="current" className="mr-2" />
                                             Generating...
                                         </>
                                     ) : (
@@ -357,7 +358,7 @@ export function BRollGenerator() {
                                         {/* Status indicator */}
                                         <div className="flex-shrink-0">
                                             {shot.status === 'generating' && (
-                                                <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                                                <LoadingSpinner size="sm" color="accent" />
                                             )}
                                             {shot.status === 'completed' && (
                                                 <CheckCircle className="w-4 h-4 text-green-500" />

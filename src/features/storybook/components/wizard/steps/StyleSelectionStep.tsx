@@ -8,7 +8,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Palette, Check, Plus, Sparkles, Loader2, X, Upload, Wand2, RefreshCw } from "lucide-react"
+import { Palette, Check, Plus, Sparkles, X, Upload, Wand2, RefreshCw } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
@@ -306,7 +307,7 @@ export function StyleSelectionStep() {
                   title="Expand style with AI"
                 >
                   {isExpanding ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <LoadingSpinner size="sm" color="current" />
                   ) : (
                     <Wand2 className="w-4 h-4" />
                   )}
@@ -430,7 +431,7 @@ export function StyleSelectionStep() {
                   onClick={() => fileInputRef.current?.click()}
                 >
                   {isUploading ? (
-                    <Loader2 className="w-6 h-6 text-zinc-500 animate-spin" />
+                    <LoadingSpinner color="muted" />
                   ) : (
                     <>
                       <Upload className="w-6 h-6 text-zinc-500" />
@@ -452,7 +453,7 @@ export function StyleSelectionStep() {
             >
               {isGenerating ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <LoadingSpinner size="sm" color="current" />
                   {progress || 'Generating...'}
                 </>
               ) : (

@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
-import { Images, Film, Grid3X3, CheckCircle, AlertCircle, Loader2, Eye, Download, Info, Clock, RefreshCw } from 'lucide-react'
+import { Images, Film, Grid3X3, CheckCircle, AlertCircle, Eye, Download, Info, Clock, RefreshCw } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
 import { BRollGenerator } from '../broll/BRollGenerator'
@@ -288,7 +289,7 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
                                             >
                                                 {isRegeneratingFailed ? (
                                                     <>
-                                                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                                        <LoadingSpinner size="xs" color="current" className="mr-1" />
                                                         Retrying...
                                                     </>
                                                 ) : (
@@ -335,7 +336,7 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
                                                     ) : (
                                                         <div className="text-center p-2">
                                                             {generatedImage?.status === 'generating' ? (
-                                                                <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
+                                                                <LoadingSpinner size="md" className="mx-auto" />
                                                             ) : generatedImage?.status === 'failed' ? (
                                                                 <AlertCircle className="w-6 h-6 mx-auto text-destructive" />
                                                             ) : generatedImage?.status === 'completed' ? (
@@ -373,7 +374,7 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
                                                             )}
                                                             {generatedImage.status === 'generating' && (
                                                                 <Badge variant="secondary" className="text-[10px]">
-                                                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                                                    <LoadingSpinner size="xs" color="current" />
                                                                 </Badge>
                                                             )}
                                                             {generatedImage.status === 'failed' && (
@@ -408,7 +409,7 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
                                                         >
                                                             {regeneratingShots.has(segment.sequence) ? (
                                                                 <>
-                                                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                                                    <LoadingSpinner size="sm" color="current" className="mr-1" />
                                                                     Retrying...
                                                                 </>
                                                             ) : (

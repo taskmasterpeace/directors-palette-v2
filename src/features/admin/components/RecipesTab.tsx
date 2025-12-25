@@ -8,7 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, RefreshCw, Sparkles, Trash2, Copy, Pencil, Search, ChevronDown, ChevronUp, Plus } from "lucide-react"
+import { RefreshCw, Sparkles, Trash2, Copy, Pencil, Search, ChevronDown, ChevronUp, Plus } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { toast } from "sonner"
 import { useRecipeStore } from "@/features/shot-creator/store/recipe.store"
 import { useAuth } from "@/features/auth/hooks/useAuth"
@@ -266,7 +267,7 @@ export function RecipesTab() {
                             {isLoading ? (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center py-8">
-                                        <Loader2 className="w-6 h-6 animate-spin mx-auto text-amber-500" />
+                                        <LoadingSpinner className="mx-auto" />
                                     </TableCell>
                                 </TableRow>
                             ) : filteredRecipes.length === 0 ? (
@@ -348,7 +349,7 @@ export function RecipesTab() {
                                                         className="text-zinc-400 hover:text-white"
                                                     >
                                                         {duplicatingId === recipe.id ? (
-                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                            <LoadingSpinner size="sm" color="current" />
                                                         ) : (
                                                             <Copy className="w-4 h-4" />
                                                         )}
@@ -361,7 +362,7 @@ export function RecipesTab() {
                                                         className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
                                                     >
                                                         {deletingId === recipe.id ? (
-                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                            <LoadingSpinner size="sm" color="current" />
                                                         ) : (
                                                             <Trash2 className="w-4 h-4" />
                                                         )}

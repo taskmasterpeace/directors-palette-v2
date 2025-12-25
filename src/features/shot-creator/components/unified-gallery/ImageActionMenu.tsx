@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -253,7 +254,7 @@ export function ImageActionMenu({
             >
               {isRemovingBackground ? (
                 <>
-                  <div className="mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <LoadingSpinner size="sm" color="current" className="mr-2" />
                   Removing...
                 </>
               ) : (

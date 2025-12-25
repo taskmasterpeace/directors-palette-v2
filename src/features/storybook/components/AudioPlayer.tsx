@@ -17,9 +17,9 @@ import {
   SkipForward,
   Volume2,
   VolumeX,
-  Loader2,
   Mic2,
 } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 // import { cn } from "@/utils/utils"
 
 // Voice options
@@ -257,7 +257,7 @@ export function AudioPlayer({
           >
             {isGenerating && generatingPageId === currentPage?.id ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <LoadingSpinner size="sm" color="current" />
                 Generating...
               </>
             ) : (
@@ -279,7 +279,7 @@ export function AudioPlayer({
           >
             {isGenerating ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <LoadingSpinner size="sm" color="current" />
                 Generating All...
               </>
             ) : (

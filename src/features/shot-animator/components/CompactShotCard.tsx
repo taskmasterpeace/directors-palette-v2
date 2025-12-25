@@ -2,7 +2,8 @@
 
 import React, { memo } from 'react'
 import Image from 'next/image'
-import { Image as ImageIcon, Film, Trash2, Loader2 } from 'lucide-react'
+import { Image as ImageIcon, Film, Trash2 } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -111,7 +112,7 @@ const CompactShotCardComponent = ({
           <div className="absolute top-2 right-2 z-10">
             {config.generatedVideos.some(v => v.status === 'processing') && (
               <Badge className="bg-primary text-white text-xs flex items-center gap-1">
-                <Loader2 className="w-3 h-3 animate-spin" />
+                <LoadingSpinner size="xs" color="current" />
                 Processing
               </Badge>
             )}

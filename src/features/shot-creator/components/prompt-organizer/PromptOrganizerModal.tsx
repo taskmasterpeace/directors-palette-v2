@@ -8,7 +8,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { Wand2, RefreshCw, Check, Copy, Loader2, ChevronDown, ChevronRight, Camera, Users, Palette, Move, Sparkles } from 'lucide-react'
+import { Wand2, RefreshCw, Check, Copy, ChevronDown, ChevronRight, Camera, Users, Palette, Move, Sparkles } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import {
     Dialog,
     DialogContent,
@@ -209,7 +210,7 @@ export function PromptOrganizerModal({
 
                 {isParsing ? (
                     <div className="flex flex-col items-center justify-center py-12">
-                        <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+                        <LoadingSpinner size="lg" className="mb-4" />
                         <p className="text-muted-foreground">Analyzing prompt...</p>
                     </div>
                 ) : structured ? (

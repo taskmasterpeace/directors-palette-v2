@@ -38,6 +38,8 @@ import {
   Settings,
   Copy,
   Lock,
+  Download,
+  Upload,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -62,6 +64,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import { useRecipeImportExport } from '../../hooks/useRecipeImportExport'
 
 interface RecipeBuilderProps {
   onSelectRecipe: (recipeId: string) => void
@@ -86,6 +89,9 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
     deleteCategory,
     isLoading: _isLoading,
   } = useRecipes()
+
+  const { exportRecipes, importRecipes } = useRecipeImportExport()
+  const importInputRef = useRef<HTMLInputElement>(null)
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
@@ -279,6 +285,18 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
     onSelectRecipe(recipe.id)
   }
 
+  // Handle import file selection
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      importRecipes(file)
+    }
+    // Reset input for re-selection
+    if (importInputRef.current) {
+      importInputRef.current.value = ''
+    }
+  }
+
   // Filter recipes by category
   const filteredRecipes = selectedCategory
     ? recipes.filter((r) => r.categoryId === selectedCategory)
@@ -383,14 +401,41 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
             {recipes.length} recipes
           </Badge>
         </div>
-        <Button
-          size="sm"
-          onClick={openCreate}
-          className="bg-amber-500 hover:bg-amber-600 text-black"
-        >
-          <Plus className="w-4 h-4 mr-1" />
-          New Recipe
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            onClick={() => exportRecipes()}
+            variant="outline"
+            className="border-border hover:bg-card"
+          >
+            <Download className="w-4 h-4 mr-1" />
+            Export
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => importInputRef.current?.click()}
+            variant="outline"
+            className="border-border hover:bg-card"
+          >
+            <Upload className="w-4 h-4 mr-1" />
+            Import
+          </Button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleImportFile}
+          />
+          <Button
+            size="sm"
+            onClick={openCreate}
+            className="bg-amber-500 hover:bg-amber-600 text-black"
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            New Recipe
+          </Button>
+        </div>
       </div>
 
       {/* Category Filter */}

@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
-import { Play, CheckCircle, AlertCircle, Loader2, SplitSquareVertical, Wand2, CheckSquare, Square, Sparkles, X } from 'lucide-react'
+import { Play, CheckCircle, AlertCircle, SplitSquareVertical, Wand2, CheckSquare, Square, Sparkles, X } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { storyboardGenerationService } from '../../services/storyboard-generation.service'
 import { PRESET_STYLES } from '../../types/storyboard.types'
@@ -613,7 +614,7 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                                             <div className="flex-1" />
                                             <div className="flex-shrink-0">
                                                 {isGenerating && progress.current === shot.sequence ? (
-                                                    <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                                                    <LoadingSpinner size="xs" />
                                                 ) : result ? (
                                                     result.error ? (
                                                         <AlertCircle className="w-3 h-3 text-destructive" />
@@ -642,7 +643,7 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                         >
                             {isGenerating ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    <LoadingSpinner size="sm" color="current" className="mr-2" />
                                     Generating {progress.current}/{progress.total}...
                                 </>
                             ) : selectedShots.size === 0 ? (

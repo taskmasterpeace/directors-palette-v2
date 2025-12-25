@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useMemo, useState, useRef } from 'react'
-import { RefreshCw, Star, Sparkles, Database, Loader2, Plus, Trash2, ChevronDown, ChevronUp, Image as ImageIcon, X, HelpCircle } from 'lucide-react'
+import { RefreshCw, Star, Sparkles, Database, Plus, Trash2, ChevronDown, ChevronUp, Image as ImageIcon, X, HelpCircle } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Button } from '@/components/ui/button'
 import { CommunityFilters } from './CommunityFilters'
 import { CommunityGrid } from './CommunityGrid'
@@ -632,7 +633,7 @@ export function CommunityPage() {
             >
               {actionLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <LoadingSpinner size="sm" color="current" className="mr-2" />
                   Saving...
                 </>
               ) : (
@@ -661,7 +662,7 @@ export function CommunityPage() {
             >
               {actionLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <LoadingSpinner size="sm" color="current" className="mr-2" />
                   Deleting...
                 </>
               ) : (

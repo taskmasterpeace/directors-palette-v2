@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
-import { BookOpen, FileText, Sparkles, ChevronDown, ChevronUp, LayoutGrid, Baby, Loader2 } from "lucide-react"
+import { BookOpen, FileText, Sparkles, ChevronDown, ChevronUp, LayoutGrid, Baby } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { cn } from "@/utils/utils"
 import { BOOK_FORMATS, type BookFormat } from "../../../types/storybook.types"
 import Image from "next/image"
@@ -391,7 +392,7 @@ export function StoryInputStep() {
         >
           {isPolishing ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <LoadingSpinner size="sm" color="current" />
               Polishing Story...
             </>
           ) : (

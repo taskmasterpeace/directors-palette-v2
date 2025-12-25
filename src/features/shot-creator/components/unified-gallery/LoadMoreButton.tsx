@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 interface LoadMoreButtonProps {
   onClick: () => void
@@ -43,7 +43,7 @@ export function LoadMoreButton({
     >
       {loading ? (
         <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <LoadingSpinner size="sm" color="current" className="mr-2" />
           Loading...
         </>
       ) : (

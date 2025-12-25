@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, ArrowRight, Sparkles, Loader2, MapPin, X, Plus } from "lucide-react"
+import { ArrowLeft, ArrowRight, Sparkles, MapPin, X, Plus } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { cn } from "@/utils/utils"
 import {
   PAGE_COUNT_OPTIONS,
@@ -544,7 +545,7 @@ export function BookSettingsStep() {
         >
           {isGenerating ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <LoadingSpinner size="sm" color="current" />
               Generating Ideas...
             </>
           ) : (

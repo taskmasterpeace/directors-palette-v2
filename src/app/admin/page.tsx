@@ -4,7 +4,8 @@ import { useAdminAuth } from '@/features/admin/hooks/useAdminAuth'
 import { AdminDashboard } from '@/features/admin/components/AdminDashboard'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Shield, AlertTriangle, Loader2, ArrowLeft } from 'lucide-react'
+import { Shield, AlertTriangle, ArrowLeft } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import Link from 'next/link'
 
 export default function AdminPage() {
@@ -14,7 +15,7 @@ export default function AdminPage() {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-amber-500 mx-auto mb-4" />
+                    <LoadingSpinner size="lg" className="mx-auto mb-4" />
                     <p className="text-muted-foreground">Verifying admin access...</p>
                 </div>
             </div>

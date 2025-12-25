@@ -12,7 +12,8 @@ import { MetadataBar } from "./MetadataBar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/utils/utils"
 import type { GridSize } from "../../store/unified-gallery-store"
-import { Loader2, AlertCircle, RefreshCw, Trash2 } from "lucide-react"
+import { AlertCircle, RefreshCw, Trash2 } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Button } from "@/components/ui/button"
 
 interface ImageCardProps {
@@ -88,7 +89,7 @@ const ImageCardComponent = ({
           {/* Animated loading spinner */}
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full blur-xl opacity-30 animate-pulse" />
-            <Loader2 className="w-10 h-10 text-violet-400 animate-spin relative z-10" />
+            <LoadingSpinner size="xl" color="accent" className="relative z-10" />
           </div>
           <p className="text-sm text-muted-foreground mt-3">Generating...</p>
           {image.prompt && (

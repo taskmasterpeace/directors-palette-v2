@@ -15,10 +15,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import {
-    Paintbrush, Eraser, Upload, Loader2, Sparkles,
+    Paintbrush, Eraser, Upload, Sparkles,
     Download, Undo2, ArrowRight, Type,
     ZoomIn, ZoomOut, Maximize
 } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 type ModelType = 'nano-banana' | 'nano-banana-pro'
 type ToolType = 'mask' | 'draw' | 'arrow' | 'text' | 'image'
@@ -629,7 +630,7 @@ export function MaskEditorTab({ className }: MaskEditorTabProps) {
                     >
                         {isProcessing ? (
                             <>
-                                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                                <LoadingSpinner size="sm" color="current" className="mr-2" />
                                 Processing...
                             </>
                         ) : (

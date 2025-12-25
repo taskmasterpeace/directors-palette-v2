@@ -7,7 +7,8 @@
 
 import { useGallery } from '../hooks/useGallery'
 import { Button } from '@/components/ui/button'
-import { Loader2, Trash2, RefreshCw } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { Trash2, RefreshCw } from 'lucide-react'
 
 export function VideoGallery() {
   const { videos, isLoading, error, deleteVideo, refreshVideos } = useGallery()
@@ -24,7 +25,7 @@ export function VideoGallery() {
   if (isLoading && videos.length === 0) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <LoadingSpinner size="lg" />
         <span className="ml-2">Loading videos...</span>
       </div>
     )
@@ -73,7 +74,7 @@ export function VideoGallery() {
             <div className="aspect-video bg-muted relative">
               {video.status === 'processing' ? (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Loader2 className="h-8 w-8 animate-spin" />
+                  <LoadingSpinner size="lg" />
                   <span className="ml-2">Processing...</span>
                 </div>
               ) : video.status === 'failed' ? (

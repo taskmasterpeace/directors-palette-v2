@@ -1,7 +1,8 @@
 'use client'
 
 import React from 'react'
-import { Download, RefreshCw, Loader2, CheckCircle2, XCircle, Clock } from 'lucide-react'
+import { Download, RefreshCw, CheckCircle2, XCircle, Clock } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent } from '@/components/ui/card'
@@ -41,7 +42,7 @@ function QueueItem({ item, onRetry, onDownload }: QueueItemProps) {
       case 'queued':
         return <Clock className="w-4 h-4 text-muted-foreground" />
       case 'processing':
-        return <Loader2 className="w-4 h-4 text-accent animate-spin" />
+        return <LoadingSpinner size="sm" color="accent" />
       case 'completed':
         return <CheckCircle2 className="w-4 h-4 text-emerald-400" />
       case 'failed':

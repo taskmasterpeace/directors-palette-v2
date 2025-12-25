@@ -9,7 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
-import { Users, DollarSign, TrendingUp, Gift, Search, RefreshCw, Shield, Loader2, Sparkles, Ticket, FileText, UsersRound, Key, Banknote, Palette } from 'lucide-react'
+import { Users, DollarSign, TrendingUp, Gift, Search, RefreshCw, Shield, Sparkles, Ticket, FileText, UsersRound, Key, Banknote, Palette } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { GenerationsTable } from './GenerationsTable'
 import { GenerationStats } from './GenerationStats'
 import { CouponsTab } from './CouponsTab'
@@ -123,7 +124,7 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+                <LoadingSpinner size="lg" />
             </div>
         )
     }
@@ -435,7 +436,7 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                         >
                             {granting ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    <LoadingSpinner size="sm" color="current" className="mr-2" />
                                     Granting...
                                 </>
                             ) : (

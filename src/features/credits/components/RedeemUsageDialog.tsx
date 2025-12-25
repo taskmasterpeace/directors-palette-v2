@@ -4,7 +4,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Gift, Loader2, Check } from "lucide-react"
+import { Gift, Check } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useCreditsStore } from "@/features/credits/store/credits.store"
 import { toast } from "sonner"
 
@@ -108,7 +109,7 @@ export function RedeemUsageDialog({ children }: { children?: React.ReactNode }) 
                         <>
                             <Button variant="ghost" onClick={handleClose}>Cancel</Button>
                             <Button onClick={handleRedeem} disabled={!code.trim() || loading}>
-                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Redeem"}
+                                {loading ? <LoadingSpinner size="sm" color="current" /> : "Redeem"}
                             </Button>
                         </>
                     ) : (

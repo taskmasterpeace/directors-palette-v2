@@ -2,7 +2,8 @@
 
 import React from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { Loader2, Inbox } from 'lucide-react'
+import { Inbox } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { CommunityCard } from './CommunityCard'
 import type { CommunityItem } from '../types/community.types'
 
@@ -35,7 +36,7 @@ export function CommunityGrid({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        <LoadingSpinner size="lg" color="muted" />
       </div>
     )
   }

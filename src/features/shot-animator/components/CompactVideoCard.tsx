@@ -3,7 +3,6 @@
 import React, { useState, useCallback, useRef, Fragment, useEffect, memo } from 'react'
 import {
   Play,
-  Loader2,
   AlertCircle,
   Trash2,
   Download,
@@ -12,6 +11,7 @@ import {
   ChevronRight,
   RotateCw
 } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import useEmblaCarousel from 'embla-carousel-react'
@@ -90,7 +90,7 @@ const CompactVideoCardComponent = ({
       case 'processing':
         return (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/90">
-            <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
+            <LoadingSpinner size="lg" className="mb-2" />
             <p className="text-xs text-foreground">Generating...</p>
           </div>
         )
@@ -124,7 +124,7 @@ const CompactVideoCardComponent = ({
       case 'pending':
         return (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50">
-            <Loader2 className="h-8 w-8 text-muted-foreground animate-pulse mb-2" />
+            <LoadingSpinner size="lg" color="muted" className="!animate-pulse mb-2" />
             <p className="text-xs text-muted-foreground">Waiting...</p>
           </div>
         )

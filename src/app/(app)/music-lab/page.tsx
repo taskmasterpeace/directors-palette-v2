@@ -7,7 +7,8 @@
  */
 
 import { useState } from 'react'
-import { ChevronRight, Loader2, Clapperboard } from 'lucide-react'
+import { ChevronRight, Clapperboard } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Button } from '@/components/ui/button'
 import {
     AudioUploader,
@@ -233,7 +234,7 @@ export default function MusicLabPage() {
                         >
                             {isAnalyzing ? (
                                 <>
-                                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                    <LoadingSpinner size="sm" color="current" className="h-5 w-5 mr-2" />
                                     Analyzing Structure...
                                 </>
                             ) : (

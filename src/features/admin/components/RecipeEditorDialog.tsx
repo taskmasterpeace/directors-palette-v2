@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, Plus, Trash2, Upload, X } from "lucide-react"
+import { Plus, Trash2, Upload, X } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import type { Recipe, RecipeCategory, RecipeField, RecipeStageType, RecipeToolId } from "@/features/shot-creator/types/recipe.types"
 import { parseStageTemplate, RECIPE_TOOLS } from "@/features/shot-creator/types/recipe.types"
 
@@ -565,7 +566,7 @@ Example: A portrait of <<CHARACTER_NAME:name!>> in <<STYLE:text>> style."
                                                     >
                                                         {uploadingStageIndex === idx ? (
                                                             <>
-                                                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                                                <LoadingSpinner size="xs" color="current" className="mr-1" />
                                                                 Uploading...
                                                             </>
                                                         ) : (
@@ -629,7 +630,7 @@ Example: A portrait of <<CHARACTER_NAME:name!>> in <<STYLE:text>> style."
                     >
                         {saving ? (
                             <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                <LoadingSpinner size="sm" color="current" className="mr-2" />
                                 {isCreateMode ? 'Creating...' : 'Saving...'}
                             </>
                         ) : (

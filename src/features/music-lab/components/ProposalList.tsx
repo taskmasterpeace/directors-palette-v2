@@ -7,7 +7,8 @@
  */
 
 import { useState, useCallback } from 'react'
-import { Loader2, RefreshCw, Users, Clapperboard } from 'lucide-react'
+import { RefreshCw, Users, Clapperboard } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Button } from '@/components/ui/button'
 import { ProposalCard } from './ProposalCard'
 import { getAllDirectors } from '../data/directors.data'
@@ -98,7 +99,7 @@ export function ProposalList({ onComplete, onSelectProposal }: ProposalListProps
                 >
                     {isGenerating ? (
                         <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            <LoadingSpinner size="sm" color="current" className="mr-2" />
                             Commissioning...
                         </>
                     ) : proposals.length > 0 ? (
@@ -124,7 +125,7 @@ export function ProposalList({ onComplete, onSelectProposal }: ProposalListProps
             {/* Generating State */}
             {isGenerating && (
                 <div className="flex flex-col items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+                    <LoadingSpinner size="lg" className="mb-4" />
                     <p className="text-muted-foreground font-medium">
                         Directors are listening to your track...
                     </p>

@@ -22,11 +22,11 @@ import {
     Coins,
     Download,
     RefreshCw,
-    Loader2,
     Image,
     Video,
     Wallet
 } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import type { FinancialStatsResponse, TimePeriod } from '../types/financials.types'
 
 export function FinancialsTab() {
@@ -68,7 +68,7 @@ export function FinancialsTab() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+                <LoadingSpinner size="lg" />
             </div>
         )
     }

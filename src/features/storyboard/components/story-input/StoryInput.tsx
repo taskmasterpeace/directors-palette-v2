@@ -14,7 +14,8 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Loader2, Sparkles, FileText, AlertCircle, Trash2 } from 'lucide-react'
+import { Sparkles, FileText, AlertCircle, Trash2 } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { LLMModelSelector } from '../settings/LLMModelSelector'
 import { toast } from 'sonner'
@@ -162,7 +163,7 @@ Marcus walked into the courtroom, his footsteps echoing against the marble floor
                     >
                         {isExtracting ? (
                             <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                <LoadingSpinner size="sm" color="current" className="mr-2" />
                                 Extracting Characters & Locations...
                             </>
                         ) : (

@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { Pause, Play, CheckCircle2, XCircle, Loader2, Image as ImageIcon, Layers } from 'lucide-react'
+import { Pause, Play, CheckCircle2, XCircle, Image as ImageIcon, Layers } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryGeneration } from '../../hooks/useStoryGeneration'
 import { getVariationCount } from '../../helpers/bracket-prompt.helper'
 import { QueueRecoveryBanner } from '../QueueRecoveryBanner'
@@ -187,8 +188,8 @@ interface QueueStatusBadgeProps {
 
 function QueueStatusBadge({ status }: QueueStatusBadgeProps) {
     const variants: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
-        pending: { color: 'bg-secondary text-foreground', icon: <Loader2 className="w-3 h-3" />, label: 'Pending' },
-        processing: { color: 'bg-blue-900/30 text-accent border-blue-800', icon: <Loader2 className="w-3 h-3 animate-spin" />, label: 'Processing' },
+        pending: { color: 'bg-secondary text-foreground', icon: <LoadingSpinner size="xs" color="current" className="!animate-none" />, label: 'Pending' },
+        processing: { color: 'bg-blue-900/30 text-accent border-blue-800', icon: <LoadingSpinner size="xs" color="current" />, label: 'Processing' },
         paused: { color: 'bg-yellow-900/30 text-yellow-400 border-yellow-800', icon: <Pause className="w-3 h-3" />, label: 'Paused' },
         completed: { color: 'bg-green-900/30 text-emerald-400 border-green-800', icon: <CheckCircle2 className="w-3 h-3" />, label: 'Completed' },
         failed: { color: 'bg-primary/20 text-primary border-primary/30', icon: <XCircle className="w-3 h-3" />, label: 'Failed' }
@@ -224,7 +225,7 @@ function ShotQueueItem({ shot, isCurrent, isComplete }: ShotQueueItemProps) {
                     {isComplete ? (
                         <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                     ) : isCurrent ? (
-                        <Loader2 className="w-5 h-5 text-accent animate-spin" />
+                        <LoadingSpinner size="md" color="accent" className="h-5 w-5" />
                     ) : (
                         <div className="w-5 h-5 rounded-full border-2 border-border" />
                     )}

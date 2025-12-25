@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { Plus, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useWildCardStore } from '@/features/shot-creator/store/wildcard.store'
 import { useWildcardsBrowserStore } from '../store'
@@ -59,7 +60,7 @@ export function WildcardSidebar() {
                 <div className="p-2 space-y-1">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-8">
-                            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                            <LoadingSpinner size="md" />
                         </div>
                     ) : wildcards.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground text-sm">

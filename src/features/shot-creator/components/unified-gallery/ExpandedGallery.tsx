@@ -12,9 +12,9 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Loader2,
   Home
 } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { cn } from '@/utils/utils'
 import { useUnifiedGalleryStore, GeneratedImage } from '../../store/unified-gallery-store'
 import { GalleryService } from '../../services/gallery.service'
@@ -289,7 +289,7 @@ export function ExpandedGallery() {
       <div className="container mx-auto px-4 py-6">
         {isLoading ? (
           <div className="text-center py-24">
-            <Loader2 className="w-12 h-12 mx-auto mb-4 text-primary animate-spin" />
+            <LoadingSpinner size="xl" className="mx-auto mb-4" />
             <p className="text-muted-foreground">Loading gallery...</p>
           </div>
         ) : filteredImages.length === 0 ? (

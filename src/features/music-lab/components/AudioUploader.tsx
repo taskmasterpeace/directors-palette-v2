@@ -7,7 +7,8 @@
  */
 
 import { useState, useCallback } from 'react'
-import { Upload, Music, X, Loader2 } from 'lucide-react'
+import { Upload, Music, X } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useMusicLabStore } from '../store/music-lab.store'
@@ -149,7 +150,7 @@ export function AudioUploader({ onUploadComplete }: AudioUploaderProps) {
 
                         {isUploading ? (
                             <>
-                                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                                <LoadingSpinner size="xl" />
                                 <p className="text-muted-foreground">Uploading...</p>
                             </>
                         ) : (

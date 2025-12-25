@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import Image from 'next/image'
 import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, ImagePlus, Eraser, Clapperboard } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
@@ -490,7 +491,7 @@ function FullscreenModal({
                                     >
                                         {isGeneratingCinematic ? (
                                             <>
-                                                <div className="w-3.5 h-3.5 mr-1 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                <LoadingSpinner size="xs" color="current" className="w-3.5 h-3.5 mr-1" />
                                                 Generating...
                                             </>
                                         ) : (
@@ -516,7 +517,7 @@ function FullscreenModal({
                                     >
                                         {isRemovingBackground ? (
                                             <>
-                                                <div className="w-3.5 h-3.5 mr-1 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                <LoadingSpinner size="xs" color="current" className="w-3.5 h-3.5 mr-1" />
                                                 Removing...
                                             </>
                                         ) : (

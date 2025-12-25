@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, Grid3X3, CheckCircle, AlertCircle, Maximize2 } from 'lucide-react'
+import { Grid3X3, CheckCircle, AlertCircle, Maximize2 } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { DEFAULT_CONTACT_SHEET_CONFIG, PRESET_STYLES, ANGLE_PROMPTS } from '../../types/storyboard.types'
 import type { CinematicAngle, GeneratedShotPrompt } from '../../types/storyboard.types'
@@ -227,7 +228,7 @@ export function ContactSheetModal({
                         <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
                                 <span className="flex items-center gap-2">
-                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <LoadingSpinner size="sm" />
                                     {progress.current === 1 ? 'Generating 3x3 grid...' : 'Slicing grid into cells...'}
                                 </span>
                                 <span>Step {progress.current} / {progress.total}</span>
@@ -282,7 +283,7 @@ export function ContactSheetModal({
                                 ) : (
                                     <div className="text-center">
                                         {variant.status === 'generating' ? (
-                                            <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
+                                            <LoadingSpinner size="md" className="mx-auto" />
                                         ) : variant.status === 'completed' ? (
                                             <div className="text-center">
                                                 <CheckCircle className="w-6 h-6 mx-auto text-green-500 mb-1" />
@@ -331,7 +332,7 @@ export function ContactSheetModal({
                             >
                                 {isGenerating ? (
                                     <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        <LoadingSpinner size="sm" color="current" className="mr-2" />
                                         Generating...
                                     </>
                                 ) : (

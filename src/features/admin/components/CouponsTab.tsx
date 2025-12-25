@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle, Dialog
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
-import { Loader2, Plus, RefreshCw, Ticket, Trash2 } from "lucide-react"
+import { Plus, RefreshCw, Ticket, Trash2 } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { toast } from "sonner"
 
 interface Coupon {
@@ -114,7 +115,7 @@ export function CouponsTab() {
                             {loading ? (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center py-8">
-                                        <Loader2 className="w-6 h-6 animate-spin mx-auto text-amber-500" />
+                                        <LoadingSpinner className="mx-auto" />
                                     </TableCell>
                                 </TableRow>
                             ) : coupons.length === 0 ? (
@@ -158,7 +159,7 @@ export function CouponsTab() {
                                                 className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
                                             >
                                                 {deletingId === coupon.id ? (
-                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                    <LoadingSpinner size="sm" color="current" />
                                                 ) : (
                                                     <Trash2 className="w-4 h-4" />
                                                 )}
@@ -284,7 +285,7 @@ function CreateCouponDialog({ onSuccess }: { onSuccess: () => void }) {
                         >
                             {loading ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    <LoadingSpinner size="sm" color="current" className="mr-2" />
                                     Creating...
                                 </>
                             ) : (

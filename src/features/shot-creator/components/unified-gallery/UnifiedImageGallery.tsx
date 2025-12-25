@@ -3,6 +3,7 @@
 import { useEffect, useCallback, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ImageIcon } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { useReferenceNamePrompt } from '@/components/providers/PromptProvider'
@@ -606,7 +607,7 @@ export function UnifiedImageGallery({
                     <CardContent className="flex-1 flex flex-col md:overflow-hidden">
                         {isLoading ? (
                             <div className="text-center py-12">
-                                <div className="w-12 h-12 mx-auto mb-4 border-4 border-border border-t-purple-500 rounded-full animate-spin" />
+                                <LoadingSpinner size="xl" color="accent" className="mx-auto mb-4" />
                                 <p className="text-muted-foreground">Loading gallery...</p>
                             </div>
                         ) : images.length === 0 ? (

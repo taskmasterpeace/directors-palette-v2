@@ -1,5 +1,6 @@
 import React, { useEffect, useState, Fragment } from 'react'
 import { LibraryCategory, useLibraryStore } from "../../store/shot-library.store"
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -100,7 +101,7 @@ const ShotReferenceLibrary = () => {
                 {/* Library Grid */}
                 {libraryLoading ? (
                     <div className="text-center py-8">
-                        <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                        <LoadingSpinner size="md" className="mx-auto mb-2" />
                         <p className="text-muted-foreground text-sm">Loading library...</p>
                     </div>
                 ) : libraryItems.length === 0 ? (

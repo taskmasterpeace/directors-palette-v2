@@ -45,12 +45,12 @@ import {
   RefreshCw,
   Download,
   Upload,
-  Loader2,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
 } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { TokenLibrary } from './TokenLibrary'
 import { TemplateBuilder } from './TemplateBuilder'
 import { TemplatePreview } from './TemplatePreview'
@@ -173,7 +173,7 @@ export function PromptTemplateEditor() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+        <LoadingSpinner size="lg" />
       </div>
     )
   }

@@ -19,7 +19,6 @@ import {
     Users,
     MapPin,
     Wand2,
-    Loader2,
     AlertCircle,
     Image as ImageIcon,
     Copy,
@@ -28,6 +27,7 @@ import {
     Star,
     FlaskConical
 } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Input } from '@/components/ui/input'
 import { useStoryboardStore } from '../../store'
 import {
@@ -723,7 +723,7 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                     >
                         {isGeneratingPrompts ? (
                             <>
-                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                <LoadingSpinner size="xs" color="current" className="mr-1" />
                                 Regenerating...
                             </>
                         ) : (
@@ -754,7 +754,7 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                             >
                                 {isGeneratingPrompts ? (
                                     <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        <LoadingSpinner size="sm" color="current" className="mr-2" />
                                         Generating...
                                     </>
                                 ) : (

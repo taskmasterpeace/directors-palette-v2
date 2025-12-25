@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { Play, Pause, Download, Maximize2, Grid3x3, List } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import {
     Dialog,
     DialogContent,
@@ -147,7 +148,7 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                     <ScrollArea className="h-[60vh] sm:h-[500px] px-2 sm:px-0 sm:pr-4">
                         {isLoading ? (
                             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-                                <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mb-4"></div>
+                                <LoadingSpinner size="lg" className="mb-4" />
                                 <p>Loading videos...</p>
                             </div>
                         ) : videos.length === 0 ? (

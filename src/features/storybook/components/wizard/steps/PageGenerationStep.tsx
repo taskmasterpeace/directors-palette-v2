@@ -18,7 +18,6 @@ import {
   ArrowLeft,
   ArrowRight,
   X,
-  Loader2,
   Grid3X3,
   LayoutTemplate,
   PanelLeft,
@@ -26,6 +25,7 @@ import {
   ImageIcon,
   Type,
 } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
 import type { TextPosition, PageLayout } from "../../../types/storybook.types"
@@ -242,7 +242,7 @@ export function PageGenerationStep() {
               >
                 {isCurrentPageGenerating ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <LoadingSpinner size="sm" color="current" />
                     {progress || 'Generating...'}
                   </>
                 ) : variations ? (
@@ -345,7 +345,7 @@ export function PageGenerationStep() {
               >
                 {isCurrentPageGenerating ? (
                   <>
-                    <Loader2 className="w-12 h-12 text-amber-400 animate-spin" />
+                    <LoadingSpinner size="xl" />
                     <span className="text-sm text-amber-400">{progress || 'Generating 9 variations...'}</span>
                   </>
                 ) : (

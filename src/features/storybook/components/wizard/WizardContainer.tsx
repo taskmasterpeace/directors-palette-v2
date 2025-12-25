@@ -20,7 +20,8 @@ import { CharacterStep } from "./steps/CharacterStep"
 import { PageGenerationStep } from "./steps/PageGenerationStep"
 import { PreviewStep } from "./steps/PreviewStep"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Loader2, Save, FolderOpen, FilePlus, Trash2, Check } from "lucide-react"
+import { ChevronLeft, ChevronRight, Save, FolderOpen, FilePlus, Trash2, Check } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -169,7 +170,7 @@ export function WizardContainer() {
             title={savedProjectId ? "Update saved project" : "Save project"}
           >
             {isSaving ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <LoadingSpinner size="sm" color="current" />
             ) : savedProjectId ? (
               <Check className="w-4 h-4 text-green-500" />
             ) : (
@@ -283,7 +284,7 @@ export function WizardContainer() {
             >
               {isGenerating ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <LoadingSpinner size="sm" color="current" />
                   Working...
                 </>
               ) : (

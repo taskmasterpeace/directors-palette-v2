@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { Upload, Clipboard, Expand, Trash2, Edit, Camera, Eraser, Download, Loader2 } from "lucide-react"
+import { Upload, Clipboard, Expand, Trash2, Edit, Camera, Eraser, Download } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
@@ -166,7 +167,7 @@ export function ReferenceImageCard({
                                                     disabled={isRemovingBackground}
                                                 >
                                                     {isRemovingBackground ? (
-                                                        <Loader2 className="h-4 w-4 md:h-3 md:w-3 text-white animate-spin" />
+                                                        <LoadingSpinner size="sm" color="current" className="md:h-3 md:w-3" />
                                                     ) : (
                                                         <Eraser className="h-4 w-4 md:h-3 md:w-3 text-white" />
                                                     )}
@@ -195,7 +196,7 @@ export function ReferenceImageCard({
                                                     disabled={isSavingToGallery}
                                                 >
                                                     {isSavingToGallery ? (
-                                                        <Loader2 className="h-4 w-4 md:h-3 md:w-3 text-white animate-spin" />
+                                                        <LoadingSpinner size="sm" color="current" className="md:h-3 md:w-3" />
                                                     ) : (
                                                         <Download className="h-4 w-4 md:h-3 md:w-3 text-white" />
                                                     )}

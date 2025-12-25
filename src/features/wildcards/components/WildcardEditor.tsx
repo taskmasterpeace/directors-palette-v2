@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Save, Trash2, Copy, Wand2, AlertCircle, Plus, X, Check, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
@@ -396,7 +397,7 @@ export function WildcardEditor() {
                 >
                     {isSaving ? (
                         <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                            <LoadingSpinner size="sm" color="current" className="mr-2" />
                             Saving...
                         </>
                     ) : (
@@ -414,7 +415,7 @@ export function WildcardEditor() {
                         disabled={isDeleting}
                     >
                         {isDeleting ? (
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <LoadingSpinner size="sm" color="current" />
                         ) : (
                             <Trash2 className="w-4 h-4" />
                         )}

@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Users, Plus, Upload, Sparkles, Trash2, User, Loader2, ImageIcon } from "lucide-react"
+import { Users, Plus, Upload, Sparkles, Trash2, User, ImageIcon } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
 
@@ -252,7 +253,7 @@ export function CharacterStep() {
         >
           {isDetecting ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <LoadingSpinner size="sm" color="current" />
               Detecting...
             </>
           ) : (
@@ -354,7 +355,7 @@ export function CharacterStep() {
                       onClick={() => triggerFileUpload(character.id)}
                     >
                       {uploadingCharacterId === character.id ? (
-                        <Loader2 className="w-6 h-6 text-zinc-500 animate-spin" />
+                        <LoadingSpinner color="muted" />
                       ) : (
                         <>
                           <Upload className="w-6 h-6 text-zinc-500" />
@@ -386,7 +387,7 @@ export function CharacterStep() {
                     >
                       {generatingCharacterId === character.id && isGenerating ? (
                         <>
-                          <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+                          <LoadingSpinner size="lg" />
                           <span className="text-sm text-amber-400">{progress || 'Generating...'}</span>
                         </>
                       ) : (
@@ -416,7 +417,7 @@ export function CharacterStep() {
                 >
                   {generatingCharacterId === character.id && isGenerating ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <LoadingSpinner size="sm" color="current" />
                       Generating...
                     </>
                   ) : character.characterSheetUrl ? (

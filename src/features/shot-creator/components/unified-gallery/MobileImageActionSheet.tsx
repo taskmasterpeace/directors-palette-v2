@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import {
@@ -166,7 +167,7 @@ export function MobileImageActionSheet({
                   {onRemoveBackground && (
                     <MenuButton
                       icon={isRemovingBackground ? (
-                        <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <LoadingSpinner size="md" color="current" className="h-5 w-5" />
                       ) : (
                         <Eraser className="h-5 w-5" />
                       )}

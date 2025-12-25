@@ -2,7 +2,8 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Loader2, Search, Wand2, CheckCircle } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Search, Wand2, CheckCircle } from "lucide-react"
 
 interface MultiStageProgressProps {
   stage: 'idle' | 'structure' | 'breakdowns' | 'complete'
@@ -52,7 +53,7 @@ export function MultiStageProgress({
         }
       default:
         return {
-          icon: <Loader2 className="h-5 w-5 animate-spin text-gray-400" />,
+          icon: <LoadingSpinner size="sm" color="muted" className="h-5 w-5" />,
           title: "Processing",
           description: "Working...",
           progress: 0,

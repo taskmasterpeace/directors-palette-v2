@@ -13,13 +13,13 @@ import {
   X,
   Star,
   Trash2,
-  Loader2,
   Clock,
   CheckCircle,
   XCircle,
   Eye,
   Pencil,
 } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { CommunityItem, CommunityItemType } from '@/features/community/types/community.types'
@@ -211,7 +211,7 @@ export function CommunityModerationTab() {
             <CardContent>
               {loading ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-amber-500" />
+                  <LoadingSpinner />
                 </div>
               ) : items.length === 0 ? (
                 <div className="text-center py-8 text-zinc-500">
@@ -294,7 +294,7 @@ export function CommunityModerationTab() {
                                   title="Approve"
                                 >
                                   {actionLoading === item.id ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <LoadingSpinner size="sm" color="current" />
                                   ) : (
                                     <Check className="w-4 h-4" />
                                   )}
@@ -326,7 +326,7 @@ export function CommunityModerationTab() {
                                 title={item.isFeatured ? 'Remove from featured' : 'Set as featured'}
                               >
                                 {actionLoading === item.id ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  <LoadingSpinner size="sm" color="current" />
                                 ) : (
                                   <Star className={`w-4 h-4 ${item.isFeatured ? 'fill-current' : ''}`} />
                                 )}
@@ -384,7 +384,7 @@ export function CommunityModerationTab() {
               className="bg-red-500 hover:bg-red-600 text-white"
             >
               {actionLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                <LoadingSpinner size="sm" color="current" className="mr-2" />
               ) : (
                 <XCircle className="w-4 h-4 mr-2" />
               )}
@@ -600,7 +600,7 @@ export function CommunityModerationTab() {
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
               {actionLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                <LoadingSpinner size="sm" color="current" className="mr-2" />
               ) : (
                 <Check className="w-4 h-4 mr-2" />
               )}

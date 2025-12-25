@@ -12,8 +12,8 @@ import {
   Film,
   Layout,
   Eraser,
-  Loader2,
 } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import Image from "next/image"
 import CreatorReferenceManagerCompact from "./CreatorReferenceManagerCompact"
 import { useShotCreatorStore } from "../../store/shot-creator.store"
@@ -364,7 +364,7 @@ export function CreatorReferenceManager({
                   disabled={removingBackgroundId === fullscreenImage.id}
                 >
                   {removingBackgroundId === fullscreenImage.id ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    <LoadingSpinner size="sm" color="current" className="mr-1" />
                   ) : (
                     <Eraser className="h-4 w-4 mr-1" />
                   )}
@@ -378,7 +378,7 @@ export function CreatorReferenceManager({
                   disabled={savingToGalleryId === fullscreenImage.id}
                 >
                   {savingToGalleryId === fullscreenImage.id ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    <LoadingSpinner size="sm" color="current" className="mr-1" />
                   ) : (
                     <Download className="h-4 w-4 mr-1" />
                   )}

@@ -3,7 +3,8 @@
 import React, { useRef, useState, useCallback } from 'react'
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { PanelLeft, PanelLeftClose, PanelRightClose, RotateCcw, Upload, Maximize, Minimize2, X, Loader2, ChevronDown, ChevronUp, RotateCw, Image as ImageIcon, Palette, Download, Layers } from "lucide-react"
+import { PanelLeft, PanelLeftClose, PanelRightClose, RotateCcw, Upload, Maximize, Minimize2, X, ChevronDown, ChevronUp, RotateCw, Image as ImageIcon, Palette, Download, Layers } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -665,7 +666,7 @@ The final image should look natural as if the edits were always part of the orig
                                 >
                                     {isProcessing ? (
                                         <>
-                                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                            <LoadingSpinner size="xs" color="current" className="mr-1" />
                                             Generating...
                                         </>
                                     ) : (

@@ -9,7 +9,8 @@
  */
 
 import { useState } from 'react'
-import { FileText, Sparkles, Loader2, Music, Layers } from 'lucide-react'
+import { FileText, Sparkles, Music, Layers } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
@@ -191,7 +192,7 @@ export function LyricsEditor({ onAnalyze, showTranscribeButton = true }: LyricsE
                             >
                                 {isAnalyzing ? (
                                     <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        <LoadingSpinner size="sm" color="current" className="mr-2" />
                                         Analyzing...
                                     </>
                                 ) : (
@@ -213,7 +214,7 @@ export function LyricsEditor({ onAnalyze, showTranscribeButton = true }: LyricsE
                             >
                                 {isTranscribing || isAnalyzing ? (
                                     <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        <LoadingSpinner size="sm" color="current" className="mr-2" />
                                         {status || 'Processing...'}
                                     </>
                                 ) : (

@@ -8,7 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Key, Copy, RefreshCw, Loader2, Activity, Clock, Zap, AlertCircle, Check, Eye, EyeOff } from 'lucide-react'
+import { Key, Copy, RefreshCw, Activity, Clock, Zap, AlertCircle, Check, Eye, EyeOff } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 interface ApiKey {
   id: string
@@ -147,7 +148,7 @@ export function ApiUsageTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+        <LoadingSpinner size="lg" />
       </div>
     )
   }
@@ -449,7 +450,7 @@ export function ApiUsageTab() {
                 >
                   {creating ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <LoadingSpinner size="sm" color="current" className="mr-2" />
                       Creating...
                     </>
                   ) : (

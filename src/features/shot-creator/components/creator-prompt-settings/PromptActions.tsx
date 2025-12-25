@@ -1,5 +1,6 @@
-import React, { Fragment, useState, useEffect } from "react"
+import React, { Fragment, useState, useEffect, useRef } from "react"
 import { Button } from '@/components/ui/button'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -27,8 +28,10 @@ import { useCallback } from "react"
 import { extractAtTags, urlToFile } from "../../helpers"
 import { ShotCreatorReferenceImage } from "../../types"
 import { useUnifiedGalleryStore } from "../../store/unified-gallery-store"
+import { useLibraryStore } from "../../store/shot-library.store"
 import { useRecipeStore } from "../../store/recipe.store"
 import { cn } from "@/utils/utils"
+import { Category } from "../CategorySelectDialog"
 
 const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextAreaElement | null> }) => {
     const {
@@ -41,6 +44,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     } = useShotCreatorStore()
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
     const { generateImage, isGenerating, cancelGeneration, currentPredictionId } = useImageGeneration()
+    const { libraryItems } = useLibraryStore()
     const { wildcards } = useWildCardStore()
     const { activeRecipeId, activeFieldValues, setActiveRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts } = useRecipeStore()
 
@@ -71,6 +75,12 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         }
     }, [shotCreatorPrompt, shotCreatorSettings, wildcards])
 
+    // Autocomplete state
+    const [showAutocomplete, setShowAutocomplete] = useState(false)
+    const [autocompleteSearch, setAutocompleteSearch] = useState('')
+    const [autocompleteCursorPos, setAutocompleteCursorPos] = useState(0)
+    const autocompleteRef = useRef<HTMLDivElement>(null)
+
     // Textarea size state
     type TextareaSize = 'small' | 'medium' | 'large'
     const [textareaSize, setTextareaSize] = useState<TextareaSize>('medium')
@@ -93,12 +103,12 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         isOpen: autocompleteIsOpen,
         items: autocompleteItems,
         selectedIndex: autocompleteSelectedIndex,
-        selectedItem: autocompleteSelectedItem,
+        selectedItem: _autocompleteSelectedItem,
         handleTextChange: handleAutocompleteTextChange,
         insertItem: insertAutocompleteItem,
         close: closeAutocomplete,
-        selectNext: selectNextAutocomplete,
-        selectPrevious: selectPreviousAutocomplete,
+        selectNext: _selectNextAutocomplete,
+        selectPrevious: _selectPreviousAutocomplete,
         selectIndex: selectAutocompleteIndex
     } = autocomplete
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
@@ -119,6 +129,144 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         // Regular mode: needs prompt and refs
         return shotCreatorPrompt.length > 0 && shotCreatorReferenceImages.length > 0
     }, [shotCreatorPrompt, shotCreatorReferenceImages, activeFieldValues, getActiveRecipe, getActiveValidation])
+
+    // Get references grouped by category from library items
+    const getReferencesGroupedByCategory = useCallback(() => {
+        const grouped: Record<Category, string[]> = {
+            people: [],
+            places: [],
+            props: [],
+            unorganized: []
+        }
+
+        libraryItems.forEach(item => {
+            if (item.tags && item.tags.length > 0) {
+                const category = item.category as Category
+                item.tags.forEach(tag => {
+                    const formattedTag = `@${tag}`
+                    if (!grouped[category].includes(formattedTag)) {
+                        grouped[category].push(formattedTag)
+                    }
+                })
+            }
+        })
+
+        return grouped
+    }, [libraryItems])
+
+    // Filter autocomplete suggestions with category grouping
+    const autocompleteSuggestions = React.useMemo(() => {
+        const grouped = getReferencesGroupedByCategory()
+        const searchWithAt = autocompleteSearch.startsWith('@')
+            ? autocompleteSearch.toLowerCase()
+            : '@' + autocompleteSearch.toLowerCase()
+
+        // Filter each category
+        const filtered: Record<Category, string[]> = {
+            people: autocompleteSearch
+                ? grouped.people.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
+                : grouped.people,
+            places: autocompleteSearch
+                ? grouped.places.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
+                : grouped.places,
+            props: autocompleteSearch
+                ? grouped.props.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
+                : grouped.props,
+            unorganized: autocompleteSearch
+                ? grouped.unorganized.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
+                : grouped.unorganized
+        }
+
+        return filtered
+    }, [autocompleteSearch, getReferencesGroupedByCategory])
+
+    // Handle autocomplete selection
+    const selectAutocompleteSuggestion = useCallback((suggestion: string) => {
+        const textarea = textareaRef.current
+        if (!textarea) return
+
+        const beforeCursor = shotCreatorPrompt.substring(0, autocompleteCursorPos)
+        const afterCursor = shotCreatorPrompt.substring(autocompleteCursorPos)
+
+        // Find the start of the @ mention
+        const atIndex = beforeCursor.lastIndexOf('@')
+        const before = shotCreatorPrompt.substring(0, atIndex)
+        const newPrompt = before + suggestion + ' ' + afterCursor
+
+        setShotCreatorPrompt(newPrompt)
+        setShowAutocomplete(false)
+        setAutocompleteSearch('')
+
+        // Set cursor position after the inserted tag
+        setTimeout(() => {
+            const newPos = atIndex + suggestion.length + 1
+            textarea.focus()
+            textarea.setSelectionRange(newPos, newPos)
+        }, 0)
+    }, [shotCreatorPrompt, autocompleteCursorPos, textareaRef, setShotCreatorPrompt])
+
+    // Detect @ symbol and show autocomplete
+    const handleTextareaKeyUp = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        const textarea = e.currentTarget
+        const cursorPos = textarea.selectionStart
+        const textBeforeCursor = shotCreatorPrompt.substring(0, cursorPos)
+
+        // Find last @ symbol before cursor
+        const lastAtIndex = textBeforeCursor.lastIndexOf('@')
+
+        if (lastAtIndex !== -1) {
+            // Check if there's a space between @ and cursor (if so, close autocomplete)
+            const textAfterAt = textBeforeCursor.substring(lastAtIndex)
+            if (textAfterAt.includes(' ')) {
+                setShowAutocomplete(false)
+                return
+            }
+
+            // Extract search term (everything after @)
+            const search = textAfterAt.substring(1) // Remove the @ symbol
+            setAutocompleteSearch(search)
+            setAutocompleteCursorPos(cursorPos)
+            setShowAutocomplete(true)
+            selectAutocompleteIndex(0)
+        } else {
+            setShowAutocomplete(false)
+        }
+    }, [shotCreatorPrompt, selectAutocompleteIndex])
+
+    // Flatten suggestions for keyboard navigation
+    const flatSuggestions = React.useMemo(() => {
+        const flat: string[] = []
+        Object.values(autocompleteSuggestions).forEach(categoryRefs => {
+            flat.push(...categoryRefs)
+        })
+        return flat
+    }, [autocompleteSuggestions])
+
+    // Check if we have any suggestions
+    const hasSuggestions = flatSuggestions.length > 0
+
+    // Handle keyboard navigation in autocomplete
+    const handleAutocompleteKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (!showAutocomplete || !hasSuggestions) return
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault()
+            const nextIndex = autocompleteSelectedIndex < flatSuggestions.length - 1 ? autocompleteSelectedIndex + 1 : 0
+            selectAutocompleteIndex(nextIndex)
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault()
+            const prevIndex = autocompleteSelectedIndex > 0 ? autocompleteSelectedIndex - 1 : flatSuggestions.length - 1
+            selectAutocompleteIndex(prevIndex)
+        } else if (e.key === 'Enter' || e.key === 'Tab') {
+            if (flatSuggestions[autocompleteSelectedIndex]) {
+                e.preventDefault()
+                selectAutocompleteSuggestion(flatSuggestions[autocompleteSelectedIndex])
+            }
+        } else if (e.key === 'Escape') {
+            e.preventDefault()
+            setShowAutocomplete(false)
+        }
+    }, [showAutocomplete, hasSuggestions, flatSuggestions, autocompleteSelectedIndex, selectAutocompleteSuggestion, selectAutocompleteIndex])
 
     // Build model settings from shotCreatorSettings
     const buildModelSettings = useCallback(() => {
@@ -343,301 +491,245 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         // Close autocomplete
         closeAutocomplete()
 
-        // IMPORTANT: Manually trigger auto-attach logic since setShotCreatorPrompt doesn't trigger onChange
-        await handlePromptChange(newText)
-
-        // Set cursor position after state update
+        // Focus textarea and set cursor position
         setTimeout(() => {
-            if (textareaRef.current) {
-                textareaRef.current.selectionStart = newCursorPosition
-                textareaRef.current.selectionEnd = newCursorPosition
-                textareaRef.current.focus()
-            }
+            textarea.focus()
+            textarea.setSelectionRange(newCursorPosition, newCursorPosition)
         }, 0)
-    }, [insertAutocompleteItem, closeAutocomplete, shotCreatorPrompt, setShotCreatorPrompt, textareaRef, handlePromptChange]);
-
-    // Calculate dropdown position when autocomplete opens
-    useEffect(() => {
-        if (autocompleteIsOpen) {
-            calculateDropdownPosition()
-        }
-    }, [autocompleteIsOpen, calculateDropdownPosition])
-
-    // Recalculate position on window resize (for mobile rotation, etc.)
-    useEffect(() => {
-        if (!autocompleteIsOpen) return
-
-        const handleResize = () => {
-            calculateDropdownPosition()
-        }
-
-        window.addEventListener('resize', handleResize)
-        window.addEventListener('scroll', handleResize, true)
-
-        return () => {
-            window.removeEventListener('resize', handleResize)
-            window.removeEventListener('scroll', handleResize, true)
-        }
-    }, [autocompleteIsOpen, calculateDropdownPosition]);
-
-    // Handle mobile prompt selection (with optional overwrite confirmation)
-    const handleMobilePromptSelect = useCallback((promptText: string) => {
-        // If there's existing text, just overwrite (could add confirmation later)
-        setShotCreatorPrompt(promptText)
-        textareaRef.current?.focus()
-    }, [setShotCreatorPrompt, textareaRef])
+    }, [shotCreatorPrompt, textareaRef, setShotCreatorPrompt, insertAutocompleteItem, closeAutocomplete])
 
     return (
         <Fragment>
-            {/* Recipe Form Fields - Shows when a recipe is active */}
-            {activeRecipeId && (
-                <RecipeFormFields className="mb-3" />
-            )}
-
-            {/* Mobile: Prompts & Recipes Toggle Bar */}
-            <MobilePromptsRecipesBar
-                onSelectPrompt={handleMobilePromptSelect}
-                onSelectRecipe={handleSelectRecipe}
-                className="mb-2"
-            />
-
-            <div className="space-y-2">
-                {/* Desktop: Combined row: Recipes on left, controls on right */}
-                <div className="hidden lg:flex items-center justify-between gap-2">
-                    {/* Left: Recipe quick access */}
-                    <QuickAccessBar
-                        onSelectRecipe={handleSelectRecipe}
-                        className="flex-shrink-0"
-                    />
-
-                    {/* Right: Controls - Hidden in recipe mode */}
-                    {!activeRecipeId && (
-                        <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                            {/* Size toggle buttons */}
-                            <div className="flex items-center gap-1 bg-card/50 rounded p-0.5">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setTextareaSize('small')}
-                                    className={cn(
-                                        "h-7 w-7 p-0 hover:bg-secondary",
-                                        textareaSize === 'small' ? "bg-secondary text-white" : "text-muted-foreground"
-                                    )}
-                                    title="Small (1 line)"
-                                >
-                                    <Minimize2 className="w-3 h-3" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setTextareaSize('medium')}
-                                    className={cn(
-                                        "h-7 w-7 p-0 hover:bg-secondary",
-                                        textareaSize === 'medium' ? "bg-secondary text-white" : "text-muted-foreground"
-                                    )}
-                                    title="Medium (2 lines)"
-                                >
-                                    <Square className="w-3 h-3" />
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setTextareaSize('large')}
-                                    className={cn(
-                                        "h-7 w-7 p-0 hover:bg-secondary",
-                                        textareaSize === 'large' ? "bg-secondary text-white" : "text-muted-foreground"
-                                    )}
-                                    title="Large (5+ lines)"
-                                >
-                                    <Maximize2 className="w-3 h-3" />
-                                </Button>
-                            </div>
-                            <OrganizeButton
-                                prompt={shotCreatorPrompt}
-                                onApply={setShotCreatorPrompt}
-                            />
-                            <Badge variant="secondary" className="text-xs whitespace-nowrap hidden sm:inline-flex">
-                                @ refs
-                            </Badge>
-                            <Badge variant="secondary" className="text-xs whitespace-nowrap hidden sm:inline-flex">
-                                Ctrl+Enter
-                            </Badge>
-                            <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                {shotCreatorPrompt.length} chars
-                            </span>
-                        </div>
-                    )}
-                </div>
-                {/* Textarea - Hidden in recipe mode */}
-                {!activeRecipeId && (
-                <div className="relative">
-                    <Textarea
-                        ref={textareaRef}
-                        value={shotCreatorPrompt}
-                        onChange={async (e) => {
-                            await handlePromptChange(e.target.value);
-                        }}
-                        placeholder="Describe your shot... Use @ to reference images"
-                        className={cn(
-                            getTextareaHeight(textareaSize),
-                            "bg-card border-border text-white placeholder:text-muted-foreground pr-10",
-                            "resize-y sm:resize-y resize-none sm:resize-y" // Allow resize on desktop, disable on mobile
-                        )}
-                        onKeyDown={(e) => {
-                            // Handle autocomplete keyboard navigation when dropdown is open
-                            if (autocompleteIsOpen && autocompleteItems.length > 0) {
-                                switch (e.key) {
-                                    case 'ArrowUp':
-                                        e.preventDefault()
-                                        selectPreviousAutocomplete()
-                                        return
-                                    case 'ArrowDown':
-                                        e.preventDefault()
-                                        selectNextAutocomplete()
-                                        return
-                                    case 'Enter':
-                                    case 'Tab':
-                                        e.preventDefault()
-                                        if (autocompleteSelectedItem) {
-                                            void handleAutocompleteSelect(autocompleteSelectedItem)
-                                        }
-                                        return
-                                    case 'Escape':
-                                        e.preventDefault()
-                                        closeAutocomplete()
-                                        return
-                                }
-                            }
-
-                            // Ctrl+Enter or Cmd+Enter to generate
-                            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && canGenerate && !shotCreatorProcessing && !isGenerating) {
-                                e.preventDefault()
-                                void handleGenerate()
-                            }
-                        }}
-                    />
-
-                    {shotCreatorPrompt.length > 0 && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-white hover:bg-secondary"
-                            onClick={() => {
-                                setShotCreatorPrompt('')
-                                textareaRef.current?.focus()
-                            }}
-                            title="Clear prompt"
-                        >
-                            <X className="h-3 w-3" />
-                        </Button>
-                    )}
-
-                    {/* Autocomplete dropdown */}
-                    {autocompleteIsOpen && (
-                        <PromptAutocomplete
-                            items={autocompleteItems}
-                            selectedIndex={autocompleteSelectedIndex}
-                            onSelect={handleAutocompleteSelect}
-                            onSelectIndex={selectAutocompleteIndex}
-                            position={dropdownPosition}
-                        />
-                    )}
-                </div>
-                )}
-
-                {/* Prompt Syntax Feedback - Hidden in recipe mode */}
-                {!activeRecipeId && (
+            <div className="flex flex-col gap-3 px-4 sm:px-6 lg:px-8">
+                {/* Textarea section */}
                 <div className="space-y-2">
-                    <PromptSyntaxFeedback
-                        prompt={shotCreatorPrompt}
-                        model={shotCreatorSettings.model}
-                        disablePipeSyntax={shotCreatorSettings.disablePipeSyntax}
-                        disableBracketSyntax={shotCreatorSettings.disableBracketSyntax}
-                        disableWildcardSyntax={shotCreatorSettings.disableWildcardSyntax}
-                        onTogglePipeSyntax={(disabled) => updateSettings({ disablePipeSyntax: disabled })}
-                        onToggleBracketSyntax={(disabled) => updateSettings({ disableBracketSyntax: disabled })}
-                        onToggleWildcardSyntax={(disabled) => updateSettings({ disableWildcardSyntax: disabled })}
-                    />
+                    <label htmlFor="prompt" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Prompt
+                    </label>
+                    <div className="relative">
+                        <Textarea
+                            id="prompt"
+                            ref={textareaRef}
+                            value={shotCreatorPrompt}
+                            onChange={(e) => handlePromptChange(e.target.value)}
+                            onKeyUp={handleTextareaKeyUp}
+                            onKeyDown={handleAutocompleteKeyDown}
+                            onMouseUp={calculateDropdownPosition}
+                            onTouchEnd={calculateDropdownPosition}
+                            placeholder="Enter your prompt here... Use @tag for references"
+                            className={cn("resize-none", getTextareaHeight(textareaSize))}
+                        />
 
-                    {/* Help Tooltip */}
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <HelpCircle className="w-3 h-3" />
-                        <span>Use [option1, option2] for variations, _wildcard_ for dynamic content, or | for chaining</span>
+                        {/* Autocomplete dropdown */}
+                        {showAutocomplete && hasSuggestions && (
+                            <div
+                                ref={autocompleteRef}
+                                className="absolute z-50 w-full max-h-[300px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg overflow-y-auto"
+                                style={{
+                                    top: `${dropdownPosition.top}px`,
+                                    left: `${dropdownPosition.left}px`,
+                                    maxWidth: textareaRef.current ? `${textareaRef.current.offsetWidth}px` : 'auto'
+                                }}
+                            >
+                                {Object.entries(autocompleteSuggestions).map(([category, suggestions]) => {
+                                    if (suggestions.length === 0) return null
+                                    const categoryIndex = Object.keys(autocompleteSuggestions).indexOf(category)
+                                    const startIndex = Object.keys(autocompleteSuggestions)
+                                        .slice(0, categoryIndex)
+                                        .reduce((sum, cat) => sum + autocompleteSuggestions[cat as Category].length, 0)
+
+                                    return (
+                                        <div key={category}>
+                                            <div className="px-3 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-900">
+                                                {category}
+                                            </div>
+                                            {suggestions.map((suggestion, idx) => {
+                                                const globalIndex = startIndex + idx
+                                                const isSelected = globalIndex === autocompleteSelectedIndex
+                                                return (
+                                                    <button
+                                                        key={`${category}-${suggestion}`}
+                                                        onClick={() => selectAutocompleteSuggestion(suggestion)}
+                                                        className={cn(
+                                                            'w-full text-left px-3 py-2 text-sm transition-colors',
+                                                            isSelected
+                                                                ? 'bg-blue-500 text-white dark:bg-blue-600'
+                                                                : 'hover:bg-slate-100 dark:hover:bg-slate-700'
+                                                        )}
+                                                    >
+                                                        {suggestion}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Generation cost and info */}
+                    <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-600 dark:text-slate-400">
+                            Cost: {generationCost.imageCount} image{generationCost.imageCount !== 1 ? 's' : ''} × ${generationCost.costPerImage} = ${generationCost.totalCost.toFixed(2)} ({generationCost.tokenCost} tokens)
+                        </span>
+                        <div className="flex gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setTextareaSize('small')}
+                                className={textareaSize === 'small' ? 'bg-slate-100 dark:bg-slate-700' : ''}
+                            >
+                                <Minimize2 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setTextareaSize('medium')}
+                                className={textareaSize === 'medium' ? 'bg-slate-100 dark:bg-slate-700' : ''}
+                            >
+                                <Square className="w-4 h-4" />
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setTextareaSize('large')}
+                                className={textareaSize === 'large' ? 'bg-slate-100 dark:bg-slate-700' : ''}
+                            >
+                                <Maximize2 className="w-4 h-4" />
+                            </Button>
+                        </div>
                     </div>
                 </div>
-                )}
-            </div>
 
-            {/* Action Buttons - Moved to top for better UX */}
-            <div className="flex flex-col sm:flex-row gap-3">
-                {/* Generate Button with Cost Preview */}
-                <div className="flex-1 flex flex-col gap-1">
-                    <Button
-                        onClick={handleGenerate}
-                        disabled={!canGenerate || isGenerating}
-                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium disabled:opacity-50"
-                        aria-label={
-                            isGenerating
-                                ? "Generating image, please wait"
-                                : `Generate ${generationCost.imageCount} image${generationCost.imageCount > 1 ? 's' : ''} for ${generationCost.tokenCost} points`
-                        }
-                        aria-busy={isGenerating}
-                        title={
-                            isGenerating
-                                ? 'Generation in progress...'
-                                : !shotCreatorPrompt.length
-                                    ? 'Enter a prompt first'
-                                    : shotCreatorReferenceImages.length === 0
-                                        ? 'Add at least one reference image'
-                                        : `Generate ${generationCost.imageCount} image${generationCost.imageCount > 1 ? 's' : ''} (${generationCost.tokenCost} pts)`
-                        }
-                    >
-                        {isGenerating ? (
-                            <>
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                                Generating...
-                            </>
-                        ) : (
-                            <>
-                                <Sparkles className="w-4 h-4 mr-2" />
-                                Generate
-                                {generationCost.imageCount > 1 && (
-                                    <span className="ml-1">({generationCost.imageCount})</span>
-                                )}
-                            </>
-                        )}
-                    </Button>
-                    {/* Cancel Button - Shows when generating */}
-                    {isGenerating && currentPredictionId && (
+                {/* Reference images section */}
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Reference Images ({shotCreatorReferenceImages.length})
+                        </label>
                         <Button
-                            variant="destructive"
-                            onClick={() => void cancelGeneration()}
-                            className="w-full mt-2"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setShotCreatorReferenceImages([])}
+                            disabled={shotCreatorReferenceImages.length === 0}
                         >
-                            <X className="w-4 h-4 mr-2" />
-                            Cancel Generation
+                            <X className="w-4 h-4" />
                         </Button>
-                    )}
-                    {/* Cost Preview */}
-                    {canGenerate && !isGenerating && (
-                        <div className="text-xs text-center text-muted-foreground">
-                            {generationCost.imageCount > 1 ? (
-                                <span>
-                                    {generationCost.imageCount} images × {generationCost.tokenCost / generationCost.imageCount} pts = <span className="text-amber-400 font-medium">{generationCost.tokenCost} pts</span>
-                                </span>
-                            ) : (
-                                <span>
-                                    Cost: <span className="text-amber-400 font-medium">{generationCost.tokenCost} pts</span>
-                                </span>
-                            )}
+                    </div>
+
+                    {/* Reference image grid */}
+                    {shotCreatorReferenceImages.length > 0 && (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                            {shotCreatorReferenceImages.map(ref => (
+                                <div key={ref.id} className="relative group">
+                                    <img
+                                        src={ref.preview}
+                                        alt={ref.tags?.[0] || 'Reference'}
+                                        className="w-full aspect-square object-cover rounded border border-slate-200 dark:border-slate-700"
+                                    />
+                                    <Button
+                                        size="sm"
+                                        variant="destructive"
+                                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => {
+                                            setShotCreatorReferenceImages(prev =>
+                                                prev.filter(r => r.id !== ref.id)
+                                            )
+                                        }}
+                                    >
+                                        <X className="w-3 h-3" />
+                                    </Button>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
 
-            </div>
+                {/* Organize and QuickAccessBar */}
+                <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                        <OrganizeButton />
+                        <QuickAccessBar />
+                    </div>
+                </div>
 
-            </Fragment>
+                {/* Recipe section */}
+                {activeRecipeId && (
+                    <div className="space-y-2 bg-slate-50 dark:bg-slate-900 p-4 rounded border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-medium text-slate-900 dark:text-slate-100">
+                                {getActiveRecipe()?.name || 'Recipe'}
+                            </h3>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setActiveRecipe(null)}
+                            >
+                                <X className="w-4 h-4" />
+                            </Button>
+                        </div>
+                        <RecipeFormFields />
+                    </div>
+                )}
+
+                {/* Mobile prompts recipes bar */}
+                <MobilePromptsRecipesBar onSelectRecipe={handleSelectRecipe} />
+
+                {/* Generate button */}
+                <Button
+                    onClick={handleGenerate}
+                    disabled={!canGenerate || isGenerating}
+                    className="w-full gap-2"
+                    size="lg"
+                >
+                    {isGenerating ? (
+                        <>
+                            <LoadingSpinner />
+                            Generating...
+                        </>
+                    ) : (
+                        <>
+                            <Sparkles className="w-4 h-4" />
+                            Generate
+                        </>
+                    )}
+                </Button>
+
+                {/* Cancel button */}
+                {isGenerating && (
+                    <Button
+                        onClick={cancelGeneration}
+                        variant="outline"
+                        className="w-full gap-2"
+                        size="lg"
+                    >
+                        <X className="w-4 h-4" />
+                        Cancel
+                    </Button>
+                )}
+
+                {/* Prompt syntax feedback */}
+                <PromptSyntaxFeedback prompt={shotCreatorPrompt} />
+
+                {/* Help section */}
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 space-y-2">
+                    <div className="flex items-start gap-2">
+                        <HelpCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                        <div className="text-sm text-blue-900 dark:text-blue-100 space-y-1">
+                            <p className="font-medium">Tips:</p>
+                            <ul className="list-disc list-inside space-y-0.5 ml-2">
+                                <li>Use @tag references to automatically attach images</li>
+                                <li>Use pipe (|) syntax for multi-stage generation</li>
+                                <li>Use {'{'}x,y{'}}'} for variation syntax</li>
+                                <li>Use * for wildcard expansion</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Fragment>
     )
 }
 
-export default PromptActions
+export { PromptActions }
