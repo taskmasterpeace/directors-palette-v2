@@ -235,7 +235,7 @@
       "impact": "high",
       "phase_id": "phase-1",
       "dependencies": [],
-      "status": "under_review",
+      "status": "planned",
       "acceptance_criteria": [
         "Reference images are uploaded to Supabase Storage on save",
         "Reference images persist across browser sessions",
@@ -247,6 +247,7 @@
         "As a comic artist, I want my character references to persist so that I can continue my project across multiple sessions",
         "As a visual storyteller, I want to access my references from any device so that I can work from my home and office"
       ],
+      "linked_spec_id": "005-complete-reference-image-persistence-to-supabase",
       "competitor_insight_ids": [
         "pain-1-2",
         "pain-2-1",
@@ -280,31 +281,6 @@
         "pain-3-4",
         "pain-4-4"
       ]
-    },
-    {
-      "id": "feature-3",
-      "title": "Reference Library Autocomplete with Real Counts",
-      "description": "Connect the reference library autocomplete to show actual counts and real-time availability of references. Currently showing placeholder data.",
-      "rationale": "Users need accurate feedback when using @reference syntax. Showing wrong counts or unavailable references breaks the workflow and causes failed generations, wasting credits.",
-      "priority": "must",
-      "complexity": "low",
-      "impact": "medium",
-      "phase_id": "phase-1",
-      "dependencies": [
-        "feature-1"
-      ],
-      "status": "under_review",
-      "acceptance_criteria": [
-        "Autocomplete shows real count of available references",
-        "Unavailable or deleted references are not shown",
-        "Autocomplete updates in real-time as references are added/removed",
-        "Performance remains fast with 100+ references"
-      ],
-      "user_stories": [
-        "As a user, I want to see accurate reference counts so that I know what's available to use",
-        "As a creator, I want autocomplete to only show valid references so that my generations don't fail"
-      ],
-      "competitor_insight_ids": []
     },
     {
       "id": "feature-4",
@@ -895,7 +871,7 @@
   ],
   "metadata": {
     "created_at": "2025-12-22T12:00:00Z",
-    "updated_at": "2025-12-23T20:01:51.443Z",
+    "updated_at": "2025-12-25T08:06:41.117Z",
     "generated_by": "roadmap_features agent",
     "prioritization_framework": "MoSCoW",
     "competitor_analysis_used": true,

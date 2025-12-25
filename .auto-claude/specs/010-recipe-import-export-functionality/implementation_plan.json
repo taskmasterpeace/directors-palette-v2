@@ -1,0 +1,257 @@
+{
+  "spec_id": "010-recipe-import-export-functionality",
+  "feature": "Recipe Import/Export Functionality",
+  "description": "Add JSON import and export capabilities for recipes, allowing users to backup, share, and transfer their custom recipes between accounts or installations.",
+  "created_at": "2025-12-25T08:00:54.891Z",
+  "updated_at": "2025-12-25T08:08:06.653Z",
+  "status": "human_review",
+  "planStatus": "review",
+  "spec_file": "spec.md",
+  "workflow_type": "development",
+  "phases": [
+    {
+      "phase_id": "phase_1",
+      "phase_title": "Core Export/Import Hook",
+      "description": "Create the useRecipeImportExport hook following the exact pattern from usePromptImportExport.ts",
+      "subtasks": [
+        {
+          "subtask_id": "1.1",
+          "title": "Create useRecipeImportExport hook with export functionality",
+          "description": "Create src/features/shot-creator/hooks/useRecipeImportExport.ts with exportRecipes() function. Export creates JSON blob with version, exportDate, and recipes array (without userId). Uses Blob API and downloads via anchor element. Shows toast notification on success/failure.",
+          "dependencies": [],
+          "estimated_effort": "small",
+          "status": "completed",
+          "notes": "Created useRecipeImportExport.ts with exportRecipes() function following exact pattern from usePromptImportExport.ts. Exports JSON with version, exportDate, and recipes array. Uses Blob API for download, shows toast notifications.",
+          "critical_files": [
+            "src/features/shot-creator/hooks/useRecipeImportExport.ts",
+            "src/features/shot-creator/hooks/usePromptImportExport.ts"
+          ]
+        },
+        {
+          "subtask_id": "1.2",
+          "title": "Add import functionality to the hook",
+          "description": "Add importRecipes() function that parses JSON file, validates structure (checks for recipes array), validates each recipe has required fields (name, stages), checks for duplicates by name+categoryId, and uses addRecipe from store to add valid recipes. Track imported/skipped counts and show appropriate toast message.",
+          "dependencies": [
+            "1.1"
+          ],
+          "estimated_effort": "medium",
+          "status": "completed",
+          "notes": "Added importRecipes() function following usePromptImportExport.ts pattern. Validates JSON structure (recipes array), validates required fields (name, stages), checks duplicates by name+categoryId, uses addRecipe from store, tracks imported/skipped counts with toast notifications.",
+          "critical_files": [
+            "src/features/shot-creator/hooks/useRecipeImportExport.ts",
+            "src/features/shot-creator/store/recipe.store.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "phase_id": "phase_2",
+      "phase_title": "Recipe Validation Service",
+      "description": "Add validation utilities for imported recipes to ensure data integrity",
+      "subtasks": [
+        {
+          "subtask_id": "2.1",
+          "title": "Create recipe validation service",
+          "description": "Create src/features/shot-creator/services/recipe-validation.service.ts with: validateRecipeForImport() that checks required fields (name, stages array, each stage has template or toolId), validateRecipeStructure() for basic structure validation, and hasDuplicateRecipe() to check for name+categoryId duplicates. Follow pattern from prompt-library.service.ts.",
+          "dependencies": [],
+          "estimated_effort": "small",
+          "status": "completed",
+          "notes": "Created recipe-validation.service.ts with: validateRecipeStructure() for basic structure validation, validateRecipeForImport() to check required fields (name, stages array, each stage has template or toolId), hasDuplicateRecipe() to check for name+categoryId duplicates, and sanitizeRecipeForImport() as a bonus helper. Follows pattern from prompt-library.service.ts with RecipeValidationResult interface and singleton export.",
+          "critical_files": [
+            "src/features/shot-creator/services/recipe-validation.service.ts",
+            "src/features/shot-creator/services/prompt-library.service.ts"
+          ]
+        },
+        {
+          "subtask_id": "2.2",
+          "title": "Integrate validation service with import hook",
+          "description": "Update useRecipeImportExport to use the validation service for import validation. Replace inline validation with service calls.",
+          "dependencies": [
+            "1.2",
+            "2.1"
+          ],
+          "estimated_effort": "small",
+          "status": "completed",
+          "notes": "Integrated recipeValidationService into useRecipeImportExport hook: replaced inline validation with validateRecipeForImport(), inline duplicate check with hasDuplicateRecipe(), and manual recipe construction with sanitizeRecipeForImport(). All validation logic is now centralized in the service.",
+          "critical_files": [
+            "src/features/shot-creator/hooks/useRecipeImportExport.ts",
+            "src/features/shot-creator/services/recipe-validation.service.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "phase_id": "phase_3",
+      "phase_title": "UI Integration",
+      "description": "Add import/export buttons to recipe management UI components",
+      "subtasks": [
+        {
+          "subtask_id": "3.1",
+          "title": "Add import/export buttons to RecipeBuilder component",
+          "description": "Update RecipeBuilder.tsx to add Export and Import buttons in the header area next to the 'New Recipe' button. Add hidden file input for import. Wire up to useRecipeImportExport hook. Follow the pattern from PromptLibraryCard.tsx with Download and Upload icons.",
+          "dependencies": [
+            "1.2"
+          ],
+          "estimated_effort": "medium",
+          "status": "completed",
+          "notes": "Export and Import buttons already implemented in RecipeBuilder.tsx header area next to 'New Recipe' button. Uses useRecipeImportExport hook with exportRecipes and importRecipes functions. Hidden file input with ref for import functionality. Pattern follows PromptLibraryCard.tsx with Download and Upload icons from lucide-react.",
+          "critical_files": [
+            "src/features/shot-creator/components/recipe/RecipeBuilder.tsx",
+            "src/features/shot-creator/hooks/useRecipeImportExport.ts"
+          ]
+        },
+        {
+          "subtask_id": "3.2",
+          "title": "Add import/export buttons to RecipesTab (Admin)",
+          "description": "Update RecipesTab.tsx to add Export and Import buttons in the header alongside 'Create Recipe' and 'Refresh' buttons. Wire up to useRecipeImportExport hook. Include system recipe handling - optionally export only user recipes or all recipes.",
+          "dependencies": [
+            "1.2"
+          ],
+          "estimated_effort": "medium",
+          "status": "completed",
+          "notes": "Added Export dropdown menu with 3 options (Export All, Export User Recipes Only, Export System Recipes Only) and Import button to RecipesTab.tsx Admin UI. Wired up to useRecipeImportExport hook. Also fixed RecipeBuilder.tsx onClick handler for the exportRecipes function.",
+          "critical_files": [
+            "src/features/admin/components/RecipesTab.tsx",
+            "src/features/shot-creator/hooks/useRecipeImportExport.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "phase_id": "phase_4",
+      "phase_title": "Testing & Documentation",
+      "description": "Add tests and document the feature",
+      "subtasks": [
+        {
+          "subtask_id": "4.1",
+          "title": "Add unit tests for useRecipeImportExport hook",
+          "description": "Create tests/recipe-import-export.spec.ts with tests for: export creates valid JSON with version/date/recipes, export excludes userId field, import validates JSON structure, import validates recipe required fields, import skips duplicates, import counts imported/skipped correctly.",
+          "dependencies": [
+            "2.2"
+          ],
+          "estimated_effort": "medium",
+          "status": "completed",
+          "notes": "Created src/features/shot-creator/hooks/useRecipeImportExport.test.ts with 57 unit tests covering: export JSON structure (version/date/recipes), userId exclusion, import JSON validation, recipe required fields validation, duplicate detection with name+categoryId, import counting logic (imported/skipped), and recipe sanitization. All tests pass with vitest. Note: File placed in src/ instead of tests/ because vitest config excludes tests/ folder for unit tests.",
+          "critical_files": [
+            "src/features/shot-creator/hooks/useRecipeImportExport.test.ts",
+            "src/features/shot-creator/hooks/useRecipeImportExport.ts"
+          ]
+        },
+        {
+          "subtask_id": "4.2",
+          "title": "Add tests for recipe validation service",
+          "description": "Add tests for recipe-validation.service.ts covering: validateRecipeForImport with valid/invalid data, hasDuplicateRecipe edge cases, validateRecipeStructure with missing fields.",
+          "dependencies": [
+            "2.1"
+          ],
+          "estimated_effort": "small",
+          "status": "completed",
+          "notes": "Created src/features/shot-creator/services/recipe-validation.service.test.ts with 102 comprehensive unit tests covering: validateRecipeStructure (basic structure validation with missing fields), validateRecipeForImport (full import validation with valid/invalid data, name/stages/optional field validation), hasDuplicateRecipe (duplicate detection with case insensitivity, whitespace handling, category edge cases, excludeId parameter), validateExportData (export structure validation), sanitizeRecipeForImport (data sanitization, field removal, system flags), and integration scenarios. All tests pass with vitest.",
+          "critical_files": [
+            "src/features/shot-creator/services/recipe-validation.service.test.ts",
+            "src/features/shot-creator/services/recipe-validation.service.ts"
+          ]
+        }
+      ]
+    }
+  ],
+  "qa_sign_off": {
+    "status": "pending",
+    "tests_passed": "",
+    "issues": ""
+  },
+  "metadata": {
+    "total_subtasks": 8,
+    "completed_subtasks": 8,
+    "estimated_total_effort": "medium",
+    "related_specs": [],
+    "key_patterns": [
+      "usePromptImportExport.ts - exact pattern for JSON export/import with version, timestamp, validation, and toast notifications",
+      "prompt-library.service.ts - validation service pattern with ValidationResult interface",
+      "PromptLibraryCard.tsx - UI pattern for export/import buttons with hidden file input",
+      "recipe.store.ts - Zustand store with addRecipe for importing recipes"
+    ],
+    "export_format": {
+      "version": "1.0",
+      "exportDate": "ISO 8601 timestamp",
+      "recipes": "Array of Recipe objects without userId field"
+    },
+    "import_validation": {
+      "structure": "Check for recipes array, valid JSON",
+      "recipe_required_fields": [
+        "name",
+        "stages"
+      ],
+      "stage_required": "Either template (for generation) or toolId (for tool)",
+      "duplicate_check": "name + categoryId combination"
+    }
+  },
+  "services_involved": [
+    "recipe.store.ts",
+    "recipe.service.ts",
+    "recipe-validation.service.ts (new)"
+  ],
+  "final_acceptance": [
+    "User can export all their recipes to a JSON file",
+    "User can import recipes from a JSON file with validation",
+    "Duplicate recipes are detected and skipped during import",
+    "Toast notifications provide clear feedback on import/export status",
+    "Export/Import buttons are available in both RecipeBuilder and Admin RecipesTab"
+  ],
+  "recoveryNote": "Task recovered from stuck state at 2025-12-25T08:08:06.653Z",
+  "qa_signoff": {
+    "status": "approved",
+    "qa_session": 1,
+    "issues_found": [
+      {
+        "description": "None - all previous issues resolved"
+      }
+    ],
+    "tests_passed": {},
+    "timestamp": "2025-12-25T09:25:29.088602+00:00",
+    "ready_for_qa_revalidation": false
+  },
+  "last_updated": "2025-12-25T09:25:29.088613+00:00",
+  "qa_iteration_history": [
+    {
+      "iteration": 1,
+      "status": "approved",
+      "timestamp": "2025-12-25T08:54:16.185329+00:00",
+      "issues": [],
+      "duration_seconds": 381.12
+    },
+    {
+      "iteration": 1,
+      "status": "rejected",
+      "timestamp": "2025-12-25T08:56:29.163094+00:00",
+      "issues": [
+        {
+          "description": "Build fails due to unused imports in test files: (1) vi, beforeEach imported but unused in useRecipeImportExport.test.ts:6, (2) RecipeValidationResult not type-imported in useRecipeImportExport.test.ts:10, (3) existingRecipes parameter unused in useRecipeImportExport.test.ts:559"
+        }
+      ],
+      "duration_seconds": 564.98
+    },
+    {
+      "iteration": 2,
+      "status": "approved",
+      "timestamp": "2025-12-25T09:21:11.288557+00:00",
+      "issues": [],
+      "duration_seconds": 1064.05
+    },
+    {
+      "iteration": 2,
+      "status": "approved",
+      "timestamp": "2025-12-25T09:26:01.785175+00:00",
+      "issues": [],
+      "duration_seconds": 1545.05
+    }
+  ],
+  "qa_stats": {
+    "total_iterations": 4,
+    "last_iteration": 2,
+    "last_status": "approved",
+    "issues_by_type": {
+      "unknown": 1
+    }
+  }
+}

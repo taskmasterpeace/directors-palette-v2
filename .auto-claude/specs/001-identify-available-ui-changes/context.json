@@ -1,0 +1,27 @@
+{
+  "task_description": "Document the available UI changes in the Directors Palette v2 codebase by reviewing git history and project structure",
+  "scoped_services": ["main"],
+  "files_to_modify": [],
+  "files_to_reference": [
+    "src/components/ui/",
+    "src/features/"
+  ],
+  "patterns": {
+    "framework": "Next.js with React/TypeScript",
+    "component_library": "shadcn/ui",
+    "architecture": "feature-based"
+  },
+  "service_contexts": {
+    "main": {
+      "description": "Main Directors Palette application",
+      "ui_features": [
+        "Shot Creator",
+        "Shot Animator",
+        "Story Creator",
+        "Storyboard",
+        "Layout Annotation"
+      ]
+    }
+  },
+  "created_at": "2025-01-13T00:00:00Z"
+}

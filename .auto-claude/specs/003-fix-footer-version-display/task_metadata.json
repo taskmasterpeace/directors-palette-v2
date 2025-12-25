@@ -1,0 +1,12 @@
+{
+  "sourceType": "ideation",
+  "ideationType": "ui_ux_improvements",
+  "ideaId": "uiux-002",
+  "rationale": "The footer displays 'v0.8' but the actual application version in package.json is '0.95.0'. This misleads users about the current version and looks unprofessional.",
+  "category": "ui_ux",
+  "uiuxCategory": "usability",
+  "affectedFiles": [
+    "src/app/layout.tsx"
+  ],
+  "problemSolved": "Footer hardcodes '<span>v0.8</span>' in layout.tsx line 73, which is significantly out of date compared to package.json version 0.95.0"
+}

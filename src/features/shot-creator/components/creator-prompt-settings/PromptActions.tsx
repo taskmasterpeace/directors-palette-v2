@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect, useRef } from "react"
+import React, { Fragment, useState, useEffect } from "react"
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
@@ -27,10 +27,8 @@ import { useCallback } from "react"
 import { extractAtTags, urlToFile } from "../../helpers"
 import { ShotCreatorReferenceImage } from "../../types"
 import { useUnifiedGalleryStore } from "../../store/unified-gallery-store"
-import { useLibraryStore } from "../../store/shot-library.store"
 import { useRecipeStore } from "../../store/recipe.store"
 import { cn } from "@/utils/utils"
-import { Category } from "../CategorySelectDialog"
 
 const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextAreaElement | null> }) => {
     const {
@@ -43,7 +41,6 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     } = useShotCreatorStore()
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
     const { generateImage, isGenerating, cancelGeneration, currentPredictionId } = useImageGeneration()
-    const { libraryItems } = useLibraryStore()
     const { wildcards } = useWildCardStore()
     const { activeRecipeId, activeFieldValues, setActiveRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts } = useRecipeStore()
 
@@ -74,12 +71,6 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         }
     }, [shotCreatorPrompt, shotCreatorSettings, wildcards])
 
-    // Autocomplete state
-    const [showAutocomplete, setShowAutocomplete] = useState(false)
-    const [autocompleteSearch, setAutocompleteSearch] = useState('')
-    const [autocompleteCursorPos, setAutocompleteCursorPos] = useState(0)
-    const autocompleteRef = useRef<HTMLDivElement>(null)
-
     // Textarea size state
     type TextareaSize = 'small' | 'medium' | 'large'
     const [textareaSize, setTextareaSize] = useState<TextareaSize>('medium')
@@ -102,12 +93,12 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         isOpen: autocompleteIsOpen,
         items: autocompleteItems,
         selectedIndex: autocompleteSelectedIndex,
-        selectedItem: _autocompleteSelectedItem,
+        selectedItem: autocompleteSelectedItem,
         handleTextChange: handleAutocompleteTextChange,
         insertItem: insertAutocompleteItem,
         close: closeAutocomplete,
-        selectNext: _selectNextAutocomplete,
-        selectPrevious: _selectPreviousAutocomplete,
+        selectNext: selectNextAutocomplete,
+        selectPrevious: selectPreviousAutocomplete,
         selectIndex: selectAutocompleteIndex
     } = autocomplete
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
@@ -128,144 +119,6 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         // Regular mode: needs prompt and refs
         return shotCreatorPrompt.length > 0 && shotCreatorReferenceImages.length > 0
     }, [shotCreatorPrompt, shotCreatorReferenceImages, activeFieldValues, getActiveRecipe, getActiveValidation])
-
-    // Get references grouped by category from library items
-    const getReferencesGroupedByCategory = useCallback(() => {
-        const grouped: Record<Category, string[]> = {
-            people: [],
-            places: [],
-            props: [],
-            unorganized: []
-        }
-
-        libraryItems.forEach(item => {
-            if (item.tags && item.tags.length > 0) {
-                const category = item.category as Category
-                item.tags.forEach(tag => {
-                    const formattedTag = `@${tag}`
-                    if (!grouped[category].includes(formattedTag)) {
-                        grouped[category].push(formattedTag)
-                    }
-                })
-            }
-        })
-
-        return grouped
-    }, [libraryItems])
-
-    // Filter autocomplete suggestions with category grouping
-    const autocompleteSuggestions = React.useMemo(() => {
-        const grouped = getReferencesGroupedByCategory()
-        const searchWithAt = autocompleteSearch.startsWith('@')
-            ? autocompleteSearch.toLowerCase()
-            : '@' + autocompleteSearch.toLowerCase()
-
-        // Filter each category
-        const filtered: Record<Category, string[]> = {
-            people: autocompleteSearch
-                ? grouped.people.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
-                : grouped.people,
-            places: autocompleteSearch
-                ? grouped.places.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
-                : grouped.places,
-            props: autocompleteSearch
-                ? grouped.props.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
-                : grouped.props,
-            unorganized: autocompleteSearch
-                ? grouped.unorganized.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
-                : grouped.unorganized
-        }
-
-        return filtered
-    }, [autocompleteSearch, getReferencesGroupedByCategory])
-
-    // Handle autocomplete selection
-    const selectAutocompleteSuggestion = useCallback((suggestion: string) => {
-        const textarea = textareaRef.current
-        if (!textarea) return
-
-        const beforeCursor = shotCreatorPrompt.substring(0, autocompleteCursorPos)
-        const afterCursor = shotCreatorPrompt.substring(autocompleteCursorPos)
-
-        // Find the start of the @ mention
-        const atIndex = beforeCursor.lastIndexOf('@')
-        const before = shotCreatorPrompt.substring(0, atIndex)
-        const newPrompt = before + suggestion + ' ' + afterCursor
-
-        setShotCreatorPrompt(newPrompt)
-        setShowAutocomplete(false)
-        setAutocompleteSearch('')
-
-        // Set cursor position after the inserted tag
-        setTimeout(() => {
-            const newPos = atIndex + suggestion.length + 1
-            textarea.focus()
-            textarea.setSelectionRange(newPos, newPos)
-        }, 0)
-    }, [shotCreatorPrompt, autocompleteCursorPos, textareaRef, setShotCreatorPrompt])
-
-    // Detect @ symbol and show autocomplete
-    const handleTextareaKeyUp = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        const textarea = e.currentTarget
-        const cursorPos = textarea.selectionStart
-        const textBeforeCursor = shotCreatorPrompt.substring(0, cursorPos)
-
-        // Find last @ symbol before cursor
-        const lastAtIndex = textBeforeCursor.lastIndexOf('@')
-
-        if (lastAtIndex !== -1) {
-            // Check if there's a space between @ and cursor (if so, close autocomplete)
-            const textAfterAt = textBeforeCursor.substring(lastAtIndex)
-            if (textAfterAt.includes(' ')) {
-                setShowAutocomplete(false)
-                return
-            }
-
-            // Extract search term (everything after @)
-            const search = textAfterAt.substring(1) // Remove the @ symbol
-            setAutocompleteSearch(search)
-            setAutocompleteCursorPos(cursorPos)
-            setShowAutocomplete(true)
-            selectAutocompleteIndex(0)
-        } else {
-            setShowAutocomplete(false)
-        }
-    }, [shotCreatorPrompt])
-
-    // Flatten suggestions for keyboard navigation
-    const flatSuggestions = React.useMemo(() => {
-        const flat: string[] = []
-        Object.values(autocompleteSuggestions).forEach(categoryRefs => {
-            flat.push(...categoryRefs)
-        })
-        return flat
-    }, [autocompleteSuggestions])
-
-    // Check if we have any suggestions
-    const hasSuggestions = flatSuggestions.length > 0
-
-    // Handle keyboard navigation in autocomplete
-    const handleAutocompleteKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (!showAutocomplete || !hasSuggestions) return
-
-        if (e.key === 'ArrowDown') {
-            e.preventDefault()
-            const nextIndex = autocompleteSelectedIndex < flatSuggestions.length - 1 ? autocompleteSelectedIndex + 1 : 0
-            selectAutocompleteIndex(nextIndex)
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault()
-            const prevIndex = autocompleteSelectedIndex > 0 ? autocompleteSelectedIndex - 1 : flatSuggestions.length - 1
-            selectAutocompleteIndex(prevIndex)
-        } else if (e.key === 'Enter' || e.key === 'Tab') {
-            if (flatSuggestions[autocompleteSelectedIndex]) {
-                e.preventDefault()
-                selectAutocompleteSuggestion(flatSuggestions[autocompleteSelectedIndex])
-            }
-        } else if (e.key === 'Escape') {
-            e.preventDefault()
-            setShowAutocomplete(false)
-        }
-    }, [showAutocomplete, hasSuggestions, flatSuggestions, autocompleteSelectedIndex, selectAutocompleteSuggestion, selectAutocompleteIndex])
 
     // Build model settings from shotCreatorSettings
     const buildModelSettings = useCallback(() => {
@@ -624,7 +477,6 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         onChange={async (e) => {
                             await handlePromptChange(e.target.value);
                         }}
-                        onKeyUp={handleTextareaKeyUp}
                         placeholder="Describe your shot... Use @ to reference images"
                         className={cn(
                             getTextareaHeight(textareaSize),
@@ -632,8 +484,30 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                             "resize-y sm:resize-y resize-none sm:resize-y" // Allow resize on desktop, disable on mobile
                         )}
                         onKeyDown={(e) => {
-                            // Handle autocomplete navigation first
-                            handleAutocompleteKeyDown(e)
+                            // Handle autocomplete keyboard navigation when dropdown is open
+                            if (autocompleteIsOpen && autocompleteItems.length > 0) {
+                                switch (e.key) {
+                                    case 'ArrowUp':
+                                        e.preventDefault()
+                                        selectPreviousAutocomplete()
+                                        return
+                                    case 'ArrowDown':
+                                        e.preventDefault()
+                                        selectNextAutocomplete()
+                                        return
+                                    case 'Enter':
+                                    case 'Tab':
+                                        e.preventDefault()
+                                        if (autocompleteSelectedItem) {
+                                            void handleAutocompleteSelect(autocompleteSelectedItem)
+                                        }
+                                        return
+                                    case 'Escape':
+                                        e.preventDefault()
+                                        closeAutocomplete()
+                                        return
+                                }
+                            }
 
                             // Ctrl+Enter or Cmd+Enter to generate
                             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && canGenerate && !shotCreatorProcessing && !isGenerating) {
@@ -643,46 +517,6 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         }}
                     />
 
-                    {/* Autocomplete Dropdown with Category Groups */}
-                    {showAutocomplete && hasSuggestions && (
-                        <div
-                            ref={autocompleteRef}
-                            className="absolute z-50 w-full mt-1 bg-card border border-border rounded-md shadow-lg max-h-80 overflow-auto touch-pan-y"
-                        >
-                            {(['people', 'places', 'props', 'unorganized'] as Category[]).map((category) => {
-                                const categoryRefs = autocompleteSuggestions[category]
-                                if (categoryRefs.length === 0) return null
-
-                                return (
-                                    <div key={category}>
-                                        {/* Category Header */}
-                                        <div className="sticky top-0 bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground uppercase tracking-wide">
-                                            {category}
-                                        </div>
-                                        {/* Category Items */}
-                                        {categoryRefs.map((suggestion) => {
-                                            const globalIndex = flatSuggestions.indexOf(suggestion)
-                                            return (
-                                                <div
-                                                    key={suggestion}
-                                                    className={cn(
-                                                        "px-4 min-h-[48px] flex items-center cursor-pointer transition-colors touch-manipulation active:scale-95",
-                                                        globalIndex === autocompleteSelectedIndex
-                                                            ? "bg-primary text-white"
-                                                            : "hover:bg-secondary active:bg-muted text-foreground"
-                                                    )}
-                                                    onClick={() => selectAutocompleteSuggestion(suggestion)}
-                                                    onTouchStart={() => selectAutocompleteIndex(globalIndex)}
-                                                >
-                                                    <span className="text-base">{suggestion}</span>
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    )}
                     {shotCreatorPrompt.length > 0 && (
                         <Button
                             variant="ghost"

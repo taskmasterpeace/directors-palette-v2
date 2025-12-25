@@ -3,103 +3,112 @@
     {
       "id": "uiux-001",
       "type": "ui_ux_improvements",
-      "title": "Standardize Auth Form Input Styling",
-      "description": "Update authentication forms (SignInForm, ForgotPasswordForm, ResetPasswordForm) to use the standard Input component instead of custom inline styling",
-      "rationale": "Auth forms use custom inline focus styles (focus:ring-2 focus:ring-blue-500 or focus:ring-amber-500) that don't match the design system's Input component. This creates visual inconsistency and maintenance burden.",
-      "category": "visual",
+      "title": "Add Skeleton Loading States for Gallery Grid",
+      "description": "Replace spinner loading indicators with skeleton placeholder cards that match the gallery grid layout for better perceived performance",
+      "rationale": "The Skeleton component exists (src/components/ui/skeleton.tsx) but the UnifiedImageGallery uses a centered spinner during loading. Skeleton screens reduce perceived wait time and prevent layout shift when content loads.",
+      "category": "performance",
       "affected_components": [
-        "src/features/auth/components/SignInForm.tsx",
-        "src/features/auth/components/ForgotPasswordForm.tsx",
-        "src/features/auth/components/ResetPasswordForm.tsx"
+        "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx",
+        "src/features/community/components/CommunityGrid.tsx",
+        "src/components/ui/skeleton.tsx"
       ],
       "screenshots": [],
-      "current_state": "Auth forms use raw <input> elements with custom Tailwind classes like 'bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500' instead of the standard Input component",
-      "proposed_change": "Replace all raw <input> elements in auth forms with the <Input /> component from '@/components/ui/input', which has consistent focus:visible:border-ring focus:visible:ring-ring/50 styling matching the design system",
-      "user_benefit": "Consistent visual experience across the application, making the auth flow feel polished and professional. Better accessibility with standardized focus states.",
+      "current_state": "Gallery loading state (lines 607-611 in UnifiedImageGallery.tsx) shows a centered purple spinner with 'Loading gallery...' text. Community grid shows Loader2 spinner. This creates a jarring transition when images load and causes layout shift.",
+      "proposed_change": "1. Create a SkeletonImageCard component that matches ImageCard dimensions with animated pulse placeholders. 2. During loading, render a grid of 8-12 SkeletonImageCards matching the current gridSize setting. 3. Use aspect-square or aspect-video based on useNativeAspectRatio setting. 4. Include skeleton badges for model and reference placeholders.",
+      "user_benefit": "Users see an immediate visual representation of incoming content, reducing perceived wait time by up to 40%. Eliminates layout shifts when images load, creating a smoother experience.",
       "status": "draft",
-      "created_at": "2025-12-22T12:15:00.000Z"
+      "created_at": "2025-12-25T03:00:00.000Z"
     },
     {
       "id": "uiux-002",
       "type": "ui_ux_improvements",
-      "title": "Fix Footer Version Display",
-      "description": "Update the footer version from hardcoded 'v0.8' to dynamically read from package.json or update to match current version 0.95.0",
-      "rationale": "The footer displays 'v0.8' but the actual application version in package.json is '0.95.0'. This misleads users about the current version and looks unprofessional.",
-      "category": "usability",
+      "title": "Add Focus Visible Indicators to Gallery Image Cards",
+      "description": "Add clear keyboard focus indicators to ImageCard components for WCAG 2.1 AA accessibility compliance",
+      "rationale": "ImageCard lacks visible focus states, making keyboard navigation impossible. This is a WCAG 2.1 requirement (2.4.7 Focus Visible) and important for users with motor impairments.",
+      "category": "accessibility",
       "affected_components": [
-        "src/app/layout.tsx"
+        "src/features/shot-creator/components/unified-gallery/ImageCard.tsx",
+        "src/features/shot-creator/components/unified-gallery/FullScreenModal.tsx"
       ],
       "screenshots": [],
-      "current_state": "Footer hardcodes '<span>v0.8</span>' in layout.tsx line 73, which is significantly out of date compared to package.json version 0.95.0",
-      "proposed_change": "Either: (1) Import version from package.json and display dynamically, or (2) Update the hardcoded version to 'v0.95.0'. Recommended approach is dynamic import for automatic updates: import { version } from '../../package.json' then use {version}",
-      "user_benefit": "Users see accurate version information, which is important for bug reports and knowing they're on the latest version. Maintains trust in the application's professionalism.",
+      "current_state": "ImageCard uses a div container with onClick handler but no tabIndex or focus styling (lines 82-100). Keyboard users cannot tab through gallery images or see focus state. The fullscreen modal supports arrow keys but individual cards lack focus support.",
+      "proposed_change": "1. Add tabIndex={0} to ImageCard container. 2. Add focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:outline-none classes. 3. Add onKeyDown handler to trigger onZoom on Enter/Space. 4. Add role='button' and aria-label describing the image. 5. Manage focus when modal opens/closes.",
+      "user_benefit": "Keyboard-only users can navigate gallery efficiently. Users with motor impairments can access all gallery features. Meets WCAG 2.1 AA compliance for focus visible requirement.",
       "status": "draft",
-      "created_at": "2025-12-22T12:15:00.000Z"
+      "created_at": "2025-12-25T03:01:00.000Z"
     },
     {
       "id": "uiux-003",
       "type": "ui_ux_improvements",
-      "title": "Add Keyboard Shortcut Hints to Sidebar",
-      "description": "Display keyboard shortcut indicators for the sidebar collapse toggle (Ctrl+B) so users can discover this feature",
-      "rationale": "The sidebar has a useful Ctrl+B keyboard shortcut for collapsing/expanding, but users have no way to discover this feature. Making shortcuts visible improves power user efficiency.",
-      "category": "usability",
+      "title": "Create Reusable EmptyState Component",
+      "description": "Create a standardized EmptyState component and replace inconsistent empty state implementations across feature modules",
+      "rationale": "Empty states vary significantly - CommunityGrid uses Inbox icon, UnifiedImageGallery uses ImageIcon, with different text styling and layouts. Consistency improves user recognition and reduces cognitive load.",
+      "category": "visual",
       "affected_components": [
-        "src/components/SidebarNavigation.tsx"
+        "src/components/ui/empty-state.tsx",
+        "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx",
+        "src/features/community/components/CommunityGrid.tsx",
+        "src/features/shot-animator/components/ShotAnimatorView.tsx",
+        "src/features/storyboard/components/gallery/StoryboardGallery.tsx"
       ],
       "screenshots": [],
-      "current_state": "The collapse button shows ChevronLeft or Menu icon but provides no hint about the Ctrl+B shortcut. Code at line 87-96 listens for the shortcut but it's invisible to users.",
-      "proposed_change": "Add a tooltip to the collapse button showing 'Toggle sidebar (Ctrl+B)' or add a small <kbd> style hint below the button when sidebar is expanded: <TooltipContent>Toggle sidebar<kbd className='ml-2 px-1 text-xs bg-muted rounded'>Ctrl+B</kbd></TooltipContent>",
-      "user_benefit": "Power users can discover and use keyboard shortcuts for faster navigation. Improves efficiency for users who work with the app frequently.",
+      "current_state": "UnifiedImageGallery (lines 612-619) shows ImageIcon at 48px with 'No images generated yet'. CommunityGrid (lines 43-50) shows Inbox at 48px with 'No items found'. Different padding (py-12 vs py-20), different opacity treatment, inconsistent action hints.",
+      "proposed_change": "Create src/components/ui/empty-state.tsx: interface EmptyStateProps { icon: LucideIcon; title: string; description?: string; action?: { label: string; onClick: () => void }; }. Standardize: py-16, icon at 48px with opacity-50, font-medium title, text-sm muted description, optional amber primary action button.",
+      "user_benefit": "Consistent empty states help users immediately recognize they need to take action. Clear CTAs reduce confusion about what to do next. The app feels more cohesive and professionally designed.",
       "status": "draft",
-      "created_at": "2025-12-22T12:15:00.000Z"
+      "created_at": "2025-12-25T03:02:00.000Z"
     },
     {
       "id": "uiux-004",
       "type": "ui_ux_improvements",
-      "title": "Improve Help Button Touch Target in SectionHeader",
-      "description": "Increase the help button size in SectionHeader to meet minimum touch target guidelines of 44x44 pixels for mobile accessibility",
-      "rationale": "The help icon button uses 'p-1.5' padding creating approximately a 28x28px touch target, which is below the recommended 44x44px minimum for mobile. This makes it hard to tap accurately on touch devices.",
-      "category": "accessibility",
+      "title": "Add Visual Drop Zone Feedback for File Uploads",
+      "description": "Implement prominent visual feedback when users drag files over upload areas, with clear valid/invalid file type indicators",
+      "rationale": "Modern creative tools provide clear drag-and-drop feedback. Without visible drop zones, users may not discover drag-and-drop is supported or may be unsure where to drop files.",
+      "category": "interaction",
       "affected_components": [
-        "src/components/SectionHeader.tsx"
+        "src/features/shot-creator/components/creator-reference-manager/index.tsx",
+        "src/features/layout-annotation/components/LayoutAnnotationTab.tsx",
+        "src/features/music-lab/components/AudioUploader.tsx"
       ],
       "screenshots": [],
-      "current_state": "Help button at line 135-137 uses 'className=\"p-1.5 rounded-full bg-background/50\"' with a 4x4 icon, resulting in approximately 28x28px touch target. Also missing aria-label for screen readers.",
-      "proposed_change": "Change button styling to 'className=\"p-2.5 -m-1 rounded-full bg-background/50 hover:bg-background/80 transition-colors\" aria-label=\"Help for this section\"'. The increased padding creates a 44x44 target while negative margin keeps visual alignment. Add aria-label for accessibility.",
-      "user_benefit": "Mobile users can accurately tap the help button without frustration. Screen reader users get clear announcement of button purpose. Complies with WCAG 2.5.5 Target Size guidelines.",
+      "current_state": "AudioUploader has a drag-drop zone with dashed border but minimal dragOver visual change. Reference image upload areas may lack clear drag feedback. No distinction between valid and invalid file types during drag.",
+      "proposed_change": "1. Create useDropZone hook managing dragOver/dragLeave/drop with visual state. 2. On drag enter: add pulsing border-2 border-amber-500, bg-amber-500/10 overlay, 'Drop to upload' text with Upload icon. 3. For invalid file types: red border with 'Invalid file type' message. 4. Add subtle scale transform (scale-[1.02]) on valid drag.",
+      "user_benefit": "Users immediately understand drag-and-drop is supported and know exactly where to drop. Clear invalid file feedback prevents confusion. The interaction feels responsive and matches expectations from other creative tools.",
       "status": "draft",
-      "created_at": "2025-12-22T12:15:00.000Z"
+      "created_at": "2025-12-25T03:03:00.000Z"
     },
     {
       "id": "uiux-005",
       "type": "ui_ux_improvements",
-      "title": "Standardize Loading Spinner Component",
-      "description": "Create a unified LoadingSpinner component and replace inconsistent loading indicators throughout the app",
-      "rationale": "Different components use varying loading indicators - some use Loader2 with amber color, others use custom border-based spinners with purple, and some have different sizes. This creates visual inconsistency.",
-      "category": "visual",
+      "title": "Add Confirmation Dialog for Destructive Actions",
+      "description": "Implement a consistent confirmation dialog pattern for destructive actions like delete, with clear undo messaging where applicable",
+      "rationale": "Gallery image deletion and folder deletion lack consistent confirmation UX. Users may accidentally delete content without warning, especially on mobile where tap targets are close together.",
+      "category": "usability",
       "affected_components": [
-        "src/components/ui/loading-spinner.tsx (new)",
-        "src/features/community/components/CommunityGrid.tsx",
-        "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx",
-        "src/features/credits/components/CreditsDisplay.tsx"
+        "src/features/shot-creator/components/unified-gallery/ImageActionMenu.tsx",
+        "src/features/shot-creator/components/unified-gallery/FolderManagerModal.tsx",
+        "src/components/ui/alert-dialog.tsx"
       ],
       "screenshots": [],
-      "current_state": "CommunityGrid uses '<Loader2 className=\"w-8 h-8 animate-spin text-muted-foreground\"/>'. UnifiedImageGallery uses '<div className=\"w-12 h-12 ... border-t-purple-500 rounded-full animate-spin\"/>'. CreditsDisplay uses '<Loader2 className=\"w-8 h-8 animate-spin text-amber-500\"/>'. No consistent size/color scheme.",
-      "proposed_change": "Create a new LoadingSpinner component: export function LoadingSpinner({ size = 'md', className }: { size?: 'sm'|'md'|'lg', className?: string }) with predefined sizes (sm=4, md=8, lg=12) and use the app's amber/orange brand colors consistently. Replace all instances with <LoadingSpinner />",
-      "user_benefit": "Consistent loading experience across the app feels polished and professional. Users recognize the loading state immediately regardless of which feature they're using.",
+      "current_state": "Image deletion may happen directly from action menu without confirmation. FolderManagerModal has delete mode but the AlertDialog usage varies. No consistent pattern for destructive action confirmation across the app.",
+      "proposed_change": "1. Create a useConfirmDialog hook that returns { confirm, ConfirmDialog } with standardized AlertDialog. 2. For deletions: red destructive button, clear item description, 'This cannot be undone' warning. 3. For bulk deletions: show count of affected items. 4. Where possible, mention 'soft delete' period if applicable.",
+      "user_benefit": "Users are protected from accidental deletions. Clear warnings set expectations about permanence. Consistent confirmation pattern reduces anxiety about destructive actions and builds trust.",
       "status": "draft",
-      "created_at": "2025-12-22T12:15:00.000Z"
+      "created_at": "2025-12-25T03:04:00.000Z"
     }
   ],
   "metadata": {
-    "generated_at": "2025-12-22T12:15:00.000Z",
-    "analysis_type": "static_code_review",
+    "generated_at": "2025-12-25T03:05:00.000Z",
+    "generated_by": "ui_ux_improvements_ideation_agent",
+    "total_ideas": 5,
+    "analysis_method": "static_code_analysis",
     "project": "Directors Palette",
     "version": "0.95.0",
     "tech_stack": {
       "framework": "Next.js 15.5.4",
       "ui_library": "shadcn/ui with Radix primitives",
       "styling": "Tailwind CSS v4"
-    }
+    },
+    "note": "Browser automation (Puppeteer) was not available; analysis based on component code review. Ideas avoid duplicating planned features from ideation_context.json."
   }
 }

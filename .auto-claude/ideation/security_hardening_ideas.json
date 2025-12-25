@@ -1,0 +1,114 @@
+{
+  "security_hardening": [
+    {
+      "id": "sec-001",
+      "type": "security_hardening",
+      "title": "Update vulnerable dependencies (happy-dom, Next.js, glob)",
+      "description": "npm audit reveals critical and high severity CVEs in production dependencies: happy-dom (<20.0.0) has VM Context Escape leading to RCE, Next.js (15.5.1-15.5.7) has DoS and source code exposure vulnerabilities, glob (11.0.0-11.0.3) has command injection via CLI. Additional moderate vulnerabilities exist in js-yaml, tar, and vite.",
+      "rationale": "These are known, exploitable vulnerabilities with published CVEs. The happy-dom RCE (GHSA-37j7-fg3j-429f) and Next.js DoS (GHSA-mwv6-3258-q52c) are particularly severe as they could allow attackers to execute arbitrary code or crash the application. Dependency vulnerabilities are a top OWASP risk (A06).",
+      "category": "dependencies",
+      "severity": "critical",
+      "affectedFiles": ["package.json", "package-lock.json"],
+      "vulnerability": "CWE-1395: Dependency on Vulnerable Third-Party Component",
+      "currentRisk": "Critical RCE vulnerability in happy-dom, High severity DoS in Next.js, both actively used in the application",
+      "remediation": "1. Run `npm audit fix` to automatically fix compatible updates. 2. Manually update: happy-dom to >=20.0.0, next to >=15.5.8, @capacitor/cli (updates glob). 3. For breaking changes, review changelogs before updating. 4. Add `npm audit` to CI pipeline to catch future vulnerabilities.",
+      "references": [
+        "https://github.com/advisories/GHSA-37j7-fg3j-429f",
+        "https://github.com/advisories/GHSA-mwv6-3258-q52c",
+        "https://github.com/advisories/GHSA-5j98-mcp5-4vw2"
+      ],
+      "compliance": ["SOC2", "PCI-DSS"]
+    },
+    {
+      "id": "sec-002",
+      "type": "security_hardening",
+      "title": "Add Content-Security-Policy (CSP) and HSTS security headers",
+      "description": "While next.config.ts implements X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy, and Permissions-Policy, the critical Content-Security-Policy (CSP) and Strict-Transport-Security (HSTS) headers are missing. These headers are essential for preventing XSS attacks and ensuring HTTPS-only connections.",
+      "rationale": "CSP prevents XSS by controlling which resources can be loaded. HSTS ensures all connections use HTTPS, preventing protocol downgrade attacks. The existing security audit report recommends these headers but they haven't been implemented yet. This is a HIGH severity gap per the audit.",
+      "category": "configuration",
+      "severity": "high",
+      "affectedFiles": ["next.config.ts"],
+      "vulnerability": "CWE-693: Protection Mechanism Failure",
+      "currentRisk": "XSS attacks possible without CSP, HTTPS downgrade attacks possible without HSTS",
+      "remediation": "Add to next.config.ts headers array: { key: 'Content-Security-Policy', value: \"default-src 'self'; img-src 'self' https://replicate.delivery https://*.supabase.co data:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co https://api.replicate.com https://api.stripe.com\" }, { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' }. Refine CSP policy iteratively based on console violations.",
+      "references": [
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP",
+        "https://owasp.org/www-project-secure-headers/"
+      ],
+      "compliance": ["SOC2", "PCI-DSS"]
+    },
+    {
+      "id": "sec-003",
+      "type": "security_hardening",
+      "title": "Implement API rate limiting with Upstash Redis",
+      "description": "No rate limiting exists on any API endpoint. High-risk endpoints include /api/coupons/redeem (brute force coupons), /api/generation/image (resource exhaustion), /api/admin/* (enumeration), and authentication flows. The RateLimitError class exists in src/lib/errors/index.ts but no actual rate limiting is implemented.",
+      "rationale": "Rate limiting is critical for preventing brute force attacks, credential stuffing, and denial of service. The coupon redemption endpoint is particularly vulnerable to automated attacks that could enumerate valid codes. This is documented as CVE-2024-DP004 (CVSS 8.1) in the security audit.",
+      "category": "configuration",
+      "severity": "critical",
+      "affectedFiles": [
+        "src/app/api/coupons/redeem/route.ts",
+        "src/app/api/generation/image/route.ts",
+        "src/app/api/admin/grant-credits/route.ts",
+        "src/middleware.ts"
+      ],
+      "vulnerability": "CWE-770: Allocation of Resources Without Limits",
+      "currentRisk": "Coupon codes can be brute-forced, server resources exhausted via generation spam, credential stuffing possible",
+      "remediation": "1. Install @upstash/ratelimit and @upstash/redis packages. 2. Create rate limiter utility in src/lib/rate-limit.ts with tiered limits: auth (5/min/IP), coupon (3/min/user), generation (10/min/user), admin (20/min/user). 3. Add rate limiting to middleware.ts for centralized enforcement. 4. Return 429 with Retry-After header on limit exceeded. 5. Use RateLimitError class from src/lib/errors/.",
+      "references": [
+        "https://upstash.com/docs/redis/sdks/ratelimit-ts",
+        "https://owasp.org/www-community/controls/Rate_Limiting"
+      ],
+      "compliance": ["SOC2", "PCI-DSS"]
+    },
+    {
+      "id": "sec-004",
+      "type": "security_hardening",
+      "title": "Remove partial secret logging from Stripe webhook handler",
+      "description": "The Stripe webhook handler at src/app/api/webhooks/stripe/route.ts logs partial secrets to console: `webhookSecret.substring(0, 15)` (line 145) and `webhookSecret.substring(0, 20)` (line 163). Even partial secrets can aid attackers in credential guessing or social engineering.",
+      "rationale": "Logging any portion of secrets violates secure coding practices. If logs are exposed via misconfiguration, log aggregation services, or breach, partial secrets provide valuable information for attackers. This specific issue is referenced in the security audit as HSF-007 but the exact lines haven't been remediated.",
+      "category": "secrets_management",
+      "severity": "high",
+      "affectedFiles": ["src/app/api/webhooks/stripe/route.ts"],
+      "vulnerability": "CWE-532: Insertion of Sensitive Information into Log File",
+      "currentRisk": "Partial webhook secrets exposed in application logs, aiding credential guessing attacks",
+      "remediation": "Replace secret logging with boolean checks only. Change line 145 to: `console.log('[Stripe Webhook] Secret configured:', !!webhookSecret)`. Remove line 163 entirely or change to: `console.log('[Stripe Webhook] Using configured secret')`. Apply same pattern to any other secret/token logging in the codebase. Consider using structured logging (e.g., Pino) with automatic redaction.",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/532.html",
+        "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/08-Testing_for_Error_Handling/01-Testing_for_Improper_Error_Handling"
+      ],
+      "compliance": ["SOC2", "PCI-DSS", "GDPR"]
+    },
+    {
+      "id": "sec-005",
+      "type": "security_hardening",
+      "title": "Add request timeout for external URL fetches to prevent slowloris attacks",
+      "description": "The StorageService.downloadAsset() function and other external URL fetch operations lack timeout configuration. An attacker could send slow responses to tie up server resources, leading to denial of service. This affects file uploads, image generation reference processing, and webhook handling.",
+      "rationale": "Without timeouts, fetch operations can block indefinitely when connecting to malicious or slow endpoints. This enables slowloris-style attacks where attackers open many connections and send data very slowly, exhausting server resources. The security audit documents this as MSF-002.",
+      "category": "configuration",
+      "severity": "medium",
+      "affectedFiles": [
+        "src/features/generation/services/storage.service.ts",
+        "src/app/api/generation/image/route.ts",
+        "src/app/api/upload-file/route.ts"
+      ],
+      "vulnerability": "CWE-400: Uncontrolled Resource Consumption",
+      "currentRisk": "Server resources can be exhausted via slow external connections, leading to DoS",
+      "remediation": "Add AbortController with timeout to all external fetch operations: `const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 30000); try { const response = await fetch(url, { signal: controller.signal }); } finally { clearTimeout(timeoutId); }`. Set appropriate timeouts: 30s for image downloads, 10s for small resources, 5s for webhooks/APIs.",
+      "references": [
+        "https://developer.mozilla.org/en-US/docs/Web/API/AbortController",
+        "https://owasp.org/www-community/attacks/Slow_HTTP_attack"
+      ],
+      "compliance": ["SOC2"]
+    }
+  ],
+  "metadata": {
+    "dependenciesScanned": 97,
+    "knownVulnerabilities": 6,
+    "filesAnalyzed": 68,
+    "criticalIssues": 2,
+    "highIssues": 2,
+    "mediumIssues": 1,
+    "generatedAt": "2025-12-25T02:50:00.000Z",
+    "notes": "Analysis complemented existing SECURITY_AUDIT_REPORT.md findings. Focused on actionable items with clear remediation steps. Dependency vulnerabilities are new findings from npm audit. Other issues verify and provide implementation details for audit recommendations."
+  }
+}

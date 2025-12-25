@@ -1,0 +1,25 @@
+{
+  "file_path": "src/features/shot-creator/hooks/useWildcardImportExport.ts",
+  "main_branch_history": [],
+  "task_views": {
+    "006-wildcard-import-export-functionality": {
+      "task_id": "006-wildcard-import-export-functionality",
+      "branch_point": {
+        "commit_hash": "147deb275c64cfce8054c292e2f81e1367043c64",
+        "content": "",
+        "timestamp": "2025-12-25T03:10:36.821114"
+      },
+      "worktree_state": null,
+      "task_intent": {
+        "title": "006-wildcard-import-export-functionality",
+        "description": "Add JSON import and export capabilities for wildcards, enabling users to backup their custom wildcards and share them with the community. Follows the same pattern as the existing usePromptImportExport.ts hook.",
+        "from_plan": true
+      },
+      "commits_behind_main": 0,
+      "status": "active",
+      "merged_at": null
+    }
+  },
+  "created_at": "2025-12-25T03:10:30.206667",
+  "last_updated": "2025-12-25T03:10:36.910985"
+}

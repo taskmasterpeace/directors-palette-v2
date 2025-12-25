@@ -1,0 +1,14 @@
+{
+  "sourceType": "ideation",
+  "ideationType": "ui_ux_improvements",
+  "ideaId": "uiux-004",
+  "rationale": "Modern creative tools provide clear drag-and-drop feedback. Without visible drop zones, users may not discover drag-and-drop is supported or may be unsure where to drop files.",
+  "category": "ui_ux",
+  "uiuxCategory": "interaction",
+  "affectedFiles": [
+    "src/features/shot-creator/components/creator-reference-manager/index.tsx",
+    "src/features/layout-annotation/components/LayoutAnnotationTab.tsx",
+    "src/features/music-lab/components/AudioUploader.tsx"
+  ],
+  "problemSolved": "AudioUploader has a drag-drop zone with dashed border but minimal dragOver visual change. Reference image upload areas may lack clear drag feedback. No distinction between valid and invalid file types during drag."
+}

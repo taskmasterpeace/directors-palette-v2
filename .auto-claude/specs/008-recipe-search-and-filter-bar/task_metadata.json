@@ -1,0 +1,13 @@
+{
+  "sourceType": "ideation",
+  "ideationType": "code_improvements",
+  "ideaId": "ci-005",
+  "rationale": "RecipeBuilder.tsx has category filter (selectedCategory state) but no text search. ExpandedGallery.tsx shows the pattern with search input + filter tabs. As users create more recipes, finding specific ones becomes difficult.",
+  "category": "feature",
+  "estimatedEffort": "small",
+  "complexity": "small",
+  "affectedFiles": [
+    "src/features/shot-creator/components/recipe/RecipeBuilder.tsx",
+    "src/features/shot-creator/hooks/useRecipeFilters.ts (new)"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "sourceType": "ideation",
+  "ideationType": "security_hardening",
+  "ideaId": "sec-001",
+  "rationale": "These are known, exploitable vulnerabilities with published CVEs. The happy-dom RCE (GHSA-37j7-fg3j-429f) and Next.js DoS (GHSA-mwv6-3258-q52c) are particularly severe as they could allow attackers to execute arbitrary code or crash the application. Dependency vulnerabilities are a top OWASP risk (A06).",
+  "category": "security",
+  "securitySeverity": "critical",
+  "impact": "critical",
+  "priority": "urgent"
+}

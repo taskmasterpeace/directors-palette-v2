@@ -1,0 +1,40 @@
+{
+  "feature": "identify-available-ui-changes",
+  "spec_name": "identify-available-ui-changes",
+  "workflow_type": "simple",
+  "total_phases": 1,
+  "recommended_workers": 1,
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Documentation",
+      "description": "Document available UI changes in the codebase",
+      "depends_on": [],
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Review and document recent UI changes from git history and codebase structure",
+          "service": "main",
+          "status": "completed",
+          "files_to_create": [],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "run": "Review spec.md for completeness"
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "created_at": "2025-01-13T00:00:00Z",
+    "complexity": "simple",
+    "estimated_sessions": 1,
+    "task_type": "inquiry",
+    "notes": "This was an informational request, not an implementation task"
+  },
+  "status": "done",
+  "planStatus": "completed",
+  "updated_at": "2025-12-25T08:03:58.912Z"
+}

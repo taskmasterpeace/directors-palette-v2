@@ -4,105 +4,112 @@
       "id": "ci-001",
       "type": "code_improvements",
       "title": "Recipe Import/Export Functionality",
-      "description": "Add import and export capability for recipes, allowing users to backup, share, and restore their recipe configurations as JSON files with version control and validation.",
-      "rationale": "The import/export pattern is already well-established in usePromptImportExport.ts with JSON export including versioning/timestamps, file download via blob URLs, import validation with duplicate checking, and toast notifications for feedback. Recipes are valuable user-created assets that would benefit from the same portability.",
-      "builds_upon": ["usePromptImportExport.ts pattern", "recipe.service.ts CRUD operations"],
+      "description": "Add JSON import and export capabilities for recipes, allowing users to backup, share, and transfer their custom recipes between accounts or installations.",
+      "rationale": "The exact pattern exists in usePromptImportExport.ts for prompts - exports to JSON with version/timestamp, imports with validation and duplicate checking. Recipes are stored in recipe.store.ts with full CRUD but lack this backup/sharing capability.",
+      "builds_upon": ["usePromptImportExport.ts pattern", "Recipe store CRUD operations", "Toast notification system"],
       "estimated_effort": "small",
       "affected_files": [
-        "src/features/shot-creator/hooks/useRecipeImportExport.ts",
-        "src/features/shot-creator/services/recipe.service.ts",
+        "src/features/shot-creator/hooks/useRecipeImportExport.ts (new)",
+        "src/features/shot-creator/components/recipe/RecipeBuilder.tsx",
         "src/features/shot-creator/types/recipe.types.ts"
       ],
       "existing_patterns": [
-        "src/features/shot-creator/hooks/usePromptImportExport.ts - exact pattern to follow",
-        "Recipe type definitions and validation already exist"
+        "usePromptImportExport.ts - JSON blob export with version/date metadata",
+        "Blob creation and download link pattern",
+        "File input with JSON parsing and validation",
+        "Toast notifications for success/failure feedback"
       ],
-      "implementation_approach": "Create useRecipeImportExport hook following the exact structure of usePromptImportExport: exportRecipes() creates JSON blob with version, exportDate, and recipes array; importRecipes() validates file format, checks for duplicates by name, and uses existing addRecipe from recipe store. Include recipe stages and reference image metadata in export.",
+      "implementation_approach": "Create useRecipeImportExport.ts following the exact structure of usePromptImportExport.ts. Export creates JSON blob with version string, exportDate, and recipes array (sans userId). Import parses JSON, validates recipe structure against recipe.types.ts, checks for duplicate names, and uses addRecipe from useRecipeStore. Add Import/Export buttons to RecipeBuilder.tsx header similar to prompt library.",
       "status": "draft",
-      "created_at": "2025-12-22T12:15:00.000Z"
+      "created_at": "2025-12-25T02:50:00.000Z"
     },
     {
       "id": "ci-002",
       "type": "code_improvements",
-      "title": "Video Gallery Search and Filtering",
-      "description": "Add search functionality to the video gallery (shot-animator) matching the existing search capability in the image gallery, allowing users to find videos by prompt text.",
-      "rationale": "The searchQuery pattern exists in shot-creator's gallery service (gallery.service.ts lines 50-64) and the unified GalleryService already supports searchQuery in loadUserGalleryPaginated. The VideoGalleryService wrapper simply doesn't pass through this parameter yet.",
-      "builds_upon": ["shot-creator gallery search pattern", "unified GalleryService.loadUserGalleryPaginated"],
-      "estimated_effort": "trivial",
+      "title": "Wildcard Import/Export Functionality",
+      "description": "Add JSON import and export capabilities for wildcards, enabling users to backup their custom wildcards and share them with the community.",
+      "rationale": "Same pattern as prompts exists in usePromptImportExport.ts. Wildcards in wildcard.store.ts have full CRUD (createWildCard, updateWildCard, deleteWildCard) but no import/export. Users cannot backup or share their wildcards.",
+      "builds_upon": ["usePromptImportExport.ts pattern", "Wildcard store CRUD operations", "Toast notification system"],
+      "estimated_effort": "small",
       "affected_files": [
-        "src/features/shot-animator/services/gallery.service.ts",
-        "src/features/shot-animator/hooks/useGallery.ts",
-        "src/features/shot-animator/store/shot-animator.store.ts"
+        "src/features/wildcards/hooks/useWildcardImportExport.ts (new)",
+        "src/features/wildcards/components/WildcardSidebar.tsx",
+        "src/features/shot-creator/store/wildcard.store.ts"
       ],
       "existing_patterns": [
-        "src/features/shot-creator/services/gallery.service.ts - loadUserGalleryPaginated with searchQuery option",
-        "src/lib/services/gallery.service.ts - unified service already supports search"
+        "usePromptImportExport.ts - complete import/export flow",
+        "Blob/download pattern for file export",
+        "File validation with duplicate checking",
+        "Toast feedback on operation completion"
       ],
-      "implementation_approach": "Update VideoGalleryService.loadUserVideosPaginated() to accept optional searchQuery parameter, pass it through to GalleryService.loadUserGalleryPaginated(). Add searchQuery state to shot-animator store. The unified service already handles the search filtering logic.",
+      "implementation_approach": "Create useWildcardImportExport.ts mirroring usePromptImportExport.ts. Export serializes wildcards array with version and timestamp. Import validates structure (name, content, category, description), checks for name duplicates using getWildCardByName, and calls createWildCard. Add Import/Export buttons to WildcardSidebar.tsx header.",
       "status": "draft",
-      "created_at": "2025-12-22T12:15:00.000Z"
+      "created_at": "2025-12-25T02:50:00.000Z"
     },
     {
       "id": "ci-003",
       "type": "code_improvements",
-      "title": "Recipe Editor Autosave",
-      "description": "Implement autosave for recipe editing sessions using localStorage, preventing loss of unsaved recipe changes when navigating away or browser crashes.",
-      "rationale": "The draft autosave pattern is well-established in useDraftAutosave.ts for story-creator with 30-second interval saves, change detection via snapshot comparison, 24-hour expiry, and clear/load functions. Recipe editing involves complex multi-stage configurations that take time to build.",
-      "builds_upon": ["useDraftAutosave.ts pattern", "recipe.store.ts state management"],
+      "title": "Draft Autosave for Recipe Editor",
+      "description": "Add localStorage-based draft autosave to the recipe editor dialog, preventing loss of work if the dialog is closed accidentally or browser crashes.",
+      "rationale": "The useDraftAutosave.ts hook already implements this pattern for story-creator with 30-second interval saves, age-based expiry (24h), and snapshot comparison to avoid unnecessary writes. Recipe editing in RecipeBuilder.tsx dialog has no such protection.",
+      "builds_upon": ["useDraftAutosave.ts pattern", "Recipe editor form state", "DraftRestorePrompt.tsx component"],
       "estimated_effort": "small",
       "affected_files": [
-        "src/features/shot-creator/hooks/useRecipeAutosave.ts",
-        "src/features/shot-creator/store/recipe.store.ts"
+        "src/features/shot-creator/hooks/useRecipeDraftAutosave.ts (new)",
+        "src/features/shot-creator/components/recipe/RecipeBuilder.tsx",
+        "src/features/shot-creator/components/recipe/RecipeDraftRestorePrompt.tsx (new)"
       ],
       "existing_patterns": [
-        "src/features/story-creator/hooks/useDraftAutosave.ts - exact autosave pattern with interval, change detection, expiry"
+        "useDraftAutosave.ts - localStorage save with timeout debounce",
+        "loadDraft(), clearDraft(), hasDraft() utility functions",
+        "DraftRestorePrompt.tsx - UI for offering draft restoration",
+        "Snapshot comparison to avoid redundant saves"
       ],
-      "implementation_approach": "Create useRecipeAutosave hook following useDraftAutosave pattern: store recipe draft in localStorage with key 'recipe-editor-draft', snapshot current state every 30 seconds if changed, include recipe ID and timestamp in draft. Add loadRecipeDraft() and clearRecipeDraft() functions. Integrate with recipe store to detect editing sessions.",
+      "implementation_approach": "Create useRecipeDraftAutosave.ts based on useDraftAutosave.ts structure. Store recipe form state (name, description, stages, category) with timestamp. When recipe dialog opens, check for existing draft and prompt user to restore. Clear draft when recipe is successfully saved. Use AUTOSAVE_KEY = 'recipe-editor-draft' for localStorage.",
       "status": "draft",
-      "created_at": "2025-12-22T12:15:00.000Z"
+      "created_at": "2025-12-25T02:50:00.000Z"
     },
     {
       "id": "ci-004",
       "type": "code_improvements",
-      "title": "Video Gallery Bulk Download",
-      "description": "Enable bulk download of selected videos from the shot-animator gallery as a ZIP file, using the existing BulkDownloadService pattern.",
-      "rationale": "BulkDownloadService already exists with full ZIP generation capability including progress callbacks, filename extraction, and error handling. The pattern is complete and battle-tested for images. Videos in the gallery have the same URL-based structure.",
-      "builds_upon": ["BulkDownloadService", "shot-animator gallery selection"],
-      "estimated_effort": "small",
+      "title": "Search Functionality for Wildcard Sidebar",
+      "description": "Add real-time search filtering to the wildcard sidebar, allowing users to quickly find wildcards by name, category, or content.",
+      "rationale": "The usePromptFilters.ts hook implements search/filter for prompts with useMemo-based filtering. WildcardSidebar.tsx currently just lists all wildcards without search, becoming unwieldy as collection grows.",
+      "builds_upon": ["usePromptFilters.ts pattern", "Wildcard store wildcards array", "Input component from shadcn/ui"],
+      "estimated_effort": "trivial",
       "affected_files": [
-        "src/features/shot-creator/services/bulk-download.service.ts",
-        "src/features/shot-animator/hooks/useGallery.ts",
-        "src/features/shot-animator/components/VideoGallery.tsx"
+        "src/features/wildcards/components/WildcardSidebar.tsx",
+        "src/features/wildcards/hooks/useWildcardFilters.ts (new)"
       ],
       "existing_patterns": [
-        "src/features/shot-creator/services/bulk-download.service.ts - complete ZIP download implementation with progress tracking"
+        "usePromptFilters.ts - useMemo filtering with searchQuery state",
+        "Input component with Search icon (seen in ExpandedGallery.tsx)",
+        "Store-based filtering approach"
       ],
-      "implementation_approach": "Update BulkDownloadService.downloadAsZip() to handle video file extensions (mp4, webm). Add selection state to shot-animator gallery (checkbox pattern from shot-creator). Wire up download button that calls BulkDownloadService with selected video URLs. Reuse exact progress UI pattern from image gallery.",
+      "implementation_approach": "Add useState for searchQuery in WildcardSidebar. Add Input component with Search icon above the wildcard list. Filter wildcards using useMemo: match searchQuery against wildcard.name, wildcard.category, and optionally wildcard.content (for finding wildcards containing specific terms). Follow the pattern from ExpandedGallery.tsx line 73-85 for filter logic.",
       "status": "draft",
-      "created_at": "2025-12-22T12:15:00.000Z"
+      "created_at": "2025-12-25T02:50:00.000Z"
     },
     {
       "id": "ci-005",
       "type": "code_improvements",
-      "title": "Personal Credit Usage Statistics",
-      "description": "Add a user-facing credit usage statistics view showing generation counts by type, spending trends over time, and model usage breakdown - extending the existing admin stats pattern to personal dashboards.",
-      "rationale": "The credits service already tracks full transaction history with metadata (model, generation type, cost). Admin endpoints (admin/stats, admin/financials) demonstrate the aggregation patterns. The transaction data model supports rich analytics.",
-      "builds_upon": ["credits.service.ts transaction history", "admin stats patterns"],
-      "estimated_effort": "medium",
+      "title": "Recipe Search and Filter Bar",
+      "description": "Add search functionality and improved filtering to the Recipe Builder, enabling users to quickly find recipes by name or description as their collection grows.",
+      "rationale": "RecipeBuilder.tsx has category filter (selectedCategory state) but no text search. ExpandedGallery.tsx shows the pattern with search input + filter tabs. As users create more recipes, finding specific ones becomes difficult.",
+      "builds_upon": ["ExpandedGallery.tsx search pattern", "usePromptFilters.ts filtering approach", "Recipe category filtering"],
+      "estimated_effort": "small",
       "affected_files": [
-        "src/features/credits/services/credits.service.ts",
-        "src/features/credits/hooks/useCreditStats.ts",
-        "src/app/api/credits/stats/route.ts",
-        "src/features/settings/components/CreditUsageStats.tsx"
+        "src/features/shot-creator/components/recipe/RecipeBuilder.tsx",
+        "src/features/shot-creator/hooks/useRecipeFilters.ts (new)"
       ],
       "existing_patterns": [
-        "src/features/credits/services/credits.service.ts - getTransactionHistory with pagination",
-        "src/app/api/admin/stats/route.ts - aggregation query patterns",
-        "src/features/admin/services/financials.service.ts - financial analytics patterns"
+        "ExpandedGallery.tsx - search input with filterTab state and filteredImages",
+        "usePromptFilters.ts - useMemo filtering against searchQuery",
+        "RecipeBuilder already has selectedCategory state"
       ],
-      "implementation_approach": "Add getCreditStats(userId) method to credits.service.ts that aggregates transactions by: generation type counts (image/video/audio), model usage breakdown, daily/weekly spending trends. Create /api/credits/stats endpoint following admin pattern but scoped to authenticated user. Build useCreditStats hook and simple stats component for settings page.",
+      "implementation_approach": "Create useRecipeFilters.ts hook that takes recipes array, searchQuery, and selectedCategory. Use useMemo to filter: first by category (existing), then by searchQuery matching name and description (case-insensitive). Add search Input above the recipe list in RecipeBuilder.tsx. Combine with existing category filter tabs for a unified search/filter bar.",
       "status": "draft",
-      "created_at": "2025-12-22T12:15:00.000Z"
+      "created_at": "2025-12-25T02:50:00.000Z"
     }
   ]
 }

@@ -1,0 +1,14 @@
+{
+  "sourceType": "ideation",
+  "ideationType": "code_improvements",
+  "ideaId": "ci-001",
+  "rationale": "The exact pattern exists in usePromptImportExport.ts for prompts - exports to JSON with version/timestamp, imports with validation and duplicate checking. Recipes are stored in recipe.store.ts with full CRUD but lack this backup/sharing capability.",
+  "category": "feature",
+  "estimatedEffort": "small",
+  "complexity": "small",
+  "affectedFiles": [
+    "src/features/shot-creator/hooks/useRecipeImportExport.ts (new)",
+    "src/features/shot-creator/components/recipe/RecipeBuilder.tsx",
+    "src/features/shot-creator/types/recipe.types.ts"
+  ]
+}

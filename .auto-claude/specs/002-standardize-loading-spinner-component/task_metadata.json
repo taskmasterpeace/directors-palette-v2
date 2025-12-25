@@ -1,0 +1,15 @@
+{
+  "sourceType": "ideation",
+  "ideationType": "ui_ux_improvements",
+  "ideaId": "uiux-005",
+  "rationale": "Different components use varying loading indicators - some use Loader2 with amber color, others use custom border-based spinners with purple, and some have different sizes. This creates visual inconsistency.",
+  "category": "ui_ux",
+  "uiuxCategory": "visual",
+  "affectedFiles": [
+    "src/components/ui/loading-spinner.tsx (new)",
+    "src/features/community/components/CommunityGrid.tsx",
+    "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx",
+    "src/features/credits/components/CreditsDisplay.tsx"
+  ],
+  "problemSolved": "CommunityGrid uses '<Loader2 className=\"w-8 h-8 animate-spin text-muted-foreground\"/>'. UnifiedImageGallery uses '<div className=\"w-12 h-12 ... border-t-purple-500 rounded-full animate-spin\"/>'. CreditsDisplay uses '<Loader2 className=\"w-8 h-8 animate-spin text-amber-500\"/>'. No consistent size/color scheme."
+}
