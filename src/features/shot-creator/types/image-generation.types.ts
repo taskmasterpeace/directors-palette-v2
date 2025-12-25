@@ -50,6 +50,7 @@ export interface GptImageSettings {
   outputFormat?: 'png' | 'jpeg' | 'webp'
   background?: 'opaque' | 'transparent' | 'auto'
   numImages?: number // 1-10
+  inputFidelity?: 'low' | 'high' // How closely to match reference image features
 }
 
 // Union type for all model settings
@@ -114,6 +115,8 @@ export interface GptImageInput {
   background?: 'opaque' | 'transparent' | 'auto'
   quality?: 'low' | 'medium' | 'high' | 'auto'
   n?: number // Number of images (1-10)
+  input_images?: string[] // Reference images (up to 10)
+  input_fidelity?: 'low' | 'high' // How closely to match reference features
 }
 
 // Union type for all Replicate inputs

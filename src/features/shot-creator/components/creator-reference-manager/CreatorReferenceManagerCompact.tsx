@@ -20,6 +20,21 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
         handlePasteImage,
         removeShotCreatorImage
     } = useReferenceImageManager(maxImages)
+
+    // For text-only models (maxImages === 0), show simplified UI
+    if (maxImages === 0) {
+        return (
+            <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                    {modelSelector}
+                </div>
+                <div className="text-xs text-muted-foreground italic">
+                    This model generates from text only
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="space-y-2">
             {/* Model selector and Paste on same row */}
@@ -42,7 +57,7 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
                     const isEmpty = !image
 
                     return (
-                        <div key={index} className="flex-1">
+                        <div key={index} className="flex-1 max-w-[100px]">
                             <div
                                 className={`relative aspect-square border border-dashed rounded-md overflow-hidden ${isEmpty
                                     ? 'border-border bg-card/50 hover:border-border cursor-pointer'

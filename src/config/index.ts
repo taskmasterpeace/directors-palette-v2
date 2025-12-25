@@ -281,6 +281,17 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         max: 10,
         default: 1,
         description: 'Generate multiple images in one request (1-10). Cost multiplied by count.'
+    },
+    gptImageInputFidelity: {
+        id: 'inputFidelity',
+        label: 'Reference Matching',
+        type: 'select',
+        default: 'low',
+        options: [
+            { value: 'low', label: 'Low (More creative freedom)' },
+            { value: 'high', label: 'High (Match reference closely)' }
+        ],
+        description: 'How closely the model should match reference image features like faces'
     }
 }
 
@@ -344,7 +355,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             numInferenceSteps: MODEL_PARAMETERS.numInferenceSteps,
             guidanceScale: MODEL_PARAMETERS.guidanceScale
         },
-        maxReferenceImages: 1
+        maxReferenceImages: 0 // Text-to-image only - no image input support
     },
     'qwen-image-fast': {
         id: 'qwen-image-fast',
@@ -381,14 +392,15 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         textColor: 'text-green-300',
         endpoint: 'openai/gpt-image-1.5',
         costPerImage: 0.03, // 3 tokens = 3 cents (~130% margin on $0.013)
-        supportedParameters: ['gptImageAspectRatio', 'gptImageOutputFormat', 'gptImageBackground', 'gptImageNumImages'],
+        supportedParameters: ['gptImageAspectRatio', 'gptImageOutputFormat', 'gptImageBackground', 'gptImageNumImages', 'gptImageInputFidelity'],
         parameters: {
             aspectRatio: MODEL_PARAMETERS.gptImageAspectRatio,
             outputFormat: MODEL_PARAMETERS.gptImageOutputFormat,
             background: MODEL_PARAMETERS.gptImageBackground,
-            numImages: MODEL_PARAMETERS.gptImageNumImages
+            numImages: MODEL_PARAMETERS.gptImageNumImages,
+            inputFidelity: MODEL_PARAMETERS.gptImageInputFidelity
         },
-        maxReferenceImages: 0 // Text-to-image only
+        maxReferenceImages: 10 // Supports input_images parameter
     },
     // OpenAI GPT Image 1.5 - Medium Quality
     'gpt-image-medium': {
@@ -403,14 +415,15 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         textColor: 'text-blue-300',
         endpoint: 'openai/gpt-image-1.5',
         costPerImage: 0.10, // 10 tokens = 10 cents (100% margin on $0.05)
-        supportedParameters: ['gptImageAspectRatio', 'gptImageOutputFormat', 'gptImageBackground', 'gptImageNumImages'],
+        supportedParameters: ['gptImageAspectRatio', 'gptImageOutputFormat', 'gptImageBackground', 'gptImageNumImages', 'gptImageInputFidelity'],
         parameters: {
             aspectRatio: MODEL_PARAMETERS.gptImageAspectRatio,
             outputFormat: MODEL_PARAMETERS.gptImageOutputFormat,
             background: MODEL_PARAMETERS.gptImageBackground,
-            numImages: MODEL_PARAMETERS.gptImageNumImages
+            numImages: MODEL_PARAMETERS.gptImageNumImages,
+            inputFidelity: MODEL_PARAMETERS.gptImageInputFidelity
         },
-        maxReferenceImages: 0 // Text-to-image only
+        maxReferenceImages: 10 // Supports input_images parameter
     },
     // OpenAI GPT Image 1.5 - High Quality
     'gpt-image-high': {
@@ -425,14 +438,15 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         textColor: 'text-violet-300',
         endpoint: 'openai/gpt-image-1.5',
         costPerImage: 0.27, // 27 tokens = 27 cents (~100% margin on $0.136)
-        supportedParameters: ['gptImageAspectRatio', 'gptImageOutputFormat', 'gptImageBackground', 'gptImageNumImages'],
+        supportedParameters: ['gptImageAspectRatio', 'gptImageOutputFormat', 'gptImageBackground', 'gptImageNumImages', 'gptImageInputFidelity'],
         parameters: {
             aspectRatio: MODEL_PARAMETERS.gptImageAspectRatio,
             outputFormat: MODEL_PARAMETERS.gptImageOutputFormat,
             background: MODEL_PARAMETERS.gptImageBackground,
-            numImages: MODEL_PARAMETERS.gptImageNumImages
+            numImages: MODEL_PARAMETERS.gptImageNumImages,
+            inputFidelity: MODEL_PARAMETERS.gptImageInputFidelity
         },
-        maxReferenceImages: 0 // Text-to-image only
+        maxReferenceImages: 10 // Supports input_images parameter
     }
 }
 

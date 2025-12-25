@@ -35,14 +35,14 @@ const MODEL_CAPABILITIES: Record<ModelId, {
   'qwen-image-fast': {
     speed: '~2s (Fastest)',
     textRendering: 'Fair',
-    refImages: 'None',
+    refImages: 'None (text-only)',
     bestFor: ['Rapid iteration', 'Concept exploration', 'Budget work']
   },
   'z-image-turbo': {
     speed: '~5s (Fast)',
     textRendering: 'Good',
-    refImages: '1 image',
-    bestFor: ['Quick image-to-image', 'Style transfer', 'Fast refinements']
+    refImages: 'None (text-only)',
+    bestFor: ['Ultra-fast generation', 'Concept exploration', 'Budget work']
   },
   'nano-banana': {
     speed: '~8s (Moderate)',
@@ -59,19 +59,19 @@ const MODEL_CAPABILITIES: Record<ModelId, {
   'gpt-image-low': {
     speed: '~16s (Slower)',
     textRendering: 'Very Good',
-    refImages: 'None',
-    bestFor: ['Budget GPT quality', 'Drafts with text', 'Quick concepts']
+    refImages: 'Up to 10',
+    bestFor: ['Budget GPT quality', 'Drafts with refs', 'Quick concepts']
   },
   'gpt-image-medium': {
     speed: '~18s (Slower)',
     textRendering: 'Excellent',
-    refImages: 'None',
+    refImages: 'Up to 10',
     bestFor: ['Accurate text', 'Story prompts', 'Final renders']
   },
   'gpt-image-high': {
     speed: '~25s (Slowest)',
     textRendering: 'Excellent',
-    refImages: 'None',
+    refImages: 'Up to 10',
     bestFor: ['Maximum quality', 'Client work', 'Detailed scenes']
   }
 }

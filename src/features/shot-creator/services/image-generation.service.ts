@@ -116,9 +116,9 @@ export class ImageGenerationService {
     const errors: string[] = []
     const settings = input.modelSettings as GptImageSettings
 
-    // GPT Image is text-to-image only, no reference images
-    if (input.referenceImages && input.referenceImages.length > 0) {
-      errors.push('GPT Image does not support reference images (text-to-image only)')
+    // GPT Image supports up to 10 reference images via input_images
+    if (input.referenceImages && input.referenceImages.length > 10) {
+      errors.push('GPT Image supports maximum 10 reference images')
     }
 
     // Validate numImages if provided
@@ -278,6 +278,15 @@ export class ImageGenerationService {
     const replicateInput: Record<string, unknown> = {
       prompt: input.prompt,
       quality: quality,
+    }
+
+    // Reference images support via input_images parameter
+    if (input.referenceImages && input.referenceImages.length > 0) {
+      replicateInput.input_images = this.normalizeReferenceImages(input.referenceImages)
+      // Add input fidelity if specified (controls how closely to match reference features)
+      if (settings.inputFidelity) {
+        replicateInput.input_fidelity = settings.inputFidelity
+      }
     }
 
     if (settings.aspectRatio) {
