@@ -76,6 +76,15 @@ export const RECIPE_TOOLS = {
     outputType: 'multi' as RecipeToolOutputType,
     outputCount: 9,
   },
+  'before-after-grid': {
+    id: 'before-after-grid',
+    name: 'Before/After Grid',
+    description: 'Generates 3x3 grid showing same location in 9 different states/time periods',
+    icon: '🔄',
+    cost: 20,  // Same as nano-banana-pro (uses it internally)
+    endpoint: '/api/tools/before-after-grid',
+    outputType: 'single' as RecipeToolOutputType,
+  },
 } as const
 
 export type RecipeToolId = keyof typeof RECIPE_TOOLS
@@ -620,6 +629,54 @@ STRICT REQUIREMENTS:
     suggestedAspectRatio: '1:1',
     isQuickAccess: true,
     quickAccessLabel: '9-Frame',
+    categoryId: 'scenes',
+  },
+
+  // 9-Frame Before/After Location Grid
+  {
+    name: 'Before/After Location',
+    description: '3x3 grid showing same location in 9 different states/time periods',
+    recipeNote: 'Attach a reference image of a location. The model will show the same camera angle with 9 different states (time of day, seasons, decades, or custom transformations).',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Analyze the location shown in the reference image. Identify the exact camera angle, composition, and key architectural/environmental features.
+
+Generate a 3x3 grid showing this EXACT SAME location from the EXACT SAME camera angle in 9 different <<TRANSFORMATION:select(time periods throughout a single day,seasons throughout a year,decades from past to future,states before and after an event,construction phases from empty lot to completion)!>>.
+
+<<LOCATION_DESCRIPTION:text>> - Brief description of the location (optional, helps with accuracy)
+
+IMPORTANT: Separate each cell with a solid BLACK LINE (4-6 pixels wide) for clean extraction.
+
+ROW 1 - BEGINNING STATES:
+1. <<STATE_1:select(Pre-dawn/6AM,Early Spring,1920s Era,Pristine Before,Empty Lot)!>>
+2. <<STATE_2:select(Sunrise/7AM,Late Spring,1950s Era,Warning Signs,Groundbreaking)!>>
+3. <<STATE_3:select(Morning/9AM,Early Summer,1970s Era,Event Beginning,Foundation)!>>
+
+ROW 2 - MIDDLE STATES:
+4. <<STATE_4:select(Midday/12PM,Mid Summer,1980s Era,Event Peak,Framing Complete)!>>
+5. <<STATE_5:select(Afternoon/3PM,Late Summer,1990s Era,Maximum Impact,Exterior Done)!>>
+6. <<STATE_6:select(Golden Hour/5PM,Early Autumn,2000s Era,Event Subsiding,Interior Work)!>>
+
+ROW 3 - END STATES:
+7. <<STATE_7:select(Sunset/7PM,Peak Autumn,2010s Era,Immediate Aftermath,Landscaping)!>>
+8. <<STATE_8:select(Dusk/8PM,Late Autumn,2020s Present,Recovery Phase,Final Touches)!>>
+9. <<STATE_9:select(Night/10PM,Winter,2040s Future,Fully Transformed,Completed/Occupied)!>>
+
+STRICT REQUIREMENTS:
+- IDENTICAL camera angle and position in EVERY cell
+- IDENTICAL composition and framing
+- Only the state/time/condition of the location changes
+- Black grid lines separating all 9 cells
+- No labels, text, overlays, icons, or captions
+- Photorealistic rendering with attention to lighting changes
+- Consistent architectural details across all frames<<STYLE:select(,maintain illustrated style,maintain painterly style,maintain cinematic style,maintain documentary style)>>`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '1:1',
+    isQuickAccess: true,
+    quickAccessLabel: 'Before/After',
     categoryId: 'scenes',
   },
 
