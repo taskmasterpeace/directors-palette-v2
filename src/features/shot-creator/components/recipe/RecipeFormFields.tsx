@@ -14,7 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { X, Check, AlertCircle } from 'lucide-react'
 import { cn } from '@/utils/utils'
-import { RecipeField, getAllFields } from '../../types/recipe.types'
+import { RecipeField, getAllFields, calculateRecipeCost } from '../../types/recipe.types'
 
 interface RecipeFormFieldsProps {
   className?: string
@@ -166,7 +166,7 @@ export function RecipeFormFields({
         </div>
       )}
 
-      {/* Footer: Validation status & Aspect Ratio */}
+      {/* Footer: Validation status, Cost & Aspect Ratio */}
       <div className="flex items-center justify-between pt-2 border-t border-border gap-2">
         <div className="flex items-center gap-3">
           {validation && !validation.isValid ? (
@@ -180,6 +180,16 @@ export function RecipeFormFields({
               Ready to Generate
             </div>
           )}
+
+          {/* Cost Display */}
+          <span className="text-xs text-muted-foreground">
+            Cost:{' '}
+            <span className="text-amber-400">
+              {calculateRecipeCost(activeRecipe.stages) > 0
+                ? `${calculateRecipeCost(activeRecipe.stages)} pts`
+                : 'Model-based'}
+            </span>
+          </span>
         </div>
 
         {/* Suggested Aspect Ratio */}

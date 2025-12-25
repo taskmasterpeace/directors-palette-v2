@@ -387,6 +387,20 @@ export function buildRecipePrompts(
 }
 
 /**
+ * Calculate the total cost of a recipe based on its tool stages
+ * Returns 0 if no tool stages (cost determined by selected model)
+ */
+export function calculateRecipeCost(stages: RecipeStage[]): number {
+  return stages.reduce((total, stage) => {
+    if (stage.type === 'tool' && stage.toolId) {
+      const tool = RECIPE_TOOLS[stage.toolId as RecipeToolId]
+      if (tool) return total + tool.cost
+    }
+    return total
+  }, 0)
+}
+
+/**
  * Validate that all required fields are filled
  * Uses deduplicated fields so same field name = validated once
  */
