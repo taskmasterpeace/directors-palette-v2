@@ -70,7 +70,7 @@ export default function RootLayout({
             <PromptProvider>
               {children}
               <footer className="hidden md:block fixed bottom-2 left-1/2 -translate-x-1/2 text-xs text-muted-foreground z-40 text-center">
-                <span>v0.8</span>
+                <span>v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
                 <span className="mx-2">|</span>
                 <a href="https://machinekinglabs.com" target="_blank" rel="noopener noreferrer" className="hover:text-muted-foreground transition-colors">
                   Designed by Machine King Labs
