@@ -1,0 +1,406 @@
+{
+  "feature": "User Prompts Organization System",
+  "workflow_type": "feature",
+  "workflow_rationale": "Net-new functionality adding a complete prompt management system with database schema, API endpoints, UI components, and integration with existing Shot Creator. This is a feature workflow because it builds a new user-facing capability rather than modifying existing behavior.",
+  "phases": [
+    {
+      "id": "phase-1-database",
+      "name": "Database Schema",
+      "type": "implementation",
+      "description": "Create database tables for prompts, folders, and tags with RLS policies",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Create database migration for user_prompts, prompt_folders, and prompt_tags tables",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["supabase/migrations/20251225000000_create_user_prompts_system.sql"],
+          "patterns_from": ["supabase/migrations/20251216_community.sql"],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('user_prompts', 'prompt_folders', 'prompt_tags');\"",
+            "expected": "3 tables exist: user_prompts, prompt_folders, prompt_tags"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-types",
+      "name": "TypeScript Types",
+      "type": "implementation",
+      "description": "Define TypeScript types and interfaces for prompts, folders, and tags",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create TypeScript type definitions for prompts system",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/types/prompts.ts"],
+          "patterns_from": ["src/features/community/types/community.types.ts"],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-api",
+      "name": "API Routes",
+      "type": "implementation",
+      "description": "Build REST API endpoints for CRUD operations on prompts, folders, and tags",
+      "depends_on": ["phase-1-database", "phase-2-types"],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create API route for prompt CRUD operations (list, create)",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/app/api/prompts/route.ts"],
+          "patterns_from": ["src/app/api/community/route.ts"],
+          "verification": {
+            "type": "api",
+            "method": "GET",
+            "url": "http://localhost:3000/api/prompts",
+            "expected_status": 200
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Create API route for single prompt operations (get, update, delete)",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/app/api/prompts/[id]/route.ts"],
+          "patterns_from": ["src/app/api/community/route.ts"],
+          "verification": {
+            "type": "manual",
+            "instructions": "Test GET, PATCH, DELETE methods for a prompt ID"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Create API route for folder CRUD operations",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/app/api/prompt-folders/route.ts"],
+          "patterns_from": ["src/app/api/community/route.ts"],
+          "verification": {
+            "type": "api",
+            "method": "GET",
+            "url": "http://localhost:3000/api/prompt-folders",
+            "expected_status": 200
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-4",
+          "description": "Create API route for tag operations and autocomplete",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/app/api/prompt-tags/route.ts"],
+          "patterns_from": ["src/app/api/community/route.ts"],
+          "verification": {
+            "type": "api",
+            "method": "GET",
+            "url": "http://localhost:3000/api/prompt-tags",
+            "expected_status": 200
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-store",
+      "name": "Zustand Store",
+      "type": "implementation",
+      "description": "Create Zustand store for prompt library state management",
+      "depends_on": ["phase-2-types"],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create Zustand store for prompt library with actions for fetching, creating, updating, deleting prompts",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/stores/promptStore.ts"],
+          "patterns_from": ["src/store/shot-production.store.ts"],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-ui-components",
+      "name": "UI Components",
+      "type": "implementation",
+      "description": "Build React components for prompt library, search, folders, and tags",
+      "depends_on": ["phase-3-api", "phase-4-store"],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Create folder tree navigation component for organizing prompts",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/components/prompts/FolderTree.tsx"],
+          "patterns_from": ["src/components/SidebarNavigation.tsx"],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/prompts",
+            "checks": ["FolderTree component renders", "No console errors"]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Create tag filter component with autocomplete",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/components/prompts/TagFilter.tsx"],
+          "patterns_from": ["src/components/ui/input.tsx"],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/prompts",
+            "checks": ["TagFilter component renders", "Autocomplete works"]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-3",
+          "description": "Create search interface component for multi-field prompt search",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/components/prompts/PromptSearch.tsx"],
+          "patterns_from": ["src/app/api/community/route.ts"],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/prompts",
+            "checks": ["Search input renders", "Debounce works", "Results update"]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-4",
+          "description": "Create save prompt dialog component for capturing prompt details",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/components/prompts/SavePromptDialog.tsx"],
+          "patterns_from": ["src/components/ui/dialog.tsx"],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/prompts",
+            "checks": ["Dialog opens", "Form validation works", "Submit creates prompt"]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-5",
+          "description": "Create main prompt library browser component with list/grid view",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/components/prompts/PromptLibrary.tsx"],
+          "patterns_from": ["src/features/shot-creator/components/reference-library/ShotReferenceLibrary.tsx"],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/prompts",
+            "checks": ["Library renders", "Prompts display", "Click loads prompt"]
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-6-integration",
+      "name": "Shot Creator Integration",
+      "type": "integration",
+      "description": "Integrate save/load prompt functionality with Shot Creator",
+      "depends_on": ["phase-5-ui-components"],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Add save prompt button and dialog trigger to Shot Creator UI",
+          "service": "main",
+          "files_to_modify": ["src/features/shot-creator/components/ShotCreator.tsx"],
+          "files_to_create": [],
+          "patterns_from": ["src/components/prompts/SavePromptDialog.tsx"],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000",
+            "checks": ["Save button visible in Shot Creator", "Click opens save dialog", "Prompt pre-filled"]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-2",
+          "description": "Add load prompt functionality to populate Shot Creator from saved prompt",
+          "service": "main",
+          "files_to_modify": ["src/features/shot-creator/store/shot-creator.store.ts"],
+          "files_to_create": [],
+          "patterns_from": ["src/stores/promptStore.ts"],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Save a prompt from Shot Creator",
+              "Navigate to Prompt Library",
+              "Click saved prompt",
+              "Verify Shot Creator fields populated"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-7-page-route",
+      "name": "Prompt Library Page Route",
+      "type": "implementation",
+      "description": "Create Next.js page route for accessing the Prompt Library",
+      "depends_on": ["phase-5-ui-components"],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-7-1",
+          "description": "Create Next.js page route for Prompt Library at /prompts",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": ["src/app/(app)/prompts/page.tsx"],
+          "patterns_from": ["src/app/(app)/help/page.tsx"],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/prompts",
+            "checks": ["Page renders", "PromptLibrary component loads", "No errors"]
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 7,
+    "total_subtasks": 14,
+    "services_involved": ["main"],
+    "parallelism": {
+      "max_parallel_phases": 3,
+      "parallel_groups": [
+        {
+          "phases": ["phase-1-database", "phase-2-types"],
+          "reason": "Database and types can be created independently with no dependencies"
+        },
+        {
+          "phases": ["phase-4-store", "phase-7-page-route"],
+          "reason": "Store and page route both depend on types but not on each other, different file sets"
+        }
+      ],
+      "recommended_workers": 2,
+      "speedup_estimate": "1.3x faster than sequential - limited parallelism due to sequential API->UI->Integration flow"
+    },
+    "startup_command": "source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 014 --parallel 2"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": ["unit", "integration"],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "All existing tests pass",
+      "New API routes have test coverage",
+      "Database RLS policies verified to block unauthorized access",
+      "No console errors during normal usage",
+      "Search performance acceptable with 100+ prompts (< 500ms)"
+    ],
+    "verification_steps": [
+      {
+        "name": "TypeScript Compilation",
+        "command": "npx tsc --noEmit",
+        "expected_outcome": "No TypeScript errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Database Migration",
+        "command": "npx supabase db push",
+        "expected_outcome": "Migration applied successfully",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Development Server",
+        "command": "npm run dev",
+        "expected_outcome": "Server starts on port 3000",
+        "type": "manual",
+        "required": true,
+        "blocking": false
+      },
+      {
+        "name": "E2E Tests",
+        "command": "npm run test:e2e",
+        "expected_outcome": "All E2E tests pass",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Medium risk change requires database migration testing, API integration tests, and E2E verification. RLS policies must be verified to prevent unauthorized access. No security scan needed as this follows existing auth patterns."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": true,
+      "commands": ["npm test"],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": true,
+      "commands": ["npm run test:integration"],
+      "services_to_test": ["main"]
+    },
+    "e2e_tests": {
+      "required": true,
+      "commands": ["npm run test:e2e"],
+      "flows": ["save-prompt-workflow", "load-prompt-workflow", "search-prompts", "organize-folders"]
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/prompts",
+          "checks": ["renders", "no-console-errors", "search-functional", "folder-navigation-works"]
+        },
+        {
+          "url": "http://localhost:3000",
+          "checks": ["shot-creator-save-button-visible", "save-dialog-opens", "load-prompt-works"]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "migrations-exist",
+        "migrations-applied",
+        "schema-valid",
+        "rls-enabled",
+        "policies-exist",
+        "indexes-created"
+      ]
+    }
+  },
+  "qa_signoff": null
+}

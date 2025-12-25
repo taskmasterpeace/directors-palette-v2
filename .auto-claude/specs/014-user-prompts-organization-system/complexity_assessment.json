@@ -1,0 +1,70 @@
+{
+  "complexity": "standard",
+  "workflow_type": "feature",
+  "confidence": 0.85,
+  "reasoning": "New feature with database table creation and multiple UI components. Contains to single service with 10-15 estimated files. All patterns exist in codebase (recipes CRUD, community tags/search). No external integrations or unfamiliar technologies.",
+
+  "analysis": {
+    "scope": {
+      "estimated_files": 12,
+      "estimated_services": 1,
+      "is_cross_cutting": false,
+      "notes": "Database migration, 3-4 API routes, 6-8 frontend components, hooks, store, and types. Integration point with Shot Creator but contained scope."
+    },
+    "integrations": {
+      "external_services": [],
+      "new_dependencies": [],
+      "research_needed": false,
+      "notes": "Uses existing Supabase database. May use shadcn/ui components for tag input and search. No external APIs or unfamiliar libraries."
+    },
+    "infrastructure": {
+      "docker_changes": false,
+      "database_changes": true,
+      "config_changes": false,
+      "notes": "New user_prompts table in existing Supabase database. No new environment variables or Docker containers needed."
+    },
+    "knowledge": {
+      "patterns_exist": true,
+      "research_required": false,
+      "unfamiliar_tech": [],
+      "notes": "Codebase has similar patterns: recipes API (/api/v1/recipes), community items with search/tags, Zustand stores, shadcn/ui forms. Feature structure follows existing conventions."
+    },
+    "risk": {
+      "level": "medium",
+      "concerns": [
+        "Search performance with hundreds of prompts",
+        "Tag system design (separate table vs JSON column)",
+        "Folder hierarchy depth and navigation UX",
+        "Shot Creator integration must preserve existing workflow"
+      ],
+      "notes": "Self-contained feature with minimal risk to existing functionality. Main concerns are UX performance for power users and clean integration with Shot Creator."
+    }
+  },
+
+  "recommended_phases": [
+    "discovery",
+    "requirements",
+    "context",
+    "spec_writing",
+    "planning",
+    "validation"
+  ],
+
+  "flags": {
+    "needs_research": false,
+    "needs_self_critique": false,
+    "needs_infrastructure_setup": false
+  },
+
+  "validation_recommendations": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "minimal_mode": false,
+    "test_types_required": ["unit", "integration"],
+    "security_scan_required": false,
+    "staging_deployment_required": false,
+    "reasoning": "Database changes and user data handling require thorough testing. Unit tests for API logic and search filtering. Integration tests for full CRUD flows and Shot Creator integration. No auth/payment changes so security scan not required."
+  },
+
+  "created_at": "2025-12-25T10:30:00Z"
+}
