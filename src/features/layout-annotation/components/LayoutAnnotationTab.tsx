@@ -19,7 +19,6 @@ import {
 import { useLayoutAnnotationStore } from "../store"
 import { useToast } from "@/hooks/use-toast"
 import { FabricCanvas, FabricCanvasRef } from "./canvas-board"
-import { CanvasToolbar } from "./canvas-settings"
 import { CanvasExporter } from "./canvas-export"
 import { FrameExtractor } from "./frame-extractor"
 import type { FrameExtractionResult } from "../types/frame-extractor.types"
