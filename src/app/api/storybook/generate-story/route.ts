@@ -13,6 +13,7 @@ import {
   type GeneratedStoryPage
 } from '@/features/storybook/types/education.types'
 import type { StoryCharacterInput } from '@/features/storybook/types/storybook.types'
+import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 
 interface GenerateStoryRequest {
   characterName: string
@@ -315,6 +316,13 @@ Create a fun, imaginative story that a ${characterAge}-year-old will love!`
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication FIRST
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+    const { user } = auth
+
+    console.log(`[Storybook API] generate-story (GPT-4o) called by user ${user.id}`)
+
     const body: GenerateStoryRequest = await request.json()
     const {
       characterName,

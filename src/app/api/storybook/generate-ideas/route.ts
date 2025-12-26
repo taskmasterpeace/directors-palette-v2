@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { getCategoryById, getTopicById, getRandomApproaches } from '@/features/storybook/types/education.types'
 import type { StoryCharacterInput } from '@/features/storybook/types/storybook.types'
 
@@ -201,6 +202,13 @@ Be creative! Bring the user's story idea to life in 4 unique and exciting ways.`
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication FIRST
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+    const { user } = auth
+
+    console.log(`[Storybook API] generate-ideas called by user ${user.id}`)
+
     const body: GenerateIdeasRequest = await request.json()
     const { characterName, characterAge, category, topic, customStoryIdea, setting, customElements, customNotes, storyCharacters } = body
 

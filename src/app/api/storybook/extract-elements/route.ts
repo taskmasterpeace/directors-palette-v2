@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import type { ExtractedElements, ExtractedCharacter, ExtractedLocation, GeneratedStoryPage } from '@/features/storybook/types/education.types'
 
 interface ExtractElementsRequest {
@@ -113,6 +114,13 @@ IMPORTANT:
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication FIRST
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+    const { user } = auth
+
+    console.log(`[Storybook API] extract-elements called by user ${user.id}`)
+
     const body: ExtractElementsRequest = await request.json()
     const { title, pages, mainCharacterName } = body
 

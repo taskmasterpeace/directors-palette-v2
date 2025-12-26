@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 
 // ElevenLabs voice options
 const ELEVENLABS_VOICES: Record<string, string> = {
@@ -28,6 +29,13 @@ interface SynthesizeResponse {
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication FIRST
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+    const { user } = auth
+
+    console.log(`[Storybook API] synthesize (ElevenLabs TTS) called by user ${user.id}`)
+
     const body: SynthesizeRequest = await request.json()
     const { text, voiceId = 'rachel', projectId, pageNumber } = body
 

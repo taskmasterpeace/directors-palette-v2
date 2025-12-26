@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 
 interface ExpandStyleRequest {
   styleName: string
@@ -74,6 +75,13 @@ Keep the description concise but visually rich. Focus on elements that AI image 
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication FIRST
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+    const { user } = auth
+
+    console.log(`[Storybook API] expand-style called by user ${user.id}`)
+
     const body: ExpandStyleRequest = await request.json()
     const { styleName, characterAge = 5 } = body
 

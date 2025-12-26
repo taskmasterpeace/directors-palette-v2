@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 
 interface SoundEffectRequest {
   description: string
@@ -27,6 +28,13 @@ const PRESET_EFFECTS: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication FIRST
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+    const { user } = auth
+
+    console.log(`[Storybook API] sound-effects (ElevenLabs) called by user ${user.id}`)
+
     const body: SoundEffectRequest = await request.json()
     let { description } = body
     const { duration = 5 } = body
