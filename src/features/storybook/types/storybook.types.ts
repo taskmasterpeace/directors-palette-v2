@@ -195,10 +195,12 @@ export interface StorybookPage {
   pageNumber: number
   text: string // The story text for this page
   sceneJSON?: SceneJSON // Parsed scene (generated automatically)
-  imageUrl?: string // Selected variation image
-  gridImageUrl?: string // The 3x3 grid image before frame extraction
-  variationUrls?: string[] // All 9 variations (extracted from grid)
-  selectedVariationIndex?: number // Which variation was selected (0-8)
+  imageUrl?: string // Generated page image (single final image)
+  // DEPRECATED: Grid-based variation system (removed in favor of recipe-based single image generation)
+  // These fields are kept for backward compatibility with existing projects
+  gridImageUrl?: string // DEPRECATED: The 3x3 grid image before frame extraction
+  variationUrls?: string[] // DEPRECATED: All 9 variations (extracted from grid)
+  selectedVariationIndex?: number // DEPRECATED: Which variation was selected (0-8)
   textPosition: TextPosition
   audioUrl?: string // Generated narration audio URL
   layout?: PageLayout // How text and image are arranged
@@ -293,6 +295,11 @@ export interface StorybookProject {
     description: string
     appearances: number[]
   }>
+
+  // Recipe references (system recipes used for generation)
+  styleGuideRecipeId?: string // Recipe used for style guide generation
+  characterSheetRecipeId?: string // Recipe used for character sheet generation
+  pageRecipeId?: string // Recipe used for page illustration generation
 }
 
 // Wizard state

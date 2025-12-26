@@ -12,13 +12,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  Check,
   ArrowUp,
   ArrowDown,
   ArrowLeft,
   ArrowRight,
   X,
-  Grid3X3,
   LayoutTemplate,
   PanelLeft,
   PanelRight,
@@ -37,13 +35,11 @@ export function PageGenerationStep() {
     currentPageIndex,
     setCurrentPageIndex,
     updatePage,
-    selectVariation,
     setPageTextPosition,
   } = useStorybookStore()
 
-  const { generatePageVariations, isGenerating, progress, error } = useStorybookGeneration()
+  const { generatePage, isGenerating, progress, error } = useStorybookGeneration()
 
-  const [selectedVariation, setSelectedVariation] = useState<number | null>(null)
   const [generatingPageId, setGeneratingPageId] = useState<string | null>(null)
 
   const pages = project?.pages || []
@@ -52,43 +48,29 @@ export function PageGenerationStep() {
   const handlePreviousPage = () => {
     if (currentPageIndex > 0) {
       setCurrentPageIndex(currentPageIndex - 1)
-      setSelectedVariation(null)
     }
   }
 
   const handleNextPage = () => {
     if (currentPageIndex < pages.length - 1) {
       setCurrentPageIndex(currentPageIndex + 1)
-      setSelectedVariation(null)
     }
   }
 
-  const handleSelectVariation = (index: number) => {
-    setSelectedVariation(index)
-    if (currentPage?.variationUrls?.[index]) {
-      selectVariation(currentPage.id, index, currentPage.variationUrls[index])
-    }
-  }
-
-  const handleGenerateVariations = useCallback(async () => {
+  const handleGeneratePage = useCallback(async () => {
     if (!currentPage) return
 
     setGeneratingPageId(currentPage.id)
 
     try {
-      const result = await generatePageVariations(currentPage.id)
+      const result = await generatePage(currentPage.id)
       if (!result.success) {
         console.error('Generation failed:', result.error)
       }
     } finally {
       setGeneratingPageId(null)
     }
-  }, [currentPage, generatePageVariations])
-
-  // Use actual variations if available, otherwise show placeholder grid
-  const variations = currentPage?.variationUrls?.length === 9
-    ? currentPage.variationUrls
-    : null
+  }, [currentPage, generatePage])
 
   // Check if this page is currently generating
   const isCurrentPageGenerating = generatingPageId === currentPage?.id && isGenerating
@@ -126,10 +108,7 @@ export function PageGenerationStep() {
           {pages.map((page, index) => (
             <button
               key={page.id}
-              onClick={() => {
-                setCurrentPageIndex(index)
-                setSelectedVariation(null)
-              }}
+              onClick={() => setCurrentPageIndex(index)}
               className={cn(
                 "w-8 h-8 rounded-full text-sm font-medium transition-all",
                 index === currentPageIndex
@@ -236,7 +215,7 @@ export function PageGenerationStep() {
 
               {/* Generate Button */}
               <Button
-                onClick={handleGenerateVariations}
+                onClick={handleGeneratePage}
                 disabled={isCurrentPageGenerating}
                 className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-black"
               >
@@ -245,15 +224,15 @@ export function PageGenerationStep() {
                     <LoadingSpinner size="sm" color="current" />
                     {progress || 'Generating...'}
                   </>
-                ) : variations ? (
+                ) : currentPage.imageUrl ? (
                   <>
                     <Sparkles className="w-4 h-4" />
-                    Regenerate Variations
+                    Regenerate Page
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4" />
-                    Generate 9 Variations
+                    Generate Page Image
                   </>
                 )}
               </Button>
@@ -278,81 +257,37 @@ export function PageGenerationStep() {
           )}
         </div>
 
-        {/* Right: 3x3 Variation Grid */}
+        {/* Right: Page Preview */}
         <Card className="bg-zinc-900/50 border-zinc-800">
           <CardContent className="p-4">
-            <Label className="mb-3 block">Choose a Variation</Label>
+            <Label className="mb-3 block">Page Preview</Label>
 
-            {/* Grid Image Preview (before frame extraction) */}
-            {currentPage.gridImageUrl && !variations && (
-              <div className="mb-4">
-                <div className="relative aspect-square rounded-lg overflow-hidden border border-zinc-700">
-                  <Image
-                    src={currentPage.gridImageUrl}
-                    alt="Generated 3x3 grid"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <p className="text-xs text-amber-400 mt-2 text-center">
-                  Frame extraction coming soon - for now, view the grid above
-                </p>
+            {currentPage.imageUrl ? (
+              <div className="relative aspect-video rounded-lg overflow-hidden border border-zinc-700">
+                <Image
+                  src={currentPage.imageUrl}
+                  alt={`Page ${currentPageIndex + 1}`}
+                  fill
+                  className="object-cover"
+                />
               </div>
-            )}
-
-            {/* Variations Grid */}
-            {variations ? (
-              <>
-                <div className="grid grid-cols-3 gap-2">
-                  {variations.map((url, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSelectVariation(index)}
-                      className={cn(
-                        "relative aspect-square rounded-lg overflow-hidden border-2 transition-all",
-                        selectedVariation === index || currentPage.selectedVariationIndex === index
-                          ? "border-amber-500 ring-2 ring-amber-500/50"
-                          : "border-zinc-700 hover:border-zinc-500"
-                      )}
-                    >
-                      <Image
-                        src={url}
-                        alt={`Variation ${index + 1}`}
-                        fill
-                        className="object-cover"
-                      />
-                      {(selectedVariation === index || currentPage.selectedVariationIndex === index) && (
-                        <div className="absolute inset-0 bg-amber-500/20 flex items-center justify-center">
-                          <Check className="w-8 h-8 text-amber-400" />
-                        </div>
-                      )}
-                      <div className="absolute bottom-1 right-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
-                        {index + 1}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-                <p className="text-xs text-zinc-500 mt-3 text-center">
-                  Click to select a variation for this page
-                </p>
-              </>
-            ) : !currentPage.gridImageUrl && (
+            ) : (
               <div
                 className={cn(
-                  "aspect-square rounded-lg border border-zinc-700 bg-zinc-800/30",
+                  "aspect-video rounded-lg border border-zinc-700 bg-zinc-800/30",
                   "flex flex-col items-center justify-center gap-3"
                 )}
               >
                 {isCurrentPageGenerating ? (
                   <>
                     <LoadingSpinner size="xl" />
-                    <span className="text-sm text-amber-400">{progress || 'Generating 9 variations...'}</span>
+                    <span className="text-sm text-amber-400">{progress || 'Generating page...'}</span>
                   </>
                 ) : (
                   <>
-                    <Grid3X3 className="w-12 h-12 text-zinc-600" />
+                    <Images className="w-12 h-12 text-zinc-600" />
                     <span className="text-sm text-zinc-500">
-                      Click &quot;Generate 9 Variations&quot; to create options
+                      Click &quot;Generate Page Image&quot; to create illustration
                     </span>
                   </>
                 )}
