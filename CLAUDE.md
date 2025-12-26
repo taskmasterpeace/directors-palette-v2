@@ -66,17 +66,17 @@ The dev server runs on `http://localhost:3000`.
 **New workflow automation commands (requires Claude Code restart to activate):**
 
 ```bash
-/project:build-check   # Run TypeScript build and report errors
-/project:test          # Smart test runner (detects changed files)
-/project:test-ui       # Launch Playwright UI mode for visual debugging
-/project:deploy        # Full deployment: build → push → Vercel monitor
+/build-check   # Run TypeScript build and report errors
+/test          # Smart test runner (detects changed files)
+/test-ui       # Launch Playwright UI mode for visual debugging
+/deploy        # Full deployment: build → push → Vercel monitor
 ```
 
 **Existing commands:**
 ```bash
-/project:git-status    # Check git status and warn about uncommitted changes
-/project:commit-all    # Quick commit and push workflow
-/project:session-end   # End session safety check (commit + push)
+/git-status    # Check git status and warn about uncommitted changes
+/commit-all    # Quick commit and push workflow
+/session-end   # End session safety check (commit + push)
 ```
 
 **Quick Reference:** See `.claude/COMMANDS_QUICK_REFERENCE.md` for detailed usage examples.

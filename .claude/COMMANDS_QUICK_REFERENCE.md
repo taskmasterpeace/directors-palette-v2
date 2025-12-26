@@ -6,7 +6,7 @@
 
 ## 🚀 Phase 1 Commands (Just Installed)
 
-### `/project:build-check`
+### `/build-check`
 **What it does:** Runs TypeScript build and reports errors
 
 **When to use:**
@@ -16,7 +16,7 @@
 
 **Example:**
 ```
-/project:build-check
+/build-check
 ```
 
 **What happens:**
@@ -27,7 +27,7 @@
 
 ---
 
-### `/project:test`
+### `/test`
 **What it does:** Smart test runner - detects changed files and runs relevant tests
 
 **When to use:**
@@ -38,7 +38,7 @@
 
 **Example:**
 ```
-/project:test
+/test
 ```
 
 **What happens:**
@@ -51,7 +51,7 @@
 
 ---
 
-### `/project:test-ui`
+### `/test-ui`
 **What it does:** Launch Playwright UI mode for visual test debugging
 
 **When to use:**
@@ -62,7 +62,7 @@
 
 **Example:**
 ```
-/project:test-ui
+/test-ui
 ```
 
 **What happens:**
@@ -76,7 +76,7 @@
 
 ---
 
-### `/project:deploy`
+### `/deploy`
 **What it does:** Full deployment workflow - build, push, monitor Vercel
 
 **When to use:**
@@ -87,7 +87,7 @@
 
 **Example:**
 ```
-/project:deploy
+/deploy
 ```
 
 **What happens:**
@@ -101,13 +101,13 @@
 
 ## 📋 Existing Commands (Already Available)
 
-### `/project:git-status`
+### `/git-status`
 Check git status and report uncommitted changes
 
-### `/project:commit-all`
+### `/commit-all`
 Quick commit and push all changes to remote
 
-### `/project:session-end`
+### `/session-end`
 End of session safety check - commit and push all changes
 
 ---
@@ -124,12 +124,12 @@ End of session safety check - commit and push all changes
    ```
 
 2. **Commands will be available immediately**
-   - Type `/project:` and press Tab to see all available commands
-   - Or just type the full command: `/project:build-check`
+   - Type `/` and press Tab to see all available commands
+   - Or just type the full command: `/build-check`
 
 3. **Test a command:**
    ```
-   /project:build-check
+   /build-check
    ```
 
 ---
@@ -138,24 +138,24 @@ End of session safety check - commit and push all changes
 
 **Before Commits:**
 ```
-/project:build-check
-/project:test
+/build-check
+/test
 ```
 
 **During Development:**
 ```
-/project:test-ui
+/test-ui
 # (opens interactive test UI)
 ```
 
 **End of Day:**
 ```
-/project:deploy
+/deploy
 ```
 
 **Quick Check:**
 ```
-/project:git-status
+/git-status
 ```
 
 ---
