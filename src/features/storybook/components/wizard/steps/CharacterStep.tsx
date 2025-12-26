@@ -51,13 +51,22 @@ export function CharacterStep() {
   // Auto-detect characters using LLM API when step loads
   useEffect(() => {
     const detectWithLLM = async () => {
-      if (project?.storyText && project.characters.length === 0 && !isDetecting) {
+      // Get storyText, fallback to generatedStory if needed
+      let textToAnalyze = project?.storyText
+
+      // FALLBACK: If storyText is empty but generatedStory exists, convert it
+      if ((!textToAnalyze || textToAnalyze.trim() === '') && project?.generatedStory) {
+        textToAnalyze = project.generatedStory.pages.map(p => p.text).join('\n\n')
+        console.warn('[CharacterStep] storyText was empty, using generatedStory.pages')
+      }
+
+      if (textToAnalyze && project.characters.length === 0 && !isDetecting) {
         setIsDetecting(true)
         try {
           const response = await fetch('/api/storybook/detect-characters', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ storyText: project.storyText })
+            body: JSON.stringify({ storyText: textToAnalyze })
           })
           if (response.ok) {
             const data = await response.json()
@@ -77,7 +86,7 @@ export function CharacterStep() {
       }
     }
     detectWithLLM()
-  }, [project?.storyText, project?.characters.length, addCharacter, detectCharacters, isDetecting])
+  }, [project?.storyText, project?.generatedStory, project?.characters.length, addCharacter, detectCharacters, isDetecting])
 
   const characters = project?.characters || []
 

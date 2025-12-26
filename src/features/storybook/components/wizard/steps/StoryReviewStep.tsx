@@ -11,7 +11,7 @@ import { ArrowLeft, ArrowRight, Edit2, Save, X, Users, MapPin, Lightbulb } from 
 import { cn } from "@/utils/utils"
 
 export function StoryReviewStep() {
-  const { project, setGeneratedStory, nextStep, previousStep } = useStorybookStore()
+  const { project, setGeneratedStory, updateProject, nextStep, previousStep } = useStorybookStore()
 
   const [editingPage, setEditingPage] = useState<number | null>(null)
   const [editText, setEditText] = useState("")
@@ -35,10 +35,15 @@ export function StoryReviewStep() {
       p.pageNumber === editingPage ? { ...p, text: editText } : p
     )
 
+    // Update generatedStory with edited pages
     setGeneratedStory({
       ...generatedStory,
       pages: updatedPages
     })
+
+    // SYNC storyText with edited pages
+    const updatedStoryText = updatedPages.map(p => p.text).join('\n\n')
+    updateProject({ storyText: updatedStoryText })
 
     setEditingPage(null)
     setEditText("")
