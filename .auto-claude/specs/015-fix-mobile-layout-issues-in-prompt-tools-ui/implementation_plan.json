@@ -15,16 +15,25 @@
           "id": "subtask-1-1",
           "description": "Fix PromptToolsPage.tsx tab navigation - add responsive classes to hide tab text and badges on mobile, reduce padding on tab triggers",
           "service": "main",
-          "files_to_modify": ["src/features/prompt-tools/components/PromptToolsPage.tsx"],
+          "files_to_modify": [
+            "src/features/prompt-tools/components/PromptToolsPage.tsx"
+          ],
           "files_to_create": [],
-          "patterns_from": ["src/features/shot-creator/components/creator-prompt-settings/PromptToolsTabs.tsx"],
+          "patterns_from": [
+            "src/features/shot-creator/components/creator-prompt-settings/PromptToolsTabs.tsx"
+          ],
           "verification": {
             "type": "browser",
             "url": "http://localhost:3000/prompt-tools",
-            "checks": ["Tabs fit viewport at 375px width", "Icons visible", "No horizontal overflow"]
+            "checks": [
+              "Tabs fit viewport at 375px width",
+              "Icons visible",
+              "No horizontal overflow"
+            ]
           },
-          "status": "pending",
-          "notes": "Use hidden sm:inline for text labels, hidden sm:inline-flex for badges, reduce gap and px on triggers"
+          "status": "completed",
+          "notes": "Fixed PromptToolsPage.tsx tab navigation for mobile responsiveness. Added text-xs, reduced gap to 1.5, used smaller icons (w-3.5 h-3.5), wrapped text in hidden sm:inline spans, and updated badges to hide on smaller screens with hidden lg:inline-flex. Committed as a0447e9.",
+          "updated_at": "2025-12-26T00:14:09.045926+00:00"
         }
       ]
     },
@@ -33,53 +42,80 @@
       "name": "Recipes Tab Mobile Fix",
       "type": "implementation",
       "description": "Fix RecipeBuilder header button overflow and ensure recipe cards stack properly on mobile. Collapse Export/Import buttons into dropdown on mobile.",
-      "depends_on": ["phase-1-tab-navigation"],
+      "depends_on": [
+        "phase-1-tab-navigation"
+      ],
       "parallel_safe": true,
       "subtasks": [
         {
           "id": "subtask-2-1",
           "description": "Fix RecipeBuilder.tsx header - collapse Export/Import buttons into dropdown on mobile, keep New Recipe button visible",
           "service": "main",
-          "files_to_modify": ["src/features/shot-creator/components/recipe/RecipeBuilder.tsx"],
+          "files_to_modify": [
+            "src/features/shot-creator/components/recipe/RecipeBuilder.tsx"
+          ],
           "files_to_create": [],
-          "patterns_from": ["src/features/shot-creator/components/creator-prompt-settings/PromptLibraryCard.tsx"],
+          "patterns_from": [
+            "src/features/shot-creator/components/creator-prompt-settings/PromptLibraryCard.tsx"
+          ],
           "verification": {
             "type": "browser",
             "url": "http://localhost:3000/prompt-tools",
-            "checks": ["Header buttons accessible at 375px", "No horizontal overflow", "New Recipe button visible"]
+            "checks": [
+              "Header buttons accessible at 375px",
+              "No horizontal overflow",
+              "New Recipe button visible"
+            ]
           },
-          "status": "pending",
-          "notes": "Add hidden md:flex for desktop buttons, flex md:hidden with DropdownMenu for mobile. Import DropdownMenu components."
+          "status": "completed",
+          "notes": "Fixed RecipeBuilder.tsx header for mobile: hid Export/Import buttons on mobile using sm:inline-flex, added mobile-only dropdown menu with MoreVertical trigger containing Export/Import options, kept New Recipe button always visible. Committed as 206362a.",
+          "updated_at": "2025-12-26T00:20:02.066255+00:00"
         },
         {
           "id": "subtask-2-2",
           "description": "Fix RecipeBuilder.tsx recipe cards - ensure cards stack properly on mobile with full content visible, fix category filter wrapping",
           "service": "main",
-          "files_to_modify": ["src/features/shot-creator/components/recipe/RecipeBuilder.tsx"],
+          "files_to_modify": [
+            "src/features/shot-creator/components/recipe/RecipeBuilder.tsx"
+          ],
           "files_to_create": [],
           "patterns_from": [],
           "verification": {
             "type": "browser",
             "url": "http://localhost:3000/prompt-tools",
-            "checks": ["Recipe cards fully visible at 375px", "Category buttons wrap on mobile", "Content not cut off"]
+            "checks": [
+              "Recipe cards fully visible at 375px",
+              "Category buttons wrap on mobile",
+              "Content not cut off"
+            ]
           },
-          "status": "pending",
-          "notes": "Ensure flex-wrap on category buttons, check card action buttons don't overflow on mobile"
+          "status": "completed",
+          "notes": "Fixed RecipeBuilder.tsx recipe cards for mobile:\n1. Recipe card badges: Icon-only on mobile (Lock icon for System, Star icon for Quick), full text on sm+ screens\n2. Hidden stages and image count badges on mobile (visible on sm+)\n3. Title truncated with max-width on mobile\n4. Action buttons collapsed into dropdown on mobile (Play button stays visible, others in MoreVertical dropdown)\n5. Category filter: Icon-only buttons on very small screens, full text on sm+\n6. Field badges: Show 3 on mobile with \"+N more\", 4 on desktop\n7. Reduced gaps and padding for mobile\nCommitted as bb60e0c.",
+          "updated_at": "2025-12-26T00:23:34.213128+00:00"
         },
         {
           "id": "subtask-2-3",
           "description": "Fix RecipeBuilder.tsx dialog - ensure create/edit dialog is scrollable and usable on mobile, fix form grid layout",
           "service": "main",
-          "files_to_modify": ["src/features/shot-creator/components/recipe/RecipeBuilder.tsx"],
+          "files_to_modify": [
+            "src/features/shot-creator/components/recipe/RecipeBuilder.tsx"
+          ],
           "files_to_create": [],
-          "patterns_from": ["src/components/ui/dialog.tsx"],
+          "patterns_from": [
+            "src/components/ui/dialog.tsx"
+          ],
           "verification": {
             "type": "browser",
             "url": "http://localhost:3000/prompt-tools",
-            "checks": ["Create Recipe dialog opens on mobile", "Dialog content scrollable", "Form fields accessible"]
+            "checks": [
+              "Create Recipe dialog opens on mobile",
+              "Dialog content scrollable",
+              "Form fields accessible"
+            ]
           },
-          "status": "pending",
-          "notes": "Dialog already has max-h-[90vh] overflow-y-auto, change RecipeForm grid-cols-2 to grid-cols-1 sm:grid-cols-2 for mobile"
+          "status": "completed",
+          "notes": "Fixed RecipeBuilder.tsx dialog mobile layout: Made Create/Edit dialogs properly scrollable with fixed header/footer, changed form grid layouts to stack on mobile (grid-cols-1 sm:grid-cols-2), made stage type and tool selects responsive (w-full sm:w-[size]), added proper padding and border separators.",
+          "updated_at": "2025-12-26T00:27:10.127831+00:00"
         }
       ]
     },
@@ -88,20 +124,30 @@
       "name": "Library Tab Mobile Fix",
       "type": "implementation",
       "description": "Fix PromptLibraryCard header with multiple buttons that overflow on mobile. Collapse secondary actions into dropdown while keeping primary Add button visible.",
-      "depends_on": ["phase-1-tab-navigation"],
+      "depends_on": [
+        "phase-1-tab-navigation"
+      ],
       "parallel_safe": true,
       "subtasks": [
         {
           "id": "subtask-3-1",
           "description": "Fix PromptLibraryCard.tsx header - collapse View Toggle, Export, Import buttons into dropdown on mobile, keep Add button visible",
           "service": "main",
-          "files_to_modify": ["src/features/shot-creator/components/creator-prompt-settings/PromptLibraryCard.tsx"],
+          "files_to_modify": [
+            "src/features/shot-creator/components/creator-prompt-settings/PromptLibraryCard.tsx"
+          ],
           "files_to_create": [],
-          "patterns_from": ["src/features/shot-creator/components/unified-gallery/GalleryHeader.tsx"],
+          "patterns_from": [
+            "src/features/shot-creator/components/unified-gallery/GalleryHeader.tsx"
+          ],
           "verification": {
             "type": "browser",
             "url": "http://localhost:3000/prompt-tools",
-            "checks": ["Header buttons fit at 375px", "Add button always visible", "Other actions in dropdown"]
+            "checks": [
+              "Header buttons fit at 375px",
+              "Add button always visible",
+              "Other actions in dropdown"
+            ]
           },
           "status": "pending",
           "notes": "Move view toggle, export, import into MoreVertical dropdown on mobile. Use hidden md:flex pattern."
@@ -110,13 +156,19 @@
           "id": "subtask-3-2",
           "description": "Fix PromptLibraryCard.tsx content layout - ensure category grid and prompt cards display properly on mobile",
           "service": "main",
-          "files_to_modify": ["src/features/shot-creator/components/creator-prompt-settings/PromptLibraryCard.tsx"],
+          "files_to_modify": [
+            "src/features/shot-creator/components/creator-prompt-settings/PromptLibraryCard.tsx"
+          ],
           "files_to_create": [],
           "patterns_from": [],
           "verification": {
             "type": "browser",
             "url": "http://localhost:3000/prompt-tools",
-            "checks": ["Category cards grid responsive", "Content scrollable", "No text overflow"]
+            "checks": [
+              "Category cards grid responsive",
+              "Content scrollable",
+              "No text overflow"
+            ]
           },
           "status": "pending",
           "notes": "Category grid uses grid-cols-2, may need grid-cols-1 on very small screens. Check TabsList styling."
@@ -128,20 +180,28 @@
       "name": "Wildcards Tab Mobile Fix",
       "type": "implementation",
       "description": "Fix WildCardManager grid to use single column on very small screens and ensure proper scrollability.",
-      "depends_on": ["phase-1-tab-navigation"],
+      "depends_on": [
+        "phase-1-tab-navigation"
+      ],
       "parallel_safe": true,
       "subtasks": [
         {
           "id": "subtask-4-1",
           "description": "Fix WildCardManager.tsx grid - change grid-cols-2 to grid-cols-1 for xs screens, adjust responsive breakpoints",
           "service": "main",
-          "files_to_modify": ["src/features/shot-creator/components/wildcard/WildCardManager.tsx"],
+          "files_to_modify": [
+            "src/features/shot-creator/components/wildcard/WildCardManager.tsx"
+          ],
           "files_to_create": [],
           "patterns_from": [],
           "verification": {
             "type": "browser",
             "url": "http://localhost:3000/prompt-tools",
-            "checks": ["Single column on 320px", "Two columns on 375px+", "Cards fully visible"]
+            "checks": [
+              "Single column on 320px",
+              "Two columns on 375px+",
+              "Cards fully visible"
+            ]
           },
           "status": "pending",
           "notes": "Change grid-cols-2 to grid-cols-1 sm:grid-cols-2 or adjust breakpoints appropriately"
@@ -150,13 +210,21 @@
           "id": "subtask-4-2",
           "description": "Fix WildCardManager.tsx dialog - ensure create/edit dialog works on mobile with scrollable content",
           "service": "main",
-          "files_to_modify": ["src/features/shot-creator/components/wildcard/WildCardManager.tsx"],
+          "files_to_modify": [
+            "src/features/shot-creator/components/wildcard/WildCardManager.tsx"
+          ],
           "files_to_create": [],
-          "patterns_from": ["src/components/ui/dialog.tsx"],
+          "patterns_from": [
+            "src/components/ui/dialog.tsx"
+          ],
           "verification": {
             "type": "browser",
             "url": "http://localhost:3000/prompt-tools",
-            "checks": ["Create dialog opens on mobile", "Dialog scrollable", "Form usable"]
+            "checks": [
+              "Create dialog opens on mobile",
+              "Dialog scrollable",
+              "Form usable"
+            ]
           },
           "status": "pending",
           "notes": "Dialog already has max-h-[90vh] overflow-y-auto. Verify form fields work with touch."
@@ -168,20 +236,28 @@
       "name": "Styles Tab Mobile Fix",
       "type": "implementation",
       "description": "Fix StyleSelector display on mobile and ensure Create Custom Style dialog is fully functional and scrollable.",
-      "depends_on": ["phase-1-tab-navigation"],
+      "depends_on": [
+        "phase-1-tab-navigation"
+      ],
       "parallel_safe": true,
       "subtasks": [
         {
           "id": "subtask-5-1",
           "description": "Fix StyleSelector.tsx layout - ensure style dropdown and clear button work properly on mobile with proper flex wrapping",
           "service": "main",
-          "files_to_modify": ["src/features/shot-creator/components/creator-prompt-settings/StyleSelector.tsx"],
+          "files_to_modify": [
+            "src/features/shot-creator/components/creator-prompt-settings/StyleSelector.tsx"
+          ],
           "files_to_create": [],
           "patterns_from": [],
           "verification": {
             "type": "browser",
             "url": "http://localhost:3000/prompt-tools",
-            "checks": ["Style dropdown accessible", "Clear button visible", "No content overflow"]
+            "checks": [
+              "Style dropdown accessible",
+              "Clear button visible",
+              "No content overflow"
+            ]
           },
           "status": "pending",
           "notes": "Check label and button layout, ensure flex wrapping on small screens"
@@ -190,13 +266,21 @@
           "id": "subtask-5-2",
           "description": "Fix StyleSelector.tsx create dialog - ensure create custom style dialog is fully scrollable and form elements are touch-friendly",
           "service": "main",
-          "files_to_modify": ["src/features/shot-creator/components/creator-prompt-settings/StyleSelector.tsx"],
+          "files_to_modify": [
+            "src/features/shot-creator/components/creator-prompt-settings/StyleSelector.tsx"
+          ],
           "files_to_create": [],
-          "patterns_from": ["src/components/ui/dialog.tsx"],
+          "patterns_from": [
+            "src/components/ui/dialog.tsx"
+          ],
           "verification": {
             "type": "browser",
             "url": "http://localhost:3000/prompt-tools",
-            "checks": ["Create Style dialog opens", "Image upload works on mobile", "Form scrollable"]
+            "checks": [
+              "Create Style dialog opens",
+              "Image upload works on mobile",
+              "Form scrollable"
+            ]
           },
           "status": "pending",
           "notes": "Dialog has max-w-md which may be too wide. Add w-[calc(100%-2rem)] sm:max-w-md. Ensure file input works."
@@ -208,7 +292,12 @@
       "name": "Integration & Verification",
       "type": "integration",
       "description": "Verify all tabs work together on mobile, no regressions on desktop, and Gallery code remains untouched.",
-      "depends_on": ["phase-2-recipes-tab", "phase-3-library-tab", "phase-4-wildcards-tab", "phase-5-styles-tab"],
+      "depends_on": [
+        "phase-2-recipes-tab",
+        "phase-3-library-tab",
+        "phase-4-wildcards-tab",
+        "phase-5-styles-tab"
+      ],
       "parallel_safe": false,
       "subtasks": [
         {
@@ -255,12 +344,19 @@
   "summary": {
     "total_phases": 6,
     "total_subtasks": 11,
-    "services_involved": ["main"],
+    "services_involved": [
+      "main"
+    ],
     "parallelism": {
       "max_parallel_phases": 4,
       "parallel_groups": [
         {
-          "phases": ["phase-2-recipes-tab", "phase-3-library-tab", "phase-4-wildcards-tab", "phase-5-styles-tab"],
+          "phases": [
+            "phase-2-recipes-tab",
+            "phase-3-library-tab",
+            "phase-4-wildcards-tab",
+            "phase-5-styles-tab"
+          ],
           "reason": "All depend only on phase-1-tab-navigation, no overlapping files"
         }
       ],
@@ -273,7 +369,9 @@
     "risk_level": "low",
     "skip_validation": false,
     "test_creation_phase": "post_implementation",
-    "test_types_required": ["unit"],
+    "test_types_required": [
+      "unit"
+    ],
     "security_scanning_required": false,
     "staging_deployment_required": false,
     "acceptance_criteria": [
@@ -315,7 +413,9 @@
   "qa_acceptance": {
     "unit_tests": {
       "required": false,
-      "commands": ["npm test"],
+      "commands": [
+        "npm test"
+      ],
       "minimum_coverage": null,
       "notes": "No new unit tests required for CSS changes, but existing tests must pass"
     },
@@ -326,16 +426,46 @@
     },
     "e2e_tests": {
       "required": true,
-      "commands": ["npx playwright test --project=chromium"],
-      "flows": ["prompt-tools-mobile-navigation"]
+      "commands": [
+        "npx playwright test --project=chromium"
+      ],
+      "flows": [
+        "prompt-tools-mobile-navigation"
+      ]
     },
     "browser_verification": {
       "required": true,
       "pages": [
-        {"url": "http://localhost:3000", "viewport": "375x667", "checks": ["Prompt Tools tabs accessible", "No overflow"]},
-        {"url": "http://localhost:3000", "viewport": "428x926", "checks": ["All tabs usable", "Dialogs scrollable"]},
-        {"url": "http://localhost:3000", "viewport": "768x1024", "checks": ["Transitional layout works"]},
-        {"url": "http://localhost:3000", "viewport": "1024x768", "checks": ["Desktop layout unchanged"]}
+        {
+          "url": "http://localhost:3000",
+          "viewport": "375x667",
+          "checks": [
+            "Prompt Tools tabs accessible",
+            "No overflow"
+          ]
+        },
+        {
+          "url": "http://localhost:3000",
+          "viewport": "428x926",
+          "checks": [
+            "All tabs usable",
+            "Dialogs scrollable"
+          ]
+        },
+        {
+          "url": "http://localhost:3000",
+          "viewport": "768x1024",
+          "checks": [
+            "Transitional layout works"
+          ]
+        },
+        {
+          "url": "http://localhost:3000",
+          "viewport": "1024x768",
+          "checks": [
+            "Desktop layout unchanged"
+          ]
+        }
       ]
     },
     "database_verification": {
@@ -343,5 +473,9 @@
       "checks": []
     }
   },
-  "qa_signoff": null
+  "qa_signoff": null,
+  "status": "human_review",
+  "planStatus": "review",
+  "updated_at": "2025-12-26T00:11:22.389Z",
+  "last_updated": "2025-12-26T00:27:10.127840+00:00"
 }

@@ -10,5 +10,6 @@
     "src/features/layout-annotation/components/LayoutAnnotationTab.tsx",
     "src/features/music-lab/components/AudioUploader.tsx"
   ],
-  "problemSolved": "AudioUploader has a drag-drop zone with dashed border but minimal dragOver visual change. Reference image upload areas may lack clear drag feedback. No distinction between valid and invalid file types during drag."
+  "problemSolved": "AudioUploader has a drag-drop zone with dashed border but minimal dragOver visual change. Reference image upload areas may lack clear drag feedback. No distinction between valid and invalid file types during drag.",
+  "archivedAt": "2025-12-25T23:31:17.826Z"
 }

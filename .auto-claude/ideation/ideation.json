@@ -1,5 +1,5 @@
 {
-  "id": "ideation-20251225-025258",
+  "id": "ideation-20251225-180759",
   "project_id": "C:\\git\\directors-palette-v2",
   "config": {
     "enabled_types": [
@@ -15,266 +15,263 @@
     {
       "id": "ci-001",
       "type": "code_improvements",
-      "title": "Recipe Import/Export Functionality",
-      "description": "Add JSON import and export capabilities for recipes, allowing users to backup, share, and transfer their custom recipes between accounts or installations.",
-      "rationale": "The exact pattern exists in usePromptImportExport.ts for prompts - exports to JSON with version/timestamp, imports with validation and duplicate checking. Recipes are stored in recipe.store.ts with full CRUD but lack this backup/sharing capability.",
+      "title": "Bulk Video Download as ZIP",
+      "description": "Add ability to download multiple videos from the Shot Animator gallery as a single ZIP file with progress tracking, mirroring the existing bulk image download feature.",
+      "rationale": "BulkDownloadService already exists for images in bulk-download.service.ts with progress callbacks, JSZip integration, and error handling per item. The same service architecture works for any URL-based content and can be extended to video files with minimal changes.",
       "builds_upon": [
-        "usePromptImportExport.ts pattern",
-        "Recipe store CRUD operations",
-        "Toast notification system"
+        "BulkDownloadService for images",
+        "JSZip integration",
+        "Shot Animator video gallery"
       ],
       "estimated_effort": "small",
       "affected_files": [
-        "src/features/shot-creator/hooks/useRecipeImportExport.ts (new)",
-        "src/features/shot-creator/components/recipe/RecipeBuilder.tsx",
-        "src/features/shot-creator/types/recipe.types.ts"
+        "src/features/shot-creator/services/bulk-download.service.ts",
+        "src/features/shot-animator/components/VideoGalleryGrid.tsx"
       ],
       "existing_patterns": [
-        "usePromptImportExport.ts - JSON blob export with version/date metadata",
-        "Blob creation and download link pattern",
-        "File input with JSON parsing and validation",
-        "Toast notifications for success/failure feedback"
+        "BulkDownloadService.downloadAsZip() with progress callbacks",
+        "DownloadProgress interface { current, total, status }",
+        "getFilename() for URL-based filename extraction"
       ],
-      "implementation_approach": "Create useRecipeImportExport.ts following the exact structure of usePromptImportExport.ts. Export creates JSON blob with version string, exportDate, and recipes array (sans userId). Import parses JSON, validates recipe structure against recipe.types.ts, checks for duplicate names, and uses addRecipe from useRecipeStore. Add Import/Export buttons to RecipeBuilder.tsx header similar to prompt library.",
-      "status": "archived",
-      "created_at": "2025-12-25T02:50:00.000Z",
-      "linked_task_id": "010-recipe-import-export-functionality"
+      "implementation_approach": "Extend BulkDownloadService.downloadAsZip() to handle video extensions (.mp4, .webm) in getFilename(). Add multi-select checkboxes to VideoGalleryGrid following the image gallery pattern. Create 'Download Selected' button that calls downloadAsZip with selected video URLs. Show progress modal during download using existing DownloadProgress interface.",
+      "status": "draft",
+      "created_at": "2025-12-25T17:55:00.000Z"
     },
     {
       "id": "ci-002",
       "type": "code_improvements",
-      "title": "Wildcard Import/Export Functionality",
-      "description": "Add JSON import and export capabilities for wildcards, enabling users to backup their custom wildcards and share them with the community.",
-      "rationale": "Same pattern as prompts exists in usePromptImportExport.ts. Wildcards in wildcard.store.ts have full CRUD (createWildCard, updateWildCard, deleteWildCard) but no import/export. Users cannot backup or share their wildcards.",
+      "title": "Wildcard Autocomplete in Prompt Input",
+      "description": "Extend the existing @reference autocomplete to also support __wildcard__ syntax. When users type __ in the prompt input, show an autocomplete dropdown of available wildcards with descriptions and line counts for quick insertion.",
+      "rationale": "The autocomplete infrastructure exists in usePromptAutocomplete.ts for @reference syntax with trigger detection, keyboard navigation, and item insertion. The wildcard service already provides getWildCards() with category filtering. Combining these enables seamless wildcard discovery.",
       "builds_upon": [
-        "usePromptImportExport.ts pattern",
-        "Wildcard store CRUD operations",
-        "Toast notification system"
+        "usePromptAutocomplete.ts @reference autocomplete",
+        "wildcard.service.ts getWildCards()",
+        "AutocompleteOption type system"
       ],
-      "estimated_effort": "small",
+      "estimated_effort": "medium",
       "affected_files": [
-        "src/features/wildcards/hooks/useWildcardImportExport.ts (new)",
-        "src/features/wildcards/components/WildcardSidebar.tsx",
-        "src/features/shot-creator/store/wildcard.store.ts"
+        "src/features/shot-creator/hooks/usePromptAutocomplete.ts",
+        "src/features/shot-creator/types/autocomplete.types.ts",
+        "src/features/shot-creator/components/creator-prompt-settings/PromptArea.tsx"
       ],
       "existing_patterns": [
-        "usePromptImportExport.ts - complete import/export flow",
-        "Blob/download pattern for file export",
-        "File validation with duplicate checking",
-        "Toast feedback on operation completion"
+        "detectTrigger() for @ symbol detection",
+        "buildOptions() filtering and sorting",
+        "insertItem() text replacement with cursor positioning",
+        "Keyboard navigation (selectPrevious, selectNext)"
       ],
-      "implementation_approach": "Create useWildcardImportExport.ts mirroring usePromptImportExport.ts. Export serializes wildcards array with version and timestamp. Import validates structure (name, content, category, description), checks for name duplicates using getWildCardByName, and calls createWildCard. Add Import/Export buttons to WildcardSidebar.tsx header.",
-      "status": "archived",
-      "created_at": "2025-12-25T02:50:00.000Z",
-      "linked_task_id": "006-wildcard-import-export-functionality"
+      "implementation_approach": "Add __ trigger detection in detectTrigger() alongside existing @ detection. Create WildcardAutocompleteItem type extending AutocompleteOption. Extend buildOptions() to fetch wildcards from service when __ triggered. Modify insertItem() to wrap selection in __name__ format. Show wildcard description and line count in dropdown items.",
+      "status": "draft",
+      "created_at": "2025-12-25T18:10:00.000Z"
     },
     {
       "id": "ci-003",
       "type": "code_improvements",
-      "title": "Draft Autosave for Recipe Editor",
-      "description": "Add localStorage-based draft autosave to the recipe editor dialog, preventing loss of work if the dialog is closed accidentally or browser crashes.",
-      "rationale": "The useDraftAutosave.ts hook already implements this pattern for story-creator with 30-second interval saves, age-based expiry (24h), and snapshot comparison to avoid unnecessary writes. Recipe editing in RecipeBuilder.tsx dialog has no such protection.",
+      "title": "Autosave for Layout Annotation Canvas",
+      "description": "Implement autosave for the layout annotation canvas state to prevent work loss. Save canvas objects, positions, and settings to localStorage and offer recovery dialog on page reload.",
+      "rationale": "The autosave pattern exists in useDraftAutosave.ts with 30-second interval saving, JSON snapshot comparison for change detection, and 24-hour expiration. The layout annotation has complex Fabric.js state that users can lose on accidental page close.",
       "builds_upon": [
-        "useDraftAutosave.ts pattern",
-        "Recipe editor form state",
-        "DraftRestorePrompt.tsx component"
+        "useDraftAutosave.ts autosave pattern",
+        "layout-annotation-store.ts canvas state",
+        "RecoveryPrompt UI component"
       ],
       "estimated_effort": "small",
       "affected_files": [
-        "src/features/shot-creator/hooks/useRecipeDraftAutosave.ts (new)",
-        "src/features/shot-creator/components/recipe/RecipeBuilder.tsx",
-        "src/features/shot-creator/components/recipe/RecipeDraftRestorePrompt.tsx (new)"
+        "src/features/layout-annotation/hooks/useCanvasAutosave.ts",
+        "src/features/layout-annotation/store/layout-annotation-store.ts",
+        "src/features/layout-annotation/components/LayoutAnnotationCanvas.tsx"
       ],
       "existing_patterns": [
-        "useDraftAutosave.ts - localStorage save with timeout debounce",
-        "loadDraft(), clearDraft(), hasDraft() utility functions",
-        "DraftRestorePrompt.tsx - UI for offering draft restoration",
-        "Snapshot comparison to avoid redundant saves"
+        "Interval-based autosave with timeoutRef",
+        "JSON.stringify snapshot comparison",
+        "loadDraft()/clearDraft()/hasDraft() utilities",
+        "24-hour expiration check"
       ],
-      "implementation_approach": "Create useRecipeDraftAutosave.ts based on useDraftAutosave.ts structure. Store recipe form state (name, description, stages, category) with timestamp. When recipe dialog opens, check for existing draft and prompt user to restore. Clear draft when recipe is successfully saved. Use AUTOSAVE_KEY = 'recipe-editor-draft' for localStorage.",
+      "implementation_approach": "Create useCanvasAutosave hook following useDraftAutosave structure. Serialize canvas via Fabric.js toJSON(). Store with project ID and timestamp. Add recovery prompt on mount if draft exists. Implement loadCanvasDraft() to restore canvas.loadFromJSON(). Clear draft on explicit save or discard.",
       "status": "draft",
-      "created_at": "2025-12-25T02:50:00.000Z"
+      "created_at": "2025-12-25T18:10:00.000Z"
     },
     {
       "id": "ci-004",
       "type": "code_improvements",
-      "title": "Search Functionality for Wildcard Sidebar",
-      "description": "Add real-time search filtering to the wildcard sidebar, allowing users to quickly find wildcards by name, category, or content.",
-      "rationale": "The usePromptFilters.ts hook implements search/filter for prompts with useMemo-based filtering. WildcardSidebar.tsx currently just lists all wildcards without search, becoming unwieldy as collection grows.",
+      "title": "Credit Transaction History Export",
+      "description": "Allow users to export their credit transaction history to JSON or CSV format for record-keeping, accounting, and expense tracking purposes.",
+      "rationale": "CreditsService.getTransactionHistory() already provides paginated transaction access. usePromptImportExport demonstrates the blob download pattern. Combining these enables transaction export without new backend work.",
       "builds_upon": [
-        "usePromptFilters.ts pattern",
-        "Wildcard store wildcards array",
-        "Input component from shadcn/ui"
+        "CreditsService.getTransactionHistory()",
+        "usePromptImportExport export pattern",
+        "Transaction history UI"
       ],
       "estimated_effort": "trivial",
       "affected_files": [
-        "src/features/wildcards/components/WildcardSidebar.tsx",
-        "src/features/wildcards/hooks/useWildcardFilters.ts (new)"
+        "src/features/credits/hooks/useCreditExport.ts",
+        "src/features/credits/components/CreditHistoryPanel.tsx"
       ],
       "existing_patterns": [
-        "usePromptFilters.ts - useMemo filtering with searchQuery state",
-        "Input component with Search icon (seen in ExpandedGallery.tsx)",
-        "Store-based filtering approach"
+        "exportPrompts() blob download with URL.createObjectURL",
+        "JSON.stringify with formatting and metadata",
+        "Toast notifications for export success/failure"
       ],
-      "implementation_approach": "Add useState for searchQuery in WildcardSidebar. Add Input component with Search icon above the wildcard list. Filter wildcards using useMemo: match searchQuery against wildcard.name, wildcard.category, and optionally wildcard.content (for finding wildcards containing specific terms). Follow the pattern from ExpandedGallery.tsx line 73-85 for filter logic.",
-      "status": "archived",
-      "created_at": "2025-12-25T02:50:00.000Z",
-      "linked_task_id": "009-search-functionality-for-wildcard-sidebar"
+      "implementation_approach": "Create useCreditExport hook with exportToJSON() and exportToCSV() functions. Fetch all transactions via getTransactionHistory with high limit. JSON export follows prompt pattern with version, exportDate, and transactions array. CSV export maps fields (date, type, amount, description, balance_after) to comma-separated rows. Add Export dropdown button to CreditHistoryPanel with JSON/CSV options.",
+      "status": "draft",
+      "created_at": "2025-12-25T17:55:00.000Z"
     },
     {
       "id": "ci-005",
       "type": "code_improvements",
-      "title": "Recipe Search and Filter Bar",
-      "description": "Add search functionality and improved filtering to the Recipe Builder, enabling users to quickly find recipes by name or description as their collection grows.",
-      "rationale": "RecipeBuilder.tsx has category filter (selectedCategory state) but no text search. ExpandedGallery.tsx shows the pattern with search input + filter tabs. As users create more recipes, finding specific ones becomes difficult.",
+      "title": "Multi-Select Gallery with Bulk Actions",
+      "description": "Add multi-select mode to the unified image gallery with bulk actions toolbar (Download ZIP, Delete Selected, Move to Folder). Enable Shift+click for range selection and Ctrl+click for toggle selection.",
+      "rationale": "The selection pattern exists in usePromptSelection.ts with Set-based tracking and selectAll/toggleSelect callbacks. BulkDownloadService handles ZIP creation. These can be combined with the existing gallery grid for powerful bulk operations.",
       "builds_upon": [
-        "ExpandedGallery.tsx search pattern",
-        "usePromptFilters.ts filtering approach",
-        "Recipe category filtering"
+        "usePromptSelection.ts multi-select hook",
+        "BulkDownloadService.downloadAsZip()",
+        "UnifiedImageGallery component"
       ],
-      "estimated_effort": "small",
+      "estimated_effort": "medium",
       "affected_files": [
-        "src/features/shot-creator/components/recipe/RecipeBuilder.tsx",
-        "src/features/shot-creator/hooks/useRecipeFilters.ts (new)"
+        "src/features/shot-creator/hooks/useGallerySelection.ts",
+        "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx",
+        "src/features/shot-creator/components/unified-gallery/GalleryGrid.tsx",
+        "src/features/shot-creator/components/unified-gallery/BulkActionsToolbar.tsx"
       ],
       "existing_patterns": [
-        "ExpandedGallery.tsx - search input with filterTab state and filteredImages",
-        "usePromptFilters.ts - useMemo filtering against searchQuery",
-        "RecipeBuilder already has selectedCategory state"
+        "Set-based selectedIds tracking",
+        "selectAll/selectNone/toggleSelect/isSelected functions",
+        "BulkDownloadService with progress callbacks",
+        "Gallery image card hover states"
       ],
-      "implementation_approach": "Create useRecipeFilters.ts hook that takes recipes array, searchQuery, and selectedCategory. Use useMemo to filter: first by category (existing), then by searchQuery matching name and description (case-insensitive). Add search Input above the recipe list in RecipeBuilder.tsx. Combine with existing category filter tabs for a unified search/filter bar.",
+      "implementation_approach": "Create useGallerySelection hook based on usePromptSelection. Add selection mode toggle to gallery header. Show checkbox overlays on image cards when in selection mode. Create BulkActionsToolbar with Download/Delete/Move buttons. Implement range selection tracking for Shift+click. Connect actions to existing services (BulkDownloadService, gallery delete, folder move).",
       "status": "archived",
-      "created_at": "2025-12-25T02:50:00.000Z",
-      "linked_task_id": "008-recipe-search-and-filter-bar"
+      "created_at": "2025-12-25T18:10:00.000Z",
+      "linked_task_id": "013-multi-select-gallery-with-bulk-actions"
     },
     {
       "id": "uiux-001",
       "type": "ui_ux_improvements",
-      "title": "Add Skeleton Loading States for Gallery Grid",
-      "description": "Replace spinner loading indicators with skeleton placeholder cards that match the gallery grid layout for better perceived performance",
-      "rationale": "The Skeleton component exists (src/components/ui/skeleton.tsx) but the UnifiedImageGallery uses a centered spinner during loading. Skeleton screens reduce perceived wait time and prevent layout shift when content loads.",
-      "category": "performance",
+      "title": "Standardize Success/Error Alert Color Scheme for Dark Theme",
+      "description": "Unify the success and error feedback styling to consistently use dark theme compatible colors across all auth forms and feedback components",
+      "rationale": "ForgotPasswordForm and ResetPasswordForm use light-mode colors (bg-green-50, text-green-600) that appear jarring against the dark app theme. SignInForm correctly uses dark theme colors (bg-red-500/10, border-red-500/30). This inconsistency breaks visual continuity.",
+      "category": "visual",
       "affected_components": [
-        "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx",
-        "src/features/community/components/CommunityGrid.tsx",
-        "src/components/ui/skeleton.tsx"
+        "src/features/auth/components/ForgotPasswordForm.tsx",
+        "src/features/auth/components/ResetPasswordForm.tsx",
+        "src/features/auth/components/SignInForm.tsx"
       ],
       "screenshots": [],
-      "current_state": "Gallery loading state (lines 607-611 in UnifiedImageGallery.tsx) shows a centered purple spinner with 'Loading gallery...' text. Community grid shows Loader2 spinner. This creates a jarring transition when images load and causes layout shift.",
-      "proposed_change": "1. Create a SkeletonImageCard component that matches ImageCard dimensions with animated pulse placeholders. 2. During loading, render a grid of 8-12 SkeletonImageCards matching the current gridSize setting. 3. Use aspect-square or aspect-video based on useNativeAspectRatio setting. 4. Include skeleton badges for model and reference placeholders.",
-      "user_benefit": "Users see an immediate visual representation of incoming content, reducing perceived wait time by up to 40%. Eliminates layout shifts when images load, creating a smoother experience.",
+      "current_state": "ForgotPasswordForm (line 26): 'text-green-600 text-sm p-4 bg-green-50 rounded-lg' - light theme green. ResetPasswordForm (line 33): same pattern. SignInForm (line 139): 'text-red-500 text-sm p-3 bg-red-500/10 rounded-lg border border-red-500/30' - proper dark theme styling.",
+      "proposed_change": "1. Create reusable Alert variants in existing alert.tsx for success/error feedback. 2. Replace ForgotPasswordForm success: 'text-green-400 p-4 bg-green-500/10 rounded-lg border border-green-500/30'. 3. Replace ResetPasswordForm success with same pattern. 4. Ensure all error states use destructive variant with border.",
+      "user_benefit": "Consistent visual language across the entire authentication flow. Success and error states feel integrated with the dark theme instead of jarring light-mode insertions. Professional, polished appearance builds user trust.",
       "status": "draft",
-      "created_at": "2025-12-25T03:00:00.000Z"
+      "created_at": "2025-12-25T17:55:00.000Z"
     },
     {
       "id": "uiux-002",
       "type": "ui_ux_improvements",
-      "title": "Add Focus Visible Indicators to Gallery Image Cards",
-      "description": "Add clear keyboard focus indicators to ImageCard components for WCAG 2.1 AA accessibility compliance",
-      "rationale": "ImageCard lacks visible focus states, making keyboard navigation impossible. This is a WCAG 2.1 requirement (2.4.7 Focus Visible) and important for users with motor impairments.",
-      "category": "accessibility",
+      "title": "Add Keyboard Shortcuts Help Dialog with Discoverable Trigger",
+      "description": "Create an accessible keyboard shortcuts reference panel that users can discover and access to learn productivity shortcuts for gallery navigation, generation, and common actions",
+      "rationale": "The FullscreenModal supports arrow key navigation and the app likely has other keyboard shortcuts, but there's no discoverable way for users to learn them. Power users expect keyboard shortcuts for productivity.",
+      "category": "usability",
       "affected_components": [
-        "src/features/shot-creator/components/unified-gallery/ImageCard.tsx",
-        "src/features/shot-creator/components/unified-gallery/FullScreenModal.tsx"
+        "src/components/HelpDialog.tsx",
+        "src/features/shot-creator/components/unified-gallery/FullScreenModal.tsx",
+        "src/app/(app)/layout.tsx"
       ],
       "screenshots": [],
-      "current_state": "ImageCard uses a div container with onClick handler but no tabIndex or focus styling (lines 82-100). Keyboard users cannot tab through gallery images or see focus state. The fullscreen modal supports arrow keys but individual cards lack focus support.",
-      "proposed_change": "1. Add tabIndex={0} to ImageCard container. 2. Add focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:outline-none classes. 3. Add onKeyDown handler to trigger onZoom on Enter/Space. 4. Add role='button' and aria-label describing the image. 5. Manage focus when modal opens/closes.",
-      "user_benefit": "Keyboard-only users can navigate gallery efficiently. Users with motor impairments can access all gallery features. Meets WCAG 2.1 AA compliance for focus visible requirement.",
+      "current_state": "FullScreenModal supports left/right arrow navigation. No keyboard shortcut documentation exists. HelpDialog.tsx may exist but lacks shortcut reference. Users cannot discover available keyboard interactions.",
+      "proposed_change": "1. Add '? or Ctrl+/' global shortcut to open help dialog. 2. Create KeyboardShortcutsPanel component showing: Gallery (arrows, Enter, Escape), Generation (Ctrl+Enter to generate), Copy (Ctrl+C), etc. 3. Add subtle '?' button in bottom-right corner of main views. 4. Group shortcuts by context (Gallery, Editor, Global).",
+      "user_benefit": "Power users can work faster with keyboard shortcuts. New users discover the full capability of the app. Reduces reliance on mouse for repetitive actions, improving accessibility for users with motor impairments.",
       "status": "draft",
-      "created_at": "2025-12-25T03:01:00.000Z"
+      "created_at": "2025-12-25T17:56:00.000Z"
     },
     {
       "id": "uiux-003",
       "type": "ui_ux_improvements",
-      "title": "Create Reusable EmptyState Component",
-      "description": "Create a standardized EmptyState component and replace inconsistent empty state implementations across feature modules",
-      "rationale": "Empty states vary significantly - CommunityGrid uses Inbox icon, UnifiedImageGallery uses ImageIcon, with different text styling and layouts. Consistency improves user recognition and reduces cognitive load.",
-      "category": "visual",
+      "title": "Enhance Mobile Touch Target Sizes Across Action Buttons",
+      "description": "Ensure all interactive elements meet 44x44px minimum touch target guidelines for comfortable mobile use, particularly in dense UI areas like action menus and toolbars",
+      "rationale": "ImageActionMenu uses 'h-6 w-6' (24px) buttons on mobile which are below the 44px minimum recommended by Apple HIG and WCAG. Some components correctly use touch-manipulation and min-h-[44px] (VideoPreviewsModal) but application is inconsistent.",
+      "category": "accessibility",
       "affected_components": [
-        "src/components/ui/empty-state.tsx",
-        "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx",
-        "src/features/community/components/CommunityGrid.tsx",
-        "src/features/shot-animator/components/ShotAnimatorView.tsx",
-        "src/features/storyboard/components/gallery/StoryboardGallery.tsx"
+        "src/features/shot-creator/components/unified-gallery/ImageActionMenu.tsx",
+        "src/features/shot-creator/components/unified-gallery/MobileImageActionSheet.tsx",
+        "src/features/layout-annotation/components/canvas-settings/CanvasToolbar.tsx"
       ],
       "screenshots": [],
-      "current_state": "UnifiedImageGallery (lines 612-619) shows ImageIcon at 48px with 'No images generated yet'. CommunityGrid (lines 43-50) shows Inbox at 48px with 'No items found'. Different padding (py-12 vs py-20), different opacity treatment, inconsistent action hints.",
-      "proposed_change": "Create src/components/ui/empty-state.tsx: interface EmptyStateProps { icon: LucideIcon; title: string; description?: string; action?: { label: string; onClick: () => void }; }. Standardize: py-16, icon at 48px with opacity-50, font-medium title, text-sm muted description, optional amber primary action button.",
-      "user_benefit": "Consistent empty states help users immediately recognize they need to take action. Clear CTAs reduce confusion about what to do next. The app feels more cohesive and professionally designed.",
+      "current_state": "ImageActionMenu (lines 93-104): Mobile button uses 'h-6 w-6 p-0' (24x24px). CanvasToolbar has small touch targets. VideoPreviewsModal correctly uses 'min-h-[44px] touch-manipulation'. Inconsistent application of mobile-friendly sizing.",
+      "proposed_change": "1. Create a mobile-first button size variant: 'mobile: min-h-[44px] min-w-[44px] touch-manipulation'. 2. Update ImageActionMenu mobile button to use touch-optimized size with larger tap area. 3. Audit CanvasToolbar and add padding/hit area expansion for toolbar buttons. 4. Use Tailwind's 'sm:' prefix to reduce back to compact size on larger screens.",
+      "user_benefit": "Mobile users can confidently tap buttons without accidental presses. Reduces frustration on touch devices. Meets WCAG 2.1 AA target size requirements, improving accessibility for users with motor impairments.",
       "status": "draft",
-      "created_at": "2025-12-25T03:02:00.000Z"
+      "created_at": "2025-12-25T17:57:00.000Z"
     },
     {
       "id": "uiux-004",
       "type": "ui_ux_improvements",
-      "title": "Add Visual Drop Zone Feedback for File Uploads",
-      "description": "Implement prominent visual feedback when users drag files over upload areas, with clear valid/invalid file type indicators",
-      "rationale": "Modern creative tools provide clear drag-and-drop feedback. Without visible drop zones, users may not discover drag-and-drop is supported or may be unsure where to drop files.",
-      "category": "interaction",
+      "title": "Add Scroll Position Indicators for Long Content Areas",
+      "description": "Implement subtle gradient fade indicators at top/bottom of scrollable areas to visually communicate when more content exists beyond the visible viewport",
+      "rationale": "FolderSidebar and other ScrollArea components don't visually indicate when content extends beyond the viewport. Users may not realize they can scroll to see more folders or options.",
+      "category": "usability",
       "affected_components": [
-        "src/features/shot-creator/components/creator-reference-manager/index.tsx",
-        "src/features/layout-annotation/components/LayoutAnnotationTab.tsx",
-        "src/features/music-lab/components/AudioUploader.tsx"
+        "src/features/shot-creator/components/unified-gallery/FolderSidebar.tsx",
+        "src/features/wildcards/components/WildcardSidebar.tsx",
+        "src/components/ui/scroll-area.tsx"
       ],
       "screenshots": [],
-      "current_state": "AudioUploader has a drag-drop zone with dashed border but minimal dragOver visual change. Reference image upload areas may lack clear drag feedback. No distinction between valid and invalid file types during drag.",
-      "proposed_change": "1. Create useDropZone hook managing dragOver/dragLeave/drop with visual state. 2. On drag enter: add pulsing border-2 border-amber-500, bg-amber-500/10 overlay, 'Drop to upload' text with Upload icon. 3. For invalid file types: red border with 'Invalid file type' message. 4. Add subtle scale transform (scale-[1.02]) on valid drag.",
-      "user_benefit": "Users immediately understand drag-and-drop is supported and know exactly where to drop. Clear invalid file feedback prevents confusion. The interaction feels responsive and matches expectations from other creative tools.",
-      "status": "archived",
-      "created_at": "2025-12-25T03:03:00.000Z",
-      "linked_task_id": "007-add-visual-drop-zone-feedback-for-file-uploads"
+      "current_state": "FolderSidebar uses ScrollArea (line 103) but has no visual scroll indicators. When there are many folders, users see a cut-off list with no hint that more exists below. Same issue in WildcardSidebar and other list components.",
+      "proposed_change": "1. Create ScrollAreaWithIndicators wrapper component. 2. Use IntersectionObserver to detect when content overflows. 3. Show subtle gradient fade (from-background via-background/80 to-transparent) at top when scrolled down, at bottom when more content below. 4. Add small chevron icons inside gradients as additional affordance. 5. Fade out indicators when at scroll boundaries.",
+      "user_benefit": "Users immediately understand when lists contain more items. Reduces confusion about folder/item counts. The subtle visual cue guides natural scrolling behavior without cluttering the interface.",
+      "status": "draft",
+      "created_at": "2025-12-25T17:58:00.000Z"
     },
     {
       "id": "uiux-005",
       "type": "ui_ux_improvements",
-      "title": "Add Confirmation Dialog for Destructive Actions",
-      "description": "Implement a consistent confirmation dialog pattern for destructive actions like delete, with clear undo messaging where applicable",
-      "rationale": "Gallery image deletion and folder deletion lack consistent confirmation UX. Users may accidentally delete content without warning, especially on mobile where tap targets are close together.",
+      "title": "Improve Form Validation with Real-time Inline Feedback",
+      "description": "Enhance form fields to show validation feedback immediately on blur rather than only on submit, using subtle visual states for valid/invalid inputs",
+      "rationale": "Auth forms only show errors after submission (SignInForm lines 108-110, 133-135). Users fill entire forms before learning of issues. Real-time validation reduces form abandonment and improves perceived responsiveness.",
       "category": "usability",
       "affected_components": [
-        "src/features/shot-creator/components/unified-gallery/ImageActionMenu.tsx",
-        "src/features/shot-creator/components/unified-gallery/FolderManagerModal.tsx",
-        "src/components/ui/alert-dialog.tsx"
+        "src/features/auth/components/SignInForm.tsx",
+        "src/features/auth/components/ForgotPasswordForm.tsx",
+        "src/features/auth/components/ResetPasswordForm.tsx",
+        "src/components/ui/input.tsx"
       ],
       "screenshots": [],
-      "current_state": "Image deletion may happen directly from action menu without confirmation. FolderManagerModal has delete mode but the AlertDialog usage varies. No consistent pattern for destructive action confirmation across the app.",
-      "proposed_change": "1. Create a useConfirmDialog hook that returns { confirm, ConfirmDialog } with standardized AlertDialog. 2. For deletions: red destructive button, clear item description, 'This cannot be undone' warning. 3. For bulk deletions: show count of affected items. 4. Where possible, mention 'soft delete' period if applicable.",
-      "user_benefit": "Users are protected from accidental deletions. Clear warnings set expectations about permanence. Consistent confirmation pattern reduces anxiety about destructive actions and builds trust.",
+      "current_state": "SignInForm shows errors only via form errors object after submit attempt. Input component has aria-invalid styling but it's not connected to real-time validation. No visual feedback for valid state. Password confirmation doesn't show match status.",
+      "proposed_change": "1. Add mode: 'onBlur' to react-hook-form useForm config for real-time validation. 2. Add visual success indicator (subtle green checkmark or border) for valid fields. 3. For password confirmation: show real-time match/mismatch feedback. 4. Add aria-describedby linking inputs to their error messages. 5. Show password strength indicator on registration.",
+      "user_benefit": "Users know immediately if their input is valid, reducing frustration. Password match feedback prevents submit-test-fix cycles. Improved accessibility through proper ARIA associations. Professional feel matching modern web apps.",
       "status": "draft",
-      "created_at": "2025-12-25T03:04:00.000Z"
+      "created_at": "2025-12-25T17:59:00.000Z"
     },
     {
       "id": "sec-001",
       "type": "security_hardening",
-      "title": "Update vulnerable dependencies (happy-dom, Next.js, glob)",
-      "description": "npm audit reveals critical and high severity CVEs in production dependencies: happy-dom (<20.0.0) has VM Context Escape leading to RCE, Next.js (15.5.1-15.5.7) has DoS and source code exposure vulnerabilities, glob (11.0.0-11.0.3) has command injection via CLI. Additional moderate vulnerabilities exist in js-yaml, tar, and vite.",
-      "rationale": "These are known, exploitable vulnerabilities with published CVEs. The happy-dom RCE (GHSA-37j7-fg3j-429f) and Next.js DoS (GHSA-mwv6-3258-q52c) are particularly severe as they could allow attackers to execute arbitrary code or crash the application. Dependency vulnerabilities are a top OWASP risk (A06).",
-      "category": "dependencies",
+      "title": "Implement API Rate Limiting with Upstash Redis",
+      "description": "No rate limiting exists on any API endpoint. High-risk endpoints include /api/coupons/redeem (brute force coupons), /api/generation/image (resource exhaustion), /api/admin/* (enumeration), and authentication flows. The RateLimitError class exists in src/lib/errors/index.ts but no actual rate limiting is implemented.",
+      "rationale": "Rate limiting is critical for preventing brute force attacks, credential stuffing, and denial of service. The coupon redemption endpoint is particularly vulnerable to automated attacks that could enumerate valid codes. Without rate limiting, attackers can abuse AI generation endpoints causing significant financial impact from Replicate API calls. This is classified as CRITICAL in the security audit.",
+      "category": "configuration",
       "severity": "critical",
       "affectedFiles": [
-        "package.json",
-        "package-lock.json"
+        "src/app/api/coupons/redeem/route.ts",
+        "src/app/api/generation/image/route.ts",
+        "src/app/api/generation/video/route.ts",
+        "src/app/api/v1/images/generate/route.ts",
+        "src/middleware.ts"
       ],
-      "vulnerability": "CWE-1395: Dependency on Vulnerable Third-Party Component",
-      "currentRisk": "Critical RCE vulnerability in happy-dom, High severity DoS in Next.js, both actively used in the application",
-      "remediation": "1. Run `npm audit fix` to automatically fix compatible updates. 2. Manually update: happy-dom to >=20.0.0, next to >=15.5.8, @capacitor/cli (updates glob). 3. For breaking changes, review changelogs before updating. 4. Add `npm audit` to CI pipeline to catch future vulnerabilities.",
+      "vulnerability": "CWE-307: Improper Restriction of Excessive Authentication Attempts",
+      "currentRisk": "Attackers can perform unlimited requests leading to brute force attacks on coupons, resource exhaustion via generation spam, and credential stuffing on auth",
+      "remediation": "1. Install @upstash/ratelimit and @upstash/redis packages. 2. Create rate limiter utility in src/lib/rate-limit.ts with tiered limits: auth (5/min/IP), coupon (3/min/user), generation (10/min/user), admin (20/min/user). 3. Add rate limiting middleware for centralized enforcement. 4. Return 429 with Retry-After and X-RateLimit-Remaining headers.",
       "references": [
-        "https://github.com/advisories/GHSA-37j7-fg3j-429f",
-        "https://github.com/advisories/GHSA-mwv6-3258-q52c",
-        "https://github.com/advisories/GHSA-5j98-mcp5-4vw2"
+        "https://owasp.org/API-Security/editions/2023/en/0xa4-unrestricted-resource-consumption/",
+        "https://cwe.mitre.org/data/definitions/307.html"
       ],
       "compliance": [
         "SOC2",
         "PCI-DSS"
-      ],
-      "status": "archived",
-      "linked_task_id": "011-update-vulnerable-dependencies-happy-dom-next-js-g"
+      ]
     },
     {
       "id": "sec-002",
       "type": "security_hardening",
-      "title": "Add Content-Security-Policy (CSP) and HSTS security headers",
+      "title": "Add Content-Security-Policy (CSP) and HSTS Security Headers",
       "description": "While next.config.ts implements X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy, and Permissions-Policy, the critical Content-Security-Policy (CSP) and Strict-Transport-Security (HSTS) headers are missing. These headers are essential for preventing XSS attacks and ensuring HTTPS-only connections.",
       "rationale": "CSP prevents XSS by controlling which resources can be loaded. HSTS ensures all connections use HTTPS, preventing protocol downgrade attacks. The existing security audit report recommends these headers but they haven't been implemented yet. This is a HIGH severity gap per the audit.",
       "category": "configuration",
@@ -297,46 +294,44 @@
     {
       "id": "sec-003",
       "type": "security_hardening",
-      "title": "Implement API rate limiting with Upstash Redis",
-      "description": "No rate limiting exists on any API endpoint. High-risk endpoints include /api/coupons/redeem (brute force coupons), /api/generation/image (resource exhaustion), /api/admin/* (enumeration), and authentication flows. The RateLimitError class exists in src/lib/errors/index.ts but no actual rate limiting is implemented.",
-      "rationale": "Rate limiting is critical for preventing brute force attacks, credential stuffing, and denial of service. The coupon redemption endpoint is particularly vulnerable to automated attacks that could enumerate valid codes. This is documented as CVE-2024-DP004 (CVSS 8.1) in the security audit.",
-      "category": "configuration",
-      "severity": "critical",
+      "title": "Remove Hardcoded Admin Authorization and Centralize Access Control",
+      "description": "Multiple API endpoints use hardcoded email arrays for admin authorization instead of the database-backed admin_users table. Found in src/app/api/admin/abuse-report/route.ts (taskmasterpeace@gmail.com) and src/app/api/admin/community/route.ts (andrew@reelcontrols.com, admin@directorspalette.com). The isAdminEmail() sync function provides an insecure fallback pattern.",
+      "rationale": "Hardcoded admin emails bypass the database audit trail, cannot be revoked without code deployment, and create privilege escalation risk if those email accounts are compromised. Inconsistent authorization patterns across endpoints increase security complexity and maintenance burden.",
+      "category": "authorization",
+      "severity": "high",
       "affectedFiles": [
-        "src/app/api/coupons/redeem/route.ts",
-        "src/app/api/generation/image/route.ts",
-        "src/app/api/admin/grant-credits/route.ts",
-        "src/middleware.ts"
+        "src/app/api/admin/abuse-report/route.ts",
+        "src/app/api/admin/community/route.ts",
+        "src/features/admin/types/admin.types.ts"
       ],
-      "vulnerability": "CWE-770: Allocation of Resources Without Limits",
-      "currentRisk": "Coupon codes can be brute-forced, server resources exhausted via generation spam, credential stuffing possible",
-      "remediation": "1. Install @upstash/ratelimit and @upstash/redis packages. 2. Create rate limiter utility in src/lib/rate-limit.ts with tiered limits: auth (5/min/IP), coupon (3/min/user), generation (10/min/user), admin (20/min/user). 3. Add rate limiting to middleware.ts for centralized enforcement. 4. Return 429 with Retry-After header on limit exceeded. 5. Use RateLimitError class from src/lib/errors/.",
+      "vulnerability": "CWE-798: Use of Hard-coded Credentials",
+      "currentRisk": "Admin privileges cannot be revoked without code deployment, no audit trail for hardcoded admins, privilege escalation if email accounts are compromised",
+      "remediation": "1. Remove all hardcoded admin email arrays from route files. 2. Delete or deprecate the isAdminEmail() sync function. 3. Replace all admin checks with adminService.checkAdminEmailAsync() which queries the database. 4. Create a requireAdmin() middleware wrapper for consistent enforcement. 5. Implement admin action audit logging table.",
       "references": [
-        "https://upstash.com/docs/redis/sdks/ratelimit-ts",
-        "https://owasp.org/www-community/controls/Rate_Limiting"
+        "https://cwe.mitre.org/data/definitions/798.html",
+        "https://owasp.org/Top10/A01_2021-Broken_Access_Control/"
       ],
       "compliance": [
-        "SOC2",
-        "PCI-DSS"
+        "SOC2"
       ]
     },
     {
       "id": "sec-004",
       "type": "security_hardening",
-      "title": "Remove partial secret logging from Stripe webhook handler",
-      "description": "The Stripe webhook handler at src/app/api/webhooks/stripe/route.ts logs partial secrets to console: `webhookSecret.substring(0, 15)` (line 145) and `webhookSecret.substring(0, 20)` (line 163). Even partial secrets can aid attackers in credential guessing or social engineering.",
-      "rationale": "Logging any portion of secrets violates secure coding practices. If logs are exposed via misconfiguration, log aggregation services, or breach, partial secrets provide valuable information for attackers. This specific issue is referenced in the security audit as HSF-007 but the exact lines haven't been remediated.",
+      "title": "Remove Partial Secret Logging from Stripe Webhook Handler",
+      "description": "The Stripe webhook handler at src/app/api/webhooks/stripe/route.ts logs partial secrets to console: `webhookSecret.substring(0, 15)` (line 145) and `webhookSecret.substring(0, 20)` (line 163). Even partial secrets can aid attackers in credential guessing or reduce brute force complexity.",
+      "rationale": "Logging any portion of secrets violates secure coding practices. If logs are exposed via misconfiguration, log aggregation services, or breach, partial secrets provide valuable information for attackers. Production logs are often accessible to developers, monitoring systems, and third-party services.",
       "category": "secrets_management",
       "severity": "high",
       "affectedFiles": [
         "src/app/api/webhooks/stripe/route.ts"
       ],
       "vulnerability": "CWE-532: Insertion of Sensitive Information into Log File",
-      "currentRisk": "Partial webhook secrets exposed in application logs, aiding credential guessing attacks",
-      "remediation": "Replace secret logging with boolean checks only. Change line 145 to: `console.log('[Stripe Webhook] Secret configured:', !!webhookSecret)`. Remove line 163 entirely or change to: `console.log('[Stripe Webhook] Using configured secret')`. Apply same pattern to any other secret/token logging in the codebase. Consider using structured logging (e.g., Pino) with automatic redaction.",
+      "currentRisk": "Partial webhook secrets (15-20 characters) exposed in application logs significantly reduce entropy for brute force attacks",
+      "remediation": "Replace secret logging with boolean checks only. Change line 145 to: `console.log('[Stripe Webhook] Secret configured:', !!webhookSecret)`. Remove line 163 entirely or change to: `console.log('[Stripe Webhook] Using configured secret')`. Consider implementing structured logging (e.g., Pino) with automatic secret redaction patterns for all sensitive values.",
       "references": [
         "https://cwe.mitre.org/data/definitions/532.html",
-        "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/08-Testing_for_Error_Handling/01-Testing_for_Improper_Error_Handling"
+        "https://owasp.org/www-community/Logging_Cheat_Sheet"
       ],
       "compliance": [
         "SOC2",
@@ -347,22 +342,21 @@
     {
       "id": "sec-005",
       "type": "security_hardening",
-      "title": "Add request timeout for external URL fetches to prevent slowloris attacks",
-      "description": "The StorageService.downloadAsset() function and other external URL fetch operations lack timeout configuration. An attacker could send slow responses to tie up server resources, leading to denial of service. This affects file uploads, image generation reference processing, and webhook handling.",
-      "rationale": "Without timeouts, fetch operations can block indefinitely when connecting to malicious or slow endpoints. This enables slowloris-style attacks where attackers open many connections and send data very slowly, exhausting server resources. The security audit documents this as MSF-002.",
-      "category": "configuration",
-      "severity": "medium",
+      "title": "Add SSRF Protection to Image URL Processing",
+      "description": "The processReferenceImages() function in src/app/api/generation/image/route.ts fetches external URLs with insufficient validation. The isPublicUrl() function only blocks localhost and one hardcoded domain, allowing requests to internal network resources, cloud metadata endpoints (169.254.x.x), and private networks.",
+      "rationale": "Server-Side Request Forgery (SSRF) allows attackers to make requests to internal services, AWS/GCP/Azure metadata endpoints (169.254.169.254), and private networks. This can lead to credential theft from cloud metadata, unauthorized access to internal services, and lateral movement within infrastructure.",
+      "category": "input_validation",
+      "severity": "high",
       "affectedFiles": [
-        "src/features/generation/services/storage.service.ts",
-        "src/app/api/generation/image/route.ts",
-        "src/app/api/upload-file/route.ts"
+        "src/app/api/generation/image/route.ts"
       ],
-      "vulnerability": "CWE-400: Uncontrolled Resource Consumption",
-      "currentRisk": "Server resources can be exhausted via slow external connections, leading to DoS",
-      "remediation": "Add AbortController with timeout to all external fetch operations: `const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 30000); try { const response = await fetch(url, { signal: controller.signal }); } finally { clearTimeout(timeoutId); }`. Set appropriate timeouts: 30s for image downloads, 10s for small resources, 5s for webhooks/APIs.",
+      "vulnerability": "CWE-918: Server-Side Request Forgery (SSRF)",
+      "currentRisk": "Attackers can access internal network resources, cloud metadata endpoints (169.254.169.254), and potentially exfiltrate credentials or pivot within infrastructure",
+      "remediation": "Enhance isPublicUrl() to: 1) Block all private IP ranges (10.x.x.x, 172.16-31.x.x, 192.168.x.x, 169.254.x.x, ::1, fc00::/7, fe80::/10), 2) Use allowlist of trusted domains (replicate.delivery, replicate.com, *.supabase.co), 3) Add DNS rebinding protection by resolving hostname and validating resulting IP before fetch, 4) Set request timeouts (30s) with AbortController to prevent slowloris attacks.",
       "references": [
-        "https://developer.mozilla.org/en-US/docs/Web/API/AbortController",
-        "https://owasp.org/www-community/attacks/Slow_HTTP_attack"
+        "https://owasp.org/www-community/attacks/Server_Side_Request_Forgery",
+        "https://cwe.mitre.org/data/definitions/918.html",
+        "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html"
       ],
       "compliance": [
         "SOC2"
@@ -374,35 +368,41 @@
     "tech_stack": [],
     "target_audience": "Visual storytellers and content creators who need to generate large batches of consistent AI images for narrative projects (comic artists, storyboard artists, visual novel creators)",
     "planned_features": [
-      "Native Mobile Apps (iOS & Android)",
-      "Smart Prompt Enhancement",
-      "Script-to-Shot AI Breakdown",
-      "Automatic Camera Angle Suggestions",
-      "Quick Spec: Identify Available UI Changes",
-      "Smart Variation Suggestions",
-      "Style Transfer from Community",
       "Standardize Loading Spinner Component",
       "Character Relationship & Group Shots",
-      "Recipe Marketplace with Ratings",
-      "Fix Footer Version Display",
-      "Style Presets Library",
-      "Print-Ready Comic Panel Export",
+      "Team Workspaces with Roles",
+      "Smart Variation Suggestions",
+      "Update vulnerable dependencies (happy-dom, Next.js, glob)",
+      "Multi-Pose Character Sheet Generator",
+      "Standardize Auth Form Input Styling",
+      "Smart Prompt Enhancement",
+      "Recipe Import/Export Functionality",
+      "Video Storyboard Export",
+      "Wildcard Import/Export Functionality",
+      "Prompt Templates with Variables",
+      "Style Lock for Projects",
       "Real-Time Collaborative Storyboard",
       "Specification: [Task Name]",
-      "Style Lock for Projects",
-      "Standardize Auth Form Input Styling",
-      "Complete Reference Image Persistence to Supabase",
-      "Reference Library Autocomplete with Real Counts",
+      "Recipe Marketplace with Ratings",
+      "Recipe Search and Filter Bar",
+      "Native Mobile Apps (iOS & Android)",
       "PDF Storyboard Export",
-      "Video Storyboard Export",
-      "Multi-Pose Character Sheet Generator",
-      "Batch Generation Queue Manager",
-      "API Access for Developers",
       "Continuity Checker",
+      "Print-Ready Comic Panel Export",
+      "Script-to-Shot AI Breakdown",
+      "Style Presets Library",
+      "Complete Reference Image Persistence to Supabase",
       "User Prompts Organization System",
-      "Team Workspaces with Roles",
-      "Enterprise SSO & Admin Dashboard",
-      "Prompt Templates with Variables"
+      "Specification: Complete Reference Image Persistence to Supabase",
+      "Style Transfer from Community",
+      "Add Visual Drop Zone Feedback for File Uploads",
+      "Batch Generation Queue Manager",
+      "Automatic Camera Angle Suggestions",
+      "Search Functionality for Wildcard Sidebar",
+      "Identify Available UI Changes",
+      "Fix Footer Version Display",
+      "API Access for Developers",
+      "Enterprise SSO & Admin Dashboard"
     ]
   },
   "summary": {
@@ -416,6 +416,6 @@
       "draft": 15
     }
   },
-  "generated_at": "2025-12-25T02:52:58.369527",
-  "updated_at": "2025-12-25T08:06:53.875Z"
+  "generated_at": "2025-12-25T18:07:59.664547",
+  "updated_at": "2025-12-25T23:17:11.520Z"
 }

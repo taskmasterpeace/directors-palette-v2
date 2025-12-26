@@ -3,102 +3,102 @@
     {
       "id": "uiux-001",
       "type": "ui_ux_improvements",
-      "title": "Add Skeleton Loading States for Gallery Grid",
-      "description": "Replace spinner loading indicators with skeleton placeholder cards that match the gallery grid layout for better perceived performance",
-      "rationale": "The Skeleton component exists (src/components/ui/skeleton.tsx) but the UnifiedImageGallery uses a centered spinner during loading. Skeleton screens reduce perceived wait time and prevent layout shift when content loads.",
-      "category": "performance",
+      "title": "Standardize Success/Error Alert Color Scheme for Dark Theme",
+      "description": "Unify the success and error feedback styling to consistently use dark theme compatible colors across all auth forms and feedback components",
+      "rationale": "ForgotPasswordForm and ResetPasswordForm use light-mode colors (bg-green-50, text-green-600) that appear jarring against the dark app theme. SignInForm correctly uses dark theme colors (bg-red-500/10, border-red-500/30). This inconsistency breaks visual continuity.",
+      "category": "visual",
       "affected_components": [
-        "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx",
-        "src/features/community/components/CommunityGrid.tsx",
-        "src/components/ui/skeleton.tsx"
+        "src/features/auth/components/ForgotPasswordForm.tsx",
+        "src/features/auth/components/ResetPasswordForm.tsx",
+        "src/features/auth/components/SignInForm.tsx"
       ],
       "screenshots": [],
-      "current_state": "Gallery loading state (lines 607-611 in UnifiedImageGallery.tsx) shows a centered purple spinner with 'Loading gallery...' text. Community grid shows Loader2 spinner. This creates a jarring transition when images load and causes layout shift.",
-      "proposed_change": "1. Create a SkeletonImageCard component that matches ImageCard dimensions with animated pulse placeholders. 2. During loading, render a grid of 8-12 SkeletonImageCards matching the current gridSize setting. 3. Use aspect-square or aspect-video based on useNativeAspectRatio setting. 4. Include skeleton badges for model and reference placeholders.",
-      "user_benefit": "Users see an immediate visual representation of incoming content, reducing perceived wait time by up to 40%. Eliminates layout shifts when images load, creating a smoother experience.",
+      "current_state": "ForgotPasswordForm (line 26): 'text-green-600 text-sm p-4 bg-green-50 rounded-lg' - light theme green. ResetPasswordForm (line 33): same pattern. SignInForm (line 139): 'text-red-500 text-sm p-3 bg-red-500/10 rounded-lg border border-red-500/30' - proper dark theme styling.",
+      "proposed_change": "1. Create reusable Alert variants in existing alert.tsx for success/error feedback. 2. Replace ForgotPasswordForm success: 'text-green-400 p-4 bg-green-500/10 rounded-lg border border-green-500/30'. 3. Replace ResetPasswordForm success with same pattern. 4. Ensure all error states use destructive variant with border.",
+      "user_benefit": "Consistent visual language across the entire authentication flow. Success and error states feel integrated with the dark theme instead of jarring light-mode insertions. Professional, polished appearance builds user trust.",
       "status": "draft",
-      "created_at": "2025-12-25T03:00:00.000Z"
+      "created_at": "2025-12-25T17:55:00.000Z"
     },
     {
       "id": "uiux-002",
       "type": "ui_ux_improvements",
-      "title": "Add Focus Visible Indicators to Gallery Image Cards",
-      "description": "Add clear keyboard focus indicators to ImageCard components for WCAG 2.1 AA accessibility compliance",
-      "rationale": "ImageCard lacks visible focus states, making keyboard navigation impossible. This is a WCAG 2.1 requirement (2.4.7 Focus Visible) and important for users with motor impairments.",
-      "category": "accessibility",
+      "title": "Add Keyboard Shortcuts Help Dialog with Discoverable Trigger",
+      "description": "Create an accessible keyboard shortcuts reference panel that users can discover and access to learn productivity shortcuts for gallery navigation, generation, and common actions",
+      "rationale": "The FullscreenModal supports arrow key navigation and the app likely has other keyboard shortcuts, but there's no discoverable way for users to learn them. Power users expect keyboard shortcuts for productivity.",
+      "category": "usability",
       "affected_components": [
-        "src/features/shot-creator/components/unified-gallery/ImageCard.tsx",
-        "src/features/shot-creator/components/unified-gallery/FullScreenModal.tsx"
+        "src/components/HelpDialog.tsx",
+        "src/features/shot-creator/components/unified-gallery/FullScreenModal.tsx",
+        "src/app/(app)/layout.tsx"
       ],
       "screenshots": [],
-      "current_state": "ImageCard uses a div container with onClick handler but no tabIndex or focus styling (lines 82-100). Keyboard users cannot tab through gallery images or see focus state. The fullscreen modal supports arrow keys but individual cards lack focus support.",
-      "proposed_change": "1. Add tabIndex={0} to ImageCard container. 2. Add focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:outline-none classes. 3. Add onKeyDown handler to trigger onZoom on Enter/Space. 4. Add role='button' and aria-label describing the image. 5. Manage focus when modal opens/closes.",
-      "user_benefit": "Keyboard-only users can navigate gallery efficiently. Users with motor impairments can access all gallery features. Meets WCAG 2.1 AA compliance for focus visible requirement.",
+      "current_state": "FullScreenModal supports left/right arrow navigation. No keyboard shortcut documentation exists. HelpDialog.tsx may exist but lacks shortcut reference. Users cannot discover available keyboard interactions.",
+      "proposed_change": "1. Add '? or Ctrl+/' global shortcut to open help dialog. 2. Create KeyboardShortcutsPanel component showing: Gallery (arrows, Enter, Escape), Generation (Ctrl+Enter to generate), Copy (Ctrl+C), etc. 3. Add subtle '?' button in bottom-right corner of main views. 4. Group shortcuts by context (Gallery, Editor, Global).",
+      "user_benefit": "Power users can work faster with keyboard shortcuts. New users discover the full capability of the app. Reduces reliance on mouse for repetitive actions, improving accessibility for users with motor impairments.",
       "status": "draft",
-      "created_at": "2025-12-25T03:01:00.000Z"
+      "created_at": "2025-12-25T17:56:00.000Z"
     },
     {
       "id": "uiux-003",
       "type": "ui_ux_improvements",
-      "title": "Create Reusable EmptyState Component",
-      "description": "Create a standardized EmptyState component and replace inconsistent empty state implementations across feature modules",
-      "rationale": "Empty states vary significantly - CommunityGrid uses Inbox icon, UnifiedImageGallery uses ImageIcon, with different text styling and layouts. Consistency improves user recognition and reduces cognitive load.",
-      "category": "visual",
+      "title": "Enhance Mobile Touch Target Sizes Across Action Buttons",
+      "description": "Ensure all interactive elements meet 44x44px minimum touch target guidelines for comfortable mobile use, particularly in dense UI areas like action menus and toolbars",
+      "rationale": "ImageActionMenu uses 'h-6 w-6' (24px) buttons on mobile which are below the 44px minimum recommended by Apple HIG and WCAG. Some components correctly use touch-manipulation and min-h-[44px] (VideoPreviewsModal) but application is inconsistent.",
+      "category": "accessibility",
       "affected_components": [
-        "src/components/ui/empty-state.tsx",
-        "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx",
-        "src/features/community/components/CommunityGrid.tsx",
-        "src/features/shot-animator/components/ShotAnimatorView.tsx",
-        "src/features/storyboard/components/gallery/StoryboardGallery.tsx"
+        "src/features/shot-creator/components/unified-gallery/ImageActionMenu.tsx",
+        "src/features/shot-creator/components/unified-gallery/MobileImageActionSheet.tsx",
+        "src/features/layout-annotation/components/canvas-settings/CanvasToolbar.tsx"
       ],
       "screenshots": [],
-      "current_state": "UnifiedImageGallery (lines 612-619) shows ImageIcon at 48px with 'No images generated yet'. CommunityGrid (lines 43-50) shows Inbox at 48px with 'No items found'. Different padding (py-12 vs py-20), different opacity treatment, inconsistent action hints.",
-      "proposed_change": "Create src/components/ui/empty-state.tsx: interface EmptyStateProps { icon: LucideIcon; title: string; description?: string; action?: { label: string; onClick: () => void }; }. Standardize: py-16, icon at 48px with opacity-50, font-medium title, text-sm muted description, optional amber primary action button.",
-      "user_benefit": "Consistent empty states help users immediately recognize they need to take action. Clear CTAs reduce confusion about what to do next. The app feels more cohesive and professionally designed.",
+      "current_state": "ImageActionMenu (lines 93-104): Mobile button uses 'h-6 w-6 p-0' (24x24px). CanvasToolbar has small touch targets. VideoPreviewsModal correctly uses 'min-h-[44px] touch-manipulation'. Inconsistent application of mobile-friendly sizing.",
+      "proposed_change": "1. Create a mobile-first button size variant: 'mobile: min-h-[44px] min-w-[44px] touch-manipulation'. 2. Update ImageActionMenu mobile button to use touch-optimized size with larger tap area. 3. Audit CanvasToolbar and add padding/hit area expansion for toolbar buttons. 4. Use Tailwind's 'sm:' prefix to reduce back to compact size on larger screens.",
+      "user_benefit": "Mobile users can confidently tap buttons without accidental presses. Reduces frustration on touch devices. Meets WCAG 2.1 AA target size requirements, improving accessibility for users with motor impairments.",
       "status": "draft",
-      "created_at": "2025-12-25T03:02:00.000Z"
+      "created_at": "2025-12-25T17:57:00.000Z"
     },
     {
       "id": "uiux-004",
       "type": "ui_ux_improvements",
-      "title": "Add Visual Drop Zone Feedback for File Uploads",
-      "description": "Implement prominent visual feedback when users drag files over upload areas, with clear valid/invalid file type indicators",
-      "rationale": "Modern creative tools provide clear drag-and-drop feedback. Without visible drop zones, users may not discover drag-and-drop is supported or may be unsure where to drop files.",
-      "category": "interaction",
+      "title": "Add Scroll Position Indicators for Long Content Areas",
+      "description": "Implement subtle gradient fade indicators at top/bottom of scrollable areas to visually communicate when more content exists beyond the visible viewport",
+      "rationale": "FolderSidebar and other ScrollArea components don't visually indicate when content extends beyond the viewport. Users may not realize they can scroll to see more folders or options.",
+      "category": "usability",
       "affected_components": [
-        "src/features/shot-creator/components/creator-reference-manager/index.tsx",
-        "src/features/layout-annotation/components/LayoutAnnotationTab.tsx",
-        "src/features/music-lab/components/AudioUploader.tsx"
+        "src/features/shot-creator/components/unified-gallery/FolderSidebar.tsx",
+        "src/features/wildcards/components/WildcardSidebar.tsx",
+        "src/components/ui/scroll-area.tsx"
       ],
       "screenshots": [],
-      "current_state": "AudioUploader has a drag-drop zone with dashed border but minimal dragOver visual change. Reference image upload areas may lack clear drag feedback. No distinction between valid and invalid file types during drag.",
-      "proposed_change": "1. Create useDropZone hook managing dragOver/dragLeave/drop with visual state. 2. On drag enter: add pulsing border-2 border-amber-500, bg-amber-500/10 overlay, 'Drop to upload' text with Upload icon. 3. For invalid file types: red border with 'Invalid file type' message. 4. Add subtle scale transform (scale-[1.02]) on valid drag.",
-      "user_benefit": "Users immediately understand drag-and-drop is supported and know exactly where to drop. Clear invalid file feedback prevents confusion. The interaction feels responsive and matches expectations from other creative tools.",
+      "current_state": "FolderSidebar uses ScrollArea (line 103) but has no visual scroll indicators. When there are many folders, users see a cut-off list with no hint that more exists below. Same issue in WildcardSidebar and other list components.",
+      "proposed_change": "1. Create ScrollAreaWithIndicators wrapper component. 2. Use IntersectionObserver to detect when content overflows. 3. Show subtle gradient fade (from-background via-background/80 to-transparent) at top when scrolled down, at bottom when more content below. 4. Add small chevron icons inside gradients as additional affordance. 5. Fade out indicators when at scroll boundaries.",
+      "user_benefit": "Users immediately understand when lists contain more items. Reduces confusion about folder/item counts. The subtle visual cue guides natural scrolling behavior without cluttering the interface.",
       "status": "draft",
-      "created_at": "2025-12-25T03:03:00.000Z"
+      "created_at": "2025-12-25T17:58:00.000Z"
     },
     {
       "id": "uiux-005",
       "type": "ui_ux_improvements",
-      "title": "Add Confirmation Dialog for Destructive Actions",
-      "description": "Implement a consistent confirmation dialog pattern for destructive actions like delete, with clear undo messaging where applicable",
-      "rationale": "Gallery image deletion and folder deletion lack consistent confirmation UX. Users may accidentally delete content without warning, especially on mobile where tap targets are close together.",
+      "title": "Improve Form Validation with Real-time Inline Feedback",
+      "description": "Enhance form fields to show validation feedback immediately on blur rather than only on submit, using subtle visual states for valid/invalid inputs",
+      "rationale": "Auth forms only show errors after submission (SignInForm lines 108-110, 133-135). Users fill entire forms before learning of issues. Real-time validation reduces form abandonment and improves perceived responsiveness.",
       "category": "usability",
       "affected_components": [
-        "src/features/shot-creator/components/unified-gallery/ImageActionMenu.tsx",
-        "src/features/shot-creator/components/unified-gallery/FolderManagerModal.tsx",
-        "src/components/ui/alert-dialog.tsx"
+        "src/features/auth/components/SignInForm.tsx",
+        "src/features/auth/components/ForgotPasswordForm.tsx",
+        "src/features/auth/components/ResetPasswordForm.tsx",
+        "src/components/ui/input.tsx"
       ],
       "screenshots": [],
-      "current_state": "Image deletion may happen directly from action menu without confirmation. FolderManagerModal has delete mode but the AlertDialog usage varies. No consistent pattern for destructive action confirmation across the app.",
-      "proposed_change": "1. Create a useConfirmDialog hook that returns { confirm, ConfirmDialog } with standardized AlertDialog. 2. For deletions: red destructive button, clear item description, 'This cannot be undone' warning. 3. For bulk deletions: show count of affected items. 4. Where possible, mention 'soft delete' period if applicable.",
-      "user_benefit": "Users are protected from accidental deletions. Clear warnings set expectations about permanence. Consistent confirmation pattern reduces anxiety about destructive actions and builds trust.",
+      "current_state": "SignInForm shows errors only via form errors object after submit attempt. Input component has aria-invalid styling but it's not connected to real-time validation. No visual feedback for valid state. Password confirmation doesn't show match status.",
+      "proposed_change": "1. Add mode: 'onBlur' to react-hook-form useForm config for real-time validation. 2. Add visual success indicator (subtle green checkmark or border) for valid fields. 3. For password confirmation: show real-time match/mismatch feedback. 4. Add aria-describedby linking inputs to their error messages. 5. Show password strength indicator on registration.",
+      "user_benefit": "Users know immediately if their input is valid, reducing frustration. Password match feedback prevents submit-test-fix cycles. Improved accessibility through proper ARIA associations. Professional feel matching modern web apps.",
       "status": "draft",
-      "created_at": "2025-12-25T03:04:00.000Z"
+      "created_at": "2025-12-25T17:59:00.000Z"
     }
   ],
   "metadata": {
-    "generated_at": "2025-12-25T03:05:00.000Z",
+    "generated_at": "2025-12-25T18:00:00.000Z",
     "generated_by": "ui_ux_improvements_ideation_agent",
     "total_ideas": 5,
     "analysis_method": "static_code_analysis",
@@ -109,6 +109,11 @@
       "ui_library": "shadcn/ui with Radix primitives",
       "styling": "Tailwind CSS v4"
     },
-    "note": "Browser automation (Puppeteer) was not available; analysis based on component code review. Ideas avoid duplicating planned features from ideation_context.json."
+    "categories_breakdown": {
+      "visual": 1,
+      "usability": 3,
+      "accessibility": 1
+    },
+    "note": "Browser automation (Puppeteer) was not available; analysis based on comprehensive static code review. Ideas avoid duplicating planned features from ideation_context.json including 'Standardize Auth Form Input Styling' and 'Add Visual Drop Zone Feedback for File Uploads'."
   }
 }

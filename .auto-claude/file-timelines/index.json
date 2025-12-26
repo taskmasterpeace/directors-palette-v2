@@ -1,7 +1,37 @@
 {
   "files": [
     "src/features/wildcards/components/WildcardSidebar.tsx",
-    "src/features/shot-creator/hooks/useWildcardImportExport.ts"
+    "src/features/shot-creator/hooks/useWildcardImportExport.ts",
+    ".auto-claude-status",
+    ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/build-progress.txt",
+    ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/implementation_plan.json",
+    ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/memory/attempt_history.json",
+    ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/memory/build_commits.json",
+    ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/memory/codebase_map.json",
+    ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/memory/gotchas.md",
+    ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/memory/session_insights/session_002.json",
+    ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/memory/session_insights/session_003.json",
+    ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/memory/session_insights/session_004.json",
+    ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/memory/session_insights/session_005.json",
+    ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/memory/session_insights/session_006.json",
+    ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/spec.md",
+    ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/task_logs.json",
+    ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/task_metadata.json",
+    "src/features/shot-creator/components/unified-gallery/BulkActionsToolbar.tsx",
+    "src/features/shot-creator/components/unified-gallery/ImageCard.tsx",
+    "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx",
+    "src/features/shot-creator/hooks/index.ts",
+    "src/features/shot-creator/hooks/useGalleryLogic.ts",
+    "src/features/shot-creator/hooks/useGallerySelection.ts",
+    "src/app/api/prompt-folders/route.ts",
+    "src/app/api/prompt-tags/route.ts",
+    "src/app/api/prompts/[id]/route.ts",
+    "src/app/api/prompts/route.ts",
+    "src/stores/promptStore.ts",
+    "src/types/prompts.ts",
+    "supabase/database.types.ts",
+    "supabase/migrations/20251225000000_create_user_prompts_system.sql",
+    "src/components/prompts/FolderTree.tsx"
   ],
-  "last_updated": "2025-12-25T03:10:37.024993"
+  "last_updated": "2025-12-25T18:57:10.985408"
 }

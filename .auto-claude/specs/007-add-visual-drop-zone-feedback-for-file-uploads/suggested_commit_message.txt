@@ -1,0 +1,3 @@
+chore(drop-zone): add visual feedback for file drag interactions
+
+Implement drop-zone component with prominent visual feedback for file drag interactions, including valid/invalid file type indicators. Integrate new component across multiple upload features and add comprehensive test coverage.

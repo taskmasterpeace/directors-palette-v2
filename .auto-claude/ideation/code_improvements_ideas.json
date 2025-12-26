@@ -3,113 +3,114 @@
     {
       "id": "ci-001",
       "type": "code_improvements",
-      "title": "Recipe Import/Export Functionality",
-      "description": "Add JSON import and export capabilities for recipes, allowing users to backup, share, and transfer their custom recipes between accounts or installations.",
-      "rationale": "The exact pattern exists in usePromptImportExport.ts for prompts - exports to JSON with version/timestamp, imports with validation and duplicate checking. Recipes are stored in recipe.store.ts with full CRUD but lack this backup/sharing capability.",
-      "builds_upon": ["usePromptImportExport.ts pattern", "Recipe store CRUD operations", "Toast notification system"],
+      "title": "Bulk Video Download as ZIP",
+      "description": "Add ability to download multiple videos from the Shot Animator gallery as a single ZIP file with progress tracking, mirroring the existing bulk image download feature.",
+      "rationale": "BulkDownloadService already exists for images in bulk-download.service.ts with progress callbacks, JSZip integration, and error handling per item. The same service architecture works for any URL-based content and can be extended to video files with minimal changes.",
+      "builds_upon": ["BulkDownloadService for images", "JSZip integration", "Shot Animator video gallery"],
       "estimated_effort": "small",
       "affected_files": [
-        "src/features/shot-creator/hooks/useRecipeImportExport.ts (new)",
-        "src/features/shot-creator/components/recipe/RecipeBuilder.tsx",
-        "src/features/shot-creator/types/recipe.types.ts"
+        "src/features/shot-creator/services/bulk-download.service.ts",
+        "src/features/shot-animator/components/VideoGalleryGrid.tsx"
       ],
       "existing_patterns": [
-        "usePromptImportExport.ts - JSON blob export with version/date metadata",
-        "Blob creation and download link pattern",
-        "File input with JSON parsing and validation",
-        "Toast notifications for success/failure feedback"
+        "BulkDownloadService.downloadAsZip() with progress callbacks",
+        "DownloadProgress interface { current, total, status }",
+        "getFilename() for URL-based filename extraction"
       ],
-      "implementation_approach": "Create useRecipeImportExport.ts following the exact structure of usePromptImportExport.ts. Export creates JSON blob with version string, exportDate, and recipes array (sans userId). Import parses JSON, validates recipe structure against recipe.types.ts, checks for duplicate names, and uses addRecipe from useRecipeStore. Add Import/Export buttons to RecipeBuilder.tsx header similar to prompt library.",
+      "implementation_approach": "Extend BulkDownloadService.downloadAsZip() to handle video extensions (.mp4, .webm) in getFilename(). Add multi-select checkboxes to VideoGalleryGrid following the image gallery pattern. Create 'Download Selected' button that calls downloadAsZip with selected video URLs. Show progress modal during download using existing DownloadProgress interface.",
       "status": "draft",
-      "created_at": "2025-12-25T02:50:00.000Z"
+      "created_at": "2025-12-25T17:55:00.000Z"
     },
     {
       "id": "ci-002",
       "type": "code_improvements",
-      "title": "Wildcard Import/Export Functionality",
-      "description": "Add JSON import and export capabilities for wildcards, enabling users to backup their custom wildcards and share them with the community.",
-      "rationale": "Same pattern as prompts exists in usePromptImportExport.ts. Wildcards in wildcard.store.ts have full CRUD (createWildCard, updateWildCard, deleteWildCard) but no import/export. Users cannot backup or share their wildcards.",
-      "builds_upon": ["usePromptImportExport.ts pattern", "Wildcard store CRUD operations", "Toast notification system"],
-      "estimated_effort": "small",
+      "title": "Wildcard Autocomplete in Prompt Input",
+      "description": "Extend the existing @reference autocomplete to also support __wildcard__ syntax. When users type __ in the prompt input, show an autocomplete dropdown of available wildcards with descriptions and line counts for quick insertion.",
+      "rationale": "The autocomplete infrastructure exists in usePromptAutocomplete.ts for @reference syntax with trigger detection, keyboard navigation, and item insertion. The wildcard service already provides getWildCards() with category filtering. Combining these enables seamless wildcard discovery.",
+      "builds_upon": ["usePromptAutocomplete.ts @reference autocomplete", "wildcard.service.ts getWildCards()", "AutocompleteOption type system"],
+      "estimated_effort": "medium",
       "affected_files": [
-        "src/features/wildcards/hooks/useWildcardImportExport.ts (new)",
-        "src/features/wildcards/components/WildcardSidebar.tsx",
-        "src/features/shot-creator/store/wildcard.store.ts"
+        "src/features/shot-creator/hooks/usePromptAutocomplete.ts",
+        "src/features/shot-creator/types/autocomplete.types.ts",
+        "src/features/shot-creator/components/creator-prompt-settings/PromptArea.tsx"
       ],
       "existing_patterns": [
-        "usePromptImportExport.ts - complete import/export flow",
-        "Blob/download pattern for file export",
-        "File validation with duplicate checking",
-        "Toast feedback on operation completion"
+        "detectTrigger() for @ symbol detection",
+        "buildOptions() filtering and sorting",
+        "insertItem() text replacement with cursor positioning",
+        "Keyboard navigation (selectPrevious, selectNext)"
       ],
-      "implementation_approach": "Create useWildcardImportExport.ts mirroring usePromptImportExport.ts. Export serializes wildcards array with version and timestamp. Import validates structure (name, content, category, description), checks for name duplicates using getWildCardByName, and calls createWildCard. Add Import/Export buttons to WildcardSidebar.tsx header.",
+      "implementation_approach": "Add __ trigger detection in detectTrigger() alongside existing @ detection. Create WildcardAutocompleteItem type extending AutocompleteOption. Extend buildOptions() to fetch wildcards from service when __ triggered. Modify insertItem() to wrap selection in __name__ format. Show wildcard description and line count in dropdown items.",
       "status": "draft",
-      "created_at": "2025-12-25T02:50:00.000Z"
+      "created_at": "2025-12-25T18:10:00.000Z"
     },
     {
       "id": "ci-003",
       "type": "code_improvements",
-      "title": "Draft Autosave for Recipe Editor",
-      "description": "Add localStorage-based draft autosave to the recipe editor dialog, preventing loss of work if the dialog is closed accidentally or browser crashes.",
-      "rationale": "The useDraftAutosave.ts hook already implements this pattern for story-creator with 30-second interval saves, age-based expiry (24h), and snapshot comparison to avoid unnecessary writes. Recipe editing in RecipeBuilder.tsx dialog has no such protection.",
-      "builds_upon": ["useDraftAutosave.ts pattern", "Recipe editor form state", "DraftRestorePrompt.tsx component"],
+      "title": "Autosave for Layout Annotation Canvas",
+      "description": "Implement autosave for the layout annotation canvas state to prevent work loss. Save canvas objects, positions, and settings to localStorage and offer recovery dialog on page reload.",
+      "rationale": "The autosave pattern exists in useDraftAutosave.ts with 30-second interval saving, JSON snapshot comparison for change detection, and 24-hour expiration. The layout annotation has complex Fabric.js state that users can lose on accidental page close.",
+      "builds_upon": ["useDraftAutosave.ts autosave pattern", "layout-annotation-store.ts canvas state", "RecoveryPrompt UI component"],
       "estimated_effort": "small",
       "affected_files": [
-        "src/features/shot-creator/hooks/useRecipeDraftAutosave.ts (new)",
-        "src/features/shot-creator/components/recipe/RecipeBuilder.tsx",
-        "src/features/shot-creator/components/recipe/RecipeDraftRestorePrompt.tsx (new)"
+        "src/features/layout-annotation/hooks/useCanvasAutosave.ts",
+        "src/features/layout-annotation/store/layout-annotation-store.ts",
+        "src/features/layout-annotation/components/LayoutAnnotationCanvas.tsx"
       ],
       "existing_patterns": [
-        "useDraftAutosave.ts - localStorage save with timeout debounce",
-        "loadDraft(), clearDraft(), hasDraft() utility functions",
-        "DraftRestorePrompt.tsx - UI for offering draft restoration",
-        "Snapshot comparison to avoid redundant saves"
+        "Interval-based autosave with timeoutRef",
+        "JSON.stringify snapshot comparison",
+        "loadDraft()/clearDraft()/hasDraft() utilities",
+        "24-hour expiration check"
       ],
-      "implementation_approach": "Create useRecipeDraftAutosave.ts based on useDraftAutosave.ts structure. Store recipe form state (name, description, stages, category) with timestamp. When recipe dialog opens, check for existing draft and prompt user to restore. Clear draft when recipe is successfully saved. Use AUTOSAVE_KEY = 'recipe-editor-draft' for localStorage.",
+      "implementation_approach": "Create useCanvasAutosave hook following useDraftAutosave structure. Serialize canvas via Fabric.js toJSON(). Store with project ID and timestamp. Add recovery prompt on mount if draft exists. Implement loadCanvasDraft() to restore canvas.loadFromJSON(). Clear draft on explicit save or discard.",
       "status": "draft",
-      "created_at": "2025-12-25T02:50:00.000Z"
+      "created_at": "2025-12-25T18:10:00.000Z"
     },
     {
       "id": "ci-004",
       "type": "code_improvements",
-      "title": "Search Functionality for Wildcard Sidebar",
-      "description": "Add real-time search filtering to the wildcard sidebar, allowing users to quickly find wildcards by name, category, or content.",
-      "rationale": "The usePromptFilters.ts hook implements search/filter for prompts with useMemo-based filtering. WildcardSidebar.tsx currently just lists all wildcards without search, becoming unwieldy as collection grows.",
-      "builds_upon": ["usePromptFilters.ts pattern", "Wildcard store wildcards array", "Input component from shadcn/ui"],
+      "title": "Credit Transaction History Export",
+      "description": "Allow users to export their credit transaction history to JSON or CSV format for record-keeping, accounting, and expense tracking purposes.",
+      "rationale": "CreditsService.getTransactionHistory() already provides paginated transaction access. usePromptImportExport demonstrates the blob download pattern. Combining these enables transaction export without new backend work.",
+      "builds_upon": ["CreditsService.getTransactionHistory()", "usePromptImportExport export pattern", "Transaction history UI"],
       "estimated_effort": "trivial",
       "affected_files": [
-        "src/features/wildcards/components/WildcardSidebar.tsx",
-        "src/features/wildcards/hooks/useWildcardFilters.ts (new)"
+        "src/features/credits/hooks/useCreditExport.ts",
+        "src/features/credits/components/CreditHistoryPanel.tsx"
       ],
       "existing_patterns": [
-        "usePromptFilters.ts - useMemo filtering with searchQuery state",
-        "Input component with Search icon (seen in ExpandedGallery.tsx)",
-        "Store-based filtering approach"
+        "exportPrompts() blob download with URL.createObjectURL",
+        "JSON.stringify with formatting and metadata",
+        "Toast notifications for export success/failure"
       ],
-      "implementation_approach": "Add useState for searchQuery in WildcardSidebar. Add Input component with Search icon above the wildcard list. Filter wildcards using useMemo: match searchQuery against wildcard.name, wildcard.category, and optionally wildcard.content (for finding wildcards containing specific terms). Follow the pattern from ExpandedGallery.tsx line 73-85 for filter logic.",
+      "implementation_approach": "Create useCreditExport hook with exportToJSON() and exportToCSV() functions. Fetch all transactions via getTransactionHistory with high limit. JSON export follows prompt pattern with version, exportDate, and transactions array. CSV export maps fields (date, type, amount, description, balance_after) to comma-separated rows. Add Export dropdown button to CreditHistoryPanel with JSON/CSV options.",
       "status": "draft",
-      "created_at": "2025-12-25T02:50:00.000Z"
+      "created_at": "2025-12-25T17:55:00.000Z"
     },
     {
       "id": "ci-005",
       "type": "code_improvements",
-      "title": "Recipe Search and Filter Bar",
-      "description": "Add search functionality and improved filtering to the Recipe Builder, enabling users to quickly find recipes by name or description as their collection grows.",
-      "rationale": "RecipeBuilder.tsx has category filter (selectedCategory state) but no text search. ExpandedGallery.tsx shows the pattern with search input + filter tabs. As users create more recipes, finding specific ones becomes difficult.",
-      "builds_upon": ["ExpandedGallery.tsx search pattern", "usePromptFilters.ts filtering approach", "Recipe category filtering"],
-      "estimated_effort": "small",
+      "title": "Multi-Select Gallery with Bulk Actions",
+      "description": "Add multi-select mode to the unified image gallery with bulk actions toolbar (Download ZIP, Delete Selected, Move to Folder). Enable Shift+click for range selection and Ctrl+click for toggle selection.",
+      "rationale": "The selection pattern exists in usePromptSelection.ts with Set-based tracking and selectAll/toggleSelect callbacks. BulkDownloadService handles ZIP creation. These can be combined with the existing gallery grid for powerful bulk operations.",
+      "builds_upon": ["usePromptSelection.ts multi-select hook", "BulkDownloadService.downloadAsZip()", "UnifiedImageGallery component"],
+      "estimated_effort": "medium",
       "affected_files": [
-        "src/features/shot-creator/components/recipe/RecipeBuilder.tsx",
-        "src/features/shot-creator/hooks/useRecipeFilters.ts (new)"
+        "src/features/shot-creator/hooks/useGallerySelection.ts",
+        "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx",
+        "src/features/shot-creator/components/unified-gallery/GalleryGrid.tsx",
+        "src/features/shot-creator/components/unified-gallery/BulkActionsToolbar.tsx"
       ],
       "existing_patterns": [
-        "ExpandedGallery.tsx - search input with filterTab state and filteredImages",
-        "usePromptFilters.ts - useMemo filtering against searchQuery",
-        "RecipeBuilder already has selectedCategory state"
+        "Set-based selectedIds tracking",
+        "selectAll/selectNone/toggleSelect/isSelected functions",
+        "BulkDownloadService with progress callbacks",
+        "Gallery image card hover states"
       ],
-      "implementation_approach": "Create useRecipeFilters.ts hook that takes recipes array, searchQuery, and selectedCategory. Use useMemo to filter: first by category (existing), then by searchQuery matching name and description (case-insensitive). Add search Input above the recipe list in RecipeBuilder.tsx. Combine with existing category filter tabs for a unified search/filter bar.",
+      "implementation_approach": "Create useGallerySelection hook based on usePromptSelection. Add selection mode toggle to gallery header. Show checkbox overlays on image cards when in selection mode. Create BulkActionsToolbar with Download/Delete/Move buttons. Implement range selection tracking for Shift+click. Connect actions to existing services (BulkDownloadService, gallery delete, folder move).",
       "status": "draft",
-      "created_at": "2025-12-25T02:50:00.000Z"
+      "created_at": "2025-12-25T18:10:00.000Z"
     }
   ]
 }

@@ -3,7 +3,7 @@
   "feature": "Recipe Import/Export Functionality",
   "description": "Add JSON import and export capabilities for recipes, allowing users to backup, share, and transfer their custom recipes between accounts or installations.",
   "created_at": "2025-12-25T08:00:54.891Z",
-  "updated_at": "2025-12-25T08:08:06.653Z",
+  "updated_at": "2025-12-25T23:18:53.665Z",
   "status": "human_review",
   "planStatus": "review",
   "spec_file": "spec.md",
@@ -253,5 +253,7 @@
     "issues_by_type": {
       "unknown": 1
     }
-  }
+  },
+  "stagedAt": "2025-12-25T23:18:53.665Z",
+  "stagedInMainProject": true
 }

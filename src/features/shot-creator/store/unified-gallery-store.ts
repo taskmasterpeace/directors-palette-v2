@@ -71,6 +71,7 @@ interface UnifiedGalleryState {
   offset: number
   hasMore: boolean
   isLoadingMore: boolean
+  infiniteScrollPage: number
 
   // UI Preferences
   gridSize: GridSize
@@ -153,6 +154,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   offset: 0,
   hasMore: true,
   isLoadingMore: false,
+  infiniteScrollPage: 1,
 
   // UI Preferences - use defaults for SSR, hydrate from localStorage after mount
   gridSize: 'medium',
@@ -496,9 +498,8 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       // Import GalleryService dynamically to avoid circular dependency
       const { GalleryService } = await import('../services/gallery.service')
 
-      // Use currentPage + 1 for the next page (currentPage starts at 1 from initial load)
-      const nextPage = state.currentPage + 1
-      console.log(`[loadMoreImages] Loading page ${nextPage}, current offset: ${state.offset}`)
+      // Use infiniteScrollPage + 1 for the next page (infiniteScrollPage starts at 1 from initial load)
+      const nextPage = state.infiniteScrollPage + 1
 
       const result = await GalleryService.loadUserGalleryPaginated(
         nextPage,
@@ -508,8 +509,8 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       )
 
       if (result.images.length > 0) {
-        // Update currentPage for future loads
-        set({ currentPage: nextPage })
+        // Update infiniteScrollPage for future loads
+        set({ infiniteScrollPage: nextPage })
 
         // Check if there are more images by comparing total loaded vs total in database
         const newOffset = state.offset + result.images.length
@@ -530,7 +531,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       offset: 0,
       hasMore: true,
       isLoadingMore: false,
-      currentPage: 1
+      infiniteScrollPage: 1
     })
   },
 
@@ -561,7 +562,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
         totalPages: result.totalPages,
         offset: uniqueImages.length,
         hasMore: uniqueImages.length < result.total,
-        currentPage: 1
+        infiniteScrollPage: 1
       })
     } catch (error) {
       console.error('Failed to refresh gallery:', error)

@@ -3,26 +3,31 @@
     {
       "id": "sec-001",
       "type": "security_hardening",
-      "title": "Update vulnerable dependencies (happy-dom, Next.js, glob)",
-      "description": "npm audit reveals critical and high severity CVEs in production dependencies: happy-dom (<20.0.0) has VM Context Escape leading to RCE, Next.js (15.5.1-15.5.7) has DoS and source code exposure vulnerabilities, glob (11.0.0-11.0.3) has command injection via CLI. Additional moderate vulnerabilities exist in js-yaml, tar, and vite.",
-      "rationale": "These are known, exploitable vulnerabilities with published CVEs. The happy-dom RCE (GHSA-37j7-fg3j-429f) and Next.js DoS (GHSA-mwv6-3258-q52c) are particularly severe as they could allow attackers to execute arbitrary code or crash the application. Dependency vulnerabilities are a top OWASP risk (A06).",
-      "category": "dependencies",
+      "title": "Implement API Rate Limiting with Upstash Redis",
+      "description": "No rate limiting exists on any API endpoint. High-risk endpoints include /api/coupons/redeem (brute force coupons), /api/generation/image (resource exhaustion), /api/admin/* (enumeration), and authentication flows. The RateLimitError class exists in src/lib/errors/index.ts but no actual rate limiting is implemented.",
+      "rationale": "Rate limiting is critical for preventing brute force attacks, credential stuffing, and denial of service. The coupon redemption endpoint is particularly vulnerable to automated attacks that could enumerate valid codes. Without rate limiting, attackers can abuse AI generation endpoints causing significant financial impact from Replicate API calls. This is classified as CRITICAL in the security audit.",
+      "category": "configuration",
       "severity": "critical",
-      "affectedFiles": ["package.json", "package-lock.json"],
-      "vulnerability": "CWE-1395: Dependency on Vulnerable Third-Party Component",
-      "currentRisk": "Critical RCE vulnerability in happy-dom, High severity DoS in Next.js, both actively used in the application",
-      "remediation": "1. Run `npm audit fix` to automatically fix compatible updates. 2. Manually update: happy-dom to >=20.0.0, next to >=15.5.8, @capacitor/cli (updates glob). 3. For breaking changes, review changelogs before updating. 4. Add `npm audit` to CI pipeline to catch future vulnerabilities.",
+      "affectedFiles": [
+        "src/app/api/coupons/redeem/route.ts",
+        "src/app/api/generation/image/route.ts",
+        "src/app/api/generation/video/route.ts",
+        "src/app/api/v1/images/generate/route.ts",
+        "src/middleware.ts"
+      ],
+      "vulnerability": "CWE-307: Improper Restriction of Excessive Authentication Attempts",
+      "currentRisk": "Attackers can perform unlimited requests leading to brute force attacks on coupons, resource exhaustion via generation spam, and credential stuffing on auth",
+      "remediation": "1. Install @upstash/ratelimit and @upstash/redis packages. 2. Create rate limiter utility in src/lib/rate-limit.ts with tiered limits: auth (5/min/IP), coupon (3/min/user), generation (10/min/user), admin (20/min/user). 3. Add rate limiting middleware for centralized enforcement. 4. Return 429 with Retry-After and X-RateLimit-Remaining headers.",
       "references": [
-        "https://github.com/advisories/GHSA-37j7-fg3j-429f",
-        "https://github.com/advisories/GHSA-mwv6-3258-q52c",
-        "https://github.com/advisories/GHSA-5j98-mcp5-4vw2"
+        "https://owasp.org/API-Security/editions/2023/en/0xa4-unrestricted-resource-consumption/",
+        "https://cwe.mitre.org/data/definitions/307.html"
       ],
       "compliance": ["SOC2", "PCI-DSS"]
     },
     {
       "id": "sec-002",
       "type": "security_hardening",
-      "title": "Add Content-Security-Policy (CSP) and HSTS security headers",
+      "title": "Add Content-Security-Policy (CSP) and HSTS Security Headers",
       "description": "While next.config.ts implements X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy, and Permissions-Policy, the critical Content-Security-Policy (CSP) and Strict-Transport-Security (HSTS) headers are missing. These headers are essential for preventing XSS attacks and ensuring HTTPS-only connections.",
       "rationale": "CSP prevents XSS by controlling which resources can be loaded. HSTS ensures all connections use HTTPS, preventing protocol downgrade attacks. The existing security audit report recommends these headers but they haven't been implemented yet. This is a HIGH severity gap per the audit.",
       "category": "configuration",
@@ -40,75 +45,77 @@
     {
       "id": "sec-003",
       "type": "security_hardening",
-      "title": "Implement API rate limiting with Upstash Redis",
-      "description": "No rate limiting exists on any API endpoint. High-risk endpoints include /api/coupons/redeem (brute force coupons), /api/generation/image (resource exhaustion), /api/admin/* (enumeration), and authentication flows. The RateLimitError class exists in src/lib/errors/index.ts but no actual rate limiting is implemented.",
-      "rationale": "Rate limiting is critical for preventing brute force attacks, credential stuffing, and denial of service. The coupon redemption endpoint is particularly vulnerable to automated attacks that could enumerate valid codes. This is documented as CVE-2024-DP004 (CVSS 8.1) in the security audit.",
-      "category": "configuration",
-      "severity": "critical",
+      "title": "Remove Hardcoded Admin Authorization and Centralize Access Control",
+      "description": "Multiple API endpoints use hardcoded email arrays for admin authorization instead of the database-backed admin_users table. Found in src/app/api/admin/abuse-report/route.ts (taskmasterpeace@gmail.com) and src/app/api/admin/community/route.ts (andrew@reelcontrols.com, admin@directorspalette.com). The isAdminEmail() sync function provides an insecure fallback pattern.",
+      "rationale": "Hardcoded admin emails bypass the database audit trail, cannot be revoked without code deployment, and create privilege escalation risk if those email accounts are compromised. Inconsistent authorization patterns across endpoints increase security complexity and maintenance burden.",
+      "category": "authorization",
+      "severity": "high",
       "affectedFiles": [
-        "src/app/api/coupons/redeem/route.ts",
-        "src/app/api/generation/image/route.ts",
-        "src/app/api/admin/grant-credits/route.ts",
-        "src/middleware.ts"
+        "src/app/api/admin/abuse-report/route.ts",
+        "src/app/api/admin/community/route.ts",
+        "src/features/admin/types/admin.types.ts"
       ],
-      "vulnerability": "CWE-770: Allocation of Resources Without Limits",
-      "currentRisk": "Coupon codes can be brute-forced, server resources exhausted via generation spam, credential stuffing possible",
-      "remediation": "1. Install @upstash/ratelimit and @upstash/redis packages. 2. Create rate limiter utility in src/lib/rate-limit.ts with tiered limits: auth (5/min/IP), coupon (3/min/user), generation (10/min/user), admin (20/min/user). 3. Add rate limiting to middleware.ts for centralized enforcement. 4. Return 429 with Retry-After header on limit exceeded. 5. Use RateLimitError class from src/lib/errors/.",
+      "vulnerability": "CWE-798: Use of Hard-coded Credentials",
+      "currentRisk": "Admin privileges cannot be revoked without code deployment, no audit trail for hardcoded admins, privilege escalation if email accounts are compromised",
+      "remediation": "1. Remove all hardcoded admin email arrays from route files. 2. Delete or deprecate the isAdminEmail() sync function. 3. Replace all admin checks with adminService.checkAdminEmailAsync() which queries the database. 4. Create a requireAdmin() middleware wrapper for consistent enforcement. 5. Implement admin action audit logging table.",
       "references": [
-        "https://upstash.com/docs/redis/sdks/ratelimit-ts",
-        "https://owasp.org/www-community/controls/Rate_Limiting"
+        "https://cwe.mitre.org/data/definitions/798.html",
+        "https://owasp.org/Top10/A01_2021-Broken_Access_Control/"
       ],
-      "compliance": ["SOC2", "PCI-DSS"]
+      "compliance": ["SOC2"]
     },
     {
       "id": "sec-004",
       "type": "security_hardening",
-      "title": "Remove partial secret logging from Stripe webhook handler",
-      "description": "The Stripe webhook handler at src/app/api/webhooks/stripe/route.ts logs partial secrets to console: `webhookSecret.substring(0, 15)` (line 145) and `webhookSecret.substring(0, 20)` (line 163). Even partial secrets can aid attackers in credential guessing or social engineering.",
-      "rationale": "Logging any portion of secrets violates secure coding practices. If logs are exposed via misconfiguration, log aggregation services, or breach, partial secrets provide valuable information for attackers. This specific issue is referenced in the security audit as HSF-007 but the exact lines haven't been remediated.",
+      "title": "Remove Partial Secret Logging from Stripe Webhook Handler",
+      "description": "The Stripe webhook handler at src/app/api/webhooks/stripe/route.ts logs partial secrets to console: `webhookSecret.substring(0, 15)` (line 145) and `webhookSecret.substring(0, 20)` (line 163). Even partial secrets can aid attackers in credential guessing or reduce brute force complexity.",
+      "rationale": "Logging any portion of secrets violates secure coding practices. If logs are exposed via misconfiguration, log aggregation services, or breach, partial secrets provide valuable information for attackers. Production logs are often accessible to developers, monitoring systems, and third-party services.",
       "category": "secrets_management",
       "severity": "high",
       "affectedFiles": ["src/app/api/webhooks/stripe/route.ts"],
       "vulnerability": "CWE-532: Insertion of Sensitive Information into Log File",
-      "currentRisk": "Partial webhook secrets exposed in application logs, aiding credential guessing attacks",
-      "remediation": "Replace secret logging with boolean checks only. Change line 145 to: `console.log('[Stripe Webhook] Secret configured:', !!webhookSecret)`. Remove line 163 entirely or change to: `console.log('[Stripe Webhook] Using configured secret')`. Apply same pattern to any other secret/token logging in the codebase. Consider using structured logging (e.g., Pino) with automatic redaction.",
+      "currentRisk": "Partial webhook secrets (15-20 characters) exposed in application logs significantly reduce entropy for brute force attacks",
+      "remediation": "Replace secret logging with boolean checks only. Change line 145 to: `console.log('[Stripe Webhook] Secret configured:', !!webhookSecret)`. Remove line 163 entirely or change to: `console.log('[Stripe Webhook] Using configured secret')`. Consider implementing structured logging (e.g., Pino) with automatic secret redaction patterns for all sensitive values.",
       "references": [
         "https://cwe.mitre.org/data/definitions/532.html",
-        "https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/08-Testing_for_Error_Handling/01-Testing_for_Improper_Error_Handling"
+        "https://owasp.org/www-community/Logging_Cheat_Sheet"
       ],
       "compliance": ["SOC2", "PCI-DSS", "GDPR"]
     },
     {
       "id": "sec-005",
       "type": "security_hardening",
-      "title": "Add request timeout for external URL fetches to prevent slowloris attacks",
-      "description": "The StorageService.downloadAsset() function and other external URL fetch operations lack timeout configuration. An attacker could send slow responses to tie up server resources, leading to denial of service. This affects file uploads, image generation reference processing, and webhook handling.",
-      "rationale": "Without timeouts, fetch operations can block indefinitely when connecting to malicious or slow endpoints. This enables slowloris-style attacks where attackers open many connections and send data very slowly, exhausting server resources. The security audit documents this as MSF-002.",
-      "category": "configuration",
-      "severity": "medium",
-      "affectedFiles": [
-        "src/features/generation/services/storage.service.ts",
-        "src/app/api/generation/image/route.ts",
-        "src/app/api/upload-file/route.ts"
-      ],
-      "vulnerability": "CWE-400: Uncontrolled Resource Consumption",
-      "currentRisk": "Server resources can be exhausted via slow external connections, leading to DoS",
-      "remediation": "Add AbortController with timeout to all external fetch operations: `const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), 30000); try { const response = await fetch(url, { signal: controller.signal }); } finally { clearTimeout(timeoutId); }`. Set appropriate timeouts: 30s for image downloads, 10s for small resources, 5s for webhooks/APIs.",
+      "title": "Add SSRF Protection to Image URL Processing",
+      "description": "The processReferenceImages() function in src/app/api/generation/image/route.ts fetches external URLs with insufficient validation. The isPublicUrl() function only blocks localhost and one hardcoded domain, allowing requests to internal network resources, cloud metadata endpoints (169.254.x.x), and private networks.",
+      "rationale": "Server-Side Request Forgery (SSRF) allows attackers to make requests to internal services, AWS/GCP/Azure metadata endpoints (169.254.169.254), and private networks. This can lead to credential theft from cloud metadata, unauthorized access to internal services, and lateral movement within infrastructure.",
+      "category": "input_validation",
+      "severity": "high",
+      "affectedFiles": ["src/app/api/generation/image/route.ts"],
+      "vulnerability": "CWE-918: Server-Side Request Forgery (SSRF)",
+      "currentRisk": "Attackers can access internal network resources, cloud metadata endpoints (169.254.169.254), and potentially exfiltrate credentials or pivot within infrastructure",
+      "remediation": "Enhance isPublicUrl() to: 1) Block all private IP ranges (10.x.x.x, 172.16-31.x.x, 192.168.x.x, 169.254.x.x, ::1, fc00::/7, fe80::/10), 2) Use allowlist of trusted domains (replicate.delivery, replicate.com, *.supabase.co), 3) Add DNS rebinding protection by resolving hostname and validating resulting IP before fetch, 4) Set request timeouts (30s) with AbortController to prevent slowloris attacks.",
       "references": [
-        "https://developer.mozilla.org/en-US/docs/Web/API/AbortController",
-        "https://owasp.org/www-community/attacks/Slow_HTTP_attack"
+        "https://owasp.org/www-community/attacks/Server_Side_Request_Forgery",
+        "https://cwe.mitre.org/data/definitions/918.html",
+        "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html"
       ],
       "compliance": ["SOC2"]
     }
   ],
   "metadata": {
-    "dependenciesScanned": 97,
+    "dependenciesScanned": 78,
     "knownVulnerabilities": 6,
     "filesAnalyzed": 68,
-    "criticalIssues": 2,
-    "highIssues": 2,
-    "mediumIssues": 1,
-    "generatedAt": "2025-12-25T02:50:00.000Z",
-    "notes": "Analysis complemented existing SECURITY_AUDIT_REPORT.md findings. Focused on actionable items with clear remediation steps. Dependency vulnerabilities are new findings from npm audit. Other issues verify and provide implementation details for audit recommendations."
+    "criticalIssues": 1,
+    "highIssues": 4,
+    "generatedAt": "2025-12-25T18:15:00.000Z",
+    "analysisNotes": [
+      "npm audit identified 6 vulnerabilities: happy-dom (CRITICAL - RCE), Next.js 15.5.7 (HIGH - DoS), glob (HIGH - command injection), js-yaml (MODERATE), tar (MODERATE), vite (MODERATE)",
+      "Dependency update (happy-dom, Next.js, glob) already in planned features - excluded from recommendations",
+      "Existing security audit report from December 2024 reviewed for context on CVE-2024-DP001 through DP004",
+      "Security headers partially implemented (X-Frame-Options, X-Content-Type-Options, etc.) but missing CSP and HSTS",
+      "Webhook signature verification properly implemented for both Stripe and Replicate",
+      "SQL injection protection through Supabase parameterized queries already in place"
+    ]
   }
 }

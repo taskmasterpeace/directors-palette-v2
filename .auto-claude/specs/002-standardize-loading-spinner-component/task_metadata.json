@@ -11,5 +11,6 @@
     "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx",
     "src/features/credits/components/CreditsDisplay.tsx"
   ],
-  "problemSolved": "CommunityGrid uses '<Loader2 className=\"w-8 h-8 animate-spin text-muted-foreground\"/>'. UnifiedImageGallery uses '<div className=\"w-12 h-12 ... border-t-purple-500 rounded-full animate-spin\"/>'. CreditsDisplay uses '<Loader2 className=\"w-8 h-8 animate-spin text-amber-500\"/>'. No consistent size/color scheme."
+  "problemSolved": "CommunityGrid uses '<Loader2 className=\"w-8 h-8 animate-spin text-muted-foreground\"/>'. UnifiedImageGallery uses '<div className=\"w-12 h-12 ... border-t-purple-500 rounded-full animate-spin\"/>'. CreditsDisplay uses '<Loader2 className=\"w-8 h-8 animate-spin text-amber-500\"/>'. No consistent size/color scheme.",
+  "archivedAt": "2025-12-25T23:31:17.826Z"
 }

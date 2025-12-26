@@ -1,0 +1,115 @@
+{
+  "complexity": "standard",
+  "workflow_type": "feature",
+  "confidence": 0.85,
+  "reasoning": "Mobile responsiveness fixes for 4 Prompt Tools sections (Recipes, Library, Wildcards, Styles). This involves CSS/layout modifications across 5-7 component files using existing Tailwind patterns. Additionally includes a functional bug fix for the 'create custom style' feature. No external integrations or infrastructure changes needed.",
+
+  "analysis": {
+    "scope": {
+      "estimated_files": 6,
+      "estimated_services": 1,
+      "is_cross_cutting": false,
+      "notes": "Changes are contained within the Prompt Tools feature. Main files: PromptToolsPage.tsx, RecipeBuilder.tsx, StyleSelector.tsx, WildCardManager.tsx, PromptLibraryCard.tsx, and potentially CategoryCard.tsx/PromptCard.tsx for Library section"
+    },
+    "integrations": {
+      "external_services": [],
+      "new_dependencies": [],
+      "research_needed": false,
+      "notes": "No external integrations. All fixes use existing Tailwind CSS classes and responsive utilities already established in the codebase"
+    },
+    "infrastructure": {
+      "docker_changes": false,
+      "database_changes": false,
+      "config_changes": false,
+      "notes": "Pure frontend UI fixes with no infrastructure impact"
+    },
+    "knowledge": {
+      "patterns_exist": true,
+      "research_required": false,
+      "unfamiliar_tech": [],
+      "notes": "Codebase already uses Tailwind responsive utilities (sm:, md:, lg:), flexbox, and grid patterns. All required patterns are established in existing components"
+    },
+    "risk": {
+      "level": "low",
+      "concerns": [
+        "StyleSelector 'create style' functionality bug needs root cause investigation",
+        "Requires visual testing on actual mobile devices or emulators",
+        "Gallery code explicitly excluded - must avoid touching gallery-related files to prevent conflicts"
+      ],
+      "notes": "Low risk overall. CSS changes are isolated to visual presentation. The functional bug in StyleSelector may require slightly more investigation but dialog structure is standard"
+    }
+  },
+
+  "recommended_phases": [
+    "discovery",
+    "requirements",
+    "context",
+    "spec_writing",
+    "planning",
+    "validation"
+  ],
+
+  "flags": {
+    "needs_research": false,
+    "needs_self_critique": false,
+    "needs_infrastructure_setup": false
+  },
+
+  "validation_recommendations": {
+    "risk_level": "low",
+    "skip_validation": false,
+    "minimal_mode": true,
+    "test_types_required": ["unit"],
+    "security_scan_required": false,
+    "staging_deployment_required": false,
+    "reasoning": "CSS/layout changes with one functional bug fix. Minimal validation with existing unit tests is sufficient. Primary validation should be visual testing on mobile viewports. No security or API changes involved."
+  },
+
+  "key_findings": {
+    "affected_components": [
+      {
+        "name": "RecipeBuilder",
+        "path": "src/features/shot-creator/components/recipe/RecipeBuilder.tsx",
+        "issue": "Content stuck on left, right side off-screen on mobile",
+        "likely_fix": "Review grid/flex containers, ensure overflow handling and proper width constraints"
+      },
+      {
+        "name": "PromptLibraryCard",
+        "path": "src/features/shot-creator/components/creator-prompt-settings/PromptLibraryCard.tsx",
+        "issue": "Text labels overflow columns, Export/Import buttons misaligned",
+        "likely_fix": "Add responsive breakpoints to button row, fix text truncation/wrapping"
+      },
+      {
+        "name": "WildCardManager",
+        "path": "src/features/shot-creator/components/wildcard/WildCardManager.tsx",
+        "issue": "Poor mobile display but scrollable (least severe)",
+        "likely_fix": "Adjust grid column count for mobile viewport"
+      },
+      {
+        "name": "StyleSelector",
+        "path": "src/features/shot-creator/components/creator-prompt-settings/StyleSelector.tsx",
+        "issue": "Content bunched up, cannot create custom styles (functional bug)",
+        "likely_fix": "Investigate create dialog trigger, fix spacing/layout issues"
+      },
+      {
+        "name": "PromptToolsPage",
+        "path": "src/features/prompt-tools/components/PromptToolsPage.tsx",
+        "issue": "Tab bar may need mobile optimization",
+        "likely_fix": "Review tab list grid columns and icon/text sizing for mobile"
+      }
+    ],
+    "constraints": [
+      "DO NOT modify any gallery-related files to avoid merge conflicts",
+      "Gallery code is actively changing in parallel work"
+    ],
+    "common_patterns_to_apply": [
+      "Use responsive breakpoint prefixes: sm:, md:, lg:",
+      "Apply overflow-x-auto for horizontal scrolling where needed",
+      "Use flex-wrap for button groups on mobile",
+      "Apply text-truncate/truncate for text overflow",
+      "Consider grid-cols-1 for mobile, expanding to grid-cols-2+ on larger screens"
+    ]
+  },
+
+  "created_at": "2025-12-25T17:00:00.000Z"
+}

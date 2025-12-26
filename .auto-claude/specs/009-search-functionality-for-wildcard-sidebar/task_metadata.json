@@ -9,5 +9,6 @@
   "affectedFiles": [
     "src/features/wildcards/components/WildcardSidebar.tsx",
     "src/features/wildcards/hooks/useWildcardFilters.ts (new)"
-  ]
+  ],
+  "archivedAt": "2025-12-25T23:31:17.826Z"
 }

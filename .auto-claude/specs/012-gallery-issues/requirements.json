@@ -1,0 +1,4 @@
+{
+  "task_description": "I want to make a request to fix   The way that the gallery handles different pages is really weird. You can go to the end and click load more images, but it won't just load more images, it'll treat it like you're just saying go to next page. And it'll display like everything there and then when you hit little more images it will display the next ones but you can't see. More than what's available on that page at a time.",
+  "workflow_type": "ui_ux"
+}

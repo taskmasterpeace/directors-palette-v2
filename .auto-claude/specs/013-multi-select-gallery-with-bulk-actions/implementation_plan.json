@@ -1,0 +1,408 @@
+{
+  "feature": "Multi-Select Gallery with Bulk Actions",
+  "description": "Add multi-select mode to the unified image gallery with bulk actions toolbar (Download ZIP, Delete Selected, Move to Folder). Enable Shift+click for range selection and Ctrl+click for toggle selection.",
+  "created_at": "2025-12-25T23:17:11.519Z",
+  "updated_at": "2025-12-25T23:57:09.082Z",
+  "status": "human_review",
+  "planStatus": "review",
+  "workflow_type": "development",
+  "spec_file": "spec.md",
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Selection Hook Enhancement",
+      "description": "Create a robust gallery selection hook with Set-based tracking, range selection (Shift+click), and toggle selection (Ctrl/Cmd+click)",
+      "subtasks": [
+        {
+          "id": "1.1",
+          "title": "Create useGallerySelection hook",
+          "description": "Create a new hook that extends the usePromptSelection pattern with additional features for gallery images. Include: Set-based selectedIds tracking, lastSelectedId for range selection, selectAll/selectNone/toggleSelect callbacks, and isSelected helper.",
+          "estimated_effort": "medium",
+          "status": "completed",
+          "files_to_modify": [
+            "src/features/shot-creator/hooks/useGallerySelection.ts"
+          ],
+          "dependencies": [],
+          "acceptance_criteria": [
+            "Hook exports: selectedIds (Set), selectedCount, selectAll, selectNone, toggleSelect, isSelected",
+            "Maintains lastSelectedId ref for range selection",
+            "Uses useCallback for all handlers to prevent unnecessary re-renders"
+          ],
+          "notes": "useGallerySelection hook created with Set-based selectedIds tracking, lastSelectedIdRef for range selection, selectAll/selectNone/toggleSelect callbacks with useCallback, isSelected helper, and additional addToSelection helper for range selection. Hook exported from index.ts. Commit: d4fadb1",
+          "updated_at": "2025-12-25T23:36:16.648068+00:00"
+        },
+        {
+          "id": "1.2",
+          "title": "Add range selection (Shift+click) support",
+          "description": "Extend useGallerySelection with handleSelectWithModifiers function that handles Shift+click for range selection. Takes the item id, the full ordered list of items, and the event to detect Shift key.",
+          "estimated_effort": "medium",
+          "status": "completed",
+          "files_to_modify": [
+            "src/features/shot-creator/hooks/useGallerySelection.ts"
+          ],
+          "dependencies": [
+            "1.1"
+          ],
+          "acceptance_criteria": [
+            "Shift+click selects all items between last selected and current item",
+            "Range selection works in both directions (forward and backward)",
+            "Range selection adds to existing selection (doesn't replace)",
+            "If no previous selection, Shift+click behaves like regular click"
+          ],
+          "notes": "Implemented handleSelectWithModifiers function in useGallerySelection hook. Features: 1) Shift+click for range selection between last selected and current item, 2) Range selection works in both directions (uses Math.min/max), 3) Range selection adds to existing selection (doesn't replace), 4) Falls back to regular toggle if no previous selection or Shift key not pressed. Added getItemId helper function to support both string IDs and objects with 'id' property. Commit: ae14b18",
+          "updated_at": "2025-12-25T23:39:05.512696+00:00"
+        },
+        {
+          "id": "1.3",
+          "title": "Add toggle selection (Ctrl/Cmd+click) support",
+          "description": "Enhance handleSelectWithModifiers to detect Ctrl (Windows) or Cmd (Mac) key for explicit toggle behavior.",
+          "estimated_effort": "small",
+          "status": "completed",
+          "files_to_modify": [
+            "src/features/shot-creator/hooks/useGallerySelection.ts"
+          ],
+          "dependencies": [
+            "1.2"
+          ],
+          "acceptance_criteria": [
+            "Ctrl+click (Windows) or Cmd+click (Mac) toggles individual item selection",
+            "Toggle works independently of Shift key",
+            "Updates lastSelectedId for subsequent range selections"
+          ],
+          "notes": "Implemented Ctrl/Cmd+click toggle selection in handleSelectWithModifiers. Features: 1) Detects Ctrl (Windows) via event.ctrlKey and Cmd (Mac) via event.metaKey, 2) Toggle takes priority over Shift+click (works independently), 3) Updates lastSelectedIdRef.current for subsequent range selections. Commit: 5426881",
+          "updated_at": "2025-12-25T23:41:36.892131+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Gallery Logic Integration",
+      "description": "Integrate the new selection hook into useGalleryLogic and update component interfaces",
+      "subtasks": [
+        {
+          "id": "2.1",
+          "title": "Integrate useGallerySelection into useGalleryLogic",
+          "description": "Replace the current array-based selectedImages state in useGalleryLogic with the new useGallerySelection hook. Map between image URLs and IDs for the selection state.",
+          "estimated_effort": "medium",
+          "status": "completed",
+          "files_to_modify": [
+            "src/features/shot-creator/hooks/useGalleryLogic.ts"
+          ],
+          "dependencies": [
+            "1.3"
+          ],
+          "acceptance_criteria": [
+            "useGalleryLogic uses useGallerySelection internally",
+            "Exposes handleImageSelectWithModifiers for keyboard-aware selection",
+            "Maintains backward compatibility with existing handleImageSelect",
+            "selectedImages array is derived from selectedIds Set for compatibility"
+          ],
+          "notes": "Integrated useGallerySelection hook into useGalleryLogic. Key changes: 1) Import and use useGallerySelection hook with selectedIds, selectedCount, selectAll, selectNone, toggleSelect, isSelected, handleSelectWithModifiers. 2) Derive selectedImages array from selectedIds Set for backward compatibility. 3) handleImageSelect now uses toggleSelect internally. 4) Added handleImageSelectWithModifiers for Shift+click range and Ctrl/Cmd+click toggle selection. 5) Updated handleClearSelection to use selectNone, handleSelectAll to use selectAllIds. 6) handleDeleteImage properly removes deleted image from selection. 7) Exports selectedCount, isSelected, and handleImageSelectWithModifiers. Commit: ed8fa01",
+          "updated_at": "2025-12-25T23:44:45.345823+00:00"
+        },
+        {
+          "id": "2.2",
+          "title": "Update ImageCard to support modifier keys",
+          "description": "Modify ImageCard to pass the click event to selection handlers so modifier keys can be detected. Update onSelect prop type to accept optional event parameter.",
+          "estimated_effort": "small",
+          "status": "completed",
+          "files_to_modify": [
+            "src/features/shot-creator/components/unified-gallery/ImageCard.tsx"
+          ],
+          "dependencies": [
+            "2.1"
+          ],
+          "acceptance_criteria": [
+            "ImageCard passes MouseEvent to onSelect callback",
+            "Checkbox click also supports modifier keys",
+            "Click on image container supports selection with modifiers"
+          ],
+          "notes": "Updated ImageCard to pass click event for modifier key detection. Key changes: 1) Updated onSelect prop type to accept optional React.MouseEvent parameter. 2) Modified Checkbox to use onClick handler instead of onCheckedChange to capture full MouseEvent with modifier keys. 3) Added e.stopPropagation() to prevent click from bubbling. 4) Moved selection handling to onClick for full event access, enabling Shift+click range selection and Ctrl/Cmd+click toggle selection. Commit: f0c3ea1",
+          "updated_at": "2025-12-25T23:47:32.968315+00:00"
+        },
+        {
+          "id": "2.3",
+          "title": "Update UnifiedImageGallery with modifier-aware selection",
+          "description": "Wire up the new handleImageSelectWithModifiers in UnifiedImageGallery component and pass ordered images array for range calculation.",
+          "estimated_effort": "medium",
+          "status": "completed",
+          "files_to_modify": [
+            "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx"
+          ],
+          "dependencies": [
+            "2.2"
+          ],
+          "acceptance_criteria": [
+            "ImageCard receives modifier-aware selection handler",
+            "Ordered images list is passed for range selection calculation",
+            "Selection works correctly with filtered/paginated views"
+          ],
+          "notes": "Subtask 2.3 was already implemented and committed (c267e0d). UnifiedImageGallery correctly wires up handleImageSelectWithModifiers: 1) Both mobile and desktop views pass event to handler via onSelect={(e) => e ? handleImageSelectWithModifiers(image.url, e) : handleImageSelect(image.url)}, 2) useGalleryLogic internally passes paginatedImages.map(img => img.url) for range calculation ensuring selection works correctly with filtered/paginated views, 3) ImageCard passes MouseEvent from Checkbox onClick handler enabling Shift+click range and Ctrl/Cmd+click toggle selection.",
+          "updated_at": "2025-12-25T23:51:07.382451+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Bulk Actions Toolbar Enhancement",
+      "description": "Create a floating/sticky bulk actions toolbar that appears when items are selected",
+      "subtasks": [
+        {
+          "id": "3.1",
+          "title": "Create BulkActionsToolbar component",
+          "description": "Create a new BulkActionsToolbar component that shows when selectedCount > 0. Includes: selected count badge, Download ZIP button, Move to Folder dropdown, Delete button, Clear selection button. Should be sticky/floating for visibility.",
+          "estimated_effort": "medium",
+          "status": "completed",
+          "files_to_modify": [
+            "src/features/shot-creator/components/unified-gallery/BulkActionsToolbar.tsx"
+          ],
+          "dependencies": [
+            "2.3"
+          ],
+          "acceptance_criteria": [
+            "Toolbar appears when selectedCount > 0",
+            "Shows selected count with clear button",
+            "Has Download ZIP, Move to Folder, Delete buttons",
+            "Sticky positioning at bottom of gallery for visibility",
+            "Smooth enter/exit animation",
+            "Mobile-responsive design"
+          ],
+          "notes": "BulkActionsToolbar component fully implemented with all acceptance criteria met: 1) Toolbar appears when selectedCount > 0 (returns null otherwise), 2) Shows selected count badge with CheckSquare icon and X clear button, 3) Has Download ZIP button (onDownloadZip), Move to Folder dropdown (onMoveToFolder with folder list, create folder option), and Delete button (onDelete), 4) Sticky positioning at fixed bottom-4 with z-50, 5) Smooth enter/exit animation using framer-motion AnimatePresence with fade and slide transitions, 6) Mobile-responsive with hidden sm:inline for button labels. Uses rounded-full pill design with backdrop-blur for modern floating toolbar aesthetic. Includes AlertDialog for delete confirmation. Commit: 0bfd318",
+          "updated_at": "2025-12-25T23:54:23.551072+00:00"
+        },
+        {
+          "id": "3.2",
+          "title": "Integrate BulkActionsToolbar into UnifiedImageGallery",
+          "description": "Add BulkActionsToolbar to UnifiedImageGallery and wire up all action handlers. Consider removing duplicate controls from GalleryHeader or making them conditional.",
+          "estimated_effort": "small",
+          "status": "completed",
+          "files_to_modify": [
+            "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx"
+          ],
+          "dependencies": [
+            "3.1"
+          ],
+          "acceptance_criteria": [
+            "BulkActionsToolbar renders in UnifiedImageGallery",
+            "All bulk action handlers are properly connected",
+            "Toolbar position doesn't overlap with important content",
+            "Works correctly in both mobile and desktop layouts"
+          ],
+          "notes": "BulkActionsToolbar already integrated into UnifiedImageGallery. All action handlers wired up correctly: selectedCount, folders, onClearSelection, onDownloadZip (handleBulkDownload), onMoveToFolder (handleBulkMoveToFolder), onCreateFolder, onDelete (handleDeleteSelected). Toolbar renders as fixed floating element at bottom-4 with z-50 when items selected. Works in both mobile and desktop layouts. Commit: 2f7d952",
+          "updated_at": "2025-12-25T23:59:03.519163+00:00"
+        },
+        {
+          "id": "3.3",
+          "title": "Refactor GalleryHeader to avoid duplication",
+          "description": "Update GalleryHeader to hide bulk action buttons when BulkActionsToolbar is visible (selectedCount > 0), or simplify header to just show 'Select All' and delegate bulk actions to toolbar.",
+          "estimated_effort": "small",
+          "status": "completed",
+          "files_to_modify": [
+            "src/features/shot-creator/components/unified-gallery/GalleryHeader.tsx"
+          ],
+          "dependencies": [
+            "3.2"
+          ],
+          "acceptance_criteria": [
+            "No duplicate bulk action controls visible",
+            "Header remains clean and focused on search/filter",
+            "Select All button remains accessible in header"
+          ],
+          "notes": "Refactored GalleryHeader to avoid duplication with BulkActionsToolbar. Key changes: 1) Removed bulk action controls from header (selected count badge, Clear, Move to folder, Download, Delete buttons) - these are now exclusively in BulkActionsToolbar, 2) Kept Select All button accessible in header for initiating bulk selections, 3) Removed unused imports and simplified GalleryHeaderProps interface, 4) Updated UnifiedImageGallery to pass only required props. Header now focuses on search/filter/grid controls while BulkActionsToolbar handles all bulk operations. Commit: 64f3df6",
+          "updated_at": "2025-12-26T00:02:42.713376+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Visual Feedback and UX Polish",
+      "description": "Enhance visual feedback for selection states and add keyboard shortcuts",
+      "subtasks": [
+        {
+          "id": "4.1",
+          "title": "Add selection mode visual indicator",
+          "description": "When items are selected, add a subtle visual mode indicator (e.g., tinted overlay, pulsing selection count) to make it clear the user is in 'selection mode'.",
+          "estimated_effort": "small",
+          "status": "completed",
+          "files_to_modify": [
+            "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx"
+          ],
+          "dependencies": [
+            "3.3"
+          ],
+          "acceptance_criteria": [
+            "Clear visual indication when in selection mode",
+            "Checkboxes become more prominent during selection mode",
+            "Mode indicator doesn't distract from image viewing"
+          ],
+          "notes": "Implemented visual selection mode indicator. Key changes: 1) Added isSelectionMode prop to ImageCard that makes checkboxes always visible during selection mode (not just on hover), 2) Checkboxes have a subtle ring highlight (ring-2 ring-primary/30) when in selection mode for better visibility, 3) CardContent area gets a subtle visual indicator (ring-2 ring-inset ring-primary/20 and bg-primary/[0.02] tint) when in selection mode, 4) Updated memo comparison to include isSelectionMode prop for proper re-rendering. All acceptance criteria met: clear visual indication when in selection mode, checkboxes become more prominent, mode indicator doesn't distract from image viewing. Commit: ec06eb6",
+          "updated_at": "2025-12-26T00:07:06.503953+00:00"
+        },
+        {
+          "id": "4.2",
+          "title": "Add keyboard shortcuts for selection",
+          "description": "Add keyboard shortcuts: Escape to clear selection, Delete/Backspace to trigger delete confirmation, Ctrl/Cmd+A to select all visible images.",
+          "estimated_effort": "small",
+          "status": "completed",
+          "files_to_modify": [
+            "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx"
+          ],
+          "dependencies": [
+            "4.1"
+          ],
+          "acceptance_criteria": [
+            "Escape clears selection",
+            "Delete/Backspace opens delete confirmation when images selected",
+            "Ctrl/Cmd+A selects all visible images",
+            "Shortcuts only active when gallery is focused/visible"
+          ],
+          "notes": "Implemented keyboard shortcuts for gallery selection. Key changes: 1) Added Escape key to clear selection (closes delete confirmation first if open, then clears selection), 2) Delete/Backspace opens delete confirmation when images are selected, 3) Ctrl/Cmd+A selects all visible images (with preventDefault to avoid browser default behavior), 4) Shortcuts only active when gallery is focused - disabled during input focus, modal open states (folder manager, download modal, fullscreen modal), 5) Updated BulkActionsToolbar to accept optional deleteConfirmOpen and onDeleteConfirmChange props for external control of delete dialog via keyboard. Commit: 0fb62cd",
+          "updated_at": "2025-12-26T00:11:09.166714+00:00"
+        },
+        {
+          "id": "4.3",
+          "title": "Add selection hint tooltip",
+          "description": "Add a tooltip or hint text explaining Shift+click and Ctrl/Cmd+click selection shortcuts when hovering over images or the select all button.",
+          "estimated_effort": "small",
+          "status": "completed",
+          "files_to_modify": [
+            "src/features/shot-creator/components/unified-gallery/GalleryHeader.tsx"
+          ],
+          "dependencies": [
+            "4.2"
+          ],
+          "acceptance_criteria": [
+            "Tooltip explains range selection (Shift+click)",
+            "Tooltip explains toggle selection (Ctrl/Cmd+click)",
+            "Hint is discoverable but not intrusive"
+          ],
+          "notes": "Added tooltip to Select All button in GalleryHeader explaining selection shortcuts. The tooltip displays: 1) Shift+click for range selection, 2) Ctrl/\u2318+click for toggle selection. Used styled kbd elements to indicate keyboard keys. Tooltip appears on hover with \"Selection shortcuts:\" header and is discoverable but not intrusive. Commit: 78db985",
+          "updated_at": "2025-12-26T00:13:33.264176+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-5",
+      "name": "Testing and Documentation",
+      "description": "Verify all selection features work correctly and document usage",
+      "subtasks": [
+        {
+          "id": "5.1",
+          "title": "Manual testing of selection features",
+          "description": "Test all selection scenarios: single click, Shift+click range, Ctrl/Cmd+click toggle, keyboard shortcuts, bulk actions.",
+          "estimated_effort": "medium",
+          "status": "completed",
+          "files_to_modify": [],
+          "dependencies": [
+            "4.3"
+          ],
+          "acceptance_criteria": [
+            "Single click toggles selection correctly",
+            "Shift+click selects range in both directions",
+            "Ctrl/Cmd+click toggles individual items",
+            "All bulk actions work: Download ZIP, Delete, Move to Folder",
+            "Keyboard shortcuts work correctly",
+            "Selection persists through filter/search changes appropriately"
+          ],
+          "notes": "Comprehensive testing suite implemented for gallery multi-select feature:\n\n**Unit Tests (25 tests - all passing):**\n- Initial state validation (empty selection)\n- Single click toggle selection\n- Select all / select none functionality\n- Shift+click range selection (forward and backward)\n- Ctrl/Cmd+click toggle selection (Windows and Mac)\n- Priority handling (Ctrl+Shift treats Ctrl as toggle, not range)\n- Object items with ID property support\n- addToSelection helper function\n- Edge cases: empty arrays, items not in list, same item as anchor\n\n**E2E Tests (Playwright):**\n- Single click selection toggle\n- Bulk toolbar visibility\n- Multiple independent selections\n- Shift+click range selection (forward/backward)\n- Range selection adds to existing (doesn't replace)\n- Ctrl+click toggle\n- Keyboard shortcuts: Escape (clear), Ctrl+A (select all), Delete (open confirm)\n- Bulk actions toolbar: count display, clear button, delete confirmation, move dropdown\n- Select All button functionality\n- Visual feedback in selection mode\n- Mobile selection support\n- Complex workflow integration tests\n\n**Dependencies Added:**\n- @testing-library/react for React hook testing\n\nCommit: 7be42ad",
+          "updated_at": "2025-12-26T00:20:49.467656+00:00"
+        },
+        {
+          "id": "5.2",
+          "title": "Update build-progress.txt with completion status",
+          "description": "Document completion of the feature in build-progress.txt with notes on implementation decisions and any known limitations.",
+          "estimated_effort": "small",
+          "status": "completed",
+          "files_to_modify": [
+            ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/build-progress.txt"
+          ],
+          "dependencies": [
+            "5.1"
+          ],
+          "acceptance_criteria": [
+            "Build progress updated with implementation summary",
+            "Any gotchas or limitations documented",
+            "Ready for code review"
+          ],
+          "notes": "Created comprehensive build-progress.txt documentation with: implementation summary covering all 5 phases and 14 subtasks, key implementation decisions (Set-based selection, event-based modifier detection, floating toolbar design, keyboard shortcut scoping, range selection with anchor), list of files modified/created, known limitations (selection not persisted, pagination boundary, touch devices, large selections), commit history table, testing summary (25 unit tests + Playwright e2e tests), and acceptance criteria checklist. Commit: 34e556a",
+          "updated_at": "2025-12-26T00:22:58.594240+00:00"
+        }
+      ]
+    }
+  ],
+  "qa_checklist": {
+    "status": "pending",
+    "items": [
+      "Single click selection works",
+      "Shift+click range selection works forward and backward",
+      "Ctrl/Cmd+click toggle selection works",
+      "Select All selects all visible images",
+      "Clear Selection removes all selections",
+      "Download ZIP creates valid ZIP with selected images",
+      "Delete Selected removes images after confirmation",
+      "Move to Folder moves selected images to chosen folder",
+      "Keyboard shortcuts (Escape, Delete, Ctrl+A) work",
+      "Selection state clears appropriately on navigation",
+      "Mobile touch interactions work correctly",
+      "Visual feedback is clear and consistent"
+    ],
+    "tests_passed": "",
+    "issues": ""
+  },
+  "services_involved": [
+    "useGallerySelection hook",
+    "useGalleryLogic hook",
+    "BulkDownloadService",
+    "UnifiedImageGallery",
+    "ImageCard",
+    "GalleryHeader",
+    "BulkActionsToolbar"
+  ],
+  "final_acceptance": [
+    "Multi-select mode works with click, Shift+click, and Ctrl/Cmd+click",
+    "Bulk actions toolbar appears when items selected",
+    "Download ZIP, Delete, Move to Folder all work correctly",
+    "Keyboard shortcuts work (Escape, Delete, Ctrl+A)",
+    "Mobile touch interactions supported",
+    "No regressions in existing gallery functionality"
+  ],
+  "metadata": {
+    "estimated_total_effort": "medium-large",
+    "priority": "high",
+    "tags": [
+      "gallery",
+      "multi-select",
+      "bulk-actions",
+      "ux"
+    ]
+  },
+  "last_updated": "2025-12-26T00:27:48.871228+00:00",
+  "recoveryNote": "Task recovered from stuck state at 2025-12-25T23:57:09.082Z",
+  "qa_signoff": {
+    "status": "approved",
+    "qa_session": 0,
+    "issues_found": [
+      {
+        "description": "Pre-existing build error in PromptActions.tsx (not related to this feature)"
+      }
+    ],
+    "tests_passed": {},
+    "timestamp": "2025-12-26T00:27:48.871219+00:00",
+    "ready_for_qa_revalidation": false
+  },
+  "qa_iteration_history": [
+    {
+      "iteration": 1,
+      "status": "approved",
+      "timestamp": "2025-12-26T00:28:04.211409+00:00",
+      "issues": [],
+      "duration_seconds": 277.99
+    }
+  ],
+  "qa_stats": {
+    "total_iterations": 1,
+    "last_iteration": 1,
+    "last_status": "approved",
+    "issues_by_type": {}
+  }
+}

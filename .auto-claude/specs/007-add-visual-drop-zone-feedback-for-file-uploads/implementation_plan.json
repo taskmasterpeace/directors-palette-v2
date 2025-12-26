@@ -2,7 +2,7 @@
   "feature": "Add Visual Drop Zone Feedback for File Uploads",
   "description": "Implement prominent visual feedback when users drag files over upload areas, with clear valid/invalid file type indicators. This addresses the gap where users may not discover drag-and-drop support or be unsure where to drop files.",
   "created_at": "2025-12-25T07:59:58.239Z",
-  "updated_at": "2025-12-25T08:08:05.303Z",
+  "updated_at": "2025-12-25T23:31:36.711Z",
   "status": "human_review",
   "planStatus": "review",
   "spec_file": "spec.md",
@@ -48,7 +48,7 @@
           ],
           "estimated_complexity": "low",
           "status": "completed",
-          "notes": "Implemented file type validation feedback:\n\n1. **Real-time drag feedback**: Using isDragAccept/isDragReject from react-dropzone with visual states:\n   - Valid drag: Primary border, CheckCircle2 icon, pulse animation\n   - Invalid drag: Red border, AlertCircle icon, shake animation\n   - Shows \"Accepts: {types}\" during rejection to guide user\n\n2. **Auto-generated accepted types display**: formatAcceptedTypes() helper converts MIME types to human-readable format (e.g., 'image/*': ['.png'] \u2192 \"PNG \u2022 Image files\"). Shows in idle state as a hint.\n\n3. **Persistent error after rejected drop**: handleDropRejected creates contextual messages:\n   - Invalid type: \"Invalid type. Accepts: {displayAcceptText}\"\n   - File too large: \"File is too large\"  \n   - Too many files: \"Too many files. Max: {maxFiles}\"\n   - Error persists for 3 seconds with destructive styling\n\nAlready committed in 7a07f91 and 99999cc.",
+          "notes": "Implemented file type validation feedback:\n\n1. **Real-time drag feedback**: Using isDragAccept/isDragReject from react-dropzone with visual states:\n   - Valid drag: Primary border, CheckCircle2 icon, pulse animation\n   - Invalid drag: Red border, AlertCircle icon, shake animation\n   - Shows \"Accepts: {types}\" during rejection to guide user\n\n2. **Auto-generated accepted types display**: formatAcceptedTypes() helper converts MIME types to human-readable format (e.g., 'image/*': ['.png'] → \"PNG • Image files\"). Shows in idle state as a hint.\n\n3. **Persistent error after rejected drop**: handleDropRejected creates contextual messages:\n   - Invalid type: \"Invalid type. Accepts: {displayAcceptText}\"\n   - File too large: \"File is too large\"  \n   - Too many files: \"Too many files. Max: {maxFiles}\"\n   - Error persists for 3 seconds with destructive styling\n\nAlready committed in 7a07f91 and 99999cc.",
           "updated_at": "2025-12-25T08:23:17.642561+00:00"
         },
         {
@@ -243,5 +243,7 @@
     "last_iteration": 1,
     "last_status": "approved",
     "issues_by_type": {}
-  }
+  },
+  "stagedAt": "2025-12-25T23:31:36.711Z",
+  "stagedInMainProject": true
 }

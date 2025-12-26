@@ -8,5 +8,6 @@
   "affectedFiles": [
     "src/app/layout.tsx"
   ],
-  "problemSolved": "Footer hardcodes '<span>v0.8</span>' in layout.tsx line 73, which is significantly out of date compared to package.json version 0.95.0"
+  "problemSolved": "Footer hardcodes '<span>v0.8</span>' in layout.tsx line 73, which is significantly out of date compared to package.json version 0.95.0",
+  "archivedAt": "2025-12-25T23:31:17.826Z"
 }

@@ -1,0 +1,3 @@
+chore(recipes): add JSON import and export capabilities
+
+Add recipe import/export functionality with JSON format, validation service, custom hook, and comprehensive tests. Enables users to backup, share, and transfer recipes between accounts or installations.

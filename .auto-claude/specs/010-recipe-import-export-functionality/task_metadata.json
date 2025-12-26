@@ -10,5 +10,6 @@
     "src/features/shot-creator/hooks/useRecipeImportExport.ts (new)",
     "src/features/shot-creator/components/recipe/RecipeBuilder.tsx",
     "src/features/shot-creator/types/recipe.types.ts"
-  ]
+  ],
+  "archivedAt": "2025-12-25T23:31:17.826Z"
 }

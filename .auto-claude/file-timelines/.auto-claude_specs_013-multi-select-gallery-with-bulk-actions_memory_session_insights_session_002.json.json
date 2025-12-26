@@ -1,0 +1,25 @@
+{
+  "file_path": ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/memory/session_insights/session_002.json",
+  "main_branch_history": [],
+  "task_views": {
+    "013-multi-select-gallery-with-bulk-actions": {
+      "task_id": "013-multi-select-gallery-with-bulk-actions",
+      "branch_point": {
+        "commit_hash": "8654231a22984c33942f63d8839bdca5b0d017c2",
+        "content": "",
+        "timestamp": "2025-12-25T18:57:10.314069"
+      },
+      "worktree_state": null,
+      "task_intent": {
+        "title": "013-multi-select-gallery-with-bulk-actions",
+        "description": "Add multi-select mode to the unified image gallery with bulk actions toolbar (Download ZIP, Delete Selected, Move to Folder). Enable Shift+click for range selection and Ctrl+click for toggle selection.",
+        "from_plan": true
+      },
+      "commits_behind_main": 0,
+      "status": "active",
+      "merged_at": null
+    }
+  },
+  "created_at": "2025-12-25T18:55:48.692725",
+  "last_updated": "2025-12-25T18:57:10.557262"
+}

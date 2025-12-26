@@ -1,0 +1,10 @@
+{
+  "discovered_files": {
+    "docs/SECURITY_AUDIT_REPORT.md": {
+      "description": "Comprehensive security audit report exists from December 2024 with critical findings including exposed secrets, hardcoded admin auth, middleware bypass, and no rate limiting. Some issues like security headers have been partially addressed.",
+      "category": "security",
+      "discovered_at": "2025-12-25T23:07:28.219169+00:00"
+    }
+  },
+  "last_updated": "2025-12-25T23:07:28.219182+00:00"
+}

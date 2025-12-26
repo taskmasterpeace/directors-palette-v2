@@ -649,7 +649,10 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 {/* Organize and QuickAccessBar */}
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                        <OrganizeButton />
+                        <OrganizeButton
+                            prompt={shotCreatorPrompt}
+                            onApply={setShotCreatorPrompt}
+                        />
                         <QuickAccessBar />
                     </div>
                 </div>

@@ -21,7 +21,7 @@ import { clipboardManager } from '@/utils/clipboard-manager'
 import { quickPresets } from "../../constants"
 import AdvancedSettings from "./AdvancedSettings"
 import BasicSettings from "./BasicSettings"
-import PromptActions from "./PromptActions"
+import { PromptActions } from "./PromptActions"
 
 const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
     const [showAdvanced, setShowAdvanced] = useState(false)
