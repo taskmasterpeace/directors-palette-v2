@@ -603,9 +603,6 @@ The final image should look natural as if the edits were always part of the orig
                                     <ChevronDown className="w-3 h-3" />
                                 )}
                             </button>
-                            {drawingToolsExpanded && (
-                                <CanvasToolbar canvasRef={canvasRef} />
-                            )}
                         </CardContent>
                     </Card>
                 </div>

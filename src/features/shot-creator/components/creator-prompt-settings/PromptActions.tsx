@@ -99,8 +99,8 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         selectedIndex: autocompleteSelectedIndex,
         selectedItem: _autocompleteSelectedItem,
         handleTextChange: handleAutocompleteTextChange,
-        insertItem: insertAutocompleteItem,
-        close: closeAutocomplete,
+        insertItem: _insertAutocompleteItem,
+        close: _closeAutocomplete,
         selectNext: _selectNextAutocomplete,
         selectPrevious: _selectPreviousAutocomplete,
         selectIndex: selectAutocompleteIndex
@@ -369,7 +369,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages])
 
     // Handle selecting a recipe
-    const handleSelectRecipe = useCallback((recipeId: string) => {
+    const _handleSelectRecipe = useCallback((recipeId: string) => {
         setActiveRecipe(recipeId)
     }, [setActiveRecipe])
 
