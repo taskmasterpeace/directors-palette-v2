@@ -25,8 +25,9 @@ const FORMAT_EXAMPLES: Record<BookFormat, string> = {
 }
 
 export function StoryInputStep() {
-  const { project, setStoryText, setPages, createProject, addCharacter, setBookFormat: storeSetBookFormat } = useStorybookStore()
+  const { project, setStoryText, setPages, createProject, addCharacter, setBookFormat: storeSetBookFormat, updateProject } = useStorybookStore()
   const [title, setTitle] = useState(project?.title || "")
+  const [author, setAuthor] = useState(project?.author || "")
   const [storyText, setLocalStoryText] = useState(project?.storyText || "")
   const [pageCount, setPageCount] = useState<string>("auto")
   const [showPages, setShowPages] = useState(false)
@@ -39,8 +40,9 @@ export function StoryInputStep() {
   // Sync with project state
   useEffect(() => {
     if (project?.title) setTitle(project.title)
+    if (project?.author) setAuthor(project.author)
     if (project?.storyText) setLocalStoryText(project.storyText)
-  }, [project?.title, project?.storyText])
+  }, [project?.title, project?.author, project?.storyText])
 
   const handleTextChange = (text: string) => {
     setLocalStoryText(text)
@@ -214,8 +216,26 @@ export function StoryInputStep() {
         <Input
           id="title"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => {
+            setTitle(e.target.value)
+            if (project) updateProject({ title: e.target.value })
+          }}
           placeholder="Enter your book title..."
+          className="bg-zinc-800/50 border-zinc-700"
+        />
+      </div>
+
+      {/* Author Name Input */}
+      <div className="space-y-2">
+        <Label htmlFor="author">Author Name</Label>
+        <Input
+          id="author"
+          value={author}
+          onChange={(e) => {
+            setAuthor(e.target.value)
+            if (project) updateProject({ author: e.target.value })
+          }}
+          placeholder="Enter author name..."
           className="bg-zinc-800/50 border-zinc-700"
         />
       </div>

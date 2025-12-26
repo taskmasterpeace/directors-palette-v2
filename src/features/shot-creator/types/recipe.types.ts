@@ -2046,6 +2046,8 @@ CRITICAL REQUIREMENTS:
     recipeNote: 'Used by storybook feature to generate art style reference',
     stages: [
       {
+        id: crypto.randomUUID(),
+        order: 0,
         type: 'generation',
         template: `Create a visual style guide as a 6-image grid (2 rows × 3 columns) in <<STYLE_NAME:text!>> style.
 
@@ -2069,6 +2071,7 @@ DIVERSITY REQUIREMENTS:
 
 Output a 16:9 image with exactly 6 tiles (2 rows x 3 columns) separated by black lines.
 <<STYLE_NAME:text!>> style throughout all tiles.`,
+        fields: [],
         referenceImages: [],
       },
     ],
@@ -2087,6 +2090,8 @@ Output a 16:9 image with exactly 6 tiles (2 rows x 3 columns) separated by black
     recipeNote: 'Used by storybook feature to generate page illustrations. Includes previous page context for storytelling flow.',
     stages: [
       {
+        id: crypto.randomUUID(),
+        order: 0,
         type: 'generation',
         template: `Create an illustration for this children's book page that continues the story flow.
 
@@ -2130,6 +2135,7 @@ QUALITY STANDARDS:
 - Fine details that reward close inspection
 
 Use reference images to match art style and character appearance exactly.`,
+        fields: [],
         referenceImages: [],
       },
     ],
@@ -2148,6 +2154,8 @@ Use reference images to match art style and character appearance exactly.`,
     recipeNote: 'Used by storybook feature to generate book covers. Includes embedded text (title + author) and main character illustration.',
     stages: [
       {
+        id: crypto.randomUUID(),
+        order: 0,
         type: 'generation',
         template: `Create a professional children's book cover illustration with embedded text.
 
@@ -2197,6 +2205,7 @@ TECHNICAL SPECS:
 - Diverse, inclusive representation
 
 Use reference images to match art style and character appearance exactly.`,
+        fields: [],
         referenceImages: [],
       },
     ],
