@@ -2,9 +2,10 @@
 
 import { useState, useCallback } from 'react'
 import { useStorybookStore } from '../store/storybook.store'
+import { useRecipeStore } from '@/features/shot-creator/store/recipe.store'
 
-// System recipe names for storybook
-const SYSTEM_RECIPE_NAMES = {
+// Default system recipe names for storybook (used as fallbacks)
+const DEFAULT_RECIPE_NAMES = {
   STYLE_GUIDE: 'Storybook Style Guide',
   CHARACTER_SHEET: 'Storybook Character Sheet',
   PAGE_FIRST: 'Storybook Page (First)',
@@ -40,11 +41,27 @@ export function useStorybookGeneration() {
     setError,
   } = useStorybookStore()
 
+  const { recipes } = useRecipeStore()
+
   const [state, setState] = useState<GenerationState>({
     isGenerating: false,
     progress: '',
     error: null,
   })
+
+  /**
+   * Get recipe name from config or fall back to default
+   */
+  const getRecipeName = useCallback((
+    configRecipeId: string | undefined,
+    defaultName: string
+  ): string => {
+    if (configRecipeId) {
+      const recipe = recipes.find(r => r.id === configRecipeId)
+      if (recipe) return recipe.name
+    }
+    return defaultName
+  }, [recipes])
 
   /**
    * Generate a style guide with optional reference image
@@ -66,8 +83,14 @@ export function useStorybookGeneration() {
 
       const referenceImages = referenceImageUrl ? [referenceImageUrl] : []
 
+      // Get recipe name from config or use default
+      const recipeName = getRecipeName(
+        project?.recipeConfig?.styleGuideRecipeId,
+        DEFAULT_RECIPE_NAMES.STYLE_GUIDE
+      )
+
       // Call recipe execution API
-      const response = await fetch(`/api/recipes/${SYSTEM_RECIPE_NAMES.STYLE_GUIDE}/execute`, {
+      const response = await fetch(`/api/recipes/${recipeName}/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -138,8 +161,14 @@ export function useStorybookGeneration() {
       }
       // Template is already in recipe's stage.referenceImages
 
+      // Get recipe name from config or use default
+      const recipeName = getRecipeName(
+        project?.recipeConfig?.characterSheetRecipeId,
+        DEFAULT_RECIPE_NAMES.CHARACTER_SHEET
+      )
+
       // Call recipe execution API
-      const response = await fetch(`/api/recipes/${SYSTEM_RECIPE_NAMES.CHARACTER_SHEET}/execute`, {
+      const response = await fetch(`/api/recipes/${recipeName}/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -216,7 +245,13 @@ export function useStorybookGeneration() {
         referenceImages.push(mainCharacter.characterSheetUrl)
       }
 
-      const response = await fetch(`/api/recipes/${SYSTEM_RECIPE_NAMES.BOOK_COVER}/execute`, {
+      // Get recipe name from config or use default
+      const recipeName = getRecipeName(
+        project?.recipeConfig?.bookCoverRecipeId,
+        DEFAULT_RECIPE_NAMES.BOOK_COVER
+      )
+
+      const response = await fetch(`/api/recipes/${recipeName}/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -276,7 +311,10 @@ export function useStorybookGeneration() {
 
       if (isFirstPage) {
         // First page - NO previous_page_text field
-        recipeName = SYSTEM_RECIPE_NAMES.PAGE_FIRST
+        recipeName = getRecipeName(
+          project?.recipeConfig?.pageFirstRecipeId,
+          DEFAULT_RECIPE_NAMES.PAGE_FIRST
+        )
         fieldValues = {
           'stage0_field0_page_text': page.text,
           'stage0_field1_scene_description': page.sceneJSON ? JSON.stringify(page.sceneJSON.scene) : '',
@@ -287,7 +325,10 @@ export function useStorybookGeneration() {
       } else {
         // Continuation page - WITH previous_page_text field
         const previousPage = project?.pages[pageIndex - 1]
-        recipeName = SYSTEM_RECIPE_NAMES.PAGE_CONTINUATION
+        recipeName = getRecipeName(
+          project?.recipeConfig?.pageContinuationRecipeId,
+          DEFAULT_RECIPE_NAMES.PAGE_CONTINUATION
+        )
         fieldValues = {
           'stage0_field0_previous_page_text': previousPage?.text || '',
           'stage0_field1_page_text': page.text,

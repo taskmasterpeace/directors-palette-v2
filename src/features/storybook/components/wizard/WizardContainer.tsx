@@ -268,7 +268,7 @@ export function WizardContainer() {
             variant="outline"
             onClick={previousStep}
             disabled={isFirstStep || isGenerating}
-            className="gap-2"
+            className="gap-2 hover:bg-zinc-700/50 dark:hover:bg-zinc-800"
           >
             <ChevronLeft className="w-4 h-4" />
             Back

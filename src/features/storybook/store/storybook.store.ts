@@ -105,6 +105,9 @@ interface StorybookState {
   selectVariation: (pageId: string, variationIndex: number, imageUrl: string) => void
   setPageTextPosition: (pageId: string, position: TextPosition) => void
 
+  // Recipe configuration actions
+  setRecipeConfig: (config: Partial<import('../types/storybook.types').StorybookRecipeConfig>) => void
+
   // Generation state
   setGenerating: (isGenerating: boolean) => void
   setError: (error: string | null) => void
@@ -464,6 +467,23 @@ export const useStorybookStore = create<StorybookState>((set, get) => ({
         project: {
           ...project,
           style,
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  // Recipe configuration actions
+  setRecipeConfig: (config) => {
+    const { project } = get()
+    if (project) {
+      set({
+        project: {
+          ...project,
+          recipeConfig: {
+            ...project.recipeConfig,
+            ...config,
+          },
           updatedAt: new Date(),
         },
       })

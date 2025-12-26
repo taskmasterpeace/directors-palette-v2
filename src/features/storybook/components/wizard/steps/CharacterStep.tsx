@@ -14,6 +14,7 @@ import { Users, Plus, Upload, Sparkles, Trash2, User, ImageIcon } from "lucide-r
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
+import { compressImage } from "@/utils/image-compression"
 
 export function CharacterStep() {
   const {
@@ -90,9 +91,12 @@ export function CharacterStep() {
     setUploadingCharacterId(characterId)
 
     try {
+      // Compress image before upload
+      const compressedFile = await compressImage(file)
+
       // Create a FormData object to upload the image
       const formData = new FormData()
-      formData.append('file', file)
+      formData.append('file', compressedFile)
 
       // Upload to our upload endpoint
       const response = await fetch('/api/upload-file', {
@@ -101,7 +105,8 @@ export function CharacterStep() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to upload photo')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Upload failed')
       }
 
       const data = await response.json()
@@ -110,7 +115,8 @@ export function CharacterStep() {
       // Update the character with the source photo URL
       updateCharacter(characterId, { sourcePhotoUrl: photoUrl })
     } catch (err) {
-      console.error('Error uploading photo:', err)
+      console.error('Upload error:', err)
+      alert(err instanceof Error ? err.message : 'Upload failed. Try a smaller image.')
     } finally {
       setUploadingCharacterId(null)
     }
@@ -142,9 +148,18 @@ export function CharacterStep() {
     setGeneratingCharacterId(characterId)
 
     try {
-      // Check if we have the "Storybook Character Sheet" system recipe
+      // Get configured recipe or default to "Photo to Character Sheet (Isolation)"
       const systemRecipes = getSystemOnlyRecipes()
-      const storybookRecipe = systemRecipes.find(r => r.name === 'Photo to Character Sheet (Isolation)')
+      const configuredRecipeId = project?.recipeConfig?.characterSheetRecipeId
+
+      let storybookRecipe
+      if (configuredRecipeId) {
+        storybookRecipe = systemRecipes.find(r => r.id === configuredRecipeId)
+      }
+      if (!storybookRecipe) {
+        // Fall back to default recipe name
+        storybookRecipe = systemRecipes.find(r => r.name === 'Photo to Character Sheet (Isolation)')
+      }
 
       if (storybookRecipe && project?.style?.styleGuideUrl) {
         // Use recipe-based generation (new 3-stage pipeline)

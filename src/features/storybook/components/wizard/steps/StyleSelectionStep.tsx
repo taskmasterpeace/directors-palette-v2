@@ -13,6 +13,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
+import { compressImage } from "@/utils/image-compression"
 
 interface ExpandedStyle {
   originalStyle: string
@@ -25,25 +26,25 @@ const PRESET_STYLES = [
   {
     id: 'watercolor',
     name: 'Watercolor',
-    preview: '/storybook/step-style.webp',
+    preview: '/storybook/styles/watercolor-preset.webp',
     description: 'Soft, dreamy watercolor illustrations',
   },
   {
     id: 'cartoon',
     name: 'Cartoon',
-    preview: '/storybook/step-characters.webp',
+    preview: '/storybook/styles/cartoon-preset.webp',
     description: 'Fun, vibrant cartoon style',
   },
   {
     id: 'storybook',
     name: 'Classic Storybook',
-    preview: '/storybook/step-pages.webp',
+    preview: '/storybook/styles/storybook-preset.webp',
     description: 'Traditional children\'s book illustration',
   },
   {
     id: 'pixar',
     name: '3D Animated',
-    preview: '/storybook/step-preview.webp',
+    preview: '/storybook/styles/pixar-preset.webp',
     description: 'Pixar-style 3D rendering',
   },
 ]
@@ -138,14 +139,18 @@ export function StyleSelectionStep() {
   const handlePhotoUpload = useCallback(async (file: File) => {
     setIsUploading(true)
     try {
+      // Compress before upload
+      const compressedFile = await compressImage(file)
+
       const formData = new FormData()
-      formData.append('file', file)
+      formData.append('file', compressedFile)
       const response = await fetch('/api/upload-file', { method: 'POST', body: formData })
       if (!response.ok) throw new Error('Upload failed')
       const data = await response.json()
       setReferenceImageUrl(data.url)
     } catch (err) {
-      console.error('Error uploading reference image:', err)
+      console.error('Upload error:', err)
+      alert('Upload failed. Try a smaller image.')
     } finally {
       setIsUploading(false)
     }
@@ -163,6 +168,8 @@ export function StyleSelectionStep() {
     setStyle({
       id: style.id,
       name: style.name,
+      description: style.description,
+      styleGuideUrl: style.preview, // Use preset image as style guide
       isPreset: true,
       presetId: style.id,
     })

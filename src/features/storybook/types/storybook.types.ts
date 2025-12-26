@@ -231,6 +231,15 @@ export interface StorybookStyle {
 }
 
 // Main storybook project
+// Recipe configuration for storybook generation
+export interface StorybookRecipeConfig {
+  styleGuideRecipeId?: string      // Recipe for generating style guides
+  characterSheetRecipeId?: string  // Recipe for generating character sheets
+  pageFirstRecipeId?: string       // Recipe for first pages
+  pageContinuationRecipeId?: string // Recipe for continuation pages
+  bookCoverRecipeId?: string       // Recipe for book covers
+}
+
 export interface StorybookProject {
   id: string
   title: string
@@ -249,6 +258,8 @@ export interface StorybookProject {
   bookFormat: BookFormat // square, landscape, portrait, wide
   defaultLayout: PageLayout // Default layout for new pages
   targetAge: number // Target reader age (3-12)
+  // Recipe configuration (NEW)
+  recipeConfig?: StorybookRecipeConfig
 
   // Education mode settings (NEW)
   storyMode: StoryMode // 'generate' or 'paste'

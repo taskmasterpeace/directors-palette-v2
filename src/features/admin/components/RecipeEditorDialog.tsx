@@ -14,6 +14,7 @@ import { Plus, Trash2, Upload, X } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import type { Recipe, RecipeCategory, RecipeField, RecipeStageType, RecipeToolId } from "@/features/shot-creator/types/recipe.types"
 import { parseStageTemplate, RECIPE_TOOLS } from "@/features/shot-creator/types/recipe.types"
+import { compressImage } from "@/utils/image-compression"
 
 interface RecipeEditorDialogProps {
     recipe: Recipe | null
@@ -182,8 +183,11 @@ export function RecipeEditorDialog({
         setUploadingStageIndex(stageIndex)
 
         try {
+            // Compress image before upload
+            const compressedFile = await compressImage(file)
+
             const formData = new FormData()
-            formData.append('file', file)
+            formData.append('file', compressedFile)
 
             const response = await fetch('/api/upload-file', {
                 method: 'POST',
@@ -216,6 +220,7 @@ export function RecipeEditorDialog({
             })
         } catch (err) {
             console.error('Error uploading image:', err)
+            alert('Upload failed. Try a smaller image.')
         } finally {
             setUploadingStageIndex(null)
         }
