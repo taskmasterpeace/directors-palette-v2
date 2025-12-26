@@ -70,7 +70,7 @@ interface StorybookState {
   setDefaultLayout: (layout: PageLayout) => void
 
   // Education actions (NEW)
-  setMainCharacter: (name: string, age: number, photoUrl?: string) => void
+  setMainCharacter: (name: string, age: number) => void
   setEducationCategory: (category: string) => void
   setEducationTopic: (topic: string) => void
   setBookSettings: (pageCount: number, sentencesPerPage: number) => void
@@ -599,7 +599,7 @@ export const useStorybookStore = create<StorybookState>((set, get) => ({
   setError: (error) => set({ error }),
 
   // Education actions (NEW)
-  setMainCharacter: (name, age, photoUrl) => {
+  setMainCharacter: (name, age) => {
     const { project } = get()
     if (project) {
       set({
@@ -607,7 +607,7 @@ export const useStorybookStore = create<StorybookState>((set, get) => ({
           ...project,
           mainCharacterName: name,
           mainCharacterAge: age,
-          mainCharacterPhotoUrl: photoUrl,
+          // mainCharacterPhotoUrl removed - deprecated field
           title: `${name}'s Story`,
           targetAge: age,
           updatedAt: new Date(),
@@ -616,7 +616,7 @@ export const useStorybookStore = create<StorybookState>((set, get) => ({
     } else {
       // Create new project for generate mode
       const newProject = createGenerateProject(name, age)
-      newProject.mainCharacterPhotoUrl = photoUrl
+      // No photoUrl assignment needed
       set({ project: newProject })
     }
   },

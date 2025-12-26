@@ -252,7 +252,7 @@ export interface StorybookProject {
   // Main character (for generate mode)
   mainCharacterName?: string
   mainCharacterAge?: number
-  mainCharacterPhotoUrl?: string
+  mainCharacterPhotoUrl?: string // DEPRECATED: No longer used in UI, kept for backward compatibility
   // Additional story characters (siblings, friends, pets, etc.)
   storyCharacters?: StoryCharacter[]
   // Educational category and topic

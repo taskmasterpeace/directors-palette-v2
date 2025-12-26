@@ -93,8 +93,10 @@ export function WizardContainer() {
         // Can proceed even without characters (story might not have named characters)
         return true
       case 'pages':
-        // Check if at least one page has an image
-        return project?.pages.some(p => p.imageUrl) ?? false
+        // Allow users to proceed to preview even without generated images
+        // They can come back to generate images later
+        // Fix for Issue #2: Removed validation catch-22 that blocked proceeding
+        return true
       case 'preview':
         return true
       default:
