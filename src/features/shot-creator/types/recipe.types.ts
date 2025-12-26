@@ -2038,4 +2038,86 @@ CRITICAL REQUIREMENTS:
     isSystem: true,
     isSystemOnly: true,  // Hidden from regular users - used internally by Storybook
   },
+
+  // Storybook Style Guide (system recipe)
+  {
+    name: 'Storybook Style Guide',
+    description: '6-tile visual style guide for children\'s books',
+    recipeNote: 'Used by storybook feature to generate art style reference',
+    stages: [
+      {
+        type: 'generation',
+        template: `Create a visual style guide as a 6-image grid (2 rows × 3 columns) in <<STYLE_NAME:text!>> style.
+
+CRITICAL: Separate each cell with a SOLID BLACK LINE (4-6 pixels wide).
+
+<<STYLE_DESCRIPTION:text>>
+
+THE 6 TILES (2x3 grid):
+1. CHARACTER CLOSE-UP: A child character headshot, warm studio lighting, 3/4 view
+2. ACTION SCENE: A different character in dynamic pose, motion blur background
+3. ENVIRONMENT DETAIL: Interior scene, afternoon light through windows
+4. CHARACTER INTERACTION: Two diverse characters (different ethnicities/appearances) in conversation
+5. DYNAMIC POSE: Character in athletic stance, dramatic angle
+6. SET/LOCATION DESIGN: Exterior establishing shot with background characters of varied appearances
+
+DIVERSITY REQUIREMENTS:
+- Use diverse characters with different ethnicities, skin tones, and appearances
+- Show variety in hair colors, styles, and physical features
+- Include both male and female characters across the tiles
+- Make each character visually distinct and unique
+
+Output a 16:9 image with exactly 6 tiles (2 rows x 3 columns) separated by black lines.
+<<STYLE_NAME:text!>> style throughout all tiles.`,
+        referenceImages: [],
+      },
+    ],
+    suggestedAspectRatio: '16:9',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: false,
+    categoryId: 'storybook',
+    isSystem: true,
+    isSystemOnly: true,
+  },
+
+  // Storybook Page (Single Image)
+  {
+    name: 'Storybook Page (Single Image)',
+    description: 'Generate a single page illustration for a children\'s book',
+    recipeNote: 'Used by storybook feature to generate page illustrations',
+    stages: [
+      {
+        type: 'generation',
+        template: `Create an illustration for this children's book page:
+
+PAGE TEXT:
+"<<PAGE_TEXT:text!>>"
+
+SCENE:
+<<SCENE_DESCRIPTION:text>>
+
+CAMERA: <<SHOT_TYPE:select(Wide Shot,Medium Shot,Close-Up,Extreme Close-Up)!>>
+MOOD: <<MOOD:select(Happy,Sad,Excited,Calm,Mysterious,Adventurous)!>>
+
+CHARACTERS:
+<<CHARACTER_NAMES:text>>
+
+TECHNICAL REQUIREMENTS:
+- Match style guide exactly
+- Maintain character consistency using attached character sheets
+- No text overlays on image (text will be added separately)
+- Age-appropriate for <<TARGET_AGE:text!>> year olds
+- Diverse, inclusive representation
+
+Use reference images to match art style and character appearance exactly.`,
+        referenceImages: [],
+      },
+    ],
+    suggestedAspectRatio: '16:9',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: false,
+    categoryId: 'storybook',
+    isSystem: true,
+    isSystemOnly: true,
+  },
 ]

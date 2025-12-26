@@ -141,6 +141,27 @@ class RecipeService {
   }
 
   /**
+   * Get a single recipe by name (useful for system recipes)
+   */
+  async getRecipeByName(recipeName: string, userId: string): Promise<Recipe | null> {
+    const supabase = await getRecipeClient()
+
+    const { data, error } = await supabase
+      .from('user_recipes')
+      .select('*')
+      .eq('name', recipeName)
+      .or(`user_id.eq.${userId},is_system.eq.true`)
+      .single()
+
+    if (error) {
+      console.error('Error fetching recipe by name:', error)
+      return null
+    }
+
+    return dbRecipeToRecipe(data as DbRecipe)
+  }
+
+  /**
    * Create a new recipe
    */
   async createRecipe(
@@ -535,3 +556,10 @@ class RecipeService {
 
 // Export singleton instance
 export const recipeService = new RecipeService()
+
+// Convenience wrapper functions
+export const getRecipe = (recipeId: string, userId: string) =>
+  recipeService.getRecipe(recipeId, userId)
+
+export const getRecipeByName = (recipeName: string, userId: string) =>
+  recipeService.getRecipeByName(recipeName, userId)
