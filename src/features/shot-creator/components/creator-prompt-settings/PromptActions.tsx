@@ -3,6 +3,12 @@ import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Textarea } from '@/components/ui/textarea'
 import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
     Sparkles,
     HelpCircle,
     X,
@@ -688,21 +694,28 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 {/* Prompt syntax feedback */}
                 <PromptSyntaxFeedback prompt={shotCreatorPrompt} />
 
-                {/* Help section */}
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 space-y-2">
-                    <div className="flex items-start gap-2">
-                        <HelpCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                        <div className="text-sm text-blue-900 dark:text-blue-100 space-y-1">
-                            <p className="font-medium">Tips:</p>
-                            <ul className="list-disc list-inside space-y-0.5 ml-2">
-                                <li>Use @tag references to automatically attach images</li>
-                                <li>Use pipe (|) syntax for multi-stage generation</li>
-                                <li>Use {'{'}x,y{'}}'} for variation syntax</li>
-                                <li>Use * for wildcard expansion</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+                {/* Help tooltip */}
+                <TooltipProvider>
+                    <Tooltip delayDuration={200}>
+                        <TooltipTrigger asChild>
+                            <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 cursor-help w-fit">
+                                <HelpCircle className="w-3.5 h-3.5" />
+                                <span>Prompt tips</span>
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                            <div className="space-y-1 text-xs">
+                                <p className="font-medium mb-1.5">Prompt Syntax:</p>
+                                <ul className="space-y-1">
+                                    <li>• Use @tag references to automatically attach images</li>
+                                    <li>• Use pipe (|) syntax for multi-stage generation</li>
+                                    <li>• Use {'{'}x,y{'}}'} for variation syntax</li>
+                                    <li>• Use * for wildcard expansion</li>
+                                </ul>
+                            </div>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             </div>
         </Fragment>
     )
