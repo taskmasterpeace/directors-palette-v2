@@ -1,0 +1,314 @@
+
+> directors-palette-v2@0.95.0 build
+> next build --turbopack
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\git\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\git\directors-palette-v2\package-lock.json
+
+   ▲ Next.js 15.5.7 (Turbopack)
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Finished writing to disk in 171ms
+ ✓ Compiled successfully in 4.7s
+   Linting and checking validity of types ...
+
+./src/app/test-frame-extractor/page.tsx
+102:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/SidebarNavigation.tsx
+96:8  Warning: React Hook useEffect has a missing dependency: 'toggleCollapse'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+169:29  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+520:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+533:29  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/admin/components/FinancialsTab.tsx
+244:29  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+
+./src/features/admin/components/RecipeEditorDialog.tsx
+590:65  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/community/components/CommunityCard.tsx
+106:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+118:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/community/components/CommunityPage.tsx
+798:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/help/components/UserManual.tsx
+62:29  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/layout-annotation/components/canvas-board/FabricCanvas.tsx
+190:6  Warning: React Hook useEffect has missing dependencies: 'canvasHeight' and 'canvasWidth'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+685:6  Warning: React Hook useEffect has a missing dependency: 'fontSize'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/layout-annotation/components/LayoutAnnotationTab.tsx
+102:8  Warning: React Hook React.useEffect has a missing dependency: 'DEFAULT_SYSTEM_PROMPT'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+525:49  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/layout-annotation/components/MaskEditorTab.tsx
+673:37  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+724:25  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/music-lab/components/Timeline.tsx
+207:37  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/music-lab/components/WardrobeLookCard.tsx
+43:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/shot-animator/components/CompactShotCard.tsx
+149:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/shot-animator/components/ShotAnimatorView.tsx
+202:6  Warning: React Hook useEffect has missing dependencies: 'setShotConfigs' and 'shotConfigs'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+230:6  Warning: React Hook useEffect has missing dependencies: 'modelSettings' and 'updateShotAnimatorSettings'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx
+113:5  Warning: Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps').
+125:8  Warning: React Hook React.useMemo has an unnecessary dependency: 'activeFieldValues'. Either exclude it or remove the dependency array.  react-hooks/exhaustive-deps
+596:37  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/shot-creator/components/ModelSelector.tsx
+231:25  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+
+./src/features/shot-creator/components/prompt-organizer/PromptOrganizerModal.tsx
+150:8  Warning: React Hook useEffect has a missing dependency: 'parsePrompt'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/shot-creator/components/recipe/RecipeBuilder.tsx
+1498:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/shot-creator/hooks/useRecipes.ts
+26:6  Warning: React Hook useEffect has a missing dependency: 'store'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+33:6  Warning: React Hook useEffect has a missing dependency: 'store'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+112:6  Warning: React Hook useEffect has a missing dependency: 'store'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/story-creator/components/CharacterReferenceUpload.tsx
+199:33  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/story-creator/components/ReferenceSelectionModal.tsx
+115:41  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/story-creator/components/sections/EntitiesSection.tsx
+153:57  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+251:57  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/story-creator/hooks/useStoryGeneration.ts
+408:8  Warning: React Hook useCallback has a missing dependency: 'progress.currentShotIndex'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/storyboard/components/broll/BRollGenerator.tsx
+342:45  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/storyboard/components/entities/CharacterList.tsx
+78:37  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+139:45  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/storyboard/components/entities/CharacterSheetGenerator.tsx
+153:49  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/storyboard/components/entities/LocationList.tsx
+77:37  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+140:45  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/storyboard/components/gallery/StoryboardGallery.tsx
+331:57  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+525:25  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/storyboard/components/generation/GenerationQueue.tsx
+140:8  Warning: React Hook useEffect has a missing dependency: 'filteredPrompts'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/storyboard/components/shot-list/ShotBreakdown.tsx
+377:53  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+400:45  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/storyboard/components/ShotLab/BlockingCanvas.tsx
+63:8  Warning: React Hook useEffect has a missing dependency: 'shot.metadata.layoutData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/storyboard/components/style-guides/StyleGuideGenerator.tsx
+141:29  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/storybook/components/AudioPlayer.tsx
+73:6  Warning: React Hook useEffect has a missing dependency: 'isPlaying'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/hooks/useMultiImageUpload.ts
+219:6  Warning: React Hook useCallback has a missing dependency: 'processFile'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+(node:175672) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:175992) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:169032) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:173192) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:14200) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:182504) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:100860) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:119112) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:131808) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:148352) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:128808) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:72856) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:125408) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:20732) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:169588) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:69376) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:170688) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:175492) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:177816) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:70208) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:173152) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:182400) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:140040) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:52228) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:63664) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:109092) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:160420) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:172128) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:144956) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:30424) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:179092) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+   Generating static pages (0/69) ...
+(node:167996) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:146856) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+   Generating static pages (17/69) 
+(node:177144) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+   Generating static pages (34/69) 
+   Generating static pages (51/69) 
+ ✓ Generating static pages (69/69)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                   Size  First Load JS
+┌ ƒ /                                       592 kB         834 kB
+├ ƒ /_not-found                                0 B         153 kB
+├ ƒ /admin                                  135 kB         339 kB
+├ ƒ /api/admin/abuse-report                    0 B            0 B
+├ ƒ /api/admin/check                           0 B            0 B
+├ ƒ /api/admin/community                       0 B            0 B
+├ ƒ /api/admin/export-logs                     0 B            0 B
+├ ƒ /api/admin/financials                      0 B            0 B
+├ ƒ /api/admin/financials/export               0 B            0 B
+├ ƒ /api/admin/generations                     0 B            0 B
+├ ƒ /api/admin/generations/stats               0 B            0 B
+├ ƒ /api/admin/grant-credits                   0 B            0 B
+├ ƒ /api/admin/migrate                         0 B            0 B
+├ ƒ /api/admin/seed-recipes                    0 B            0 B
+├ ƒ /api/admin/stats                           0 B            0 B
+├ ƒ /api/admin/style-sheets                    0 B            0 B
+├ ƒ /api/admin/users                           0 B            0 B
+├ ƒ /api/community                             0 B            0 B
+├ ƒ /api/community/add                         0 B            0 B
+├ ƒ /api/community/library                     0 B            0 B
+├ ƒ /api/community/rate                        0 B            0 B
+├ ƒ /api/coupons                               0 B            0 B
+├ ƒ /api/coupons/redeem                        0 B            0 B
+├ ƒ /api/credits                               0 B            0 B
+├ ƒ /api/credits/packages                      0 B            0 B
+├ ƒ /api/credits/pricing                       0 B            0 B
+├ ƒ /api/credits/usage                         0 B            0 B
+├ ƒ /api/cron/cleanup-expired                  0 B            0 B
+├ ƒ /api/director-proposal/generate            0 B            0 B
+├ ƒ /api/gallery/save-frame                    0 B            0 B
+├ ƒ /api/generation/cancel/[predictionId]      0 B            0 B
+├ ƒ /api/generation/image                      0 B            0 B
+├ ƒ /api/generation/inpaint                    0 B            0 B
+├ ƒ /api/generation/status/[predictionId]      0 B            0 B
+├ ƒ /api/generation/video                      0 B            0 B
+├ ƒ /api/music-lab/analyze-structure           0 B            0 B
+├ ƒ /api/music-lab/isolate-vocals              0 B            0 B
+├ ƒ /api/music-lab/transcribe                  0 B            0 B
+├ ƒ /api/music-lab/upload                      0 B            0 B
+├ ƒ /api/payments/create-checkout              0 B            0 B
+├ ƒ /api/predictions/[id]                      0 B            0 B
+├ ƒ /api/prompt-organizer/parse                0 B            0 B
+├ ƒ /api/recipes/[recipeId]/execute            0 B            0 B
+├ ƒ /api/storage/limits                        0 B            0 B
+├ ƒ /api/story-creator/llm-chat                0 B            0 B
+├ ƒ /api/storyboard/broll                      0 B            0 B
+├ ƒ /api/storyboard/extract                    0 B            0 B
+├ ƒ /api/storyboard/generate-prompts           0 B            0 B
+├ ƒ /api/storybook/detect-characters           0 B            0 B
+├ ƒ /api/storybook/expand-style                0 B            0 B
+├ ƒ /api/storybook/extract-elements            0 B            0 B
+├ ƒ /api/storybook/generate-ideas              0 B            0 B
+├ ƒ /api/storybook/generate-story              0 B            0 B
+├ ƒ /api/storybook/polish-story                0 B            0 B
+├ ƒ /api/storybook/projects                    0 B            0 B
+├ ƒ /api/storybook/projects/[id]               0 B            0 B
+├ ƒ /api/storybook/sound-effects               0 B            0 B
+├ ƒ /api/storybook/synthesize                  0 B            0 B
+├ ƒ /api/tools/before-after-grid               0 B            0 B
+├ ƒ /api/tools/cinematic-grid                  0 B            0 B
+├ ƒ /api/tools/grid-split                      0 B            0 B
+├ ƒ /api/tools/remove-background               0 B            0 B
+├ ƒ /api/upload-file                           0 B            0 B
+├ ƒ /api/v1/images/generate                    0 B            0 B
+├ ƒ /api/v1/keys                               0 B            0 B
+├ ƒ /api/v1/recipes                            0 B            0 B
+├ ƒ /api/v1/recipes/execute                    0 B            0 B
+├ ƒ /api/v1/usage                              0 B            0 B
+├ ƒ /api/wardrobe/generate-preview             0 B            0 B
+├ ƒ /api/wardrobe/generate-reference           0 B            0 B
+├ ƒ /api/webhooks/replicate                    0 B            0 B
+├ ƒ /api/webhooks/stripe                       0 B            0 B
+├ ƒ /api/wildcards/generate                    0 B            0 B
+├ ƒ /api/wildcards/seed                        0 B            0 B
+├ ƒ /auth/callback                             0 B            0 B
+├ ƒ /auth/forgot-password                   9.5 kB         228 kB
+├ ƒ /auth/reset-password                   6.56 kB         226 kB
+├ ƒ /auth/signin                           16.4 kB         235 kB
+├ ƒ /gallery                                150 kB         382 kB
+├ ƒ /help                                  8.99 kB         162 kB
+├ ƒ /landing                                 15 kB         168 kB
+├ ƒ /music-lab                               89 kB         242 kB
+├ ƒ /test-frame-extractor                  10.9 kB         164 kB
+└ ƒ /test-storyboard                        243 kB         438 kB
++ First Load JS shared by all               190 kB
+  ├ chunks/1baab3984f7e91dd.js             12.8 kB
+  ├ chunks/546dfb9f0014d27e.js             59.2 kB
+  └ chunks/a40199e63aefe8d5.js               13 kB
+  ├ chunks/cfae3f55f140d7b7.js             17.1 kB
+  ├ chunks/a3ccbc02feb7c993.css            36.9 kB
+  └ other shared chunks (total)            50.9 kB
+
+
+ƒ Middleware                               72.8 kB
+
+ƒ  (Dynamic)  server-rendered on demand
+

@@ -1,0 +1,153 @@
+
+> directors-palette-v2@0.95.0 build
+> next build --turbopack
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\git\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\git\directors-palette-v2\package-lock.json
+
+   ▲ Next.js 15.5.7 (Turbopack)
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Finished writing to disk in 231ms
+ ✓ Compiled successfully in 5.1s
+   Linting and checking validity of types ...
+
+./src/app/test-frame-extractor/page.tsx
+102:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/SidebarNavigation.tsx
+96:8  Warning: React Hook useEffect has a missing dependency: 'toggleCollapse'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+169:29  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+520:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+533:29  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/admin/components/FinancialsTab.tsx
+244:29  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+
+./src/features/admin/components/RecipeEditorDialog.tsx
+590:65  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/community/components/CommunityCard.tsx
+106:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+118:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/community/components/CommunityPage.tsx
+798:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/help/components/UserManual.tsx
+62:29  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/layout-annotation/components/canvas-board/FabricCanvas.tsx
+190:6  Warning: React Hook useEffect has missing dependencies: 'canvasHeight' and 'canvasWidth'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+685:6  Warning: React Hook useEffect has a missing dependency: 'fontSize'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/layout-annotation/components/LayoutAnnotationTab.tsx
+102:8  Warning: React Hook React.useEffect has a missing dependency: 'DEFAULT_SYSTEM_PROMPT'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+525:49  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/layout-annotation/components/MaskEditorTab.tsx
+673:37  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+724:25  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/music-lab/components/Timeline.tsx
+207:37  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/music-lab/components/WardrobeLookCard.tsx
+43:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/shot-animator/components/CompactShotCard.tsx
+149:15  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/shot-animator/components/ShotAnimatorView.tsx
+202:6  Warning: React Hook useEffect has missing dependencies: 'setShotConfigs' and 'shotConfigs'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+230:6  Warning: React Hook useEffect has missing dependencies: 'modelSettings' and 'updateShotAnimatorSettings'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx
+113:5  Warning: Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps').
+125:8  Warning: React Hook React.useMemo has an unnecessary dependency: 'activeFieldValues'. Either exclude it or remove the dependency array.  react-hooks/exhaustive-deps
+596:37  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/shot-creator/components/ModelSelector.tsx
+231:25  Warning: Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images.  jsx-a11y/alt-text
+
+./src/features/shot-creator/components/prompt-organizer/PromptOrganizerModal.tsx
+150:8  Warning: React Hook useEffect has a missing dependency: 'parsePrompt'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/shot-creator/components/recipe/RecipeBuilder.tsx
+1498:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/shot-creator/hooks/useRecipes.ts
+26:6  Warning: React Hook useEffect has a missing dependency: 'store'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+33:6  Warning: React Hook useEffect has a missing dependency: 'store'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+112:6  Warning: React Hook useEffect has a missing dependency: 'store'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/story-creator/components/CharacterReferenceUpload.tsx
+199:33  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/story-creator/components/ReferenceSelectionModal.tsx
+115:41  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/story-creator/components/sections/EntitiesSection.tsx
+153:57  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+251:57  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/story-creator/hooks/useStoryGeneration.ts
+408:8  Warning: React Hook useCallback has a missing dependency: 'progress.currentShotIndex'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/storyboard/components/broll/BRollGenerator.tsx
+342:45  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/storyboard/components/entities/CharacterList.tsx
+78:37  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+139:45  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/storyboard/components/entities/CharacterSheetGenerator.tsx
+153:49  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/storyboard/components/entities/LocationList.tsx
+77:37  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+140:45  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/storyboard/components/gallery/StoryboardGallery.tsx
+331:57  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+525:25  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/storyboard/components/generation/GenerationQueue.tsx
+140:8  Warning: React Hook useEffect has a missing dependency: 'filteredPrompts'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/storyboard/components/shot-list/ShotBreakdown.tsx
+377:53  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+400:45  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/storyboard/components/ShotLab/BlockingCanvas.tsx
+63:8  Warning: React Hook useEffect has a missing dependency: 'shot.metadata.layoutData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/features/storyboard/components/style-guides/StyleGuideGenerator.tsx
+141:29  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/features/storybook/components/AudioPlayer.tsx
+73:6  Warning: React Hook useEffect has a missing dependency: 'isPlaying'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/hooks/useMultiImageUpload.ts
+219:6  Warning: React Hook useCallback has a missing dependency: 'processFile'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+Failed to compile.
+
+./src/features/layout-annotation/components/LayoutAnnotationTab.tsx:625:21
+Type error: Type '{ ref: RefObject<FabricCanvasRef | null>; className: string; onFileUpload: (event: ChangeEvent<HTMLInputElement>) => void; backgroundImage: string | null; canvasMode: "canvas" | "photo"; toolbarContent: Element; }' is not assignable to type 'IntrinsicAttributes & FabricCanvasProps & RefAttributes<FabricCanvasRef>'.
+  Property 'className' does not exist on type 'IntrinsicAttributes & FabricCanvasProps & RefAttributes<FabricCanvasRef>'.
+
+[0m [90m 623 |[39m                 [33m<[39m[33mFabricCanvas[39m
+ [90m 624 |[39m                     ref[33m=[39m{canvasRef}
+[31m[1m>[22m[39m[90m 625 |[39m                     className[33m=[39m[32m"flex-1"[39m
+ [90m     |[39m                     [31m[1m^[22m[39m
+ [90m 626 |[39m                     onFileUpload[33m=[39m{handleFileUpload}
+ [90m 627 |[39m                     backgroundImage[33m=[39m{backgroundImage}
+ [90m 628 |[39m                     canvasMode[33m=[39m{canvasMode}[0m
+Next.js build worker exited with code: 1 and signal: null

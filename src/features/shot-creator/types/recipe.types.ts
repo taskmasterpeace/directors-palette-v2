@@ -154,6 +154,8 @@ export interface RecipeCategory {
 export const DEFAULT_RECIPE_CATEGORIES: RecipeCategory[] = [
   { id: 'characters', name: 'Characters', icon: '👤', isDefault: true },
   { id: 'scenes', name: 'Scenes', icon: '🎬', isDefault: true },
+  { id: 'environments', name: 'Environments', icon: '🏛️', isDefault: true },
+  { id: 'narrative', name: 'Narrative', icon: '📚', isDefault: true },
   { id: 'styles', name: 'Style Transfers', icon: '🎨', isDefault: true },
   { id: 'products', name: 'Products', icon: '📦', isDefault: true },
   { id: 'custom', name: 'Custom', icon: '✨', isDefault: true },
@@ -2279,5 +2281,611 @@ Use reference images to match art style and character appearance exactly.`,
     categoryId: 'storybook',
     isSystem: true,
     isSystemOnly: true,
+  },
+
+  // ========================================
+  // CINEMATIC GRID RECIPES (10 recipes)
+  // ========================================
+
+  // POV Simulation (16:9)
+  {
+    name: 'POV Simulation (16:9)',
+    description: 'First-person perspective grid showing what character sees through their own eyes',
+    recipeNote: 'Attach character reference for outfit/appearance. Grid shows character\'s hands, arms, legs, but NOT their face (except in reflections).',
+    stages: [
+      {
+        id: crypto.randomUUID(),
+        order: 0,
+        type: 'generation',
+        template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 16:9 aspect ratio.
+SEPARATE EACH CELL WITH A SOLID BLACK LINE (4-6 pixels wide).
+
+CHARACTER PERSPECTIVE: First-person POV from @<<CHARACTER_NAME:name!>>'s eyes.
+CURRENT ACTIVITY: <<STORY:text!>>
+
+STYLE EXTRACTION: Analyze the style reference image for environmental textures, lighting quality, and color grading.
+
+CAMERA SETTINGS:
+- First Person Perspective (POV)
+- Wide angle (24mm-35mm equivalent) simulating human vision
+- We do NOT see <<CHARACTER_NAME:name!>>'s face (except in reflections)
+- We DO see their ARMS, HANDS, LEGS dressed in their outfit
+
+3×3 GRID LAYOUT (Reading order: Left→Right, Top→Bottom):
+
+ROW 1 - INTERACTION:
+Panel 1 (Top-Left): POV looking DOWN at @<<CHARACTER_NAME:name!>>'s own torso and outfit, establishing their identity and clothing.
+Panel 2 (Top-Center): POV of @<<CHARACTER_NAME:name!>>'s HANDS interacting with a key object from the story (<<STORY:text!>>).
+Panel 3 (Top-Right): POV of @<<CHARACTER_NAME:name!>> REACHING OUT to touch a texture or open a door in the environment.
+
+ROW 2 - COMBAT/ACTION POV:
+Panel 4 (Middle-Left): POV BLOCKING a light source or incoming attack with @<<CHARACTER_NAME:name!>>'s ARM visible in frame.
+Panel 5 (Middle-Center): POV FOCUSING on a target or destination from <<STORY:text!>>. Hands visible in lower frame guiding the way.
+Panel 6 (Middle-Right): POV looking at a REFLECTION (mirror/window/water). We FINALLY see @<<CHARACTER_NAME:name!>>'s face clearly in the reflection.
+
+ROW 3 - ENVIRONMENTAL AWARENESS:
+Panel 7 (Bottom-Left): POV looking DOWN at @<<CHARACTER_NAME:name!>>'s FEET moving across the specific terrain mentioned in <<STORY:text!>>.
+Panel 8 (Bottom-Center): POV checking a TOOL, WEAPON, or PHONE held in @<<CHARACTER_NAME:name!>>'s hands.
+Panel 9 (Bottom-Right): POV BLINKING/FADING. Vision is slightly blurred or vignetted, implying fatigue or emotion from <<STORY:text!>>.
+
+CONSISTENCY REQUIREMENTS:
+- All panels must show the SAME outfit on <<CHARACTER_NAME:name!>>
+- Lighting and color grading from style reference must remain consistent
+- Grid cells separated by SOLID BLACK LINES`,
+        fields: [],
+        referenceImages: [],
+      },
+    ],
+    suggestedAspectRatio: '16:9',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: true,
+    categoryId: 'characters',
+    isSystem: true,
+    isSystemOnly: false,
+  },
+
+  // POV Simulation (9:16)
+  {
+    name: 'POV Simulation (9:16)',
+    description: 'First-person perspective grid showing what character sees through their own eyes (portrait)',
+    recipeNote: 'Attach character reference for outfit/appearance. Grid shows character\'s hands, arms, legs, but NOT their face (except in reflections).',
+    stages: [
+      {
+        id: crypto.randomUUID(),
+        order: 0,
+        type: 'generation',
+        template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 9:16 aspect ratio.
+SEPARATE EACH CELL WITH A SOLID BLACK LINE (4-6 pixels wide).
+
+CHARACTER PERSPECTIVE: First-person POV from @<<CHARACTER_NAME:name!>>'s eyes.
+CURRENT ACTIVITY: <<STORY:text!>>
+
+STYLE EXTRACTION: Analyze the style reference image for environmental textures, lighting quality, and color grading.
+
+CAMERA SETTINGS:
+- First Person Perspective (POV)
+- Wide angle (24mm-35mm equivalent) simulating human vision
+- We do NOT see <<CHARACTER_NAME:name!>>'s face (except in reflections)
+- We DO see their ARMS, HANDS, LEGS dressed in their outfit
+
+3×3 GRID LAYOUT (Reading order: Left→Right, Top→Bottom):
+
+ROW 1 - INTERACTION:
+Panel 1 (Top-Left): POV looking DOWN at @<<CHARACTER_NAME:name!>>'s own torso and outfit, establishing their identity and clothing.
+Panel 2 (Top-Center): POV of @<<CHARACTER_NAME:name!>>'s HANDS interacting with a key object from the story (<<STORY:text!>>).
+Panel 3 (Top-Right): POV of @<<CHARACTER_NAME:name!>> REACHING OUT to touch a texture or open a door in the environment.
+
+ROW 2 - COMBAT/ACTION POV:
+Panel 4 (Middle-Left): POV BLOCKING a light source or incoming attack with @<<CHARACTER_NAME:name!>>'s ARM visible in frame.
+Panel 5 (Middle-Center): POV FOCUSING on a target or destination from <<STORY:text!>>. Hands visible in lower frame guiding the way.
+Panel 6 (Middle-Right): POV looking at a REFLECTION (mirror/window/water). We FINALLY see @<<CHARACTER_NAME:name!>>'s face clearly in the reflection.
+
+ROW 3 - ENVIRONMENTAL AWARENESS:
+Panel 7 (Bottom-Left): POV looking DOWN at @<<CHARACTER_NAME:name!>>'s FEET moving across the specific terrain mentioned in <<STORY:text!>>.
+Panel 8 (Bottom-Center): POV checking a TOOL, WEAPON, or PHONE held in @<<CHARACTER_NAME:name!>>'s hands.
+Panel 9 (Bottom-Right): POV BLINKING/FADING. Vision is slightly blurred or vignetted, implying fatigue or emotion from <<STORY:text!>>.
+
+CONSISTENCY REQUIREMENTS:
+- All panels must show the SAME outfit on <<CHARACTER_NAME:name!>>
+- Lighting and color grading from style reference must remain consistent
+- Grid cells separated by SOLID BLACK LINES`,
+        fields: [],
+        referenceImages: [],
+      },
+    ],
+    suggestedAspectRatio: '9:16',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: true,
+    categoryId: 'characters',
+    isSystem: true,
+    isSystemOnly: false,
+  },
+
+  // Action Sequencer (16:9)
+  {
+    name: 'Action Sequencer (16:9)',
+    description: 'Motion breakdown grid showing action in 3 phases: Wind-Up → Impact → Aftermath',
+    recipeNote: 'Best for fight scenes, athletic moves, or any dynamic action. Row 2 features motion blur.',
+    stages: [
+      {
+        id: crypto.randomUUID(),
+        order: 0,
+        type: 'generation',
+        template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 16:9 aspect ratio.
+SEPARATE EACH CELL WITH A SOLID BLACK LINE (4-6 pixels wide).
+
+CHARACTER PERFORMING ACTION: @<<CHARACTER_NAME:name!>>
+ACTION NARRATIVE: <<ACTION_STORY:text!>>
+
+STYLE EXTRACTION: Analyze style reference for color palette, film grain, lighting contrast, and render engine style. Apply these EXACT visual parameters to @<<CHARACTER_NAME:name!>>.
+
+CONSISTENCY: @<<CHARACTER_NAME:name!>> MUST maintain consistent facial features and costume details across all 9 panels despite rapid movement blur.
+
+SHUTTER SPEED RULES:
+- Rows 1 & 3: CRISP/STATIC (high shutter speed, frozen motion)
+- Row 2: DIRECTIONAL MOTION BLUR (low shutter speed, action blur)
+
+3×3 GRID LAYOUT - ACTION BREAKDOWN:
+
+ROW 1 - THE WIND UP (Anticipation):
+Panel 1 (Top-Left): @<<CHARACTER_NAME:name!>> shifts weight, tensing muscles. Focus on BODY MECHANICS preparing for the action in <<ACTION_STORY:text!>>.
+Panel 2 (Top-Center): CLOSE-UP on @<<CHARACTER_NAME:name!>>'s EYES or HANDS. Intense focus. The moment BEFORE the strike/action.
+Panel 3 (Top-Right): THE COIL. @<<CHARACTER_NAME:name!>> in the final frame of preparation, energy stored, ready to release.
+
+ROW 2 - THE IMPACT (Action with Motion Blur):
+Panel 4 (Middle-Left): THE RELEASE. @<<CHARACTER_NAME:name!>> EXPLODES into motion. High energy, frozen violence/action. Motion blur begins.
+Panel 5 (Middle-Center): THE CONTACT/PEAK. The DEFINING moment of <<ACTION_STORY:text!>>. Maximum dynamic energy. Facial expression of EXERTION. Heavy motion blur.
+Panel 6 (Middle-Right): FOLLOW-THROUGH. The limb or body part extends FULLY. Motion blur indicates speed.
+
+ROW 3 - THE AFTERMATH (Reaction):
+Panel 7 (Bottom-Left): THE LANDING. @<<CHARACTER_NAME:name!>> regains balance or skids to a halt. Dust/debris settling.
+Panel 8 (Bottom-Center): PHYSICAL TOLL. Close-up on @<<CHARACTER_NAME:name!>> breathing hard, sweating, or bleeding (if applicable to <<ACTION_STORY:text!>>).
+Panel 9 (Bottom-Right): THE RESOLVE. @<<CHARACTER_NAME:name!>> standing in the aftermath, body language showing the outcome of the action.
+
+CRITICAL:
+- Grid cells separated by SOLID BLACK LINES
+- Character appearance MUST remain consistent despite motion blur`,
+        fields: [],
+        referenceImages: [],
+      },
+    ],
+    suggestedAspectRatio: '16:9',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: true,
+    categoryId: 'characters',
+    isSystem: true,
+    isSystemOnly: false,
+  },
+
+  // Action Sequencer (9:16)
+  {
+    name: 'Action Sequencer (9:16)',
+    description: 'Motion breakdown grid showing action in 3 phases: Wind-Up → Impact → Aftermath (portrait)',
+    recipeNote: 'Best for fight scenes, athletic moves, or any dynamic action. Row 2 features motion blur.',
+    stages: [
+      {
+        id: crypto.randomUUID(),
+        order: 0,
+        type: 'generation',
+        template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 9:16 aspect ratio.
+SEPARATE EACH CELL WITH A SOLID BLACK LINE (4-6 pixels wide).
+
+CHARACTER PERFORMING ACTION: @<<CHARACTER_NAME:name!>>
+ACTION NARRATIVE: <<ACTION_STORY:text!>>
+
+STYLE EXTRACTION: Analyze style reference for color palette, film grain, lighting contrast, and render engine style. Apply these EXACT visual parameters to @<<CHARACTER_NAME:name!>>.
+
+CONSISTENCY: @<<CHARACTER_NAME:name!>> MUST maintain consistent facial features and costume details across all 9 panels despite rapid movement blur.
+
+SHUTTER SPEED RULES:
+- Rows 1 & 3: CRISP/STATIC (high shutter speed, frozen motion)
+- Row 2: DIRECTIONAL MOTION BLUR (low shutter speed, action blur)
+
+3×3 GRID LAYOUT - ACTION BREAKDOWN:
+
+ROW 1 - THE WIND UP (Anticipation):
+Panel 1 (Top-Left): @<<CHARACTER_NAME:name!>> shifts weight, tensing muscles. Focus on BODY MECHANICS preparing for the action in <<ACTION_STORY:text!>>.
+Panel 2 (Top-Center): CLOSE-UP on @<<CHARACTER_NAME:name!>>'s EYES or HANDS. Intense focus. The moment BEFORE the strike/action.
+Panel 3 (Top-Right): THE COIL. @<<CHARACTER_NAME:name!>> in the final frame of preparation, energy stored, ready to release.
+
+ROW 2 - THE IMPACT (Action with Motion Blur):
+Panel 4 (Middle-Left): THE RELEASE. @<<CHARACTER_NAME:name!>> EXPLODES into motion. High energy, frozen violence/action. Motion blur begins.
+Panel 5 (Middle-Center): THE CONTACT/PEAK. The DEFINING moment of <<ACTION_STORY:text!>>. Maximum dynamic energy. Facial expression of EXERTION. Heavy motion blur.
+Panel 6 (Middle-Right): FOLLOW-THROUGH. The limb or body part extends FULLY. Motion blur indicates speed.
+
+ROW 3 - THE AFTERMATH (Reaction):
+Panel 7 (Bottom-Left): THE LANDING. @<<CHARACTER_NAME:name!>> regains balance or skids to a halt. Dust/debris settling.
+Panel 8 (Bottom-Center): PHYSICAL TOLL. Close-up on @<<CHARACTER_NAME:name!>> breathing hard, sweating, or bleeding (if applicable to <<ACTION_STORY:text!>>).
+Panel 9 (Bottom-Right): THE RESOLVE. @<<CHARACTER_NAME:name!>> standing in the aftermath, body language showing the outcome of the action.
+
+CRITICAL:
+- Grid cells separated by SOLID BLACK LINES
+- Character appearance MUST remain consistent despite motion blur`,
+        fields: [],
+        referenceImages: [],
+      },
+    ],
+    suggestedAspectRatio: '9:16',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: true,
+    categoryId: 'characters',
+    isSystem: true,
+    isSystemOnly: false,
+  },
+
+  // World Building (16:9)
+  {
+    name: 'World Building (16:9)',
+    description: 'Location exploration grid: Interior details → Exterior establishing → Voyeuristic views',
+    recipeNote: 'Provide a reference image showing the main location. Grid explores the environment from multiple perspectives.',
+    stages: [
+      {
+        id: crypto.randomUUID(),
+        order: 0,
+        type: 'generation',
+        template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 16:9 aspect ratio.
+SEPARATE EACH CELL WITH A SOLID BLACK LINE (4-6 pixels wide).
+
+LOCATION BEING EXPLORED: <<LOCATION_NAME:name!>>
+DESCRIPTION: <<LOCATION_DESCRIPTION:text!>>
+
+STYLE EXTRACTION: Analyze reference image for:
+- Primary location type (e.g., dive bar, office, meadow, warehouse)
+- Photographic style, lighting quality, film grain
+- Color grading and atmospheric mood
+- Main subjects (for context only)
+
+CONSISTENCY RULES:
+- All panels inhabit the EXACT SAME location
+- Lighting and film stock style MUST remain consistent
+- In Rows 1 & 3: Main subjects are present but SIGNIFICANTLY OUT OF FOCUS (heavy bokeh/blur)
+- Sharp focus on ENVIRONMENTAL DETAILS, not people
+
+3×3 GRID LAYOUT - LOCATION EXPLORATION:
+
+ROW 1 - INTERIOR/INTIMATE CONTEXT (Shallow Depth of Field):
+Panel 1 (Top-Left): WIDE ANGLE INTERIOR. A relevant foreground object (coffee cup, tool, hand on table) is INTENSELY SHARP. Any people in mid-ground are EXTREMELY BLURRY.
+Panel 2 (Top-Center): MEDIUM SHOT INTERIOR. Looking past a structural element (doorframe, pillar, beam) that is SHARP in foreground. Any people in background are OUT OF FOCUS.
+Panel 3 (Top-Right): MACRO DETAIL INTERIOR. Extreme close-up on a texture definitive of <<LOCATION_NAME:name!>> (peeling paint, polished chrome, worn wood grain). Any people are vague shapes in distance.
+
+ROW 2 - EXTERIOR ESTABLISHING (The Reveal):
+Panel 4 (Middle-Left): EYE-LEVEL STREET VIEW. Standard wide establishing shot of the EXTERIOR building facade of <<LOCATION_NAME:name!>>.
+Panel 5 (Middle-Center): HIGH ANGLE DRONE SHOT. Excessive wide shot showing <<LOCATION_NAME:name!>> situated within its larger geography/cityscape. NO foreground elements.
+Panel 6 (Middle-Right): ARCHITECTURAL DETAIL EXTERIOR. Focus on a specific exterior feature that gives character (neon sign, rusted fire escape, ornate doorway).
+
+ROW 3 - EXTERIOR PEEP-HOLE (Voyeuristic View):
+Panel 7 (Bottom-Left): THROUGH FOREGROUND ELEMENTS. Looking at the exterior location from distance through SHARP foreground foliage, fence, or rain-streaked glass. The location is SLIGHTLY SOFT.
+Panel 8 (Bottom-Center): REFLECTION SHOT. The exterior of <<LOCATION_NAME:name!>> is seen ONLY as a reflection in a puddle, car window, or glossy surface.
+Panel 9 (Bottom-Right): LONG LENS COMPRESSION. A telephoto shot from very far away, compressing distance. Heat haze or atmospheric perspective makes the location look distant and embedded in surroundings.
+
+CRITICAL:
+- Grid cells separated by SOLID BLACK LINES
+- Infer exterior architecture from interior reference`,
+        fields: [],
+        referenceImages: [],
+      },
+    ],
+    suggestedAspectRatio: '16:9',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: true,
+    categoryId: 'environments',
+    isSystem: true,
+    isSystemOnly: false,
+  },
+
+  // World Building (9:16)
+  {
+    name: 'World Building (9:16)',
+    description: 'Location exploration grid: Interior details → Exterior establishing → Voyeuristic views (portrait)',
+    recipeNote: 'Provide a reference image showing the main location. Grid explores the environment from multiple perspectives.',
+    stages: [
+      {
+        id: crypto.randomUUID(),
+        order: 0,
+        type: 'generation',
+        template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 9:16 aspect ratio.
+SEPARATE EACH CELL WITH A SOLID BLACK LINE (4-6 pixels wide).
+
+LOCATION BEING EXPLORED: <<LOCATION_NAME:name!>>
+DESCRIPTION: <<LOCATION_DESCRIPTION:text!>>
+
+STYLE EXTRACTION: Analyze reference image for:
+- Primary location type (e.g., dive bar, office, meadow, warehouse)
+- Photographic style, lighting quality, film grain
+- Color grading and atmospheric mood
+- Main subjects (for context only)
+
+CONSISTENCY RULES:
+- All panels inhabit the EXACT SAME location
+- Lighting and film stock style MUST remain consistent
+- In Rows 1 & 3: Main subjects are present but SIGNIFICANTLY OUT OF FOCUS (heavy bokeh/blur)
+- Sharp focus on ENVIRONMENTAL DETAILS, not people
+
+3×3 GRID LAYOUT - LOCATION EXPLORATION:
+
+ROW 1 - INTERIOR/INTIMATE CONTEXT (Shallow Depth of Field):
+Panel 1 (Top-Left): WIDE ANGLE INTERIOR. A relevant foreground object (coffee cup, tool, hand on table) is INTENSELY SHARP. Any people in mid-ground are EXTREMELY BLURRY.
+Panel 2 (Top-Center): MEDIUM SHOT INTERIOR. Looking past a structural element (doorframe, pillar, beam) that is SHARP in foreground. Any people in background are OUT OF FOCUS.
+Panel 3 (Top-Right): MACRO DETAIL INTERIOR. Extreme close-up on a texture definitive of <<LOCATION_NAME:name!>> (peeling paint, polished chrome, worn wood grain). Any people are vague shapes in distance.
+
+ROW 2 - EXTERIOR ESTABLISHING (The Reveal):
+Panel 4 (Middle-Left): EYE-LEVEL STREET VIEW. Standard wide establishing shot of the EXTERIOR building facade of <<LOCATION_NAME:name!>>.
+Panel 5 (Middle-Center): HIGH ANGLE DRONE SHOT. Excessive wide shot showing <<LOCATION_NAME:name!>> situated within its larger geography/cityscape. NO foreground elements.
+Panel 6 (Middle-Right): ARCHITECTURAL DETAIL EXTERIOR. Focus on a specific exterior feature that gives character (neon sign, rusted fire escape, ornate doorway).
+
+ROW 3 - EXTERIOR PEEP-HOLE (Voyeuristic View):
+Panel 7 (Bottom-Left): THROUGH FOREGROUND ELEMENTS. Looking at the exterior location from distance through SHARP foreground foliage, fence, or rain-streaked glass. The location is SLIGHTLY SOFT.
+Panel 8 (Bottom-Center): REFLECTION SHOT. The exterior of <<LOCATION_NAME:name!>> is seen ONLY as a reflection in a puddle, car window, or glossy surface.
+Panel 9 (Bottom-Right): LONG LENS COMPRESSION. A telephoto shot from very far away, compressing distance. Heat haze or atmospheric perspective makes the location look distant and embedded in surroundings.
+
+CRITICAL:
+- Grid cells separated by SOLID BLACK LINES
+- Infer exterior architecture from interior reference`,
+        fields: [],
+        referenceImages: [],
+      },
+    ],
+    suggestedAspectRatio: '9:16',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: true,
+    categoryId: 'environments',
+    isSystem: true,
+    isSystemOnly: false,
+  },
+
+  // Story Summary - Full Arc (16:9)
+  {
+    name: 'Story Summary - Full Arc (16:9)',
+    description: '9-panel visual narrative showing complete story from beginning to resolution',
+    recipeNote: 'Attach character reference for consistent appearance. Grid tells entire story with NO text bubbles.',
+    stages: [
+      {
+        id: crypto.randomUUID(),
+        order: 0,
+        type: 'generation',
+        template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 16:9 aspect ratio.
+SEPARATE EACH CELL WITH A SOLID BLACK LINE (4-6 pixels wide).
+
+PROTAGONIST: @<<CHARACTER_NAME:name!>>
+COMPLETE NARRATIVE: <<FULL_STORY:text!>>
+
+STYLE EXTRACTION: Analyze character reference image to define:
+- Protagonist's appearance, clothing, physical features
+- Overall visual art style and cinematography
+- Color palette and lighting approach
+
+CONSISTENCY REQUIREMENTS:
+- @<<CHARACTER_NAME:name!>> must look EXACTLY like the reference image in ALL panels
+- Cinematographic style must match reference
+- NO TEXT BUBBLES or overlaid words
+- Story told purely through VISUAL ACTION, composition, and character emotion
+
+NARRATIVE STRUCTURE: Identify the 9 MOST CRUCIAL PLOT POINTS from <<FULL_STORY:text!>> spanning beginning to resolution.
+
+3×3 GRID LAYOUT - FULL STORY ARC:
+
+ROW 1 - ACT 1: Setup and Inciting Incident
+Panel 1 (Top-Left): PLOT POINT 1 - The Status Quo / Beginning. Show @<<CHARACTER_NAME:name!>> in their normal world before change.
+Panel 2 (Top-Center): PLOT POINT 2 - The Inciting Incident / Disruption. The event that disrupts the status quo from <<FULL_STORY:text!>>.
+Panel 3 (Top-Right): PLOT POINT 3 - Locking into the Journey. @<<CHARACTER_NAME:name!>> commits to the path forward.
+
+ROW 2 - ACT 2: Confrontation and Rising Action
+Panel 4 (Middle-Left): PLOT POINT 4 - Rising obstacles/challenges. @<<CHARACTER_NAME:name!>> faces first major challenge from <<FULL_STORY:text!>>.
+Panel 5 (Middle-Center): PLOT POINT 5 - The Midpoint Climax / Point of No Return. The turning point where stakes are raised.
+Panel 6 (Middle-Right): PLOT POINT 6 - The Lowest Point. @<<CHARACTER_NAME:name!>> faces their darkest moment or setup for final confrontation.
+
+ROW 3 - ACT 3: Resolution
+Panel 7 (Bottom-Left): PLOT POINT 7 - The Climax / Final Battle. The peak moment of conflict from <<FULL_STORY:text!>>.
+Panel 8 (Bottom-Center): PLOT POINT 8 - The Immediate Aftermath / Falling Action. Immediate consequences of the climax.
+Panel 9 (Bottom-Right): PLOT POINT 9 - The New Status Quo / Final Image. @<<CHARACTER_NAME:name!>> in their changed world after the journey.
+
+CRITICAL:
+- Grid cells separated by SOLID BLACK LINES
+- Sequential reading order: left→right, top→bottom
+- NO text, purely visual storytelling`,
+        fields: [],
+        referenceImages: [],
+      },
+    ],
+    suggestedAspectRatio: '16:9',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: true,
+    categoryId: 'narrative',
+    isSystem: true,
+    isSystemOnly: false,
+  },
+
+  // Story Summary - Full Arc (9:16)
+  {
+    name: 'Story Summary - Full Arc (9:16)',
+    description: '9-panel visual narrative showing complete story from beginning to resolution (portrait)',
+    recipeNote: 'Attach character reference for consistent appearance. Grid tells entire story with NO text bubbles.',
+    stages: [
+      {
+        id: crypto.randomUUID(),
+        order: 0,
+        type: 'generation',
+        template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 9:16 aspect ratio.
+SEPARATE EACH CELL WITH A SOLID BLACK LINE (4-6 pixels wide).
+
+PROTAGONIST: @<<CHARACTER_NAME:name!>>
+COMPLETE NARRATIVE: <<FULL_STORY:text!>>
+
+STYLE EXTRACTION: Analyze character reference image to define:
+- Protagonist's appearance, clothing, physical features
+- Overall visual art style and cinematography
+- Color palette and lighting approach
+
+CONSISTENCY REQUIREMENTS:
+- @<<CHARACTER_NAME:name!>> must look EXACTLY like the reference image in ALL panels
+- Cinematographic style must match reference
+- NO TEXT BUBBLES or overlaid words
+- Story told purely through VISUAL ACTION, composition, and character emotion
+
+NARRATIVE STRUCTURE: Identify the 9 MOST CRUCIAL PLOT POINTS from <<FULL_STORY:text!>> spanning beginning to resolution.
+
+3×3 GRID LAYOUT - FULL STORY ARC:
+
+ROW 1 - ACT 1: Setup and Inciting Incident
+Panel 1 (Top-Left): PLOT POINT 1 - The Status Quo / Beginning. Show @<<CHARACTER_NAME:name!>> in their normal world before change.
+Panel 2 (Top-Center): PLOT POINT 2 - The Inciting Incident / Disruption. The event that disrupts the status quo from <<FULL_STORY:text!>>.
+Panel 3 (Top-Right): PLOT POINT 3 - Locking into the Journey. @<<CHARACTER_NAME:name!>> commits to the path forward.
+
+ROW 2 - ACT 2: Confrontation and Rising Action
+Panel 4 (Middle-Left): PLOT POINT 4 - Rising obstacles/challenges. @<<CHARACTER_NAME:name!>> faces first major challenge from <<FULL_STORY:text!>>.
+Panel 5 (Middle-Center): PLOT POINT 5 - The Midpoint Climax / Point of No Return. The turning point where stakes are raised.
+Panel 6 (Middle-Right): PLOT POINT 6 - The Lowest Point. @<<CHARACTER_NAME:name!>> faces their darkest moment or setup for final confrontation.
+
+ROW 3 - ACT 3: Resolution
+Panel 7 (Bottom-Left): PLOT POINT 7 - The Climax / Final Battle. The peak moment of conflict from <<FULL_STORY:text!>>.
+Panel 8 (Bottom-Center): PLOT POINT 8 - The Immediate Aftermath / Falling Action. Immediate consequences of the climax.
+Panel 9 (Bottom-Right): PLOT POINT 9 - The New Status Quo / Final Image. @<<CHARACTER_NAME:name!>> in their changed world after the journey.
+
+CRITICAL:
+- Grid cells separated by SOLID BLACK LINES
+- Sequential reading order: left→right, top→bottom
+- NO text, purely visual storytelling`,
+        fields: [],
+        referenceImages: [],
+      },
+    ],
+    suggestedAspectRatio: '9:16',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: true,
+    categoryId: 'narrative',
+    isSystem: true,
+    isSystemOnly: false,
+  },
+
+  // Story Summary - First Half (16:9)
+  {
+    name: 'Story Summary - First Half (16:9)',
+    description: '9-panel visual narrative showing FIRST HALF of story (up to midpoint)',
+    recipeNote: 'Attach character reference for consistent appearance. Grid shows story up to midpoint cliffhanger.',
+    stages: [
+      {
+        id: crypto.randomUUID(),
+        order: 0,
+        type: 'generation',
+        template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 16:9 aspect ratio.
+SEPARATE EACH CELL WITH A SOLID BLACK LINE (4-6 pixels wide).
+
+PROTAGONIST: @<<CHARACTER_NAME:name!>>
+COMPLETE NARRATIVE: <<FULL_STORY:text!>>
+
+STYLE EXTRACTION: Analyze character reference image to define:
+- Protagonist's appearance, clothing, physical features
+- Overall visual art style and cinematography
+- Color palette and lighting approach
+
+CONSISTENCY REQUIREMENTS:
+- @<<CHARACTER_NAME:name!>> must look EXACTLY like the reference image in ALL panels
+- Cinematographic style must match reference
+- NO TEXT BUBBLES or overlaid words
+- Story told purely through VISUAL ACTION, composition, and character emotion
+
+NARRATIVE STRUCTURE:
+- Identify the MIDPOINT of <<FULL_STORY:text!>>
+- Select 9 CRUCIAL PLOT POINTS leading UP TO the midpoint
+- Panel 9 should be the MIDPOINT CLIMAX/CLIFFHANGER
+
+3×3 GRID LAYOUT - FIRST HALF STORY ARC:
+
+ROW 1 - ACT 1: Setup and Inciting Incident
+Panel 1 (Top-Left): PLOT POINT 1 - The Status Quo / Beginning. Show @<<CHARACTER_NAME:name!>> in their normal world before change.
+Panel 2 (Top-Center): PLOT POINT 2 - The Inciting Incident / Disruption. The event that disrupts the status quo from <<FULL_STORY:text!>>.
+Panel 3 (Top-Right): PLOT POINT 3 - Locking into the Journey. @<<CHARACTER_NAME:name!>> commits to the path forward.
+
+ROW 2 - ACT 2A: Early Confrontation
+Panel 4 (Middle-Left): PLOT POINT 4 - First obstacle encountered. @<<CHARACTER_NAME:name!>> begins facing challenges.
+Panel 5 (Middle-Center): PLOT POINT 5 - Rising stakes. Complications increase from <<FULL_STORY:text!>>.
+Panel 6 (Middle-Right): PLOT POINT 6 - Approaching the midpoint. Tension builds toward the turning point.
+
+ROW 3 - MIDPOINT APPROACH
+Panel 7 (Bottom-Left): PLOT POINT 7 - Setup for midpoint. Elements converge toward the pivotal moment.
+Panel 8 (Bottom-Center): PLOT POINT 8 - Midpoint trigger. The immediate precursor to the major turning point.
+Panel 9 (Bottom-Right): PLOT POINT 9 - THE MIDPOINT CLIMAX. The pivotal moment that changes everything. End on a CLIFFHANGER.
+
+CRITICAL:
+- Grid cells separated by SOLID BLACK LINES
+- Sequential reading order: left→right, top→bottom
+- NO text, purely visual storytelling
+- Panel 9 MUST be an exciting cliffhanger moment`,
+        fields: [],
+        referenceImages: [],
+      },
+    ],
+    suggestedAspectRatio: '16:9',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: true,
+    categoryId: 'narrative',
+    isSystem: true,
+    isSystemOnly: false,
+  },
+
+  // Story Summary - First Half (9:16)
+  {
+    name: 'Story Summary - First Half (9:16)',
+    description: '9-panel visual narrative showing FIRST HALF of story (up to midpoint) (portrait)',
+    recipeNote: 'Attach character reference for consistent appearance. Grid shows story up to midpoint cliffhanger.',
+    stages: [
+      {
+        id: crypto.randomUUID(),
+        order: 0,
+        type: 'generation',
+        template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 9:16 aspect ratio.
+SEPARATE EACH CELL WITH A SOLID BLACK LINE (4-6 pixels wide).
+
+PROTAGONIST: @<<CHARACTER_NAME:name!>>
+COMPLETE NARRATIVE: <<FULL_STORY:text!>>
+
+STYLE EXTRACTION: Analyze character reference image to define:
+- Protagonist's appearance, clothing, physical features
+- Overall visual art style and cinematography
+- Color palette and lighting approach
+
+CONSISTENCY REQUIREMENTS:
+- @<<CHARACTER_NAME:name!>> must look EXACTLY like the reference image in ALL panels
+- Cinematographic style must match reference
+- NO TEXT BUBBLES or overlaid words
+- Story told purely through VISUAL ACTION, composition, and character emotion
+
+NARRATIVE STRUCTURE:
+- Identify the MIDPOINT of <<FULL_STORY:text!>>
+- Select 9 CRUCIAL PLOT POINTS leading UP TO the midpoint
+- Panel 9 should be the MIDPOINT CLIMAX/CLIFFHANGER
+
+3×3 GRID LAYOUT - FIRST HALF STORY ARC:
+
+ROW 1 - ACT 1: Setup and Inciting Incident
+Panel 1 (Top-Left): PLOT POINT 1 - The Status Quo / Beginning. Show @<<CHARACTER_NAME:name!>> in their normal world before change.
+Panel 2 (Top-Center): PLOT POINT 2 - The Inciting Incident / Disruption. The event that disrupts the status quo from <<FULL_STORY:text!>>.
+Panel 3 (Top-Right): PLOT POINT 3 - Locking into the Journey. @<<CHARACTER_NAME:name!>> commits to the path forward.
+
+ROW 2 - ACT 2A: Early Confrontation
+Panel 4 (Middle-Left): PLOT POINT 4 - First obstacle encountered. @<<CHARACTER_NAME:name!>> begins facing challenges.
+Panel 5 (Middle-Center): PLOT POINT 5 - Rising stakes. Complications increase from <<FULL_STORY:text!>>.
+Panel 6 (Middle-Right): PLOT POINT 6 - Approaching the midpoint. Tension builds toward the turning point.
+
+ROW 3 - MIDPOINT APPROACH
+Panel 7 (Bottom-Left): PLOT POINT 7 - Setup for midpoint. Elements converge toward the pivotal moment.
+Panel 8 (Bottom-Center): PLOT POINT 8 - Midpoint trigger. The immediate precursor to the major turning point.
+Panel 9 (Bottom-Right): PLOT POINT 9 - THE MIDPOINT CLIMAX. The pivotal moment that changes everything. End on a CLIFFHANGER.
+
+CRITICAL:
+- Grid cells separated by SOLID BLACK LINES
+- Sequential reading order: left→right, top→bottom
+- NO text, purely visual storytelling
+- Panel 9 MUST be an exciting cliffhanger moment`,
+        fields: [],
+        referenceImages: [],
+      },
+    ],
+    suggestedAspectRatio: '9:16',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: true,
+    categoryId: 'narrative',
+    isSystem: true,
+    isSystemOnly: false,
   },
 ]
