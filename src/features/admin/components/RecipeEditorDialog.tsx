@@ -254,13 +254,16 @@ export function RecipeEditorDialog({
     }, [])
 
     const handleSave = async () => {
+        console.log('[RecipeEditorDialog] handleSave called', { name, categoryId, stageCount: stages.length })
+
         if (!name.trim()) {
+            console.warn('[RecipeEditorDialog] Save aborted: empty name')
             return
         }
 
         setSaving(true)
         try {
-            await onSave({
+            const updates = {
                 name: name.trim(),
                 description: description.trim() || undefined,
                 recipeNote: recipeNote.trim() || undefined,
@@ -278,7 +281,15 @@ export function RecipeEditorDialog({
                     fields: s.fields,
                     referenceImages: s.referenceImages,
                 })),
-            })
+            }
+
+            console.log('[RecipeEditorDialog] Calling onSave with updates:', updates)
+            await onSave(updates)
+            console.log('[RecipeEditorDialog] onSave completed successfully')
+        } catch (error) {
+            console.error('[RecipeEditorDialog] Save failed:', error)
+            // Re-throw so parent can handle
+            throw error
         } finally {
             setSaving(false)
         }

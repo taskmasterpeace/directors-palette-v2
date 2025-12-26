@@ -93,13 +93,18 @@ export function RecipesTab() {
     }
 
     const handleSaveEdit = async (updates: Partial<Recipe>) => {
+        console.log('[RecipesTab] handleSaveEdit called', { editMode: !!editingRecipe, updates })
+
         try {
             if (editingRecipe) {
                 // Edit mode - use admin client to bypass RLS for system recipes
+                console.log('[RecipesTab] Updating recipe:', editingRecipe.id)
                 await updateRecipe(editingRecipe.id, updates, true)
+                console.log('[RecipesTab] Recipe updated successfully')
                 toast.success(`Recipe "${editingRecipe.name}" updated`)
             } else {
                 // Create mode
+                console.log('[RecipesTab] Creating new recipe')
                 const newRecipe = await addRecipe({
                     name: updates.name || 'New Recipe',
                     description: updates.description,
@@ -122,12 +127,15 @@ export function RecipesTab() {
                     isSystemOnly: updates.isSystemOnly || false,
                 })
                 if (newRecipe) {
+                    console.log('[RecipesTab] Recipe created successfully:', newRecipe.id)
                     toast.success(`Recipe "${newRecipe.name}" created`)
                 }
             }
+            console.log('[RecipesTab] Closing dialog')
             setEditDialogOpen(false)
             setEditingRecipe(null)
         } catch (error) {
+            console.error('[RecipesTab] Save error:', error)
             toast.error(error instanceof Error ? error.message : "Failed to save recipe")
         }
     }

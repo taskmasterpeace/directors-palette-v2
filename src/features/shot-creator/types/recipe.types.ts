@@ -2118,10 +2118,16 @@ OPENING PAGE STORYTELLING:
 - Use composition to draw the eye to key story elements
 - Choose appropriate framing that serves the narrative
 
+CRITICAL STYLE REQUIREMENTS:
+- A STYLE GUIDE reference image is attached - analyze it carefully
+- Extract the EXACT art style from the style guide (rendering technique, line work, color palette, shading approach)
+- Apply this style CONSISTENTLY to the entire illustration
+- The style guide shows example illustrations - match that visual aesthetic precisely
+- Maintain character consistency using attached character sheets (if provided)
+- Characters should have EXACT same appearance, clothing, and features as their character sheets
+- If no character sheets are attached, design characters that fit the style guide aesthetic
+
 TECHNICAL REQUIREMENTS:
-- Match style guide EXACTLY using reference images
-- Maintain character consistency using attached character sheets
-- Characters should have EXACT same appearance, clothing, and features
 - No text overlays on image (text will be added separately)
 - Age-appropriate for <<TARGET_AGE:text!>> year olds
 - Diverse, inclusive representation
@@ -2134,7 +2140,7 @@ QUALITY STANDARDS:
 - Fine details that reward close inspection
 - Inviting composition that makes readers want to turn the page
 
-Use reference images to match art style and character appearance exactly.`,
+CRITICAL: Use the attached STYLE GUIDE reference image to determine the exact art style, rendering technique, and visual aesthetic. Match it precisely.`,
         fields: [],
         referenceImages: [],
       },
@@ -2185,10 +2191,17 @@ STORYTELLING CONTINUITY:
 - Pacing should feel like natural story progression (not jarring jumps)
 - Use composition that serves narrative progression
 
+CRITICAL STYLE REQUIREMENTS:
+- A STYLE GUIDE reference image is attached - analyze it carefully
+- Extract the EXACT art style from the style guide (rendering technique, line work, color palette, shading approach)
+- Apply this style CONSISTENTLY to the entire illustration
+- The style guide shows example illustrations - match that visual aesthetic precisely
+- Maintain character consistency using attached character sheets (if provided)
+- Characters should have EXACT same appearance, clothing, and features as their character sheets
+- If no character sheets are attached, design characters that fit the style guide aesthetic
+- Keep the SAME art style as previous pages in the book
+
 TECHNICAL REQUIREMENTS:
-- Match style guide EXACTLY using reference images
-- Maintain character consistency using attached character sheets
-- Characters should have EXACT same appearance, clothing, and features
 - No text overlays on image (text will be added separately)
 - Age-appropriate for <<TARGET_AGE:text!>> year olds
 - Diverse, inclusive representation
@@ -2200,7 +2213,7 @@ QUALITY STANDARDS:
 - Vibrant, engaging colors appropriate to the mood
 - Fine details that reward close inspection
 
-Use reference images to match art style and character appearance exactly.`,
+CRITICAL: Use the attached STYLE GUIDE reference image to determine the exact art style, rendering technique, and visual aesthetic. Match it precisely.`,
         fields: [],
         referenceImages: [],
       },
