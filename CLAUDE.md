@@ -83,6 +83,29 @@ The dev server runs on `http://localhost:3000`.
 
 **Full Documentation:** See `C:\Users\taskm\.claude\plans\AUTOMATION_GUIDE.md` for complete automation stack.
 
+### Claude Code Automation Hooks (Phase 2)
+
+**Active productivity and safety hooks:**
+
+#### Sound Feedback:
+- **Stop Hook**: Plays Windows notification sound when Claude completes a response
+- **Notification Hook**: Double beep alert when Claude needs attention
+
+#### File Protection (PreToolUse):
+- Blocks edits to sensitive files: `.env*`, `credentials.json`, `*.pem`, `*.key`, `vercel.json`, CI/CD workflows
+- Shows clear override instructions if you need to edit protected files manually
+
+#### Git Auto-Backup (PreToolUse):
+- Automatically creates checkpoint commits when 10+ files are modified
+- Prevents data loss before major refactors
+- Easy rollback: `git reset --soft HEAD~1`
+
+**Hook Configuration**: See `.claude/settings.json`
+**Hook Scripts**: `.claude/hooks/protect-files.sh`, `.claude/hooks/git-backup.sh`
+**Disable Hooks**: Set `"hooks": {}` in `.claude/settings.json` or edit individual hook scripts
+
+**Note**: Hooks require Claude Code restart to activate/deactivate.
+
 ## Architecture
 
 ### Tech Stack

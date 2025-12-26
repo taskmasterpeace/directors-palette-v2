@@ -9,6 +9,40 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -Command \"(New-Object Media.SoundPlayer 'C:\\Windows\\Media\\Windows Notify System Generic.wav').PlaySync()\""
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -Command \"[console]::beep(1200, 200); Start-Sleep -Milliseconds 100; [console]::beep(1200, 200)\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/protect-files.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/git-backup.sh"
+          }
+        ]
+      }
     ]
   }
 }
