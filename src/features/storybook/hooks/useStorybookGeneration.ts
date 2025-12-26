@@ -7,7 +7,8 @@ import { useStorybookStore } from '../store/storybook.store'
 const SYSTEM_RECIPE_NAMES = {
   STYLE_GUIDE: 'Storybook Style Guide',
   CHARACTER_SHEET: 'Storybook Character Sheet',
-  PAGE: 'Storybook Page (Single Image)',
+  PAGE_FIRST: 'Storybook Page (First)',
+  PAGE_CONTINUATION: 'Storybook Page (Continuation)',
   BOOK_COVER: 'Storybook Book Cover',
 } as const
 
@@ -262,26 +263,39 @@ export function useStorybookGeneration() {
     setGenerating(true)
 
     try {
-      // Calculate page index and get previous page for story continuity
+      // Calculate page index and detect first page
       const pageIndex = project?.pages.findIndex(p => p.id === pageId) ?? -1
-      const previousPage = pageIndex > 0 ? project?.pages[pageIndex - 1] : null
-
-      // Get previous page text or indicate first page
-      const previousPageText = previousPage
-        ? previousPage.text
-        : 'This is the first page of the story. Start with an engaging opening illustration.'
+      const isFirstPage = pageIndex === 0
 
       // Build field values from page data
       const characterTags = project?.characters.map(c => `@${c.tag || c.name.replace(/\s+/g, '')}`).join(', ') || 'No named characters'
 
-      const fieldValues = {
-        'stage0_field0_previous_page_text': previousPageText,
-        'stage0_field1_page_text': page.text,
-        'stage0_field2_scene_description': page.sceneJSON ? JSON.stringify(page.sceneJSON.scene) : '',
-        'stage0_field3_shot_type': page.sceneJSON?.camera.shot || 'Medium Shot',
-        'stage0_field4_mood': page.sceneJSON?.scene.mood || 'Happy',
-        'stage0_field5_character_names': characterTags,
-        'stage0_field6_target_age': project?.targetAge.toString() || '5',
+      // Build field values and select recipe based on page type
+      let fieldValues: Record<string, string>
+      let recipeName: string
+
+      if (isFirstPage) {
+        // First page - NO previous_page_text field
+        recipeName = SYSTEM_RECIPE_NAMES.PAGE_FIRST
+        fieldValues = {
+          'stage0_field0_page_text': page.text,
+          'stage0_field1_scene_description': page.sceneJSON ? JSON.stringify(page.sceneJSON.scene) : '',
+          'stage0_field2_mood': page.sceneJSON?.scene.mood || 'Happy',
+          'stage0_field3_character_names': characterTags,
+          'stage0_field4_target_age': project?.targetAge.toString() || '5',
+        }
+      } else {
+        // Continuation page - WITH previous_page_text field
+        const previousPage = project?.pages[pageIndex - 1]
+        recipeName = SYSTEM_RECIPE_NAMES.PAGE_CONTINUATION
+        fieldValues = {
+          'stage0_field0_previous_page_text': previousPage?.text || '',
+          'stage0_field1_page_text': page.text,
+          'stage0_field2_scene_description': page.sceneJSON ? JSON.stringify(page.sceneJSON.scene) : '',
+          'stage0_field3_mood': page.sceneJSON?.scene.mood || 'Happy',
+          'stage0_field4_character_names': characterTags,
+          'stage0_field5_target_age': project?.targetAge.toString() || '5',
+        }
       }
 
       // Auto-attach reference images: style guide + all character sheets
@@ -294,8 +308,8 @@ export function useStorybookGeneration() {
         .map(c => c.characterSheetUrl!) || []
       referenceImages.push(...characterSheetUrls)
 
-      // Call recipe execution API
-      const response = await fetch(`/api/recipes/${SYSTEM_RECIPE_NAMES.PAGE}/execute`, {
+      // Call recipe execution API with selected recipe
+      const response = await fetch(`/api/recipes/${recipeName}/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -2083,11 +2083,73 @@ Output a 16:9 image with exactly 6 tiles (2 rows x 3 columns) separated by black
     isSystemOnly: true,
   },
 
-  // Storybook Page (Single Image)
+  // Storybook Page (First) - Optimized for story opening
   {
-    name: 'Storybook Page (Single Image)',
-    description: 'Generate a single page illustration for a children\'s book with story continuity',
-    recipeNote: 'Used by storybook feature to generate page illustrations. Includes previous page context for storytelling flow.',
+    name: 'Storybook Page (First)',
+    description: 'Generate the opening page illustration for a children\'s book story',
+    recipeNote: 'Used by storybook feature for first pages. Optimized for story opening - no previous context needed.',
+    stages: [
+      {
+        id: crypto.randomUUID(),
+        order: 0,
+        type: 'generation',
+        template: `Create an engaging opening illustration for this children's book story.
+
+STORY OPENING:
+
+Current Page Text (the story begins):
+"<<PAGE_TEXT:text!>>"
+
+SCENE DETAILS:
+<<SCENE_DESCRIPTION:text>>
+
+MOOD: <<MOOD:select(Happy,Sad,Excited,Calm,Mysterious,Adventurous)!>>
+
+CHARACTERS IN SCENE:
+<<CHARACTER_NAMES:text>>
+
+OPENING PAGE STORYTELLING:
+- Establish the story's setting and atmosphere immediately
+- Create visual intrigue to hook young readers
+- Introduce main character(s) with clear, engaging poses
+- Set the tone for the entire story
+- Use composition to draw the eye to key story elements
+- Choose appropriate framing that serves the narrative
+
+TECHNICAL REQUIREMENTS:
+- Match style guide EXACTLY using reference images
+- Maintain character consistency using attached character sheets
+- Characters should have EXACT same appearance, clothing, and features
+- No text overlays on image (text will be added separately)
+- Age-appropriate for <<TARGET_AGE:text!>> year olds
+- Diverse, inclusive representation
+- Composition should balance illustration with space for text overlay
+
+QUALITY STANDARDS:
+- Professional children's book illustration quality
+- Strong focal point that establishes the story's core
+- Vibrant, engaging colors appropriate to the mood
+- Fine details that reward close inspection
+- Inviting composition that makes readers want to turn the page
+
+Use reference images to match art style and character appearance exactly.`,
+        fields: [],
+        referenceImages: [],
+      },
+    ],
+    suggestedAspectRatio: '16:9',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: false,
+    categoryId: 'storybook',
+    isSystem: true,
+    isSystemOnly: true,
+  },
+
+  // Storybook Page (Continuation) - Optimized for story flow
+  {
+    name: 'Storybook Page (Continuation)',
+    description: 'Generate a continuation page illustration for a children\'s book with story flow',
+    recipeNote: 'Used by storybook feature for continuation pages. Maintains story continuity from previous page.',
     stages: [
       {
         id: crypto.randomUUID(),
@@ -2098,7 +2160,7 @@ Output a 16:9 image with exactly 6 tiles (2 rows x 3 columns) separated by black
 STORY CONTEXT:
 
 Previous Page (what happened before):
-<<PREVIOUS_PAGE_TEXT:text>>
+<<PREVIOUS_PAGE_TEXT:text!>>
 
 Current Page (what's happening now):
 "<<PAGE_TEXT:text!>>"
@@ -2106,18 +2168,20 @@ Current Page (what's happening now):
 SCENE DETAILS:
 <<SCENE_DESCRIPTION:text>>
 
-CAMERA: <<SHOT_TYPE:select(Wide Shot,Medium Shot,Close-Up,Extreme Close-Up)!>>
 MOOD: <<MOOD:select(Happy,Sad,Excited,Calm,Mysterious,Adventurous)!>>
 
 CHARACTERS IN SCENE:
 <<CHARACTER_NAMES:text>>
 
 STORYTELLING CONTINUITY:
-- Show progression from the previous page
-- Visual flow should feel natural (e.g., if character was walking left on previous page, show them continuing that direction)
+- Show clear progression from the previous page's events
+- Visual flow should feel natural (e.g., if character was walking left, continue that direction)
 - Maintain consistent lighting/time of day unless story indicates a change
-- Character expressions should reflect the emotional arc of the story
-- Background elements should show logical progression
+- Character expressions should reflect the emotional arc from the previous moment
+- Background elements should show logical progression from previous scene
+- Create visual cause-and-effect relationship with previous illustration
+- Pacing should feel like natural story progression (not jarring jumps)
+- Use composition that serves narrative progression
 
 TECHNICAL REQUIREMENTS:
 - Match style guide EXACTLY using reference images
