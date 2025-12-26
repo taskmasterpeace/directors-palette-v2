@@ -623,7 +623,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                             prompt={shotCreatorPrompt}
                             onApply={setShotCreatorPrompt}
                         />
-                        <QuickAccessBar />
+                        <QuickAccessBar onSelectRecipe={_handleSelectRecipe} />
                     </div>
                 </div>
 
@@ -647,7 +647,10 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 )}
 
                 {/* Mobile prompts recipes bar */}
-                <MobilePromptsRecipesBar onSelectRecipe={(recipeId) => setActiveRecipe(recipeId)} />
+                <MobilePromptsRecipesBar
+                    onSelectPrompt={(prompt) => setShotCreatorPrompt(shotCreatorPrompt + (shotCreatorPrompt ? ' ' : '') + prompt)}
+                    onSelectRecipe={(recipeId) => setActiveRecipe(recipeId)}
+                />
 
                 {/* Generate button */}
                 <Button

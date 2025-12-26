@@ -622,11 +622,12 @@ The final image should look natural as if the edits were always part of the orig
                 {/* Fabric Canvas */}
                 <FabricCanvas
                     ref={canvasRef}
-                    className="flex-1"
-                    onFileUpload={handleFileUpload}
-                    backgroundImage={backgroundImage}
+                    backgroundImageUrl={backgroundImage}
                     canvasMode={canvasMode}
-                    toolbarContent={toolbarContent}
+                    headerContent={toolbarContent}
+                    tool="select"
+                    brushSize={5}
+                    color="#000000"
                 />
 
                 {/* Export Panel */}
@@ -645,12 +646,13 @@ The final image should look natural as if the edits were always part of the orig
                     rightSidebarCollapsed ? 'w-0 opacity-0' : 'w-[280px] opacity-100'
                 }`}
             >
-                <FrameExtractor
-                    open={frameExtractorOpen}
-                    imageUrl={frameExtractorImage}
-                    onClose={handleFrameExtractorClose}
-                    onFramesExtracted={handleFramesExtracted}
-                />
+                {frameExtractorOpen && frameExtractorImage && (
+                    <FrameExtractor
+                        imageUrl={frameExtractorImage}
+                        onClose={handleFrameExtractorClose}
+                        onExtract={handleFramesExtracted}
+                    />
+                )}
             </div>
 
             {/* Sidebar Toggle Buttons */}
