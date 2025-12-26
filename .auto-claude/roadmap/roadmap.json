@@ -276,12 +276,12 @@
         "As a storyboard artist, I want to save my best prompts so that I can reuse them for similar scenes",
         "As a comic creator, I want to organize prompts by project so that I can quickly find the right prompt for each series"
       ],
+      "linked_spec_id": "014-user-prompts-organization-system",
       "competitor_insight_ids": [
         "pain-1-4",
         "pain-3-4",
         "pain-4-4"
-      ],
-      "linked_spec_id": "014-user-prompts-organization-system"
+      ]
     },
     {
       "id": "feature-4",
@@ -872,7 +872,7 @@
   ],
   "metadata": {
     "created_at": "2025-12-22T12:00:00Z",
-    "updated_at": "2025-12-25T23:17:56.932Z",
+    "updated_at": "2025-12-26T01:46:58.955Z",
     "generated_by": "roadmap_features agent",
     "prioritization_framework": "MoSCoW",
     "competitor_analysis_used": true,

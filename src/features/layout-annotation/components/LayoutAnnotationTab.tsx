@@ -1,9 +1,8 @@
 'use client'
 
 import React, { useRef, useState, useCallback, useEffect } from 'react'
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { PanelLeft, PanelLeftClose, PanelRightClose, RotateCcw, Upload, Maximize, Minimize2, X, Loader2, ChevronDown, ChevronUp, RotateCw, Image as ImageIcon, Palette, Download, Layers } from "lucide-react"
+import { PanelLeft, PanelLeftClose, PanelRightClose, RotateCcw, Upload, Maximize, Minimize2, X, ChevronDown, ChevronUp, Image as ImageIcon, Palette, Download, Layers } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Button } from "@/components/ui/button"
 import { DropZone } from "@/components/ui/drop-zone"
@@ -43,7 +42,7 @@ interface QueuedResult {
     model: string         // Which model was used
 }
 
-function LayoutAnnotationTab({ className, setActiveTab }: LayoutAnnotationTabProps) {
+function LayoutAnnotationTab({ className, setActiveTab: _setActiveTab }: LayoutAnnotationTabProps) {
     const { toast } = useToast()
     const canvasRef = useRef<FabricCanvasRef | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -84,9 +83,9 @@ The final image should look natural as if the edits were always part of the orig
     const [systemPrompt, setSystemPrompt] = useState(DEFAULT_SYSTEM_PROMPT)
     const [systemPromptExpanded, setSystemPromptExpanded] = useState(false)
     const [drawingToolsExpanded, setDrawingToolsExpanded] = useState(true)
-    const [exportPanelExpanded, setExportPanelExpanded] = useState(true)
+    const [exportPanelExpanded, _setExportPanelExpanded] = useState(true)
     const [canvasMode, setCanvasMode] = useState<'canvas' | 'photo'>('canvas')
-    const [backgroundImage, setBackgroundImage] = useState<string | null>(null)
+    const [backgroundImage, _setBackgroundImage] = useState<string | null>(null)
     const [isDragOverCanvas, setIsDragOverCanvas] = useState(false)
     const canvasContainerRef = useRef<HTMLDivElement>(null)
 
@@ -112,7 +111,7 @@ The final image should look natural as if the edits were always part of the orig
 
     // Custom hooks for business logic
     const { sidebarCollapsed, setSidebarCollapsed, rightSidebarCollapsed, setRightSidebarCollapsed, imageImportMode, setImageImportMode } = useLayoutAnnotationStore()
-    const { canvasState, handleAspectRatioChange, updateCanvasState, updateDrawingProperties, updateCanvasSettings: _updateCanvasSettings } = useCanvasSettings()
+    const { canvasState, handleAspectRatioChange: _handleAspectRatioChange, updateCanvasState: _updateCanvasState, updateDrawingProperties: _updateDrawingProperties, updateCanvasSettings: _updateCanvasSettings } = useCanvasSettings()
     const { handleUndo, handleClearCanvas, handleSaveCanvas: _handleSaveCanvas } = useCanvasOperations({ canvasRef })
     const { handleImportClick, handleFileUpload, handleReceiveImage } = useImageImport({ fileInputRef })
     useIncomingImageSync({ canvasRef })

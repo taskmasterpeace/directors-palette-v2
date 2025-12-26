@@ -564,10 +564,64 @@
       ]
     }
   },
-  "qa_signoff": null,
-  "status": "in_progress",
-  "planStatus": "in_progress",
+  "qa_signoff": {
+    "status": "approved",
+    "qa_session": 0,
+    "issues_found": [
+      {
+        "description": "None - Previous TypeScript errors fixed in commit d8ca5ee"
+      }
+    ],
+    "tests_passed": {},
+    "timestamp": "2025-12-26T01:08:52.560782+00:00",
+    "ready_for_qa_revalidation": false
+  },
+  "status": "human_review",
+  "planStatus": "review",
   "updated_at": "2025-12-25T23:57:07.978Z",
   "recoveryNote": "Task recovered from stuck state at 2025-12-25T23:57:07.978Z",
-  "last_updated": "2025-12-26T00:23:22.922983+00:00"
+  "last_updated": "2025-12-26T01:08:52.560796+00:00",
+  "qa_iteration_history": [
+    {
+      "iteration": 1,
+      "status": "error",
+      "timestamp": "2025-12-26T00:33:01.863949+00:00",
+      "issues": [
+        {
+          "title": "QA error",
+          "description": "QA agent did not update implementation_plan.json"
+        }
+      ]
+    },
+    {
+      "iteration": 2,
+      "status": "rejected",
+      "timestamp": "2025-12-26T00:40:41.042774+00:00",
+      "issues": [
+        {
+          "type": "critical",
+          "title": "TypeScript errors in PromptActions.tsx",
+          "location": "src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx:652,653,677",
+          "fix_required": "Pass required props to components"
+        }
+      ],
+      "duration_seconds": 459.18
+    },
+    {
+      "iteration": 3,
+      "status": "approved",
+      "timestamp": "2025-12-26T01:09:20.060079+00:00",
+      "issues": [],
+      "duration_seconds": 1175.87
+    }
+  ],
+  "qa_stats": {
+    "total_iterations": 3,
+    "last_iteration": 3,
+    "last_status": "approved",
+    "issues_by_type": {
+      "unknown": 1,
+      "critical": 1
+    }
+  }
 }

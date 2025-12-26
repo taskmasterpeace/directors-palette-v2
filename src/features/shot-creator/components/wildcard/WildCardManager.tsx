@@ -369,7 +369,7 @@ export function WildCardManager() {
                     </CardContent>
                 </Card>
             ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                     {wildcards.map((wildcard) => (
                         <WildCardCard
                             key={wildcard.id}
@@ -384,8 +384,8 @@ export function WildCardManager() {
 
             {/* Create/Edit Dialog */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="bg-card border-border text-white max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
+                <DialogContent className="bg-card border-border text-white max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[85vh] flex flex-col">
+                    <DialogHeader className="flex-shrink-0">
                         <DialogTitle>{isEditing ? 'Edit Wild Card' : 'Create New Wild Card'}</DialogTitle>
                         <DialogDescription className="text-muted-foreground">
                             {isEditing
@@ -394,7 +394,7 @@ export function WildCardManager() {
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="space-y-4 py-4">
+                    <div className="flex-1 overflow-y-auto space-y-4 py-4 pr-1">
                         {/* Name */}
                         <div className="space-y-2">
                             <Label>Wild Card Name *</Label>
@@ -402,7 +402,7 @@ export function WildCardManager() {
                                 placeholder="e.g., black_girl_hairstyles (no spaces)"
                                 value={formData.name}
                                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                                className="bg-background border-border font-mono"
+                                className="bg-background border-border font-mono text-base"
                             />
                             <p className="text-xs text-muted-foreground">
                                 Use it in prompts as: <span className="font-mono text-accent">_{formData.name || 'name'}_</span>
@@ -416,7 +416,7 @@ export function WildCardManager() {
                                 placeholder="e.g., hairstyles, locations, characters"
                                 value={formData.category}
                                 onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                                className="bg-background border-border"
+                                className="bg-background border-border text-base"
                             />
                         </div>
 
@@ -427,7 +427,7 @@ export function WildCardManager() {
                                 placeholder="What is this wild card for?"
                                 value={formData.description}
                                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                className="bg-background border-border"
+                                className="bg-background border-border text-base"
                             />
                         </div>
 
@@ -439,7 +439,7 @@ export function WildCardManager() {
                                     type="file"
                                     accept=".txt"
                                     onChange={handleFileUpload}
-                                    className="bg-background border-border"
+                                    className="bg-background border-border text-base"
                                 />
                                 <Button variant="outline" size="sm" asChild>
                                     <label className="cursor-pointer">
@@ -457,7 +457,7 @@ export function WildCardManager() {
                                 placeholder="box braids&#10;cornrows&#10;locs&#10;afro puffs&#10;twist out"
                                 value={formData.content}
                                 onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                                className="bg-background border-border min-h-[200px] font-mono text-sm"
+                                className="bg-background border-border min-h-[150px] sm:min-h-[200px] font-mono text-sm"
                             />
                             <p className="text-xs text-muted-foreground">
                                 {getLineCount(formData.content)} options - Each line becomes one variation
@@ -465,7 +465,7 @@ export function WildCardManager() {
                         </div>
                     </div>
 
-                    <DialogFooter>
+                    <DialogFooter className="flex-shrink-0 pt-4 border-t border-border">
                         <Button variant="outline" onClick={() => setDialogOpen(false)}>
                             Cancel
                         </Button>

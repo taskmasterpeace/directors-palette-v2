@@ -23,6 +23,12 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   Plus,
   Trash2,
   Star,
@@ -40,6 +46,7 @@ import {
   Lock,
   Download,
   Upload,
+  MoreVertical,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -402,11 +409,12 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
           </Badge>
         </div>
         <div className="flex items-center gap-2">
+          {/* Desktop: Export/Import buttons visible */}
           <Button
             size="sm"
             onClick={() => exportRecipes()}
             variant="outline"
-            className="border-border hover:bg-card"
+            className="hidden sm:inline-flex border-border hover:bg-card"
           >
             <Download className="w-4 h-4 mr-1" />
             Export
@@ -415,7 +423,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
             size="sm"
             onClick={() => importInputRef.current?.click()}
             variant="outline"
-            className="border-border hover:bg-card"
+            className="hidden sm:inline-flex border-border hover:bg-card"
           >
             <Upload className="w-4 h-4 mr-1" />
             Import
@@ -427,6 +435,30 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
             className="hidden"
             onChange={handleImportFile}
           />
+
+          {/* Mobile: Export/Import in dropdown menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="sm:hidden border-border hover:bg-card"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => exportRecipes()}>
+                <Download className="w-4 h-4 mr-2" />
+                Export Recipes
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => importInputRef.current?.click()}>
+                <Upload className="w-4 h-4 mr-2" />
+                Import Recipes
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button
             size="sm"
             onClick={openCreate}
@@ -439,12 +471,12 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
       </div>
 
       {/* Category Filter */}
-      <div className="flex gap-2 mb-4 flex-wrap items-center">
+      <div className="flex gap-1.5 sm:gap-2 mb-4 flex-wrap items-center">
         <Button
           variant={selectedCategory === null ? 'default' : 'outline'}
           size="sm"
           onClick={() => setSelectedCategory(null)}
-          className="h-7 text-xs"
+          className="h-7 text-xs px-2 sm:px-3"
         >
           All
         </Button>
@@ -454,9 +486,10 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
             variant={selectedCategory === cat.id ? 'default' : 'outline'}
             size="sm"
             onClick={() => setSelectedCategory(cat.id)}
-            className="h-7 text-xs"
+            className="h-7 text-xs px-2 sm:px-3"
           >
-            {cat.icon} {cat.name}
+            <span>{cat.icon}</span>
+            <span className="hidden xs:inline sm:inline ml-1">{cat.name}</span>
           </Button>
         ))}
         <TooltipProvider>
@@ -466,7 +499,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsCategoryManageOpen(true)}
-                className="h-7 w-7 p-0 text-muted-foreground hover:text-white"
+                className="h-7 w-7 p-0 text-muted-foreground hover:text-white shrink-0"
               >
                 <Settings className="w-4 h-4" />
               </Button>
@@ -496,29 +529,30 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium text-white text-sm truncate">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        <h4 className="font-medium text-white text-sm truncate max-w-[150px] sm:max-w-none">
                           {recipe.name}
                         </h4>
                         {recipe.isSystem && (
-                          <Badge variant="secondary" className="text-xs bg-blue-500/20 text-blue-400">
-                            <Lock className="w-3 h-3 mr-1" />
-                            System
+                          <Badge variant="secondary" className="text-xs bg-blue-500/20 text-blue-400 shrink-0">
+                            <Lock className="w-3 h-3 sm:mr-1" />
+                            <span className="hidden sm:inline">System</span>
                           </Badge>
                         )}
                         {isInQuickAccess(recipe.id) && (
-                          <Badge variant="secondary" className="text-xs bg-amber-500/20 text-amber-400">
-                            Quick
+                          <Badge variant="secondary" className="text-xs bg-amber-500/20 text-amber-400 shrink-0">
+                            <Star className="w-3 h-3 fill-current sm:hidden" />
+                            <span className="hidden sm:inline">Quick</span>
                           </Badge>
                         )}
                         {recipe.stages.length > 1 && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs shrink-0 hidden sm:inline-flex">
                             <Layers className="w-3 h-3 mr-1" />
                             {recipe.stages.length} stages
                           </Badge>
                         )}
                         {totalRefImages > 0 && (
-                          <Badge variant="outline" className="text-xs text-blue-400 border-blue-500/30">
+                          <Badge variant="outline" className="text-xs text-blue-400 border-blue-500/30 shrink-0 hidden sm:inline-flex">
                             <ImageIcon className="w-3 h-3 mr-1" />
                             {totalRefImages}
                           </Badge>
@@ -530,12 +564,12 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
                         </p>
                       )}
                       <div className="flex gap-1 mt-2 flex-wrap">
-                        {allFields.slice(0, 4).map((field) => (
+                        {allFields.slice(0, 3).map((field) => (
                           <Badge
                             key={field.id}
                             variant="outline"
                             className={cn(
-                              'text-xs',
+                              'text-xs truncate max-w-[80px] sm:max-w-none',
                               field.required
                                 ? 'border-amber-500/50 text-amber-400'
                                 : 'border-border text-muted-foreground'
@@ -545,97 +579,179 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
                             {field.required && '!'}
                           </Badge>
                         ))}
+                        {/* Show 4th field only on sm+ screens */}
+                        {allFields.length > 3 && (
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              'text-xs hidden sm:inline-flex',
+                              allFields[3]?.required
+                                ? 'border-amber-500/50 text-amber-400'
+                                : 'border-border text-muted-foreground'
+                            )}
+                          >
+                            {allFields[3]?.label}
+                            {allFields[3]?.required && '!'}
+                          </Badge>
+                        )}
                         {allFields.length > 4 && (
-                          <Badge variant="outline" className="text-xs text-muted-foreground">
+                          <Badge variant="outline" className="text-xs text-muted-foreground hidden sm:inline-flex">
                             +{allFields.length - 4} more
+                          </Badge>
+                        )}
+                        {allFields.length > 3 && (
+                          <Badge variant="outline" className="text-xs text-muted-foreground sm:hidden">
+                            +{allFields.length - 3} more
                           </Badge>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleUseRecipe(recipe)}
-                              className="h-7 w-7 p-0 text-green-400 hover:text-green-300"
-                            >
-                              <Play className="w-4 h-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Use Recipe</TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleQuickAccess(recipe)}
-                              className={cn(
-                                'h-7 w-7 p-0',
-                                isInQuickAccess(recipe.id)
-                                  ? 'text-amber-400 hover:text-amber-300'
-                                  : 'text-muted-foreground hover:text-white'
-                              )}
-                            >
-                              {isInQuickAccess(recipe.id) ? (
-                                <Star className="w-4 h-4 fill-current" />
-                              ) : (
-                                <StarOff className="w-4 h-4" />
-                              )}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {isInQuickAccess(recipe.id) ? 'Remove from Quick' : 'Add to Quick'}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                      {recipe.isSystem ? (
-                        // System recipes: Show duplicate button instead of edit/delete
+                    <div className="flex items-center gap-1 shrink-0">
+                      {/* Desktop: Show all buttons */}
+                      <div className="hidden sm:flex items-center gap-1">
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleDuplicate(recipe)}
-                                className="h-7 w-7 p-0 text-blue-400 hover:text-blue-300"
+                                onClick={() => handleUseRecipe(recipe)}
+                                className="h-7 w-7 p-0 text-green-400 hover:text-green-300"
                               >
-                                <Copy className="w-4 h-4" />
+                                <Play className="w-4 h-4" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Duplicate to My Recipes</TooltipContent>
+                            <TooltipContent>Use Recipe</TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
-                      ) : (
-                        // User recipes: Show edit and delete buttons
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEdit(recipe)}
-                            className="h-7 w-7 p-0 text-muted-foreground hover:text-white"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </Button>
 
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(recipe)}
-                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </>
-                      )}
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleQuickAccess(recipe)}
+                                className={cn(
+                                  'h-7 w-7 p-0',
+                                  isInQuickAccess(recipe.id)
+                                    ? 'text-amber-400 hover:text-amber-300'
+                                    : 'text-muted-foreground hover:text-white'
+                                )}
+                              >
+                                {isInQuickAccess(recipe.id) ? (
+                                  <Star className="w-4 h-4 fill-current" />
+                                ) : (
+                                  <StarOff className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {isInQuickAccess(recipe.id) ? 'Remove from Quick' : 'Add to Quick'}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        {recipe.isSystem ? (
+                          // System recipes: Show duplicate button instead of edit/delete
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDuplicate(recipe)}
+                                  className="h-7 w-7 p-0 text-blue-400 hover:text-blue-300"
+                                >
+                                  <Copy className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Duplicate to My Recipes</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          // User recipes: Show edit and delete buttons
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEdit(recipe)}
+                              className="h-7 w-7 p-0 text-muted-foreground hover:text-white"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(recipe)}
+                              className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Mobile: Use button always visible, others in dropdown */}
+                      <div className="flex sm:hidden items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleUseRecipe(recipe)}
+                          className="h-7 w-7 p-0 text-green-400 hover:text-green-300"
+                        >
+                          <Play className="w-4 h-4" />
+                        </Button>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-muted-foreground hover:text-white"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => toggleQuickAccess(recipe)}>
+                              {isInQuickAccess(recipe.id) ? (
+                                <>
+                                  <Star className="w-4 h-4 mr-2 fill-amber-400 text-amber-400" />
+                                  Remove from Quick
+                                </>
+                              ) : (
+                                <>
+                                  <StarOff className="w-4 h-4 mr-2" />
+                                  Add to Quick
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                            {recipe.isSystem ? (
+                              <DropdownMenuItem onClick={() => handleDuplicate(recipe)}>
+                                <Copy className="w-4 h-4 mr-2" />
+                                Duplicate to My Recipes
+                              </DropdownMenuItem>
+                            ) : (
+                              <>
+                                <DropdownMenuItem onClick={() => openEdit(recipe)}>
+                                  <Edit3 className="w-4 h-4 mr-2" />
+                                  Edit Recipe
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDelete(recipe)}
+                                  className="text-destructive focus:text-destructive"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete Recipe
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -647,42 +763,44 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
 
       {/* Create Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 shrink-0">
             <DialogTitle>Create Recipe</DialogTitle>
           </DialogHeader>
 
-          <RecipeForm
-            name={formName}
-            description={formDescription}
-            recipeNote={formRecipeNote}
-            category={formCategory}
-            quickLabel={formQuickLabel}
-            isQuickAccess={formIsQuickAccess}
-            aspectRatio={formAspectRatio}
-            suggestedModel={formSuggestedModel}
-            stages={formStages}
-            categories={categories}
-            onNameChange={setFormName}
-            onDescriptionChange={setFormDescription}
-            onRecipeNoteChange={setFormRecipeNote}
-            onCategoryChange={setFormCategory}
-            onQuickLabelChange={setFormQuickLabel}
-            onIsQuickAccessChange={setFormIsQuickAccess}
-            onAspectRatioChange={setFormAspectRatio}
-            onSuggestedModelChange={setFormSuggestedModel}
-            onAddStage={addStage}
-            onRemoveStage={removeStage}
-            onMoveStageUp={moveStageUp}
-            onMoveStageDown={moveStageDown}
-            onUpdateStageTemplate={updateStageTemplate}
-            onUpdateStageType={updateStageType}
-            onUpdateStageToolId={updateStageToolId}
-            onAddReferenceImage={addReferenceImage}
-            onRemoveReferenceImage={removeReferenceImage}
-          />
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-2">
+            <RecipeForm
+              name={formName}
+              description={formDescription}
+              recipeNote={formRecipeNote}
+              category={formCategory}
+              quickLabel={formQuickLabel}
+              isQuickAccess={formIsQuickAccess}
+              aspectRatio={formAspectRatio}
+              suggestedModel={formSuggestedModel}
+              stages={formStages}
+              categories={categories}
+              onNameChange={setFormName}
+              onDescriptionChange={setFormDescription}
+              onRecipeNoteChange={setFormRecipeNote}
+              onCategoryChange={setFormCategory}
+              onQuickLabelChange={setFormQuickLabel}
+              onIsQuickAccessChange={setFormIsQuickAccess}
+              onAspectRatioChange={setFormAspectRatio}
+              onSuggestedModelChange={setFormSuggestedModel}
+              onAddStage={addStage}
+              onRemoveStage={removeStage}
+              onMoveStageUp={moveStageUp}
+              onMoveStageDown={moveStageDown}
+              onUpdateStageTemplate={updateStageTemplate}
+              onUpdateStageType={updateStageType}
+              onUpdateStageToolId={updateStageToolId}
+              onAddReferenceImage={addReferenceImage}
+              onRemoveReferenceImage={removeReferenceImage}
+            />
+          </div>
 
-          <DialogFooter>
+          <DialogFooter className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2 shrink-0 border-t border-border">
             <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
               Cancel
             </Button>
@@ -699,42 +817,44 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
 
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2 shrink-0">
             <DialogTitle>Edit Recipe</DialogTitle>
           </DialogHeader>
 
-          <RecipeForm
-            name={formName}
-            description={formDescription}
-            recipeNote={formRecipeNote}
-            category={formCategory}
-            quickLabel={formQuickLabel}
-            isQuickAccess={formIsQuickAccess}
-            aspectRatio={formAspectRatio}
-            suggestedModel={formSuggestedModel}
-            stages={formStages}
-            categories={categories}
-            onNameChange={setFormName}
-            onDescriptionChange={setFormDescription}
-            onRecipeNoteChange={setFormRecipeNote}
-            onCategoryChange={setFormCategory}
-            onQuickLabelChange={setFormQuickLabel}
-            onIsQuickAccessChange={setFormIsQuickAccess}
-            onAspectRatioChange={setFormAspectRatio}
-            onSuggestedModelChange={setFormSuggestedModel}
-            onAddStage={addStage}
-            onRemoveStage={removeStage}
-            onMoveStageUp={moveStageUp}
-            onMoveStageDown={moveStageDown}
-            onUpdateStageTemplate={updateStageTemplate}
-            onUpdateStageType={updateStageType}
-            onUpdateStageToolId={updateStageToolId}
-            onAddReferenceImage={addReferenceImage}
-            onRemoveReferenceImage={removeReferenceImage}
-          />
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-2">
+            <RecipeForm
+              name={formName}
+              description={formDescription}
+              recipeNote={formRecipeNote}
+              category={formCategory}
+              quickLabel={formQuickLabel}
+              isQuickAccess={formIsQuickAccess}
+              aspectRatio={formAspectRatio}
+              suggestedModel={formSuggestedModel}
+              stages={formStages}
+              categories={categories}
+              onNameChange={setFormName}
+              onDescriptionChange={setFormDescription}
+              onRecipeNoteChange={setFormRecipeNote}
+              onCategoryChange={setFormCategory}
+              onQuickLabelChange={setFormQuickLabel}
+              onIsQuickAccessChange={setFormIsQuickAccess}
+              onAspectRatioChange={setFormAspectRatio}
+              onSuggestedModelChange={setFormSuggestedModel}
+              onAddStage={addStage}
+              onRemoveStage={removeStage}
+              onMoveStageUp={moveStageUp}
+              onMoveStageDown={moveStageDown}
+              onUpdateStageTemplate={updateStageTemplate}
+              onUpdateStageType={updateStageType}
+              onUpdateStageToolId={updateStageToolId}
+              onAddReferenceImage={addReferenceImage}
+              onRemoveReferenceImage={removeReferenceImage}
+            />
+          </div>
 
-          <DialogFooter>
+          <DialogFooter className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2 shrink-0 border-t border-border">
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>
               Cancel
             </Button>
@@ -930,7 +1050,7 @@ function RecipeForm({
   return (
     <div className="space-y-4">
       {/* Name & Category Row */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div className="space-y-2">
           <Label>Recipe Name</Label>
           <Input
@@ -979,7 +1099,7 @@ function RecipeForm({
       </div>
 
       {/* Aspect Ratio & Suggested Model Row */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div className="space-y-2">
           <Label>Suggested Aspect Ratio (optional)</Label>
           <Select value={aspectRatio} onValueChange={onAspectRatioChange}>
@@ -1232,7 +1352,7 @@ function StageSection({
                 value={stage.type || 'generation'}
                 onValueChange={(value) => onTypeChange(value as RecipeStageType)}
               >
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-full sm:w-[200px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1250,7 +1370,7 @@ function StageSection({
                   value={stage.toolId || 'remove-background'}
                   onValueChange={(value) => onToolIdChange(value as RecipeToolId)}
                 >
-                  <SelectTrigger className="w-[350px]">
+                  <SelectTrigger className="w-full sm:w-[350px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

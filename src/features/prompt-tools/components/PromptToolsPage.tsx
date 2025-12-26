@@ -36,43 +36,43 @@ export function PromptToolsPage() {
       {/* Tabs */}
       <div className="flex-1 p-4 overflow-hidden">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-          <TabsList className="w-full grid grid-cols-4 bg-card/50 h-12 mb-4">
+          <TabsList className="w-full grid grid-cols-4 bg-card/50 h-10 mb-4">
             <TabsTrigger
               value="recipes"
-              className="gap-2 data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400"
+              className="text-xs gap-1.5 data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400"
             >
-              <FlaskConical className="w-4 h-4" />
-              Recipes
-              <Badge variant="secondary" className="h-5 px-1.5 text-xs bg-amber-500/20 text-amber-400">
+              <FlaskConical className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Recipes</span>
+              <Badge variant="secondary" className="h-4 px-1 text-[10px] hidden lg:inline-flex bg-amber-500/20 text-amber-400">
                 {recipes.length}
               </Badge>
             </TabsTrigger>
             <TabsTrigger
               value="library"
-              className="gap-2 data-[state=active]:bg-background"
+              className="text-xs gap-1.5 data-[state=active]:bg-background"
             >
-              <BookOpen className="w-4 h-4" />
-              Library
-              <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+              <BookOpen className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Library</span>
+              <Badge variant="secondary" className="h-4 px-1 text-[10px] hidden lg:inline-flex">
                 {prompts.length}
               </Badge>
             </TabsTrigger>
             <TabsTrigger
               value="wildcards"
-              className="gap-2 data-[state=active]:bg-background"
+              className="text-xs gap-1.5 data-[state=active]:bg-background"
             >
-              <Shuffle className="w-4 h-4" />
-              Wildcards
-              <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+              <Shuffle className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Wildcards</span>
+              <Badge variant="secondary" className="h-4 px-1 text-[10px] hidden lg:inline-flex">
                 {wildcards.length}
               </Badge>
             </TabsTrigger>
             <TabsTrigger
               value="styles"
-              className="gap-2 data-[state=active]:bg-background"
+              className="text-xs gap-1.5 data-[state=active]:bg-background"
             >
-              <Palette className="w-4 h-4" />
-              Styles
+              <Palette className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Styles</span>
             </TabsTrigger>
           </TabsList>
 

@@ -1,8 +1,7 @@
-import React, { Fragment, useState, useEffect, useRef } from "react"
+import React, { Fragment, useState, useRef } from "react"
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
 import {
     Sparkles,
     HelpCircle,
@@ -19,11 +18,9 @@ import { PromptSyntaxFeedback } from "./PromptSyntaxFeedback"
 import { parseDynamicPrompt } from "../../helpers/prompt-syntax-feedback"
 import { useWildCardStore } from "../../store/wildcard.store"
 import { QuickAccessBar, RecipeFormFields } from "../recipe"
-import { PromptAutocomplete } from "../prompt-autocomplete"
 import { OrganizeButton } from "../prompt-organizer"
 import { MobilePromptsRecipesBar } from "./MobilePromptsRecipesBar"
 import { usePromptAutocomplete } from "../../hooks/usePromptAutocomplete"
-import type { AutocompleteOption } from "../../types/autocomplete.types"
 import { useCallback } from "react"
 import { extractAtTags, urlToFile } from "../../helpers"
 import { ShotCreatorReferenceImage } from "../../types"
@@ -36,14 +33,13 @@ import { Category } from "../CategorySelectDialog"
 const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextAreaElement | null> }) => {
     const {
         shotCreatorPrompt,
-        shotCreatorProcessing,
         shotCreatorReferenceImages,
         setShotCreatorPrompt,
         setShotCreatorReferenceImages,
         setStageReferenceImages,
     } = useShotCreatorStore()
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
-    const { generateImage, isGenerating, cancelGeneration, currentPredictionId } = useImageGeneration()
+    const { generateImage, isGenerating, cancelGeneration } = useImageGeneration()
     const { libraryItems } = useLibraryStore()
     const { wildcards } = useWildCardStore()
     const { activeRecipeId, activeFieldValues, setActiveRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts } = useRecipeStore()
@@ -100,8 +96,6 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     // Autocomplete for @references - destructure to avoid circular dependencies
     const autocomplete = usePromptAutocomplete()
     const {
-        isOpen: autocompleteIsOpen,
-        items: autocompleteItems,
         selectedIndex: autocompleteSelectedIndex,
         selectedItem: _autocompleteSelectedItem,
         handleTextChange: handleAutocompleteTextChange,
@@ -474,30 +468,6 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         }
     }, [setShotCreatorPrompt, setShotCreatorReferenceImages, shotCreatorReferenceImages, textareaRef, handleAutocompleteTextChange]);
 
-    // Handle autocomplete selection
-    const handleAutocompleteSelect = useCallback(async (item: AutocompleteOption | null) => {
-        if (!item || !textareaRef.current) return
-
-        const textarea = textareaRef.current
-        const cursorPosition = textarea.selectionStart
-        const currentText = shotCreatorPrompt
-
-        // Insert the selected item
-        const { newText, newCursorPosition } = insertAutocompleteItem(item, currentText, cursorPosition)
-
-        // Update prompt
-        setShotCreatorPrompt(newText)
-
-        // Close autocomplete
-        closeAutocomplete()
-
-        // Focus textarea and set cursor position
-        setTimeout(() => {
-            textarea.focus()
-            textarea.setSelectionRange(newCursorPosition, newCursorPosition)
-        }, 0)
-    }, [shotCreatorPrompt, textareaRef, setShotCreatorPrompt, insertAutocompleteItem, closeAutocomplete])
-
     return (
         <Fragment>
             <div className="flex flex-col gap-3 px-4 sm:px-6 lg:px-8">
@@ -677,7 +647,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 )}
 
                 {/* Mobile prompts recipes bar */}
-                <MobilePromptsRecipesBar onSelectRecipe={handleSelectRecipe} />
+                <MobilePromptsRecipesBar onSelectRecipe={(recipeId) => setActiveRecipe(recipeId)} />
 
                 {/* Generate button */}
                 <Button
@@ -736,3 +706,4 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
 }
 
 export { PromptActions }
+export default PromptActions

@@ -268,8 +268,8 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
 
                 {/* Create Style Dialog - reuse from full mode */}
                 <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-                    <DialogContent className="bg-zinc-900 border-zinc-800 max-w-md">
-                        <DialogHeader>
+                    <DialogContent className="bg-zinc-900 border-zinc-800 max-w-[calc(100%-2rem)] sm:max-w-md max-h-[85vh] flex flex-col">
+                        <DialogHeader className="flex-shrink-0">
                             <DialogTitle className="text-white flex items-center gap-2">
                                 <Palette className="w-5 h-5 text-amber-500" />
                                 Create Custom Style
@@ -278,42 +278,42 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                 Add your own style with a reference image
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-4 py-4">
+                        <div className="flex-1 overflow-y-auto space-y-4 py-4">
                             <div className="space-y-2">
                                 <Label>Reference Image *</Label>
                                 <div
-                                    className="border-2 border-dashed border-zinc-700 rounded-lg p-4 text-center cursor-pointer hover:border-amber-500/50 transition-colors"
+                                    className="border-2 border-dashed border-zinc-700 rounded-lg p-4 text-center cursor-pointer hover:border-amber-500/50 transition-colors active:border-amber-500/70"
                                     onClick={() => fileInputRef.current?.click()}
                                 >
                                     {newStyleImage ? (
                                         <div className="relative w-full aspect-video rounded overflow-hidden">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img src={newStyleImage} alt="Style preview" className="w-full h-full object-cover" />
-                                            <Button variant="destructive" size="sm" className="absolute top-2 right-2" onClick={(e) => { e.stopPropagation(); setNewStyleImage(''); }}>
+                                            <Button variant="destructive" size="sm" className="absolute top-2 right-2 min-h-[44px] min-w-[44px]" onClick={(e) => { e.stopPropagation(); setNewStyleImage(''); }}>
                                                 <X className="w-4 h-4" />
                                             </Button>
                                         </div>
                                     ) : (
                                         <div className="py-8">
                                             <Upload className="w-8 h-8 mx-auto text-zinc-500 mb-2" />
-                                            <p className="text-sm text-zinc-400">Click to upload image</p>
+                                            <p className="text-sm text-zinc-400">Tap to upload image</p>
                                         </div>
                                     )}
                                 </div>
                                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="style-name">Style Name *</Label>
-                                <Input id="style-name" placeholder="e.g., Anime, Watercolor" value={newStyleName} onChange={(e) => setNewStyleName(e.target.value)} className="bg-zinc-800 border-zinc-700" />
+                                <Label htmlFor="style-name-compact">Style Name *</Label>
+                                <Input id="style-name-compact" placeholder="e.g., Anime, Watercolor" value={newStyleName} onChange={(e) => setNewStyleName(e.target.value)} className="bg-zinc-800 border-zinc-700 text-base" />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="style-prompt">Style Prompt <span className="text-xs text-muted-foreground">(optional)</span></Label>
-                                <Textarea id="style-prompt" placeholder={`Default: "in the ${newStyleName || '[name]'} style"`} value={newStylePrompt} onChange={(e) => setNewStylePrompt(e.target.value)} className="bg-zinc-800 border-zinc-700 min-h-[60px]" />
+                                <Label htmlFor="style-prompt-compact">Style Prompt <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                                <Textarea id="style-prompt-compact" placeholder={`Default: "in the ${newStyleName || '[name]'} style"`} value={newStylePrompt} onChange={(e) => setNewStylePrompt(e.target.value)} className="bg-zinc-800 border-zinc-700 min-h-[60px] text-base" />
                             </div>
                         </div>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
-                            <Button onClick={handleCreateStyle} className="bg-amber-500 text-black hover:bg-amber-600">
+                        <DialogFooter className="flex-shrink-0 border-t border-zinc-800 pt-4">
+                            <Button variant="outline" onClick={() => setCreateDialogOpen(false)} className="min-h-[44px]">Cancel</Button>
+                            <Button onClick={handleCreateStyle} className="bg-amber-500 text-black hover:bg-amber-600 min-h-[44px]">
                                 <Plus className="w-4 h-4 mr-2" />
                                 Create
                             </Button>
@@ -326,8 +326,8 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
 
     return (
         <div className="space-y-2">
-            <div className="flex items-center justify-between">
-                <Label className="text-sm text-foreground flex items-center gap-2">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+                <Label className="text-sm text-foreground flex items-center gap-2 flex-shrink-0">
                     <Palette className="w-4 h-4" />
                     Style
                 </Label>
@@ -336,7 +336,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                         variant="ghost"
                         size="sm"
                         onClick={clearStyle}
-                        className="h-6 px-2 text-xs text-muted-foreground hover:text-white"
+                        className="h-6 px-2 text-xs text-muted-foreground hover:text-white flex-shrink-0"
                     >
                         <X className="w-3 h-3 mr-1" />
                         Clear
@@ -350,7 +350,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                 <SelectTrigger className="bg-card border-border text-white">
                     <SelectValue placeholder="No style selected">
                         {currentStyle ? (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
                                 <div className="w-5 h-5 rounded overflow-hidden flex-shrink-0 relative">
                                     {currentStyle.imagePath ? (
                                         currentStyle.imagePath.startsWith('data:') ? (
@@ -375,7 +375,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                         </div>
                                     )}
                                 </div>
-                                <span>{currentStyle.name}</span>
+                                <span className="truncate">{currentStyle.name}</span>
                             </div>
                         ) : (
                             <span className="text-muted-foreground">No style</span>
@@ -455,15 +455,15 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                 </SelectContent>
             </Select>
             {currentStyle && currentStyle.stylePrompt && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground break-words">
                     Auto-injects: &quot;{currentStyle.stylePrompt}&quot;
                 </p>
             )}
 
             {/* Create Style Dialog */}
             <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-                <DialogContent className="bg-zinc-900 border-zinc-800 max-w-md">
-                    <DialogHeader>
+                <DialogContent className="bg-zinc-900 border-zinc-800 max-w-[calc(100%-2rem)] sm:max-w-md max-h-[85vh] flex flex-col">
+                    <DialogHeader className="flex-shrink-0">
                         <DialogTitle className="text-white flex items-center gap-2">
                             <Palette className="w-5 h-5 text-amber-500" />
                             Create Custom Style
@@ -472,12 +472,12 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                             Add your own style with a reference image
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
+                    <div className="flex-1 overflow-y-auto space-y-4 py-4">
                         {/* Style Image */}
                         <div className="space-y-2">
                             <Label>Reference Image *</Label>
                             <div
-                                className="border-2 border-dashed border-zinc-700 rounded-lg p-4 text-center cursor-pointer hover:border-amber-500/50 transition-colors"
+                                className="border-2 border-dashed border-zinc-700 rounded-lg p-4 text-center cursor-pointer hover:border-amber-500/50 transition-colors active:border-amber-500/70"
                                 onClick={() => fileInputRef.current?.click()}
                             >
                                 {newStyleImage ? (
@@ -491,7 +491,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                         <Button
                                             variant="destructive"
                                             size="sm"
-                                            className="absolute top-2 right-2"
+                                            className="absolute top-2 right-2 min-h-[44px] min-w-[44px]"
                                             onClick={(e) => {
                                                 e.stopPropagation()
                                                 setNewStyleImage('')
@@ -503,7 +503,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                 ) : (
                                     <div className="py-8">
                                         <Upload className="w-8 h-8 mx-auto text-zinc-500 mb-2" />
-                                        <p className="text-sm text-zinc-400">Click to upload image</p>
+                                        <p className="text-sm text-zinc-400">Tap to upload image</p>
                                         <p className="text-xs text-zinc-500 mt-1">PNG, JPG, WebP up to 5MB</p>
                                     </div>
                                 )}
@@ -525,7 +525,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                 placeholder="e.g., Anime, Watercolor, Vintage"
                                 value={newStyleName}
                                 onChange={(e) => setNewStyleName(e.target.value)}
-                                className="bg-zinc-800 border-zinc-700"
+                                className="bg-zinc-800 border-zinc-700 text-base"
                             />
                         </div>
 
@@ -537,7 +537,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                 placeholder="Brief description of the style"
                                 value={newStyleDescription}
                                 onChange={(e) => setNewStyleDescription(e.target.value)}
-                                className="bg-zinc-800 border-zinc-700"
+                                className="bg-zinc-800 border-zinc-700 text-base"
                             />
                         </div>
 
@@ -552,23 +552,24 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                 placeholder={`Default: "in the ${newStyleName || '[style name]'} style of the reference image"`}
                                 value={newStylePrompt}
                                 onChange={(e) => setNewStylePrompt(e.target.value)}
-                                className="bg-zinc-800 border-zinc-700 min-h-[80px]"
+                                className="bg-zinc-800 border-zinc-700 min-h-[80px] text-base"
                             />
                             <p className="text-xs text-muted-foreground">
                                 This text is appended to your prompt when this style is selected
                             </p>
                         </div>
                     </div>
-                    <DialogFooter>
+                    <DialogFooter className="flex-shrink-0 border-t border-zinc-800 pt-4">
                         <Button
                             variant="outline"
                             onClick={() => setCreateDialogOpen(false)}
+                            className="min-h-[44px]"
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={handleCreateStyle}
-                            className="bg-amber-500 text-black hover:bg-amber-600"
+                            className="bg-amber-500 text-black hover:bg-amber-600 min-h-[44px]"
                         >
                             <Plus className="w-4 h-4 mr-2" />
                             Create Style

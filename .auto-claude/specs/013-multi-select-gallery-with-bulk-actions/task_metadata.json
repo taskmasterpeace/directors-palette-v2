@@ -11,5 +11,6 @@
     "src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx",
     "src/features/shot-creator/components/unified-gallery/GalleryGrid.tsx",
     "src/features/shot-creator/components/unified-gallery/BulkActionsToolbar.tsx"
-  ]
+  ],
+  "archivedAt": "2025-12-26T01:31:11.874Z"
 }

@@ -1,0 +1,196 @@
+{
+  "project_root": "C:\\git\\directors-palette-v2",
+  "project_type": "single",
+  "services": {
+    "main": {
+      "name": "main",
+      "path": "C:\\git\\directors-palette-v2",
+      "language": "TypeScript",
+      "framework": "Next.js",
+      "type": "frontend",
+      "package_manager": "npm",
+      "default_port": 3000,
+      "styling": "Tailwind CSS",
+      "state_management": "Zustand",
+      "dev_command": "npm run dev",
+      "key_directories": {
+        "src": {
+          "path": "src",
+          "purpose": "Source code"
+        },
+        "tests": {
+          "path": "tests",
+          "purpose": "Tests"
+        }
+      },
+      "dependencies": [
+        "@capacitor/android",
+        "@capacitor/app",
+        "@capacitor/camera",
+        "@capacitor/cli",
+        "@capacitor/clipboard",
+        "@capacitor/core",
+        "@capacitor/haptics",
+        "@capacitor/ios",
+        "@capacitor/splash-screen",
+        "@capacitor/status-bar",
+        "@dnd-kit/core",
+        "@dnd-kit/sortable",
+        "@dnd-kit/utilities",
+        "@floating-ui/react",
+        "@google/generative-ai",
+        "@hookform/resolvers",
+        "@radix-ui/react-accordion",
+        "@radix-ui/react-alert-dialog",
+        "@radix-ui/react-aspect-ratio",
+        "@radix-ui/react-avatar"
+      ],
+      "dev_dependencies": [
+        "@eslint/eslintrc",
+        "@playwright/test",
+        "@tailwindcss/postcss",
+        "@testing-library/jest-dom",
+        "@testing-library/react",
+        "@types/node",
+        "@types/pg",
+        "@types/react",
+        "@types/react-dom",
+        "@types/three"
+      ],
+      "e2e_testing": "Playwright",
+      "test_directory": "tests",
+      "environment": {
+        "variables": {
+          "NEXT_PUBLIC_SUPABASE_URL": {
+            "value": "https://tarohelkwuurakbxjyxm.supabase.co",
+            "source": ".env.local",
+            "type": "url",
+            "sensitive": false,
+            "required": true
+          },
+          "NEXT_PUBLIC_SUPABASE_ANON_KEY": {
+            "value": "<REDACTED>",
+            "source": ".env.local",
+            "type": "string",
+            "sensitive": true,
+            "required": true
+          },
+          "NEXT_PUBLIC_REQUESTY_API_KEY": {
+            "value": "<REDACTED>",
+            "source": ".env.local",
+            "type": "string",
+            "sensitive": true,
+            "required": true
+          },
+          "OPENROUTER_API_KEY": {
+            "value": "<REDACTED>",
+            "source": ".env.local",
+            "type": "string",
+            "sensitive": true,
+            "required": false
+          },
+          "REPLICATE_API_TOKEN": {
+            "value": "<REDACTED>",
+            "source": ".env.local",
+            "type": "string",
+            "sensitive": true,
+            "required": true
+          },
+          "STRIPE_SECRET_KEY": {
+            "value": "<REDACTED>",
+            "source": ".env.local",
+            "type": "string",
+            "sensitive": true,
+            "required": false
+          },
+          "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": {
+            "value": "<REDACTED>",
+            "source": ".env.local",
+            "type": "string",
+            "sensitive": true,
+            "required": false
+          },
+          "STRIPE_WEBHOOK_SECRET": {
+            "value": "<REDACTED>",
+            "source": ".env.local",
+            "type": "string",
+            "sensitive": true,
+            "required": false
+          },
+          "TEST_USER_EMAIL": {
+            "value": "taskmasterpeace@gmail.com",
+            "source": ".env.local",
+            "type": "email",
+            "sensitive": false,
+            "required": false
+          },
+          "TEST_USER_PASSWORD": {
+            "value": "<REDACTED>",
+            "source": ".env.local",
+            "type": "string",
+            "sensitive": true,
+            "required": false
+          },
+          "SUPABASE_SERVICE_ROLE_KEY": {
+            "value": "<REDACTED>",
+            "source": ".env.local",
+            "type": "string",
+            "sensitive": true,
+            "required": true
+          },
+          "DATABASE_URL": {
+            "value": "postgresql://postgres:m5yzccc01GkNNrJ2@db.tarohelkwuurakbxjyxm.supabase.co:5432/postgres",
+            "source": ".env.local",
+            "type": "url",
+            "sensitive": false,
+            "required": false
+          },
+          "SUPABASE_ACCESS_TOKEN": {
+            "value": "<REDACTED>",
+            "source": ".env.local",
+            "type": "string",
+            "sensitive": true,
+            "required": false
+          },
+          "WEBHOOK_URL": {
+            "value": "https://directors-palette-v2.vercel.app",
+            "source": ".env.local",
+            "type": "url",
+            "sensitive": false,
+            "required": false
+          },
+          "ELEVENLABS_API_KEY": {
+            "value": "<REDACTED>",
+            "source": ".env.local",
+            "type": "string",
+            "sensitive": true,
+            "required": false
+          }
+        },
+        "required_count": 5,
+        "optional_count": 0,
+        "detected_count": 15
+      },
+      "services": {
+        "databases": [
+          {
+            "type": "postgresql",
+            "client": "pg"
+          }
+        ],
+        "payments": [
+          {
+            "provider": "stripe",
+            "client": "stripe"
+          }
+        ]
+      }
+    }
+  },
+  "infrastructure": {
+    "deployment": "Vercel"
+  },
+  "conventions": {
+    "typescript": true
+  }
+}

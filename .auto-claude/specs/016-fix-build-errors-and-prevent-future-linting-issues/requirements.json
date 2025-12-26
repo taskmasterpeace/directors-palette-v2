@@ -1,0 +1,6 @@
+{
+  "task_description": "Fix the 2 TypeScript/ESLint errors in PromptActions.tsx and LayoutAnnotationTab.tsx that are blocking Vercel builds. Set up pre-commit hooks with Husky and lint-staged to automatically run ESLint checks before commits, preventing future build failures. Configure VS Code settings for auto-fix on save, and optionally add GitHub Actions for CI/CD linting.",
+  "workflow_type": "feature",
+  "services_involved": [],
+  "created_at": "2025-12-25T19:38:52.835371"
+}

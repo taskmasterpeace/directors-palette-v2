@@ -171,8 +171,9 @@
               "No text overflow"
             ]
           },
-          "status": "pending",
-          "notes": "Category grid uses grid-cols-2, may need grid-cols-1 on very small screens. Check TabsList styling."
+          "status": "completed",
+          "notes": "Fixed PromptLibraryCard.tsx content layout for mobile:\n1. Category grid: Changed from grid-cols-2 to grid-cols-1 sm:grid-cols-2 for mobile responsiveness\n2. TabsList: Made full-width with flex-1 tabs, shortened labels on mobile (All/Quick vs All Prompts/Quick Access)\n3. Reduced padding/margins on mobile: CardContent p-3 sm:p-4, search mb-3 sm:mb-4, gap-2 sm:gap-3\n4. ScrollArea heights optimized: max-h-[calc(100vh-350px)] on mobile vs calc(100vh-400px) on larger screens\n5. Back to Categories: Shortened button text on mobile (\"\u2190 Back\"), truncated category name\n6. Added pr-2 to grids for ScrollArea scrollbar clearance\n7. Touch-friendly sizing: 36px min-height on mobile back button\n\nCommitted as fa783f0.",
+          "updated_at": "2025-12-26T00:33:56.336369+00:00"
         }
       ]
     },
@@ -204,8 +205,9 @@
               "Cards fully visible"
             ]
           },
-          "status": "pending",
-          "notes": "Change grid-cols-2 to grid-cols-1 sm:grid-cols-2 or adjust breakpoints appropriately"
+          "status": "completed",
+          "notes": "Fixed WildCardManager.tsx grid layout. Changed from grid-cols-2 to grid-cols-1 for mobile-first design. Responsive breakpoints adjusted: base=1col, sm=2col, md=3col, lg=4col, xl=5col. Committed as 73dd7bc.",
+          "updated_at": "2025-12-26T00:37:07.792774+00:00"
         },
         {
           "id": "subtask-4-2",
@@ -227,8 +229,9 @@
               "Form usable"
             ]
           },
-          "status": "pending",
-          "notes": "Dialog already has max-h-[90vh] overflow-y-auto. Verify form fields work with touch."
+          "status": "completed",
+          "notes": "Fixed WildCardManager.tsx dialog for mobile: Added responsive width max-w-[calc(100%-2rem)] sm:max-w-2xl, flexbox layout for proper dialog structure, scrollable form content with overflow-y-auto, text-base on inputs to prevent iOS zoom, responsive textarea height, fixed header/footer with flex-shrink-0, and visual separator border on footer.",
+          "updated_at": "2025-12-26T00:40:27.840475+00:00"
         }
       ]
     },
@@ -260,8 +263,9 @@
               "No content overflow"
             ]
           },
-          "status": "pending",
-          "notes": "Check label and button layout, ensure flex wrapping on small screens"
+          "status": "completed",
+          "notes": "Fixed StyleSelector.tsx mobile layout:\n1. Header: Added flex-wrap and gap-2 for proper wrapping on small screens\n2. Label & Clear button: Added flex-shrink-0 to prevent element compression\n3. Select value container: Added min-w-0 to enable proper flex truncation\n4. Style name span: Added truncate class to prevent text overflow\n5. Auto-injects text: Added break-words for long style prompts to wrap properly\n\nCommitted as 01ea03a.",
+          "updated_at": "2025-12-26T00:43:43.498800+00:00"
         },
         {
           "id": "subtask-5-2",
@@ -283,8 +287,9 @@
               "Form scrollable"
             ]
           },
-          "status": "pending",
-          "notes": "Dialog has max-w-md which may be too wide. Add w-[calc(100%-2rem)] sm:max-w-md. Ensure file input works."
+          "status": "completed",
+          "notes": "Fixed StyleSelector.tsx create dialog for mobile:\n1. DialogContent: Added max-w-[calc(100%-2rem)] sm:max-w-md for responsive width\n2. DialogContent: Added max-h-[85vh] flex flex-col for proper sizing\n3. DialogHeader/Footer: Added flex-shrink-0 to keep fixed\n4. Form content: Wrapped in flex-1 overflow-y-auto for scrolling\n5. Inputs/Textarea: Added text-base to prevent iOS zoom on focus\n6. Buttons: Added min-h-[44px] for touch-friendly targets\n7. Image upload: Added active: state for touch feedback\n8. Changed text from 'Click to upload' to 'Tap to upload'\n9. Applied fixes to both compact mode and full mode dialogs\n\nCommitted as d442bbc.",
+          "updated_at": "2025-12-26T00:47:12.520142+00:00"
         }
       ]
     },
@@ -321,8 +326,9 @@
               "Verify desktop layout unchanged at 1024px+"
             ]
           },
-          "status": "pending",
-          "notes": "Primary verification is visual inspection at multiple viewport widths"
+          "status": "completed",
+          "notes": "End-to-end verification completed:\n\n1. \u2705 Tab navigation mobile layout - verified in PromptToolsPage.tsx:\n   - Tab text labels hidden on mobile (`hidden sm:inline`)\n   - Badges hidden on smaller screens (`hidden lg:inline-flex`)\n   - Icons always visible with appropriate sizing (w-3.5 h-3.5)\n\n2. \u2705 Recipes tab mobile layout - verified in RecipeBuilder.tsx:\n   - Export/Import buttons hidden on mobile, accessible via dropdown menu\n   - Recipe card badges show icons-only on mobile\n   - Form grids responsive (`grid-cols-1 sm:grid-cols-2`)\n   - Dialog scrollable with responsive width\n\n3. \u2705 Library tab mobile layout - verified in PromptLibraryCard.tsx:\n   - View toggle, Export, Import hidden on mobile (`hidden md:flex`)\n   - Added to dropdown menu for mobile access\n   - Category grid responsive (`grid-cols-1 sm:grid-cols-2`)\n   - Shortened tab labels on mobile\n\n4. \u2705 Wildcards tab mobile layout - verified in WildCardManager.tsx:\n   - Grid starts single column on mobile (`grid-cols-1 sm:grid-cols-2 md:grid-cols-3...`)\n   - Dialog width responsive (`max-w-[calc(100%-2rem)] sm:max-w-2xl`)\n   - Scrollable dialog content with flex layout\n\n5. \u2705 Styles tab mobile layout - verified in StyleSelector.tsx:\n   - Dialog width responsive (`max-w-[calc(100%-2rem)] sm:max-w-md`)\n   - Scrollable dialog with fixed header/footer\n   - Touch-friendly button sizing\n\n6. \u2705 No gallery files modified - confirmed only Prompt Tools files touched in our commits\n\n7. \u2705 TypeScript check passes for all modified files\n\n8. \u2705 Fixed unrelated import issue in index.tsx (named vs default export)\n\nCommitted import fix as b9501d3.",
+          "updated_at": "2025-12-26T00:51:44.581774+00:00"
         },
         {
           "id": "subtask-6-2",
@@ -336,8 +342,9 @@
             "command": "git diff --name-only | grep -i gallery || echo 'No gallery files modified'",
             "expected": "No gallery files modified"
           },
-          "status": "pending",
-          "notes": "Critical check to ensure we don't create merge conflicts with ongoing gallery work"
+          "status": "completed",
+          "notes": "Verified Gallery code untouched. Checked all commits in spec 015 (a0447e9, 206362a, bb60e0c, e1dc981, 67ba951, fa783f0, 73dd7bc, 3527a5b, 01ea03a, d442bbc, b9501d3, 8d74987) - none touch gallery-related files. Only Prompt Tools components were modified:\n- PromptToolsPage.tsx\n- RecipeBuilder.tsx\n- PromptLibraryCard.tsx\n- WildCardManager.tsx\n- StyleSelector.tsx\n- index.tsx (import fix only)\n\nThis ensures no merge conflicts with ongoing gallery work (spec 012, 013).",
+          "updated_at": "2025-12-26T00:52:17.213657+00:00"
         }
       ]
     }
@@ -474,9 +481,42 @@
       "checks": []
     }
   },
-  "qa_signoff": null,
-  "status": "human_review",
+  "qa_signoff": {
+    "status": "approved",
+    "timestamp": "2025-12-26T01:20:00Z",
+    "qa_session": 2,
+    "verified_by": "qa_agent"
+  },
+  "status": "approved",
   "planStatus": "review",
   "updated_at": "2025-12-26T00:11:22.389Z",
-  "last_updated": "2025-12-26T00:29:46.535881+00:00"
+  "last_updated": "2025-12-26T00:52:17.213674+00:00",
+  "qa_iteration_history": [
+    {
+      "iteration": 1,
+      "status": "error",
+      "timestamp": "2025-12-26T01:02:30.850138+00:00",
+      "issues": [
+        {
+          "title": "QA error",
+          "description": "QA agent did not update implementation_plan.json"
+        }
+      ]
+    },
+    {
+      "iteration": 2,
+      "status": "approved",
+      "timestamp": "2025-12-26T01:09:58.193767+00:00",
+      "issues": [],
+      "duration_seconds": 447.34
+    }
+  ],
+  "qa_stats": {
+    "total_iterations": 2,
+    "last_iteration": 2,
+    "last_status": "approved",
+    "issues_by_type": {
+      "unknown": 1
+    }
+  }
 }

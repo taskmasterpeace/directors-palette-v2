@@ -1,0 +1,3 @@
+fix(prompt-tools): improve mobile responsiveness for Prompt Tools UI
+
+Fixed critical mobile layout issues in the Prompt Tools section including Recipes, Library, Wildcards, and Styles tabs. Content was being cut off and buttons were not properly displayed on mobile devices. Updated PromptToolsPage, PromptLibraryCard, StyleSelector, RecipeBuilder, and WildCardManager components with responsive design improvements.

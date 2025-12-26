@@ -1,15 +1,15 @@
 {
   "active": true,
-  "spec": "013-multi-select-gallery-with-bulk-actions",
+  "spec": "015-fix-mobile-layout-issues-in-prompt-tools-ui",
   "state": "building",
   "subtasks": {
-    "completed": 13,
-    "total": 14,
+    "completed": 9,
+    "total": 12,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Testing and Documentation",
+    "current": "Styles Tab Mobile Fix",
     "id": null,
     "total": 2
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 7,
-    "started_at": "2025-12-25T18:57:10.987218"
+    "number": 10,
+    "started_at": "2025-12-25T19:12:20.248987"
   },
-  "last_update": "2025-12-25T19:21:25.427479"
+  "last_update": "2025-12-25T19:44:26.736397"
 }

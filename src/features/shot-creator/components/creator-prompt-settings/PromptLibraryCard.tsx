@@ -95,9 +95,9 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                             {prompts.length} prompts
                         </Badge>
                     </div>
-                    <div className="flex items-center gap-3">
-                        {/* View Mode Toggle */}
-                        <div className="flex rounded-lg border border-border bg-card p-1">
+                    <div className="flex items-center gap-2 md:gap-3">
+                        {/* Desktop: View Mode Toggle */}
+                        <div className="hidden md:flex rounded-lg border border-border bg-card p-1">
                             <Button
                                 size="sm"
                                 variant={viewMode === 'cards' ? 'default' : 'ghost'}
@@ -116,23 +116,25 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                             </Button>
                         </div>
 
-                        <div className="h-6 w-px bg-secondary" />
+                        <div className="hidden md:block h-6 w-px bg-secondary" />
 
+                        {/* Desktop: Export Button */}
                         <Button
                             size="sm"
                             onClick={() => handleExportPrompts()}
                             variant="outline"
-                            className="border-border hover:bg-card"
+                            className="hidden md:flex border-border hover:bg-card"
                         >
                             <Download className="w-4 h-4 mr-1" />
                             Export
                         </Button>
 
+                        {/* Desktop: Import Button */}
                         <Button
                             size="sm"
                             onClick={() => document.getElementById('import-prompts')?.click()}
                             variant="outline"
-                            className="border-border hover:bg-card"
+                            className="hidden md:flex border-border hover:bg-card"
                         >
                             <Upload className="w-4 h-4 mr-1" />
                             Import
@@ -146,26 +148,49 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                             onChange={handleImportPrompts}
                         />
 
+                        {/* Add Button - Always Visible */}
                         <Button
                             size="sm"
                             onClick={() => setIsAddPromptOpen?.(true)}
-                            className="bg-accent hover:bg-accent/90 text-white"
+                            className="bg-accent hover:bg-accent/90 text-white min-h-[44px] md:min-h-0"
                         >
                             <Plus className="w-4 h-4 mr-1" />
                             Add
                         </Button>
 
-                        {/* More Options Menu */}
+                        {/* Mobile: Actions Dropdown (View, Export, Import, More) */}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="border-border hover:bg-card">
+                                <Button variant="outline" size="sm" className="border-border hover:bg-card min-h-[44px] md:min-h-0">
                                     <MoreVertical className="w-4 h-4" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                                {/* Mobile-only: View Mode Options */}
+                                <div className="md:hidden">
+                                    <DropdownMenuItem onClick={() => setViewMode('cards')}>
+                                        <Grid className="w-4 h-4 mr-2" />
+                                        Card View
+                                        {viewMode === 'cards' && <span className="ml-auto text-accent">✓</span>}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setViewMode('table')}>
+                                        <Table className="w-4 h-4 mr-2" />
+                                        Table View
+                                        {viewMode === 'table' && <span className="ml-auto text-accent">✓</span>}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                </div>
                                 <DropdownMenuItem onClick={() => handleExportPrompts()}>
                                     <Download className="w-4 h-4 mr-2" />
                                     Export All
+                                </DropdownMenuItem>
+                                {/* Mobile-only: Import option */}
+                                <DropdownMenuItem
+                                    className="md:hidden"
+                                    onClick={() => document.getElementById('import-prompts')?.click()}
+                                >
+                                    <Upload className="w-4 h-4 mr-2" />
+                                    Import
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
@@ -182,7 +207,7 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                 </CardTitle>
             </CardHeader>
 
-            <CardContent className="flex-1 flex flex-col p-4">
+            <CardContent className="flex-1 flex flex-col p-3 sm:p-4">
                 {/* Conditional rendering based on view mode */}
                 {viewMode === 'table' ? (
                     <TablePromptLibrary
@@ -193,7 +218,7 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                 ) : (
                     <>
                         {/* Search Bar */}
-                        <div className="relative mb-4">
+                        <div className="relative mb-3 sm:mb-4">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <Input
                                 placeholder="Search prompts..."
@@ -204,15 +229,23 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                         </div>
 
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-                            <TabsList className="bg-card border-border">
-                                <TabsTrigger value="all">All Prompts</TabsTrigger>
-                                {showQuickAccess && <TabsTrigger value="quick">Quick Access</TabsTrigger>}
-                                <TabsTrigger value="categories">Categories</TabsTrigger>
+                            <TabsList className="bg-card border-border w-full">
+                                <TabsTrigger value="all" className="text-xs sm:text-sm px-2 sm:px-3 flex-1">
+                                    <span className="sm:hidden">All</span>
+                                    <span className="hidden sm:inline">All Prompts</span>
+                                </TabsTrigger>
+                                {showQuickAccess && (
+                                    <TabsTrigger value="quick" className="text-xs sm:text-sm px-2 sm:px-3 flex-1">
+                                        <span className="sm:hidden">Quick</span>
+                                        <span className="hidden sm:inline">Quick Access</span>
+                                    </TabsTrigger>
+                                )}
+                                <TabsTrigger value="categories" className="text-xs sm:text-sm px-2 sm:px-3 flex-1">Categories</TabsTrigger>
                             </TabsList>
 
-                            <TabsContent value="all" className="flex-1 mt-4 min-h-0">
-                                <ScrollArea className="h-full max-h-[calc(100vh-400px)] min-h-[300px]">
-                                    <div className="grid gap-3">
+                            <TabsContent value="all" className="flex-1 mt-3 sm:mt-4 min-h-0">
+                                <ScrollArea className="h-full max-h-[calc(100vh-350px)] sm:max-h-[calc(100vh-400px)] min-h-[250px] sm:min-h-[300px]">
+                                    <div className="grid gap-2 sm:gap-3 pr-2">
                                         {filteredPrompts.map(prompt => {
                                             const category = categories.find(c => c.id === prompt.categoryId)
                                             return (
@@ -234,9 +267,9 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                             </TabsContent>
 
                             {showQuickAccess && (
-                                <TabsContent value="quick" className="flex-1 mt-4 min-h-0">
-                                    <ScrollArea className="h-full max-h-[calc(100vh-400px)] min-h-[300px]">
-                                        <div className="grid gap-3">
+                                <TabsContent value="quick" className="flex-1 mt-3 sm:mt-4 min-h-0">
+                                    <ScrollArea className="h-full max-h-[calc(100vh-350px)] sm:max-h-[calc(100vh-400px)] min-h-[250px] sm:min-h-[300px]">
+                                        <div className="grid gap-2 sm:gap-3 pr-2">
                                             {quickPrompts.map(prompt => {
                                                 const category = categories.find(c => c.id === prompt.categoryId)
                                                 return (
@@ -258,10 +291,10 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                                 </TabsContent>
                             )}
 
-                            <TabsContent value="categories" className="flex-1 mt-4 min-h-0">
+                            <TabsContent value="categories" className="flex-1 mt-3 sm:mt-4 min-h-0">
                                 {!selectedCategory ? (
-                                    <ScrollArea className="h-full max-h-[calc(100vh-400px)] min-h-[300px]">
-                                        <div className="grid grid-cols-2 gap-3">
+                                    <ScrollArea className="h-full max-h-[calc(100vh-350px)] sm:max-h-[calc(100vh-400px)] min-h-[250px] sm:min-h-[300px]">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 pr-2">
                                             {categories.map(category => {
                                                 const promptCount = getPromptsByCategory(category.id).length
                                                 return (
@@ -281,29 +314,28 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                                         </div>
                                     </ScrollArea>
                                 ) : (
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => setSelectedCategory(null)}
-                                                    className="text-muted-foreground hover:text-white"
-                                                >
-                                                    ← Back to Categories
-                                                </Button>
-                                                <div className="flex items-center gap-2 ml-2">
-                                                    <span className="text-xl">
-                                                        {categories.find(c => c.id === selectedCategory)?.icon}
-                                                    </span>
-                                                    <h3 className="font-medium text-white">
-                                                        {categories.find(c => c.id === selectedCategory)?.name}
-                                                    </h3>
-                                                </div>
+                                    <div className="space-y-3 sm:space-y-4">
+                                        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setSelectedCategory(null)}
+                                                className="text-muted-foreground hover:text-white px-2 sm:px-3 min-h-[36px] sm:min-h-0"
+                                            >
+                                                <span className="sm:hidden">← Back</span>
+                                                <span className="hidden sm:inline">← Back to Categories</span>
+                                            </Button>
+                                            <div className="flex items-center gap-1.5 sm:gap-2 ml-1 sm:ml-2 min-w-0 flex-1">
+                                                <span className="text-lg sm:text-xl shrink-0">
+                                                    {categories.find(c => c.id === selectedCategory)?.icon}
+                                                </span>
+                                                <h3 className="font-medium text-white text-sm sm:text-base truncate">
+                                                    {categories.find(c => c.id === selectedCategory)?.name}
+                                                </h3>
                                             </div>
                                         </div>
-                                        <ScrollArea className="h-full max-h-[calc(100vh-450px)] min-h-[250px]">
-                                            <div className="grid gap-3">
+                                        <ScrollArea className="h-full max-h-[calc(100vh-400px)] sm:max-h-[calc(100vh-450px)] min-h-[200px] sm:min-h-[250px]">
+                                            <div className="grid gap-2 sm:gap-3 pr-2">
                                                 {categoryPrompts.length > 0 ? (
                                                     categoryPrompts.map(prompt => {
                                                         const category = categories.find(c => c.id === prompt.categoryId)
