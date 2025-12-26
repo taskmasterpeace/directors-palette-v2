@@ -7,7 +7,8 @@ import { useStorybookStore } from '../store/storybook.store'
 const SYSTEM_RECIPE_NAMES = {
   STYLE_GUIDE: 'Storybook Style Guide',
   CHARACTER_SHEET: 'Storybook Character Sheet',
-  PAGE: 'Storybook Page (Single Image)'
+  PAGE: 'Storybook Page (Single Image)',
+  BOOK_COVER: 'Storybook Book Cover',
 } as const
 
 interface GenerationResult {
@@ -173,6 +174,80 @@ export function useStorybookGeneration() {
   }, [project, updateCharacter, setGenerating, setError])
 
   /**
+   * Generate book cover with embedded title, author, and main character
+   */
+  const generateBookCover = useCallback(async (): Promise<GenerationResult> => {
+    if (!project) {
+      return { success: false, error: 'No project found' }
+    }
+
+    if (!project.title) {
+      return { success: false, error: 'Book title is required for cover generation' }
+    }
+
+    if (!project.author) {
+      return { success: false, error: 'Author name is required for cover generation' }
+    }
+
+    setState({ isGenerating: true, progress: 'Generating book cover...', error: null })
+    setGenerating(true)
+
+    try {
+      // Get main character description
+      const mainCharacter = project.characters[0] // Assuming first character is main
+      const mainCharacterDescription = mainCharacter
+        ? `${mainCharacter.name}: A child character with distinctive features`
+        : project.mainCharacterName || 'A child character'
+
+      const fieldValues = {
+        'stage0_field0_book_title': project.title,
+        'stage0_field1_author_name': project.author,
+        'stage0_field2_target_age': project.targetAge.toString(),
+        'stage0_field3_main_character_description': mainCharacterDescription,
+      }
+
+      // Auto-attach reference images: style guide + main character sheet
+      const referenceImages: string[] = []
+      if (project.style?.styleGuideUrl) {
+        referenceImages.push(project.style.styleGuideUrl)
+      }
+      if (mainCharacter?.characterSheetUrl) {
+        referenceImages.push(mainCharacter.characterSheetUrl)
+      }
+
+      const response = await fetch(`/api/recipes/${SYSTEM_RECIPE_NAMES.BOOK_COVER}/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fieldValues,
+          referenceImages,
+          modelSettings: {
+            aspectRatio: '3:4',
+            outputFormat: 'png',
+          },
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to generate book cover')
+      }
+
+      setState({ isGenerating: false, progress: '', error: null })
+      setGenerating(false)
+
+      return { success: true, imageUrl: data.imageUrl, predictionId: data.predictionId }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Generation failed'
+      setState({ isGenerating: false, progress: '', error: errorMessage })
+      setGenerating(false)
+      setError(errorMessage)
+      return { success: false, error: errorMessage }
+    }
+  }, [project, setGenerating, setError])
+
+  /**
    * Generate a single page illustration (renamed from generatePageVariations)
    */
   const generatePage = useCallback(async (
@@ -187,16 +262,26 @@ export function useStorybookGeneration() {
     setGenerating(true)
 
     try {
+      // Calculate page index and get previous page for story continuity
+      const pageIndex = project?.pages.findIndex(p => p.id === pageId) ?? -1
+      const previousPage = pageIndex > 0 ? project?.pages[pageIndex - 1] : null
+
+      // Get previous page text or indicate first page
+      const previousPageText = previousPage
+        ? previousPage.text
+        : 'This is the first page of the story. Start with an engaging opening illustration.'
+
       // Build field values from page data
       const characterTags = project?.characters.map(c => `@${c.tag || c.name.replace(/\s+/g, '')}`).join(', ') || 'No named characters'
 
       const fieldValues = {
-        'stage0_field0_page_text': page.text,
-        'stage0_field1_scene_description': page.sceneJSON ? JSON.stringify(page.sceneJSON.scene) : '',
-        'stage0_field2_shot_type': page.sceneJSON?.camera.shot || 'Medium Shot',
-        'stage0_field3_mood': page.sceneJSON?.scene.mood || 'Happy',
-        'stage0_field4_character_names': characterTags,
-        'stage0_field5_target_age': project?.targetAge.toString() || '5',
+        'stage0_field0_previous_page_text': previousPageText,
+        'stage0_field1_page_text': page.text,
+        'stage0_field2_scene_description': page.sceneJSON ? JSON.stringify(page.sceneJSON.scene) : '',
+        'stage0_field3_shot_type': page.sceneJSON?.camera.shot || 'Medium Shot',
+        'stage0_field4_mood': page.sceneJSON?.scene.mood || 'Happy',
+        'stage0_field5_character_names': characterTags,
+        'stage0_field6_target_age': project?.targetAge.toString() || '5',
       }
 
       // Auto-attach reference images: style guide + all character sheets
@@ -258,6 +343,7 @@ export function useStorybookGeneration() {
     // Actions
     generateStyleGuide,
     generateCharacterSheet,
+    generateBookCover,
     generatePage,  // ← Renamed from generatePageVariations
   }
 }

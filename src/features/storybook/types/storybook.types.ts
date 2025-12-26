@@ -234,6 +234,7 @@ export interface StorybookStyle {
 export interface StorybookProject {
   id: string
   title: string
+  author?: string // Author name for book cover
   storyText: string // Full story text
   pages: StorybookPage[]
   characters: StorybookCharacter[]

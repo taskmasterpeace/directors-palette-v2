@@ -2083,37 +2083,124 @@ Output a 16:9 image with exactly 6 tiles (2 rows x 3 columns) separated by black
   // Storybook Page (Single Image)
   {
     name: 'Storybook Page (Single Image)',
-    description: 'Generate a single page illustration for a children\'s book',
-    recipeNote: 'Used by storybook feature to generate page illustrations',
+    description: 'Generate a single page illustration for a children\'s book with story continuity',
+    recipeNote: 'Used by storybook feature to generate page illustrations. Includes previous page context for storytelling flow.',
     stages: [
       {
         type: 'generation',
-        template: `Create an illustration for this children's book page:
+        template: `Create an illustration for this children's book page that continues the story flow.
 
-PAGE TEXT:
+STORY CONTEXT:
+
+Previous Page (what happened before):
+<<PREVIOUS_PAGE_TEXT:text>>
+
+Current Page (what's happening now):
 "<<PAGE_TEXT:text!>>"
 
-SCENE:
+SCENE DETAILS:
 <<SCENE_DESCRIPTION:text>>
 
 CAMERA: <<SHOT_TYPE:select(Wide Shot,Medium Shot,Close-Up,Extreme Close-Up)!>>
 MOOD: <<MOOD:select(Happy,Sad,Excited,Calm,Mysterious,Adventurous)!>>
 
-CHARACTERS:
+CHARACTERS IN SCENE:
 <<CHARACTER_NAMES:text>>
 
+STORYTELLING CONTINUITY:
+- Show progression from the previous page
+- Visual flow should feel natural (e.g., if character was walking left on previous page, show them continuing that direction)
+- Maintain consistent lighting/time of day unless story indicates a change
+- Character expressions should reflect the emotional arc of the story
+- Background elements should show logical progression
+
 TECHNICAL REQUIREMENTS:
-- Match style guide exactly
+- Match style guide EXACTLY using reference images
 - Maintain character consistency using attached character sheets
+- Characters should have EXACT same appearance, clothing, and features
 - No text overlays on image (text will be added separately)
 - Age-appropriate for <<TARGET_AGE:text!>> year olds
 - Diverse, inclusive representation
+- Composition should balance illustration with space for text overlay
+
+QUALITY STANDARDS:
+- Professional children's book illustration quality
+- Clear focal point that supports the story
+- Vibrant, engaging colors appropriate to the mood
+- Fine details that reward close inspection
 
 Use reference images to match art style and character appearance exactly.`,
         referenceImages: [],
       },
     ],
     suggestedAspectRatio: '16:9',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: false,
+    categoryId: 'storybook',
+    isSystem: true,
+    isSystemOnly: true,
+  },
+
+  // Storybook Book Cover
+  {
+    name: 'Storybook Book Cover',
+    description: 'Generate a professional children\'s book cover with title, author, and main character',
+    recipeNote: 'Used by storybook feature to generate book covers. Includes embedded text (title + author) and main character illustration.',
+    stages: [
+      {
+        type: 'generation',
+        template: `Create a professional children's book cover illustration with embedded text.
+
+BOOK INFORMATION:
+Title: "<<BOOK_TITLE:text!>>"
+Author: <<AUTHOR_NAME:text!>>
+Target Age: <<TARGET_AGE:text!>> years old
+
+MAIN CHARACTER:
+<<MAIN_CHARACTER_DESCRIPTION:text!>>
+
+COVER LAYOUT REQUIREMENTS:
+
+1. TITLE PLACEMENT (Top third of cover):
+   - Display the book title "<<BOOK_TITLE:text!>>" prominently
+   - Use large, playful, child-friendly typography
+   - Ensure text is readable with good contrast
+   - Title should feel magical/whimsical
+   - Use colors that complement the illustration
+
+2. ILLUSTRATION (Center 60% of cover):
+   - Feature the main character in an engaging pose
+   - Show character's personality and energy
+   - Dynamic composition that draws the eye
+   - Match the art style from the style guide EXACTLY
+   - Character should match their character sheet reference
+   - Background hints at the story's setting/adventure
+   - Age-appropriate for <<TARGET_AGE:text!>> year olds
+
+3. AUTHOR NAME (Bottom of cover):
+   - Display "by <<AUTHOR_NAME:text!>>" below the illustration
+   - Smaller, elegant font
+   - Good readability but doesn't compete with title
+
+4. VISUAL STYLE:
+   - Match style guide precisely (use reference image)
+   - Bright, inviting colors that appeal to children
+   - Professional children's book cover quality
+   - Cover should work for both digital and print (high contrast)
+   - Add subtle decorative elements (stars, sparkles, borders) if they enhance the design
+
+TECHNICAL SPECS:
+- Aspect ratio: 3:4 portrait (standard book cover proportions)
+- All text MUST be clearly legible
+- Ensure character consistency with attached character sheet
+- High visual appeal to attract young readers
+- Diverse, inclusive representation
+
+Use reference images to match art style and character appearance exactly.`,
+        referenceImages: [],
+      },
+    ],
+    suggestedAspectRatio: '3:4',
     suggestedModel: 'nano-banana-pro',
     isQuickAccess: false,
     categoryId: 'storybook',
