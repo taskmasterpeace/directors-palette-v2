@@ -1,0 +1,347 @@
+{
+  "feature": "Fix Mobile Layout Issues in Prompt Tools UI",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a targeted fix for existing functionality that involves CSS/layout modifications across multiple components in a single service. It requires systematic changes to responsive breakpoints, flexbox/grid configurations, and container sizing across the Prompt Tools feature.",
+  "phases": [
+    {
+      "id": "phase-1-tab-navigation",
+      "name": "Tab Navigation Mobile Fix",
+      "type": "implementation",
+      "description": "Fix the tab navigation in PromptToolsPage and PromptToolsTabs to not overflow on mobile. Hide text labels and badges on small screens while keeping icons visible.",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Fix PromptToolsPage.tsx tab navigation - add responsive classes to hide tab text and badges on mobile, reduce padding on tab triggers",
+          "service": "main",
+          "files_to_modify": ["src/features/prompt-tools/components/PromptToolsPage.tsx"],
+          "files_to_create": [],
+          "patterns_from": ["src/features/shot-creator/components/creator-prompt-settings/PromptToolsTabs.tsx"],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/prompt-tools",
+            "checks": ["Tabs fit viewport at 375px width", "Icons visible", "No horizontal overflow"]
+          },
+          "status": "pending",
+          "notes": "Use hidden sm:inline for text labels, hidden sm:inline-flex for badges, reduce gap and px on triggers"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-recipes-tab",
+      "name": "Recipes Tab Mobile Fix",
+      "type": "implementation",
+      "description": "Fix RecipeBuilder header button overflow and ensure recipe cards stack properly on mobile. Collapse Export/Import buttons into dropdown on mobile.",
+      "depends_on": ["phase-1-tab-navigation"],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Fix RecipeBuilder.tsx header - collapse Export/Import buttons into dropdown on mobile, keep New Recipe button visible",
+          "service": "main",
+          "files_to_modify": ["src/features/shot-creator/components/recipe/RecipeBuilder.tsx"],
+          "files_to_create": [],
+          "patterns_from": ["src/features/shot-creator/components/creator-prompt-settings/PromptLibraryCard.tsx"],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/prompt-tools",
+            "checks": ["Header buttons accessible at 375px", "No horizontal overflow", "New Recipe button visible"]
+          },
+          "status": "pending",
+          "notes": "Add hidden md:flex for desktop buttons, flex md:hidden with DropdownMenu for mobile. Import DropdownMenu components."
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Fix RecipeBuilder.tsx recipe cards - ensure cards stack properly on mobile with full content visible, fix category filter wrapping",
+          "service": "main",
+          "files_to_modify": ["src/features/shot-creator/components/recipe/RecipeBuilder.tsx"],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/prompt-tools",
+            "checks": ["Recipe cards fully visible at 375px", "Category buttons wrap on mobile", "Content not cut off"]
+          },
+          "status": "pending",
+          "notes": "Ensure flex-wrap on category buttons, check card action buttons don't overflow on mobile"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Fix RecipeBuilder.tsx dialog - ensure create/edit dialog is scrollable and usable on mobile, fix form grid layout",
+          "service": "main",
+          "files_to_modify": ["src/features/shot-creator/components/recipe/RecipeBuilder.tsx"],
+          "files_to_create": [],
+          "patterns_from": ["src/components/ui/dialog.tsx"],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/prompt-tools",
+            "checks": ["Create Recipe dialog opens on mobile", "Dialog content scrollable", "Form fields accessible"]
+          },
+          "status": "pending",
+          "notes": "Dialog already has max-h-[90vh] overflow-y-auto, change RecipeForm grid-cols-2 to grid-cols-1 sm:grid-cols-2 for mobile"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-library-tab",
+      "name": "Library Tab Mobile Fix",
+      "type": "implementation",
+      "description": "Fix PromptLibraryCard header with multiple buttons that overflow on mobile. Collapse secondary actions into dropdown while keeping primary Add button visible.",
+      "depends_on": ["phase-1-tab-navigation"],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Fix PromptLibraryCard.tsx header - collapse View Toggle, Export, Import buttons into dropdown on mobile, keep Add button visible",
+          "service": "main",
+          "files_to_modify": ["src/features/shot-creator/components/creator-prompt-settings/PromptLibraryCard.tsx"],
+          "files_to_create": [],
+          "patterns_from": ["src/features/shot-creator/components/unified-gallery/GalleryHeader.tsx"],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/prompt-tools",
+            "checks": ["Header buttons fit at 375px", "Add button always visible", "Other actions in dropdown"]
+          },
+          "status": "pending",
+          "notes": "Move view toggle, export, import into MoreVertical dropdown on mobile. Use hidden md:flex pattern."
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Fix PromptLibraryCard.tsx content layout - ensure category grid and prompt cards display properly on mobile",
+          "service": "main",
+          "files_to_modify": ["src/features/shot-creator/components/creator-prompt-settings/PromptLibraryCard.tsx"],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/prompt-tools",
+            "checks": ["Category cards grid responsive", "Content scrollable", "No text overflow"]
+          },
+          "status": "pending",
+          "notes": "Category grid uses grid-cols-2, may need grid-cols-1 on very small screens. Check TabsList styling."
+        }
+      ]
+    },
+    {
+      "id": "phase-4-wildcards-tab",
+      "name": "Wildcards Tab Mobile Fix",
+      "type": "implementation",
+      "description": "Fix WildCardManager grid to use single column on very small screens and ensure proper scrollability.",
+      "depends_on": ["phase-1-tab-navigation"],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Fix WildCardManager.tsx grid - change grid-cols-2 to grid-cols-1 for xs screens, adjust responsive breakpoints",
+          "service": "main",
+          "files_to_modify": ["src/features/shot-creator/components/wildcard/WildCardManager.tsx"],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/prompt-tools",
+            "checks": ["Single column on 320px", "Two columns on 375px+", "Cards fully visible"]
+          },
+          "status": "pending",
+          "notes": "Change grid-cols-2 to grid-cols-1 sm:grid-cols-2 or adjust breakpoints appropriately"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Fix WildCardManager.tsx dialog - ensure create/edit dialog works on mobile with scrollable content",
+          "service": "main",
+          "files_to_modify": ["src/features/shot-creator/components/wildcard/WildCardManager.tsx"],
+          "files_to_create": [],
+          "patterns_from": ["src/components/ui/dialog.tsx"],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/prompt-tools",
+            "checks": ["Create dialog opens on mobile", "Dialog scrollable", "Form usable"]
+          },
+          "status": "pending",
+          "notes": "Dialog already has max-h-[90vh] overflow-y-auto. Verify form fields work with touch."
+        }
+      ]
+    },
+    {
+      "id": "phase-5-styles-tab",
+      "name": "Styles Tab Mobile Fix",
+      "type": "implementation",
+      "description": "Fix StyleSelector display on mobile and ensure Create Custom Style dialog is fully functional and scrollable.",
+      "depends_on": ["phase-1-tab-navigation"],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Fix StyleSelector.tsx layout - ensure style dropdown and clear button work properly on mobile with proper flex wrapping",
+          "service": "main",
+          "files_to_modify": ["src/features/shot-creator/components/creator-prompt-settings/StyleSelector.tsx"],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/prompt-tools",
+            "checks": ["Style dropdown accessible", "Clear button visible", "No content overflow"]
+          },
+          "status": "pending",
+          "notes": "Check label and button layout, ensure flex wrapping on small screens"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Fix StyleSelector.tsx create dialog - ensure create custom style dialog is fully scrollable and form elements are touch-friendly",
+          "service": "main",
+          "files_to_modify": ["src/features/shot-creator/components/creator-prompt-settings/StyleSelector.tsx"],
+          "files_to_create": [],
+          "patterns_from": ["src/components/ui/dialog.tsx"],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/prompt-tools",
+            "checks": ["Create Style dialog opens", "Image upload works on mobile", "Form scrollable"]
+          },
+          "status": "pending",
+          "notes": "Dialog has max-w-md which may be too wide. Add w-[calc(100%-2rem)] sm:max-w-md. Ensure file input works."
+        }
+      ]
+    },
+    {
+      "id": "phase-6-integration",
+      "name": "Integration & Verification",
+      "type": "integration",
+      "description": "Verify all tabs work together on mobile, no regressions on desktop, and Gallery code remains untouched.",
+      "depends_on": ["phase-2-recipes-tab", "phase-3-library-tab", "phase-4-wildcards-tab", "phase-5-styles-tab"],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "End-to-end verification - test all Prompt Tools tabs at 375px, 428px, and 768px widths",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Navigate to Prompt Tools page",
+              "Switch between all 4 tabs on mobile viewport (375px)",
+              "Verify no horizontal overflow on any tab",
+              "Test Recipes: Open New Recipe dialog, verify scrollable",
+              "Test Library: Access Export/Import via dropdown",
+              "Test Wildcards: Create new wildcard, verify dialog works",
+              "Test Styles: Create new custom style, verify dialog works",
+              "Verify desktop layout unchanged at 1024px+"
+            ]
+          },
+          "status": "pending",
+          "notes": "Primary verification is visual inspection at multiple viewport widths"
+        },
+        {
+          "id": "subtask-6-2",
+          "description": "Verify Gallery code untouched - confirm no modifications to gallery-related files",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "git diff --name-only | grep -i gallery || echo 'No gallery files modified'",
+            "expected": "No gallery files modified"
+          },
+          "status": "pending",
+          "notes": "Critical check to ensure we don't create merge conflicts with ongoing gallery work"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 6,
+    "total_subtasks": 11,
+    "services_involved": ["main"],
+    "parallelism": {
+      "max_parallel_phases": 4,
+      "parallel_groups": [
+        {
+          "phases": ["phase-2-recipes-tab", "phase-3-library-tab", "phase-4-wildcards-tab", "phase-5-styles-tab"],
+          "reason": "All depend only on phase-1-tab-navigation, no overlapping files"
+        }
+      ],
+      "recommended_workers": 2,
+      "speedup_estimate": "2x faster than sequential due to independent tab fixes"
+    },
+    "startup_command": "source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 015 --parallel 2"
+  },
+  "verification_strategy": {
+    "risk_level": "low",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": ["unit"],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "All Prompt Tools tabs fit mobile viewport (375px) without horizontal overflow",
+      "All action buttons are accessible on mobile",
+      "All create/edit dialogs work on mobile",
+      "Desktop layout remains unchanged",
+      "Gallery code is not modified",
+      "No console errors introduced"
+    ],
+    "verification_steps": [
+      {
+        "name": "Existing Tests",
+        "command": "npm test",
+        "expected_outcome": "All existing tests pass",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Build Check",
+        "command": "npm run build",
+        "expected_outcome": "Build completes without errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "No Gallery Changes",
+        "command": "git diff --name-only | grep -i gallery || echo 'Clean'",
+        "expected_outcome": "Clean (no gallery files modified)",
+        "type": "command",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Low risk CSS/layout changes with no external integrations. Primary validation is visual testing at multiple viewport widths. Existing tests should catch any regressions."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": ["npm test"],
+      "minimum_coverage": null,
+      "notes": "No new unit tests required for CSS changes, but existing tests must pass"
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": true,
+      "commands": ["npx playwright test --project=chromium"],
+      "flows": ["prompt-tools-mobile-navigation"]
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {"url": "http://localhost:3000", "viewport": "375x667", "checks": ["Prompt Tools tabs accessible", "No overflow"]},
+        {"url": "http://localhost:3000", "viewport": "428x926", "checks": ["All tabs usable", "Dialogs scrollable"]},
+        {"url": "http://localhost:3000", "viewport": "768x1024", "checks": ["Transitional layout works"]},
+        {"url": "http://localhost:3000", "viewport": "1024x768", "checks": ["Desktop layout unchanged"]}
+      ]
+    },
+    "database_verification": {
+      "required": false,
+      "checks": []
+    }
+  },
+  "qa_signoff": null
+}

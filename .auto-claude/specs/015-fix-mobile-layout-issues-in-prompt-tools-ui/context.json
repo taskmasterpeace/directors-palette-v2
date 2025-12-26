@@ -1,0 +1,41 @@
+{
+  "task_description": "Fix mobile layout issues across all Prompt Tools tabs (Recipes, Library, Wildcards, Styles). Issues include overflow, buttons off-screen, and content cut off on mobile devices.",
+  "scoped_services": ["main"],
+  "files_to_modify": {
+    "main": [
+      "src/features/prompt-tools/components/PromptToolsPage.tsx",
+      "src/features/shot-creator/components/creator-prompt-settings/PromptToolsTabs.tsx",
+      "src/features/shot-creator/components/recipe/RecipeBuilder.tsx",
+      "src/features/shot-creator/components/creator-prompt-settings/PromptLibraryCard.tsx",
+      "src/features/shot-creator/components/wildcard/WildCardManager.tsx",
+      "src/features/shot-creator/components/creator-prompt-settings/StyleSelector.tsx"
+    ]
+  },
+  "files_to_reference": [
+    "src/features/shot-creator/components/prompt-library/mobile/PromptLibraryMobile.tsx",
+    "src/components/ui/tabs.tsx",
+    "src/components/ui/dialog.tsx",
+    "src/components/ui/dropdown-menu.tsx"
+  ],
+  "patterns": {
+    "responsive_grid": "Use grid-cols-1 for mobile, progressively increase: sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
+    "button_collapse": "Use hidden md:flex for desktop buttons, flex md:hidden with DropdownMenu for mobile",
+    "text_hiding": "Use hidden sm:inline for text labels on tabs/buttons, keep icons always visible",
+    "overflow_handling": "Parent overflow-hidden, scrollable child flex-1 overflow-auto min-h-0",
+    "dialog_mobile": "Use max-w-[calc(100%-2rem)] and max-h-[90vh] overflow-y-auto for mobile dialogs"
+  },
+  "existing_implementations": {
+    "description": "WildCardManager already has responsive grid. PromptToolsTabs has hidden sm:inline pattern. PromptLibraryCard has MoreVertical dropdown but only for secondary actions.",
+    "relevant_files": [
+      "src/features/shot-creator/components/wildcard/WildCardManager.tsx",
+      "src/features/shot-creator/components/creator-prompt-settings/PromptToolsTabs.tsx",
+      "src/features/shot-creator/components/creator-prompt-settings/PromptLibraryCard.tsx"
+    ]
+  },
+  "constraints": [
+    "DO NOT modify any gallery-related files (UnifiedImageGallery, ImageGallery, etc.)",
+    "Maintain desktop layout unchanged",
+    "Use Tailwind responsive classes, not JavaScript media queries"
+  ],
+  "created_at": "2025-12-25T19:10:00.000Z"
+}

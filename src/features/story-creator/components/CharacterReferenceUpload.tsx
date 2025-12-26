@@ -4,10 +4,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button'
 import { Upload, X } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { useState, useRef } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { toast } from '@/hooks/use-toast'
 import { getClient } from '@/lib/db/client'
 import { useUnifiedGalleryStore } from '@/features/shot-creator/store/unified-gallery-store'
+import { DropZone, type DropZoneRef } from '@/components/ui/drop-zone'
 
 interface CharacterReferenceUploadProps {
     open: boolean
@@ -30,41 +31,30 @@ export function CharacterReferenceUpload({
     const [isUploading, setIsUploading] = useState(false)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
-    const fileInputRef = useRef<HTMLInputElement>(null)
+    const dropZoneRef = useRef<DropZoneRef>(null)
 
-    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0]
-        if (!file) return
-
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            toast({
-                title: 'Invalid File',
-                description: 'Please select an image file',
-                variant: 'destructive'
-            })
-            return
-        }
-
-        // Validate file size (max 10MB)
-        if (file.size > 10 * 1024 * 1024) {
-            toast({
-                title: 'File Too Large',
-                description: 'Please select an image under 10MB',
-                variant: 'destructive'
-            })
-            return
-        }
-
-        setSelectedFile(file)
-
-        // Create preview
-        const reader = new FileReader()
-        reader.onload = (e) => {
-            setPreviewUrl(e.target?.result as string)
-        }
-        reader.readAsDataURL(file)
+    // Accepted image file types for the DropZone
+    const IMAGE_ACCEPT = {
+        'image/*': ['.png', '.jpg', '.jpeg', '.webp', '.gif']
     }
+
+    // Max file size: 10MB
+    const MAX_FILE_SIZE = 10 * 1024 * 1024
+
+    // Handle files dropped via DropZone
+    const handleDropAccepted = useCallback((acceptedFiles: File[]) => {
+        if (acceptedFiles.length > 0) {
+            const file = acceptedFiles[0]
+            setSelectedFile(file)
+
+            // Create preview
+            const reader = new FileReader()
+            reader.onload = (e) => {
+                setPreviewUrl(e.target?.result as string)
+            }
+            reader.readAsDataURL(file)
+        }
+    }, [])
 
     const handleUpload = async () => {
         if (!selectedFile) return
@@ -182,9 +172,7 @@ export function CharacterReferenceUpload({
         onOpenChange(false)
         setPreviewUrl(null)
         setSelectedFile(null)
-        if (fileInputRef.current) {
-            fileInputRef.current.value = ''
-        }
+        dropZoneRef.current?.clearError()
     }
 
     return (
@@ -204,15 +192,6 @@ export function CharacterReferenceUpload({
                 </DialogHeader>
 
                 <div className="flex flex-col gap-4">
-                    {/* File Input */}
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleFileSelect}
-                    />
-
                     {/* Preview or Upload Area */}
                     {previewUrl ? (
                         <div className="space-y-3">
@@ -226,21 +205,25 @@ export function CharacterReferenceUpload({
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => fileInputRef.current?.click()}
+                                onClick={() => dropZoneRef.current?.open()}
                                 className="w-full"
                             >
                                 Choose Different Image
                             </Button>
                         </div>
                     ) : (
-                        <div
-                            className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-border transition-colors"
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                            <Upload className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                            <p className="text-muted-foreground mb-1">Click to select an image</p>
-                            <p className="text-xs text-muted-foreground">PNG, JPG, WEBP up to 10MB</p>
-                        </div>
+                        <DropZone
+                            ref={dropZoneRef}
+                            accept={IMAGE_ACCEPT}
+                            maxFiles={1}
+                            maxSize={MAX_FILE_SIZE}
+                            multiple={false}
+                            onDropAccepted={handleDropAccepted}
+                            idleText="Drag & drop an image, or click to select"
+                            dragText="Drop the image here..."
+                            acceptText="PNG, JPG, WEBP, GIF up to 10MB"
+                            rejectText="Please upload an image file"
+                        />
                     )}
 
                     {/* Action Buttons */}

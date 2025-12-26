@@ -6,12 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Wand2, Upload, X, CheckCircle, AlertCircle, Image as ImageIcon } from 'lucide-react'
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { Wand2, X, Loader2, CheckCircle, AlertCircle, Image as ImageIcon } from 'lucide-react'
+import { DropZone } from '@/components/ui/drop-zone'
 import { PromptEditor, type PromptVariable, applyVariablesToPrompt } from '../shared/PromptEditor'
 import { styleGeneratorService, DEFAULT_STYLE_GUIDE_PROMPT } from '../../services/style-generator.service'
 import { useStoryboardStore } from '../../store'
-import { useDropzone } from 'react-dropzone'
 
 type GenerationStatus = 'idle' | 'generating' | 'completed' | 'failed'
 
@@ -26,7 +25,12 @@ export function StyleGuideGenerator() {
     const [generatedGalleryId, setGeneratedGalleryId] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
 
-    const onDrop = useCallback((acceptedFiles: File[]) => {
+    // Accepted image file types for reference image
+    const IMAGE_ACCEPT = {
+        'image/*': ['.png', '.jpg', '.jpeg', '.webp']
+    }
+
+    const handleDropAccepted = useCallback((acceptedFiles: File[]) => {
         if (acceptedFiles.length > 0) {
             const file = acceptedFiles[0]
             setReferenceFile(file)
@@ -37,14 +41,6 @@ export function StyleGuideGenerator() {
             reader.readAsDataURL(file)
         }
     }, [])
-
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-        accept: {
-            'image/*': ['.png', '.jpg', '.jpeg', '.webp']
-        },
-        maxFiles: 1
-    })
 
     const removeReferenceImage = () => {
         setReferenceImage(null)
@@ -160,25 +156,16 @@ export function StyleGuideGenerator() {
                             </Badge>
                         </div>
                     ) : (
-                        <div
-                            {...getRootProps()}
-                            className={`
-                                border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-                                ${isDragActive ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50'}
-                            `}
-                        >
-                            <input {...getInputProps()} />
-                            <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">
-                                {isDragActive
-                                    ? 'Drop the image here...'
-                                    : 'Drag & drop an image, or click to select'
-                                }
-                            </p>
-                            <p className="text-xs text-muted-foreground/70 mt-1">
-                                PNG, JPG, WEBP up to 10MB
-                            </p>
-                        </div>
+                        <DropZone
+                            accept={IMAGE_ACCEPT}
+                            maxFiles={1}
+                            multiple={false}
+                            onDropAccepted={handleDropAccepted}
+                            idleText="Drag & drop an image, or click to select"
+                            dragText="Drop the image here..."
+                            acceptText="PNG, JPG, WEBP up to 10MB"
+                            rejectText="Please upload an image file"
+                        />
                     )}
                 </div>
 
@@ -246,7 +233,7 @@ export function StyleGuideGenerator() {
                 >
                     {generationStatus === 'generating' ? (
                         <>
-                            <LoadingSpinner size="sm" color="current" className="mr-2" />
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                             Generating Style Guide...
                         </>
                     ) : (

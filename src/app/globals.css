@@ -462,3 +462,51 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
+
+/* DropZone animations */
+@keyframes dropzone-pulse-border {
+  0%, 100% {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0 rgba(var(--primary), 0.2);
+  }
+  50% {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(var(--primary), 0.1);
+  }
+}
+
+@keyframes dropzone-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-4px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes dropzone-scale-in {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-dropzone-pulse {
+  animation: dropzone-pulse-border 1.5s ease-in-out infinite;
+}
+
+.animate-dropzone-shake {
+  animation: dropzone-shake 0.5s ease-in-out;
+}
+
+.animate-dropzone-scale {
+  animation: dropzone-scale-in 0.3s ease-out;
+}

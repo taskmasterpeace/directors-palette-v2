@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useRef, useState, useCallback } from 'react'
+import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { PanelLeft, PanelLeftClose, PanelRightClose, RotateCcw, Upload, Maximize, Minimize2, X, ChevronDown, ChevronUp, RotateCw, Image as ImageIcon, Palette, Download, Layers } from "lucide-react"
+import { PanelLeft, PanelLeftClose, PanelRightClose, RotateCcw, Upload, Maximize, Minimize2, X, Loader2, ChevronDown, ChevronUp, RotateCw, Image as ImageIcon, Palette, Download, Layers } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Button } from "@/components/ui/button"
+import { DropZone } from "@/components/ui/drop-zone"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { haptics } from "@/utils/haptics"
@@ -23,6 +24,11 @@ import { CanvasToolbar } from "./canvas-settings"
 import { CanvasExporter } from "./canvas-export"
 import { FrameExtractor } from "./frame-extractor"
 import type { FrameExtractionResult } from "../types/frame-extractor.types"
+
+// Accepted image types for canvas import
+const IMAGE_ACCEPT = {
+    'image/*': ['.png', '.jpg', '.jpeg', '.webp', '.gif']
+}
 
 interface LayoutAnnotationTabProps {
     className?: string
@@ -81,6 +87,8 @@ The final image should look natural as if the edits were always part of the orig
     const [exportPanelExpanded, setExportPanelExpanded] = useState(true)
     const [canvasMode, setCanvasMode] = useState<'canvas' | 'photo'>('canvas')
     const [backgroundImage, setBackgroundImage] = useState<string | null>(null)
+    const [isDragOverCanvas, setIsDragOverCanvas] = useState(false)
+    const canvasContainerRef = useRef<HTMLDivElement>(null)
 
     // Load system prompt from localStorage on mount
     React.useEffect(() => {
@@ -106,7 +114,7 @@ The final image should look natural as if the edits were always part of the orig
     const { sidebarCollapsed, setSidebarCollapsed, rightSidebarCollapsed, setRightSidebarCollapsed, imageImportMode, setImageImportMode } = useLayoutAnnotationStore()
     const { canvasState, handleAspectRatioChange, updateCanvasState, updateDrawingProperties, updateCanvasSettings: _updateCanvasSettings } = useCanvasSettings()
     const { handleUndo, handleClearCanvas, handleSaveCanvas: _handleSaveCanvas } = useCanvasOperations({ canvasRef })
-    const { handleImportClick, handleFileUpload } = useImageImport({ fileInputRef })
+    const { handleImportClick, handleFileUpload, handleReceiveImage } = useImageImport({ fileInputRef })
     useIncomingImageSync({ canvasRef })
 
     // Frame Extractor handlers
@@ -293,6 +301,63 @@ The final image should look natural as if the edits were always part of the orig
         }
     }, [toast])
 
+    // Canvas drag-and-drop handlers for file import
+    const handleCanvasDropAccepted = useCallback((files: File[]) => {
+        const file = files[0]
+        if (!file) return
+
+        const url = URL.createObjectURL(file)
+        handleReceiveImage(url)
+        // Give enough time for image to be loaded to canvas before revoking
+        setTimeout(() => URL.revokeObjectURL(url), 30000)
+    }, [handleReceiveImage])
+
+    // Track drag events over the canvas container for overlay visibility
+    useEffect(() => {
+        const container = canvasContainerRef.current
+        if (!container) return
+
+        let dragCounter = 0
+
+        const handleDragEnter = (e: DragEvent) => {
+            e.preventDefault()
+            dragCounter++
+            if (e.dataTransfer?.types.includes('Files')) {
+                setIsDragOverCanvas(true)
+            }
+        }
+
+        const handleDragLeave = (e: DragEvent) => {
+            e.preventDefault()
+            dragCounter--
+            if (dragCounter === 0) {
+                setIsDragOverCanvas(false)
+            }
+        }
+
+        const handleDragOver = (e: DragEvent) => {
+            e.preventDefault()
+        }
+
+        const handleDrop = (e: DragEvent) => {
+            e.preventDefault()
+            dragCounter = 0
+            setIsDragOverCanvas(false)
+        }
+
+        container.addEventListener('dragenter', handleDragEnter)
+        container.addEventListener('dragleave', handleDragLeave)
+        container.addEventListener('dragover', handleDragOver)
+        container.addEventListener('drop', handleDrop)
+
+        return () => {
+            container.removeEventListener('dragenter', handleDragEnter)
+            container.removeEventListener('dragleave', handleDragLeave)
+            container.removeEventListener('dragover', handleDragOver)
+            container.removeEventListener('drop', handleDrop)
+        }
+    }, [])
+
     // Toolbar controls to be rendered in FabricCanvas header
     const toolbarContent = (
         <>
@@ -348,142 +413,260 @@ The final image should look natural as if the edits were always part of the orig
                     }}
                     variant="outline"
                     className="h-7 w-7 border-primary/30 text-primary hover:bg-primary/20"
-                    title={imageImportMode === 'fit' ? 'Switch to Fill mode' : 'Switch to Fit mode'}
+                    title={imageImportMode === 'fit' ? 'Switch to Fill Mode' : 'Switch to Fit Mode'}
                 >
-                    {imageImportMode === 'fit' ? <Minimize2 className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                    {imageImportMode === 'fit' ? (
+                        <Maximize className="w-3 h-3" />
+                    ) : (
+                        <Minimize2 className="w-3 h-3" />
+                    )}
                 </Button>
             )}
 
-            <Button
-                size="sm"
-                onClick={() => {
-                    haptics.medium()
-                    handleUndo()
-                }}
-                disabled={canvasState.historyIndex <= 0}
-                variant="outline"
-                className="h-7 w-7 border-primary/30 text-primary hover:bg-primary/20 disabled:opacity-50"
-                title="Undo"
-            >
-                <RotateCcw className="w-4 h-4" />
-            </Button>
-
-            <Button
-                size="sm"
-                onClick={() => {
-                    haptics.warning()
-                    handleClearCanvas()
-                }}
-                variant="destructive"
-                className="h-7 w-7"
-                title="Clear"
-            >
-                <X className="w-4 h-4" />
-            </Button>
-
-            <div className="h-4 w-px bg-border mx-1" />
-
-            <div className="h-4 w-px bg-border mx-1" />
-
-
+            {canvasMode === 'canvas' && (
+                <Button
+                    size="sm"
+                    type="button"
+                    onClick={() => {
+                        haptics.light()
+                        handleClearCanvas()
+                    }}
+                    variant="outline"
+                    className="h-7 px-2 text-xs border-primary/30 text-primary hover:bg-primary/20"
+                >
+                    <RotateCcw className="w-3 h-3 sm:mr-1" />
+                    <span className="hidden sm:inline">Clear</span>
+                </Button>
+            )}
 
             {canvasMode === 'canvas' && (
-                <Select
-                    value={canvasState.aspectRatio}
-                    onValueChange={handleAspectRatioChange}
+                <Button
+                    size="sm"
+                    type="button"
+                    onClick={() => {
+                        haptics.light()
+                        handleUndo()
+                    }}
+                    variant="outline"
+                    className="h-7 w-7 p-0 border-primary/30 text-primary hover:bg-primary/20"
+                    title="Undo"
                 >
-                    <SelectTrigger className="bg-card border-primary/30 text-white h-7 w-20 text-[10px]">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-primary/30">
-                        <SelectItem value="16:9">16:9</SelectItem>
-                        <SelectItem value="9:16">9:16</SelectItem>
-                        <SelectItem value="1:1">1:1</SelectItem>
-                        <SelectItem value="4:3">4:3</SelectItem>
-                        <SelectItem value="21:9">21:9</SelectItem>
-                    </SelectContent>
-                </Select>
-            )
-            }
-
-            {
-                canvasMode === 'photo' && backgroundImage && (
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 px-2 text-[10px] text-destructive hover:bg-destructive/20"
-                        onClick={() => {
-                            canvasRef.current?.clearBackground()
-                            setBackgroundImage(null)
-                            setCanvasMode('canvas')
-                        }}
-                    >
-                        Remove BG
-                    </Button>
-                )
-            }
+                    <RotateCcw className="w-3 h-3" />
+                </Button>
+            )}
         </>
     )
 
-    const selectedModelConfig = MODEL_CONFIGS[nanoBananaModel]
-
-    const centerToolbarContent = (
-        <Select
-            value={nanoBananaModel}
-            onValueChange={(val) => setNanoBananaModel(val as ModelId)}
-        >
-            <SelectTrigger className="bg-card border-primary/30 text-white h-7 min-w-[140px] px-2 text-[10px] font-medium justify-between gap-2 shadow-none focus:ring-0 focus:ring-offset-0">
-                <SelectValue>
-                    <div className="flex items-center gap-1.5">
-                        <span className="text-sm">{selectedModelConfig.icon}</span>
-                        <span className="font-medium">{selectedModelConfig.displayName}</span>
-                        <Badge
-                            variant="secondary"
-                            className={`h-4 px-1 text-[9px] border-0 pointer-events-none ${selectedModelConfig.badgeColor} ${selectedModelConfig.textColor}`}
-                        >
-                            {selectedModelConfig.badge}
-                        </Badge>
-                    </div>
-                </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="bg-card border-primary/30 min-w-[200px]">
-                {Object.values(MODEL_CONFIGS).map((model) => (
-                    <SelectItem key={model.id} value={model.id} className="py-2">
-                        <div className="flex items-center gap-2">
-                            <span className="text-lg">{model.icon}</span>
-                            <div className="flex flex-col text-left">
-                                <div className="flex items-center gap-2">
-                                    <span className="font-medium">{model.displayName}</span>
-                                    <Badge
-                                        variant="secondary"
-                                        className={`h-4 px-1 text-[9px] border-0 ${model.badgeColor} ${model.textColor}`}
-                                    >
-                                        {model.badge}
-                                    </Badge>
-                                </div>
-                                <span className="text-[9px] text-muted-foreground">
-                                    {Math.round(model.costPerImage * 100)} pts
-                                </span>
-                            </div>
-                        </div>
-                    </SelectItem>
-                ))}
-            </SelectContent>
-        </Select>
-    )
-
     return (
-        <div className={`flex flex-col h-full ${className}`}>
+        <div className={`flex h-full bg-background ${className}`}>
+            {/* Left Sidebar */}
+            <div
+                className={`transition-all duration-300 border-r border-border flex flex-col bg-background ${
+                    sidebarCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'w-[280px] opacity-100'
+                }`}
+            >
+                <div className="p-3 space-y-3 flex-1 overflow-y-auto">
+                    {/* Nano Banana Generator */}
+                    <Card className="border-primary/30 bg-primary/5">
+                        <CardContent className="p-3 space-y-2">
+                            <h3 className="text-xs font-semibold text-primary flex items-center gap-2">
+                                <Palette className="w-3 h-3" />
+                                Nano Banana AI
+                            </h3>
+                            <Textarea
+                                placeholder="Describe what you want to create or change..."
+                                value={nanoBananaPrompt}
+                                onChange={(e) => setNanoBananaPrompt(e.target.value)}
+                                className="min-h-[60px] text-xs resize-none"
+                                disabled={isProcessing}
+                            />
+                            <div className="flex gap-2">
+                                <Select value={nanoBananaModel} onValueChange={(value) => setNanoBananaModel(value as ModelId)}>
+                                    <SelectTrigger className="h-7 text-xs border-primary/30">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {Object.entries(MODEL_CONFIGS).map(([key, config]) => (
+                                            <SelectItem key={key} value={key}>
+                                                {config.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <Button
+                                onClick={handleNanoBananaGenerate}
+                                disabled={isProcessing || !nanoBananaPrompt.trim()}
+                                className="w-full h-7 text-xs"
+                                size="sm"
+                            >
+                                {isProcessing ? (
+                                    <>
+                                        <LoadingSpinner className="w-3 h-3 mr-2" />
+                                        Processing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Palette className="w-3 h-3 mr-1" />
+                                        Generate
+                                    </>
+                                )}
+                            </Button>
+                        </CardContent>
+                    </Card>
 
+                    {/* Results Queue Display */}
+                    {resultsQueue.length > 0 && (
+                        <Card className="border-green-500/30 bg-green-500/5">
+                            <CardContent className="p-3 space-y-2">
+                                <h3 className="text-xs font-semibold text-green-600 dark:text-green-400">Results ({resultsQueue.length})</h3>
+                                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                                    {resultsQueue.map((result) => (
+                                        <div key={result.id} className="flex gap-2">
+                                            <div className="flex-1 min-w-0">
+                                                <img
+                                                    src={result.imageUrl}
+                                                    alt="Result"
+                                                    className="w-full h-16 object-cover rounded border border-green-500/20"
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-1 justify-between">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-6 w-6 p-0 text-green-600 dark:text-green-400 border-green-500/30"
+                                                    onClick={() => handleUseResult(result)}
+                                                    title="Use this result"
+                                                >
+                                                    ✓
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-6 w-6 p-0 text-blue-600 dark:text-blue-400 border-blue-500/30"
+                                                    onClick={() => handleSaveResult(result)}
+                                                    title="Save to gallery"
+                                                >
+                                                    <Download className="w-3 h-3" />
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="h-6 w-6 p-0 text-destructive border-destructive/30"
+                                                    onClick={() => handleDismissResult(result.id)}
+                                                    title="Dismiss"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
 
-            <div className="flex-1 flex gap-2 sm:gap-4 min-h-0">
-                {/* Left Sidebar Toggle - Always visible */}
+                    {/* System Prompt */}
+                    <Card className="border-border">
+                        <CardContent className="p-3 space-y-2">
+                            <button
+                                onClick={() => setSystemPromptExpanded(!systemPromptExpanded)}
+                                className="text-xs font-semibold text-muted-foreground hover:text-foreground flex items-center gap-2 w-full"
+                            >
+                                System Prompt
+                                {systemPromptExpanded ? (
+                                    <ChevronUp className="w-3 h-3" />
+                                ) : (
+                                    <ChevronDown className="w-3 h-3" />
+                                )}
+                            </button>
+                            {systemPromptExpanded && (
+                                <Textarea
+                                    value={systemPrompt}
+                                    onChange={(e) => setSystemPrompt(e.target.value)}
+                                    className="min-h-[100px] text-xs resize-none"
+                                />
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Drawing Tools */}
+                    <Card className="border-border">
+                        <CardContent className="p-3 space-y-2">
+                            <button
+                                onClick={() => setDrawingToolsExpanded(!drawingToolsExpanded)}
+                                className="text-xs font-semibold text-muted-foreground hover:text-foreground flex items-center gap-2 w-full"
+                            >
+                                Drawing Tools
+                                {drawingToolsExpanded ? (
+                                    <ChevronUp className="w-3 h-3" />
+                                ) : (
+                                    <ChevronDown className="w-3 h-3" />
+                                )}
+                            </button>
+                            {drawingToolsExpanded && (
+                                <CanvasToolbar canvasRef={canvasRef} />
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+
+            {/* Main Canvas Area */}
+            <div className="flex-1 flex flex-col min-w-0 relative" ref={canvasContainerRef}>
+                {/* Canvas Drop Zone Feedback */}
+                {isDragOverCanvas && (
+                    <DropZone
+                        onDropAccepted={handleCanvasDropAccepted}
+                        accept={IMAGE_ACCEPT}
+                        maxSize={50 * 1024 * 1024}
+                        multiple={false}
+                    />
+                )}
+
+                {/* Fabric Canvas */}
+                <FabricCanvas
+                    ref={canvasRef}
+                    className="flex-1"
+                    onFileUpload={handleFileUpload}
+                    backgroundImage={backgroundImage}
+                    canvasMode={canvasMode}
+                    toolbarContent={toolbarContent}
+                />
+
+                {/* Export Panel */}
+                <div
+                    className={`transition-all duration-300 border-t border-border flex flex-col ${
+                        exportPanelExpanded ? 'h-[200px] opacity-100' : 'h-0 opacity-0 overflow-hidden'
+                    }`}
+                >
+                    <CanvasExporter canvasRef={canvasRef} />
+                </div>
+            </div>
+
+            {/* Right Sidebar */}
+            <div
+                className={`transition-all duration-300 border-l border-border flex flex-col bg-background overflow-hidden ${
+                    rightSidebarCollapsed ? 'w-0 opacity-0' : 'w-[280px] opacity-100'
+                }`}
+            >
+                <FrameExtractor
+                    open={frameExtractorOpen}
+                    imageUrl={frameExtractorImage}
+                    onClose={handleFrameExtractorClose}
+                    onFramesExtracted={handleFramesExtracted}
+                />
+            </div>
+
+            {/* Sidebar Toggle Buttons */}
+            <div className="absolute left-0 top-4 z-50 flex gap-2">
                 <Button
                     size="sm"
+                    type="button"
                     onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                    className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-50 bg-primary hover:bg-primary/90 text-white rounded-r-lg p-1 w-6 h-12 items-center justify-center transition-all"
-                    style={{ marginLeft: sidebarCollapsed ? '0' : '318px' }}
-                    title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    variant="outline"
+                    className="h-8 w-8 p-0"
+                    title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
                 >
                     {sidebarCollapsed ? (
                         <PanelLeft className="w-4 h-4" />
@@ -491,361 +674,26 @@ The final image should look natural as if the edits were always part of the orig
                         <PanelLeftClose className="w-4 h-4" />
                     )}
                 </Button>
+            </div>
 
-                {/* Left Sidebar - Tools & Settings - Bottom sheet on mobile */}
-                <div className={`
-                    ${sidebarCollapsed ? 'hidden sm:hidden' : 'block'}
-                    sm:w-80 sm:relative
-                    fixed bottom-0 left-0 right-0 sm:inset-auto
-                    max-h-[60vh] sm:max-h-none
-                    bg-background/98 sm:bg-transparent
-                    border-t sm:border-t-0 border-primary/30
-                    rounded-t-2xl sm:rounded-none
-                    z-40 sm:z-auto
-                    transition-all duration-300
-                    overflow-y-auto
-                `}
-                    style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
-                >
-                    {/* Mobile drag handle */}
-                    <div className="sm:hidden flex justify-center py-2 border-b border-primary/20 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
-                        <div className="w-12 h-1 bg-primary/50 rounded-full" />
-                    </div>
-
-                    {/* Sidebar Content */}
-                    <div className="p-4 sm:p-0 space-y-4">
-
-
-                        {/* Crop Settings (Only visible in Crop Mode) */}
-                        {canvasState.tool === 'crop' && (
-                            <Card className="bg-card/50 border-border">
-                                <CardContent className="p-3 space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-xs font-medium text-foreground">Crop Aspect Ratio</label>
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className="h-5 text-[10px] text-muted-foreground"
-                                            onClick={() => updateCanvasState({ tool: 'select' })}
-                                        >
-                                            Done
-                                        </Button>
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {['16:9', '9:16', '4:3', '3:4', '1:1', '21:9'].map((ratio) => (
-                                            <Button
-                                                key={ratio}
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => {
-                                                    // Implement setCropAspectRatio logic
-                                                    const [w, h] = ratio.split(':').map(Number)
-                                                    canvasRef.current?.setCropAspectRatio(w / h)
-                                                    toast({ description: `Aspect ratio set to ${ratio}` })
-                                                }}
-                                                className="text-xs h-8"
-                                            >
-                                                {ratio}
-                                            </Button>
-                                        ))}
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => {
-                                                canvasRef.current?.setCropAspectRatio(null)
-                                                toast({ description: "Freeform crop" })
-                                            }}
-                                            className="text-xs h-8 col-span-3"
-                                        >
-                                            Free / Custom
-                                        </Button>
-                                    </div>
-                                    <Button className="w-full h-7 text-xs" onClick={() => {
-                                        canvasRef.current?.applyCrop().then(() => {
-                                            updateCanvasState({ tool: 'select' })
-                                            toast({ title: 'Image Cropped' })
-                                        })
-                                    }}>
-                                        Apply Crop
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        )}
-
-                        {/* Drawing Tools - Collapsible */}
-                        <Card className="bg-card/50 border-border">
-                            <button
-                                onClick={() => setDrawingToolsExpanded(!drawingToolsExpanded)}
-                                className="w-full p-2 flex items-center justify-between text-xs hover:bg-primary/10 transition-colors"
-                            >
-                                <span className="font-medium text-foreground flex items-center gap-2">
-                                    <Palette className="w-4 h-4 text-primary" />
-                                    {!drawingToolsExpanded && 'Drawing Tools'}
-                                </span>
-                                {drawingToolsExpanded ? (
-                                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                                ) : (
-                                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                                )}
-                            </button>
-                            {drawingToolsExpanded && (
-                                <CardContent className="p-2 pt-0">
-                                    <CanvasToolbar
-                                        canvasState={canvasState}
-                                        onToolChange={(tool) => {
-                                            const annotationTools = ['brush', 'arrow', 'text', 'line', 'rectangle', 'circle']
-                                            if (annotationTools.includes(tool)) {
-                                                updateCanvasState({ tool, color: '#00d2d3' })
-                                            } else {
-                                                updateCanvasState({ tool })
-                                            }
-                                        }}
-                                        onPropertiesChange={updateDrawingProperties}
-                                        hideHeader={true}
-                                    />
-                                </CardContent>
-                            )}
-                        </Card>
-
-                        {/* System Prompt Editor */}
-                        <Card className="bg-card/50 border-muted-foreground/20">
-                            <button
-                                onClick={() => setSystemPromptExpanded(!systemPromptExpanded)}
-                                className="w-full p-2 flex items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                                <span className="font-medium">System Prompt (Advanced)</span>
-                                {systemPromptExpanded ? (
-                                    <ChevronUp className="w-4 h-4" />
-                                ) : (
-                                    <ChevronDown className="w-4 h-4" />
-                                )}
-                            </button>
-                            {systemPromptExpanded && (
-                                <CardContent className="p-2 pt-0 space-y-2">
-                                    <Textarea
-                                        value={systemPrompt}
-                                        onChange={(e) => setSystemPrompt(e.target.value)}
-                                        className="bg-secondary/50 border-muted-foreground/20 text-[10px] font-mono min-h-[150px] max-h-[300px] resize-y"
-                                    />
-                                    <div className="flex gap-2">
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="flex-1 h-7 text-[10px]"
-                                            onClick={() => setSystemPrompt(DEFAULT_SYSTEM_PROMPT)}
-                                        >
-                                            <RotateCw className="w-3 h-3 mr-1" />
-                                            Reset to Default
-                                        </Button>
-                                    </div>
-                                    <p className="text-[9px] text-muted-foreground">
-                                        This prompt instructs the AI how to interpret your annotations. Edit for testing.
-                                    </p>
-                                </CardContent>
-                            )}
-                        </Card>
-
-                        {/* AI Edit Input (Moved Below Drawing Tools) */}
-                        <div className="space-y-2 pt-2 border-t border-border/50">
-                            <label className="text-xs font-medium text-foreground">AI Instruction</label>
-                            <Textarea
-                                value={nanoBananaPrompt}
-                                onChange={(e) => setNanoBananaPrompt(e.target.value)}
-                                placeholder="Describe your shot or edits..."
-                                className="bg-secondary/50 border-primary/20 focus:border-primary/50 min-h-[60px] max-h-[120px] resize-none text-xs"
-                            />
-                            <div className="flex justify-between items-center">
-                                <span className="text-[10px] text-muted-foreground ml-1">
-                                    {Math.round(MODEL_CONFIGS[nanoBananaModel].costPerImage * 100)} tokens
-                                </span>
-                                <Button
-                                    size="sm"
-                                    onClick={handleNanoBananaGenerate}
-                                    disabled={!nanoBananaPrompt.trim() || isProcessing}
-                                    className="h-7 bg-primary hover:bg-primary/90 text-primary-foreground text-xs"
-                                >
-                                    {isProcessing ? (
-                                        <>
-                                            <LoadingSpinner size="xs" color="current" className="mr-1" />
-                                            Generating...
-                                        </>
-                                    ) : (
-                                        <>Generate ({Math.round(MODEL_CONFIGS[nanoBananaModel].costPerImage * 100)} pts)</>
-                                    )}
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Main Canvas Area */}
-                <div className="flex-1 min-w-0 overflow-hidden">
-                    <FabricCanvas
-                        ref={canvasRef}
-                        tool={canvasState.tool}
-                        brushSize={canvasState.brushSize}
-                        fontSize={canvasState.fontSize}
-                        color={canvasState.color}
-                        fillMode={canvasState.fillMode}
-                        backgroundColor={canvasState.backgroundColor}
-                        canvasWidth={canvasState.canvasWidth}
-                        canvasHeight={canvasState.canvasHeight}
-                        imageImportMode={imageImportMode}
-                        canvasMode={canvasMode}
-                        backgroundImageUrl={backgroundImage}
-                        headerContent={toolbarContent}
-                        centerContent={centerToolbarContent}
-                        onCanvasSizeChange={(width, height) => {
-                            updateCanvasState({ canvasWidth: width, canvasHeight: height })
-                            setBackgroundImage('set') // Mark as having background
-                        }}
-                        onToolChange={(tool) => {
-                            // Enforce Cyan color for annotation tools to match API requirements
-                            const annotationTools = ['brush', 'arrow', 'text', 'line', 'rectangle', 'circle']
-                            if (annotationTools.includes(tool)) {
-                                updateCanvasState({ tool, color: '#00d2d3' })
-                            } else {
-                                updateCanvasState({ tool })
-                            }
-                        }}
-                        onObjectsChange={(count) => {
-                            console.log(`Canvas now has ${count} objects`)
-                        }}
-                    />
-                </div>
-
-                {/* Right Sidebar Toggle - Always visible */}
+            <div className="absolute right-0 top-4 z-50">
                 <Button
                     size="sm"
+                    type="button"
                     onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
-                    className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-50 bg-primary hover:bg-primary/90 text-white rounded-l-lg p-1 w-6 h-12 items-center justify-center transition-all"
-                    style={{ marginRight: rightSidebarCollapsed ? '0' : '254px' }}
-                    title={rightSidebarCollapsed ? 'Expand export panel' : 'Collapse export panel'}
+                    variant="outline"
+                    className="h-8 w-8 p-0"
+                    title={rightSidebarCollapsed ? 'Show frame extractor' : 'Hide frame extractor'}
                 >
                     {rightSidebarCollapsed ? (
-                        <PanelRightClose className="w-4 h-4 rotate-180" />
+                        <PanelRightClose className="w-4 h-4" />
                     ) : (
                         <PanelRightClose className="w-4 h-4" />
                     )}
                 </Button>
-
-                {/* Right Sidebar - Export - Bottom sheet on mobile */}
-                <div className={`
-                    ${rightSidebarCollapsed ? 'hidden sm:hidden' : 'block'}
-                    sm:w-64 sm:relative
-                    fixed bottom-0 left-0 right-0 sm:inset-auto
-                    max-h-[60vh] sm:max-h-none
-                    bg-background/98 sm:bg-transparent
-                    border-t sm:border-t-0 border-primary/30
-                    rounded-t-2xl sm:rounded-none
-                    z-40 sm:z-auto
-                    transition-all duration-300
-                    overflow-y-auto
-                `}
-                    style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
-                >
-                    {/* Mobile drag handle */}
-                    <div className="sm:hidden flex justify-center py-2 border-b border-primary/20 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
-                        <div className="w-12 h-1 bg-primary/50 rounded-full" />
-                    </div>
-
-                    {/* Right Sidebar Content - Export & Share - Collapsible */}
-                    <div className="p-4 sm:p-0">
-                        <Card className="bg-card/50 border-border">
-                            <button
-                                onClick={() => setExportPanelExpanded(!exportPanelExpanded)}
-                                className="w-full p-2 flex items-center justify-between text-xs hover:bg-primary/10 transition-colors"
-                            >
-                                <span className="font-medium text-foreground flex items-center gap-2">
-                                    <Download className="w-4 h-4 text-primary" />
-                                    {!exportPanelExpanded && 'Export & Share'}
-                                </span>
-                                {exportPanelExpanded ? (
-                                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                                ) : (
-                                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                                )}
-                            </button>
-                            {exportPanelExpanded && (
-                                <CardContent className="p-2 pt-0">
-                                    <CanvasExporter
-                                        canvasRef={canvasRef}
-                                        setActiveTab={setActiveTab}
-                                        onExport={(format, _dataUrl) => {
-                                            toast({
-                                                title: `Exported as ${format.toUpperCase()}`,
-                                                description: "Canvas exported successfully"
-                                            })
-                                        }}
-                                    />
-                                </CardContent>
-                            )}
-                        </Card>
-                    </div>
-                </div>
             </div>
 
-            {/* Results Queue Strip */}
-            {resultsQueue.length > 0 && (
-                <div className="mt-2 p-3 bg-card border border-primary/30 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-primary">
-                            Results Queue ({resultsQueue.length})
-                        </span>
-                        <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 text-xs text-muted-foreground"
-                            onClick={() => setResultsQueue([])}
-                        >
-                            Clear All
-                        </Button>
-                    </div>
-                    <div className="flex gap-3 overflow-x-auto pb-2">
-                        {resultsQueue.map((result) => (
-                            <div key={result.id} className="flex-shrink-0 flex flex-col items-center gap-1">
-                                <div
-                                    className="w-20 h-20 rounded border border-primary/30 overflow-hidden cursor-pointer hover:border-primary transition-colors"
-                                    onClick={() => handleUseResult(result)}
-                                >
-                                    <img
-                                        src={result.imageUrl}
-                                        alt="Generated result"
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                                <div className="flex gap-1">
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-6 px-2 text-[10px]"
-                                        onClick={() => handleUseResult(result)}
-                                    >
-                                        Use
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-6 px-2 text-[10px]"
-                                        onClick={() => handleSaveResult(result)}
-                                    >
-                                        Save
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        className="h-6 px-1 text-[10px] text-destructive"
-                                        onClick={() => handleDismissResult(result.id)}
-                                    >
-                                        ✕
-                                    </Button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
+            {/* Hidden file inputs */}
             <input
                 ref={fileInputRef}
                 type="file"
@@ -853,7 +701,6 @@ The final image should look natural as if the edits were always part of the orig
                 onChange={handleFileUpload}
                 className="hidden"
             />
-
             <input
                 ref={frameExtractorInputRef}
                 type="file"
@@ -861,17 +708,7 @@ The final image should look natural as if the edits were always part of the orig
                 onChange={handleFrameExtractorFileSelect}
                 className="hidden"
             />
-
-            {
-                frameExtractorOpen && frameExtractorImage && (
-                    <FrameExtractor
-                        imageUrl={frameExtractorImage}
-                        onClose={handleFrameExtractorClose}
-                        onExtract={handleFramesExtracted}
-                    />
-                )
-            }
-        </div >
+        </div>
     )
 }
 

@@ -13,9 +13,15 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { DropZone, type DropZoneRef } from "@/components/ui/drop-zone"
 import InlineTagEditor from "./InlineTagEditor"
 import { Capacitor } from '@capacitor/core'
 import { cn } from "@/utils/utils"
+
+// Accepted image file types for reference images
+const IMAGE_ACCEPT = {
+    'image/*': ['.png', '.jpg', '.jpeg', '.webp', '.gif']
+}
 
 // ImageData type can be extended
 export interface ShotImage {
@@ -78,37 +84,43 @@ export function ReferenceImageCard({
     isSavingToGallery = false
 }: ReferenceImageCardProps) {
     const isNative = Capacitor.isNativePlatform()
+    const dropZoneRef = React.useRef<DropZoneRef>(null)
+
+    // Handle files dropped into the DropZone
+    const handleDropAccepted = React.useCallback((acceptedFiles: File[]) => {
+        if (acceptedFiles.length > 0) {
+            if (handleMultipleImageUpload) {
+                // Convert array to FileList-like object for batch upload
+                const dataTransfer = new DataTransfer()
+                acceptedFiles.forEach(file => dataTransfer.items.add(file))
+                handleMultipleImageUpload(dataTransfer.files)
+            } else if (acceptedFiles[0]) {
+                handleShotCreatorImageUpload(acceptedFiles[0])
+            }
+        }
+    }, [handleMultipleImageUpload, handleShotCreatorImageUpload])
+
     return (
         <div key={index} className="space-y-3">
             {/* Upload / Preview Box */}
+            {isEmpty ? (
+                <DropZone
+                    ref={dropZoneRef}
+                    accept={IMAGE_ACCEPT}
+                    multiple={true}
+                    onDropAccepted={handleDropAccepted}
+                    idleText={`Tap to add Reference ${index + 1}`}
+                    dragText="Drop images here..."
+                    acceptText="PNG, JPG, WEBP, GIF"
+                    rejectText="Please upload image files"
+                    size="large"
+                    className="min-h-[240px] md:min-h-[160px] md:aspect-square rounded-xl bg-gradient-to-br from-card to-background touch-manipulation"
+                />
+            ) : (
             <div
-                className={`relative rounded-xl overflow-hidden transition-all ${isEmpty
-                    ? "min-h-[240px] md:min-h-[160px] md:aspect-square bg-gradient-to-br from-card to-background border border-border hover:border-border cursor-pointer touch-manipulation"
-                    : "border-2 border-primary bg-primary/15 shadow-lg shadow-primary/20"
-                    }`}
-                onClick={
-                    isEmpty
-                        ? () => {
-                            const input = document.createElement("input")
-                            input.type = "file"
-                            input.accept = "image/*"
-                            input.multiple = true
-                            input.onchange = (e) => {
-                                const files = (e.target as HTMLInputElement).files
-                                if (files && files.length > 0) {
-                                    if (handleMultipleImageUpload) {
-                                        handleMultipleImageUpload(files)
-                                    } else if (files[0]) {
-                                        handleShotCreatorImageUpload(files[0])
-                                    }
-                                }
-                            }
-                            input.click()
-                        }
-                        : undefined
-                }
+                className="relative rounded-xl overflow-hidden transition-all border-2 border-primary bg-primary/15 shadow-lg shadow-primary/20"
             >
-                {image ? (
+                {image && (
                     <>
                         <div
                             className={cn(
@@ -219,22 +231,13 @@ export function ReferenceImageCard({
                                 e.stopPropagation()
                                 removeShotCreatorImage(image.id)
                             }}
-                        >
+>
                             <Trash2 className="h-4 w-4 md:h-3 md:w-3" />
                         </Button>
                     </>
-                ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center p-8">
-                            <Upload className="h-12 w-12 md:h-8 md:w-8 text-muted-foreground mx-auto mb-3 md:mb-2" />
-                            <p className="text-sm md:text-xs text-muted-foreground font-medium">
-                                Tap to add Reference {index + 1}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1 md:hidden">or use buttons below</p>
-                        </div>
-                    </div>
                 )}
             </div>
+            )}
 
             {/* Action buttons */}
             <div className={`grid gap-4 md:flex md:flex-row md:gap-2 ${isNative && handleCameraCapture ? 'grid-cols-3' : 'grid-cols-2'}`}>
@@ -263,21 +266,27 @@ export function ReferenceImageCard({
                     variant="outline"
                     className="h-16 md:h-8 md:flex-1 border-border hover:border-border bg-card/50 hover:bg-card flex items-center justify-center"
                     onClick={() => {
-                        const input = document.createElement("input")
-                        input.type = "file"
-                        input.accept = "image/*"
-                        input.multiple = true
-                        input.onchange = (e) => {
-                            const files = (e.target as HTMLInputElement).files
-                            if (files && files.length > 0) {
-                                if (handleMultipleImageUpload) {
-                                    handleMultipleImageUpload(files)
-                                } else if (files[0]) {
-                                    handleShotCreatorImageUpload(files[0])
+                        // Use DropZone's open method when empty for consistent validation
+                        if (isEmpty && dropZoneRef.current) {
+                            dropZoneRef.current.open()
+                        } else {
+                            // When an image exists, create a new file input for replacement
+                            const input = document.createElement("input")
+                            input.type = "file"
+                            input.accept = "image/*"
+                            input.multiple = true
+                            input.onchange = (e) => {
+                                const files = (e.target as HTMLInputElement).files
+                                if (files && files.length > 0) {
+                                    if (handleMultipleImageUpload) {
+                                        handleMultipleImageUpload(files)
+                                    } else if (files[0]) {
+                                        handleShotCreatorImageUpload(files[0])
+                                    }
                                 }
                             }
+                            input.click()
                         }
-                        input.click()
                     }}
                 >
                     <Upload className="h-6 w-6 md:h-4 md:w-4" />
@@ -302,20 +311,18 @@ export function ReferenceImageCard({
                             onCancel={() => setEditingTagsId(null)}
                         />
                     ) : (
-                        <div className="flex items-center gap-1">
-                            <div className="flex-1">
-                                {image.tags.length > 0 ? (
-                                    <div className="flex flex-wrap gap-1">
-                                        {image.tags.map((tag, tagIndex) => (
-                                            <Badge key={tagIndex} variant="outline" className="text-xs">
-                                                {tag}
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <span className="text-xs text-muted-foreground">No tags</span>
-                                )}
-                            </div>
+                        <div className="flex flex-wrap gap-1 items-center">
+                            {image.tags && image.tags.length > 0 ? (
+                                <>
+                                    {image.tags.map((tag, idx) => (
+                                        <Badge key={idx} variant="secondary" className="text-xs">
+                                            {tag}
+                                        </Badge>
+                                    ))}
+                                </>
+                            ) : (
+                                <span className="text-xs text-muted-foreground">No tags</span>
+                            )}
                             <Button
                                 size="sm"
                                 variant="ghost"

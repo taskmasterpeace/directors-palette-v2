@@ -1,0 +1,85 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Fix Mobile Layout Issues in Prompt Tools UI
+Spec Number: 015
+Workspace: Managed by orchestrator
+Started: 2025-12-25
+
+Workflow Type: feature
+Rationale: Targeted fix for existing functionality involving CSS/layout modifications across
+multiple components in a single service. Requires systematic changes to responsive breakpoints,
+flexbox/grid configurations, and container sizing across the Prompt Tools feature.
+
+Session 1 (Planner):
+- Completed deep codebase investigation
+- Created implementation_plan.json with 6 phases, 11 subtasks
+- Created context.json with files to modify and patterns
+- Created init.sh for development environment
+- Created this progress tracking document
+
+Phase Summary:
+1. Tab Navigation Mobile Fix: 1 subtask, no dependencies
+   - Fix PromptToolsPage.tsx tabs (hide text/badges on mobile)
+
+2. Recipes Tab Mobile Fix: 3 subtasks, depends on phase-1
+   - Fix RecipeBuilder.tsx header (collapse buttons to dropdown)
+   - Fix recipe cards layout (proper stacking)
+   - Fix create/edit dialog (mobile scrollable)
+
+3. Library Tab Mobile Fix: 2 subtasks, depends on phase-1
+   - Fix PromptLibraryCard.tsx header (5+ buttons to dropdown)
+   - Fix category grid and prompt cards
+
+4. Wildcards Tab Mobile Fix: 2 subtasks, depends on phase-1
+   - Fix WildCardManager.tsx grid (single column on xs screens)
+   - Fix create/edit dialog
+
+5. Styles Tab Mobile Fix: 2 subtasks, depends on phase-1
+   - Fix StyleSelector.tsx layout (flex wrapping)
+   - Fix create custom style dialog
+
+6. Integration & Verification: 2 subtasks, depends on phases 2-5
+   - End-to-end verification at 375px, 428px, 768px
+   - Verify Gallery code untouched
+
+Services Involved:
+- main (Next.js frontend with Tailwind CSS)
+
+Files to Modify:
+- src/features/prompt-tools/components/PromptToolsPage.tsx
+- src/features/shot-creator/components/creator-prompt-settings/PromptToolsTabs.tsx
+- src/features/shot-creator/components/recipe/RecipeBuilder.tsx
+- src/features/shot-creator/components/creator-prompt-settings/PromptLibraryCard.tsx
+- src/features/shot-creator/components/wildcard/WildCardManager.tsx
+- src/features/shot-creator/components/creator-prompt-settings/StyleSelector.tsx
+
+Patterns to Apply:
+- hidden md:flex for desktop buttons, flex md:hidden with DropdownMenu for mobile
+- hidden sm:inline for text labels on tabs
+- grid-cols-1 sm:grid-cols-2 for responsive grids
+- max-w-[calc(100%-2rem)] sm:max-w-md for mobile dialogs
+
+Constraints:
+- DO NOT modify any Gallery-related files
+- Maintain desktop layout unchanged
+- Use Tailwind responsive classes only
+
+Parallelism Analysis:
+- Max parallel phases: 4 (phases 2-5 can run simultaneously)
+- Recommended workers: 2
+- Speedup estimate: 2x faster than sequential
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 015 --parallel 2
+
+Or manually:
+
+  npm run dev
+  # Open browser to http://localhost:3000
+  # Use Chrome DevTools mobile viewport (375px)
+  # Navigate to Prompt Tools section
+
+=== END SESSION 1 ===

@@ -15,6 +15,11 @@ interface WildcardsBrowserStore {
     isGenerating: boolean
     setIsGenerating: (isGenerating: boolean) => void
 
+    // Search & Filter
+    searchQuery: string
+    setSearchQuery: (query: string) => void
+    clearFilters: () => void
+
     // Draft content for new/edited wildcard
     draftName: string
     draftContent: string
@@ -41,6 +46,11 @@ export const useWildcardsBrowserStore = create<WildcardsBrowserStore>((set) => (
 
     isGenerating: false,
     setIsGenerating: (isGenerating) => set({ isGenerating: isGenerating }),
+
+    // Search & Filter
+    searchQuery: '',
+    setSearchQuery: (query) => set({ searchQuery: query }),
+    clearFilters: () => set({ searchQuery: '' }),
 
     draftName: '',
     draftContent: '',

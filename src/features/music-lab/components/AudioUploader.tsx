@@ -2,68 +2,41 @@
 
 /**
  * Audio Uploader Component
- * 
+ *
  * Drag-and-drop or file picker for audio upload.
+ * Uses the shared DropZone component for consistent visual feedback.
  */
 
 import { useState, useCallback } from 'react'
-import { Upload, Music, X } from 'lucide-react'
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { Music, X } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { DropZone } from '@/components/ui/drop-zone'
 import { useMusicLabStore } from '../store/music-lab.store'
 
 interface AudioUploaderProps {
     onUploadComplete?: (url: string, fileName: string) => void
 }
 
+// Accepted audio file types
+const AUDIO_ACCEPT = {
+    'audio/mpeg': ['.mp3'],
+    'audio/mp3': ['.mp3'],
+    'audio/wav': ['.wav'],
+    'audio/x-m4a': ['.m4a'],
+    'audio/m4a': ['.m4a'],
+    'audio/aac': ['.aac'],
+}
+
+// Maximum file size: 50MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024
+
 export function AudioUploader({ onUploadComplete }: AudioUploaderProps) {
     const { project, setAudioFile } = useMusicLabStore()
-    const [isDragging, setIsDragging] = useState(false)
     const [isUploading, setIsUploading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-        e.preventDefault()
-        setIsDragging(true)
-    }, [])
-
-    const handleDragLeave = useCallback((e: React.DragEvent) => {
-        e.preventDefault()
-        setIsDragging(false)
-    }, [])
-
-    const handleDrop = useCallback(async (e: React.DragEvent) => {
-        e.preventDefault()
-        setIsDragging(false)
-
-        const file = e.dataTransfer.files[0]
-        if (file) {
-            await handleFile(file)
-        }
-    }, [])
-
-    const handleFileInput = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (file) {
-            await handleFile(file)
-        }
-    }, [])
-
-    const handleFile = async (file: File) => {
-        // Validate file type
-        const validTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 'audio/aac']
-        if (!validTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|m4a|aac)$/i)) {
-            setError('Please upload an audio file (MP3, WAV, M4A, or AAC)')
-            return
-        }
-
-        // Validate file size (max 50MB)
-        if (file.size > 50 * 1024 * 1024) {
-            setError('File size must be under 50MB')
-            return
-        }
-
+    const handleUpload = useCallback(async (file: File) => {
         setIsUploading(true)
         setError(null)
 
@@ -86,19 +59,27 @@ export function AudioUploader({ onUploadComplete }: AudioUploaderProps) {
 
             setAudioFile(url, file.name)
             onUploadComplete?.(url, file.name)
-        } catch (err) {
+        } catch (_err) {
             setError('Failed to upload audio file')
-            console.error('Upload error:', err)
+            // Error is already logged by the API layer
         } finally {
             setIsUploading(false)
         }
-    }
+    }, [setAudioFile, onUploadComplete])
+
+    const handleDropAccepted = useCallback((files: File[]) => {
+        const file = files[0]
+        if (file) {
+            handleUpload(file)
+        }
+    }, [handleUpload])
 
     const handleRemove = () => {
         setAudioFile('', '')
         setError(null)
     }
 
+    // Success state - audio file uploaded
     if (project.audioUrl) {
         return (
             <Card className="border-green-500/50 bg-green-500/5">
@@ -127,48 +108,24 @@ export function AudioUploader({ onUploadComplete }: AudioUploaderProps) {
         )
     }
 
+    // Upload state - DropZone for audio upload
     return (
         <div className="space-y-2">
-            <Card
-                className={`border-2 border-dashed transition-colors cursor-pointer ${isDragging
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary/50'
-                    }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-            >
-                <CardContent className="p-8">
-                    <label className="flex flex-col items-center gap-4 cursor-pointer">
-                        <input
-                            type="file"
-                            accept="audio/*"
-                            onChange={handleFileInput}
-                            className="hidden"
-                            disabled={isUploading}
-                        />
-
-                        {isUploading ? (
-                            <>
-                                <LoadingSpinner size="xl" />
-                                <p className="text-muted-foreground">Uploading...</p>
-                            </>
-                        ) : (
-                            <>
-                                <div className="p-4 rounded-full bg-primary/10">
-                                    <Upload className="w-8 h-8 text-primary" />
-                                </div>
-                                <div className="text-center">
-                                    <p className="font-medium">Drop your audio file here</p>
-                                    <p className="text-sm text-muted-foreground">
-                                        or click to browse (MP3, WAV, M4A, AAC • Max 50MB)
-                                    </p>
-                                </div>
-                            </>
-                        )}
-                    </label>
-                </CardContent>
-            </Card>
+            <DropZone
+                accept={AUDIO_ACCEPT}
+                maxFiles={1}
+                maxSize={MAX_FILE_SIZE}
+                multiple={false}
+                onDropAccepted={handleDropAccepted}
+                isUploading={isUploading}
+                idleText="Drop your audio file here"
+                dragText="Drop audio file..."
+                acceptText="MP3, WAV, M4A, AAC • Max 50MB"
+                uploadingText="Uploading..."
+                rejectText="Please upload an audio file"
+                disabled={isUploading}
+                size="large"
+            />
 
             {error && (
                 <p className="text-sm text-destructive">{error}</p>

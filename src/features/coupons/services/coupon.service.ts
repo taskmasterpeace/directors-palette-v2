@@ -159,7 +159,7 @@ export class CouponService {
             if (error) throw error
 
             // RPC returns JSONB like { success: boolean, error?: string, points?: number }
-            const result = data as { success: boolean; error?: string; points?: number }
+            const result = data as unknown as { success: boolean; error?: string; points?: number }
 
             if (result.success) {
                 return { success: true, pointsAdded: result.points }
