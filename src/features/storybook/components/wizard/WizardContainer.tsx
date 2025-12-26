@@ -30,6 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useToast } from "@/hooks/use-toast"
 
 export function WizardContainer() {
   const {
@@ -47,8 +48,10 @@ export function WizardContainer() {
     clearProject,
     fetchSavedProjects,
     deleteSavedProject,
+    updateProject,
   } = useStorybookStore()
 
+  const { toast } = useToast()
   const [showSaved, setShowSaved] = useState(false)
 
   // Fetch saved projects on mount
@@ -101,6 +104,32 @@ export function WizardContainer() {
         return true
       default:
         return false
+    }
+  }
+
+  // Handle finish button - save project as completed
+  const handleFinish = async () => {
+    if (!project) return
+
+    try {
+      // Update project status to completed before saving
+      updateProject({ status: 'completed' })
+
+      // Save to database
+      await saveProject()
+
+      // Show success message
+      toast({
+        title: "Storybook Completed!",
+        description: `"${project.title}" has been saved successfully.`,
+        variant: "default",
+      })
+    } catch (error) {
+      toast({
+        title: "Save Failed",
+        description: error instanceof Error ? error.message : "Failed to save storybook",
+        variant: "destructive",
+      })
     }
   }
 
@@ -298,10 +327,21 @@ export function WizardContainer() {
             </Button>
           ) : (
             <Button
+              onClick={handleFinish}
+              disabled={isGenerating || isSaving}
               className="gap-2 bg-green-500 hover:bg-green-600 text-white"
-              disabled={isGenerating}
             >
-              Finish
+              {isSaving ? (
+                <>
+                  <LoadingSpinner size="sm" color="current" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4" />
+                  Finish
+                </>
+              )}
             </Button>
           )}
         </div>

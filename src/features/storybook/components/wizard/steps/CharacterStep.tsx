@@ -60,7 +60,7 @@ export function CharacterStep() {
         console.warn('[CharacterStep] storyText was empty, using generatedStory.pages')
       }
 
-      if (textToAnalyze && project.characters.length === 0 && !isDetecting) {
+      if (textToAnalyze && project?.characters.length === 0 && !isDetecting) {
         setIsDetecting(true)
         try {
           const response = await fetch('/api/storybook/detect-characters', {
