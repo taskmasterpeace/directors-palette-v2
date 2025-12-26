@@ -19,6 +19,7 @@ import { FolderSidebar } from "./FolderSidebar"
 import { MobileFolderMenu } from "./MobileFolderMenu"
 import { FolderManagerModal } from "./FolderManagerModal"
 import { BulkDownloadModal } from "./BulkDownloadModal"
+import { BulkActionsToolbar } from "./BulkActionsToolbar"
 import { useFolderManager } from "../../hooks/useFolderManager"
 import { GeneratedImage, useUnifiedGalleryStore, GridSize } from '../../store/unified-gallery-store'
 
@@ -65,6 +66,7 @@ export function UnifiedImageGallery({
         handleClearSelection,
         handleDeleteSelected,
         handleImageSelect,
+        handleImageSelectWithModifiers,
         updateImageReference,
         downloadModalOpen,
         downloadProgress,
@@ -115,6 +117,7 @@ export function UnifiedImageGallery({
     const [isMobileFolderMenuOpen, setIsMobileFolderMenuOpen] = useState(false)
     const [removingBackgroundId, setRemovingBackgroundId] = useState<string | null>(null)
     const [generatingCinematicId, setGeneratingCinematicId] = useState<string | null>(null)
+    const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
 
     // Handle background removal
     const handleRemoveBackground = useCallback(async (image: GeneratedImage) => {
@@ -244,6 +247,22 @@ export function UnifiedImageGallery({
     const handleMoveToFolder = async (imageId: string, folderId: string | null) => {
         await handleMoveImages([imageId], folderId)
     }
+
+    // Handle bulk moving selected images to folder (for BulkActionsToolbar)
+    const handleBulkMoveToFolder = useCallback(async (folderId: string | null) => {
+        // Convert selected image URLs to IDs
+        const imageIds = selectedImages
+            .map(url => images.find(img => img.url === url)?.id)
+            .filter((id): id is string => !!id)
+        if (imageIds.length > 0) {
+            await handleMoveImages(imageIds, folderId)
+            handleClearSelection()
+            toast({
+                title: "Images Moved",
+                description: `${imageIds.length} images moved to ${folderId ? folders.find(f => f.id === folderId)?.name || 'folder' : 'Uncategorized'}`
+            })
+        }
+    }, [selectedImages, images, handleMoveImages, handleClearSelection, folders, toast])
 
     // Handle extracting frames from a composite image
     const handleExtractFrames = useCallback(async (imageUrl: string) => {
@@ -437,7 +456,7 @@ export function UnifiedImageGallery({
         setFullscreenImage(images[newIndex])
     }, [fullscreenImage, images, setFullscreenImage])
 
-    // Keyboard event handler
+    // Keyboard event handler for fullscreen modal
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (!fullscreenImage) return
@@ -466,6 +485,66 @@ export function UnifiedImageGallery({
             document.removeEventListener('keydown', handleKeyDown)
         }
     }, [fullscreenImage, navigateToImage, setFullscreenImage])
+
+    // Keyboard shortcuts for gallery selection
+    // Escape: clear selection, Delete/Backspace: trigger delete, Ctrl/Cmd+A: select all
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            // Don't handle shortcuts when fullscreen modal is open (it has its own handlers)
+            if (fullscreenImage) return
+
+            // Don't handle shortcuts when typing in an input or textarea
+            const target = event.target as HTMLElement
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+                return
+            }
+
+            // Don't handle shortcuts when a modal/dialog is open (except our delete confirm)
+            if (modalMode !== null || downloadModalOpen) {
+                return
+            }
+
+            // Escape: Clear selection
+            if (event.key === 'Escape' && selectedImages.length > 0) {
+                event.preventDefault()
+                // If delete confirmation is open, close it instead of clearing selection
+                if (showBulkDeleteConfirm) {
+                    setShowBulkDeleteConfirm(false)
+                } else {
+                    handleClearSelection()
+                }
+                return
+            }
+
+            // Delete or Backspace: Trigger delete confirmation when images are selected
+            if ((event.key === 'Delete' || event.key === 'Backspace') && selectedImages.length > 0) {
+                event.preventDefault()
+                setShowBulkDeleteConfirm(true)
+                return
+            }
+
+            // Ctrl/Cmd+A: Select all visible images
+            if (event.key === 'a' && (event.ctrlKey || event.metaKey)) {
+                event.preventDefault()
+                handleSelectAll()
+                return
+            }
+        }
+
+        document.addEventListener('keydown', handleKeyDown)
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown)
+        }
+    }, [
+        fullscreenImage,
+        selectedImages.length,
+        showBulkDeleteConfirm,
+        modalMode,
+        downloadModalOpen,
+        handleClearSelection,
+        handleSelectAll
+    ])
 
     // Minimal mode for embedded use
     if (mode === 'minimal') {
@@ -523,6 +602,9 @@ export function UnifiedImageGallery({
         ? folders.find(f => f.id === currentFolderId)?.name || 'Uncategorized'
         : undefined
 
+    // Determine if we're in selection mode (any images selected)
+    const isSelectionMode = selectedImages.length > 0
+
     return (
         <>
             {/* Mobile Folder Menu */}
@@ -575,36 +657,19 @@ export function UnifiedImageGallery({
                         totalCredits={totalCredits}
                         searchQuery={filters.searchQuery}
                         currentFolderName={currentFolderName}
-                        onSearchChange={handleSearchChange}
-                        selectedCount={selectedImages.length}
                         gridSize={gridSize}
                         useNativeAspectRatio={useNativeAspectRatio}
-                        folders={folders}
+                        onSearchChange={handleSearchChange}
                         onSelectAll={handleSelectAll}
-                        onClearSelection={handleClearSelection}
-                        onDeleteSelected={handleDeleteSelected}
                         onGridSizeChange={setGridSize}
                         onAspectRatioChange={setUseNativeAspectRatio}
                         onOpenMobileMenu={() => setIsMobileFolderMenuOpen(true)}
-                        onMoveToFolder={async (folderId) => {
-                            // Convert selected image URLs to IDs
-                            const imageIds = selectedImages
-                                .map(url => images.find(img => img.url === url)?.id)
-                                .filter((id): id is string => !!id)
-                            if (imageIds.length > 0) {
-                                await handleMoveImages(imageIds, folderId)
-                                handleClearSelection()
-                                toast({
-                                    title: "Images Moved",
-                                    description: `${imageIds.length} images moved to ${folderId ? folders.find(f => f.id === folderId)?.name || 'folder' : 'Uncategorized'}`
-                                })
-                            }
-                        }}
-                        onBulkDownload={handleBulkDownload}
-                        onCreateFolder={openCreateModal}
                     />
 
-                    <CardContent className="flex-1 flex flex-col md:overflow-hidden">
+                    <CardContent className={cn(
+                        "flex-1 flex flex-col md:overflow-hidden transition-all duration-300",
+                        isSelectionMode && "ring-2 ring-inset ring-primary/20 bg-primary/[0.02]"
+                    )}>
                         {isLoading ? (
                             <div className="text-center py-12">
                                 <LoadingSpinner size="xl" color="accent" className="mx-auto mb-4" />
@@ -627,7 +692,8 @@ export function UnifiedImageGallery({
                                                 key={image.id}
                                                 image={image}
                                                 isSelected={selectedImages.includes(image.url)}
-                                                onSelect={() => handleImageSelect(image.url)}
+                                                isSelectionMode={isSelectionMode}
+                                                onSelect={(e) => e ? handleImageSelectWithModifiers(image.url, e) : handleImageSelect(image.url)}
                                                 onZoom={() => setFullscreenImage(image)}
                                                 onCopy={() => handleCopyImage(image.url)}
                                                 onDownload={() => handleDownloadImage(image.url)}
@@ -676,7 +742,8 @@ export function UnifiedImageGallery({
                                                     key={image.id}
                                                     image={image}
                                                     isSelected={selectedImages.includes(image.url)}
-                                                    onSelect={() => handleImageSelect(image.url)}
+                                                    isSelectionMode={isSelectionMode}
+                                                    onSelect={(e) => e ? handleImageSelectWithModifiers(image.url, e) : handleImageSelect(image.url)}
                                                     onZoom={() => setFullscreenImage(image)}
                                                     onCopy={() => handleCopyImage(image.url)}
                                                     onDownload={() => handleDownloadImage(image.url)}
@@ -781,6 +848,19 @@ export function UnifiedImageGallery({
                         error={downloadProgress?.error}
                     />
                 </Card>
+
+                {/* Bulk Actions Toolbar - floating at bottom of viewport when items selected */}
+                <BulkActionsToolbar
+                    selectedCount={selectedImages.length}
+                    folders={folders}
+                    onClearSelection={handleClearSelection}
+                    onDownloadZip={handleBulkDownload}
+                    onMoveToFolder={handleBulkMoveToFolder}
+                    onCreateFolder={openCreateModal}
+                    onDelete={handleDeleteSelected}
+                    deleteConfirmOpen={showBulkDeleteConfirm}
+                    onDeleteConfirmChange={setShowBulkDeleteConfirm}
+                />
             </div>
         </>
     )

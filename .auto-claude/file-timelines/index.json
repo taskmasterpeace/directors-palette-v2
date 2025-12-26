@@ -31,7 +31,12 @@
     "src/types/prompts.ts",
     "supabase/database.types.ts",
     "supabase/migrations/20251225000000_create_user_prompts_system.sql",
-    "src/components/prompts/FolderTree.tsx"
+    "src/components/prompts/FolderTree.tsx",
+    ".auto-claude/specs/013-multi-select-gallery-with-bulk-actions/memory/session_insights/session_001.json",
+    "package-lock.json",
+    "package.json",
+    "src/features/shot-creator/components/unified-gallery/GalleryHeader.tsx",
+    "src/features/shot-creator/hooks/useGallerySelection.test.ts"
   ],
-  "last_updated": "2025-12-25T18:57:10.985408"
+  "last_updated": "2025-12-25T19:32:48.526232"
 }

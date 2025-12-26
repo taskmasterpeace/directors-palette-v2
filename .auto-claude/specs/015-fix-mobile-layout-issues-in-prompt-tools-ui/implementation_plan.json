@@ -149,8 +149,9 @@
               "Other actions in dropdown"
             ]
           },
-          "status": "pending",
-          "notes": "Move view toggle, export, import into MoreVertical dropdown on mobile. Use hidden md:flex pattern."
+          "status": "completed",
+          "notes": "Implemented mobile-responsive header for PromptLibraryCard: View Mode Toggle, Export, and Import buttons hidden on mobile (md:flex), added to dropdown menu with Card View and Table View options. Add button always visible with 44px min-height touch target. Desktop layout unchanged.",
+          "updated_at": "2025-12-26T00:29:46.535872+00:00"
         },
         {
           "id": "subtask-3-2",
@@ -477,5 +478,5 @@
   "status": "human_review",
   "planStatus": "review",
   "updated_at": "2025-12-26T00:11:22.389Z",
-  "last_updated": "2025-12-26T00:27:10.127840+00:00"
+  "last_updated": "2025-12-26T00:29:46.535881+00:00"
 }

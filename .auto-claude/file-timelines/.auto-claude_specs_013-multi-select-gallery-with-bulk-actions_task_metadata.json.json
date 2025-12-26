@@ -11,7 +11,7 @@
       },
       "worktree_state": {
         "content": "{\n  \"sourceType\": \"ideation\",\n  \"ideationType\": \"code_improvements\",\n  \"ideaId\": \"ci-005\",\n  \"rationale\": \"The selection pattern exists in usePromptSelection.ts with Set-based tracking and selectAll/toggleSelect callbacks. BulkDownloadService handles ZIP creation. These can be combined with the existing gallery grid for powerful bulk operations.\",\n  \"category\": \"feature\",\n  \"estimatedEffort\": \"medium\",\n  \"complexity\": \"medium\",\n  \"affectedFiles\": [\n    \"src/features/shot-creator/hooks/useGallerySelection.ts\",\n    \"src/features/shot-creator/components/unified-gallery/UnifiedImageGallery.tsx\",\n    \"src/features/shot-creator/components/unified-gallery/GalleryGrid.tsx\",\n    \"src/features/shot-creator/components/unified-gallery/BulkActionsToolbar.tsx\"\n  ]\n}",
-        "last_modified": "2025-12-25T18:57:10.942626"
+        "last_modified": "2025-12-25T19:32:48.520129"
       },
       "task_intent": {
         "title": "013-multi-select-gallery-with-bulk-actions",

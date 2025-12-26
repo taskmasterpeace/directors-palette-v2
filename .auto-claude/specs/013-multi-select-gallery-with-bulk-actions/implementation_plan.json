@@ -2,9 +2,9 @@
   "feature": "Multi-Select Gallery with Bulk Actions",
   "description": "Add multi-select mode to the unified image gallery with bulk actions toolbar (Download ZIP, Delete Selected, Move to Folder). Enable Shift+click for range selection and Ctrl+click for toggle selection.",
   "created_at": "2025-12-25T23:17:11.519Z",
-  "updated_at": "2025-12-25T23:57:09.082Z",
-  "status": "human_review",
-  "planStatus": "review",
+  "updated_at": "2025-12-26T00:33:04.785Z",
+  "status": "done",
+  "planStatus": "completed",
   "workflow_type": "development",
   "spec_file": "spec.md",
   "phases": [
@@ -276,7 +276,7 @@
             "Tooltip explains toggle selection (Ctrl/Cmd+click)",
             "Hint is discoverable but not intrusive"
           ],
-          "notes": "Added tooltip to Select All button in GalleryHeader explaining selection shortcuts. The tooltip displays: 1) Shift+click for range selection, 2) Ctrl/\u2318+click for toggle selection. Used styled kbd elements to indicate keyboard keys. Tooltip appears on hover with \"Selection shortcuts:\" header and is discoverable but not intrusive. Commit: 78db985",
+          "notes": "Added tooltip to Select All button in GalleryHeader explaining selection shortcuts. The tooltip displays: 1) Shift+click for range selection, 2) Ctrl/⌘+click for toggle selection. Used styled kbd elements to indicate keyboard keys. Tooltip appears on hover with \"Selection shortcuts:\" header and is discoverable but not intrusive. Commit: 78db985",
           "updated_at": "2025-12-26T00:13:33.264176+00:00"
         }
       ]

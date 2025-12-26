@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useUnifiedGalleryStore } from '../store/unified-gallery-store'
 import { useToast } from '@/hooks/use-toast'
 import { clipboardManager } from '@/utils/clipboard-manager'
 import { haptics } from '@/utils/haptics'
 import { BulkDownloadService, DownloadProgress } from '../services/bulk-download.service'
+import { useGallerySelection } from './useGallerySelection'
 
 export type ViewMode = 'grid'
 
@@ -36,8 +37,21 @@ export function useGalleryLogic(
     setSearchQuery
   } = useUnifiedGalleryStore()
 
-  // State
-  const [selectedImages, setSelectedImages] = useState<string[]>([])
+  // Selection state using Set-based hook for efficient operations
+  const {
+    selectedIds,
+    selectedCount,
+    selectAll: selectAllIds,
+    selectNone,
+    toggleSelect,
+    isSelected,
+    handleSelectWithModifiers
+  } = useGallerySelection()
+
+  // Derive selectedImages array from selectedIds Set for backward compatibility
+  // The selection uses image URLs for consistency with existing handlers
+  const selectedImages = useMemo(() => Array.from(selectedIds), [selectedIds])
+
   // We only keep viewMode locally as it's UI preference
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
 
@@ -53,21 +67,34 @@ export function useGalleryLogic(
     if (onImageSelect) {
       onImageSelect(imageUrl)
     } else {
-      setSelectedImages(prev =>
-        prev.includes(imageUrl)
-          ? prev.filter(url => url !== imageUrl)
-          : [...prev, imageUrl]
-      )
+      toggleSelect(imageUrl)
     }
-  }, [onImageSelect])
+  }, [onImageSelect, toggleSelect])
 
-  const handleClearSelection = () => {
-    setSelectedImages([])
-  }
+  /**
+   * Handle selection with modifier keys (Shift+click for range, Ctrl/Cmd+click for toggle).
+   * Pass the ordered images array for range selection to work correctly.
+   */
+  const handleImageSelectWithModifiers = useCallback((
+    imageUrl: string,
+    event: React.MouseEvent
+  ) => {
+    if (onImageSelect) {
+      // If custom handler provided, just call it (no modifier key support)
+      onImageSelect(imageUrl)
+    } else {
+      // Use the ordered images from the paginated view for range selection
+      handleSelectWithModifiers(imageUrl, paginatedImages.map(img => img.url), event)
+    }
+  }, [onImageSelect, handleSelectWithModifiers, paginatedImages])
 
-  const handleSelectAll = () => {
-    setSelectedImages(paginatedImages.map(img => img.url))
-  }
+  const handleClearSelection = useCallback(() => {
+    selectNone()
+  }, [selectNone])
+
+  const handleSelectAll = useCallback(() => {
+    selectAllIds(paginatedImages.map(img => img.url))
+  }, [selectAllIds, paginatedImages])
 
   const handleDeleteSelected = async () => {
     let successCount = 0
@@ -89,7 +116,7 @@ export function useGalleryLogic(
       }
     })
 
-    setSelectedImages([])
+    selectNone()
 
     if (failedCount === 0) {
       toast({
@@ -215,7 +242,10 @@ export function useGalleryLogic(
   const handleDeleteImage = async (imageUrl: string) => {
     const success = await removeImage(imageUrl)
     if (success) {
-      setSelectedImages(prev => prev.filter(url => url !== imageUrl))
+      // Remove from selection if it was selected
+      if (isSelected(imageUrl)) {
+        toggleSelect(imageUrl)
+      }
       toast({
         title: "Image Deleted Permanently",
         description: "Removed from database and storage"
@@ -327,6 +357,8 @@ export function useGalleryLogic(
     paginatedImages,
     totalPages,
     selectedImages,
+    selectedCount, // Number of selected images (from useGallerySelection)
+    isSelected, // Check if a specific image is selected
     filters: {
       searchQuery: searchQuery,
       viewMode: viewMode
@@ -339,6 +371,7 @@ export function useGalleryLogic(
 
     // Handlers
     handleImageSelect,
+    handleImageSelectWithModifiers, // Selection with Shift/Ctrl modifier key support
     handleSelectAll,
     handleClearSelection,
     handleDeleteSelected,

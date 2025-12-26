@@ -9,7 +9,10 @@
         "content": "",
         "timestamp": "2025-12-25T18:57:10.314069"
       },
-      "worktree_state": null,
+      "worktree_state": {
+        "content": "{\n  \"commits\": [\n    {\n      \"hash\": \"64f3df696bc85e6fb44aa50e1a483e83183179e6\",\n      \"subtask_id\": \"3.3\",\n      \"timestamp\": \"2025-12-25T19:02:51.588914\"\n    },\n    {\n      \"hash\": \"ec06eb6b9b00326a8e7258f7994f997b5b46f09f\",\n      \"subtask_id\": \"4.1\",\n      \"timestamp\": \"2025-12-25T19:07:25.700105\"\n    },\n    {\n      \"hash\": \"0fb62cd628e163192ce206b2fbdc37b1c0e49578\",\n      \"subtask_id\": \"4.2\",\n      \"timestamp\": \"2025-12-25T19:11:21.975850\"\n    },\n    {\n      \"hash\": \"78db985c0a49ee4fcff34853d2e534d4f50b1668\",\n      \"subtask_id\": \"4.3\",\n      \"timestamp\": \"2025-12-25T19:13:40.459316\"\n    },\n    {\n      \"hash\": \"7be42ad88d65f8ee98e88075ea1b0fbb29bdca8a\",\n      \"subtask_id\": \"5.1\",\n      \"timestamp\": \"2025-12-25T19:21:09.244841\"\n    },\n    {\n      \"hash\": \"34e556a55a7b264160c85053a28e3be7a8179586\",\n      \"subtask_id\": \"5.2\",\n      \"timestamp\": \"2025-12-25T19:23:14.096263\"\n    }\n  ],\n  \"last_good_commit\": \"34e556a55a7b264160c85053a28e3be7a8179586\",\n  \"metadata\": {\n    \"created_at\": \"2025-12-25T18:57:10.986942\",\n    \"last_updated\": \"2025-12-25T19:23:14.096271\"\n  }\n}",
+        "last_modified": "2025-12-25T19:32:48.511480"
+      },
       "task_intent": {
         "title": "013-multi-select-gallery-with-bulk-actions",
         "description": "Add multi-select mode to the unified image gallery with bulk actions toolbar (Download ZIP, Delete Selected, Move to Folder). Enable Shift+click for range selection and Ctrl+click for toggle selection.",

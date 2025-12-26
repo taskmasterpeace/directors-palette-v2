@@ -1,11 +1,10 @@
 'use client'
 
-import { useState } from 'react'
 import { CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { ImageIcon, Search, Trash2, Grid3x3, Grid2x2, Menu, FolderInput, Download, Square, RectangleHorizontal } from 'lucide-react'
+import { ImageIcon, Search, Grid3x3, Grid2x2, Menu, Square, RectangleHorizontal } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { GridSize } from '../../store/unified-gallery-store'
 import {
@@ -14,24 +13,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import type { FolderWithCount } from '../../types/folder.types'
 
 // Storage limits constants
 const IMAGE_LIMIT = 500
@@ -42,21 +23,14 @@ interface GalleryHeaderProps {
   totalDatabaseCount: number
   totalCredits: number
   searchQuery: string
-  selectedCount: number
   gridSize: GridSize
   currentFolderName?: string
   useNativeAspectRatio: boolean
-  folders?: FolderWithCount[]
   onSearchChange: (query: string) => void
   onSelectAll: () => void
-  onClearSelection: () => void
-  onDeleteSelected: () => void
   onGridSizeChange: (size: GridSize) => void
   onAspectRatioChange: (useNative: boolean) => void
   onOpenMobileMenu?: () => void
-  onMoveToFolder?: (folderId: string | null) => void
-  onCreateFolder?: () => void
-  onBulkDownload?: () => void
 }
 
 export function GalleryHeader({
@@ -64,23 +38,15 @@ export function GalleryHeader({
   totalDatabaseCount,
   totalCredits,
   searchQuery,
-  selectedCount,
   gridSize,
   currentFolderName,
   useNativeAspectRatio,
-  folders = [],
   onSearchChange,
   onSelectAll,
-  onClearSelection,
-  onDeleteSelected,
   onGridSizeChange,
   onAspectRatioChange,
   onOpenMobileMenu,
-  onMoveToFolder,
-  onCreateFolder,
-  onBulkDownload
 }: GalleryHeaderProps) {
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   return (
     <CardHeader className="pb-4">
@@ -210,123 +176,29 @@ export function GalleryHeader({
             </Button>
           </div>
 
-          {/* Selection Actions */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onSelectAll}
-          >
-            Select All
-          </Button>
-          {selectedCount > 0 && (
-            <>
-              <Badge className="bg-accent">
-                {selectedCount} selected
-              </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onClearSelection}
-              >
-                Clear
-              </Button>
-              {onMoveToFolder && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <FolderInput className="w-4 h-4 mr-2" />
-                      Move
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-card border-border">
-                    <DropdownMenuItem
-                      onClick={() => onMoveToFolder(null)}
-                      className="cursor-pointer"
-                    >
-                      <span>Uncategorized</span>
-                    </DropdownMenuItem>
-                    {onCreateFolder && (
-                      <DropdownMenuItem
-                        onClick={onCreateFolder}
-                        className="cursor-pointer text-primary"
-                      >
-                        <FolderInput className="w-4 h-4 mr-2" />
-                        <span>Create new folder...</span>
-                      </DropdownMenuItem>
-                    )}
-                    {(folders.length > 0 || onCreateFolder) && <DropdownMenuSeparator />}
-                    {folders.map(folder => (
-                      <DropdownMenuItem
-                        key={folder.id}
-                        onClick={() => onMoveToFolder(folder.id)}
-                        className="cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2">
-                          {folder.color && (
-                            <div
-                              className="h-3 w-3 rounded-full border border-border"
-                              style={{ backgroundColor: folder.color }}
-                            />
-                          )}
-                          <span>{folder.name}</span>
-                          <span className="text-muted-foreground text-xs ml-auto">({folder.imageCount})</span>
-                        </div>
-                      </DropdownMenuItem>
-                    ))}
-                    {folders.length === 0 && (
-                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                        No folders created yet
-                      </div>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-              {onBulkDownload && (
+          {/* Select All Button - bulk actions are now in floating BulkActionsToolbar */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={onBulkDownload}
+                  onClick={onSelectAll}
                 >
-                  <Download className="h-4 w-4" />
-                  <span className="hidden sm:inline ml-2">Download</span>
+                  Select All
                 </Button>
-              )}
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </Button>
-            </>
-          )}
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-[250px]">
+                <p className="font-medium mb-1">Selection shortcuts:</p>
+                <ul className="text-xs space-y-0.5">
+                  <li>• <kbd className="px-1 py-0.5 rounded bg-muted text-muted-foreground">Shift</kbd>+click for range select</li>
+                  <li>• <kbd className="px-1 py-0.5 rounded bg-muted text-muted-foreground">Ctrl</kbd>/<kbd className="px-1 py-0.5 rounded bg-muted text-muted-foreground">⌘</kbd>+click to toggle</li>
+                </ul>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
-
-      {/* Bulk Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete {selectedCount} images?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. These images will be permanently deleted from your gallery and storage.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                onDeleteSelected()
-                setShowDeleteConfirm(false)
-              }}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              Delete {selectedCount} Images
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </CardHeader>
   )
 }

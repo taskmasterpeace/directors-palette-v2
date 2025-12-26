@@ -1,4 +1,5 @@
 export * from './useGalleryLogic';
+export * from './useGallerySelection';
 export * from './usePromptLibraryManager';
 export * from './useReferenceImageManager';
 export * from './useShotCreatorSettings';

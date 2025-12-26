@@ -11,7 +11,7 @@
       },
       "worktree_state": {
         "content": "export * from './useGalleryLogic';\nexport * from './useGallerySelection';\nexport * from './usePromptLibraryManager';\nexport * from './useReferenceImageManager';\nexport * from './useShotCreatorSettings';\nexport * from './useImageGeneration';\nexport * from './useGalleryLoader';\nexport * from './useRecipeImportExport';\n",
-        "last_modified": "2025-12-25T18:57:10.946347"
+        "last_modified": "2025-12-25T19:32:48.524568"
       },
       "task_intent": {
         "title": "013-multi-select-gallery-with-bulk-actions",

@@ -19,7 +19,9 @@ import { Button } from "@/components/ui/button"
 interface ImageCardProps {
   image: GeneratedImage
   isSelected: boolean
-  onSelect: () => void
+  /** When true, checkboxes are always visible (not just on hover) */
+  isSelectionMode?: boolean
+  onSelect: (event?: React.MouseEvent) => void
   onZoom: () => void
   onCopy: () => void
   onDownload: () => void
@@ -49,6 +51,7 @@ interface ImageCardProps {
 const ImageCardComponent = ({
   image,
   isSelected,
+  isSelectionMode = false,
   onSelect,
   onZoom,
   onDownload,
@@ -155,12 +158,26 @@ const ImageCardComponent = ({
   // Render completed state (normal image)
   return (
     <div className={`relative group rounded-lg overflow-hidden bg-card border transition-all ${isSelected ? 'border-primary border-2' : 'border-border hover:border-primary/50'}`}>
-      {/* Selection Checkbox */}
-      <div className={`absolute top-2 left-2 z-10 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+      {/* Selection Checkbox - always visible in selection mode, otherwise show on hover/selected */}
+      <div className={cn(
+        "absolute top-2 left-2 z-10 transition-opacity",
+        isSelectionMode || isSelected
+          ? 'opacity-100'
+          : 'opacity-0 group-hover:opacity-100'
+      )}>
         <Checkbox
           checked={isSelected}
-          onCheckedChange={onSelect}
-          className="bg-background/80 border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation()
+            onSelect(e)
+          }}
+          onCheckedChange={() => {
+            // Selection is handled by onClick to capture modifier keys
+          }}
+          className={cn(
+            "bg-background/80 border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary",
+            isSelectionMode && "ring-2 ring-primary/30 ring-offset-1 ring-offset-background"
+          )}
         />
       </div>
 
@@ -236,6 +253,7 @@ export const ImageCard = memo(ImageCardComponent, (prevProps, nextProps) => {
     prevProps.image.url === nextProps.image.url &&
     prevProps.image.status === nextProps.image.status &&
     prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isSelectionMode === nextProps.isSelectionMode &&
     prevProps.showActions === nextProps.showActions &&
     prevProps.useNativeAspectRatio === nextProps.useNativeAspectRatio &&
     prevProps.gridSize === nextProps.gridSize
