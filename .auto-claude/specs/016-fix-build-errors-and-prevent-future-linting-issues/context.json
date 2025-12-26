@@ -1,0 +1,60 @@
+{
+  "task_description": "Fix the 2 TypeScript/ESLint errors in PromptActions.tsx and LayoutAnnotationTab.tsx that are blocking Vercel builds. Set up pre-commit hooks with Husky and lint-staged to automatically run ESLint checks before commits, preventing future build failures. Configure VS Code settings for auto-fix on save, and optionally add GitHub Actions for CI/CD linting.",
+  "scoped_services": ["main"],
+  "files_to_modify": {
+    "main": [
+      "src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx",
+      "src/features/layout-annotation/components/LayoutAnnotationTab.tsx",
+      "package.json",
+      ".vscode/settings.json"
+    ]
+  },
+  "files_to_create": {
+    "main": [
+      ".husky/pre-commit",
+      ".github/workflows/lint.yml"
+    ]
+  },
+  "files_to_reference": [
+    "eslint.config.mjs",
+    "package.json",
+    "tsconfig.json"
+  ],
+  "patterns": {
+    "unused_variable_pattern": "Prefix unused variables with underscore: _variableName",
+    "husky_pattern": "Standard Husky setup with prepare script and lint-staged",
+    "vscode_pattern": "ESLint auto-fix on save with codeActionsOnSave"
+  },
+  "existing_implementations": {
+    "description": "ESLint is already configured with @typescript-eslint/no-unused-vars rule requiring unused vars to match /^_/u pattern",
+    "relevant_files": [
+      "eslint.config.mjs",
+      ".vscode/settings.json"
+    ]
+  },
+  "errors_found": {
+    "PromptActions.tsx": [
+      "useEffect imported but never used",
+      "Badge imported but never used",
+      "PromptAutocomplete imported but never used",
+      "shotCreatorProcessing unused",
+      "currentPredictionId unused",
+      "autocompleteIsOpen unused",
+      "autocompleteItems unused",
+      "handleAutocompleteSelect unused",
+      "Incorrect eslint-disable directive at line 119"
+    ],
+    "LayoutAnnotationTab.tsx": [
+      "Badge imported but never used",
+      "Loader2 imported but never used",
+      "RotateCw imported but never used",
+      "setActiveTab parameter unused",
+      "setExportPanelExpanded unused",
+      "setBackgroundImage unused",
+      "handleAspectRatioChange unused",
+      "updateCanvasState unused",
+      "updateDrawingProperties unused"
+    ]
+  },
+  "created_at": "2025-12-25T19:40:46.511783"
+}

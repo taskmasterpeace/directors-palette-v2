@@ -1,0 +1,296 @@
+{
+  "feature": "Fix Build Errors and Prevent Future Linting Issues",
+  "workflow_type": "simple",
+  "workflow_rationale": "This is a straightforward infrastructure improvement task with no multi-service dependencies. All work happens in a single Next.js service with sequential subtasks that don't require complex phase orchestration.",
+  "phases": [
+    {
+      "id": "phase-1-implementation",
+      "name": "Fix Errors and Setup Linting Infrastructure",
+      "type": "implementation",
+      "description": "Fix TypeScript/ESLint errors and set up pre-commit hooks",
+      "depends_on": [],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Fix ESLint errors in PromptActions.tsx",
+          "service": "main",
+          "files_to_modify": [
+            "src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "eslint.config.mjs"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx eslint src/features/shot-creator/components/creator-prompt-settings/PromptActions.tsx",
+            "expected": "0 errors"
+          },
+          "status": "pending",
+          "implementation_notes": [
+            "Remove unused imports: useEffect, Badge, PromptAutocomplete",
+            "Prefix unused variables with underscore: _shotCreatorProcessing, _currentPredictionId, etc.",
+            "Remove incorrect eslint-disable directive at line 119",
+            "Ensure component functionality remains unchanged"
+          ]
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Fix ESLint errors in LayoutAnnotationTab.tsx",
+          "service": "main",
+          "files_to_modify": [
+            "src/features/layout-annotation/components/LayoutAnnotationTab.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "eslint.config.mjs"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx eslint src/features/layout-annotation/components/LayoutAnnotationTab.tsx",
+            "expected": "0 errors (warnings acceptable)"
+          },
+          "status": "pending",
+          "implementation_notes": [
+            "Remove unused imports: Badge, Loader2, RotateCw",
+            "Prefix unused destructured variables with underscore: _setActiveTab, _setExportPanelExpanded, etc.",
+            "Keep React Hooks warnings if they are non-blocking",
+            "Ensure component functionality remains unchanged"
+          ]
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Install Husky and lint-staged dependencies",
+          "service": "main",
+          "files_to_modify": [
+            "package.json"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "package.json"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm list husky lint-staged",
+            "expected": "Both packages listed"
+          },
+          "status": "pending",
+          "implementation_notes": [
+            "Run: npm install --save-dev husky lint-staged",
+            "Add prepare script: \"prepare\": \"husky install\"",
+            "Add lint-staged config in package.json",
+            "Run npm install to trigger prepare script"
+          ]
+        },
+        {
+          "id": "subtask-1-4",
+          "description": "Create Husky pre-commit hook",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            ".husky/pre-commit"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "test -f .husky/pre-commit && test -x .husky/pre-commit && echo OK",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "implementation_notes": [
+            "Run: npx husky install",
+            "Run: npx husky add .husky/pre-commit \"npx lint-staged\"",
+            "Ensure .husky/pre-commit is executable",
+            "Test hook by staging file with error and attempting commit"
+          ]
+        },
+        {
+          "id": "subtask-1-5",
+          "description": "Configure VS Code ESLint auto-fix on save",
+          "service": "main",
+          "files_to_modify": [
+            ".vscode/settings.json"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Check .vscode/settings.json contains editor.codeActionsOnSave with source.fixAll.eslint"
+          },
+          "status": "pending",
+          "implementation_notes": [
+            "Add editor.codeActionsOnSave configuration",
+            "Add eslint.validate for TypeScript files",
+            "Preserve any existing VS Code settings"
+          ]
+        },
+        {
+          "id": "subtask-1-6",
+          "description": "Create GitHub Actions lint workflow (optional)",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            ".github/workflows/lint.yml"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Check .github/workflows/lint.yml exists and contains ESLint job"
+          },
+          "status": "pending",
+          "implementation_notes": [
+            "Create workflow that runs on push and pull_request",
+            "Run npm install and npm run lint",
+            "Ensure workflow fails if linting errors exist",
+            "This is optional and can be skipped if time-constrained"
+          ]
+        },
+        {
+          "id": "subtask-1-7",
+          "description": "Verify complete build and pre-commit hook",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Run npm run build - should succeed",
+              "Run npm run lint - should show 0 errors",
+              "Stage file with intentional error",
+              "Attempt git commit - should be blocked",
+              "Fix error and commit should succeed"
+            ]
+          },
+          "status": "pending",
+          "implementation_notes": [
+            "Test full build pipeline",
+            "Verify all errors are fixed",
+            "Test pre-commit hook blocks bad commits",
+            "Ensure existing functionality works"
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 1,
+    "total_subtasks": 7,
+    "services_involved": [
+      "main"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 1,
+      "parallel_groups": [],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution - no parallelism"
+    },
+    "startup_command": "source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 016"
+  },
+  "verification_strategy": {
+    "risk_level": "low",
+    "skip_validation": false,
+    "test_creation_phase": "none",
+    "test_types_required": [
+      "unit"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "Both PromptActions.tsx and LayoutAnnotationTab.tsx have zero ESLint errors",
+      "npm run build succeeds without linting errors",
+      "Pre-commit hook blocks commits with linting errors",
+      "VS Code auto-fix on save is configured",
+      "No regressions in component functionality"
+    ],
+    "verification_steps": [
+      {
+        "name": "ESLint Check",
+        "command": "npm run lint",
+        "expected_outcome": "0 errors (warnings acceptable)",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "TypeScript Check",
+        "command": "npx tsc --noEmit",
+        "expected_outcome": "0 type errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Build Check",
+        "command": "npm run build",
+        "expected_outcome": "Build succeeds with exit code 0",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Pre-commit Hook Test",
+        "command": "Manual test: stage file with error and verify commit blocked",
+        "expected_outcome": "Commit blocked with ESLint error message",
+        "type": "manual",
+        "required": true,
+        "blocking": false
+      }
+    ],
+    "reasoning": "Low risk infrastructure task - need to verify errors are fixed and build passes. Pre-commit hooks should be tested to ensure they run correctly."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": true,
+      "commands": [
+        "npm run lint",
+        "npx tsc --noEmit"
+      ],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": true,
+      "commands": [],
+      "services_to_test": [
+        "main"
+      ],
+      "notes": "Manual test: verify pre-commit hook blocks commits with errors"
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000",
+          "checks": [
+            "Pages using PromptActions render correctly",
+            "Pages using LayoutAnnotationTab render correctly",
+            "No console errors"
+          ]
+        }
+      ]
+    },
+    "build_verification": {
+      "required": true,
+      "checks": [
+        "npm run build succeeds",
+        "npm run lint shows 0 errors",
+        "npx tsc --noEmit shows 0 type errors"
+      ]
+    },
+    "git_hooks_verification": {
+      "required": true,
+      "checks": [
+        ".husky/pre-commit file exists and is executable",
+        "Staging file with error and running git commit is blocked",
+        "git commit --no-verify bypasses hook"
+      ]
+    }
+  },
+  "qa_signoff": null
+}
