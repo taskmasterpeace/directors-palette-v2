@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Plus, Trash2, Upload, X } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import type { Recipe, RecipeCategory, RecipeField, RecipeStageType, RecipeToolId } from "@/features/shot-creator/types/recipe.types"
@@ -607,6 +608,18 @@ Example: A portrait of <<CHARACTER_NAME:name!>> in <<STYLE:text>> style."
                                                                     src={img.url}
                                                                     alt={img.name}
                                                                     className="w-8 h-8 object-cover rounded"
+                                                                    onError={(e) => {
+                                                                        console.error('[RecipeEditorDialog] Failed to load image:', {
+                                                                            url: img.url,
+                                                                            name: img.name,
+                                                                            imageId: img.id,
+                                                                        });
+                                                                        // Show broken image indicator
+                                                                        e.currentTarget.classList.add('opacity-30');
+                                                                    }}
+                                                                    onLoad={() => {
+                                                                        console.log('[RecipeEditorDialog] Image loaded successfully:', img.url);
+                                                                    }}
                                                                 />
                                                             )}
                                                             <span className="text-xs text-zinc-400 max-w-[120px] truncate">
@@ -635,24 +648,46 @@ Example: A portrait of <<CHARACTER_NAME:name!>> in <<STYLE:text>> style."
                     </div>
                 </div>
 
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleSave}
-                        disabled={saving || !name.trim()}
-                        className="bg-amber-500 text-black hover:bg-amber-600"
-                    >
-                        {saving ? (
-                            <>
-                                <LoadingSpinner size="sm" color="current" className="mr-2" />
-                                {isCreateMode ? 'Creating...' : 'Saving...'}
-                            </>
-                        ) : (
-                            isCreateMode ? 'Create Recipe' : 'Save Changes'
-                        )}
-                    </Button>
+                <DialogFooter className="flex-col items-stretch gap-4">
+                    {!name.trim() && (
+                        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3">
+                            <p className="text-sm text-red-400">
+                                ⚠ Recipe name is required to save
+                            </p>
+                        </div>
+                    )}
+                    <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => onOpenChange(false)}>
+                            Cancel
+                        </Button>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <div>
+                                        <Button
+                                            onClick={handleSave}
+                                            disabled={saving || !name.trim()}
+                                            className="bg-amber-500 text-black hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {saving ? (
+                                                <>
+                                                    <LoadingSpinner size="sm" color="current" className="mr-2" />
+                                                    {isCreateMode ? 'Creating...' : 'Saving...'}
+                                                </>
+                                            ) : (
+                                                isCreateMode ? 'Create Recipe' : 'Save Changes'
+                                            )}
+                                        </Button>
+                                    </div>
+                                </TooltipTrigger>
+                                {(!name.trim() && !saving) && (
+                                    <TooltipContent>
+                                        <p>Recipe name is required</p>
+                                    </TooltipContent>
+                                )}
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
