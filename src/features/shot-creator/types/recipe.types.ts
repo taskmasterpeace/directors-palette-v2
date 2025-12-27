@@ -603,6 +603,96 @@ Professional character sheet suitable for animation/illustration reference.`,
     categoryId: 'characters',
   },
 
+  // Character Sheet from Description - No photo required
+  {
+    name: 'Character Sheet (From Description)',
+    description: 'Generate a character sheet from text description only - no reference photo needed',
+    recipeNote: 'Perfect for creating consistent characters when you only have a written description. Stage 1 generates the character appearance, Stage 2 creates the full character sheet.',
+    stages: [
+      // STAGE 0: Generate character appearance from description
+      {
+        id: 'stage_desc_char_0',
+        order: 0,
+        type: 'generation',
+        template: `Generate a character based on this description:
+
+CHARACTER NAME: @<<CHARACTER_NAME:name!>>
+VISUAL DESCRIPTION: <<CHARACTER_DESCRIPTION:text!>>
+
+Create a full-body character portrait:
+- Standing pose, facing forward (slight 3/4 angle is acceptable)
+- Clean WHITE or light gray background
+- Neutral expression, relaxed posture
+- Soft, even studio lighting
+- Show full body from head to feet
+- High detail on face and distinctive features
+
+STYLE: <<STYLE:select(realistic,cinematic,anime,3D render,cartoon,illustrated,concept art,oil painting,watercolor,Pixar-style,Disney-style)>>
+
+The character should match the description EXACTLY - pay attention to:
+- Age, gender, ethnicity
+- Hair color, style, length
+- Eye color
+- Build/body type
+- Clothing and accessories
+- Any distinctive features (scars, tattoos, glasses, etc.)
+
+Output: High-quality full-body character portrait suitable for reference.`,
+        fields: [],
+        referenceImages: [],
+      },
+      // STAGE 1: Generate character sheet with expressions
+      {
+        id: 'stage_desc_char_1',
+        order: 1,
+        type: 'generation',
+        template: `CHARACTER: @<<CHARACTER_NAME:name!>>
+
+Create a professional character reference sheet using the previous image as the definitive reference.
+
+CRITICAL: Every view and expression must clearly be the SAME PERSON.
+Facial structure, proportions, and distinctive features must remain IDENTICAL across all views.
+
+CHARACTER SHEET LAYOUT (21:9 aspect ratio):
+
+LEFT SECTION - FULL BODY VIEWS:
+- Large front view with proportion reference
+- Side profile view
+- Back view
+- All views on same baseline for height reference
+- Below: COLOR PALETTE strip (skin, hair, eye colors, main clothing colors)
+
+RIGHT SECTION - EXPRESSIONS (2 rows × 5 columns):
+Row 1: Neutral, Happy, Sad, Angry, Surprised
+Row 2: Speaking, Shouting, Whispering, Confident, Scared
+
+TOP: Character name "@<<CHARACTER_NAME:name!>>" prominently displayed
+
+STYLE: Match the style from Stage 1 exactly
+
+CRITICAL REQUIREMENTS:
+- SOLID BLACK LINES (4-6 pixels) separating each expression cell
+- All expressions maintain the SAME face structure
+- Clean white/light gray background throughout
+- Production-ready layout for animation/illustration reference`,
+        fields: [],
+        referenceImages: [
+          {
+            id: 'template_charsheet_advanced',
+            url: SYSTEM_TEMPLATE_URLS.characterSheetAdvanced,
+            name: 'Character Sheet Layout Template',
+            aspectRatio: '21:9',
+          }
+        ],
+      },
+    ],
+    suggestedAspectRatio: '21:9',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: true,
+    quickAccessLabel: 'DescSheet',
+    categoryId: 'characters',
+  },
+
   // 9-Frame Cinematic Contact Sheet
   {
     name: '9-Frame Cinematic',

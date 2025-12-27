@@ -19,7 +19,7 @@ interface CharacterCardProps {
     character: StoryboardCharacter
     index: number
     onUpdate: (index: number, updates: Partial<StoryboardCharacter>) => void
-    onOpenCharacterSheetRecipe: (characterName: string, referenceImageUrl?: string) => void
+    onOpenCharacterSheetRecipe: (characterName: string, data?: string, type?: 'photo' | 'description') => void
 }
 
 function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe }: CharacterCardProps) {
@@ -226,26 +226,45 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe 
                                 </p>
                             </div>
 
-                            {/* Character Sheet Recipe Button */}
-                            {character.reference_image_url && (
-                                <div className="pt-2 border-t">
+                            {/* Character Sheet Recipe Buttons */}
+                            <div className="pt-2 border-t space-y-2">
+                                {character.reference_image_url ? (
+                                    /* Has photo - use photo-based recipe */
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         className="w-full gap-2"
                                         onClick={() => onOpenCharacterSheetRecipe(
                                             character.name,
-                                            character.reference_image_url
+                                            character.reference_image_url,
+                                            'photo'
                                         )}
                                     >
                                         <Sparkles className="w-4 h-4" />
-                                        Create Character Sheet in Shot Creator
+                                        Create Character Sheet (from photo)
                                     </Button>
-                                    <p className="text-xs text-muted-foreground mt-1 text-center">
+                                ) : character.description ? (
+                                    /* No photo but has description - use description-based recipe */
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full gap-2"
+                                        onClick={() => onOpenCharacterSheetRecipe(
+                                            character.name,
+                                            character.description,
+                                            'description'
+                                        )}
+                                    >
+                                        <Sparkles className="w-4 h-4" />
+                                        Create Character Sheet (from description)
+                                    </Button>
+                                ) : null}
+                                {(character.reference_image_url || character.description) && (
+                                    <p className="text-xs text-muted-foreground text-center">
                                         Opens Shot Creator with the Character Sheet recipe
                                     </p>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
                     </div>
                 </CollapsibleContent>
@@ -260,17 +279,25 @@ export function CharacterList() {
     const { recipes, setActiveRecipe, setFieldValue } = useRecipeStore()
 
     // Handler to open Shot Creator with Character Sheet recipe
-    const handleOpenCharacterSheetRecipe = (characterName: string, referenceImageUrl?: string) => {
-        // Find the Character Sheet recipe
-        const characterSheetRecipe = recipes.find(r => r.name === 'Character Sheet')
+    const handleOpenCharacterSheetRecipe = (characterName: string, data?: string, type: 'photo' | 'description' = 'photo') => {
+        // Find the appropriate recipe based on type
+        const recipeName = type === 'description'
+            ? 'Character Sheet (From Description)'
+            : 'Character Sheet'
 
-        if (characterSheetRecipe) {
+        const targetRecipe = recipes.find(r => r.name === recipeName)
+
+        if (targetRecipe) {
             // Set the active recipe
-            setActiveRecipe(characterSheetRecipe.id)
+            setActiveRecipe(targetRecipe.id)
 
             // Pre-fill the character name field
-            // The field ID format is: stage{stageIndex}_field{fieldIndex}_{fieldName}
             setFieldValue('stage0_field0_character_name', characterName)
+
+            // For description-based recipe, also pre-fill the description
+            if (type === 'description' && data) {
+                setFieldValue('stage0_field1_character_description', data)
+            }
         }
 
         // Switch to Shot Creator tab

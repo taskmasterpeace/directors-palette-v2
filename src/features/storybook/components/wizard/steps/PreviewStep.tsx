@@ -78,8 +78,8 @@ export function PreviewStep() {
                   ref={bookRef}
                   pages={pages}
                   title={project?.title || "My Storybook"}
-                  author={project?.metadata?.authorName}
-                  coverUrl={project?.coverUrl}
+                  author={project?.author}
+                  coverUrl={project?.coverImageUrl}
                   currentPage={currentPreviewPage}
                   onPageChange={handlePageChange}
                 />
