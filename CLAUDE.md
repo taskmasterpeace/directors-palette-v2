@@ -279,3 +279,158 @@ curl -s "https://api.replicate.com/v1/predictions/PREDICTION_ID" \
 - `kwaivgi/kling-v2.5-turbo-pro` - Premium quality
 
 ## NEVER ask the user for Replicate credentials - they are in .env.local!
+
+---
+
+# 🎬 FEATURE ARCHITECTURE REFERENCE
+
+## Feature Overview
+
+| Feature | Location | Purpose |
+|---------|----------|---------|
+| **Storyboard** | `src/features/storyboard/` | Story text → cinematic shot images |
+| **Storybook** | `src/features/storybook/` | Children's book creation |
+| **Music Lab** | `src/features/music-lab/` | Music video treatment generation |
+| **Shot Creator** | `src/features/shot-creator/` | Single shot generation with recipes |
+
+## Storyboard
+- **Flow**: Story → OpenRouter LLM → Cinematic prompts → nano-banana
+- **Key Services**:
+  - `storyboard-generation.service.ts` - Image generation
+  - `shot-prompt.service.ts` - AI prompt enhancement
+  - `story-director.service.ts` - Director enhancements
+- **Uses**: @character_name tags, style guides, directors
+
+## Storybook
+- **Flow**: Uses recipe execution API (`/api/recipes/{name}/execute`)
+- **5 System Recipes**: Style Guide, Character Sheet, Page (First), Page (Continuation), Book Cover
+- **Key Hook**: `useStorybookGeneration.ts`
+
+## Music Lab
+- **Purpose**: AI directors generate music video treatments from audio/lyrics
+- **Has**: 5 AI Directors, Director Fingerprints, Prompt Templates (Page2Prompt)
+- **Most sophisticated prompting system in the app**
+
+## Shot Creator
+- **Purpose**: Single shot generation with customizable recipes
+- **Key Files**:
+  - `recipe.types.ts` - Where SYSTEM_RECIPES are defined
+  - `recipe.service.ts` - Recipe CRUD operations
+
+---
+
+# 🧪 RECIPE SYSTEM
+
+## Field Syntax
+```
+<<FIELD_NAME:type>>     - Optional field
+<<FIELD_NAME:type!>>    - Required field (note the !)
+
+Types:
+- name   - Short text input
+- text   - Long text input
+- select(Option1,Option2,Option3) - Dropdown
+```
+
+## Recipe Execution API
+```
+POST /api/recipes/{recipeName}/execute
+
+{
+  "fieldValues": {
+    "stage0_field0_character_name": "Marcus",
+    "stage0_field1_style_description": "Comic book style"
+  },
+  "referenceImages": [
+    "https://example.com/style-guide.jpg",
+    "https://example.com/character-photo.jpg"
+  ],
+  "modelSettings": {
+    "aspectRatio": "16:9",
+    "outputFormat": "png",
+    "model": "nano-banana-pro"
+  }
+}
+```
+
+## Key Recipe Files
+- **Types & System Recipes**: `src/features/shot-creator/types/recipe.types.ts`
+- **Recipe Service**: `src/features/shot-creator/services/recipe.service.ts`
+- **Execution Service**: `src/features/shared/services/recipe-execution.service.ts`
+- **Storybook Pattern**: `src/features/storybook/hooks/useStorybookGeneration.ts`
+
+---
+
+# 🎭 DIRECTOR SYSTEM
+
+## 5 AI Directors (Music Lab / Storyboard)
+
+| Director | Style | Key Traits |
+|----------|-------|------------|
+| **Ryan Cooler** | Emotion-forward | Intimate framing, warm lighting, subjective POV |
+| **Clint Westwood** | Economical | Restrained, cool tones, stillness-dominant |
+| **David Pincher** | Precision | Symmetric, psychological, digital VFX |
+| **Wes Sanderson** | Whimsy | Center-framed, curated, choreographed |
+| **Hype Millions** | Glossy | Heroic angles, spectacle, frantic pacing |
+
+## Director Enhancement Flow
+Directors ADD visual modifiers to base prompts (10 categories):
+1. Framing/Composition
+2. Distance/Shot Size
+3. Emotional Tone
+4. Lighting/Atmosphere
+5. Movement/Stillness
+6. POV/Perspective
+7. Spectacle/VFX
+8. Actor Direction
+9. Visual Complexity
+10. Pacing Hints
+
+**Example**: `basePrompt + ", intimate close framing, close-up shot, evoking melancholy, warm golden lighting"`
+
+**Key Service**: `src/features/storyboard/services/story-director.service.ts`
+
+---
+
+# 🏷️ CHARACTER TAGGING CONVENTION
+
+## @name Tags
+Use `@underscore_names` for character references:
+```
+@marcus_jones  (not "Marcus Jones")
+@sarah_chen    (not "Sarah")
+@the_judge     (for titled characters)
+```
+
+This anchors characters to their reference images in nano-banana.
+
+## Visual Descriptions (DO vs DON'T)
+
+**DO** - Comma-separated visual attributes:
+```
+"African American man, mid-30s, muscular build, bald head, gold chain necklace, white tank top, baggy jeans, fresh Jordans"
+```
+
+**DON'T** - Narrative descriptions:
+```
+"Marcus is a confident man who works at the store" ❌
+```
+
+---
+
+# 🛡️ NANO-BANANA GUARDRAILS
+
+## DO
+- ✅ Use @name tags for characters
+- ✅ Append style guide at end of prompt
+- ✅ Include shot type (establishing/wide/medium/close-up/detail)
+- ✅ Keep prompts 2-3 sentences (not 1, not 5+)
+- ✅ Attach reference images for characters
+- ✅ Use visual attribute descriptions
+
+## DON'T
+- ❌ Use video terms: dolly, pan, tilt, crane, rack focus
+- ❌ Use narrative descriptions ("he felt angry")
+- ❌ Skip reference images for characters
+- ❌ Forget the style guide
+- ❌ Write overly long prompts
