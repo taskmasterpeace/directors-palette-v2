@@ -1,5 +1,6 @@
 import { ShotCreatorReferenceImage } from '../types/shot-creator.types'
-import { LibraryImageReference, Category } from '../types/library.types'
+import { LibraryImageReference } from '../types/shot-library.types'
+import { Category } from '../components/CategorySelectDialog'
 
 /**
  * Converts ShotCreatorReferenceImage to LibraryImageReference for fullscreen display
