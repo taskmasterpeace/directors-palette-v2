@@ -282,7 +282,7 @@ class RecipeService {
         .list(`recipe-images/${recipeId}`)
 
       if (files && files.length > 0) {
-        const paths = files.map(f => `recipe-images/${recipeId}/${f.name}`)
+        const paths = files.map((f: { name: string }) => `recipe-images/${recipeId}/${f.name}`)
         await supabase.storage.from('directors-palette').remove(paths)
         console.log(`[RecipeService] Deleted ${paths.length} images for recipe ${recipeId}`)
       }
