@@ -262,7 +262,7 @@ class RecipeService {
   }
 
   /**
-   * Delete a recipe
+   * Delete a recipe (also deletes associated images from storage)
    * @param useAdminClient - If true, uses service role client to bypass RLS (for admin operations on system recipes)
    */
   async deleteRecipe(
@@ -274,6 +274,22 @@ class RecipeService {
     const supabase = useAdminClient
       ? await getAPIClient()
       : await getRecipeClient()
+
+    // First, delete associated images from storage (cascade delete)
+    try {
+      const { data: files } = await supabase.storage
+        .from('directors-palette')
+        .list(`recipe-images/${recipeId}`)
+
+      if (files && files.length > 0) {
+        const paths = files.map(f => `recipe-images/${recipeId}/${f.name}`)
+        await supabase.storage.from('directors-palette').remove(paths)
+        console.log(`[RecipeService] Deleted ${paths.length} images for recipe ${recipeId}`)
+      }
+    } catch (storageError) {
+      // Log but don't fail - images cleanup is best-effort
+      console.error('[RecipeService] Error deleting recipe images:', storageError)
+    }
 
     // Build query - admin client can delete any recipe, regular client only user's own
     let query = supabase

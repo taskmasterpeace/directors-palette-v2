@@ -328,6 +328,52 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
       return null
     }
 
+    // Copy reference images from source recipe to new recipe
+    const hasImages = recipe.stages.some(s => s.referenceImages && s.referenceImages.length > 0)
+    if (hasImages) {
+      try {
+        const response = await fetch(`/api/recipes/${newRecipe.id}/copy-images`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sourceRecipeId: recipeId }),
+        })
+
+        if (response.ok) {
+          const { copies } = await response.json()
+
+          if (copies && copies.length > 0) {
+            // Build URL mapping: oldUrl -> { newUrl, newImageId }
+            const urlMap = new Map<string, { newUrl: string; newImageId: string }>()
+            for (const copy of copies) {
+              urlMap.set(copy.oldUrl, { newUrl: copy.newUrl, newImageId: copy.newImageId })
+            }
+
+            // Update stages with new image URLs
+            const updatedStages = newRecipe.stages.map(stage => ({
+              ...stage,
+              referenceImages: stage.referenceImages.map(img => {
+                const mapping = urlMap.get(img.url)
+                if (mapping) {
+                  return { ...img, id: mapping.newImageId, url: mapping.newUrl }
+                }
+                return img
+              }),
+            }))
+
+            // Update the recipe with new image URLs
+            await recipeService.updateRecipe(newRecipe.id, { stages: updatedStages }, userId)
+            newRecipe.stages = updatedStages
+            console.log(`📷 Copied ${copies.length} images to duplicated recipe`)
+          }
+        } else {
+          console.warn('Failed to copy images during duplication:', await response.text())
+        }
+      } catch (copyError) {
+        console.error('Error copying images during duplication:', copyError)
+        // Continue anyway - recipe is created, just without copied images
+      }
+    }
+
     // Update local state
     set((state) => ({
       recipes: [newRecipe, ...state.recipes],

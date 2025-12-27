@@ -190,7 +190,12 @@ export function RecipeEditorDialog({
             const formData = new FormData()
             formData.append('file', compressedFile)
 
-            const response = await fetch('/api/upload-file', {
+            // Use recipe-scoped endpoint if recipe has ID, otherwise use general upload
+            const uploadUrl = recipe?.id
+                ? `/api/recipes/${recipe.id}/images`
+                : '/api/upload-file'
+
+            const response = await fetch(uploadUrl, {
                 method: 'POST',
                 body: formData,
             })
@@ -201,6 +206,7 @@ export function RecipeEditorDialog({
 
             const data = await response.json()
             const imageUrl = data.url
+            const imageId = data.imageId || `img_${Date.now()}`
             const imageName = file.name
 
             // Add the image to the stage
@@ -211,7 +217,7 @@ export function RecipeEditorDialog({
                     referenceImages: [
                         ...newStages[stageIndex].referenceImages,
                         {
-                            id: `img_${Date.now()}`,
+                            id: imageId,
                             url: imageUrl,
                             name: imageName,
                         }
@@ -225,7 +231,7 @@ export function RecipeEditorDialog({
         } finally {
             setUploadingStageIndex(null)
         }
-    }, [])
+    }, [recipe?.id])
 
     // Handle file input change
     const handleFileChange = useCallback((stageIndex: number, event: React.ChangeEvent<HTMLInputElement>) => {
@@ -242,8 +248,9 @@ export function RecipeEditorDialog({
         fileInputRefs.current[stageIndex]?.click()
     }, [])
 
-    // Remove a reference image from a stage
-    const removeReferenceImage = useCallback((stageIndex: number, imageId: string) => {
+    // Remove a reference image from a stage (also deletes from storage)
+    const removeReferenceImage = useCallback(async (stageIndex: number, imageId: string) => {
+        // Remove from local state immediately for responsive UI
         setStages(prev => {
             const newStages = [...prev]
             newStages[stageIndex] = {
@@ -252,7 +259,19 @@ export function RecipeEditorDialog({
             }
             return newStages
         })
-    }, [])
+
+        // Delete from storage if recipe has ID (recipe-scoped storage)
+        if (recipe?.id) {
+            try {
+                await fetch(`/api/recipes/${recipe.id}/images/${imageId}`, {
+                    method: 'DELETE',
+                })
+            } catch (err) {
+                console.error('Failed to delete image from storage:', err)
+                // Image is already removed from UI, storage cleanup is best-effort
+            }
+        }
+    }, [recipe?.id])
 
     const handleSave = async () => {
         console.log('[RecipeEditorDialog] handleSave called', { name, categoryId, stageCount: stages.length })
