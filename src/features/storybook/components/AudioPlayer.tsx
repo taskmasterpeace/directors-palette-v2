@@ -62,14 +62,22 @@ export function AudioPlayer({
 
   // Reset audio when page changes
   useEffect(() => {
-    if (audioRef.current && currentPage?.audioUrl) {
-      audioRef.current.src = currentPage.audioUrl
-      audioRef.current.load()
-      if (isPlaying) {
-        audioRef.current.play()
+    const playAudio = async () => {
+      if (audioRef.current && currentPage?.audioUrl) {
+        audioRef.current.src = currentPage.audioUrl
+        audioRef.current.load()
+        if (isPlaying) {
+          try {
+            await audioRef.current.play()
+          } catch (error) {
+            console.error('Audio playback failed on page change:', error)
+            setIsPlaying(false)
+          }
+        }
       }
+      setCurrentTime(0)
     }
-    setCurrentTime(0)
+    playAudio()
   }, [currentPageIndex, currentPage?.audioUrl])
 
   // Handle audio time update
@@ -87,14 +95,22 @@ export function AudioPlayer({
       }
     }
 
+    const handleError = (e: Event) => {
+      const target = e.target as HTMLAudioElement
+      console.error('Audio error:', target.error?.message || 'Unknown audio error')
+      setIsPlaying(false)
+    }
+
     audio.addEventListener('timeupdate', handleTimeUpdate)
     audio.addEventListener('loadedmetadata', handleLoadedMetadata)
     audio.addEventListener('ended', handleEnded)
+    audio.addEventListener('error', handleError)
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate)
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
       audio.removeEventListener('ended', handleEnded)
+      audio.removeEventListener('error', handleError)
     }
   }, [autoAdvance, currentPageIndex, onPageChange, pages.length])
 
@@ -112,15 +128,21 @@ export function AudioPlayer({
     }
   }, [playbackSpeed])
 
-  const togglePlayback = () => {
+  const togglePlayback = async () => {
     if (!audioRef.current || !currentPage?.audioUrl) return
 
     if (isPlaying) {
       audioRef.current.pause()
+      setIsPlaying(false)
     } else {
-      audioRef.current.play()
+      try {
+        await audioRef.current.play()
+        setIsPlaying(true)
+      } catch (error) {
+        console.error('Audio playback failed:', error)
+        setIsPlaying(false)
+      }
     }
-    setIsPlaying(!isPlaying)
   }
 
   const handlePrevious = () => {
@@ -177,8 +199,14 @@ export function AudioPlayer({
       if (audioRef.current) {
         audioRef.current.src = data.audioUrl
         audioRef.current.load()
-        audioRef.current.play()
-        setIsPlaying(true)
+        try {
+          await audioRef.current.play()
+          setIsPlaying(true)
+        } catch (playError) {
+          console.error('Audio playback failed:', playError)
+          // Still mark as ready even if autoplay fails
+          setIsPlaying(false)
+        }
       }
     } catch (error) {
       console.error('Error generating narration:', error)
@@ -228,7 +256,7 @@ export function AudioPlayer({
   return (
     <div className="space-y-4">
       {/* Hidden audio element */}
-      <audio ref={audioRef} />
+      <audio ref={audioRef} crossOrigin="anonymous" preload="auto" />
 
       {/* Voice Selection and Generate Button */}
       <div className="flex items-center gap-4 flex-wrap">

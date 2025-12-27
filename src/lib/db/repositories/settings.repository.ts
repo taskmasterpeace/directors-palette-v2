@@ -109,7 +109,7 @@ export class SupabaseSettingsRepository implements ISettingsRepository {
       .from('settings')
       .select('*')
       .eq('user_id', userId)
-      .single()
+      .maybeSingle()
 
     if (error) {
       throw new DatabaseError(`Failed to find settings: ${error.message}`, error)

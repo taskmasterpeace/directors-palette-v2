@@ -1,36 +1,42 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   BookCheck,
+  Download,
   ChevronLeft,
   ChevronRight,
-  Download,
 } from "lucide-react"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
 import { AudioPlayer } from "../../AudioPlayer"
+import { BookViewer, BookViewerRef } from "../../BookViewer"
 
 export function PreviewStep() {
   const { project, updatePage } = useStorybookStore()
   const [currentPreviewPage, setCurrentPreviewPage] = useState(0)
+  const bookRef = useRef<BookViewerRef>(null)
 
   const pages = project?.pages || []
-  const currentPage = pages[currentPreviewPage]
 
-  const handlePrevious = () => {
-    if (currentPreviewPage > 0) {
-      setCurrentPreviewPage(currentPreviewPage - 1)
-    }
+  const handlePageChange = (pageIndex: number) => {
+    setCurrentPreviewPage(pageIndex)
   }
 
-  const handleNext = () => {
-    if (currentPreviewPage < pages.length - 1) {
-      setCurrentPreviewPage(currentPreviewPage + 1)
-    }
+  const handleThumbnailClick = (index: number) => {
+    setCurrentPreviewPage(index)
+    bookRef.current?.flipToPage(index)
+  }
+
+  const handlePrevPage = () => {
+    bookRef.current?.flipPrev()
+  }
+
+  const handleNextPage = () => {
+    bookRef.current?.flipNext()
   }
 
   const handleAudioGenerated = (pageId: string, audioUrl: string) => {
@@ -50,76 +56,87 @@ export function PreviewStep() {
         </p>
       </div>
 
-      {/* Main Preview Area */}
+      {/* Main Book Preview Area */}
       <Card className="bg-zinc-900/50 border-zinc-800 overflow-hidden">
-        <CardContent className="p-0">
-          {/* Book View */}
-          <div className="relative aspect-[16/9] bg-gradient-to-b from-zinc-800 to-zinc-900">
-            {currentPage?.imageUrl ? (
-              <Image
-                src={currentPage.imageUrl}
-                alt={`Page ${currentPreviewPage + 1}`}
-                fill
-                className="object-contain"
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Image
-                  src="/storybook/step-preview.webp"
-                  alt="Preview placeholder"
-                  fill
-                  className="object-cover opacity-50"
-                />
-              </div>
-            )}
-
-            {/* Text Overlay */}
-            {currentPage && currentPage.textPosition !== 'none' && (
-              <div
-                className={cn(
-                  "absolute bg-black/60 backdrop-blur-sm p-4 max-w-[80%]",
-                  currentPage.textPosition === 'top' && "top-4 left-1/2 -translate-x-1/2",
-                  currentPage.textPosition === 'bottom' && "bottom-4 left-1/2 -translate-x-1/2",
-                  currentPage.textPosition === 'left' && "left-4 top-1/2 -translate-y-1/2 max-w-[40%]",
-                  currentPage.textPosition === 'right' && "right-4 top-1/2 -translate-y-1/2 max-w-[40%]"
-                )}
-              >
-                <p className="text-white font-serif text-lg leading-relaxed">
-                  {currentPage.text}
-                </p>
-              </div>
-            )}
-
-            {/* Navigation Arrows */}
-            <button
-              onClick={handlePrevious}
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center gap-4">
+            {/* Previous Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handlePrevPage}
               disabled={currentPreviewPage === 0}
-              className={cn(
-                "absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full",
-                "bg-black/50 hover:bg-black/70 transition-colors",
-                "disabled:opacity-30 disabled:cursor-not-allowed"
-              )}
+              className="hidden md:flex"
             >
-              <ChevronLeft className="w-8 h-8 text-white" />
-            </button>
-            <button
-              onClick={handleNext}
-              disabled={currentPreviewPage === pages.length - 1}
-              className={cn(
-                "absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full",
-                "bg-black/50 hover:bg-black/70 transition-colors",
-                "disabled:opacity-30 disabled:cursor-not-allowed"
-              )}
-            >
-              <ChevronRight className="w-8 h-8 text-white" />
-            </button>
+              <ChevronLeft className="w-6 h-6" />
+            </Button>
 
-            {/* Page Counter */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 px-4 py-2 rounded-full">
-              <span className="text-white text-sm">
-                Page {currentPreviewPage + 1} of {pages.length || 1}
-              </span>
+            {/* Book Viewer */}
+            <div className="relative bg-gradient-to-b from-zinc-800 to-zinc-900 rounded-lg p-4 min-h-[500px] flex items-center justify-center">
+              {pages.length > 0 ? (
+                <BookViewer
+                  ref={bookRef}
+                  pages={pages}
+                  title={project?.title || "My Storybook"}
+                  author={project?.metadata?.authorName}
+                  coverUrl={project?.coverUrl}
+                  currentPage={currentPreviewPage}
+                  onPageChange={handlePageChange}
+                />
+              ) : (
+                <div className="text-center text-zinc-500">
+                  <Image
+                    src="/storybook/step-preview.webp"
+                    alt="Preview placeholder"
+                    width={400}
+                    height={533}
+                    className="opacity-50 rounded-lg"
+                  />
+                  <p className="mt-4">No pages to preview yet</p>
+                </div>
+              )}
             </div>
+
+            {/* Next Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleNextPage}
+              disabled={currentPreviewPage >= pages.length - 1}
+              className="hidden md:flex"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </Button>
+          </div>
+
+          {/* Mobile Navigation */}
+          <div className="flex justify-center gap-4 mt-4 md:hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrevPage}
+              disabled={currentPreviewPage === 0}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Prev
+            </Button>
+            <span className="flex items-center text-zinc-400 text-sm">
+              Page {currentPreviewPage + 1} of {pages.length || 1}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleNextPage}
+              disabled={currentPreviewPage >= pages.length - 1}
+            >
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+
+          {/* Page Counter */}
+          <div className="text-center mt-4 text-zinc-500 text-sm hidden md:block">
+            Page {currentPreviewPage + 1} of {pages.length || 1} • Click pages or use arrows to navigate
           </div>
         </CardContent>
       </Card>
@@ -129,7 +146,7 @@ export function PreviewStep() {
         {pages.map((page, index) => (
           <button
             key={page.id}
-            onClick={() => setCurrentPreviewPage(index)}
+            onClick={() => handleThumbnailClick(index)}
             className={cn(
               "relative w-20 h-12 rounded overflow-hidden border-2 transition-all flex-shrink-0",
               index === currentPreviewPage
@@ -164,7 +181,10 @@ export function PreviewStep() {
               audioUrl: p.audioUrl,
             }))}
             currentPageIndex={currentPreviewPage}
-            onPageChange={setCurrentPreviewPage}
+            onPageChange={(index) => {
+              setCurrentPreviewPage(index)
+              bookRef.current?.flipToPage(index)
+            }}
             projectId={project?.id}
             autoAdvance={true}
             onAudioGenerated={handleAudioGenerated}
