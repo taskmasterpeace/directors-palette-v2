@@ -578,50 +578,6 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                     </div>
                 </div>
 
-                {/* Reference images section */}
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Reference Images ({shotCreatorReferenceImages.length})
-                        </label>
-                        <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setShotCreatorReferenceImages([])}
-                            disabled={shotCreatorReferenceImages.length === 0}
-                        >
-                            <X className="w-4 h-4" />
-                        </Button>
-                    </div>
-
-                    {/* Reference image grid */}
-                    {shotCreatorReferenceImages.length > 0 && (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                            {shotCreatorReferenceImages.map(ref => (
-                                <div key={ref.id} className="relative group">
-                                    <img
-                                        src={ref.preview}
-                                        alt={ref.tags?.[0] || 'Reference'}
-                                        className="w-full aspect-square object-cover rounded border border-slate-200 dark:border-slate-700"
-                                    />
-                                    <Button
-                                        size="sm"
-                                        variant="destructive"
-                                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        onClick={() => {
-                                            setShotCreatorReferenceImages(prev =>
-                                                prev.filter(r => r.id !== ref.id)
-                                            )
-                                        }}
-                                    >
-                                        <X className="w-3 h-3" />
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
                 {/* Organize and QuickAccessBar */}
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
