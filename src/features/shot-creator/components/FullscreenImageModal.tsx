@@ -1,25 +1,39 @@
 'use client'
 
-import { X, Tag, Download, Copy } from 'lucide-react'
+import { X, Tag, Download, Copy, Film, Layout, Eraser, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useShotCreatorStore } from "../store"
 import Image from "next/image"
 import { clipboardManager } from '@/utils/clipboard-manager'
 import { useToast } from '@/hooks/use-toast'
+import { useState } from 'react'
 
 interface FullscreenImageModalProps {
     open: boolean
     onOpenChange: (open: boolean) => void
+    onSendToAnimator?: (imageUrl: string) => void
+    onSendToLayout?: (imageUrl: string) => void
+    onRemoveBackground?: (imageUrl: string) => Promise<void>
+    onSaveToGallery?: (imageUrl: string) => Promise<void>
+    onDelete?: (imageId: string) => void
 }
 
 export default function FullscreenImageModal({
     open,
     onOpenChange,
+    onSendToAnimator,
+    onSendToLayout,
+    onRemoveBackground,
+    onSaveToGallery,
+    onDelete,
 }: FullscreenImageModalProps) {
     const { fullscreenImage } = useShotCreatorStore()
     const { toast } = useToast()
+    const [removingBackground, setRemovingBackground] = useState(false)
+    const [savingToGallery, setSavingToGallery] = useState(false)
 
     if (!fullscreenImage) return null
 
@@ -106,23 +120,124 @@ export default function FullscreenImageModal({
                             />
 
                             {/* --- Action buttons overlay --- */}
-                            <div className="absolute bottom-4 right-4 flex gap-2 z-20">
-                                <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    onClick={handleCopyUrl}
-                                    className="bg-card/70 hover:bg-secondary text-white border-border backdrop-blur-sm"
-                                >
-                                    <Copy className="w-4 h-4 mr-1" />
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    onClick={handleDownload}
-                                    className="bg-card/70 hover:bg-secondary text-white border-border backdrop-blur-sm"
-                                >
-                                    <Download className="w-4 h-4 mr-1" />
-                                </Button>
+                            <div className="absolute bottom-4 left-4 right-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 z-20">
+                                {/* Action buttons grid */}
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-white border-zinc-600 hover:bg-zinc-700"
+                                        onClick={handleCopyUrl}
+                                    >
+                                        <Copy className="h-4 w-4 mr-1" />
+                                        Copy
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-white border-zinc-600 hover:bg-zinc-700"
+                                        onClick={handleDownload}
+                                    >
+                                        <Download className="h-4 w-4 mr-1" />
+                                        Download
+                                    </Button>
+                                    {onRemoveBackground && (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="text-white border-zinc-600 hover:bg-zinc-700"
+                                            onClick={async () => {
+                                                setRemovingBackground(true)
+                                                try {
+                                                    const imageUrl = fullscreenImage.preview || fullscreenImage.imageData
+                                                    await onRemoveBackground(imageUrl)
+                                                } finally {
+                                                    setRemovingBackground(false)
+                                                }
+                                            }}
+                                            disabled={removingBackground}
+                                        >
+                                            {removingBackground ? (
+                                                <LoadingSpinner size="sm" color="current" className="mr-1" />
+                                            ) : (
+                                                <Eraser className="h-4 w-4 mr-1" />
+                                            )}
+                                            {removingBackground ? 'Removing...' : 'Remove BG'}
+                                        </Button>
+                                    )}
+                                    {onSaveToGallery && (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="text-white border-zinc-600 hover:bg-zinc-700"
+                                            onClick={async () => {
+                                                setSavingToGallery(true)
+                                                try {
+                                                    const imageUrl = fullscreenImage.preview || fullscreenImage.imageData
+                                                    await onSaveToGallery(imageUrl)
+                                                } finally {
+                                                    setSavingToGallery(false)
+                                                }
+                                            }}
+                                            disabled={savingToGallery}
+                                        >
+                                            {savingToGallery ? (
+                                                <LoadingSpinner size="sm" color="current" className="mr-1" />
+                                            ) : (
+                                                <Download className="h-4 w-4 mr-1" />
+                                            )}
+                                            {savingToGallery ? 'Saving...' : 'Save to Gallery'}
+                                        </Button>
+                                    )}
+                                    {onSendToAnimator && (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="text-white border-zinc-600 hover:bg-zinc-700"
+                                            onClick={() => {
+                                                const imageUrl = fullscreenImage.preview || fullscreenImage.imageData
+                                                onSendToAnimator(imageUrl)
+                                                onOpenChange(false)
+                                            }}
+                                        >
+                                            <Film className="h-4 w-4 mr-1" />
+                                            Animator
+                                        </Button>
+                                    )}
+                                    {onSendToLayout && (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="text-white border-zinc-600 hover:bg-zinc-700"
+                                            onClick={() => {
+                                                const imageUrl = fullscreenImage.preview || fullscreenImage.imageData
+                                                onSendToLayout(imageUrl)
+                                                onOpenChange(false)
+                                            }}
+                                        >
+                                            <Layout className="h-4 w-4 mr-1" />
+                                            Layout
+                                        </Button>
+                                    )}
+                                </div>
+
+                                {/* Delete button - separate row */}
+                                {onDelete && (
+                                    <div className="mt-3 pt-3 border-t border-zinc-700">
+                                        <Button
+                                            size="sm"
+                                            variant="destructive"
+                                            className="w-full"
+                                            onClick={() => {
+                                                onDelete(fullscreenImage.id)
+                                                onOpenChange(false)
+                                            }}
+                                        >
+                                            <Trash2 className="h-4 w-4 mr-1" />
+                                            Remove Reference
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

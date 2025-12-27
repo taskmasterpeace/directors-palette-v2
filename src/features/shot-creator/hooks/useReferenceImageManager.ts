@@ -13,7 +13,6 @@ import { Capacitor } from '@capacitor/core'
 export function useReferenceImageManager(maxImages: number = 3) {
     const { toast } = useToast()
     const { shotCreatorReferenceImages, setShotCreatorReferenceImages } = useShotCreatorStore()
-    const [fullscreenImage, setFullscreenImage] = useState<ShotCreatorReferenceImage | null>(null)
 
     // Progressive disclosure logic
     const getVisibleSlots = () => {
@@ -250,8 +249,6 @@ export function useReferenceImageManager(maxImages: number = 3) {
 
     return {
         visibleSlots,
-        fullscreenImage,
-        setFullscreenImage,
         handleShotCreatorImageUpload,
         handleMultipleImageUpload,
         handlePasteImage,

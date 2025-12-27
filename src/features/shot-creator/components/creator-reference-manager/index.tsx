@@ -22,6 +22,7 @@ import { ReferenceImageCard, type ShotImage } from "./ReferenceImageCard"
 import { useToast } from "@/hooks/use-toast"
 import { clipboardManager } from '@/utils/clipboard-manager'
 import { useUnifiedGalleryStore } from "../../store/unified-gallery-store"
+import { shotImageToLibraryReference } from "../../helpers/type-adapters"
 
 interface CreatorReferenceManagerProps {
   compact?: boolean
@@ -34,7 +35,7 @@ export function CreatorReferenceManager({
   maxImages = 3,
   modelSelector
 }: CreatorReferenceManagerProps) {
-  const { shotCreatorReferenceImages, setShotCreatorReferenceImages, useNativeAspectRatio, setUseNativeAspectRatio, onSendToShotAnimator } = useShotCreatorStore()
+  const { shotCreatorReferenceImages, setShotCreatorReferenceImages, useNativeAspectRatio, setUseNativeAspectRatio, onSendToShotAnimator, setFullscreenImage } = useShotCreatorStore()
   const [editingTagsId, setEditingTagsId] = useState<string | null>(null)
   const [removingBackgroundId, setRemovingBackgroundId] = useState<string | null>(null)
   const [savingToGalleryId, setSavingToGalleryId] = useState<string | null>(null)
@@ -42,71 +43,12 @@ export function CreatorReferenceManager({
 
   const {
     visibleSlots,
-    fullscreenImage,
-    setFullscreenImage,
     handleShotCreatorImageUpload,
     handleMultipleImageUpload,
     handlePasteImage,
     handleCameraCapture,
     removeShotCreatorImage
   } = useReferenceImageManager(maxImages)
-
-  // Action handlers for fullscreen modal
-  const handleDownload = async (imageUrl: string) => {
-    try {
-      const response = await fetch(imageUrl)
-      const blob = await response.blob()
-      const blobUrl = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = blobUrl
-      link.download = `reference_${Date.now()}.png`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(blobUrl)
-      toast({ title: "Downloaded", description: "Image saved to downloads" })
-    } catch (error) {
-      console.error('Download failed:', error)
-      toast({ title: "Download Failed", variant: "destructive" })
-    }
-  }
-
-  const handleCopyImage = async (imageUrl: string) => {
-    try {
-      const response = await fetch(imageUrl)
-      const blob = await response.blob()
-      // Convert blob to data URL for clipboard manager
-      const reader = new FileReader()
-      reader.onloadend = async () => {
-        try {
-          await clipboardManager.writeImage(reader.result as string)
-          toast({ title: "Copied", description: "Image copied to clipboard" })
-        } catch {
-          // Fallback: copy URL
-          await clipboardManager.writeText(imageUrl)
-          toast({ title: "URL Copied", description: "Image URL copied to clipboard" })
-        }
-      }
-      reader.readAsDataURL(blob)
-    } catch (error) {
-      console.error('Copy failed:', error)
-      // Fallback: copy URL
-      await clipboardManager.writeText(imageUrl)
-      toast({ title: "URL Copied", description: "Image URL copied to clipboard" })
-    }
-  }
-
-  const handleSendToAnimator = async (imageUrl: string) => {
-    await onSendToShotAnimator(imageUrl)
-    setFullscreenImage(null)
-  }
-
-  const handleSendToLayout = (imageUrl: string) => {
-    // Dispatch event to layout annotation
-    window.dispatchEvent(new CustomEvent('send-to-layout', { detail: { imageUrl } }))
-    toast({ title: "Sent to Layout", description: "Image added to Layout & Annotation" })
-    setFullscreenImage(null)
-  }
 
   // Handle removing background from reference image
   const handleRemoveBackground = useCallback(async (image: ShotImage) => {
@@ -277,7 +219,6 @@ export function CreatorReferenceManager({
               handlePasteImage={handlePasteImage}
               handleCameraCapture={handleCameraCapture}
               removeShotCreatorImage={removeShotCreatorImage}
-              setFullscreenImage={setFullscreenImage}
               useNativeAspectRatio={useNativeAspectRatio}
               onRemoveBackground={handleRemoveBackground}
               onSaveToGallery={handleSaveToGallery}
@@ -287,142 +228,6 @@ export function CreatorReferenceManager({
           )
         })}
       </div>
-
-      {/* Fullscreen Modal */}
-      {fullscreenImage && (
-        <div
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
-          onClick={() => setFullscreenImage(null)}
-        >
-          <div className="relative max-w-7xl max-h-screen w-full h-full flex items-center justify-center p-4">
-            {/* Close button */}
-            <Button
-              size="sm"
-              variant="ghost"
-              className="absolute top-4 right-4 h-10 w-10 p-0 bg-black/50 hover:bg-black/70 z-10"
-              onClick={() => setFullscreenImage(null)}
-            >
-              <X className="h-6 w-6 text-white" />
-            </Button>
-
-            {/* Image */}
-            <Image
-              src={fullscreenImage.preview}
-              alt="Reference image fullscreen"
-              width={1000}
-              height={1000}
-              className="max-w-full max-h-full object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
-
-            {/* Image info and actions overlay */}
-            <div className="absolute bottom-4 left-4 right-4 bg-black/80 backdrop-blur-sm rounded-lg p-4" onClick={(e) => e.stopPropagation()}>
-              {/* Info row */}
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="text-white text-sm font-medium">
-                    Reference Image
-                  </p>
-                  {fullscreenImage.detectedAspectRatio && (
-                    <p className="text-zinc-400 text-xs mt-1">
-                      Aspect Ratio: {fullscreenImage.detectedAspectRatio}
-                    </p>
-                  )}
-                  {fullscreenImage.tags && fullscreenImage.tags.length > 0 && (
-                    <p className="text-zinc-400 text-xs mt-1">
-                      Tags: {fullscreenImage.tags.join(', ')}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Action buttons grid */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-white border-zinc-600 hover:bg-zinc-700"
-                  onClick={() => handleCopyImage(fullscreenImage.preview)}
-                >
-                  <Copy className="h-4 w-4 mr-1" />
-                  Copy
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-white border-zinc-600 hover:bg-zinc-700"
-                  onClick={() => handleDownload(fullscreenImage.preview)}
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  Download
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-white border-zinc-600 hover:bg-zinc-700"
-                  onClick={() => handleRemoveBackground(fullscreenImage)}
-                  disabled={removingBackgroundId === fullscreenImage.id}
-                >
-                  {removingBackgroundId === fullscreenImage.id ? (
-                    <LoadingSpinner size="sm" color="current" className="mr-1" />
-                  ) : (
-                    <Eraser className="h-4 w-4 mr-1" />
-                  )}
-                  {removingBackgroundId === fullscreenImage.id ? 'Removing...' : 'Remove BG'}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-white border-zinc-600 hover:bg-zinc-700"
-                  onClick={() => handleSaveToGallery(fullscreenImage)}
-                  disabled={savingToGalleryId === fullscreenImage.id}
-                >
-                  {savingToGalleryId === fullscreenImage.id ? (
-                    <LoadingSpinner size="sm" color="current" className="mr-1" />
-                  ) : (
-                    <Download className="h-4 w-4 mr-1" />
-                  )}
-                  {savingToGalleryId === fullscreenImage.id ? 'Saving...' : 'Save to Gallery'}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-white border-zinc-600 hover:bg-zinc-700"
-                  onClick={() => handleSendToAnimator(fullscreenImage.preview)}
-                >
-                  <Film className="h-4 w-4 mr-1" />
-                  Animator
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-white border-zinc-600 hover:bg-zinc-700"
-                  onClick={() => handleSendToLayout(fullscreenImage.preview)}
-                >
-                  <Layout className="h-4 w-4 mr-1" />
-                  Layout
-                </Button>
-              </div>
-
-              {/* Delete button - separate row */}
-              <div className="mt-3 pt-3 border-t border-zinc-700">
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  className="w-full"
-                  onClick={() => {
-                    removeShotCreatorImage(fullscreenImage.id)
-                    setFullscreenImage(null)
-                  }}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Remove Reference
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

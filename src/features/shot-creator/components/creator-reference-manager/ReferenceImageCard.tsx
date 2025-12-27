@@ -17,6 +17,8 @@ import { DropZone, type DropZoneRef } from "@/components/ui/drop-zone"
 import InlineTagEditor from "./InlineTagEditor"
 import { Capacitor } from '@capacitor/core'
 import { cn } from "@/utils/utils"
+import { useShotCreatorStore } from "../../store/shot-creator.store"
+import { shotImageToLibraryReference } from "../../helpers/type-adapters"
 
 // Accepted image file types for reference images
 const IMAGE_ACCEPT = {
@@ -54,7 +56,6 @@ interface ReferenceImageCardProps {
     handlePasteImage: (e: React.MouseEvent<HTMLButtonElement>) => void
     handleCameraCapture?: () => void
     removeShotCreatorImage: (id: string) => void
-    setFullscreenImage: (img: ShotImage) => void
     useNativeAspectRatio?: boolean
     // Action callbacks
     onRemoveBackground?: (image: ShotImage) => Promise<void>
@@ -76,13 +77,13 @@ export function ReferenceImageCard({
     handlePasteImage,
     handleCameraCapture,
     removeShotCreatorImage,
-    setFullscreenImage,
     useNativeAspectRatio = false,
     onRemoveBackground,
     onSaveToGallery,
     isRemovingBackground = false,
     isSavingToGallery = false
 }: ReferenceImageCardProps) {
+    const { setFullscreenImage } = useShotCreatorStore()
     const isNative = Capacitor.isNativePlatform()
     const dropZoneRef = React.useRef<DropZoneRef>(null)
 
@@ -138,7 +139,7 @@ export function ReferenceImageCard({
                                     "w-full h-full cursor-pointer",
                                     useNativeAspectRatio ? "object-contain bg-black/20" : "object-cover"
                                 )}
-                                onClick={() => setFullscreenImage(image)}
+                                onClick={() => setFullscreenImage(shotImageToLibraryReference(image))}
                             />
                         </div>
                         {/* Action buttons row at bottom */}
@@ -152,7 +153,7 @@ export function ReferenceImageCard({
                                                 size="sm"
                                                 variant="ghost"
                                                 className="h-8 w-8 p-0 md:h-6 md:w-6 bg-black/50 hover:bg-black/70"
-                                                onClick={() => setFullscreenImage(image)}
+                                                onClick={() => setFullscreenImage(shotImageToLibraryReference(image))}
                                             >
                                                 <Expand className="h-4 w-4 md:h-3 md:w-3 text-white" />
                                             </Button>

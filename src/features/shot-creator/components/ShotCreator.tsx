@@ -11,6 +11,7 @@ import { UnifiedImageGallery } from "./unified-gallery/UnifiedImageGallery"
 import { toast } from "@/hooks/use-toast"
 import { useLayoutStore } from "@/store/layout.store"
 import ShotReferenceLibrary from "./reference-library/ShotReferenceLibrary"
+import { useUnifiedGalleryStore } from "../store/unified-gallery-store"
 import CreatorPromptSettings from "./creator-prompt-settings"
 import CategorySelectionDialog from "./CategorySelectDialog"
 import FullscreenImageModal from "./FullscreenImageModal"
@@ -39,6 +40,8 @@ const ShotCreator = () => {
         setCategoryDialogOpen,
         setPendingGeneration,
         pendingGeneration,
+        shotCreatorReferenceImages,
+        setShotCreatorReferenceImages,
     } = useShotCreatorStore()
 
     // Load gallery from Supabase on mount
@@ -118,6 +121,109 @@ const ShotCreator = () => {
                 variant: "destructive"
             })
         }
+    }
+
+    const handleRemoveBackgroundFromFullscreen = async (imageUrl: string) => {
+        toast({
+            title: "Removing Background",
+            description: "Processing image... (3 pts)"
+        })
+
+        try {
+            const response = await fetch('/api/tools/remove-background', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    imageUrl,
+                    saveToGallery: true
+                })
+            })
+
+            const result = await response.json()
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to remove background')
+            }
+
+            toast({
+                title: "Background Removed!",
+                description: "New image saved to gallery."
+            })
+
+            // Refresh gallery
+            setTimeout(async () => {
+                await useUnifiedGalleryStore.getState().refreshGallery()
+            }, 500)
+        } catch (error) {
+            console.error('Background removal error:', error)
+            toast({
+                title: "Remove Background Failed",
+                description: error instanceof Error ? error.message : "An error occurred",
+                variant: "destructive"
+            })
+        }
+    }
+
+    const handleSaveToGalleryFromFullscreen = async (imageUrl: string) => {
+        toast({
+            title: "Saving to Gallery",
+            description: "Uploading image..."
+        })
+
+        try {
+            const response = await fetch(imageUrl)
+            const blob = await response.blob()
+            const reader = new FileReader()
+
+            const base64Data = await new Promise<string>((resolve, reject) => {
+                reader.onloadend = () => resolve(reader.result as string)
+                reader.onerror = reject
+                reader.readAsDataURL(blob)
+            })
+
+            const saveResponse = await fetch('/api/gallery/save-frame', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    imageData: base64Data,
+                    metadata: {
+                        aspectRatio: '16:9',
+                        width: 1024,
+                        height: 576,
+                        row: 0,
+                        col: 0
+                    }
+                })
+            })
+
+            const result = await saveResponse.json()
+
+            if (!saveResponse.ok) {
+                throw new Error(result.error || 'Failed to save to gallery')
+            }
+
+            toast({
+                title: "Saved to Gallery!",
+                description: "Reference image added to your gallery."
+            })
+
+            setTimeout(async () => {
+                await useUnifiedGalleryStore.getState().refreshGallery()
+            }, 500)
+        } catch (error) {
+            console.error('Save to gallery error:', error)
+            toast({
+                title: "Save Failed",
+                description: error instanceof Error ? error.message : "An error occurred",
+                variant: "destructive"
+            })
+        }
+    }
+
+    const handleDeleteFromFullscreen = (imageId: string) => {
+        const currentImages = shotCreatorReferenceImages.filter(img => img.id !== imageId)
+        setShotCreatorReferenceImages(currentImages)
+        toast({ title: "Reference Removed", description: "Reference image removed" })
     }
 
     return (
@@ -312,6 +418,11 @@ const ShotCreator = () => {
                     onOpenChange={(open) => {
                         if (!open) setFullscreenImage(null)
                     }}
+                    onSendToAnimator={onSendToShotAnimator}
+                    onSendToLayout={onSendToLayoutAnnotation}
+                    onRemoveBackground={handleRemoveBackgroundFromFullscreen}
+                    onSaveToGallery={handleSaveToGalleryFromFullscreen}
+                    onDelete={handleDeleteFromFullscreen}
                 />
             </div>
         </div>
