@@ -9,17 +9,20 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { Users, ImagePlus, Upload, Link, X, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react'
+import { Users, ImagePlus, Upload, Link, X, ChevronDown, ChevronUp, CheckCircle, Sparkles } from 'lucide-react'
 import { useStoryboardStore } from '../../store'
+import { useLayoutStore } from '@/store/layout.store'
+import { useRecipeStore } from '@/features/shot-creator/store/recipe.store'
 import type { StoryboardCharacter } from '../../types/storyboard.types'
 
 interface CharacterCardProps {
     character: StoryboardCharacter
     index: number
     onUpdate: (index: number, updates: Partial<StoryboardCharacter>) => void
+    onOpenCharacterSheetRecipe: (characterName: string, referenceImageUrl?: string) => void
 }
 
-function CharacterCard({ character, index, onUpdate }: CharacterCardProps) {
+function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe }: CharacterCardProps) {
     const [isExpanded, setIsExpanded] = useState(false)
     const [imageInputMode, setImageInputMode] = useState<'upload' | 'url'>('upload')
     const [imageUrl, setImageUrl] = useState(character.reference_image_url || '')
@@ -222,6 +225,27 @@ function CharacterCard({ character, index, onUpdate }: CharacterCardProps) {
                                     This description will be included in prompts when this character appears.
                                 </p>
                             </div>
+
+                            {/* Character Sheet Recipe Button */}
+                            {character.reference_image_url && (
+                                <div className="pt-2 border-t">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full gap-2"
+                                        onClick={() => onOpenCharacterSheetRecipe(
+                                            character.name,
+                                            character.reference_image_url
+                                        )}
+                                    >
+                                        <Sparkles className="w-4 h-4" />
+                                        Create Character Sheet in Shot Creator
+                                    </Button>
+                                    <p className="text-xs text-muted-foreground mt-1 text-center">
+                                        Opens Shot Creator with the Character Sheet recipe
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </CollapsibleContent>
@@ -232,6 +256,26 @@ function CharacterCard({ character, index, onUpdate }: CharacterCardProps) {
 
 export function CharacterList() {
     const { extractionResult, characters, setCharacters } = useStoryboardStore()
+    const { setActiveTab } = useLayoutStore()
+    const { recipes, setActiveRecipe, setFieldValue } = useRecipeStore()
+
+    // Handler to open Shot Creator with Character Sheet recipe
+    const handleOpenCharacterSheetRecipe = (characterName: string, referenceImageUrl?: string) => {
+        // Find the Character Sheet recipe
+        const characterSheetRecipe = recipes.find(r => r.name === 'Character Sheet')
+
+        if (characterSheetRecipe) {
+            // Set the active recipe
+            setActiveRecipe(characterSheetRecipe.id)
+
+            // Pre-fill the character name field
+            // The field ID format is: stage{stageIndex}_field{fieldIndex}_{fieldName}
+            setFieldValue('stage0_field0_character_name', characterName)
+        }
+
+        // Switch to Shot Creator tab
+        setActiveTab('shot-creator')
+    }
 
     // Initialize characters from extraction result if not already set
     const displayCharacters = characters.length > 0
@@ -299,6 +343,7 @@ export function CharacterList() {
                             character={character}
                             index={index}
                             onUpdate={handleUpdateCharacter}
+                            onOpenCharacterSheetRecipe={handleOpenCharacterSheetRecipe}
                         />
                     ))}
                 </div>
