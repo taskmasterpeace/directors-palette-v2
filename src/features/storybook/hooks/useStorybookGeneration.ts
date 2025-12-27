@@ -302,8 +302,11 @@ export function useStorybookGeneration() {
       const pageIndex = project?.pages.findIndex(p => p.id === pageId) ?? -1
       const isFirstPage = pageIndex === 0
 
-      // Build field values from page data
-      const characterTags = project?.characters.map(c => `@${c.tag || c.name.replace(/\s+/g, '')}`).join(', ') || 'No named characters'
+      // Build field values from page data - include both main and supporting characters
+      const mainCharacterTags = project?.characters.map(c => `@${c.tag || c.name.replace(/\s+/g, '')}`) || []
+      const supportingCharacterTags = project?.storyCharacters?.map(c => `@${c.name.replace(/\s+/g, '')}`) || []
+      const allCharacterTags = [...mainCharacterTags, ...supportingCharacterTags]
+      const characterTags = allCharacterTags.length > 0 ? allCharacterTags.join(', ') : 'No named characters'
 
       // Build field values and select recipe based on page type
       let fieldValues: Record<string, string>
@@ -339,15 +342,21 @@ export function useStorybookGeneration() {
         }
       }
 
-      // Auto-attach reference images: style guide + all character sheets
+      // Auto-attach reference images: style guide + all character sheets (main + supporting)
       const referenceImages: string[] = []
       if (project?.style?.styleGuideUrl) {
         referenceImages.push(project.style.styleGuideUrl)
       }
-      const characterSheetUrls = project?.characters
+      // Include main character sheets
+      const mainCharacterSheetUrls = project?.characters
         .filter(c => c.characterSheetUrl)
         .map(c => c.characterSheetUrl!) || []
-      referenceImages.push(...characterSheetUrls)
+      referenceImages.push(...mainCharacterSheetUrls)
+      // Include supporting character sheets
+      const supportingCharacterSheetUrls = project?.storyCharacters
+        ?.filter(c => c.characterSheetUrl)
+        .map(c => c.characterSheetUrl!) || []
+      referenceImages.push(...supportingCharacterSheetUrls)
 
       // Call recipe execution API with selected recipe
       const response = await fetch(`/api/recipes/${recipeName}/execute`, {

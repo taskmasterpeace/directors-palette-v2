@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, useCallback } from "react"
+import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
 import { useStorybookGeneration } from "../../../hooks/useStorybookGeneration"
 import { useRecipeExecution } from "@/features/shared/hooks/useRecipeExecution"
@@ -10,11 +10,25 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Users, Plus, Upload, Sparkles, Trash2, User, ImageIcon } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Users, Plus, Upload, Sparkles, Trash2, User, ImageIcon, UserCircle } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
 import { compressImage } from "@/utils/image-compression"
+import { StoryCharacter } from "../../../types/storybook.types"
+
+// Unified character type for display (combines main and supporting characters)
+interface UnifiedCharacter {
+  id: string
+  name: string
+  tag: string
+  sourcePhotoUrl?: string
+  characterSheetUrl?: string
+  isSupporting: boolean
+  role?: string
+  description?: string
+}
 
 export function CharacterStep() {
   const {
@@ -23,7 +37,42 @@ export function CharacterStep() {
     removeCharacter,
     updateCharacter,
     detectCharacters,
+    updateProject,
   } = useStorybookStore()
+
+  // Create unified list of all characters (main + supporting)
+  const allCharacters = useMemo((): UnifiedCharacter[] => {
+    const mainChars: UnifiedCharacter[] = (project?.characters || []).map(c => ({
+      id: c.id,
+      name: c.name,
+      tag: c.tag,
+      sourcePhotoUrl: c.sourcePhotoUrl,
+      characterSheetUrl: c.characterSheetUrl,
+      isSupporting: false,
+    }))
+
+    const supportChars: UnifiedCharacter[] = (project?.storyCharacters || []).map(sc => ({
+      id: sc.id,
+      name: sc.name,
+      tag: `@${sc.name.replace(/\s+/g, '')}`,
+      sourcePhotoUrl: sc.photoUrl,
+      characterSheetUrl: sc.characterSheetUrl,
+      isSupporting: true,
+      role: sc.role,
+      description: sc.description,
+    }))
+
+    return [...mainChars, ...supportChars]
+  }, [project?.characters, project?.storyCharacters])
+
+  // Helper to update supporting character
+  const updateSupportingCharacter = useCallback((charId: string, updates: Partial<StoryCharacter>) => {
+    if (!project?.storyCharacters) return
+    const updatedChars = project.storyCharacters.map(sc =>
+      sc.id === charId ? { ...sc, ...updates } : sc
+    )
+    updateProject({ storyCharacters: updatedChars })
+  }, [project?.storyCharacters, updateProject])
 
   // Legacy generation (fallback)
   const { generateCharacterSheet: legacyGenerateCharacterSheet, isGenerating: legacyIsGenerating, progress: legacyProgress, error: legacyError } = useStorybookGeneration()
@@ -88,10 +137,9 @@ export function CharacterStep() {
     detectWithLLM()
   }, [project?.storyText, project?.generatedStory, project?.characters.length, addCharacter, detectCharacters, isDetecting])
 
-  const characters = project?.characters || []
-
   const handleAddCharacter = () => {
-    const name = `Character ${characters.length + 1}`
+    const mainCharCount = project?.characters?.length || 0
+    const name = `Character ${mainCharCount + 1}`
     addCharacter(name, `@${name.replace(/\s+/g, '')}`)
   }
 
@@ -147,9 +195,11 @@ export function CharacterStep() {
   }, [])
 
   // Handle character sheet generation using recipe-based pipeline
+  // Now supports both main characters (with photos) and supporting characters (with or without photos)
   const handleGenerateCharacterSheet = useCallback(async (characterId: string) => {
-    const character = project?.characters.find(c => c.id === characterId)
-    if (!character) {
+    // Find character in unified list
+    const unifiedChar = allCharacters.find(c => c.id === characterId)
+    if (!unifiedChar) {
       console.error('Character not found:', characterId)
       return
     }
@@ -157,80 +207,130 @@ export function CharacterStep() {
     setGeneratingCharacterId(characterId)
 
     try {
-      // Get configured recipe or default to "Photo to Character Sheet (Isolation)"
       const systemRecipes = getSystemOnlyRecipes()
-      const configuredRecipeId = project?.recipeConfig?.characterSheetRecipeId
+      const styleGuideUrl = project?.style?.styleGuideUrl
 
-      let storybookRecipe
-      if (configuredRecipeId) {
-        storybookRecipe = systemRecipes.find(r => r.id === configuredRecipeId)
-      }
-      if (!storybookRecipe) {
-        // Fall back to default recipe name
-        storybookRecipe = systemRecipes.find(r => r.name === 'Photo to Character Sheet (Isolation)')
+      if (!styleGuideUrl) {
+        console.error('[CharacterStep] Style guide is required for character sheet generation')
+        return
       }
 
-      if (storybookRecipe && project?.style?.styleGuideUrl) {
-        // Use recipe-based generation (new 3-stage pipeline)
-        console.log('[CharacterStep] Using recipe-based generation')
+      const hasPhoto = !!unifiedChar.sourcePhotoUrl
 
-        // Auto-populate field values from storybook data
-        const fieldValues = {
-          CHARACTER_NAME: character.tag || character.name.replace(/\s+/g, ''),
-          STYLE_NAME: project.style.name || 'illustrated',
+      // Choose recipe based on whether we have a photo
+      const recipeName = hasPhoto
+        ? 'Storybook Character Sheet'  // 3-stage: isolate → stylize → sheet
+        : 'Storybook Character Sheet (From Description)'  // 2-stage: generate from description → sheet
+
+      const recipe = systemRecipes.find(r => r.name === recipeName)
+      if (!recipe) {
+        console.error(`[CharacterStep] Recipe not found: ${recipeName}`)
+        // Fall back to legacy for main characters only
+        if (!unifiedChar.isSupporting) {
+          const legacyResult = await legacyGenerateCharacterSheet(characterId)
+          if (!legacyResult.success) {
+            console.error('Legacy generation failed:', legacyResult.error)
+          }
         }
+        return
+      }
 
-        // Build stage reference images
-        // Stage 0: User's uploaded photo (isolate character)
-        // Stage 1: User's custom style guide (transform to style)
-        // Stage 2: Character sheet template (generate sheet)
-        const stageReferenceImages: string[][] = [
-          character.sourcePhotoUrl ? [character.sourcePhotoUrl] : [],
-          project.style.styleGuideUrl ? [project.style.styleGuideUrl] : [],
+      // Get or extract character description for description-based generation
+      let characterDescription = unifiedChar.description || ''
+      if (!hasPhoto && !characterDescription) {
+        // Extract description from story text
+        console.log('[CharacterStep] Extracting character description from story...')
+        try {
+          const storyText = project?.storyText || project?.generatedStory?.pages.map(p => p.text).join('\n\n') || ''
+          const response = await fetch('/api/storybook/extract-character-description', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              characterName: unifiedChar.name,
+              storyText,
+              role: unifiedChar.role,
+            })
+          })
+          if (response.ok) {
+            const data = await response.json()
+            characterDescription = data.description || `A ${unifiedChar.role || 'character'} named ${unifiedChar.name}`
+            console.log('[CharacterStep] Extracted description:', characterDescription)
+          }
+        } catch (err) {
+          console.error('Error extracting character description:', err)
+          characterDescription = `A ${unifiedChar.role || 'character'} named ${unifiedChar.name}`
+        }
+      }
+
+      // Build field values
+      const fieldValues: Record<string, string> = {
+        CHARACTER_NAME: unifiedChar.tag.replace('@', '') || unifiedChar.name.replace(/\s+/g, ''),
+        STYLE_NAME: project?.style?.name || 'illustrated',
+      }
+
+      // Add description fields for description-based recipe
+      if (!hasPhoto) {
+        fieldValues.CHARACTER_ROLE = unifiedChar.role || 'character'
+        fieldValues.CHARACTER_DESCRIPTION = characterDescription
+      }
+
+      // Build stage reference images
+      let stageReferenceImages: string[][]
+      if (hasPhoto) {
+        // Photo-based: Stage 0 = photo, Stage 1 = style guide, Stage 2 = template
+        stageReferenceImages = [
+          [unifiedChar.sourcePhotoUrl!],
+          [styleGuideUrl],
           [SYSTEM_TEMPLATES.characterSheet.advanced],
         ]
+      } else {
+        // Description-based: Stage 0 = style guide, Stage 1 = template
+        stageReferenceImages = [
+          [styleGuideUrl],
+          [SYSTEM_TEMPLATES.characterSheet.advanced],
+        ]
+      }
 
-        console.log('[CharacterStep] Recipe execution:', {
-          recipeName: storybookRecipe.name,
-          fieldValues,
-          stageRefs: stageReferenceImages.map((refs, i) => `Stage ${i}: ${refs.length} refs`),
-        })
+      console.log('[CharacterStep] Recipe execution:', {
+        recipeName: recipe.name,
+        hasPhoto,
+        fieldValues,
+        stageRefs: stageReferenceImages.map((refs, i) => `Stage ${i}: ${refs.length} refs`),
+      })
 
-        const result = await executeSystemRecipe(
-          'Photo to Character Sheet (Isolation)',
-          fieldValues,
-          stageReferenceImages,
-          {
-            model: 'nano-banana-pro',
-            aspectRatio: '21:9',
-          }
-        )
+      const result = await executeSystemRecipe(
+        recipeName,
+        fieldValues,
+        stageReferenceImages,
+        {
+          model: 'nano-banana-pro',
+          aspectRatio: '21:9',
+        }
+      )
 
-        if (result.success && result.finalImageUrl) {
-          // Update character with the generated sheet
-          updateCharacter(characterId, { characterSheetUrl: result.finalImageUrl })
-          console.log('[CharacterStep] Recipe generation succeeded:', result.finalImageUrl)
+      if (result.success && result.finalImageUrl) {
+        // Update the appropriate store based on character type
+        if (unifiedChar.isSupporting) {
+          updateSupportingCharacter(characterId, { characterSheetUrl: result.finalImageUrl })
         } else {
-          console.error('[CharacterStep] Recipe generation failed:', result.error)
-          // Fall back to legacy generation
+          updateCharacter(characterId, { characterSheetUrl: result.finalImageUrl })
+        }
+        console.log('[CharacterStep] Recipe generation succeeded:', result.finalImageUrl)
+      } else {
+        console.error('[CharacterStep] Recipe generation failed:', result.error)
+        // Fall back to legacy for main characters only
+        if (!unifiedChar.isSupporting) {
           console.log('[CharacterStep] Falling back to legacy generation')
           const legacyResult = await legacyGenerateCharacterSheet(characterId)
           if (!legacyResult.success) {
             console.error('Legacy generation also failed:', legacyResult.error)
           }
         }
-      } else {
-        // Fall back to legacy generation if recipe not available
-        console.log('[CharacterStep] Recipe not found or style guide missing, using legacy generation')
-        const result = await legacyGenerateCharacterSheet(characterId)
-        if (!result.success) {
-          console.error('Generation failed:', result.error)
-        }
       }
     } finally {
       setGeneratingCharacterId(null)
     }
-  }, [project, getSystemOnlyRecipes, executeSystemRecipe, legacyGenerateCharacterSheet, updateCharacter])
+  }, [allCharacters, project, getSystemOnlyRecipes, executeSystemRecipe, legacyGenerateCharacterSheet, updateCharacter, updateSupportingCharacter])
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -297,8 +397,8 @@ export function CharacterStep() {
         </Button>
       </div>
 
-      {/* Character List */}
-      {characters.length === 0 ? (
+      {/* Character List - includes both main and supporting characters */}
+      {allCharacters.length === 0 ? (
         <Card className="bg-zinc-900/50 border-zinc-800 border-dashed">
           <CardContent className="py-12 text-center">
             <User className="w-12 h-12 mx-auto text-zinc-600 mb-4" />
@@ -309,37 +409,61 @@ export function CharacterStep() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {characters.map((character) => (
+          {allCharacters.map((character) => (
             <Card
               key={character.id}
-              className="bg-zinc-900/50 border-zinc-800"
+              className={cn(
+                "bg-zinc-900/50 border-zinc-800",
+                character.isSupporting && "border-l-4 border-l-purple-500/50"
+              )}
             >
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center justify-between">
                   <span className="flex items-center gap-2">
+                    {character.isSupporting ? (
+                      <UserCircle className="w-4 h-4 text-purple-400" />
+                    ) : (
+                      <User className="w-4 h-4 text-amber-400" />
+                    )}
                     <span className="text-amber-400">{character.tag}</span>
+                    {character.isSupporting && (
+                      <Badge variant="outline" className="text-xs text-purple-400 border-purple-500/50">
+                        {character.role || 'Supporting'}
+                      </Badge>
+                    )}
                   </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeCharacter(character.id)}
-                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  {!character.isSupporting && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeCharacter(character.id)}
+                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Name Input */}
-                <div className="space-y-2">
-                  <Label htmlFor={`name-${character.id}`}>Display Name</Label>
-                  <Input
-                    id={`name-${character.id}`}
-                    value={character.name}
-                    onChange={(e) => updateCharacter(character.id, { name: e.target.value })}
-                    className="bg-zinc-800/50 border-zinc-700"
-                  />
-                </div>
+                {/* Name Input - only for main characters */}
+                {!character.isSupporting && (
+                  <div className="space-y-2">
+                    <Label htmlFor={`name-${character.id}`}>Display Name</Label>
+                    <Input
+                      id={`name-${character.id}`}
+                      value={character.name}
+                      onChange={(e) => updateCharacter(character.id, { name: e.target.value })}
+                      className="bg-zinc-800/50 border-zinc-700"
+                    />
+                  </div>
+                )}
+
+                {/* Supporting character info */}
+                {character.isSupporting && character.description && (
+                  <div className="text-sm text-zinc-400 italic">
+                    &ldquo;{character.description}&rdquo;
+                  </div>
+                )}
 
                 {/* Hidden file input */}
                 <input
@@ -350,9 +474,14 @@ export function CharacterStep() {
                   onChange={(e) => handleFileChange(character.id, e)}
                 />
 
-                {/* Source Photo Upload */}
+                {/* Source Photo Upload - optional for supporting characters */}
                 <div className="space-y-2">
-                  <Label>Source Photo</Label>
+                  <Label>
+                    Source Photo
+                    {character.isSupporting && (
+                      <span className="text-xs text-zinc-500 ml-2">(optional - can generate from description)</span>
+                    )}
+                  </Label>
                   {character.sourcePhotoUrl ? (
                     <div
                       className="relative aspect-square w-32 rounded-lg overflow-hidden border border-zinc-700 cursor-pointer hover:border-amber-500/50 transition-colors"
@@ -419,8 +548,10 @@ export function CharacterStep() {
                           <ImageIcon className="w-8 h-8 text-zinc-600" />
                           <span className="text-sm text-zinc-500">
                             {character.sourcePhotoUrl
-                              ? 'Ready to generate'
-                              : 'Upload a photo first'}
+                              ? 'Ready to generate from photo'
+                              : character.isSupporting
+                                ? 'Ready to generate from description'
+                                : 'Upload a photo first'}
                           </span>
                         </>
                       )}
@@ -433,10 +564,13 @@ export function CharacterStep() {
                   <p className="text-sm text-red-400">{error}</p>
                 )}
 
-                {/* Generate Button */}
+                {/* Generate Button - supporting characters can generate without photo */}
                 <Button
                   className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-black"
-                  disabled={!character.sourcePhotoUrl || (isGenerating && generatingCharacterId === character.id)}
+                  disabled={
+                    (!character.sourcePhotoUrl && !character.isSupporting) ||
+                    (isGenerating && generatingCharacterId === character.id)
+                  }
                   onClick={() => handleGenerateCharacterSheet(character.id)}
                 >
                   {generatingCharacterId === character.id && isGenerating ? (
@@ -452,7 +586,9 @@ export function CharacterStep() {
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4" />
-                      Generate Character Sheet
+                      {character.sourcePhotoUrl
+                        ? 'Generate from Photo'
+                        : 'Generate from Description'}
                     </>
                   )}
                 </Button>

@@ -2041,6 +2041,94 @@ CRITICAL REQUIREMENTS:
     isSystemOnly: true,  // Hidden from regular users - used internally by Storybook
   },
 
+  // Storybook Character Sheet (From Description) - 2-stage pipeline for generating character sheets without photos
+  // Stage 0: Generate character appearance from text description
+  // Stage 1: Generate character sheet with expressions
+  {
+    name: 'Storybook Character Sheet (From Description)',
+    description: 'Generate character sheet from text description for storybook (no photo required)',
+    recipeNote: 'Used when no source photo is available. Generates character appearance from description in the target style, then creates a character sheet.',
+    stages: [
+      // STAGE 0: Generate character appearance from description
+      {
+        id: 'stage_desc_0',
+        order: 0,
+        type: 'generation',
+        template: `Generate a character based on this description:
+
+CHARACTER: @<<CHARACTER_NAME:name!>>
+ROLE: <<CHARACTER_ROLE:text!>>
+DESCRIPTION: <<CHARACTER_DESCRIPTION:text!>>
+
+CRITICAL INSTRUCTIONS:
+- Follow the attached style guide reference EXACTLY
+- The style guide is the definitive visual reference - match its art style precisely
+- Create a full-body standing pose on clean WHITE background
+- Neutral expression, relaxed posture
+- Soft studio lighting
+- Match the style guide's color palette and level of stylization
+- Match line quality, rendering approach, and edge treatment from the style guide
+
+The character must:
+1. Match the description provided exactly (age, build, hair color, distinguishing features)
+2. Be rendered in the EXACT art style shown in the style guide
+3. Look like they belong in the same world as the style guide characters
+
+Output: Full-body character portrait on clean white background.`,
+        fields: [],
+        referenceImages: [],  // Style guide attached at runtime
+      },
+      // STAGE 1: Generate character sheet with expressions
+      {
+        id: 'stage_desc_1',
+        order: 1,
+        type: 'generation',
+        template: `CHARACTER: @<<CHARACTER_NAME:name!>>
+
+Create a professional character reference sheet matching the attached template layout.
+
+CRITICAL: Every view and expression must clearly be the SAME PERSON from previous stage.
+Facial structure, proportions, and distinctive features must remain IDENTICAL across all views.
+
+CHARACTER SHEET LAYOUT (21:9 aspect ratio):
+
+LEFT SECTION - FULL BODY:
+- Large neutral standing pose, front view (primary reference)
+- Smaller side profile view
+- Smaller back view (if space permits)
+- Color palette strip: skin tone, hair color, eye color, main clothing colors
+
+RIGHT SECTION - EXPRESSIONS (2 rows × 5 columns):
+Row 1: Neutral, Happy, Sad, Angry, Surprised
+Row 2: Speaking, Shouting, Whispering, Smug/Confident, Scared
+
+TOP: Character name "@<<CHARACTER_NAME:name!>>" prominently displayed
+
+CRITICAL REQUIREMENTS:
+- All expressions maintain the SAME face structure - only expression changes
+- Maintain EXACT art style from previous stage
+- Clean white/light gray background
+- Black separator lines between expression cells (4-6 pixels)
+- Production-ready layout following the template reference`,
+        fields: [],
+        referenceImages: [
+          {
+            id: 'template_charsheet_advanced',
+            url: SYSTEM_TEMPLATE_URLS.characterSheetAdvanced,
+            name: 'Character Sheet Layout Template',
+            aspectRatio: '21:9',
+          }
+        ],
+      },
+    ],
+    suggestedAspectRatio: '21:9',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: false,
+    categoryId: 'storybook',
+    isSystem: true,
+    isSystemOnly: true,  // Hidden from regular users - used internally by Storybook
+  },
+
   // Storybook Style Guide (system recipe)
   {
     name: 'Storybook Style Guide',

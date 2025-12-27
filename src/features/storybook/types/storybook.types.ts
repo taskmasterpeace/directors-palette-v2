@@ -144,6 +144,7 @@ export interface StoryCharacter {
   age?: number
   photoUrl?: string
   description?: string  // If no photo: "A fluffy golden retriever"
+  characterSheetUrl?: string  // Generated character sheet (for consistency in page generation)
 }
 
 // API input type for story characters (without id)
