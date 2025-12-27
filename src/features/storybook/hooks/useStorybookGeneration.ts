@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useStorybookStore } from '../store/storybook.store'
-import { useRecipeStore } from '@/features/shot-creator/store/recipe.store'
+import { useRecipes } from '@/features/shot-creator/hooks/useRecipes'
 
 // Default system recipe names for storybook (used as fallbacks)
 const DEFAULT_RECIPE_NAMES = {
@@ -41,7 +41,7 @@ export function useStorybookGeneration() {
     setError,
   } = useStorybookStore()
 
-  const { recipes } = useRecipeStore()
+  const { recipes } = useRecipes()
 
   const [state, setState] = useState<GenerationState>({
     isGenerating: false,

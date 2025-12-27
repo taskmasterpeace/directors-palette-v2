@@ -42,6 +42,10 @@ export function useRecipes() {
     isLoading: store.isLoading || authLoading,
     isInitialized: store.isInitialized,
 
+    // Filtered getters
+    getVisibleRecipes: store.getVisibleRecipes,
+    getSystemOnlyRecipes: store.getSystemOnlyRecipes,
+
     // Recipe CRUD
     addRecipe: store.addRecipe,
     updateRecipe: store.updateRecipe,

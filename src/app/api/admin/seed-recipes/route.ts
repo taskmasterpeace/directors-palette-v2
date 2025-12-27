@@ -57,6 +57,7 @@ export async function POST() {
         is_quick_access: sample.isQuickAccess || false,
         category_id: sample.categoryId || null,
         is_system: true,
+        is_system_only: sample.isSystemOnly || false,
       }
 
       const { error } = await supabase

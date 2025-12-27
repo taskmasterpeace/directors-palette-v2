@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
 import { useStorybookGeneration } from "../../../hooks/useStorybookGeneration"
 import { useRecipeExecution } from "@/features/shared/hooks/useRecipeExecution"
-import { useRecipeStore } from "@/features/shot-creator/store/recipe.store"
+import { useRecipes } from "@/features/shot-creator/hooks/useRecipes"
 import { SYSTEM_TEMPLATES } from "../../../services/template.service"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -79,7 +79,7 @@ export function CharacterStep() {
 
   // Recipe-based generation (new)
   const { executeSystemRecipe, isExecuting: recipeIsExecuting, progress: recipeProgress, error: recipeError } = useRecipeExecution()
-  const { getSystemOnlyRecipes } = useRecipeStore()
+  const { getSystemOnlyRecipes, isInitialized: recipesInitialized } = useRecipes()
 
   // Use recipe-based generation if available, fall back to legacy
   const isGenerating = recipeIsExecuting || legacyIsGenerating
@@ -207,7 +207,15 @@ export function CharacterStep() {
     setGeneratingCharacterId(characterId)
 
     try {
+      // Ensure recipes are loaded
+      if (!recipesInitialized) {
+        console.error('[CharacterStep] Recipe store not initialized yet')
+        return
+      }
+
       const systemRecipes = getSystemOnlyRecipes()
+      console.log(`[CharacterStep] Found ${systemRecipes.length} system-only recipes`)
+
       const styleGuideUrl = project?.style?.styleGuideUrl
 
       if (!styleGuideUrl) {
