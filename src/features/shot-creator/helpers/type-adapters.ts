@@ -1,5 +1,5 @@
 import { ShotCreatorReferenceImage } from '../types/shot-creator.types'
-import { LibraryImageReference } from '../types/library.types'
+import { LibraryImageReference, Category } from '../types/library.types'
 
 /**
  * Converts ShotCreatorReferenceImage to LibraryImageReference for fullscreen display
@@ -15,7 +15,7 @@ export function shotImageToLibraryReference(
     imageData: image.preview, // Use preview as imageData
     preview: image.preview,   // Also set preview for fallback
     tags: image.tags,
-    category: 'Reference Images' as any, // Default category for reference images
+    category: 'Reference Images' as Category, // Default category for reference images
     source: image.file ? 'uploaded' : 'generated',
     createdAt: new Date(),
     prompt: undefined, // Reference images don't have generation prompts

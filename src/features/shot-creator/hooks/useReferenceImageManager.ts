@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { getImageDimensions } from "@/features/shot-creator/helpers/short-creator.helper"
 import { validateImageFile, resizeImage } from "@/features/shot-creator/helpers/image-resize.helper"

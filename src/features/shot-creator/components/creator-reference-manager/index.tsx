@@ -3,26 +3,15 @@
 import { useState, ReactNode, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import {
-  Trash2,
-  X,
   RectangleHorizontal,
   Square,
-  Download,
-  Copy,
-  Film,
-  Layout,
-  Eraser,
 } from 'lucide-react'
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import Image from "next/image"
 import CreatorReferenceManagerCompact from "./CreatorReferenceManagerCompact"
 import { useShotCreatorStore } from "../../store/shot-creator.store"
 import { useReferenceImageManager } from "../../hooks/useReferenceImageManager"
 import { ReferenceImageCard, type ShotImage } from "./ReferenceImageCard"
 import { useToast } from "@/hooks/use-toast"
-import { clipboardManager } from '@/utils/clipboard-manager'
 import { useUnifiedGalleryStore } from "../../store/unified-gallery-store"
-import { shotImageToLibraryReference } from "../../helpers/type-adapters"
 
 interface CreatorReferenceManagerProps {
   compact?: boolean
@@ -35,7 +24,7 @@ export function CreatorReferenceManager({
   maxImages = 3,
   modelSelector
 }: CreatorReferenceManagerProps) {
-  const { shotCreatorReferenceImages, setShotCreatorReferenceImages, useNativeAspectRatio, setUseNativeAspectRatio, onSendToShotAnimator, setFullscreenImage } = useShotCreatorStore()
+  const { shotCreatorReferenceImages, setShotCreatorReferenceImages, useNativeAspectRatio, setUseNativeAspectRatio } = useShotCreatorStore()
   const [editingTagsId, setEditingTagsId] = useState<string | null>(null)
   const [removingBackgroundId, setRemovingBackgroundId] = useState<string | null>(null)
   const [savingToGalleryId, setSavingToGalleryId] = useState<string | null>(null)

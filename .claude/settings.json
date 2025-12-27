@@ -30,19 +30,6 @@
         ]
       }
     ],
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/protect-files.sh"
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/git-backup.sh"
-          }
-        ]
-      }
-    ]
+    "PreToolUse": []
   }
 }
