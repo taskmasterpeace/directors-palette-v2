@@ -434,3 +434,161 @@ This anchors characters to their reference images in nano-banana.
 - ❌ Skip reference images for characters
 - ❌ Forget the style guide
 - ❌ Write overly long prompts
+
+---
+
+# 📖 STORYBOOK VS STORYBOARD
+
+| Feature | Storybook | Storyboard |
+|---------|-----------|------------|
+| **Purpose** | Children's illustrated books | Cinematic shot sequences |
+| **Target** | Kids' stories with text overlays | Music videos, films |
+| **Uses Recipes** | ✅ Yes (5 system recipes) | ❌ No (direct LLM → image) |
+| **Text Overlay** | ✅ Yes (story text on pages) | ❌ No |
+| **Audio** | ✅ TTS narration (ElevenLabs) | ❌ No |
+| **Page Flip** | ✅ react-pageflip | N/A |
+| **Directors** | ❌ No | ✅ Yes (5 AI directors) |
+| **Key Location** | `src/features/storybook/` | `src/features/storyboard/` |
+
+---
+
+# 🔊 ELEVENLABS TTS REFERENCE
+
+## API Endpoint
+```
+POST /api/storybook/synthesize
+```
+
+## Voice Options
+| Voice ID | Name | Description |
+|----------|------|-------------|
+| `rachel` | Rachel | Warm, nurturing (default) |
+| `adam` | Adam | Friendly |
+| `charlotte` | Charlotte | Expressive |
+| `dorothy` | Dorothy | Pleasant |
+
+## Model
+- **Model ID**: `eleven_turbo_v2_5`
+- **Format**: MP3 audio file
+- **Storage**: Uploaded to project storage, URL returned
+
+## Request Format
+```json
+{
+  "text": "Story text to synthesize",
+  "voiceId": "rachel",
+  "projectId": "optional-project-id",
+  "pageNumber": 1
+}
+```
+
+---
+
+# 🎧 AUDIO PLAYBACK GOTCHAS
+
+## Critical Pattern
+`audio.play()` returns a **Promise** that can reject. Always use:
+
+```typescript
+// ✅ CORRECT - async/await with try/catch
+const togglePlayback = async () => {
+  try {
+    await audioRef.current.play()
+    setIsPlaying(true)
+  } catch (error) {
+    console.error('Audio playback failed:', error)
+    setIsPlaying(false)
+  }
+}
+
+// ❌ WRONG - ignoring Promise
+audioRef.current.play()
+setIsPlaying(true)
+```
+
+## Audio Element Setup
+```tsx
+<audio
+  ref={audioRef}
+  crossOrigin="anonymous"  // Required for CORS
+  preload="auto"           // Preload for instant playback
+/>
+```
+
+## Error Handler
+```typescript
+useEffect(() => {
+  const handleError = (e: Event) => {
+    const target = e.target as HTMLAudioElement
+    console.error('Audio error:', target.error?.message)
+    setIsPlaying(false)
+  }
+  audio.addEventListener('error', handleError)
+  return () => audio.removeEventListener('error', handleError)
+}, [])
+```
+
+---
+
+# 📦 KEY THIRD-PARTY LIBRARIES
+
+| Library | Purpose | Key Usage |
+|---------|---------|-----------|
+| `react-pageflip` | Book page flip animation | Storybook preview |
+| `@11ty/eleventy` | N/A in this project | - |
+| `react-hook-form` | Form state management | All forms |
+| `zustand` | Global state stores | Feature stores |
+| `openrouter` | LLM API gateway | Storyboard prompts |
+| `replicate` | Image/video generation | nano-banana |
+| `@supabase/supabase-js` | Database & auth | All data ops |
+
+## react-pageflip Notes
+- Page components **must** use `forwardRef`
+- Cover pages counted in page index (+1 offset)
+- `onFlip` callback provides `e.data` as page index
+
+---
+
+# 🔧 COMMON FIX PATTERNS
+
+## Supabase: "Cannot coerce to single JSON object"
+**Error**: Query expects exactly 1 row but got 0
+**Fix**: Use `.maybeSingle()` instead of `.single()`
+```typescript
+// ❌ Throws error when 0 rows
+.select('*').eq('user_id', userId).single()
+
+// ✅ Returns null when 0 rows
+.select('*').eq('user_id', userId).maybeSingle()
+```
+
+## React: Missing exhaustive deps warning
+**Fix**: Add all dependencies or use refs for stable values
+```typescript
+// If callback changes cause infinite loops, use ref
+const callbackRef = useRef(callback)
+callbackRef.current = callback
+
+useEffect(() => {
+  callbackRef.current()
+}, [dependency])
+```
+
+## Audio: No sound plays after generation
+1. Check `crossOrigin="anonymous"` on audio element
+2. Wrap `play()` in try/catch with await
+3. Add error event listener
+4. Verify audio URL is set before calling play()
+
+---
+
+# 📁 PLAN FILE LOCATION
+
+Claude Code stores plan files at:
+```
+C:\Users\taskm\.claude\plans\
+```
+
+Plans are named with random identifiers (e.g., `woolly-shimmying-hennessy.md`).
+
+Check the system message for "A plan file exists from plan mode at:" to find the current plan.
