@@ -1,21 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Replicate from 'replicate';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
-import { StorageService } from '@/features/generation/services/storage.service';
 import { randomUUID } from 'crypto';
 
-const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN,
-});
-
+const STORAGE_BUCKET = 'directors-palette';
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB server-side limit
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
+// Create Supabase client on demand to avoid build-time errors
+function getSupabaseClient(): SupabaseClient {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // ✅ SECURITY: Verify authentication first
+    // Verify authentication first
     const auth = await getAuthenticatedUser(request);
-    if (auth instanceof NextResponse) return auth; // Return 401 error
+    if (auth instanceof NextResponse) return auth;
 
     // Parse the multipart form data
     const formData = await request.formData();
@@ -50,75 +54,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get optional metadata from form data
-    const metadataString = formData.get('metadata') as string | null;
-    let metadata: Record<string, string> | undefined;
-    
-    if (metadataString) {
-      try {
-        metadata = JSON.parse(metadataString);
-      } catch (_e) {
-        return NextResponse.json(
-          { error: 'Invalid metadata JSON format' },
-          { status: 400 }
-        );
-      }
-    }
+    // Convert File to Buffer
+    const buffer = Buffer.from(await file.arrayBuffer());
 
-    // Upload file to Replicate (needed for Replicate model API use)
-    const response = await replicate.files.create(file, metadata);
-    const tempUrl = response.urls.get;
+    // Determine file extension
+    const extMap: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+    };
+    const fileExtension = extMap[file.type] || 'jpg';
 
-    // Now persist to Supabase Storage for permanent URL
-    // This prevents images from disappearing when Replicate temp URLs expire
-    try {
-      // Download from Replicate temp URL
-      const { buffer, contentType } = await StorageService.downloadAsset(tempUrl);
+    // Generate unique ID for this upload
+    const uploadId = randomUUID();
+    const userId = auth.user.id;
 
-      // Determine file extension from content type
-      const extMap: Record<string, string> = {
-        'image/jpeg': 'jpg',
-        'image/png': 'png',
-        'image/webp': 'webp',
-      };
-      const fileExtension = extMap[contentType] || extMap[file.type] || 'jpg';
+    // Upload directly to Supabase Storage
+    const storagePath = `generations/${userId}/upload_${uploadId}.${fileExtension}`;
+    const supabase = getSupabaseClient();
 
-      // Upload to Supabase Storage with permanent URL
-      const uploadId = randomUUID();
-      const { publicUrl } = await StorageService.uploadToStorage(
-        buffer,
-        auth.user.id, // user ID from auth
-        `upload_${uploadId}`,
-        fileExtension,
-        contentType
+    const { error: uploadError } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .upload(storagePath, buffer, {
+        contentType: file.type,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error('[upload-file] Storage upload error:', uploadError);
+      return NextResponse.json(
+        { error: 'Failed to upload file', details: uploadError.message },
+        { status: 500 }
       );
-
-      // Return the permanent Supabase URL
-      return NextResponse.json({
-        url: publicUrl,
-        replicateUrl: tempUrl, // Also return temp URL in case needed for immediate Replicate API use
-      });
-    } catch (storageError) {
-      // Log detailed error for debugging in production
-      const errorMessage = storageError instanceof Error ? storageError.message : 'Unknown error';
-      console.error('[upload-file] Supabase storage FAILED:', {
-        error: errorMessage,
-        hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-        tempUrl: tempUrl.substring(0, 50) + '...',
-      });
-
-      // Fall back to temp URL but include clear error info
-      return NextResponse.json({
-        url: tempUrl,
-        warning: 'Using temporary URL - may expire within 1 hour.',
-        error: `Supabase storage failed: ${errorMessage}`,
-        debug: {
-          hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-          hasSupabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-        }
-      });
     }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from(STORAGE_BUCKET)
+      .getPublicUrl(storagePath);
+
+    return NextResponse.json({
+      url: publicUrl,
+    });
 
   } catch (error) {
     console.error('File upload error:', error);
