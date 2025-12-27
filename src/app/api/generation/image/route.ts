@@ -490,8 +490,16 @@ export async function POST(request: NextRequest) {
               imageUrl: publicUrl,
             });
           } catch (uploadError) {
-            console.error('Failed to upload to Supabase Storage:', uploadError);
-            // Fallback: store Replicate URL (will expire, but at least show something)
+            // Log detailed error for debugging in production
+            const errorMessage = uploadError instanceof Error ? uploadError.message : 'Unknown error';
+            console.error('[generation/image] Supabase storage FAILED:', {
+              error: errorMessage,
+              hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+              hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+              predictionId: prediction.id,
+            });
+
+            // Fallback: store Replicate URL (will expire within 1 hour)
             await supabase
               .from('gallery')
               .update({

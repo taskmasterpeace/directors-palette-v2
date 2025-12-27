@@ -99,11 +99,24 @@ export async function POST(request: NextRequest) {
         replicateUrl: tempUrl, // Also return temp URL in case needed for immediate Replicate API use
       });
     } catch (storageError) {
-      // If Supabase storage fails, fall back to temp URL with warning
-      console.warn('Supabase storage failed, returning temp URL:', storageError);
+      // Log detailed error for debugging in production
+      const errorMessage = storageError instanceof Error ? storageError.message : 'Unknown error';
+      console.error('[upload-file] Supabase storage FAILED:', {
+        error: errorMessage,
+        hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+        tempUrl: tempUrl.substring(0, 50) + '...',
+      });
+
+      // Fall back to temp URL but include clear error info
       return NextResponse.json({
         url: tempUrl,
-        warning: 'Using temporary URL - may expire. Supabase storage failed.',
+        warning: 'Using temporary URL - may expire within 1 hour.',
+        error: `Supabase storage failed: ${errorMessage}`,
+        debug: {
+          hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+          hasSupabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+        }
       });
     }
 

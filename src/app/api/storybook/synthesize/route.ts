@@ -117,7 +117,20 @@ export async function POST(request: NextRequest) {
           } as SynthesizeResponse)
         }
 
-        console.error('Supabase upload error:', uploadError)
+        // Log detailed error for debugging in production
+        console.error('[storybook/synthesize] Supabase storage FAILED:', {
+          error: uploadError.message,
+          hasUrl: !!supabaseUrl,
+          hasKey: !!supabaseKey,
+          projectId,
+          fileName,
+        })
+      } else {
+        console.warn('[storybook/synthesize] Missing Supabase env vars:', {
+          hasUrl: !!supabaseUrl,
+          hasKey: !!supabaseKey,
+          projectId,
+        })
       }
     }
 

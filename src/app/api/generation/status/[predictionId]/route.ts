@@ -84,7 +84,15 @@ export async function GET(
           completedAt: prediction.completed_at,
         });
       } catch (uploadError) {
-        console.error('Failed to persist to Supabase Storage:', uploadError);
+        // Log detailed error for debugging in production
+        const errorMessage = uploadError instanceof Error ? uploadError.message : 'Unknown error';
+        console.error('[generation/status] Supabase storage FAILED:', {
+          error: errorMessage,
+          hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+          hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+          predictionId: prediction.id,
+        });
+
         // Fall back to temporary URL if upload fails
         return NextResponse.json({
           id: prediction.id,
@@ -93,7 +101,12 @@ export async function GET(
           error: prediction.error,
           createdAt: prediction.created_at,
           completedAt: prediction.completed_at,
-          warning: 'Image stored temporarily - may expire',
+          warning: 'Image stored temporarily - may expire within 1 hour',
+          debug: {
+            storageError: errorMessage,
+            hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+            hasSupabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+          }
         });
       }
     }

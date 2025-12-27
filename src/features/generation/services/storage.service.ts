@@ -6,10 +6,18 @@ const STORAGE_BUCKET = 'directors-palette';
 let _supabase: SupabaseClient | null = null;
 function getSupabase(): SupabaseClient {
   if (!_supabase) {
-    _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !key) {
+      const missing = [];
+      if (!url) missing.push('NEXT_PUBLIC_SUPABASE_URL');
+      if (!key) missing.push('SUPABASE_SERVICE_ROLE_KEY');
+      throw new Error(`StorageService: Missing required env vars: ${missing.join(', ')}`);
+    }
+
+    console.log('[StorageService] Initializing Supabase client');
+    _supabase = createClient(url, key);
   }
   return _supabase;
 }
