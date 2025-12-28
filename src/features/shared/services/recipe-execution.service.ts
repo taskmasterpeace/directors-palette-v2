@@ -344,6 +344,12 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
     }
 
     console.log(`[Recipe Execution] Starting ${totalStages}-stage recipe: ${recipe.name}`)
+    console.log(`[Recipe Execution] Stages:`, recipe.stages.map(s => ({
+      id: s.id,
+      type: s.type,
+      toolId: s.toolId,
+      order: s.order
+    })))
 
     const imageUrls: string[] = []
     let previousImageUrl: string | undefined = undefined

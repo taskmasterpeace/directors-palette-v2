@@ -229,12 +229,14 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
     const userId = get().currentUserId
     if (!userId) throw new Error('No user ID')
 
-    // If stages are updated, re-parse fields
+    // If stages are updated, re-parse fields (preserve type and toolId for tool stages)
     const processedUpdates = {
       ...updates,
       ...(updates.stages && {
         stages: updates.stages.map((stage, index) => ({
           ...stage,
+          type: stage.type || 'generation',
+          toolId: stage.toolId,
           fields: parseStageTemplate(stage.template, index),
         }))
       })
@@ -392,6 +394,7 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
     const newStage: RecipeStage = {
       id: `stage_${newStageIndex}_${Date.now()}`,
       order: newStageIndex,
+      type: 'generation', // Default to generation stage
       template: '',
       fields: [],
       referenceImages: [],

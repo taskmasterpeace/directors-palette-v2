@@ -338,8 +338,19 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 .filter((url): url is string => Boolean(url))
             const allRefs = [...new Set([...userRefs, ...result.referenceImages])]
 
+            // Debug: Log recipe stages to verify type field is present
+            console.log('[PromptActions] Active recipe stages:', activeRecipe.stages.map(s => ({
+                id: s.id,
+                type: s.type,
+                toolId: s.toolId,
+                order: s.order
+            })))
+
             // Check if recipe has tool stages - use full recipe execution service
-            if (hasToolStages(activeRecipe)) {
+            const hasTool = hasToolStages(activeRecipe)
+            console.log('[PromptActions] hasToolStages result:', hasTool)
+
+            if (hasTool) {
                 console.log('[PromptActions] Recipe has tool stages, using executeRecipe service')
 
                 // Build stage reference images array

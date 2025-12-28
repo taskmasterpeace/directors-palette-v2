@@ -53,6 +53,9 @@ function dbRecipeToRecipe(dbRecipe: DbRecipe): Recipe {
     recipeNote: dbRecipe.recipe_note || undefined,
     stages: dbRecipe.stages.map((stage, index) => ({
       ...stage,
+      // Explicitly preserve type and toolId for tool stages
+      type: stage.type || 'generation',
+      toolId: stage.toolId,
       fields: parseStageTemplate(stage.template, index),
     })),
     suggestedAspectRatio: dbRecipe.suggested_aspect_ratio || undefined,
