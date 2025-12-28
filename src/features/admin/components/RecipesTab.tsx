@@ -58,8 +58,15 @@ export function RecipesTab() {
 
         setDeletingId(recipe.id)
         try {
-            // Use admin client to bypass RLS for system recipes
-            await deleteRecipe(recipe.id, true)
+            // Use admin API endpoint for system recipes
+            const response = await fetch(`/api/recipes/${recipe.id}`, {
+                method: 'DELETE',
+            })
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || 'Failed to delete recipe')
+            }
+            await refreshRecipes() // Refresh store from DB
             toast.success(`Recipe "${recipe.name}" deleted`)
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "Failed to delete recipe")
@@ -97,9 +104,18 @@ export function RecipesTab() {
 
         try {
             if (editingRecipe) {
-                // Edit mode - use admin client to bypass RLS for system recipes
-                console.log('[RecipesTab] Updating recipe:', editingRecipe.id)
-                await updateRecipe(editingRecipe.id, updates, true)
+                // Edit mode - use admin API endpoint for system recipes
+                console.log('[RecipesTab] Updating recipe via API:', editingRecipe.id)
+                const response = await fetch(`/api/recipes/${editingRecipe.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updates),
+                })
+                if (!response.ok) {
+                    const errorData = await response.json()
+                    throw new Error(errorData.error || 'Failed to update recipe')
+                }
+                await refreshRecipes() // Refresh store from DB
                 console.log('[RecipesTab] Recipe updated successfully')
                 toast.success(`Recipe "${editingRecipe.name}" updated`)
             } else {
