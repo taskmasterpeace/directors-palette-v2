@@ -35,6 +35,16 @@ import { useLibraryStore } from "../../store/shot-library.store"
 import { useRecipeStore } from "../../store/recipe.store"
 import { cn } from "@/utils/utils"
 import { Category } from "../CategorySelectDialog"
+import { executeRecipe } from "@/features/shared/services/recipe-execution.service"
+import type { Recipe } from "../../types/recipe.types"
+import { toast } from "sonner"
+
+/**
+ * Check if a recipe has any tool stages that require special execution
+ */
+function hasToolStages(recipe: Recipe): boolean {
+    return recipe.stages.some(stage => stage.type === 'tool')
+}
 
 const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextAreaElement | null> }) => {
     const {
@@ -322,6 +332,65 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 updateSettings({ aspectRatio: activeRecipe.suggestedAspectRatio })
             }
 
+            // Combine user refs + recipe refs (deduplicated)
+            const userRefs = shotCreatorReferenceImages
+                .map(ref => ref.url || ref.preview)
+                .filter((url): url is string => Boolean(url))
+            const allRefs = [...new Set([...userRefs, ...result.referenceImages])]
+
+            // Check if recipe has tool stages - use full recipe execution service
+            if (hasToolStages(activeRecipe)) {
+                console.log('[PromptActions] Recipe has tool stages, using executeRecipe service')
+
+                // Build stage reference images array
+                // First stage uses user refs + recipe's first stage refs
+                // Subsequent stages use their own refs (tool outputs are handled by the service)
+                const stageReferenceImages: string[][] = result.stageReferenceImages || []
+
+                // Ensure first stage has user refs
+                if (stageReferenceImages.length === 0) {
+                    stageReferenceImages.push(allRefs)
+                } else {
+                    // Combine user refs with first stage refs
+                    stageReferenceImages[0] = [...new Set([...allRefs, ...stageReferenceImages[0]])]
+                }
+
+                const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-pro') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-fast' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high'
+                const aspectRatio = activeRecipe.suggestedAspectRatio || shotCreatorSettings.aspectRatio || '16:9'
+
+                try {
+                    toast.info('Starting recipe with tool stages...')
+
+                    const executionResult = await executeRecipe({
+                        recipe: activeRecipe,
+                        fieldValues: activeFieldValues,
+                        stageReferenceImages,
+                        model,
+                        aspectRatio,
+                        onProgress: (stage, total, status) => {
+                            console.log(`[PromptActions] Stage ${stage + 1}/${total}: ${status}`)
+                            toast.info(`Stage ${stage + 1}/${total}: ${status}`)
+                        }
+                    })
+
+                    if (executionResult.success) {
+                        toast.success('Recipe completed successfully!')
+                        console.log('[PromptActions] Recipe execution complete:', executionResult.imageUrls)
+                    } else {
+                        toast.error(`Recipe failed: ${executionResult.error}`)
+                        console.error('[PromptActions] Recipe execution failed:', executionResult.error)
+                    }
+                } catch (error) {
+                    const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+                    toast.error(`Recipe execution error: ${errorMsg}`)
+                    console.error('[PromptActions] Recipe execution error:', error)
+                }
+
+                // Keep recipe selected for re-generation
+                return
+            }
+
+            // No tool stages - use fast pipe-concatenation approach
             // Build full prompt (pipe-separated for multi-stage execution)
             const fullPrompt = result.prompts.join(' | ')
 
@@ -331,12 +400,6 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             } else {
                 setStageReferenceImages([])
             }
-
-            // Combine user refs + recipe refs (deduplicated)
-            const userRefs = shotCreatorReferenceImages
-                .map(ref => ref.url || ref.preview)
-                .filter((url): url is string => Boolean(url))
-            const allRefs = [...new Set([...userRefs, ...result.referenceImages])]
 
             // Build model settings
             const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-fast' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high'
@@ -372,7 +435,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
 
         // Clear recipe tracking after generation
         setLastUsedRecipe(null)
-    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages])
+    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages, activeFieldValues])
 
     // Handle selecting a recipe
     const _handleSelectRecipe = useCallback((recipeId: string) => {
