@@ -24,9 +24,7 @@ export function RecipesTab() {
         isLoading,
         initialize,
         refreshRecipes,
-        deleteRecipe,
         duplicateRecipe,
-        updateRecipe,
         addRecipe,
     } = useRecipeStore()
 
