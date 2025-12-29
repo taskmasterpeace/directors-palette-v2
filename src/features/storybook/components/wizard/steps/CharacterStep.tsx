@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Users, Plus, Upload, Sparkles, Trash2, User, ImageIcon, UserCircle } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
@@ -50,6 +51,7 @@ export function CharacterStep() {
       sourcePhotoUrl: c.sourcePhotoUrl,
       characterSheetUrl: c.characterSheetUrl,
       isSupporting: false,
+      description: c.description, // Include main character descriptions
     }))
 
     const supportChars: UnifiedCharacter[] = (project?.storyCharacters || []).map(sc => ({
@@ -97,6 +99,48 @@ export function CharacterStep() {
 
   // State for LLM-based detection
   const [isDetecting, setIsDetecting] = useState(false)
+  // State for description enhancement
+  const [isEnhancing, setIsEnhancing] = useState(false)
+  const [enhancingCharacterId, setEnhancingCharacterId] = useState<string | null>(null)
+
+  // Handler to enhance character description using AI
+  const handleEnhanceDescription = async (characterId: string) => {
+    const character = allCharacters.find(c => c.id === characterId)
+    if (!character?.description?.trim()) return
+
+    setIsEnhancing(true)
+    setEnhancingCharacterId(characterId)
+
+    try {
+      const response = await fetch('/api/storybook/enhance-character-description', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          characterHint: character.description,
+          characterName: character.name,
+          role: character.isSupporting ? character.role : 'protagonist',
+          storyContext: project?.storyText?.slice(0, 500),
+        })
+      })
+
+      if (response.ok) {
+        const { expandedDescription } = await response.json()
+        // Update the character description with the enhanced version
+        if (character.isSupporting) {
+          updateSupportingCharacter(characterId, { description: expandedDescription })
+        } else {
+          updateCharacter(characterId, { description: expandedDescription })
+        }
+      } else {
+        console.error('Failed to enhance description')
+      }
+    } catch (err) {
+      console.error('Error enhancing description:', err)
+    } finally {
+      setIsEnhancing(false)
+      setEnhancingCharacterId(null)
+    }
+  }
 
   // Auto-detect characters using LLM API when step loads
   useEffect(() => {
@@ -538,6 +582,62 @@ export function CharacterStep() {
                   )}
                 </div>
 
+                {/* Description Input - for all characters (especially when no photo) */}
+                <div className="space-y-2">
+                  <Label>
+                    Visual Description
+                    <span className="text-xs text-zinc-500 ml-2">(optional - AI can enhance your hints)</span>
+                  </Label>
+                  <div className="flex gap-2">
+                    <Textarea
+                      placeholder="E.g., young African American girl, 5 years old, curly black hair, bright smile..."
+                      value={character.description || ''}
+                      onChange={(e) => {
+                        const charId = character.id
+                        const desc = e.target.value
+                        if (character.isSupporting) {
+                          // Update supporting character description
+                          const sc = project?.storyCharacters?.find(c => c.id === charId)
+                          if (sc) {
+                            updateProject({
+                              storyCharacters: project?.storyCharacters?.map(c =>
+                                c.id === charId ? { ...c, description: desc } : c
+                              )
+                            })
+                          }
+                        } else {
+                          // Update main character description
+                          updateCharacter(charId, { description: desc })
+                        }
+                      }}
+                      rows={2}
+                      className="text-sm flex-1"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEnhanceDescription(character.id)}
+                      disabled={!character.description?.trim() || (isEnhancing && enhancingCharacterId === character.id)}
+                      className="h-auto py-2"
+                      title="AI will expand your hints into a detailed visual description"
+                    >
+                      {isEnhancing && enhancingCharacterId === character.id ? (
+                        <LoadingSpinner size="sm" />
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 mr-1" />
+                          Enhance
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  {!character.sourcePhotoUrl && !character.description && (
+                    <p className="text-xs text-amber-500/80">
+                      Tip: Add hints like age, gender, race - AI will create a full description
+                    </p>
+                  )}
+                </div>
+
                 {/* Character Sheet Preview */}
                 <div className="space-y-2">
                   <Label>Character Sheet</Label>
@@ -568,9 +668,9 @@ export function CharacterStep() {
                           <span className="text-sm text-zinc-500">
                             {character.sourcePhotoUrl
                               ? 'Ready to generate from photo'
-                              : character.isSupporting
+                              : character.description
                                 ? 'Ready to generate from description'
-                                : 'Upload a photo first'}
+                                : 'Add photo or description above'}
                           </span>
                         </>
                       )}
@@ -583,13 +683,10 @@ export function CharacterStep() {
                   <p className="text-sm text-red-400">{error}</p>
                 )}
 
-                {/* Generate Button - supporting characters can generate without photo */}
+                {/* Generate Button - all characters can generate with photo OR description */}
                 <Button
                   className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-black"
-                  disabled={
-                    (!character.sourcePhotoUrl && !character.isSupporting) ||
-                    (isGenerating && generatingCharacterId === character.id)
-                  }
+                  disabled={isGenerating && generatingCharacterId === character.id}
                   onClick={() => handleGenerateCharacterSheet(character.id)}
                 >
                   {generatingCharacterId === character.id && isGenerating ? (

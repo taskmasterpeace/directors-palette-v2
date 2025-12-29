@@ -2216,7 +2216,7 @@ CRITICAL REQUIREMENTS:
     isQuickAccess: false,
     categoryId: 'storybook',
     isSystem: true,
-    isSystemOnly: true,  // Hidden from regular users - used internally by Storybook
+    isSystemOnly: false,  // Now visible in Shot Creator so users can refine the recipe
   },
 
   // Storybook Style Guide (system recipe)

@@ -217,6 +217,7 @@ export interface StorybookCharacter {
   characterSheetUrl?: string // Generated character sheet
   artStyle?: string // The style used for this character
   isFromLibrary?: boolean // Whether loaded from saved library
+  description?: string // Visual description for character (used when no photo)
 }
 
 // Style guide for the storybook
