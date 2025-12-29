@@ -34,6 +34,7 @@ export function CharacterStep() {
   const {
     project,
     addCharacter,
+    addStoryCharacter,
     removeCharacter,
     updateCharacter,
     detectCharacters,
@@ -74,8 +75,8 @@ export function CharacterStep() {
     updateProject({ storyCharacters: updatedChars })
   }, [project?.storyCharacters, updateProject])
 
-  // Legacy generation (fallback)
-  const { generateCharacterSheet: legacyGenerateCharacterSheet, isGenerating: legacyIsGenerating, progress: legacyProgress, error: legacyError } = useStorybookGeneration()
+  // Legacy generation state (for display purposes only)
+  const { isGenerating: legacyIsGenerating, progress: legacyProgress, error: legacyError } = useStorybookGeneration()
 
   // Recipe-based generation (new)
   const { executeSystemRecipe, isExecuting: recipeIsExecuting, progress: recipeProgress, error: recipeError } = useRecipeExecution()
@@ -120,8 +121,18 @@ export function CharacterStep() {
           if (response.ok) {
             const data = await response.json()
             if (data.characters?.length > 0) {
-              data.characters.forEach((c: { name: string; tag: string }) => {
-                addCharacter(c.name, c.tag)
+              data.characters.forEach((c: { name: string; tag: string; role: string; description?: string }) => {
+                if (c.role === 'supporting') {
+                  // Add supporting characters to storyCharacters array
+                  addStoryCharacter({
+                    name: c.name,
+                    role: 'other', // CharacterRole type for store
+                    description: c.description || '',
+                  })
+                } else {
+                  // Add main characters to characters array
+                  addCharacter(c.name, c.tag)
+                }
               })
             }
           }
@@ -135,7 +146,7 @@ export function CharacterStep() {
       }
     }
     detectWithLLM()
-  }, [project?.storyText, project?.generatedStory, project?.characters.length, addCharacter, detectCharacters, isDetecting])
+  }, [project?.storyText, project?.generatedStory, project?.characters.length, addCharacter, addStoryCharacter, detectCharacters, isDetecting])
 
   const handleAddCharacter = () => {
     const mainCharCount = project?.characters?.length || 0
@@ -220,6 +231,8 @@ export function CharacterStep() {
 
       if (!styleGuideUrl) {
         console.error('[CharacterStep] Style guide is required for character sheet generation')
+        alert('Please select an art style first (Step 7) before generating character sheets.')
+        setGeneratingCharacterId(null)
         return
       }
 
@@ -233,13 +246,8 @@ export function CharacterStep() {
       const recipe = systemRecipes.find(r => r.name === recipeName)
       if (!recipe) {
         console.error(`[CharacterStep] Recipe not found: ${recipeName}`)
-        // Fall back to legacy for main characters only
-        if (!unifiedChar.isSupporting) {
-          const legacyResult = await legacyGenerateCharacterSheet(characterId)
-          if (!legacyResult.success) {
-            console.error('Legacy generation failed:', legacyResult.error)
-          }
-        }
+        alert(`Character sheet recipe "${recipeName}" not found. Please refresh the page and try again.`)
+        setGeneratingCharacterId(null)
         return
       }
 
@@ -326,19 +334,12 @@ export function CharacterStep() {
         console.log('[CharacterStep] Recipe generation succeeded:', result.finalImageUrl)
       } else {
         console.error('[CharacterStep] Recipe generation failed:', result.error)
-        // Fall back to legacy for main characters only
-        if (!unifiedChar.isSupporting) {
-          console.log('[CharacterStep] Falling back to legacy generation')
-          const legacyResult = await legacyGenerateCharacterSheet(characterId)
-          if (!legacyResult.success) {
-            console.error('Legacy generation also failed:', legacyResult.error)
-          }
-        }
+        alert(`Character sheet generation failed: ${result.error || 'Unknown error'}. Please try again.`)
       }
     } finally {
       setGeneratingCharacterId(null)
     }
-  }, [allCharacters, project, getSystemOnlyRecipes, executeSystemRecipe, legacyGenerateCharacterSheet, updateCharacter, updateSupportingCharacter])
+  }, [allCharacters, project, getSystemOnlyRecipes, executeSystemRecipe, updateCharacter, updateSupportingCharacter, recipesInitialized])
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -368,8 +369,18 @@ export function CharacterStep() {
               if (response.ok) {
                 const data = await response.json()
                 if (data.characters?.length > 0) {
-                  data.characters.forEach((c: { name: string; tag: string }) => {
-                    addCharacter(c.name, c.tag)
+                  data.characters.forEach((c: { name: string; tag: string; role: string; description?: string }) => {
+                    if (c.role === 'supporting') {
+                      // Add supporting characters to storyCharacters array
+                      addStoryCharacter({
+                        name: c.name,
+                        role: 'other', // CharacterRole type for store
+                        description: c.description || '',
+                      })
+                    } else {
+                      // Add main characters to characters array
+                      addCharacter(c.name, c.tag)
+                    }
                   })
                 }
               }

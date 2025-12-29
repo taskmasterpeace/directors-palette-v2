@@ -743,19 +743,32 @@ export const useStorybookStore = create<StorybookState>((set, get) => ({
   setExtractedElements: (elements) => {
     const { project } = get()
     if (project) {
-      // Add extracted characters as storybook characters
-      const newCharacters: StorybookCharacter[] = elements.characters.map(char => ({
-        id: generateId(),
-        name: char.name,
-        tag: `@${char.name.replace(/\s+/g, '')}`,
-      }))
+      // Split extracted characters by role
+      const mainCharacters: StorybookCharacter[] = elements.characters
+        .filter(char => char.role === 'main')
+        .map(char => ({
+          id: generateId(),
+          name: char.name,
+          tag: `@${char.name.replace(/\s+/g, '')}`,
+        }))
+
+      // Supporting characters go to storyCharacters array
+      const supportingCharacters: StoryCharacter[] = elements.characters
+        .filter(char => char.role === 'supporting')
+        .map(char => ({
+          id: generateId(),
+          name: char.name,
+          role: 'other' as const, // CharacterRole type for store
+          description: char.description || '',
+        }))
 
       set({
         project: {
           ...project,
           extractedCharacters: elements.characters,
           extractedLocations: elements.locations,
-          characters: newCharacters,
+          characters: mainCharacters,
+          storyCharacters: [...(project.storyCharacters || []), ...supportingCharacters],
           updatedAt: new Date(),
         },
       })

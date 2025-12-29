@@ -175,7 +175,7 @@ async function waitForImageCompletion(
 
 /**
  * Converts reference images to HTTPS URLs for Replicate API
- * Handles data URLs, blob URLs, and already-uploaded URLs
+ * Handles data URLs, blob URLs, local paths, and already-uploaded URLs
  */
 async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<string[]> {
   const uploadedUrls: string[] = []
@@ -187,6 +187,36 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
     // If already HTTPS URL, use as-is
     if (imageUrl.startsWith('https://')) {
       uploadedUrls.push(imageUrl)
+      continue
+    }
+
+    // Handle local paths (e.g., /storybook/styles/watercolor-preset.webp)
+    // These need to be fetched and uploaded to Supabase since external APIs can't access localhost
+    if (imageUrl.startsWith('/')) {
+      try {
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
+        const fullUrl = `${baseUrl}${imageUrl}`
+        console.log(`[Recipe Execution] Fetching local asset: ${fullUrl}`)
+
+        // Fetch the local asset
+        const response = await fetch(fullUrl)
+        if (!response.ok) {
+          console.error(`[Recipe Execution] Failed to fetch local asset: ${fullUrl}`)
+          continue
+        }
+
+        const blob = await response.blob()
+        const filename = imageUrl.split('/').pop() || 'local-asset.png'
+        const file = new File([blob], filename, { type: blob.type || 'image/png' })
+
+        // Upload to Supabase for permanent storage (via /api/upload-file)
+        // Note: uploadImageToReplicate is a legacy name - it actually uploads to Supabase
+        const httpsUrl = await uploadImageToReplicate(file)
+        uploadedUrls.push(httpsUrl)
+        console.log(`[Recipe Execution] Uploaded local asset to Supabase: ${imageUrl} -> ${httpsUrl}`)
+      } catch (error) {
+        console.error(`[Recipe Execution] Failed to upload local asset: ${imageUrl}`, error)
+      }
       continue
     }
 
