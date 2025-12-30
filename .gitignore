@@ -27,6 +27,7 @@
 # misc
 .DS_Store
 *.pem
+claude-resume.bat
 
 # debug
 npm-debug.log*
