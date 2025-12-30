@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -50,6 +51,7 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
         quickPrompts,
         filteredPrompts,
         categoryPrompts,
+        isLoading,
         handleExportPrompts,
         handleImportPrompts,
         handleUpdateCategory,
@@ -246,31 +248,26 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                             <TabsContent value="all" className="flex-1 mt-3 sm:mt-4 min-h-0">
                                 <ScrollArea className="h-full max-h-[calc(100vh-350px)] sm:max-h-[calc(100vh-400px)] min-h-[250px] sm:min-h-[300px]">
                                     <div className="grid gap-2 sm:gap-3 pr-2">
-                                        {filteredPrompts.map(prompt => {
-                                            const category = categories.find(c => c.id === prompt.categoryId)
-                                            return (
-                                                <PromptCard
-                                                    key={prompt.id}
-                                                    prompt={prompt}
-                                                    categoryName={category?.name}
-                                                    categoryIcon={category?.icon}
-                                                    onToggleStar={toggleQuickAccess}
-                                                    onDelete={deletePrompt}
-                                                    onEdit={handleEdit}
-                                                    onUsePrompt={handleSelectPrompt}
-                                                    processPromptReplacements={processPromptReplacements}
-                                                />
-                                            )
-                                        })}
-                                    </div>
-                                </ScrollArea>
-                            </TabsContent>
-
-                            {showQuickAccess && (
-                                <TabsContent value="quick" className="flex-1 mt-3 sm:mt-4 min-h-0">
-                                    <ScrollArea className="h-full max-h-[calc(100vh-350px)] sm:max-h-[calc(100vh-400px)] min-h-[250px] sm:min-h-[300px]">
-                                        <div className="grid gap-2 sm:gap-3 pr-2">
-                                            {quickPrompts.map(prompt => {
+                                        {isLoading ? (
+                                            // Skeleton loading cards
+                                            Array.from({ length: 4 }).map((_, i) => (
+                                                <div key={i} className="bg-card border border-border rounded-lg p-3 sm:p-4">
+                                                    <div className="flex items-start justify-between gap-2 mb-2">
+                                                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                            <Skeleton className="w-5 h-5 rounded" />
+                                                            <Skeleton className="h-4 w-32" />
+                                                        </div>
+                                                        <Skeleton className="w-8 h-8 rounded" />
+                                                    </div>
+                                                    <Skeleton className="h-12 w-full mb-2" />
+                                                    <div className="flex gap-1">
+                                                        <Skeleton className="h-5 w-16 rounded-full" />
+                                                        <Skeleton className="h-5 w-12 rounded-full" />
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            filteredPrompts.map(prompt => {
                                                 const category = categories.find(c => c.id === prompt.categoryId)
                                                 return (
                                                     <PromptCard
@@ -285,7 +282,50 @@ const PromptLibraryCard = ({ onSelectPrompt, setIsAddPromptOpen, showQuickAccess
                                                         processPromptReplacements={processPromptReplacements}
                                                     />
                                                 )
-                                            })}
+                                            })
+                                        )}
+                                    </div>
+                                </ScrollArea>
+                            </TabsContent>
+
+                            {showQuickAccess && (
+                                <TabsContent value="quick" className="flex-1 mt-3 sm:mt-4 min-h-0">
+                                    <ScrollArea className="h-full max-h-[calc(100vh-350px)] sm:max-h-[calc(100vh-400px)] min-h-[250px] sm:min-h-[300px]">
+                                        <div className="grid gap-2 sm:gap-3 pr-2">
+                                            {isLoading ? (
+                                                Array.from({ length: 3 }).map((_, i) => (
+                                                    <div key={i} className="bg-card border border-border rounded-lg p-3 sm:p-4">
+                                                        <div className="flex items-start justify-between gap-2 mb-2">
+                                                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                                <Skeleton className="w-5 h-5 rounded" />
+                                                                <Skeleton className="h-4 w-32" />
+                                                            </div>
+                                                            <Skeleton className="w-8 h-8 rounded" />
+                                                        </div>
+                                                        <Skeleton className="h-12 w-full mb-2" />
+                                                        <div className="flex gap-1">
+                                                            <Skeleton className="h-5 w-16 rounded-full" />
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                quickPrompts.map(prompt => {
+                                                    const category = categories.find(c => c.id === prompt.categoryId)
+                                                    return (
+                                                        <PromptCard
+                                                            key={prompt.id}
+                                                            prompt={prompt}
+                                                            categoryName={category?.name}
+                                                            categoryIcon={category?.icon}
+                                                            onToggleStar={toggleQuickAccess}
+                                                            onDelete={deletePrompt}
+                                                            onEdit={handleEdit}
+                                                            onUsePrompt={handleSelectPrompt}
+                                                            processPromptReplacements={processPromptReplacements}
+                                                        />
+                                                    )
+                                                })
+                                            )}
                                         </div>
                                     </ScrollArea>
                                 </TabsContent>
