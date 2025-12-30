@@ -189,3 +189,70 @@ This incident could have resulted in weeks of lost work. The only reason recover
 *Document created: December 16, 2024*
 *Incident resolved: December 16, 2024*
 *Author: Claude Code with Human Oversight*
+
+---
+
+# LESSON: Claude Code Statusline Setup - December 30, 2024
+
+## What We Wanted
+A statusline showing current folder and git branch in Claude Code.
+
+## What Went Wrong (Multiple Times)
+1. **JSON parsing failures** - Tried parsing Claude's JSON input with `jq` and `grep/sed` - unreliable
+2. **jq not working** - Windows had npm-based jq wrapper that was broken
+3. **Line ending corruption** - Windows CRLF caused garbled output like `| maintors-palette-v2`
+4. **Inconsistent output** - Sometimes showed folder, sometimes branch, sometimes nothing
+
+## The Fix
+
+### Simple statusline script (no JSON parsing needed!)
+```bash
+#!/bin/bash
+DIR=$(basename "$(pwd)")
+BRANCH=$(git branch --show-current 2>/dev/null)
+echo "📁 $DIR | 🌿 $BRANCH"
+```
+
+**Key insight**: The script runs in the project directory context, so `pwd` works directly. No need to parse JSON.
+
+### Settings configuration
+In `.claude/settings.json`:
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "bash .claude/statusline.sh"
+  }
+}
+```
+
+### Prevent CRLF corruption
+Add to `.gitattributes`:
+```
+*.sh text eol=lf
+```
+
+## Setup Checklist
+
+- [ ] Create `.claude/statusline.sh` with the script above
+- [ ] Ensure Unix line endings (LF, not CRLF)
+- [ ] Add `*.sh text eol=lf` to `.gitattributes`
+- [ ] Configure in `.claude/settings.json`
+- [ ] **Restart Claude Code** for changes to take effect
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Nothing shows | Restart Claude Code |
+| Garbled output | Fix line endings: `sed -i 's/\r$//' .claude/statusline.sh` |
+| Only branch shows | Check `pwd` works in Git Bash |
+| Only folder shows | Check `git branch --show-current` works |
+
+## Reference
+- cc-statusline project: https://github.com/chongdashu/cc-statusline
+- Our simplified version doesn't need jq or JSON parsing
+
+---
+
+*Lesson added: December 30, 2024*
