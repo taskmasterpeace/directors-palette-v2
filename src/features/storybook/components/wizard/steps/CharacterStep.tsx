@@ -634,7 +634,7 @@ export function CharacterStep() {
                   <p className="text-xs text-zinc-500">
                     {!character.sourcePhotoUrl && !character.description ? (
                       <span className="text-amber-500/80">
-                        ✓ Good: "7yo girl, Asian, pigtails, pink tutu" — ✗ Avoid: "a nice friendly child"
+                        ✓ Good: &quot;7yo girl, Asian, pigtails, pink tutu&quot; — ✗ Avoid: &quot;a nice friendly child&quot;
                       </span>
                     ) : (
                       <span>Click Enhance to expand your hints into a detailed visual description</span>
