@@ -1,14 +1,14 @@
 /**
  * Prompt Expander API
  *
- * Expands prompts with cinematographic detail using Gemini 2.0 Flash via OpenRouter.
+ * Expands prompts with cinematographic detail using GPT-4o-mini via OpenRouter.
  * Preserves user's original text as the core while adding visual modifiers.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 
-const GEMINI_MODEL = 'google/gemini-2.0-flash-exp:free'
+const MODEL = 'openai/gpt-4o-mini'
 
 const SYSTEM_PROMPT = `You are a prompt expansion specialist for AI image generation.
 
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
             userMessage += `\n\nUse the visual style of director: ${director}`
         }
 
-        // Call OpenRouter with Gemini 2.0 Flash (free)
+        // Call OpenRouter with GPT-4o-mini
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
                 'X-Title': 'Director\'s Palette Prompt Expander'
             },
             body: JSON.stringify({
-                model: GEMINI_MODEL,
+                model: MODEL,
                 messages: [
                     { role: 'system', content: SYSTEM_PROMPT },
                     { role: 'user', content: userMessage }
