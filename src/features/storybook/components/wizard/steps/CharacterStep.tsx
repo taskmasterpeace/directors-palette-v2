@@ -590,7 +590,7 @@ export function CharacterStep() {
                   </Label>
                   <div className="flex gap-2">
                     <Textarea
-                      placeholder="E.g., young African American girl, 5 years old, curly black hair, bright smile..."
+                      placeholder="age, gender, ethnicity, hair, outfit, key feature&#10;&#10;Examples:&#10;• 8-year-old boy, Latino, messy brown hair, red hoodie, missing front tooth&#10;• elderly Asian grandmother, silver bun, round glasses, floral apron&#10;• young Black girl, poofy afro puffs, yellow sundress, bright curious eyes"
                       value={character.description || ''}
                       onChange={(e) => {
                         const charId = character.id
@@ -610,8 +610,8 @@ export function CharacterStep() {
                           updateCharacter(charId, { description: desc })
                         }
                       }}
-                      rows={2}
-                      className="text-sm flex-1"
+                      rows={4}
+                      className="text-sm flex-1 placeholder:text-zinc-600"
                     />
                     <Button
                       variant="outline"
@@ -631,11 +631,15 @@ export function CharacterStep() {
                       )}
                     </Button>
                   </div>
-                  {!character.sourcePhotoUrl && !character.description && (
-                    <p className="text-xs text-amber-500/80">
-                      Tip: Add hints like age, gender, race - AI will create a full description
-                    </p>
-                  )}
+                  <p className="text-xs text-zinc-500">
+                    {!character.sourcePhotoUrl && !character.description ? (
+                      <span className="text-amber-500/80">
+                        ✓ Good: "7yo girl, Asian, pigtails, pink tutu" — ✗ Avoid: "a nice friendly child"
+                      </span>
+                    ) : (
+                      <span>Click Enhance to expand your hints into a detailed visual description</span>
+                    )}
+                  </p>
                 </div>
 
                 {/* Character Sheet Preview */}

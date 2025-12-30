@@ -156,7 +156,7 @@ export function useStorybookGeneration() {
 
     try {
       let fieldValues: Record<string, string>
-      let referenceImages: string[] = []
+      const referenceImages: string[] = []
       let recipeName: string
 
       if (hasPhoto) {
