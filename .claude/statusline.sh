@@ -1,8 +1,8 @@
 #!/bin/bash
-# Simple statusline - folder name and git branch
-# Claude Code runs this from workspace directory, so pwd works directly
+# Simple statusline - no JSON parsing needed
+# pwd gives us the current directory when script runs
 
 DIR=$(basename "$(pwd)")
 BRANCH=$(git branch --show-current 2>/dev/null)
 
-echo "📁 $DIR | 🌿 $BRANCH"
+echo "$DIR | $BRANCH"
