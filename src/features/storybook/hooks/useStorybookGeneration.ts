@@ -8,6 +8,7 @@ import { useRecipes } from '@/features/shot-creator/hooks/useRecipes'
 const DEFAULT_RECIPE_NAMES = {
   STYLE_GUIDE: 'Storybook Style Guide',
   CHARACTER_SHEET: 'Storybook Character Sheet',
+  CHARACTER_SHEET_FROM_DESCRIPTION: 'Storybook Character Sheet (From Description)',
   PAGE_FIRST: 'Storybook Page (First)',
   PAGE_CONTINUATION: 'Storybook Page (Continuation)',
   BOOK_COVER: 'Storybook Book Cover',
@@ -132,7 +133,7 @@ export function useStorybookGeneration() {
   }, [setStyle, setGenerating, setError])
 
   /**
-   * Generate a character sheet from a photo
+   * Generate a character sheet from a photo OR description
    */
   const generateCharacterSheet = useCallback(async (
     characterId: string
@@ -142,30 +143,53 @@ export function useStorybookGeneration() {
       return { success: false, error: 'Character not found' }
     }
 
+    // Determine if we have photo or description
+    const hasPhoto = !!character.sourcePhotoUrl
+    const hasDescription = !!character.description?.trim()
+
+    if (!hasPhoto && !hasDescription) {
+      return { success: false, error: 'Character needs either a photo or description to generate a character sheet' }
+    }
+
     setState({ isGenerating: true, progress: `Generating character sheet for ${character.name}...`, error: null })
     setGenerating(true)
 
     try {
-      // Build field values for recipe
-      const fieldValues = {
-        'stage0_field0_character_name': character.tag || character.name,
-      }
+      let fieldValues: Record<string, string>
+      let referenceImages: string[] = []
+      let recipeName: string
 
-      // Auto-attach reference images: source photo + style guide
-      const referenceImages: string[] = []
-      if (character.sourcePhotoUrl) {
-        referenceImages.push(character.sourcePhotoUrl)
-      }
-      if (project?.style?.styleGuideUrl) {
-        referenceImages.push(project.style.styleGuideUrl)
-      }
-      // Template is already in recipe's stage.referenceImages
+      if (hasPhoto) {
+        // Photo-based generation: use original 3-stage recipe
+        fieldValues = {
+          'stage0_field0_character_name': character.tag || character.name,
+        }
 
-      // Get recipe name from config or use default
-      const recipeName = getRecipeName(
-        project?.recipeConfig?.characterSheetRecipeId,
-        DEFAULT_RECIPE_NAMES.CHARACTER_SHEET
-      )
+        // Reference images: source photo + style guide
+        referenceImages.push(character.sourcePhotoUrl!)
+        if (project?.style?.styleGuideUrl) {
+          referenceImages.push(project.style.styleGuideUrl)
+        }
+
+        recipeName = getRecipeName(
+          project?.recipeConfig?.characterSheetRecipeId,
+          DEFAULT_RECIPE_NAMES.CHARACTER_SHEET
+        )
+      } else {
+        // Description-based generation: use 2-stage recipe
+        fieldValues = {
+          'stage0_field0_character_name': character.tag || character.name,
+          'stage0_field1_character_role': 'main character',
+          'stage0_field2_character_description': character.description!,
+        }
+
+        // Reference images: style guide is critical for description-based
+        if (project?.style?.styleGuideUrl) {
+          referenceImages.push(project.style.styleGuideUrl)
+        }
+
+        recipeName = DEFAULT_RECIPE_NAMES.CHARACTER_SHEET_FROM_DESCRIPTION
+      }
 
       // Call recipe execution API
       const response = await fetch(`/api/recipes/${recipeName}/execute`, {

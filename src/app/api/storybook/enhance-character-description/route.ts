@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
         'X-Title': 'Directors Palette - Character Enhancement'
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-3.2-3b-instruct', // Fast and cost-effective
+        model: 'openai/gpt-4o-mini', // Better quality for character descriptions
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: userMessage }
