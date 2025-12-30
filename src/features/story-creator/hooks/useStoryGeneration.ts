@@ -10,7 +10,7 @@ import { parseDynamicPrompt } from '@/features/shot-creator/helpers/prompt-synta
 import { parseReferenceTags } from '@/features/shot-creator/helpers/parse-reference-tags'
 import { getRandomFromCategory } from '@/features/shot-creator/services/reference-selection.service'
 import { getVariationCount } from '../helpers/bracket-prompt.helper'
-import { uploadImageToReplicate } from '@/features/shot-creator/helpers/image-resize.helper'
+import { uploadImageToStorage } from '@/features/shot-creator/helpers/image-resize.helper'
 import { StoryProjectService } from '../services/story-project.service'
 import { QueueRecoveryService } from '../services/queue-recovery.service'
 import type { ImageGenerationRequest, ImageModel, ImageModelSettings } from '@/features/shot-creator/types/image-generation.types'
@@ -45,7 +45,7 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
                 const response = await fetch(imageUrl)
                 const blob = await response.blob()
                 const file = new File([blob], `reference-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' })
-                const httpsUrl = await uploadImageToReplicate(file)
+                const httpsUrl = await uploadImageToStorage(file)
                 uploadedUrls.push(httpsUrl)
             } catch (error) {
                 console.error('Failed to upload reference image:', error)

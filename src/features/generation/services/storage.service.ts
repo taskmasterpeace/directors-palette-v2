@@ -125,6 +125,7 @@ export class StorageService {
       .upload(storagePath, buffer, {
         contentType: mimeType,
         upsert: true,
+        cacheControl: 'public, max-age=31536000, immutable',
       });
 
     if (uploadError) {

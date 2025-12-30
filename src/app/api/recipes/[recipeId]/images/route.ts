@@ -93,6 +93,7 @@ export async function POST(
       .upload(storagePath, buffer, {
         contentType: file.type,
         upsert: true,
+        cacheControl: 'public, max-age=31536000, immutable',
       });
 
     if (uploadError) {

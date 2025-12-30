@@ -499,34 +499,21 @@ export async function POST(request: NextRequest) {
               predictionId: prediction.id,
             });
 
-            // Fallback: store Replicate URL (will expire within 1 hour)
+            // Mark as failed - DO NOT store Replicate URL (expires in 1 hour!)
             await supabase
               .from('gallery')
               .update({
-                status: 'completed',
-                public_url: replicateUrl,
+                status: 'failed',
+                error_message: `Storage upload failed: ${errorMessage}`,
               })
               .eq('id', gallery.id);
 
-            // ✅ CREDITS: Deduct credits for fallback success case too (admins bypass)
-            if (!userIsAdmin) {
-              const deductResult = await creditsService.deductCredits(user.id, model, {
-                generationType: 'image',
-                predictionId: prediction.id,
-                description: `Image generation (${model})`,
-              })
-              if (!deductResult.success) {
-                console.error('Failed to deduct credits:', deductResult.error)
-              } else {
-                console.log(`Deducted credits for user ${user.id}. New balance: ${deductResult.newBalance}`)
-              }
-            }
-
+            // Don't deduct credits on storage failure - user didn't get their image
             return NextResponse.json({
               predictionId: prediction.id,
               galleryId: gallery.id,
-              status: 'completed',
-              imageUrl: replicateUrl,
+              status: 'failed',
+              error: 'Image generated but storage upload failed. Please try again.',
             });
           }
         } else if (completedPrediction.status === 'failed') {

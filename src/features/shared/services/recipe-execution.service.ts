@@ -15,7 +15,7 @@ import {
   buildRecipePrompts,
 } from '@/features/shot-creator/types/recipe.types'
 import { imageGenerationService } from '@/features/shot-creator/services/image-generation.service'
-import { uploadImageToReplicate } from '@/features/shot-creator/helpers/image-resize.helper'
+import { uploadImageToStorage } from '@/features/shot-creator/helpers/image-resize.helper'
 import type { ImageModel, ImageModelSettings, ImageGenerationRequest } from '@/features/shot-creator/types/image-generation.types'
 
 export interface RecipeExecutionOptions {
@@ -210,8 +210,7 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
         const file = new File([blob], filename, { type: blob.type || 'image/png' })
 
         // Upload to Supabase for permanent storage (via /api/upload-file)
-        // Note: uploadImageToReplicate is a legacy name - it actually uploads to Supabase
-        const httpsUrl = await uploadImageToReplicate(file)
+        const httpsUrl = await uploadImageToStorage(file)
         uploadedUrls.push(httpsUrl)
         console.log(`[Recipe Execution] Uploaded local asset to Supabase: ${imageUrl} -> ${httpsUrl}`)
       } catch (error) {
@@ -230,8 +229,8 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
         // Convert Blob to File
         const file = new File([blob], `reference-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' })
 
-        // Upload to Replicate
-        const httpsUrl = await uploadImageToReplicate(file)
+        // Upload to Supabase storage
+        const httpsUrl = await uploadImageToStorage(file)
         uploadedUrls.push(httpsUrl)
       } catch (error) {
         console.error('Failed to upload reference image:', error)

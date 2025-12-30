@@ -11,7 +11,7 @@ import { getClient, TypedSupabaseClient } from '@/lib/db/client'
 import { parseDynamicPrompt } from '../helpers/prompt-syntax-feedback'
 import { parseReferenceTags } from '../helpers/parse-reference-tags'
 import { getRandomFromCategory } from '../services/reference-selection.service'
-import { uploadImageToReplicate } from '../helpers/image-resize.helper'
+import { uploadImageToStorage } from '../helpers/image-resize.helper'
 import { ImageGenerationRequest, ImageModel, ImageModelSettings } from "../types/image-generation.types"
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { useCustomStylesStore } from '../store/custom-styles.store'
@@ -194,7 +194,7 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
                 const file = new File([blob], `reference-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' })
 
                 // Upload to Replicate
-                const httpsUrl = await uploadImageToReplicate(file)
+                const httpsUrl = await uploadImageToStorage(file)
                 uploadedUrls.push(httpsUrl)
             } catch (error) {
                 console.error('Failed to upload reference image:', error)

@@ -94,10 +94,10 @@ export async function resizeImage(
 
 /**
  * Uploads image to Supabase storage and returns permanent HTTPS URL
- * Note: Function name is legacy - it now uploads to Supabase via /api/upload-file
+ * Uses /api/upload-file endpoint
  * Returns: https://tarohelkwuurakbxjyxm.supabase.co/... (permanent URL)
  */
-export async function uploadImageToReplicate(file: File): Promise<string> {
+export async function uploadImageToStorage(file: File): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);
 
@@ -133,7 +133,7 @@ export async function processAndUploadImage(
     const resizedFile = await resizeImage(file, aspectRatio);
 
     // Step 3: Upload
-    const url = await uploadImageToReplicate(resizedFile);
+    const url = await uploadImageToStorage(resizedFile);
 
     return { url };
   } catch (error) {
