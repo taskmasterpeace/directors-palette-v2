@@ -1,10 +1,13 @@
 #!/bin/bash
-# Statusline script - reads JSON from Claude stdin
-JQ="/c/Users/taskm/AppData/Local/Microsoft/WinGet/Packages/jqlang.jq_Microsoft.Winget.Source_8wekyb3d8bbwe/jq.exe"
+# Statusline script - simple version that works
 
-INPUT=$(cat)
-CWD=$(echo "$INPUT" | "$JQ" -r '.workspace.current_dir // .cwd // empty')
-DIR=$(basename "$CWD")
-BRANCH=$(cd "$CWD" 2>/dev/null && git branch --show-current 2>/dev/null)
+# Consume stdin (required by Claude Code)
+cat > /dev/null
+
+# Get directory name from PWD (script runs in project dir)
+DIR=$(basename "$(pwd)")
+
+# Get git branch
+BRANCH=$(git branch --show-current 2>/dev/null)
 
 echo "📁 $DIR | 🌿 $BRANCH"
