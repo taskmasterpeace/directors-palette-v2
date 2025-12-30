@@ -1,7 +1,7 @@
 {
   "statusLine": {
     "type": "command",
-    "command": "bash C:/git/directors-palette-v2/.claude/statusline.sh"
+    "command": "bash .claude/statusline.sh"
   },
   "hooks": {
     "SessionStart": [
