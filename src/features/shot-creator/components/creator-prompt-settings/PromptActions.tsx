@@ -25,6 +25,7 @@ import { parseDynamicPrompt } from "../../helpers/prompt-syntax-feedback"
 import { useWildCardStore } from "../../store/wildcard.store"
 import { QuickAccessBar, RecipeFormFields } from "../recipe"
 import { OrganizeButton } from "../prompt-organizer"
+import { PromptExpanderButton } from "../prompt-expander/PromptExpanderButton"
 import { MobilePromptsRecipesBar } from "./MobilePromptsRecipesBar"
 import { usePromptAutocomplete } from "../../hooks/usePromptAutocomplete"
 import { useCallback } from "react"
@@ -658,6 +659,10 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                         <OrganizeButton
                             prompt={shotCreatorPrompt}
                             onApply={setShotCreatorPrompt}
+                        />
+                        <PromptExpanderButton
+                            prompt={shotCreatorPrompt}
+                            onPromptChange={setShotCreatorPrompt}
                         />
                         <QuickAccessBar onSelectRecipe={_handleSelectRecipe} />
                     </div>
