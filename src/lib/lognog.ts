@@ -87,7 +87,7 @@ export const lognog = {
     // Model/service specifics
     model?: string
     prompt_length?: number
-    prompt_preview?: string // First 50 chars for debugging
+    prompt_preview?: string // First 100 chars for debugging
     // Replicate specific
     prediction_id?: string
     output_url?: string
@@ -157,7 +157,9 @@ export const lognog = {
    */
   business(data: {
     event: 'credit_deduction' | 'generation_completed' | 'generation_failed' |
-           'payment_completed' | 'webhook_received' | 'user_signup' | string
+           'payment_completed' | 'webhook_received' | 'user_signup' |
+           'recipe_executed' | 'story_generated' | 'storybook_project_created' |
+           'storybook_project_updated' | 'prompt_expanded' | string
     // User context (strongly recommended)
     user_id?: string
     user_email?: string
@@ -173,6 +175,27 @@ export const lognog = {
     // Payment context
     amount_cents?: number
     stripe_session_id?: string
+    // Recipe context
+    recipe_id?: string
+    recipe_name?: string
+    stage_count?: number
+    prompt_preview?: string // First 100 chars
+    prompt_length?: number
+    // Storybook context
+    project_id?: string
+    title?: string
+    category?: string
+    topic?: string
+    character_name?: string
+    character_age?: number
+    page_count?: number
+    sentences_per_page?: number
+    generated_title?: string
+    // Prompt expander context
+    detail_level?: string
+    director_style?: string
+    original_prompt_length?: number
+    expanded_prompt_length?: number
     // Additional metadata
     metadata?: Record<string, unknown>
   }): void {
@@ -189,6 +212,27 @@ export const lognog = {
       prediction_id: data.prediction_id,
       amount_cents: data.amount_cents,
       stripe_session_id: data.stripe_session_id,
+      // Recipe fields
+      recipe_id: data.recipe_id,
+      recipe_name: data.recipe_name,
+      stage_count: data.stage_count,
+      prompt_preview: data.prompt_preview,
+      prompt_length: data.prompt_length,
+      // Storybook fields
+      project_id: data.project_id,
+      title: data.title,
+      category: data.category,
+      topic: data.topic,
+      character_name: data.character_name,
+      character_age: data.character_age,
+      page_count: data.page_count,
+      sentences_per_page: data.sentences_per_page,
+      generated_title: data.generated_title,
+      // Prompt expander fields
+      detail_level: data.detail_level,
+      director_style: data.director_style,
+      original_prompt_length: data.original_prompt_length,
+      expanded_prompt_length: data.expanded_prompt_length,
       ...data.metadata,
     })
   },

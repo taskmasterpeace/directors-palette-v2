@@ -14,6 +14,7 @@ import { ImageGenerationService } from '@/features/shot-creator/services/image-g
 import { StorageService } from '@/features/generation/services/storage.service'
 import { getModelConfig } from '@/config'
 import type { ImageModel, ImageModelSettings } from '@/features/shot-creator/types/image-generation.types'
+import { lognog } from '@/lib/lognog'
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -321,6 +322,26 @@ export async function POST(request: NextRequest): Promise<NextResponse<RecipeExe
       responseTimeMs: Date.now() - startTime,
       ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] || undefined,
       userAgent: request.headers.get('user-agent') || undefined,
+    })
+
+    // Log recipe execution to LogNog
+    lognog.business({
+      event: 'recipe_executed',
+      user_id: validatedKey.userId,
+      stage_count: stages.length,
+      prompt_preview: results[0]?.prompt.slice(0, 100),
+      prompt_length: results[0]?.prompt.length,
+      model,
+    })
+
+    // Log API success
+    lognog.api({
+      route: '/api/v1/recipes/execute',
+      method: 'POST',
+      status_code: 200,
+      duration_ms: Date.now() - startTime,
+      user_id: validatedKey.userId,
+      model,
     })
 
     return NextResponse.json({

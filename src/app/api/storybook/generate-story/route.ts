@@ -14,6 +14,7 @@ import {
 } from '@/features/storybook/types/education.types'
 import type { StoryCharacterInput } from '@/features/storybook/types/storybook.types'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { lognog } from '@/lib/lognog'
 
 interface GenerateStoryRequest {
   characterName: string
@@ -315,11 +316,17 @@ Create a fun, imaginative story that a ${characterAge}-year-old will love!`
 }
 
 export async function POST(request: NextRequest) {
+  const apiStart = Date.now()
+  let userId: string | undefined
+  let userEmail: string | undefined
+
   try {
     // Verify authentication FIRST
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
     const { user } = auth
+    userId = user.id
+    userEmail = user.email
 
     console.log(`[Storybook API] generate-story (GPT-4o) called by user ${user.id}`)
 
@@ -436,6 +443,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Use GPT-4o for better story quality (not mini)
+    const openRouterStart = Date.now()
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -458,11 +466,36 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const error = await response.text()
       console.error('OpenRouter API error:', error)
+
+      // Log OpenRouter failure
+      lognog.integration({
+        integration: 'openrouter',
+        success: false,
+        latency_ms: Date.now() - openRouterStart,
+        http_status: response.status,
+        model: 'openai/gpt-4o',
+        error,
+        user_id: userId,
+        user_email: userEmail,
+      })
+
       return NextResponse.json(
         { error: 'Failed to generate story' },
         { status: 500 }
       )
     }
+
+    // Log OpenRouter success
+    lognog.integration({
+      integration: 'openrouter',
+      success: true,
+      latency_ms: Date.now() - openRouterStart,
+      http_status: 200,
+      model: 'openai/gpt-4o',
+      prompt_length: systemPrompt.length + userMessage.length,
+      user_id: userId,
+      user_email: userEmail,
+    })
 
     const data = await response.json()
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0]
@@ -492,6 +525,32 @@ export async function POST(request: NextRequest) {
         pages
       }
 
+      // Log story generation success
+      lognog.business({
+        event: 'story_generated',
+        user_id: userId,
+        user_email: userEmail,
+        category: category,
+        topic: topic,
+        character_name: characterName,
+        character_age: characterAge,
+        page_count: pageCount,
+        sentences_per_page: sentencesPerPage,
+        generated_title: result.title,
+      })
+
+      // Log API success
+      lognog.api({
+        route: '/api/storybook/generate-story',
+        method: 'POST',
+        status_code: 200,
+        duration_ms: Date.now() - apiStart,
+        user_id: userId,
+        user_email: userEmail,
+        integration: 'openrouter',
+        model: 'openai/gpt-4o',
+      })
+
       return NextResponse.json(story)
     } catch (parseError) {
       console.error('Failed to parse tool call arguments:', parseError)
@@ -502,6 +561,29 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('Error in generate-story:', error)
+
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
+    // Log error
+    lognog.error({
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+      route: '/api/storybook/generate-story',
+      user_id: userId,
+      user_email: userEmail,
+    })
+
+    // Log API failure
+    lognog.api({
+      route: '/api/storybook/generate-story',
+      method: 'POST',
+      status_code: 500,
+      duration_ms: Date.now() - apiStart,
+      user_id: userId,
+      user_email: userEmail,
+      error: errorMessage,
+    })
+
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

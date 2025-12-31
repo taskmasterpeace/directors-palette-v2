@@ -3,6 +3,7 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { getRecipe } from '@/features/shot-creator/services/recipe.service'
 import { buildRecipePrompts, validateRecipe } from '@/features/shot-creator/types/recipe.types'
 import type { RecipeFieldValues } from '@/features/shot-creator/types/recipe.types'
+import { lognog } from '@/lib/lognog'
 
 /**
  * Recipe Execution API
@@ -23,12 +24,18 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ recipeId: string }> }
 ) {
+  const apiStart = Date.now()
+  let userId: string | undefined
+  let userEmail: string | undefined
+
   try {
     // Authenticate user
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
 
     const { user } = auth
+    userId = user.id
+    userEmail = user.email
 
     // Extract recipeId from params
     const { recipeId } = await params
@@ -186,6 +193,31 @@ export async function POST(
         const imageUrl = statusData.persistedUrl || statusData.output
         const finalImageUrl = Array.isArray(imageUrl) ? imageUrl[0] : imageUrl
 
+        // Log recipe execution success
+        lognog.business({
+          event: 'recipe_executed',
+          user_id: userId,
+          user_email: userEmail,
+          recipe_id: recipe.id,
+          recipe_name: recipe.name,
+          stage_count: recipe.stages.length,
+          prompt_preview: prompt.slice(0, 100),
+          prompt_length: prompt.length,
+          model,
+          prediction_id: predictionId,
+        })
+
+        // Log API success
+        lognog.api({
+          route: `/api/recipes/${recipeId}/execute`,
+          method: 'POST',
+          status_code: 200,
+          duration_ms: Date.now() - apiStart,
+          user_id: userId,
+          user_email: userEmail,
+          model,
+        })
+
         return NextResponse.json({
           success: true,
           imageUrl: finalImageUrl,
@@ -227,6 +259,27 @@ export async function POST(
     console.error('[Recipe Execute] Error:', error)
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
+    // Log error
+    lognog.error({
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+      route: '/api/recipes/[recipeId]/execute',
+      user_id: userId,
+      user_email: userEmail,
+    })
+
+    // Log API failure
+    lognog.api({
+      route: '/api/recipes/[recipeId]/execute',
+      method: 'POST',
+      status_code: 500,
+      duration_ms: Date.now() - apiStart,
+      user_id: userId,
+      user_email: userEmail,
+      error: errorMessage,
+    })
+
     return NextResponse.json(
       {
         success: false,

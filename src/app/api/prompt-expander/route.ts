@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { lognog } from '@/lib/lognog'
 
 const MODEL = 'openai/gpt-4o-mini'
 
@@ -48,10 +49,16 @@ interface ExpandRequest {
 }
 
 export async function POST(request: NextRequest) {
+    const apiStart = Date.now()
+    let userId: string | undefined
+    let userEmail: string | undefined
+
     try {
         // Check authentication
         const auth = await getAuthenticatedUser(request)
         if (auth instanceof NextResponse) return auth
+        userId = auth.user.id
+        userEmail = auth.user.email
 
         const body: ExpandRequest = await request.json()
         const { prompt, level, director } = body
@@ -72,6 +79,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Call OpenRouter with GPT-4o-mini
+        const openRouterStart = Date.now()
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -94,8 +102,32 @@ export async function POST(request: NextRequest) {
         if (!response.ok) {
             const error = await response.text()
             console.error('OpenRouter error:', error)
+
+            lognog.integration({
+                integration: 'openrouter',
+                success: false,
+                latency_ms: Date.now() - openRouterStart,
+                http_status: response.status,
+                model: MODEL,
+                error,
+                user_id: userId,
+                user_email: userEmail,
+            })
+
             return NextResponse.json({ error: 'Expansion failed' }, { status: 500 })
         }
+
+        // Log OpenRouter success
+        lognog.integration({
+            integration: 'openrouter',
+            success: true,
+            latency_ms: Date.now() - openRouterStart,
+            http_status: 200,
+            model: MODEL,
+            prompt_length: prompt.length,
+            user_id: userId,
+            user_email: userEmail,
+        })
 
         const data = await response.json()
         const content = data.choices?.[0]?.message?.content
@@ -109,6 +141,28 @@ export async function POST(request: NextRequest) {
             .replace(/^["']|["']$/g, '') // Remove surrounding quotes
             .trim()
 
+        // Log prompt expansion success
+        lognog.business({
+            event: 'prompt_expanded',
+            user_id: userId,
+            user_email: userEmail,
+            detail_level: level,
+            director_style: director || 'none',
+            original_prompt_length: prompt.length,
+            expanded_prompt_length: expanded.length,
+        })
+
+        lognog.api({
+            route: '/api/prompt-expander',
+            method: 'POST',
+            status_code: 200,
+            duration_ms: Date.now() - apiStart,
+            user_id: userId,
+            user_email: userEmail,
+            integration: 'openrouter',
+            model: MODEL,
+        })
+
         return NextResponse.json({
             original: prompt,
             expanded,
@@ -117,6 +171,26 @@ export async function POST(request: NextRequest) {
         })
     } catch (error) {
         console.error('Prompt expansion error:', error)
+
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
+        lognog.error({
+            message: errorMessage,
+            route: '/api/prompt-expander',
+            user_id: userId,
+            user_email: userEmail,
+        })
+
+        lognog.api({
+            route: '/api/prompt-expander',
+            method: 'POST',
+            status_code: 500,
+            duration_ms: Date.now() - apiStart,
+            user_id: userId,
+            user_email: userEmail,
+            error: errorMessage,
+        })
+
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }

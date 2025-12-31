@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { StorybookProjectsService } from '@/features/storybook/services/storybook-projects.service';
+import { lognog } from '@/lib/lognog';
 
 /**
  * GET /api/storybook/projects
@@ -28,9 +29,15 @@ export async function GET(request: NextRequest) {
  * Create a new storybook project or update existing one
  */
 export async function POST(request: NextRequest) {
+  const apiStart = Date.now();
+  let userId: string | undefined;
+  let userEmail: string | undefined;
+
   try {
     const auth = await getAuthenticatedUser(request);
     if (auth instanceof NextResponse) return auth;
+    userId = auth.user.id;
+    userEmail = auth.user.email;
 
     const body = await request.json();
     const { id, title, status, projectData } = body;
@@ -51,10 +58,28 @@ export async function POST(request: NextRequest) {
 
     // If ID is provided, update existing project
     if (id) {
-      const project = await StorybookProjectsService.updateProject(id, auth.user.id, {
+      const project = await StorybookProjectsService.updateProject(id, userId, {
         title,
         status: status || 'draft',
         projectData,
+      });
+
+      // Log project update
+      lognog.business({
+        event: 'storybook_project_updated',
+        user_id: userId,
+        user_email: userEmail,
+        project_id: id,
+        title,
+      });
+
+      lognog.api({
+        route: '/api/storybook/projects',
+        method: 'POST',
+        status_code: 200,
+        duration_ms: Date.now() - apiStart,
+        user_id: userId,
+        user_email: userEmail,
       });
 
       return NextResponse.json({
@@ -65,11 +90,29 @@ export async function POST(request: NextRequest) {
 
     // Create new project
     const project = await StorybookProjectsService.createProject(
-      auth.user.id,
+      userId,
       title,
       projectData,
       status || 'draft'
     );
+
+    // Log project creation
+    lognog.business({
+      event: 'storybook_project_created',
+      user_id: userId,
+      user_email: userEmail,
+      project_id: project.id,
+      title,
+    });
+
+    lognog.api({
+      route: '/api/storybook/projects',
+      method: 'POST',
+      status_code: 200,
+      duration_ms: Date.now() - apiStart,
+      user_id: userId,
+      user_email: userEmail,
+    });
 
     return NextResponse.json({
       project,
@@ -77,8 +120,28 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Project save error:', error);
+
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+    lognog.error({
+      message: errorMessage,
+      route: '/api/storybook/projects',
+      user_id: userId,
+      user_email: userEmail,
+    });
+
+    lognog.api({
+      route: '/api/storybook/projects',
+      method: 'POST',
+      status_code: 500,
+      duration_ms: Date.now() - apiStart,
+      user_id: userId,
+      user_email: userEmail,
+      error: errorMessage,
+    });
+
     return NextResponse.json(
-      { error: 'Failed to save project', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to save project', details: errorMessage },
       { status: 500 }
     );
   }
