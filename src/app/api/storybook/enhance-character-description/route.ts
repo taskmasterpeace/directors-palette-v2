@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { lognog } from '@/lib/lognog'
 
 interface EnhanceDescriptionRequest {
   characterHint: string  // User's brief description/hints
@@ -87,11 +88,17 @@ EXAMPLES:
   Output: "A warm elderly Asian grandmother with silver-streaked black hair pulled back in a neat bun. She has gentle crow's feet around her kind brown eyes and rosy cheeks from the kitchen warmth. She wears a soft cream-colored cardigan over a floral apron dusted with flour, always ready to offer a fresh-baked treat."`
 
 export async function POST(request: NextRequest) {
+  const apiStart = Date.now()
+  let userId: string | undefined
+  let userEmail: string | undefined
+
   try {
     // Verify authentication
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
     const { user } = auth
+    userId = user.id
+    userEmail = user.email
 
     console.log(`[Storybook API] enhance-character-description called by user ${user.id}`)
 
@@ -129,6 +136,7 @@ export async function POST(request: NextRequest) {
     }
     userMessage += '\n\nPlease expand these hints into a detailed visual description.'
 
+    const openRouterStart = Date.now()
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -151,11 +159,34 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const error = await response.text()
       console.error('OpenRouter API error:', error)
+
+      lognog.integration({
+        integration: 'openrouter',
+        success: false,
+        latency_ms: Date.now() - openRouterStart,
+        http_status: response.status,
+        model: 'openai/gpt-4o-mini',
+        error,
+        user_id: userId,
+        user_email: userEmail,
+      })
+
       return NextResponse.json(
         { error: 'Failed to enhance description' },
         { status: 500 }
       )
     }
+
+    lognog.integration({
+      integration: 'openrouter',
+      success: true,
+      latency_ms: Date.now() - openRouterStart,
+      http_status: 200,
+      model: 'openai/gpt-4o-mini',
+      prompt_length: userMessage.length,
+      user_id: userId,
+      user_email: userEmail,
+    })
 
     const data = await response.json()
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0]
@@ -170,6 +201,18 @@ export async function POST(request: NextRequest) {
 
     try {
       const result: EnhanceDescriptionResponse = JSON.parse(toolCall.function.arguments)
+
+      lognog.api({
+        route: '/api/storybook/enhance-character-description',
+        method: 'POST',
+        status_code: 200,
+        duration_ms: Date.now() - apiStart,
+        user_id: userId,
+        user_email: userEmail,
+        integration: 'openrouter',
+        model: 'openai/gpt-4o-mini',
+      })
+
       return NextResponse.json(result)
     } catch (parseError) {
       console.error('Failed to parse tool call arguments:', parseError)
@@ -180,6 +223,26 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('Error in enhance-character-description:', error)
+
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
+    lognog.error({
+      message: errorMessage,
+      route: '/api/storybook/enhance-character-description',
+      user_id: userId,
+      user_email: userEmail,
+    })
+
+    lognog.api({
+      route: '/api/storybook/enhance-character-description',
+      method: 'POST',
+      status_code: 500,
+      duration_ms: Date.now() - apiStart,
+      user_id: userId,
+      user_email: userEmail,
+      error: errorMessage,
+    })
+
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

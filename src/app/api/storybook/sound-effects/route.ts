@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { lognog } from '@/lib/lognog'
 
 interface SoundEffectRequest {
   description: string
@@ -27,11 +28,17 @@ const PRESET_EFFECTS: Record<string, string> = {
 }
 
 export async function POST(request: NextRequest) {
+  const apiStart = Date.now()
+  let userId: string | undefined
+  let userEmail: string | undefined
+
   try {
     // Verify authentication FIRST
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
     const { user } = auth
+    userId = user.id
+    userEmail = user.email
 
     console.log(`[Storybook API] sound-effects (ElevenLabs) called by user ${user.id}`)
 
@@ -61,6 +68,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call ElevenLabs Sound Generation API
+    const elevenLabsStart = Date.now()
     const response = await fetch(
       'https://api.elevenlabs.io/v1/sound-generation',
       {
@@ -80,16 +88,47 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const error = await response.text()
       console.error('ElevenLabs Sound Effects error:', error)
+
+      lognog.integration({
+        integration: 'elevenlabs',
+        success: false,
+        latency_ms: Date.now() - elevenLabsStart,
+        http_status: response.status,
+        error,
+        user_id: userId,
+        user_email: userEmail,
+      })
+
       return NextResponse.json(
         { error: 'Failed to generate sound effect' },
         { status: 500 }
       )
     }
 
+    lognog.integration({
+      integration: 'elevenlabs',
+      success: true,
+      latency_ms: Date.now() - elevenLabsStart,
+      http_status: 200,
+      prompt_length: description.length,
+      user_id: userId,
+      user_email: userEmail,
+    })
+
     // Return audio as base64 data URL
     const audioBuffer = await response.arrayBuffer()
     const base64Audio = Buffer.from(audioBuffer).toString('base64')
     const audioUrl = `data:audio/mpeg;base64,${base64Audio}`
+
+    lognog.api({
+      route: '/api/storybook/sound-effects',
+      method: 'POST',
+      status_code: 200,
+      duration_ms: Date.now() - apiStart,
+      user_id: userId,
+      user_email: userEmail,
+      integration: 'elevenlabs',
+    })
 
     return NextResponse.json({
       audioUrl,
@@ -97,6 +136,26 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in sound-effects:', error)
+
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
+    lognog.error({
+      message: errorMessage,
+      route: '/api/storybook/sound-effects',
+      user_id: userId,
+      user_email: userEmail,
+    })
+
+    lognog.api({
+      route: '/api/storybook/sound-effects',
+      method: 'POST',
+      status_code: 500,
+      duration_ms: Date.now() - apiStart,
+      user_id: userId,
+      user_email: userEmail,
+      error: errorMessage,
+    })
+
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { lognog } from '@/lib/lognog'
 
 interface ExtractDescriptionRequest {
   characterName: string
@@ -98,10 +99,17 @@ EXAMPLES:
 - "Grandma Rose" → "A warm, elderly woman with silver hair pulled back in a soft bun. She wears a lavender cardigan with pearl buttons and reading glasses perched on her nose. Her face has gentle smile lines around kind brown eyes."`
 
 export async function POST(request: NextRequest) {
+  const apiStart = Date.now()
+  let userId: string | undefined
+  let userEmail: string | undefined
+
   try {
     // Verify authentication
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
+    const { user } = auth
+    userId = user.id
+    userEmail = user.email
 
     const body: ExtractDescriptionRequest = await request.json()
     const { characterName, storyText, role, relationship } = body
@@ -129,6 +137,7 @@ export async function POST(request: NextRequest) {
       contextInfo += `\n\nStory text (for context):\n${storyText.substring(0, 3000)}` // Limit story length
     }
 
+    const openRouterStart = Date.now()
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -154,11 +163,34 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const error = await response.text()
       console.error('OpenRouter API error:', error)
+
+      lognog.integration({
+        integration: 'openrouter',
+        success: false,
+        latency_ms: Date.now() - openRouterStart,
+        http_status: response.status,
+        model: 'openai/gpt-4o-mini',
+        error,
+        user_id: userId,
+        user_email: userEmail,
+      })
+
       return NextResponse.json(
         { error: 'Failed to extract character description' },
         { status: 500 }
       )
     }
+
+    lognog.integration({
+      integration: 'openrouter',
+      success: true,
+      latency_ms: Date.now() - openRouterStart,
+      http_status: 200,
+      model: 'openai/gpt-4o-mini',
+      prompt_length: contextInfo.length,
+      user_id: userId,
+      user_email: userEmail,
+    })
 
     const data = await response.json()
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0]
@@ -173,6 +205,18 @@ export async function POST(request: NextRequest) {
 
     try {
       const result: ExtractDescriptionResponse = JSON.parse(toolCall.function.arguments)
+
+      lognog.api({
+        route: '/api/storybook/extract-character-description',
+        method: 'POST',
+        status_code: 200,
+        duration_ms: Date.now() - apiStart,
+        user_id: userId,
+        user_email: userEmail,
+        integration: 'openrouter',
+        model: 'openai/gpt-4o-mini',
+      })
+
       return NextResponse.json(result)
     } catch (parseError) {
       console.error('Failed to parse tool call arguments:', parseError)
@@ -183,6 +227,26 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('Error in extract-character-description:', error)
+
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
+    lognog.error({
+      message: errorMessage,
+      route: '/api/storybook/extract-character-description',
+      user_id: userId,
+      user_email: userEmail,
+    })
+
+    lognog.api({
+      route: '/api/storybook/extract-character-description',
+      method: 'POST',
+      status_code: 500,
+      duration_ms: Date.now() - apiStart,
+      user_id: userId,
+      user_email: userEmail,
+      error: errorMessage,
+    })
+
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
