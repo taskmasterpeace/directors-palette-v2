@@ -191,7 +191,8 @@ export class StoryboardGenerationService {
         config: GenerationConfig,
         styleGuide?: StyleGuide,
         _characters: StoryboardCharacter[] = [],
-        _locations: StoryboardLocation[] = []
+        _locations: StoryboardLocation[] = [],
+        abortSignal?: AbortSignal
     ): Promise<Array<{ shotNumber: number; predictionId: string; imageUrl?: string; error?: string }>> {
         const results: Array<{ shotNumber: number; predictionId: string; imageUrl?: string; error?: string }> = []
 
@@ -202,6 +203,13 @@ export class StoryboardGenerationService {
         })
 
         for (let i = 0; i < prompts.length; i++) {
+            // Check for abort before each shot
+            if (abortSignal?.aborted) {
+                const abortError = new Error('Generation cancelled')
+                abortError.name = 'AbortError'
+                throw abortError
+            }
+
             const shot = prompts[i]
 
             this.updateProgress({

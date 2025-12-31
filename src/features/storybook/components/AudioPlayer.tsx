@@ -48,6 +48,7 @@ export function AudioPlayer({
   onAudioGenerated,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
+  const wasPlayingRef = useRef(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [volume, setVolume] = useState(80)
@@ -60,13 +61,19 @@ export function AudioPlayer({
 
   const currentPage = pages[currentPageIndex]
 
+  // Track playing state in ref to avoid race conditions
+  useEffect(() => {
+    wasPlayingRef.current = isPlaying
+  }, [isPlaying])
+
   // Reset audio when page changes
   useEffect(() => {
     const playAudio = async () => {
       if (audioRef.current && currentPage?.audioUrl) {
         audioRef.current.src = currentPage.audioUrl
         audioRef.current.load()
-        if (isPlaying) {
+        // Use ref to check if we should continue playing (avoids dependency loop)
+        if (wasPlayingRef.current) {
           try {
             await audioRef.current.play()
           } catch (error) {

@@ -86,7 +86,8 @@ export async function POST(request: NextRequest) {
         // Format response to match expected interface
         const fullText = output.transcription || ''
 
-        // Convert segments to words format
+        // Convert segments to words format with estimated timing
+        // Whisper large-v3 doesn't provide word-level timestamps, so we estimate them
         const words: Array<{
             word: string
             startTime: number
@@ -94,12 +95,29 @@ export async function POST(request: NextRequest) {
             confidence: number
         }> = []
 
-        const segments = output.segments?.map(seg => ({
-            text: seg.text,
-            start: seg.start,
-            end: seg.end,
-            words: [] // Whisper large-v3 doesn't provide word-level timestamps
-        })) || []
+        const segments = output.segments?.map(seg => {
+            const segmentWords = seg.text.trim().split(/\s+/).filter(w => w.length > 0)
+            const segmentDuration = seg.end - seg.start
+            const wordDuration = segmentWords.length > 0 ? segmentDuration / segmentWords.length : 0
+
+            // Create estimated word-level timestamps for this segment
+            const estimatedWords = segmentWords.map((word, idx) => ({
+                word,
+                startTime: seg.start + (idx * wordDuration),
+                endTime: seg.start + ((idx + 1) * wordDuration),
+                confidence: 0.9 // Estimated confidence for segment-level transcription
+            }))
+
+            // Add to global words array
+            words.push(...estimatedWords)
+
+            return {
+                text: seg.text,
+                start: seg.start,
+                end: seg.end,
+                words: estimatedWords
+            }
+        }) || []
 
         return NextResponse.json({
             fullText: fullText.trim(),

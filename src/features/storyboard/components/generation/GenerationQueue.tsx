@@ -293,7 +293,8 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                 },
                 effectiveStyleGuide || undefined,
                 characters,
-                locations
+                locations,
+                abortControllerRef.current?.signal
             )
 
             setResults(generationResults)

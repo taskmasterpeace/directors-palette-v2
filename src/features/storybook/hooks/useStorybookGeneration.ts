@@ -52,15 +52,25 @@ export function useStorybookGeneration() {
 
   /**
    * Get recipe name from config or fall back to default
+   * Validates that the recipe actually exists before returning
    */
   const getRecipeName = useCallback((
     configRecipeId: string | undefined,
     defaultName: string
   ): string => {
+    // First, try to find recipe by configured ID
     if (configRecipeId) {
       const recipe = recipes.find(r => r.id === configRecipeId)
       if (recipe) return recipe.name
+      console.warn(`[useStorybookGeneration] Configured recipe ID "${configRecipeId}" not found, falling back to default`)
     }
+
+    // Validate the default recipe exists
+    const defaultRecipe = recipes.find(r => r.name === defaultName)
+    if (!defaultRecipe) {
+      console.warn(`[useStorybookGeneration] Default recipe "${defaultName}" not found in ${recipes.length} available recipes`)
+    }
+
     return defaultName
   }, [recipes])
 

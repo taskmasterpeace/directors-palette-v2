@@ -162,21 +162,45 @@ class DirectorProposalService {
         director: DirectorFingerprint,
         input: ProposalInput
     ): Promise<DirectorProposal> {
-        const response = await fetch(this.apiEndpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                directorId: director.id,
-                directorName: director.name,
-                prompt: buildProposalPrompt(director, input)
+        let response: Response
+
+        try {
+            response = await fetch(this.apiEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    directorId: director.id,
+                    directorName: director.name,
+                    prompt: buildProposalPrompt(director, input)
+                })
             })
-        })
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Network request failed'
+            throw new Error(`Failed to connect to proposal service: ${message}`)
+        }
 
         if (!response.ok) {
             throw new Error(`Proposal generation failed: ${response.statusText}`)
         }
 
-        const data = await response.json()
+        let data: {
+            logline?: string
+            conceptOverview?: string
+            locations?: Array<Omit<ProposedLocation, 'id'>>
+            wardrobeLooks?: Array<Omit<ProposedWardrobe, 'id'>>
+            keyShots?: Array<Omit<ProposedShot, 'id' | 'sectionId'> & { sectionType: string }>
+        }
+
+        try {
+            data = await response.json()
+        } catch {
+            throw new Error('Invalid response format from proposal service')
+        }
+
+        // Validate required fields exist
+        if (!data.logline || !data.conceptOverview) {
+            throw new Error('Proposal response missing required fields')
+        }
 
         return {
             id: `proposal_${director.id}_${Date.now()}`,
@@ -185,15 +209,15 @@ class DirectorProposalService {
             directorName: director.name,
             logline: data.logline,
             conceptOverview: data.conceptOverview,
-            locations: data.locations.map((l: Omit<ProposedLocation, 'id'>, i: number) => ({
+            locations: (data.locations || []).map((l, i) => ({
                 ...l,
                 id: `loc_${i}`
             })),
-            wardrobeLooks: data.wardrobeLooks.map((w: Omit<ProposedWardrobe, 'id'>, i: number) => ({
+            wardrobeLooks: (data.wardrobeLooks || []).map((w, i) => ({
                 ...w,
                 id: `ward_${i}`
             })),
-            keyShots: data.keyShots.map((s: Omit<ProposedShot, 'id' | 'sectionId'> & { sectionType: string }, i: number) => ({
+            keyShots: (data.keyShots || []).map((s, i) => ({
                 ...s,
                 id: `shot_${i}`,
                 sectionId: s.sectionType // Map sectionType (from JSON) to sectionId (Type)

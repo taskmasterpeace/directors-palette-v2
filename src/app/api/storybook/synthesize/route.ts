@@ -134,13 +134,34 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Return audio as base64 data URL if not storing
+    // Fallback to base64 only for small audio (< 500KB) to prevent memory issues
+    // Large audio files should always be stored in Supabase
+    const MAX_BASE64_SIZE = 500 * 1024 // 500KB limit for base64 fallback
+
+    if (audioBuffer.byteLength > MAX_BASE64_SIZE) {
+      console.error('[storybook/synthesize] Audio too large for base64 fallback:', {
+        size: audioBuffer.byteLength,
+        maxSize: MAX_BASE64_SIZE,
+        projectId,
+      })
+      return NextResponse.json(
+        { error: 'Audio storage failed and file too large for fallback' },
+        { status: 500 }
+      )
+    }
+
+    // Return audio as base64 data URL for small files only
+    console.warn('[storybook/synthesize] Using base64 fallback (storage unavailable):', {
+      size: audioBuffer.byteLength,
+      projectId,
+    })
     const base64Audio = Buffer.from(audioBuffer).toString('base64')
     const audioUrl = `data:audio/mpeg;base64,${base64Audio}`
 
     return NextResponse.json({
       audioUrl,
-    } as SynthesizeResponse)
+      isBase64Fallback: true, // Let client know this is a fallback
+    } as SynthesizeResponse & { isBase64Fallback?: boolean })
 
   } catch (error) {
     console.error('Error in synthesize:', error)

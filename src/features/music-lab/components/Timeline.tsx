@@ -61,11 +61,14 @@ export function Timeline({ className }: TimelineProps) {
         if (!audioRef.current) return
 
         if (isPlaying) {
-            audioRef.current.play()
+            audioRef.current.play().catch((error) => {
+                console.error('Audio playback failed:', error)
+                setPlaying(false)
+            })
         } else {
             audioRef.current.pause()
         }
-    }, [isPlaying])
+    }, [isPlaying, setPlaying])
 
     // Update time from audio
     useEffect(() => {

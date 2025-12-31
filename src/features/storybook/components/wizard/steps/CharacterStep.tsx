@@ -259,14 +259,16 @@ export function CharacterStep() {
       return
     }
 
+    // Ensure recipes are loaded BEFORE setting generating state
+    if (!recipesInitialized) {
+      console.error('[CharacterStep] Recipe store not initialized yet')
+      alert('Recipe system is still loading. Please wait a moment and try again.')
+      return
+    }
+
     setGeneratingCharacterId(characterId)
 
     try {
-      // Ensure recipes are loaded
-      if (!recipesInitialized) {
-        console.error('[CharacterStep] Recipe store not initialized yet')
-        return
-      }
 
       const systemRecipes = getSystemOnlyRecipes()
       console.log(`[CharacterStep] Found ${systemRecipes.length} system-only recipes`)
