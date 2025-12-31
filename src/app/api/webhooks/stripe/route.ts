@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { creditsService } from '@/features/credits'
 import { getAPIClient } from '@/lib/db/client'
+import { lognog } from '@/lib/lognog'
 
 // Helper to get an untyped client for webhook tables (not in main DB types yet)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -135,6 +136,8 @@ async function queueForRetry(
  * Handle Stripe webhook events
  */
 export async function POST(request: NextRequest) {
+    const webhookStart = Date.now()
+
     // Read env vars fresh on each request (critical for serverless)
     const stripe = getStripe()
     const webhookSecret = getWebhookSecret()
@@ -224,6 +227,14 @@ export async function POST(request: NextRequest) {
             // Record successful processing
             await recordWebhookEvent(event.id, event.type, 'processed', event.data.object)
 
+            // Log successful Stripe webhook
+            lognog.api({
+                route: '/api/webhooks/stripe',
+                method: 'POST',
+                status_code: 200,
+                duration_ms: Date.now() - webhookStart,
+            })
+
         } catch (processingError) {
             const errorMessage = processingError instanceof Error
                 ? processingError.message
@@ -297,6 +308,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, eventId
 
         if (result.success) {
             console.log(`[handleCheckoutCompleted] ✅ Successfully added ${credits} credits to user ${userId}. New balance: ${result.newBalance}`)
+
+            // Log successful payment
+            lognog.business({
+                event: 'payment_completed',
+                user_id: userId,
+                metadata: {
+                    credits,
+                    package_name: packageName,
+                    amount_cents: session.amount_total,
+                    stripe_session_id: session.id,
+                },
+            })
         } else {
             console.error(`[handleCheckoutCompleted] ❌ Failed to add credits for user ${userId}:`, result.error)
             throw new Error(result.error || 'Failed to add credits')

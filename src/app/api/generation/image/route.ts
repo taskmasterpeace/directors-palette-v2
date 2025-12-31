@@ -12,6 +12,7 @@ import { StorageLimitsService } from '@/features/storage/services/storage-limits
 import type { Database } from '../../../../../supabase/database.types';
 import fs from 'fs';
 import path from 'path';
+import { lognog } from '@/lib/lognog';
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -156,12 +157,16 @@ async function processReferenceImages(
 }
 
 export async function POST(request: NextRequest) {
+  const apiStart = Date.now();
+  let userId: string | undefined;
+
   try {
     // ✅ SECURITY: Verify authentication first
     const auth = await getAuthenticatedUser(request);
     if (auth instanceof NextResponse) return auth; // Return 401 error
 
     const { user, supabase } = auth;
+    userId = user.id;
 
     const body = await request.json();
     const {
@@ -298,7 +303,16 @@ export async function POST(request: NextRequest) {
 
       console.log('Input payload:', JSON.stringify(predictionOptions, null, 2));
 
+      const replicateStart = Date.now();
       prediction = await replicate.predictions.create(predictionOptions);
+
+      // Log Replicate integration success
+      lognog.integration({
+        name: 'replicate',
+        latency_ms: Date.now() - replicateStart,
+        success: true,
+        metadata: { model: replicateModelId, prediction_id: prediction.id },
+      });
 
       console.log('Prediction created successfully:', prediction.id);
     } catch (replicateError: unknown) {
@@ -315,6 +329,16 @@ export async function POST(request: NextRequest) {
         status: error.response?.status,
         statusText: error.response?.statusText,
         data: error.response?.data,
+      });
+
+      // Log Replicate integration failure
+      lognog.integration({
+        name: 'replicate',
+        latency_ms: Date.now() - apiStart,
+        status: error.response?.status,
+        success: false,
+        error: error.message,
+        metadata: { model: replicateModelId },
       });
 
       // Check if this is a model not found error (404) or bad gateway (502)
@@ -483,6 +507,22 @@ export async function POST(request: NextRequest) {
               }
             }
 
+            // Log successful generation
+            lognog.business({
+              event: 'generation_completed',
+              user_id: user.id,
+              metadata: { model, prediction_id: prediction.id, credits_cost: creditsCost },
+            });
+
+            // Log API success
+            lognog.api({
+              route: '/api/generation/image',
+              method: 'POST',
+              status_code: 200,
+              duration_ms: Date.now() - apiStart,
+              user_id: user.id,
+            });
+
             return NextResponse.json({
               predictionId: prediction.id,
               galleryId: gallery.id,
@@ -497,6 +537,13 @@ export async function POST(request: NextRequest) {
               hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
               hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
               predictionId: prediction.id,
+            });
+
+            // Log storage failure
+            lognog.error({
+              message: 'Storage upload failed',
+              context: { prediction_id: prediction.id, model },
+              user_id: user.id,
             });
 
             // Mark as failed - DO NOT store Replicate URL (expires in 1 hour!)
@@ -544,6 +591,25 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Image generation error:', error);
+
+    // Log error
+    lognog.error({
+      message: error instanceof Error ? error.message : 'Image generation failed',
+      stack: error instanceof Error ? error.stack : undefined,
+      context: { route: '/api/generation/image' },
+      user_id: userId,
+    });
+
+    // Log API failure
+    lognog.api({
+      route: '/api/generation/image',
+      method: 'POST',
+      status_code: 500,
+      duration_ms: Date.now() - apiStart,
+      user_id: userId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+
     return NextResponse.json(
       { error: 'Failed to create image generation prediction' },
       { status: 500 }

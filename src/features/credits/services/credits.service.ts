@@ -5,6 +5,7 @@
  */
 
 import { getClient, getAPIClient } from '@/lib/db/client'
+import { lognog } from '@/lib/lognog'
 import type {
     UserCredits,
     CreditTransaction,
@@ -200,11 +201,23 @@ class CreditsService {
         if (!rpcError && result && result.length > 0) {
             const atomicResult = result[0]
             if (atomicResult.success) {
+                // Log successful credit deduction
+                lognog.business({
+                    event: 'credit_deduction',
+                    user_id: userId,
+                    metadata: { amount: priceToDeduct, model_id: modelId, new_balance: atomicResult.new_balance },
+                })
                 return {
                     success: true,
                     newBalance: atomicResult.new_balance
                 }
             } else {
+                // Log failed credit deduction (critical - revenue impacting)
+                lognog.business({
+                    event: 'credit_deduction_failed',
+                    user_id: userId,
+                    metadata: { amount: priceToDeduct, model_id: modelId, reason: atomicResult.error_message },
+                })
                 return {
                     success: false,
                     error: atomicResult.error_message || 'Deduction failed'
@@ -225,6 +238,12 @@ class CreditsService {
 
         // Check sufficient funds
         if (balance.balance < priceToDeduct) {
+            // Log insufficient credits
+            lognog.business({
+                event: 'credit_deduction_failed',
+                user_id: userId,
+                metadata: { amount: priceToDeduct, model_id: modelId, reason: 'insufficient_balance', balance: balance.balance },
+            })
             return {
                 success: false,
                 error: `Insufficient credits. Need ${priceToDeduct} credits, have ${balance.balance}`

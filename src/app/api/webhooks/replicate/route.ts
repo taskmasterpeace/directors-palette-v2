@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { WebhookVerificationService } from '@/features/generation/services/webhook-verification.service';
 import { WebhookService } from '@/features/generation/services/webhook.service';
+import { lognog } from '@/lib/lognog';
 
 export async function POST(request: NextRequest) {
+  const webhookStart = Date.now();
+  let predictionId: string | undefined;
+
   try {
     // 1. Get raw body and headers
     const body = await request.text();
@@ -59,17 +63,45 @@ export async function POST(request: NextRequest) {
 
     // 6. Parse and process the prediction event
     const event = JSON.parse(body);
+    predictionId = event.id;
     console.log(`Webhook received for prediction ${event.id}: ${event.status}`);
 
     // 7. Process the prediction asynchronously
     try {
       await WebhookService.processCompletedPrediction(event);
 
+      // Log successful webhook processing
+      lognog.business({
+        event: 'webhook_processed',
+        metadata: { prediction_id: predictionId, status: event.status },
+      });
+
+      lognog.api({
+        route: '/api/webhooks/replicate',
+        method: 'POST',
+        status_code: 200,
+        duration_ms: Date.now() - webhookStart,
+      });
+
       // 8. Return success immediately (Replicate expects quick response)
       return NextResponse.json({ received: true });
     } catch (processingError) {
       // If processing fails (e.g., download timeout), return 500 so Replicate retries
       console.error('Prediction processing error:', processingError);
+
+      lognog.error({
+        message: processingError instanceof Error ? processingError.message : 'Webhook processing failed',
+        context: { prediction_id: predictionId },
+      });
+
+      lognog.api({
+        route: '/api/webhooks/replicate',
+        method: 'POST',
+        status_code: 500,
+        duration_ms: Date.now() - webhookStart,
+        error: processingError instanceof Error ? processingError.message : 'Processing error',
+      });
+
       return NextResponse.json(
         { error: 'Failed to process prediction' },
         { status: 500 }
@@ -78,6 +110,20 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Webhook processing error:', error);
+
+    lognog.error({
+      message: error instanceof Error ? error.message : 'Webhook failed',
+      context: { prediction_id: predictionId },
+    });
+
+    lognog.api({
+      route: '/api/webhooks/replicate',
+      method: 'POST',
+      status_code: 500,
+      duration_ms: Date.now() - webhookStart,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+
     return NextResponse.json(
       { error: 'Failed to process webhook' },
       { status: 500 }

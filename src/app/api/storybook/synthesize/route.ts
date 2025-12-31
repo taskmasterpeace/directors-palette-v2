@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { lognog } from '@/lib/lognog'
 
 // ElevenLabs voice options
 const ELEVENLABS_VOICES: Record<string, string> = {
@@ -28,11 +29,15 @@ interface SynthesizeResponse {
 }
 
 export async function POST(request: NextRequest) {
+  const apiStart = Date.now()
+  let userId: string | undefined
+
   try {
     // Verify authentication FIRST
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
     const { user } = auth
+    userId = user.id
 
     console.log(`[Storybook API] synthesize (ElevenLabs TTS) called by user ${user.id}`)
 
@@ -62,6 +67,7 @@ export async function POST(request: NextRequest) {
     const finalVoiceId = elevenLabsVoiceId || ELEVENLABS_VOICES.rachel
 
     // Call ElevenLabs TTS API
+    const elevenLabsStart = Date.now()
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${finalVoiceId}`,
       {
@@ -86,11 +92,31 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const error = await response.text()
       console.error('ElevenLabs API error:', error)
+
+      // Log ElevenLabs integration failure
+      lognog.integration({
+        name: 'elevenlabs',
+        latency_ms: Date.now() - elevenLabsStart,
+        status: response.status,
+        success: false,
+        error: error,
+        metadata: { voice: voiceId },
+      })
+
       return NextResponse.json(
         { error: 'Failed to synthesize speech' },
         { status: 500 }
       )
     }
+
+    // Log ElevenLabs integration success
+    lognog.integration({
+      name: 'elevenlabs',
+      latency_ms: Date.now() - elevenLabsStart,
+      status: 200,
+      success: true,
+      metadata: { voice: voiceId, text_length: text.length },
+    })
 
     // Get audio as array buffer
     const audioBuffer = await response.arrayBuffer()
@@ -115,6 +141,15 @@ export async function POST(request: NextRequest) {
           const { data: urlData } = supabase.storage
             .from('generations')
             .getPublicUrl(fileName)
+
+          // Log API success
+          lognog.api({
+            route: '/api/storybook/synthesize',
+            method: 'POST',
+            status_code: 200,
+            duration_ms: Date.now() - apiStart,
+            user_id: userId,
+          })
 
           return NextResponse.json({
             audioUrl: urlData.publicUrl,
@@ -169,6 +204,24 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in synthesize:', error)
+
+    // Log error
+    lognog.error({
+      message: error instanceof Error ? error.message : 'TTS synthesis failed',
+      context: { route: '/api/storybook/synthesize' },
+      user_id: userId,
+    })
+
+    // Log API failure
+    lognog.api({
+      route: '/api/storybook/synthesize',
+      method: 'POST',
+      status_code: 500,
+      duration_ms: Date.now() - apiStart,
+      user_id: userId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    })
+
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

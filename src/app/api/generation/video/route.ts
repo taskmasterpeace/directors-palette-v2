@@ -6,18 +6,23 @@ import type { AnimationModel, ModelSettings } from '@/features/shot-animator/typ
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { creditsService } from '@/features/credits';
 import { isAdminEmail } from '@/features/admin/types/admin.types';
+import { lognog } from '@/lib/lognog';
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
 export async function POST(request: NextRequest) {
+  const apiStart = Date.now();
+  let userId: string | undefined;
+
   try {
     // ✅ SECURITY: Verify authentication first
     const auth = await getAuthenticatedUser(request);
     if (auth instanceof NextResponse) return auth; // Return 401 error
 
     const { user, supabase } = auth;
+    userId = user.id;
 
     const {
       model,
@@ -107,11 +112,20 @@ export async function POST(request: NextRequest) {
 
     // Create Replicate prediction with webhook
     const webhookUrl = `${process.env.WEBHOOK_URL}/api/webhooks/replicate`;
+    const replicateStart = Date.now();
     const prediction = await replicate.predictions.create({
       model: replicateModelId,
       input: replicateInput,
       webhook: webhookUrl,
       webhook_events_filter: ['start', 'completed'],
+    });
+
+    // Log Replicate integration success
+    lognog.integration({
+      name: 'replicate',
+      latency_ms: Date.now() - replicateStart,
+      success: true,
+      metadata: { model: replicateModelId, prediction_id: prediction.id, type: 'video' },
     });
 
     // Build metadata for storage
@@ -146,6 +160,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Log API success
+    lognog.api({
+      route: '/api/generation/video',
+      method: 'POST',
+      status_code: 200,
+      duration_ms: Date.now() - apiStart,
+      user_id: user.id,
+    });
+
     return NextResponse.json({
       predictionId: prediction.id,
       galleryId: gallery.id,
@@ -154,6 +177,25 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Video generation error:', error);
+
+    // Log error
+    lognog.error({
+      message: error instanceof Error ? error.message : 'Video generation failed',
+      stack: error instanceof Error ? error.stack : undefined,
+      context: { route: '/api/generation/video' },
+      user_id: userId,
+    });
+
+    // Log API failure
+    lognog.api({
+      route: '/api/generation/video',
+      method: 'POST',
+      status_code: 500,
+      duration_ms: Date.now() - apiStart,
+      user_id: userId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+
     return NextResponse.json(
       { error: 'Failed to create video generation prediction' },
       { status: 500 }
