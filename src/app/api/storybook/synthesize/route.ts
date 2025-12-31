@@ -95,12 +95,12 @@ export async function POST(request: NextRequest) {
 
       // Log ElevenLabs integration failure
       lognog.integration({
-        name: 'elevenlabs',
+        integration: 'elevenlabs',
         latency_ms: Date.now() - elevenLabsStart,
-        status: response.status,
+        http_status: response.status,
         success: false,
         error: error,
-        metadata: { voice: voiceId },
+        user_id: userId,
       })
 
       return NextResponse.json(
@@ -111,11 +111,12 @@ export async function POST(request: NextRequest) {
 
     // Log ElevenLabs integration success
     lognog.integration({
-      name: 'elevenlabs',
+      integration: 'elevenlabs',
       latency_ms: Date.now() - elevenLabsStart,
-      status: 200,
+      http_status: 200,
       success: true,
-      metadata: { voice: voiceId, text_length: text.length },
+      prompt_length: text.length,
+      user_id: userId,
     })
 
     // Get audio as array buffer
@@ -208,7 +209,7 @@ export async function POST(request: NextRequest) {
     // Log error
     lognog.error({
       message: error instanceof Error ? error.message : 'TTS synthesis failed',
-      context: { route: '/api/storybook/synthesize' },
+      route: '/api/storybook/synthesize',
       user_id: userId,
     })
 

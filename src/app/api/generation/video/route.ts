@@ -122,10 +122,14 @@ export async function POST(request: NextRequest) {
 
     // Log Replicate integration success
     lognog.integration({
-      name: 'replicate',
+      integration: 'replicate',
       latency_ms: Date.now() - replicateStart,
       success: true,
-      metadata: { model: replicateModelId, prediction_id: prediction.id, type: 'video' },
+      model: replicateModelId,
+      prediction_id: prediction.id,
+      prompt_length: prompt?.length,
+      user_id: user.id,
+      user_email: user.email,
     });
 
     // Build metadata for storage
@@ -167,6 +171,9 @@ export async function POST(request: NextRequest) {
       status_code: 200,
       duration_ms: Date.now() - apiStart,
       user_id: user.id,
+      user_email: user.email,
+      integration: 'replicate',
+      model: model,
     });
 
     return NextResponse.json({
@@ -182,7 +189,7 @@ export async function POST(request: NextRequest) {
     lognog.error({
       message: error instanceof Error ? error.message : 'Video generation failed',
       stack: error instanceof Error ? error.stack : undefined,
-      context: { route: '/api/generation/video' },
+      route: '/api/generation/video',
       user_id: userId,
     });
 
@@ -194,6 +201,7 @@ export async function POST(request: NextRequest) {
       duration_ms: Date.now() - apiStart,
       user_id: userId,
       error: error instanceof Error ? error.message : 'Unknown error',
+      integration: 'replicate',
     });
 
     return NextResponse.json(

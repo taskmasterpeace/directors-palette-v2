@@ -66,10 +66,11 @@ export async function POST(request: NextRequest) {
 
                 // Log OpenRouter integration success for this batch
                 lognog.integration({
-                    name: 'openrouter',
+                    integration: 'openrouter',
                     latency_ms: Date.now() - batchStart,
                     success: true,
-                    metadata: { model: model || 'openai/gpt-4o-mini', batch: batchNumber, shots: batch.length },
+                    model: model || 'openai/gpt-4o-mini',
+                    prompt_length: batch.reduce((sum, s) => sum + (s.text?.length || 0), 0),
                 })
             } catch (batchError) {
                 console.error(`Batch ${batchNumber} failed:`, batchError)
@@ -77,11 +78,11 @@ export async function POST(request: NextRequest) {
 
                 // Log OpenRouter integration failure
                 lognog.integration({
-                    name: 'openrouter',
+                    integration: 'openrouter',
                     latency_ms: Date.now() - apiStart,
                     success: false,
                     error: batchError instanceof Error ? batchError.message : 'Unknown error',
-                    metadata: { model: model || 'openai/gpt-4o-mini', batch: batchNumber },
+                    model: model || 'openai/gpt-4o-mini',
                 })
                 // Continue with next batch instead of failing completely
             }
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
         // Log error
         lognog.error({
             message: error instanceof Error ? error.message : 'Shot prompt generation failed',
-            context: { route: '/api/storyboard/generate-prompts' },
+            route: '/api/storyboard/generate-prompts',
         })
 
         // Log API failure

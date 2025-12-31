@@ -305,13 +305,19 @@ export async function POST(request: NextRequest) {
 
       const replicateStart = Date.now();
       prediction = await replicate.predictions.create(predictionOptions);
+      const replicateLatency = Date.now() - replicateStart;
 
       // Log Replicate integration success
       lognog.integration({
-        name: 'replicate',
-        latency_ms: Date.now() - replicateStart,
+        integration: 'replicate',
+        latency_ms: replicateLatency,
         success: true,
-        metadata: { model: replicateModelId, prediction_id: prediction.id },
+        model: replicateModelId,
+        prediction_id: prediction.id,
+        prompt_length: prompt?.length,
+        prompt_preview: prompt?.substring(0, 50),
+        user_id: user.id,
+        user_email: user.email,
       });
 
       console.log('Prediction created successfully:', prediction.id);
@@ -333,12 +339,14 @@ export async function POST(request: NextRequest) {
 
       // Log Replicate integration failure
       lognog.integration({
-        name: 'replicate',
+        integration: 'replicate',
         latency_ms: Date.now() - apiStart,
-        status: error.response?.status,
+        http_status: error.response?.status,
         success: false,
         error: error.message,
-        metadata: { model: replicateModelId },
+        model: replicateModelId,
+        user_id: user.id,
+        user_email: user.email,
       });
 
       // Check if this is a model not found error (404) or bad gateway (502)
@@ -511,7 +519,11 @@ export async function POST(request: NextRequest) {
             lognog.business({
               event: 'generation_completed',
               user_id: user.id,
-              metadata: { model, prediction_id: prediction.id, credits_cost: creditsCost },
+              user_email: user.email,
+              model: model,
+              prediction_id: prediction.id,
+              credits_deducted: creditsCost,
+              reason: 'image_generation',
             });
 
             // Log API success
@@ -521,6 +533,10 @@ export async function POST(request: NextRequest) {
               status_code: 200,
               duration_ms: Date.now() - apiStart,
               user_id: user.id,
+              user_email: user.email,
+              integration: 'replicate',
+              model: model,
+              credits_used: creditsCost,
             });
 
             return NextResponse.json({
@@ -542,8 +558,11 @@ export async function POST(request: NextRequest) {
             // Log storage failure
             lognog.error({
               message: 'Storage upload failed',
-              context: { prediction_id: prediction.id, model },
+              route: '/api/generation/image',
               user_id: user.id,
+              user_email: user.email,
+              model: model,
+              context: { prediction_id: prediction.id },
             });
 
             // Mark as failed - DO NOT store Replicate URL (expires in 1 hour!)
@@ -596,7 +615,7 @@ export async function POST(request: NextRequest) {
     lognog.error({
       message: error instanceof Error ? error.message : 'Image generation failed',
       stack: error instanceof Error ? error.stack : undefined,
-      context: { route: '/api/generation/image' },
+      route: '/api/generation/image',
       user_id: userId,
     });
 
@@ -608,6 +627,7 @@ export async function POST(request: NextRequest) {
       duration_ms: Date.now() - apiStart,
       user_id: userId,
       error: error instanceof Error ? error.message : 'Unknown error',
+      integration: 'replicate',
     });
 
     return NextResponse.json(

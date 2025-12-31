@@ -205,7 +205,11 @@ class CreditsService {
                 lognog.business({
                     event: 'credit_deduction',
                     user_id: userId,
-                    metadata: { amount: priceToDeduct, model_id: modelId, new_balance: atomicResult.new_balance },
+                    credits_deducted: priceToDeduct,
+                    credits_after: atomicResult.new_balance,
+                    model: modelId,
+                    reason: generationType,
+                    prediction_id: predictionId,
                 })
                 return {
                     success: true,
@@ -216,7 +220,9 @@ class CreditsService {
                 lognog.business({
                     event: 'credit_deduction_failed',
                     user_id: userId,
-                    metadata: { amount: priceToDeduct, model_id: modelId, reason: atomicResult.error_message },
+                    credits_deducted: priceToDeduct,
+                    model: modelId,
+                    reason: atomicResult.error_message || 'unknown',
                 })
                 return {
                     success: false,
@@ -242,7 +248,10 @@ class CreditsService {
             lognog.business({
                 event: 'credit_deduction_failed',
                 user_id: userId,
-                metadata: { amount: priceToDeduct, model_id: modelId, reason: 'insufficient_balance', balance: balance.balance },
+                credits_deducted: priceToDeduct,
+                credits_before: balance.balance,
+                model: modelId,
+                reason: 'insufficient_balance',
             })
             return {
                 success: false,
