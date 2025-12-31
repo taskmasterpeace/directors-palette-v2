@@ -78,15 +78,22 @@ export function Timeline({ className }: TimelineProps) {
         const handleTimeUpdate = () => setCurrentTime(audio.currentTime)
         const handleLoadedMetadata = () => setDuration(audio.duration)
         const handleEnded = () => setPlaying(false)
+        const handleError = (e: Event) => {
+            const target = e.target as HTMLAudioElement
+            console.error('Timeline audio error:', target.error?.message || 'Unknown audio error')
+            setPlaying(false)
+        }
 
         audio.addEventListener('timeupdate', handleTimeUpdate)
         audio.addEventListener('loadedmetadata', handleLoadedMetadata)
         audio.addEventListener('ended', handleEnded)
+        audio.addEventListener('error', handleError)
 
         return () => {
             audio.removeEventListener('timeupdate', handleTimeUpdate)
             audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
             audio.removeEventListener('ended', handleEnded)
+            audio.removeEventListener('error', handleError)
         }
     }, [setCurrentTime, setDuration, setPlaying])
 

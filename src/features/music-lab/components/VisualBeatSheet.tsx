@@ -17,10 +17,12 @@ interface VisualBeatSheetProps {
 export function VisualBeatSheet({ proposal }: VisualBeatSheetProps) {
     // Simple logic to distribute locations/wardrobe across sections for visualization
     const getLocationForSection = (index: number) => {
+        if (!proposal.locations?.length) return undefined
         return proposal.locations[index % proposal.locations.length]
     }
 
     const getWardrobeForSection = (index: number) => {
+        if (!proposal.wardrobeLooks?.length) return undefined
         return proposal.wardrobeLooks[index % proposal.wardrobeLooks.length]
     }
 

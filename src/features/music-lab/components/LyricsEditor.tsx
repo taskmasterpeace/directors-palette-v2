@@ -99,7 +99,9 @@ export function LyricsEditor({ onAnalyze, showTranscribeButton = true }: LyricsE
                         words: transcriptionData.words || []
                     },
                     structure: {
-                        bpm: 120, // Default, will be updated when structure analysis runs
+                        // TODO: Implement BPM detection using audio-analysis.service.ts
+                        // Currently defaults to 120 BPM - affects timeline calculations
+                        bpm: 120,
                         sections: [],
                         beats: []
                     },
@@ -149,7 +151,8 @@ export function LyricsEditor({ onAnalyze, showTranscribeButton = true }: LyricsE
                 setSongAnalysis({
                     transcription: { fullText: lyrics, words: [] },
                     structure: {
-                        bpm: 120, // Default
+                        // TODO: Implement BPM detection using audio-analysis.service.ts
+                        bpm: 120,
                         sections: [],
                         beats: []
                     },

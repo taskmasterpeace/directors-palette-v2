@@ -225,6 +225,8 @@ export function AudioPlayer({
 
   const generateAllNarration = async () => {
     setIsGenerating(true)
+    const failedPages: number[] = []
+    let successCount = 0
 
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i]
@@ -247,10 +249,20 @@ export function AudioPlayer({
         if (response.ok) {
           const data = await response.json()
           onAudioGenerated?.(page.id, data.audioUrl)
+          successCount++
+        } else {
+          failedPages.push(i + 1)
+          console.error(`Failed to generate narration for page ${i + 1}: ${response.statusText}`)
         }
       } catch (error) {
+        failedPages.push(i + 1)
         console.error(`Error generating narration for page ${i + 1}:`, error)
       }
+    }
+
+    // Log summary of generation results
+    if (failedPages.length > 0) {
+      console.warn(`Narration generation complete: ${successCount} succeeded, ${failedPages.length} failed (pages: ${failedPages.join(', ')})`)
     }
 
     setIsGenerating(false)

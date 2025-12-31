@@ -109,7 +109,8 @@ export function WizardContainer() {
 
   // Handle finish button - save project as completed
   const handleFinish = async () => {
-    if (!project) return
+    // Guard against double-clicks while saving
+    if (!project || isSaving) return
 
     try {
       // Update project status to completed before saving

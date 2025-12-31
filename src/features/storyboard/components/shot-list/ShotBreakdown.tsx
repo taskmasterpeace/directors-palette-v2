@@ -658,17 +658,22 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         }
 
         // Final progress update
+        const isComplete = allPrompts.length >= totalSegments
         setGenerationProgress({
             total: totalSegments,
             processed: allPrompts.length,
-            complete: allPrompts.length >= totalSegments,
+            complete: isComplete,
             currentBatch: totalBatches,
             totalBatches
         })
 
-        // Show accumulated errors if any
+        // Show accumulated errors if any, with clear indication of missing segments
         if (errors.length > 0) {
-            setError(`Some batches failed: ${errors.slice(0, 3).join('; ')}${errors.length > 3 ? ` (+${errors.length - 3} more)` : ''}`)
+            const missingCount = totalSegments - allPrompts.length
+            const errorSummary = errors.slice(0, 3).join('; ')
+            const moreErrors = errors.length > 3 ? ` (+${errors.length - 3} more errors)` : ''
+            const missingWarning = missingCount > 0 ? ` Missing ${missingCount} segment(s).` : ''
+            setError(`Some batches failed: ${errorSummary}${moreErrors}${missingWarning}`)
         }
 
         setIsGeneratingPrompts(false)

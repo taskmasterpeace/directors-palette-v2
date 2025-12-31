@@ -155,8 +155,10 @@ export const BookViewer = forwardRef<BookViewerRef, BookViewerProps>(({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const bookRef = useRef<any>(null)
 
-  const handleFlip = useCallback((e: { data: number }) => {
+  const handleFlip = useCallback((e: { data?: number }) => {
     // react-pageflip uses 0-based indexing
+    // Guard against undefined e.data (can happen during rapid flipping or edge cases)
+    if (typeof e.data !== 'number') return
     // We add 1 for cover, so page 0 in data means cover, page 1 means first content page
     const contentPageIndex = Math.max(0, e.data - 1)
     onPageChange?.(contentPageIndex)

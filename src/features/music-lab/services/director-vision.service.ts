@@ -3,8 +3,17 @@ import { imageGenerationService } from '@/features/shot-creator/services/image-g
 import type { ZImageTurboSettings, ImageGenerationRequest } from '@/features/shot-creator/types/image-generation.types'
 
 /**
+ * Result type for director vision generation
+ */
+export interface DirectorVisionResult {
+    status: 'completed' | 'pending' | 'failed'
+    imageUrl?: string
+    error?: string
+}
+
+/**
  * Director Vision Service
- * 
+ *
  * Generates rapid visualizations for director concepts using z-image-turbo.
  * Used for:
  * - Proposal Headers (Director Vibe)
@@ -16,8 +25,9 @@ export class DirectorVisionService {
     /**
      * Generate a "Vibe" image for a director
      * Useful for header backgrounds or style referencing.
+     * Returns a result object with status to distinguish pending from failed states.
      */
-    async generateDirectorVibeImage(director: DirectorFingerprint, contextPrompt: string): Promise<string | null> {
+    async generateDirectorVibeImage(director: DirectorFingerprint, contextPrompt: string): Promise<DirectorVisionResult> {
         // Construct prompt using director's visual style keywords
         const styleKeywords = [
             director.coreIntent.controlVsSpontaneity,
@@ -54,18 +64,19 @@ export class DirectorVisionService {
             // If it polls (no webhook), it returns imageUrl.
 
             if (response.imageUrl) {
-                return response.imageUrl
+                return { status: 'completed', imageUrl: response.imageUrl }
             }
 
             if (response.status === 'failed') {
-                throw new Error('Generation failed')
+                return { status: 'failed', error: 'Generation failed on server' }
             }
 
-            return null // Pending
+            return { status: 'pending' } // Still processing
 
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error'
             console.error('Director Vision Generation Failed:', error)
-            return null
+            return { status: 'failed', error: errorMessage }
         }
     }
 }
