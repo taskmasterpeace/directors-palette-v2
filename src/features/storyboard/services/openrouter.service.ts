@@ -374,8 +374,16 @@ IMPORTANT: When a Director's Note is provided, incorporate that specific guidanc
         })
 
         if (!response.ok) {
-            const error = await response.text()
-            throw new Error(`OpenRouter API error: ${response.status} - ${error}`)
+            const errorText = await response.text()
+            // Try to parse as JSON for better error messages
+            let errorMessage = errorText
+            try {
+                const errorJson = JSON.parse(errorText)
+                errorMessage = errorJson.error?.message || errorJson.message || errorText
+            } catch {
+                // Keep raw text if not JSON
+            }
+            throw new Error(`OpenRouter API error: ${response.status} - ${errorMessage}`)
         }
 
         return response.json()

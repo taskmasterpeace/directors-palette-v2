@@ -186,12 +186,14 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
         return () => window.removeEventListener('beforeunload', handleBeforeUnload)
     }, [isGenerating])
 
-    // Cancel generation handler
+    // Cancel generation handler - clean up all generation state
     const handleCancelGeneration = () => {
         if (abortControllerRef.current) {
             abortControllerRef.current.abort()
             abortControllerRef.current = null
             setIsGenerating(false)
+            // Reset progress to avoid orphaned state
+            setProgress({ current: 0, total: 0 })
             toast.info('Generation cancelled')
         }
     }

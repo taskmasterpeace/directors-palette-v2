@@ -27,7 +27,29 @@ export function DirectorProposalDialog({
     director,
     onConfirm
 }: DirectorProposalDialogProps) {
-    if (!pitch || !director) return null
+    // Show dialog even if pitch/director missing - display error state
+    if (!open) return null
+
+    // Missing data - show error in dialog instead of returning null
+    if (!pitch || !director) {
+        return (
+            <Dialog open={open} onOpenChange={onOpenChange}>
+                <DialogContent className="sm:max-w-md bg-zinc-950 border-zinc-800 text-zinc-100">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl text-red-400">Unable to Load Pitch</DialogTitle>
+                        <DialogDescription className="text-zinc-400">
+                            Director proposal data is not available. Please try again.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => onOpenChange(false)}>
+                            Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        )
+    }
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>

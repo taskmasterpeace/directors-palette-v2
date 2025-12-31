@@ -157,10 +157,12 @@ class DirectorProposalService {
 
     /**
      * Generate a proposal for a single director
+     * @param projectId - Optional project ID. If not provided, generates a unique ID.
      */
     async generateProposal(
         director: DirectorFingerprint,
-        input: ProposalInput
+        input: ProposalInput,
+        projectId?: string
     ): Promise<DirectorProposal> {
         let response: Response
 
@@ -204,7 +206,7 @@ class DirectorProposalService {
 
         return {
             id: `proposal_${director.id}_${Date.now()}`,
-            projectId: 'temp_project_id', // Needs to be injected or managed by store
+            projectId: projectId || `project_${Date.now()}`, // Use provided ID or generate unique one
             directorId: director.id,
             directorName: director.name,
             logline: data.logline,
@@ -228,12 +230,16 @@ class DirectorProposalService {
 
     /**
      * Generate proposals for multiple directors in parallel
+     * @param projectId - Optional project ID shared across all proposals
      */
     async generateAllProposals(
         directors: DirectorFingerprint[],
-        input: ProposalInput
+        input: ProposalInput,
+        projectId?: string
     ): Promise<DirectorProposal[]> {
-        const promises = directors.map(d => this.generateProposal(d, input))
+        // Generate a shared projectId if not provided
+        const sharedProjectId = projectId || `project_${Date.now()}`
+        const promises = directors.map(d => this.generateProposal(d, input, sharedProjectId))
         return Promise.all(promises)
     }
 }

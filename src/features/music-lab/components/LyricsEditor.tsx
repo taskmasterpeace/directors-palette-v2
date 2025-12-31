@@ -55,8 +55,10 @@ export function LyricsEditor({ onAnalyze, showTranscribeButton = true }: LyricsE
                 if (demucsResponse.ok) {
                     const { vocalsUrl } = await demucsResponse.json()
                     audioToTranscribe = vocalsUrl
+                    setStatus('Vocals isolated, transcribing...')
                 } else {
                     console.warn('Demucs failed, using original audio')
+                    setStatus('Vocal isolation failed, using original audio...')
                 }
             }
 

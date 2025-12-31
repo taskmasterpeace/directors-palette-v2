@@ -54,12 +54,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get voice ID
-    const elevenLabsVoiceId = ELEVENLABS_VOICES[voiceId] || ELEVENLABS_VOICES.rachel
+    // Get voice ID - warn if falling back to default
+    const elevenLabsVoiceId = ELEVENLABS_VOICES[voiceId]
+    if (!elevenLabsVoiceId) {
+      console.warn(`[storybook/synthesize] Unknown voice ID "${voiceId}", falling back to "rachel"`)
+    }
+    const finalVoiceId = elevenLabsVoiceId || ELEVENLABS_VOICES.rachel
 
     // Call ElevenLabs TTS API
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${elevenLabsVoiceId}`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${finalVoiceId}`,
       {
         method: 'POST',
         headers: {

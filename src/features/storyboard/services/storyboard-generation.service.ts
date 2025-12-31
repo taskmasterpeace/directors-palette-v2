@@ -229,16 +229,32 @@ export class StoryboardGenerationService {
                 // Get reference images from the shot's characterRefs
                 const referenceImages: string[] = []
 
-                // Add character reference images
-                for (const charRef of shot.characterRefs) {
-                    if (charRef.reference_image_url) {
-                        referenceImages.push(charRef.reference_image_url)
+                // Helper to validate image URL format
+                const isValidImageUrl = (url: string): boolean => {
+                    try {
+                        const parsed = new URL(url)
+                        return parsed.protocol === 'https:' || parsed.protocol === 'http:'
+                    } catch {
+                        return false
                     }
                 }
 
-                // Add location reference image if present
+                // Add character reference images (with URL validation)
+                for (const charRef of shot.characterRefs) {
+                    if (charRef.reference_image_url && isValidImageUrl(charRef.reference_image_url)) {
+                        referenceImages.push(charRef.reference_image_url)
+                    } else if (charRef.reference_image_url) {
+                        console.warn(`[StoryboardGeneration] Invalid character reference URL: ${charRef.reference_image_url}`)
+                    }
+                }
+
+                // Add location reference image if present (with URL validation)
                 if (shot.locationRef?.reference_image_url) {
-                    referenceImages.push(shot.locationRef.reference_image_url)
+                    if (isValidImageUrl(shot.locationRef.reference_image_url)) {
+                        referenceImages.push(shot.locationRef.reference_image_url)
+                    } else {
+                        console.warn(`[StoryboardGeneration] Invalid location reference URL: ${shot.locationRef.reference_image_url}`)
+                    }
                 }
 
                 // Validate input
