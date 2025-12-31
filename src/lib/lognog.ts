@@ -53,6 +53,9 @@ function sendEvent(event: LogEvent): void {
     return
   }
 
+  // Log what we're sending for debugging
+  console.log('[LogNog] Sending event:', JSON.stringify(event))
+
   // Fire and forget - don't await to avoid blocking the response
   fetch(LOGNOG_ENDPOINT, {
     method: 'POST',
@@ -61,9 +64,17 @@ function sendEvent(event: LogEvent): void {
       'X-API-Key': LOGNOG_API_KEY,
     },
     body: JSON.stringify([event]),
-  }).catch((error) => {
-    console.error('[LogNog] Failed to send event:', error)
   })
+    .then((res) => {
+      if (!res.ok) {
+        console.error('[LogNog] Failed:', res.status)
+      } else {
+        console.log('[LogNog] Sent successfully')
+      }
+    })
+    .catch((error) => {
+      console.error('[LogNog] Failed to send event:', error)
+    })
 }
 
 export const lognog = {
