@@ -2,61 +2,27 @@
  * LogNog Logging Service
  * Sends structured logs to LogNog analytics platform
  *
- * Note: Sends immediately (no batching) for serverless compatibility
+ * Uses flat format with message string (LogNog requirement)
  */
 
 const LOGNOG_ENDPOINT = 'https://analytics.machinekinglabs.com/ingest/nextjs'
 const LOGNOG_API_KEY = process.env.LOGNOG_API_KEY
 
-type LogEvent = {
-  timestamp: number
-  type: 'api' | 'integration' | 'error' | 'business'
-  // API event fields
-  api?: {
-    route: string
-    method: string
-    status_code: number
-    duration_ms: number
-    user_id?: string
-    error?: string
-  }
-  // Integration event fields (Replicate, OpenRouter, ElevenLabs, Stripe)
-  integration?: {
-    integration_name: string
-    integration_latency_ms: number
-    http_status?: number
-    success: boolean
-    error?: string
-    metadata?: Record<string, unknown>
-  }
-  // Error event fields
-  error?: {
-    message: string
-    stack?: string
-    context?: Record<string, unknown>
-    user_id?: string
-  }
-  // Business event fields
-  business?: {
-    event: string
-    user_id?: string
-    metadata?: Record<string, unknown>
-  }
-}
-
 /**
- * Send event to LogNog immediately (fire-and-forget for serverless)
+ * Send event to LogNog with flat fields + message string
  */
-function sendEvent(event: LogEvent): void {
+function sendEvent(type: string, message: string, fields: Record<string, unknown>): void {
   if (!LOGNOG_API_KEY) {
-    console.warn('[LogNog] API key not configured, skipping')
     return
   }
 
-  // Log what we're sending for debugging
-  console.log('[LogNog] Sending event:', JSON.stringify(event))
+  const event = {
+    timestamp: new Date().toISOString(),
+    type,
+    message,
+    ...fields,
+  }
 
-  // Fire and forget - don't await to avoid blocking the response
   fetch(LOGNOG_ENDPOINT, {
     method: 'POST',
     headers: {
@@ -64,22 +30,15 @@ function sendEvent(event: LogEvent): void {
       'X-API-Key': LOGNOG_API_KEY,
     },
     body: JSON.stringify([event]),
+  }).catch(() => {
+    // Silent fail - don't break the app for logging
   })
-    .then((res) => {
-      if (!res.ok) {
-        console.error('[LogNog] Failed:', res.status)
-      } else {
-        console.log('[LogNog] Sent successfully')
-      }
-    })
-    .catch((error) => {
-      console.error('[LogNog] Failed to send event:', error)
-    })
 }
 
 export const lognog = {
   /**
    * Log API route performance
+   * Message: "POST /api/generation/image 200 (1523ms) [replicate]"
    */
   api(data: {
     route: string
@@ -89,15 +48,13 @@ export const lognog = {
     user_id?: string
     error?: string
   }): void {
-    sendEvent({
-      timestamp: Date.now(),
-      type: 'api',
-      api: data,
-    })
+    const message = `${data.method} ${data.route} ${data.status_code} (${data.duration_ms}ms)`
+    sendEvent('api', message, data)
   },
 
   /**
    * Log external integration calls (Replicate, OpenRouter, ElevenLabs, Stripe)
+   * Message: "replicate OK 3500ms" or "replicate FAIL 1200ms"
    */
   integration(data: {
     name: string
@@ -107,22 +64,21 @@ export const lognog = {
     error?: string
     metadata?: Record<string, unknown>
   }): void {
-    sendEvent({
-      timestamp: Date.now(),
-      type: 'integration',
-      integration: {
-        integration_name: data.name,
-        integration_latency_ms: data.latency_ms,
-        http_status: data.status,
-        success: data.success,
-        error: data.error,
-        metadata: data.metadata,
-      },
+    const status = data.success ? 'OK' : 'FAIL'
+    const message = `${data.name} ${status} ${data.latency_ms}ms`
+    sendEvent('integration', message, {
+      integration: data.name,
+      latency_ms: data.latency_ms,
+      success: data.success,
+      http_status: data.status,
+      error: data.error,
+      ...data.metadata,
     })
   },
 
   /**
    * Log errors with context
+   * Message: The error message itself
    */
   error(data: {
     message: string
@@ -130,25 +86,25 @@ export const lognog = {
     context?: Record<string, unknown>
     user_id?: string
   }): void {
-    sendEvent({
-      timestamp: Date.now(),
-      type: 'error',
-      error: data,
+    sendEvent('error', data.message, {
+      user_id: data.user_id,
+      ...data.context,
     })
   },
 
   /**
    * Log business events (generation completed, payment, credits)
+   * Message: The event name itself (e.g., "generation_completed")
    */
   business(data: {
     event: string
     user_id?: string
     metadata?: Record<string, unknown>
   }): void {
-    sendEvent({
-      timestamp: Date.now(),
-      type: 'business',
-      business: data,
+    sendEvent('business', data.event, {
+      event: data.event,
+      user_id: data.user_id,
+      ...data.metadata,
     })
   },
 }
