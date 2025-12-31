@@ -114,7 +114,8 @@ export async function POST(request: NextRequest) {
                 const result = await creditsService.deductCredits(auth.user.id, model_id, {
                     generationType: generation_type as GenerationType || 'image',
                     predictionId: prediction_id,
-                    description
+                    description,
+                    user_email: auth.user.email,
                 })
 
                 if (!result.success) {

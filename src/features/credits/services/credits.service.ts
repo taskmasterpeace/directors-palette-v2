@@ -165,9 +165,10 @@ class CreditsService {
             predictionId?: string
             description?: string
             overrideAmount?: number  // For video: calculated cost based on duration/resolution
+            user_email?: string  // For LogNog analytics
         } = {}
     ): Promise<{ success: boolean; transaction?: CreditTransaction; error?: string; newBalance?: number }> {
-        const { generationType = 'image', predictionId, description, overrideAmount } = options
+        const { generationType = 'image', predictionId, description, overrideAmount, user_email } = options
         const supabase = await getCreditsClient()
 
         // Get pricing for this model (used for metadata, may be overridden for videos)
@@ -205,6 +206,7 @@ class CreditsService {
                 lognog.business({
                     event: 'credit_deduction',
                     user_id: userId,
+                    user_email: user_email,
                     credits_deducted: priceToDeduct,
                     credits_after: atomicResult.new_balance,
                     model: modelId,
@@ -220,6 +222,7 @@ class CreditsService {
                 lognog.business({
                     event: 'credit_deduction_failed',
                     user_id: userId,
+                    user_email: user_email,
                     credits_deducted: priceToDeduct,
                     model: modelId,
                     reason: atomicResult.error_message || 'unknown',
@@ -248,6 +251,7 @@ class CreditsService {
             lognog.business({
                 event: 'credit_deduction_failed',
                 user_id: userId,
+                user_email: user_email,
                 credits_deducted: priceToDeduct,
                 credits_before: balance.balance,
                 model: modelId,

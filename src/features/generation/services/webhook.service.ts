@@ -229,6 +229,7 @@ export class WebhookService {
         predictionId: galleryEntry.prediction_id,
         description: `${generationType === 'video' ? 'Video' : 'Image'} generation (${model})`,
         overrideAmount,  // Use calculated video cost
+        user_email: userEmail,  // Pass email for LogNog analytics
       });
 
       if (!deductResult.success) {

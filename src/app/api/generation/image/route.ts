@@ -507,6 +507,7 @@ export async function POST(request: NextRequest) {
                 generationType: 'image',
                 predictionId: prediction.id,
                 description: `Image generation (${model})`,
+                user_email: user.email,
               })
               if (!deductResult.success) {
                 console.error('Failed to deduct credits:', deductResult.error)
