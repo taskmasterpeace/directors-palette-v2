@@ -65,7 +65,8 @@ export async function POST(request: NextRequest) {
                 allResults.push(...batchResults)
 
                 // Log OpenRouter integration success for this batch
-                lognog.integration({
+                lognog.debug(`openrouter OK ${Date.now() - batchStart}ms ${model || 'openai/gpt-4o-mini'}`, {
+                    type: 'integration',
                     integration: 'openrouter',
                     latency_ms: Date.now() - batchStart,
                     success: true,
@@ -77,7 +78,8 @@ export async function POST(request: NextRequest) {
                 errors.push(`Batch ${batchNumber} (shots ${batch[0].sequence}-${batch[batch.length - 1].sequence}) failed: ${batchError instanceof Error ? batchError.message : 'Unknown error'}`)
 
                 // Log OpenRouter integration failure
-                lognog.integration({
+                lognog.warn(`openrouter FAIL ${Date.now() - apiStart}ms ${model || 'openai/gpt-4o-mini'}`, {
+                    type: 'integration',
                     integration: 'openrouter',
                     latency_ms: Date.now() - apiStart,
                     success: false,
@@ -92,7 +94,8 @@ export async function POST(request: NextRequest) {
         allResults.sort((a, b) => a.sequence - b.sequence)
 
         // Log API success
-        lognog.api({
+        lognog.info(`POST /api/storyboard/generate-prompts 200 (${Date.now() - apiStart}ms)`, {
+            type: 'api',
             route: '/api/storyboard/generate-prompts',
             method: 'POST',
             status_code: 200,
@@ -110,13 +113,14 @@ export async function POST(request: NextRequest) {
         console.error('Shot prompt generation error:', error)
 
         // Log error
-        lognog.error({
-            message: error instanceof Error ? error.message : 'Shot prompt generation failed',
+        lognog.error(error instanceof Error ? error.message : 'Shot prompt generation failed', {
+            type: 'error',
             route: '/api/storyboard/generate-prompts',
         })
 
         // Log API failure
-        lognog.api({
+        lognog.info(`POST /api/storyboard/generate-prompts 500 (${Date.now() - apiStart}ms)`, {
+            type: 'api',
             route: '/api/storyboard/generate-prompts',
             method: 'POST',
             status_code: 500,

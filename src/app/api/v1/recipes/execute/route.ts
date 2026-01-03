@@ -325,7 +325,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<RecipeExe
     })
 
     // Log recipe execution to LogNog
-    lognog.business({
+    lognog.info('recipe_executed', {
+      type: 'business',
       event: 'recipe_executed',
       user_id: validatedKey.userId,
       stage_count: stages.length,
@@ -335,7 +336,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<RecipeExe
     })
 
     // Log API success
-    lognog.api({
+    lognog.info(`POST /api/v1/recipes/execute 200 (${Date.now() - startTime}ms)`, {
+      type: 'api',
       route: '/api/v1/recipes/execute',
       method: 'POST',
       status_code: 200,

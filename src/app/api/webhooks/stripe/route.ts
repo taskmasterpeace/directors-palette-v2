@@ -228,7 +228,8 @@ export async function POST(request: NextRequest) {
             await recordWebhookEvent(event.id, event.type, 'processed', event.data.object)
 
             // Log successful Stripe webhook
-            lognog.api({
+            lognog.info(`POST /api/webhooks/stripe 200 (${Date.now() - webhookStart}ms)`, {
+                type: 'api',
                 route: '/api/webhooks/stripe',
                 method: 'POST',
                 status_code: 200,
@@ -310,15 +311,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, eventId
             console.log(`[handleCheckoutCompleted] ✅ Successfully added ${credits} credits to user ${userId}. New balance: ${result.newBalance}`)
 
             // Log successful payment
-            lognog.business({
+            lognog.info('payment_completed', {
+                type: 'business',
                 event: 'payment_completed',
                 user_id: userId,
-                metadata: {
-                    credits,
-                    package_name: packageName,
-                    amount_cents: session.amount_total,
-                    stripe_session_id: session.id,
-                },
+                credits,
+                package_name: packageName,
+                amount_cents: session.amount_total,
+                stripe_session_id: session.id,
             })
         } else {
             console.error(`[handleCheckoutCompleted] ❌ Failed to add credits for user ${userId}:`, result.error)

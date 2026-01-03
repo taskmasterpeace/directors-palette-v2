@@ -468,7 +468,8 @@ export async function POST(request: NextRequest) {
       console.error('OpenRouter API error:', error)
 
       // Log OpenRouter failure
-      lognog.integration({
+      lognog.warn(`openrouter FAIL ${Date.now() - openRouterStart}ms openai/gpt-4o`, {
+        type: 'integration',
         integration: 'openrouter',
         success: false,
         latency_ms: Date.now() - openRouterStart,
@@ -486,7 +487,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Log OpenRouter success
-    lognog.integration({
+    lognog.debug(`openrouter OK ${Date.now() - openRouterStart}ms openai/gpt-4o`, {
+      type: 'integration',
       integration: 'openrouter',
       success: true,
       latency_ms: Date.now() - openRouterStart,
@@ -526,7 +528,8 @@ export async function POST(request: NextRequest) {
       }
 
       // Log story generation success
-      lognog.business({
+      lognog.info('story_generated', {
+        type: 'business',
         event: 'story_generated',
         user_id: userId,
         user_email: userEmail,
@@ -540,7 +543,8 @@ export async function POST(request: NextRequest) {
       })
 
       // Log API success
-      lognog.api({
+      lognog.info(`POST /api/storybook/generate-story 200 (${Date.now() - apiStart}ms)`, {
+        type: 'api',
         route: '/api/storybook/generate-story',
         method: 'POST',
         status_code: 200,
@@ -565,8 +569,8 @@ export async function POST(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 
     // Log error
-    lognog.error({
-      message: errorMessage,
+    lognog.error(errorMessage, {
+      type: 'error',
       stack: error instanceof Error ? error.stack : undefined,
       route: '/api/storybook/generate-story',
       user_id: userId,
@@ -574,7 +578,8 @@ export async function POST(request: NextRequest) {
     })
 
     // Log API failure
-    lognog.api({
+    lognog.info(`POST /api/storybook/generate-story 500 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: '/api/storybook/generate-story',
       method: 'POST',
       status_code: 500,

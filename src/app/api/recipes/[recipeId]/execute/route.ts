@@ -194,7 +194,8 @@ export async function POST(
         const finalImageUrl = Array.isArray(imageUrl) ? imageUrl[0] : imageUrl
 
         // Log recipe execution success
-        lognog.business({
+        lognog.info('recipe_executed', {
+          type: 'business',
           event: 'recipe_executed',
           user_id: userId,
           user_email: userEmail,
@@ -208,7 +209,8 @@ export async function POST(
         })
 
         // Log API success
-        lognog.api({
+        lognog.info(`POST /api/recipes/${recipeId}/execute 200 (${Date.now() - apiStart}ms)`, {
+          type: 'api',
           route: `/api/recipes/${recipeId}/execute`,
           method: 'POST',
           status_code: 200,
@@ -261,8 +263,8 @@ export async function POST(
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 
     // Log error
-    lognog.error({
-      message: errorMessage,
+    lognog.error(errorMessage, {
+      type: 'error',
       stack: error instanceof Error ? error.stack : undefined,
       route: '/api/recipes/[recipeId]/execute',
       user_id: userId,
@@ -270,7 +272,8 @@ export async function POST(
     })
 
     // Log API failure
-    lognog.api({
+    lognog.info(`POST /api/recipes/[recipeId]/execute 500 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: '/api/recipes/[recipeId]/execute',
       method: 'POST',
       status_code: 500,

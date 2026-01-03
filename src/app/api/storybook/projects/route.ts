@@ -65,7 +65,8 @@ export async function POST(request: NextRequest) {
       });
 
       // Log project update
-      lognog.business({
+      lognog.info('storybook_project_updated', {
+        type: 'business',
         event: 'storybook_project_updated',
         user_id: userId,
         user_email: userEmail,
@@ -73,7 +74,8 @@ export async function POST(request: NextRequest) {
         title,
       });
 
-      lognog.api({
+      lognog.info(`POST /api/storybook/projects 200 (${Date.now() - apiStart}ms)`, {
+        type: 'api',
         route: '/api/storybook/projects',
         method: 'POST',
         status_code: 200,
@@ -97,7 +99,8 @@ export async function POST(request: NextRequest) {
     );
 
     // Log project creation
-    lognog.business({
+    lognog.info('storybook_project_created', {
+      type: 'business',
       event: 'storybook_project_created',
       user_id: userId,
       user_email: userEmail,
@@ -105,7 +108,8 @@ export async function POST(request: NextRequest) {
       title,
     });
 
-    lognog.api({
+    lognog.info(`POST /api/storybook/projects 200 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: '/api/storybook/projects',
       method: 'POST',
       status_code: 200,
@@ -123,14 +127,15 @@ export async function POST(request: NextRequest) {
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-    lognog.error({
-      message: errorMessage,
+    lognog.error(errorMessage, {
+      type: 'error',
       route: '/api/storybook/projects',
       user_id: userId,
       user_email: userEmail,
     });
 
-    lognog.api({
+    lognog.info(`POST /api/storybook/projects 500 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: '/api/storybook/projects',
       method: 'POST',
       status_code: 500,

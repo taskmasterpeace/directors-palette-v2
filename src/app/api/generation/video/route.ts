@@ -121,7 +121,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Log Replicate integration success
-    lognog.integration({
+    lognog.debug(`replicate OK ${Date.now() - replicateStart}ms ${replicateModelId}`, {
+      type: 'integration',
       integration: 'replicate',
       latency_ms: Date.now() - replicateStart,
       success: true,
@@ -165,7 +166,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Log API success
-    lognog.api({
+    lognog.info(`POST /api/generation/video 200 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: '/api/generation/video',
       method: 'POST',
       status_code: 200,
@@ -186,15 +188,16 @@ export async function POST(request: NextRequest) {
     console.error('Video generation error:', error);
 
     // Log error
-    lognog.error({
-      message: error instanceof Error ? error.message : 'Video generation failed',
+    lognog.error(error instanceof Error ? error.message : 'Video generation failed', {
+      type: 'error',
       stack: error instanceof Error ? error.stack : undefined,
       route: '/api/generation/video',
       user_id: userId,
     });
 
     // Log API failure
-    lognog.api({
+    lognog.info(`POST /api/generation/video 500 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: '/api/generation/video',
       method: 'POST',
       status_code: 500,

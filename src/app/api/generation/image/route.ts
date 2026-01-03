@@ -308,7 +308,8 @@ export async function POST(request: NextRequest) {
       const replicateLatency = Date.now() - replicateStart;
 
       // Log Replicate integration success
-      lognog.integration({
+      lognog.debug(`replicate OK ${replicateLatency}ms ${replicateModelId}`, {
+        type: 'integration',
         integration: 'replicate',
         latency_ms: replicateLatency,
         success: true,
@@ -338,7 +339,8 @@ export async function POST(request: NextRequest) {
       });
 
       // Log Replicate integration failure
-      lognog.integration({
+      lognog.warn(`replicate FAIL ${Date.now() - apiStart}ms ${replicateModelId}`, {
+        type: 'integration',
         integration: 'replicate',
         latency_ms: Date.now() - apiStart,
         http_status: error.response?.status,
@@ -517,7 +519,8 @@ export async function POST(request: NextRequest) {
             }
 
             // Log successful generation
-            lognog.business({
+            lognog.info('generation_completed', {
+              type: 'business',
               event: 'generation_completed',
               user_id: user.id,
               user_email: user.email,
@@ -528,7 +531,8 @@ export async function POST(request: NextRequest) {
             });
 
             // Log API success
-            lognog.api({
+            lognog.info(`POST /api/generation/image 200 (${Date.now() - apiStart}ms)`, {
+              type: 'api',
               route: '/api/generation/image',
               method: 'POST',
               status_code: 200,
@@ -557,13 +561,13 @@ export async function POST(request: NextRequest) {
             });
 
             // Log storage failure
-            lognog.error({
-              message: 'Storage upload failed',
+            lognog.error('Storage upload failed', {
+              type: 'error',
               route: '/api/generation/image',
               user_id: user.id,
               user_email: user.email,
               model: model,
-              context: { prediction_id: prediction.id },
+              prediction_id: prediction.id,
             });
 
             // Mark as failed - DO NOT store Replicate URL (expires in 1 hour!)
@@ -613,15 +617,16 @@ export async function POST(request: NextRequest) {
     console.error('Image generation error:', error);
 
     // Log error
-    lognog.error({
-      message: error instanceof Error ? error.message : 'Image generation failed',
+    lognog.error(error instanceof Error ? error.message : 'Image generation failed', {
+      type: 'error',
       stack: error instanceof Error ? error.stack : undefined,
       route: '/api/generation/image',
       user_id: userId,
     });
 
     // Log API failure
-    lognog.api({
+    lognog.info(`POST /api/generation/image 500 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: '/api/generation/image',
       method: 'POST',
       status_code: 500,

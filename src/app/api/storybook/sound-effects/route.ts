@@ -89,9 +89,9 @@ export async function POST(request: NextRequest) {
       const error = await response.text()
       console.error('ElevenLabs Sound Effects error:', error)
 
-      lognog.integration({
+      lognog.warn(`elevenlabs FAIL ${Date.now() - elevenLabsStart}ms`, {
+        type: 'integration',
         integration: 'elevenlabs',
-        success: false,
         latency_ms: Date.now() - elevenLabsStart,
         http_status: response.status,
         error,
@@ -105,9 +105,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    lognog.integration({
+    lognog.debug(`elevenlabs OK ${Date.now() - elevenLabsStart}ms`, {
+      type: 'integration',
       integration: 'elevenlabs',
-      success: true,
       latency_ms: Date.now() - elevenLabsStart,
       http_status: 200,
       prompt_length: description.length,
@@ -120,7 +120,8 @@ export async function POST(request: NextRequest) {
     const base64Audio = Buffer.from(audioBuffer).toString('base64')
     const audioUrl = `data:audio/mpeg;base64,${base64Audio}`
 
-    lognog.api({
+    lognog.info(`POST /api/storybook/sound-effects 200 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: '/api/storybook/sound-effects',
       method: 'POST',
       status_code: 200,
@@ -139,14 +140,15 @@ export async function POST(request: NextRequest) {
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 
-    lognog.error({
-      message: errorMessage,
+    lognog.error(errorMessage, {
+      type: 'error',
       route: '/api/storybook/sound-effects',
       user_id: userId,
       user_email: userEmail,
     })
 
-    lognog.api({
+    lognog.info(`POST /api/storybook/sound-effects 500 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: '/api/storybook/sound-effects',
       method: 'POST',
       status_code: 500,

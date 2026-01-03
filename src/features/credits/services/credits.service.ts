@@ -203,7 +203,8 @@ class CreditsService {
             const atomicResult = result[0]
             if (atomicResult.success) {
                 // Log successful credit deduction
-                lognog.business({
+                lognog.info('credit_deduction', {
+                    type: 'business',
                     event: 'credit_deduction',
                     user_id: userId,
                     user_email: user_email,
@@ -219,7 +220,8 @@ class CreditsService {
                 }
             } else {
                 // Log failed credit deduction (critical - revenue impacting)
-                lognog.business({
+                lognog.warn('credit_deduction_failed', {
+                    type: 'business',
                     event: 'credit_deduction_failed',
                     user_id: userId,
                     user_email: user_email,
@@ -248,7 +250,8 @@ class CreditsService {
         // Check sufficient funds
         if (balance.balance < priceToDeduct) {
             // Log insufficient credits
-            lognog.business({
+            lognog.warn('credit_deduction_failed', {
+                type: 'business',
                 event: 'credit_deduction_failed',
                 user_id: userId,
                 user_email: user_email,

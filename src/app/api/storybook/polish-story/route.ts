@@ -182,9 +182,9 @@ export async function POST(request: NextRequest) {
       const error = await response.text()
       console.error('OpenRouter API error:', error)
 
-      lognog.integration({
+      lognog.warn(`openrouter FAIL ${Date.now() - openRouterStart}ms`, {
+        type: 'integration',
         integration: 'openrouter',
-        success: false,
         latency_ms: Date.now() - openRouterStart,
         http_status: response.status,
         model: 'openai/gpt-4o-mini',
@@ -199,9 +199,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    lognog.integration({
+    lognog.debug(`openrouter OK ${Date.now() - openRouterStart}ms`, {
+      type: 'integration',
       integration: 'openrouter',
-      success: true,
       latency_ms: Date.now() - openRouterStart,
       http_status: 200,
       model: 'openai/gpt-4o-mini',
@@ -224,7 +224,8 @@ export async function POST(request: NextRequest) {
     try {
       const result: PolishedStoryResponse = JSON.parse(toolCall.function.arguments)
 
-      lognog.api({
+      lognog.info(`POST /api/storybook/polish-story 200 (${Date.now() - apiStart}ms)`, {
+        type: 'api',
         route: '/api/storybook/polish-story',
         method: 'POST',
         status_code: 200,
@@ -248,14 +249,15 @@ export async function POST(request: NextRequest) {
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 
-    lognog.error({
-      message: errorMessage,
+    lognog.error(errorMessage, {
+      type: 'error',
       route: '/api/storybook/polish-story',
       user_id: userId,
       user_email: userEmail,
     })
 
-    lognog.api({
+    lognog.info(`POST /api/storybook/polish-story 500 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: '/api/storybook/polish-story',
       method: 'POST',
       status_code: 500,

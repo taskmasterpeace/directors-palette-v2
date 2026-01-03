@@ -26,7 +26,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const project = await StorybookProjectsService.getProject(id, auth.user.id);
 
     if (!project) {
-      lognog.api({
+      lognog.info(`GET /api/storybook/projects/${id} 404 (${Date.now() - apiStart}ms)`, {
+        type: 'api',
         route: `/api/storybook/projects/${id}`,
         method: 'GET',
         status_code: 404,
@@ -41,7 +42,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    lognog.api({
+    lognog.info(`GET /api/storybook/projects/${id} 200 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: `/api/storybook/projects/${id}`,
       method: 'GET',
       status_code: 200,
@@ -56,14 +58,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-    lognog.error({
-      message: errorMessage,
+    lognog.error(errorMessage, {
+      type: 'error',
       route: '/api/storybook/projects/[id]',
       user_id: userId,
       user_email: userEmail,
     });
 
-    lognog.api({
+    lognog.info(`GET /api/storybook/projects/[id] 500 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: '/api/storybook/projects/[id]',
       method: 'GET',
       status_code: 500,
@@ -105,7 +108,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       projectData,
     });
 
-    lognog.business({
+    lognog.info('storybook_project_updated', {
+      type: 'business',
       event: 'storybook_project_updated',
       user_id: userId,
       user_email: userEmail,
@@ -113,7 +117,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       title,
     });
 
-    lognog.api({
+    lognog.info(`PUT /api/storybook/projects/${id} 200 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: `/api/storybook/projects/${id}`,
       method: 'PUT',
       status_code: 200,
@@ -132,7 +137,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
     if (error instanceof Error && error.message === 'Project not found') {
-      lognog.api({
+      lognog.info(`PUT /api/storybook/projects/[id] 404 (${Date.now() - apiStart}ms)`, {
+        type: 'api',
         route: '/api/storybook/projects/[id]',
         method: 'PUT',
         status_code: 404,
@@ -147,14 +153,15 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    lognog.error({
-      message: errorMessage,
+    lognog.error(errorMessage, {
+      type: 'error',
       route: '/api/storybook/projects/[id]',
       user_id: userId,
       user_email: userEmail,
     });
 
-    lognog.api({
+    lognog.info(`PUT /api/storybook/projects/[id] 500 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: '/api/storybook/projects/[id]',
       method: 'PUT',
       status_code: 500,
@@ -189,14 +196,16 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     await StorybookProjectsService.deleteProject(id, auth.user.id);
 
-    lognog.business({
+    lognog.info('storybook_project_deleted', {
+      type: 'business',
       event: 'storybook_project_deleted',
       user_id: userId,
       user_email: userEmail,
       project_id: id,
     });
 
-    lognog.api({
+    lognog.info(`DELETE /api/storybook/projects/${id} 200 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: `/api/storybook/projects/${id}`,
       method: 'DELETE',
       status_code: 200,
@@ -213,14 +222,15 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-    lognog.error({
-      message: errorMessage,
+    lognog.error(errorMessage, {
+      type: 'error',
       route: '/api/storybook/projects/[id]',
       user_id: userId,
       user_email: userEmail,
     });
 
-    lognog.api({
+    lognog.info(`DELETE /api/storybook/projects/[id] 500 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: '/api/storybook/projects/[id]',
       method: 'DELETE',
       status_code: 500,

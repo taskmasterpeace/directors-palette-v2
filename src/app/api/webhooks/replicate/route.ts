@@ -71,12 +71,15 @@ export async function POST(request: NextRequest) {
       await WebhookService.processCompletedPrediction(event);
 
       // Log successful webhook processing
-      lognog.business({
+      lognog.info('webhook_processed', {
+        type: 'business',
         event: 'webhook_processed',
-        metadata: { prediction_id: predictionId, status: event.status },
+        prediction_id: predictionId,
+        status: event.status,
       });
 
-      lognog.api({
+      lognog.info(`POST /api/webhooks/replicate 200 (${Date.now() - webhookStart}ms)`, {
+        type: 'api',
         route: '/api/webhooks/replicate',
         method: 'POST',
         status_code: 200,
@@ -89,12 +92,13 @@ export async function POST(request: NextRequest) {
       // If processing fails (e.g., download timeout), return 500 so Replicate retries
       console.error('Prediction processing error:', processingError);
 
-      lognog.error({
-        message: processingError instanceof Error ? processingError.message : 'Webhook processing failed',
-        context: { prediction_id: predictionId },
+      lognog.error(processingError instanceof Error ? processingError.message : 'Webhook processing failed', {
+        type: 'error',
+        prediction_id: predictionId,
       });
 
-      lognog.api({
+      lognog.info(`POST /api/webhooks/replicate 500 (${Date.now() - webhookStart}ms)`, {
+        type: 'api',
         route: '/api/webhooks/replicate',
         method: 'POST',
         status_code: 500,
@@ -111,12 +115,13 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Webhook processing error:', error);
 
-    lognog.error({
-      message: error instanceof Error ? error.message : 'Webhook failed',
-      context: { prediction_id: predictionId },
+    lognog.error(error instanceof Error ? error.message : 'Webhook failed', {
+      type: 'error',
+      prediction_id: predictionId,
     });
 
-    lognog.api({
+    lognog.info(`POST /api/webhooks/replicate 500 (${Date.now() - webhookStart}ms)`, {
+      type: 'api',
       route: '/api/webhooks/replicate',
       method: 'POST',
       status_code: 500,

@@ -94,7 +94,8 @@ export async function POST(request: NextRequest) {
       console.error('ElevenLabs API error:', error)
 
       // Log ElevenLabs integration failure
-      lognog.integration({
+      lognog.warn(`elevenlabs FAIL ${Date.now() - elevenLabsStart}ms`, {
+        type: 'integration',
         integration: 'elevenlabs',
         latency_ms: Date.now() - elevenLabsStart,
         http_status: response.status,
@@ -110,7 +111,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Log ElevenLabs integration success
-    lognog.integration({
+    lognog.debug(`elevenlabs OK ${Date.now() - elevenLabsStart}ms`, {
+      type: 'integration',
       integration: 'elevenlabs',
       latency_ms: Date.now() - elevenLabsStart,
       http_status: 200,
@@ -144,7 +146,8 @@ export async function POST(request: NextRequest) {
             .getPublicUrl(fileName)
 
           // Log API success
-          lognog.api({
+          lognog.info(`POST /api/storybook/synthesize 200 (${Date.now() - apiStart}ms)`, {
+            type: 'api',
             route: '/api/storybook/synthesize',
             method: 'POST',
             status_code: 200,
@@ -207,14 +210,15 @@ export async function POST(request: NextRequest) {
     console.error('Error in synthesize:', error)
 
     // Log error
-    lognog.error({
-      message: error instanceof Error ? error.message : 'TTS synthesis failed',
+    lognog.error(error instanceof Error ? error.message : 'TTS synthesis failed', {
+      type: 'error',
       route: '/api/storybook/synthesize',
       user_id: userId,
     })
 
     // Log API failure
-    lognog.api({
+    lognog.info(`POST /api/storybook/synthesize 500 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
       route: '/api/storybook/synthesize',
       method: 'POST',
       status_code: 500,

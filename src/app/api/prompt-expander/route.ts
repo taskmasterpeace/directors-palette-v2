@@ -103,9 +103,9 @@ export async function POST(request: NextRequest) {
             const error = await response.text()
             console.error('OpenRouter error:', error)
 
-            lognog.integration({
+            lognog.warn(`openrouter FAIL ${Date.now() - openRouterStart}ms`, {
+                type: 'integration',
                 integration: 'openrouter',
-                success: false,
                 latency_ms: Date.now() - openRouterStart,
                 http_status: response.status,
                 model: MODEL,
@@ -118,9 +118,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Log OpenRouter success
-        lognog.integration({
+        lognog.debug(`openrouter OK ${Date.now() - openRouterStart}ms`, {
+            type: 'integration',
             integration: 'openrouter',
-            success: true,
             latency_ms: Date.now() - openRouterStart,
             http_status: 200,
             model: MODEL,
@@ -142,7 +142,8 @@ export async function POST(request: NextRequest) {
             .trim()
 
         // Log prompt expansion success
-        lognog.business({
+        lognog.info('prompt_expanded', {
+            type: 'business',
             event: 'prompt_expanded',
             user_id: userId,
             user_email: userEmail,
@@ -152,7 +153,8 @@ export async function POST(request: NextRequest) {
             expanded_prompt_length: expanded.length,
         })
 
-        lognog.api({
+        lognog.info(`POST /api/prompt-expander 200 (${Date.now() - apiStart}ms)`, {
+            type: 'api',
             route: '/api/prompt-expander',
             method: 'POST',
             status_code: 200,
@@ -174,14 +176,15 @@ export async function POST(request: NextRequest) {
 
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 
-        lognog.error({
-            message: errorMessage,
+        lognog.error(errorMessage, {
+            type: 'error',
             route: '/api/prompt-expander',
             user_id: userId,
             user_email: userEmail,
         })
 
-        lognog.api({
+        lognog.info(`POST /api/prompt-expander 500 (${Date.now() - apiStart}ms)`, {
+            type: 'api',
             route: '/api/prompt-expander',
             method: 'POST',
             status_code: 500,
