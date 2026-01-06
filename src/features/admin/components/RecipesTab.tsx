@@ -61,8 +61,14 @@ export function RecipesTab() {
                 method: 'DELETE',
             })
             if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.error || 'Failed to delete recipe')
+                // Try to parse JSON error, but handle HTML error pages gracefully
+                const contentType = response.headers.get('content-type')
+                if (contentType?.includes('application/json')) {
+                    const errorData = await response.json()
+                    throw new Error(errorData.error || 'Failed to delete recipe')
+                } else {
+                    throw new Error(`Failed to delete recipe (HTTP ${response.status})`)
+                }
             }
             await refreshRecipes() // Refresh store from DB
             toast.success(`Recipe "${recipe.name}" deleted`)
@@ -110,8 +116,15 @@ export function RecipesTab() {
                     body: JSON.stringify(updates),
                 })
                 if (!response.ok) {
-                    const errorData = await response.json()
-                    throw new Error(errorData.error || 'Failed to update recipe')
+                    // Try to parse JSON error, but handle HTML error pages gracefully
+                    const contentType = response.headers.get('content-type')
+                    if (contentType?.includes('application/json')) {
+                        const errorData = await response.json()
+                        throw new Error(errorData.error || 'Failed to update recipe')
+                    } else {
+                        console.error('[RecipesTab] Non-JSON error response:', response.status, response.statusText)
+                        throw new Error(`Failed to update recipe (HTTP ${response.status})`)
+                    }
                 }
                 await refreshRecipes() // Refresh store from DB
                 console.log('[RecipesTab] Recipe updated successfully')

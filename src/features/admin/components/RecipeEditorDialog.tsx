@@ -201,7 +201,22 @@ export function RecipeEditorDialog({
             })
 
             if (!response.ok) {
-                throw new Error('Failed to upload image')
+                // Try to get error details from JSON response
+                const contentType = response.headers.get('content-type')
+                if (contentType?.includes('application/json')) {
+                    const errorData = await response.json()
+                    throw new Error(errorData.error || `Upload failed (HTTP ${response.status})`)
+                } else {
+                    console.error('[RecipeEditorDialog] Non-JSON error response:', response.status, uploadUrl)
+                    throw new Error(`Upload failed (HTTP ${response.status}). Recipe ID: ${recipe?.id || 'new'}`)
+                }
+            }
+
+            // Verify response is JSON before parsing
+            const contentType = response.headers.get('content-type')
+            if (!contentType?.includes('application/json')) {
+                console.error('[RecipeEditorDialog] Unexpected response type:', contentType, uploadUrl)
+                throw new Error(`Server returned unexpected response type: ${contentType}`)
             }
 
             const data = await response.json()

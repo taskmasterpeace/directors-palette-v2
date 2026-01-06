@@ -17,6 +17,16 @@
  * - Previous stage output becomes reference for next stage
  */
 
+// Server-safe UUID generator (crypto.randomUUID() is not available on server during SSR)
+let uuidCounter = 0;
+function generateStageId(): string {
+  // Use crypto.randomUUID if available (client-side), otherwise use a counter-based ID
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `stage-${Date.now()}-${++uuidCounter}`;
+}
+
 // Field types for recipe forms
 export type RecipeFieldType = 'name' | 'text' | 'select'
 
@@ -2226,7 +2236,7 @@ CRITICAL REQUIREMENTS:
     recipeNote: 'Used by storybook feature to generate art style reference',
     stages: [
       {
-        id: crypto.randomUUID(),
+        id: generateStageId(),
         order: 0,
         type: 'generation',
         template: `Create a visual style guide as a 6-image grid (2 rows × 3 columns) in <<STYLE_NAME:text!>> style.
@@ -2270,7 +2280,7 @@ Output a 16:9 image with exactly 6 tiles (2 rows x 3 columns) separated by black
     recipeNote: 'Used by storybook feature for first pages. Optimized for story opening - no previous context needed.',
     stages: [
       {
-        id: crypto.randomUUID(),
+        id: generateStageId(),
         order: 0,
         type: 'generation',
         template: `Create an engaging opening illustration for this children's book story.
@@ -2338,7 +2348,7 @@ CRITICAL: Use the attached STYLE GUIDE reference image to determine the exact ar
     recipeNote: 'Used by storybook feature for continuation pages. Maintains story continuity from previous page.',
     stages: [
       {
-        id: crypto.randomUUID(),
+        id: generateStageId(),
         order: 0,
         type: 'generation',
         template: `Create an illustration for this children's book page that continues the story flow.
@@ -2411,7 +2421,7 @@ CRITICAL: Use the attached STYLE GUIDE reference image to determine the exact ar
     recipeNote: 'Used by storybook feature to generate book covers. Includes embedded text (title + author) and main character illustration.',
     stages: [
       {
-        id: crypto.randomUUID(),
+        id: generateStageId(),
         order: 0,
         type: 'generation',
         template: `Create a professional children's book cover illustration with embedded text.
@@ -2485,7 +2495,7 @@ Use reference images to match art style and character appearance exactly.`,
     recipeNote: 'Attach character reference for outfit/appearance. Grid shows character\'s hands, arms, legs, but NOT their face (except in reflections).',
     stages: [
       {
-        id: crypto.randomUUID(),
+        id: generateStageId(),
         order: 0,
         type: 'generation',
         template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 16:9 aspect ratio.
@@ -2542,7 +2552,7 @@ CONSISTENCY REQUIREMENTS:
     recipeNote: 'Attach character reference for outfit/appearance. Grid shows character\'s hands, arms, legs, but NOT their face (except in reflections).',
     stages: [
       {
-        id: crypto.randomUUID(),
+        id: generateStageId(),
         order: 0,
         type: 'generation',
         template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 9:16 aspect ratio.
@@ -2599,7 +2609,7 @@ CONSISTENCY REQUIREMENTS:
     recipeNote: 'Best for fight scenes, athletic moves, or any dynamic action. Row 2 features motion blur.',
     stages: [
       {
-        id: crypto.randomUUID(),
+        id: generateStageId(),
         order: 0,
         type: 'generation',
         template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 16:9 aspect ratio.
@@ -2655,7 +2665,7 @@ CRITICAL:
     recipeNote: 'Best for fight scenes, athletic moves, or any dynamic action. Row 2 features motion blur.',
     stages: [
       {
-        id: crypto.randomUUID(),
+        id: generateStageId(),
         order: 0,
         type: 'generation',
         template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 9:16 aspect ratio.
@@ -2711,7 +2721,7 @@ CRITICAL:
     recipeNote: 'Provide a reference image showing the main location. Grid explores the environment from multiple perspectives.',
     stages: [
       {
-        id: crypto.randomUUID(),
+        id: generateStageId(),
         order: 0,
         type: 'generation',
         template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 16:9 aspect ratio.
@@ -2771,7 +2781,7 @@ CRITICAL:
     recipeNote: 'Provide a reference image showing the main location. Grid explores the environment from multiple perspectives.',
     stages: [
       {
-        id: crypto.randomUUID(),
+        id: generateStageId(),
         order: 0,
         type: 'generation',
         template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 9:16 aspect ratio.
@@ -2831,7 +2841,7 @@ CRITICAL:
     recipeNote: 'Attach character reference for consistent appearance. Grid tells entire story with NO text bubbles.',
     stages: [
       {
-        id: crypto.randomUUID(),
+        id: generateStageId(),
         order: 0,
         type: 'generation',
         template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 16:9 aspect ratio.
@@ -2893,7 +2903,7 @@ CRITICAL:
     recipeNote: 'Attach character reference for consistent appearance. Grid tells entire story with NO text bubbles.',
     stages: [
       {
-        id: crypto.randomUUID(),
+        id: generateStageId(),
         order: 0,
         type: 'generation',
         template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 9:16 aspect ratio.
@@ -2955,7 +2965,7 @@ CRITICAL:
     recipeNote: 'Attach character reference for consistent appearance. Grid shows story up to midpoint cliffhanger.',
     stages: [
       {
-        id: crypto.randomUUID(),
+        id: generateStageId(),
         order: 0,
         type: 'generation',
         template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 16:9 aspect ratio.
@@ -3021,7 +3031,7 @@ CRITICAL:
     recipeNote: 'Attach character reference for consistent appearance. Grid shows story up to midpoint cliffhanger.',
     stages: [
       {
-        id: crypto.randomUUID(),
+        id: generateStageId(),
         order: 0,
         type: 'generation',
         template: `CRITICAL GRID FORMAT: Create a 3×3 grid (9 panels) in 9:16 aspect ratio.

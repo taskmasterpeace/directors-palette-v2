@@ -30,9 +30,20 @@ export async function POST(
 
     const { recipeId } = await params;
 
+    console.log('[recipe-images] POST request for recipe:', recipeId, 'user:', auth.user.id);
+
     if (!recipeId) {
       return NextResponse.json(
         { error: 'Recipe ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate recipe ID format (should be a UUID)
+    if (!/^[a-f0-9-]{36}$/.test(recipeId)) {
+      console.error('[recipe-images] Invalid recipe ID format:', recipeId);
+      return NextResponse.json(
+        { error: 'Invalid recipe ID format', details: `Expected UUID, got: ${recipeId}` },
         { status: 400 }
       );
     }
