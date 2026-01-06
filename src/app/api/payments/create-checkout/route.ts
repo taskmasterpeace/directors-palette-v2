@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { getClient } from '@/lib/db/client'
+import { lognog } from '@/lib/lognog'
 
 // Initialize Stripe (only if key is available)
 const stripe = process.env.STRIPE_SECRET_KEY
@@ -91,13 +92,28 @@ export async function POST(request: NextRequest) {
             customer_email: auth.user.email,
         })
 
+        lognog.info('checkout_session_created', {
+            userId: auth.user.id,
+            packageId: pkg.id,
+            packageName: pkg.name,
+            credits: totalCredits,
+            priceId: pkg.stripe_price_id,
+            sessionId: session.id,
+        })
+
         return NextResponse.json({
             url: session.url,
             session_id: session.id
         })
 
     } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
         console.error('Checkout error:', error)
+        lognog.error('checkout_session_failed', {
+            userId: auth.user.id,
+            error: errorMessage,
+            stack: error instanceof Error ? error.stack : undefined,
+        })
         return NextResponse.json(
             { error: 'Failed to create checkout session' },
             { status: 500 }

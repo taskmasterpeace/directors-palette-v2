@@ -3,6 +3,7 @@ import Replicate from 'replicate';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { creditsService } from '@/features/credits';
 import { isAdminEmail } from '@/features/admin/types/admin.types';
+import { lognog } from '@/lib/lognog';
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -162,6 +163,11 @@ export async function POST(request: NextRequest) {
     const errorDetails = error instanceof Error ? error.stack : String(error);
 
     console.error('Full error details:', errorDetails);
+
+    lognog.error('tool_remove_background_failed', {
+      error: errorMessage,
+      tool: 'remove-background',
+    });
 
     return NextResponse.json(
       {

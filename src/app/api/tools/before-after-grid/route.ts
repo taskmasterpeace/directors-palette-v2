@@ -10,6 +10,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { lognog } from '@/lib/lognog'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -284,6 +285,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Before/After Grid error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    lognog.error('tool_before_after_grid_failed', {
+      error: errorMessage,
+      tool: 'before-after-grid',
+    })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

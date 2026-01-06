@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { creditsService } from '@/features/credits/services/credits.service'
 import type { GenerationType } from '@/features/credits/types/credits.types'
+import { lognog } from '@/lib/lognog'
 
 /**
  * Extract client IP from Next.js request headers
@@ -65,7 +66,12 @@ export async function GET(request: NextRequest) {
             formatted_balance: `$${(balance.balance / 100).toFixed(2)}`
         })
     } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
         console.error('Error fetching credits:', error)
+        lognog.error('credits_fetch_failed', {
+            userId: auth.user.id,
+            error: errorMessage,
+        })
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }
@@ -119,6 +125,12 @@ export async function POST(request: NextRequest) {
                 })
 
                 if (!result.success) {
+                    lognog.warn('credits_deduction_failed', {
+                        userId: auth.user.id,
+                        modelId: model_id,
+                        generationType: generation_type || 'image',
+                        error: result.error,
+                    })
                     return NextResponse.json({
                         success: false,
                         error: result.error
@@ -166,7 +178,12 @@ export async function POST(request: NextRequest) {
                 }, { status: 400 })
         }
     } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
         console.error('Credits API error:', error)
+        lognog.error('credits_api_error', {
+            userId: auth.user.id,
+            error: errorMessage,
+        })
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }

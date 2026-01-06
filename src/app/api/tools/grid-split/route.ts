@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import sharp from 'sharp'
+import { lognog } from '@/lib/lognog'
 
 const STORAGE_BUCKET = 'directors-palette'
 
@@ -140,6 +141,10 @@ export async function POST(request: NextRequest) {
     console.error('[Grid Split] Error:', error)
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    lognog.error('tool_grid_split_failed', {
+      error: errorMessage,
+      tool: 'grid-split',
+    })
     return NextResponse.json(
       {
         error: 'Failed to split grid',
