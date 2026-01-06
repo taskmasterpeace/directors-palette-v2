@@ -99,7 +99,6 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         type: 'select',
         default: '2K',
         options: [
-            { value: '1K', label: '1K (1024px)' },
             { value: '2K', label: '2K (2048px) - Default quality' },
             { value: '4K', label: '4K (4096px) - High quality' },
             { value: 'custom', label: 'Custom dimensions' }
@@ -176,17 +175,17 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         type: 'slider',
         min: 0,
         max: 10,
-        default: 3,
+        default: 4,
         description: 'Image generation guidance (0-10)'
     },
     qwenSteps: {
         id: 'num_inference_steps',
         label: 'Inference Steps',
         type: 'slider',
-        min: 10,
+        min: 20,
         max: 50,
-        default: 30,
-        description: 'Number of denoising steps (10-50)'
+        default: 40,
+        description: 'Number of denoising steps (20-50)'
     },
     negativePrompt: {
         id: 'negative_prompt',
