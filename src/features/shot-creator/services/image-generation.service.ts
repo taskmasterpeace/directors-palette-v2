@@ -13,8 +13,9 @@ import type {
   NanoBananaSettings,
   NanoBananaProSettings,
   ZImageTurboSettings,
-  QwenImageFastSettings,
+  QwenImage2512Settings,
   GptImageSettings,
+  SeedreamSettings,
 } from '../types/image-generation.types'
 import { ASPECT_RATIO_SIZES } from '@/config'
 
@@ -50,16 +51,22 @@ export class ImageGenerationService {
       case 'z-image-turbo':
         errors.push(...this.validateZImageTurbo(input))
         break
-      case 'qwen-image-fast':
-        // Qwen Image Fast is text-to-image only, no reference images
-        if (input.referenceImages && input.referenceImages.length > 0) {
-          errors.push('Qwen Image Fast does not support reference images (text-to-image only)')
+      case 'qwen-image-2512':
+        // Qwen Image 2512 supports single image for i2i
+        if (input.referenceImages && input.referenceImages.length > 1) {
+          errors.push('Qwen Image 2512 supports maximum 1 reference image')
         }
         break
       case 'gpt-image-low':
       case 'gpt-image-medium':
       case 'gpt-image-high':
         errors.push(...this.validateGptImage(input))
+        break
+      case 'seedream-4.5':
+        // Seedream 4.5 supports up to 14 reference images
+        if (input.referenceImages && input.referenceImages.length > 14) {
+          errors.push('Seedream 4.5 supports maximum 14 reference images')
+        }
         break
     }
 
@@ -147,14 +154,16 @@ export class ImageGenerationService {
         return this.buildNanoBananaProInput(input)
       case 'z-image-turbo':
         return this.buildZImageTurboInput(input)
-      case 'qwen-image-fast':
-        return this.buildQwenImageFastInput(input)
+      case 'qwen-image-2512':
+        return this.buildQwenImage2512Input(input)
       case 'gpt-image-low':
         return this.buildGptImageInput(input, 'low')
       case 'gpt-image-medium':
         return this.buildGptImageInput(input, 'medium')
       case 'gpt-image-high':
         return this.buildGptImageInput(input, 'high')
+      case 'seedream-4.5':
+        return this.buildSeedreamInput(input)
       default:
         throw new Error(`Unsupported model: ${input.model}`)
     }
@@ -228,11 +237,14 @@ export class ImageGenerationService {
       replicateInput.guidance_scale = settings.guidanceScale
     }
 
-    if (settings.aspectRatio) {
-      // Check if z-image-turbo supports aspect_ratio param. 
-      // Assuming yes based on standard Replicate models.
-      // If not, we might need width/height mapping.
-      replicateInput.aspect_ratio = settings.aspectRatio
+    // Z-Image Turbo doesn't support aspect_ratio - convert to width/height
+    // Max dimensions: 1440px
+    if (settings.aspectRatio && settings.aspectRatio !== 'match_input_image') {
+      const dimensions = ASPECT_RATIO_SIZES[settings.aspectRatio]
+      if (dimensions) {
+        replicateInput.width = Math.min(dimensions.width, 1440)
+        replicateInput.height = Math.min(dimensions.height, 1440)
+      }
     }
 
     // Z-Image uses 'image' key for single reference image usually
@@ -243,19 +255,15 @@ export class ImageGenerationService {
     return replicateInput
   }
 
-  private static buildQwenImageFastInput(input: ImageGenerationInput) {
-    const settings = input.modelSettings as QwenImageFastSettings
+  private static buildQwenImage2512Input(input: ImageGenerationInput) {
+    const settings = input.modelSettings as QwenImage2512Settings
     const replicateInput: Record<string, unknown> = {
       prompt: input.prompt,
     }
 
-    // Qwen uses width/height instead of aspect_ratio
+    // Qwen Image 2512 supports aspect_ratio directly
     if (settings.aspectRatio && settings.aspectRatio !== 'match_input_image') {
-      const dimensions = ASPECT_RATIO_SIZES[settings.aspectRatio]
-      if (dimensions) {
-        replicateInput.width = dimensions.width
-        replicateInput.height = dimensions.height
-      }
+      replicateInput.aspect_ratio = settings.aspectRatio
     }
 
     if (settings.guidance !== undefined) {
@@ -268,6 +276,22 @@ export class ImageGenerationService {
 
     if (settings.negative_prompt) {
       replicateInput.negative_prompt = settings.negative_prompt
+    }
+
+    if (settings.outputFormat) {
+      replicateInput.output_format = settings.outputFormat
+    }
+
+    // go_fast optimization
+    if (settings.goFast !== undefined) {
+      replicateInput.go_fast = settings.goFast
+    }
+
+    // Image-to-image support
+    if (input.referenceImages && input.referenceImages.length > 0) {
+      replicateInput.image = this.normalizeReferenceImages(input.referenceImages)[0]
+      // Default strength for i2i
+      replicateInput.strength = 0.8
     }
 
     return replicateInput
@@ -302,7 +326,42 @@ export class ImageGenerationService {
     }
 
     if (settings.numImages && settings.numImages > 1) {
-      replicateInput.n = settings.numImages
+      replicateInput.number_of_images = settings.numImages
+    }
+
+    return replicateInput
+  }
+
+  private static buildSeedreamInput(input: ImageGenerationInput) {
+    const settings = input.modelSettings as SeedreamSettings
+    const replicateInput: Record<string, unknown> = {
+      prompt: input.prompt,
+    }
+
+    if (settings.aspectRatio) {
+      replicateInput.aspect_ratio = settings.aspectRatio
+    }
+
+    if (settings.resolution) {
+      replicateInput.size = settings.resolution // 2K, 4K, or custom
+    }
+
+    if (settings.outputFormat) {
+      replicateInput.output_format = settings.outputFormat
+    }
+
+    // Sequential image generation
+    if (settings.sequentialGeneration) {
+      replicateInput.sequential_image_generation = settings.sequentialGeneration ? 'auto' : 'disabled'
+    }
+
+    if (settings.maxImages && settings.maxImages > 1) {
+      replicateInput.max_images = settings.maxImages
+    }
+
+    // Reference images for i2i
+    if (input.referenceImages && input.referenceImages.length > 0) {
+      replicateInput.image_input = this.normalizeReferenceImages(input.referenceImages)
     }
 
     return replicateInput

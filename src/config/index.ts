@@ -19,7 +19,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-fast' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high'
+export type ModelId = 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-2512' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5'
 
 export interface ModelParameter {
     id: string
@@ -200,11 +200,11 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         type: 'select',
         default: '2K',
         options: [
-            { value: '1K', label: '1K (20 tokens)' },
-            { value: '2K', label: '2K (20 tokens) - Recommended' },
-            { value: '4K', label: '4K (35 tokens) - Premium' }
+            { value: '1K', label: '1K (1024px)' },
+            { value: '2K', label: '2K (2048px) - Recommended' },
+            { value: '4K', label: '4K (4096px) - Premium' }
         ],
-        description: 'Higher resolution = better quality but increased cost'
+        description: 'Higher resolution = better quality'
     },
     safetyFilterLevel: {
         id: 'safetyFilterLevel',
@@ -326,7 +326,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         badgeColor: 'bg-amber-600',
         textColor: 'text-amber-300',
         endpoint: 'google/nano-banana-pro',
-        costPerImage: 0.20, // Price we charge users (20 pts = $0.20)
+        costPerImage: 0.40, // Price we charge users (40 pts = $0.40) - 4K costs $0.30, 1K/2K costs $0.15
         supportedParameters: ['outputFormat', 'aspectRatio', 'resolution', 'safetyFilterLevel'],
         parameters: {
             outputFormat: MODEL_PARAMETERS.outputFormat,
@@ -357,27 +357,28 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         },
         maxReferenceImages: 0 // Text-to-image only - no image input support
     },
-    'qwen-image-fast': {
-        id: 'qwen-image-fast',
-        name: 'qwen-image-fast',
-        displayName: 'Qwen Image Fast',
+    'qwen-image-2512': {
+        id: 'qwen-image-2512',
+        name: 'qwen-image-2512',
+        displayName: 'Qwen Image 2512',
         type: 'generation',
         icon: '🚀',
-        description: 'Lightning-fast image generation. Almost instant results.',
-        badge: 'Instant',
+        description: 'Fast, high-quality image generation with image-to-image support.',
+        badge: 'Fast',
         badgeColor: 'bg-cyan-600',
         textColor: 'text-cyan-300',
-        endpoint: 'prunaai/qwen-image-fast:01b324d214eb4870ff424dc4215c067759c4c01a8751e327a434e2b16054db2f',
-        costPerImage: 0.02, // 2 points = 2 cents (100% margin)
-        supportedParameters: ['outputFormat', 'aspectRatio', 'qwenGuidance', 'qwenSteps', 'negativePrompt'],
+        endpoint: 'qwen/qwen-image-2512',
+        costPerImage: 0.04, // 4 points = 4 cents ($0.02 cost, 100% margin)
+        supportedParameters: ['outputFormat', 'aspectRatio', 'qwenGuidance', 'qwenSteps', 'negativePrompt', 'goFast'],
         parameters: {
             outputFormat: MODEL_PARAMETERS.outputFormat,
             aspectRatio: MODEL_PARAMETERS.aspectRatio,
             guidance: MODEL_PARAMETERS.qwenGuidance,
             num_inference_steps: MODEL_PARAMETERS.qwenSteps,
-            negative_prompt: MODEL_PARAMETERS.negativePrompt
+            negative_prompt: MODEL_PARAMETERS.negativePrompt,
+            goFast: MODEL_PARAMETERS.goFast
         },
-        maxReferenceImages: 0 // Text-to-image only
+        maxReferenceImages: 1 // Supports single image for i2i
     },
     // OpenAI GPT Image 1.5 - Low Quality (Budget option)
     'gpt-image-low': {
@@ -447,6 +448,28 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             inputFidelity: MODEL_PARAMETERS.gptImageInputFidelity
         },
         maxReferenceImages: 10 // Supports input_images parameter
+    },
+    'seedream-4.5': {
+        id: 'seedream-4.5',
+        name: 'seedream-4.5',
+        displayName: 'Seedream 4.5',
+        type: 'generation',
+        icon: '🌱',
+        description: 'High quality generation with 4K support and sequential image generation.',
+        badge: 'Quality',
+        badgeColor: 'bg-emerald-600',
+        textColor: 'text-emerald-300',
+        endpoint: 'bytedance/seedream-4.5',
+        costPerImage: 0.06, // 6 points = 6 cents ($0.04 cost, 50% margin)
+        supportedParameters: ['outputFormat', 'aspectRatio', 'seedreamResolution', 'maxImages', 'sequentialGeneration'],
+        parameters: {
+            outputFormat: MODEL_PARAMETERS.outputFormat,
+            aspectRatio: MODEL_PARAMETERS.aspectRatio,
+            resolution: MODEL_PARAMETERS.seedreamResolution,
+            maxImages: MODEL_PARAMETERS.maxImages,
+            sequentialGeneration: MODEL_PARAMETERS.sequentialGeneration
+        },
+        maxReferenceImages: 14
     }
 }
 

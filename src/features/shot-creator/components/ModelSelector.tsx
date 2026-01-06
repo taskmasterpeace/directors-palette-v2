@@ -32,16 +32,16 @@ const MODEL_CAPABILITIES: Record<ModelId, {
   refImages: string
   bestFor: string[]
 }> = {
-  'qwen-image-fast': {
-    speed: '~2s (Fastest)',
-    textRendering: 'Fair',
-    refImages: 'None (text-only)',
-    bestFor: ['Rapid iteration', 'Concept exploration', 'Budget work']
+  'qwen-image-2512': {
+    speed: '~3s (Fast)',
+    textRendering: 'Good',
+    refImages: 'Up to 1 (i2i)',
+    bestFor: ['Fast generation', 'Image-to-image', 'Budget work']
   },
   'z-image-turbo': {
     speed: '~5s (Fast)',
     textRendering: 'Good',
-    refImages: 'None (text-only)',
+    refImages: 'Up to 1',
     bestFor: ['Ultra-fast generation', 'Concept exploration', 'Budget work']
   },
   'nano-banana': {
@@ -73,6 +73,12 @@ const MODEL_CAPABILITIES: Record<ModelId, {
     textRendering: 'Excellent',
     refImages: 'Up to 10',
     bestFor: ['Maximum quality', 'Client work', 'Detailed scenes']
+  },
+  'seedream-4.5': {
+    speed: '~10s (Moderate)',
+    textRendering: 'Good',
+    refImages: 'Up to 14',
+    bestFor: ['4K resolution', 'Sequential images', 'High quality']
   }
 }
 

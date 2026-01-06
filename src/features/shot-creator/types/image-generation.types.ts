@@ -10,10 +10,11 @@ export type ImageModel = Extract<ModelId,
   | 'nano-banana'
   | 'nano-banana-pro'
   | 'z-image-turbo'
-  | 'qwen-image-fast'
+  | 'qwen-image-2512'
   | 'gpt-image-low'
   | 'gpt-image-medium'
   | 'gpt-image-high'
+  | 'seedream-4.5'
 >
 
 // Model-specific settings interfaces
@@ -37,12 +38,21 @@ export interface ZImageTurboSettings {
   promptStrength?: number
 }
 
-export interface QwenImageFastSettings {
+export interface QwenImage2512Settings {
   aspectRatio?: string
-  outputFormat?: 'jpg' | 'png'
+  outputFormat?: 'jpg' | 'png' | 'webp'
   guidance?: number
   num_inference_steps?: number
   negative_prompt?: string
+  goFast?: boolean
+}
+
+export interface SeedreamSettings {
+  aspectRatio?: string
+  outputFormat?: 'jpg' | 'png'
+  resolution?: '2K' | '4K' | 'custom'
+  maxImages?: number // 1-15
+  sequentialGeneration?: boolean
 }
 
 export interface GptImageSettings {
@@ -58,8 +68,9 @@ export type ImageModelSettings =
   | NanoBananaSettings
   | NanoBananaProSettings
   | ZImageTurboSettings
-  | QwenImageFastSettings
+  | QwenImage2512Settings
   | GptImageSettings
+  | SeedreamSettings
 
 // Input for image generation service
 export interface ImageGenerationInput {
@@ -99,13 +110,26 @@ export interface ZImageTurboInput {
   output_format?: string
 }
 
-export interface QwenImageFastInput {
+export interface QwenImage2512Input {
   prompt: string
-  width?: number
-  height?: number
+  aspect_ratio?: string
   guidance?: number
   num_inference_steps?: number
   negative_prompt?: string
+  output_format?: string
+  go_fast?: boolean
+  image?: string // For i2i
+  strength?: number
+}
+
+export interface SeedreamInput {
+  prompt: string
+  aspect_ratio?: string
+  size?: '2K' | '4K' | 'custom'
+  output_format?: string
+  sequential_image_generation?: 'auto' | 'disabled'
+  max_images?: number
+  image_input?: string[]
 }
 
 export interface GptImageInput {
@@ -124,8 +148,9 @@ export type ReplicateImageInput =
   | NanoBananaInput
   | NanoBananaProInput
   | ZImageTurboInput
-  | QwenImageFastInput
+  | QwenImage2512Input
   | GptImageInput
+  | SeedreamInput
 
 // API Request/Response types
 export interface ImageGenerationRequest {

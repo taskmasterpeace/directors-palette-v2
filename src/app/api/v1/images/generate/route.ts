@@ -131,7 +131,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
     const modelConfig = getModelConfig(model as ImageModel)
     if (!modelConfig) {
       return NextResponse.json(
-        { success: false, error: `Invalid model: ${model}. Use: nano-banana, nano-banana-pro, z-image-turbo, qwen-image-fast, gpt-image-low, gpt-image-medium, or gpt-image-high` },
+        { success: false, error: `Invalid model: ${model}. Use: nano-banana, nano-banana-pro, z-image-turbo, qwen-image-2512, gpt-image-low, gpt-image-medium, gpt-image-high, or seedream-4.5` },
         { status: 400 }
       )
     }
@@ -305,7 +305,7 @@ export async function GET(): Promise<NextResponse> {
         type: 'string',
         required: false,
         default: 'nano-banana',
-        options: ['nano-banana', 'nano-banana-pro', 'z-image-turbo', 'qwen-image-fast'],
+        options: ['nano-banana', 'nano-banana-pro', 'z-image-turbo', 'qwen-image-2512', 'gpt-image-low', 'gpt-image-medium', 'gpt-image-high', 'seedream-4.5'],
         description: 'Model to use for generation',
       },
       aspectRatio: {
@@ -329,9 +329,13 @@ export async function GET(): Promise<NextResponse> {
     },
     modelCosts: {
       'nano-banana': '8 points/image ($0.08)',
-      'nano-banana-pro': '20 points/image ($0.20)',
+      'nano-banana-pro': '40 points/image ($0.40)',
       'z-image-turbo': '5 points/image ($0.05)',
-      'qwen-image-fast': '2 points/image ($0.02)',
+      'qwen-image-2512': '4 points/image ($0.04)',
+      'gpt-image-low': '3 points/image ($0.03)',
+      'gpt-image-medium': '10 points/image ($0.10)',
+      'gpt-image-high': '27 points/image ($0.27)',
+      'seedream-4.5': '6 points/image ($0.06)',
     },
     modelCapabilities: {
       'nano-banana': {
@@ -353,11 +357,36 @@ export async function GET(): Promise<NextResponse> {
         referenceImages: 'Up to 1',
         bestFor: 'Rapid visualization, quick prototyping',
       },
-      'qwen-image-fast': {
-        speed: 'Almost Instant (~1 sec)',
+      'qwen-image-2512': {
+        speed: 'Fast (~3 sec)',
         quality: 'Good',
-        referenceImages: 'None (text-to-image only)',
-        bestFor: 'Ultra-fast generation, real-time previews, budget-conscious workflows',
+        referenceImages: 'Up to 1 (image-to-image)',
+        bestFor: 'Fast generation, image-to-image, budget workflows',
+      },
+      'gpt-image-low': {
+        speed: 'Medium',
+        quality: 'Good',
+        referenceImages: 'Up to 10',
+        bestFor: 'Budget GPT quality, quick concepts',
+      },
+      'gpt-image-medium': {
+        speed: 'Medium',
+        quality: 'Excellent',
+        referenceImages: 'Up to 10',
+        bestFor: 'Accurate text, story prompts, final renders',
+      },
+      'gpt-image-high': {
+        speed: 'Slower',
+        quality: 'Excellent',
+        referenceImages: 'Up to 10',
+        bestFor: 'Maximum quality, client work, detailed scenes',
+      },
+      'seedream-4.5': {
+        speed: 'Medium',
+        quality: 'Excellent',
+        referenceImages: 'Up to 14',
+        resolution: 'Up to 4K',
+        bestFor: 'High-quality 4K images, sequential generation',
       },
     },
     example: {
