@@ -218,25 +218,25 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         ],
         description: 'Content safety filtering level'
     },
-    // New parameters for z-image-turbo
+    // Z-Image Turbo parameters (Replicate API: 1-50 steps, 0-20 guidance, defaults per API docs)
     numInferenceSteps: {
         id: 'numInferenceSteps',
         label: 'Inference Steps',
         type: 'slider',
         min: 1,
-        max: 4,
-        default: 2,
-        description: 'Number of denoising steps (1-4)'
+        max: 50,
+        default: 8,
+        description: 'Number of denoising steps (1-50). Lower = faster.'
     },
     guidanceScale: {
         id: 'guidanceScale',
         label: 'Guidance Scale',
         type: 'slider',
         min: 0,
-        max: 2,
-        step: 0.1,
-        default: 1.0,
-        description: 'Guidance scale (0-2)'
+        max: 20,
+        step: 0.5,
+        default: 0,
+        description: 'Guidance scale. Use 0 for Turbo models.'
     },
     // GPT Image specific parameters
     gptImageAspectRatio: {

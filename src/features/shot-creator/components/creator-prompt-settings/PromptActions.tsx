@@ -297,6 +297,31 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 baseSettings.resolution = shotCreatorSettings.resolution
                 baseSettings.safetyFilterLevel = shotCreatorSettings.safetyFilterLevel || 'block_only_high'
                 break
+            case 'z-image-turbo':
+                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
+                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
+                // numInferenceSteps and guidanceScale use config defaults (8 and 0)
+                break
+            case 'seedream-4.5':
+                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
+                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
+                baseSettings.resolution = shotCreatorSettings.resolution || '2K'
+                // Sequential generation settings
+                if (shotCreatorSettings.sequentialGeneration) {
+                    baseSettings.sequentialGeneration = true
+                    baseSettings.maxImages = shotCreatorSettings.maxImages || 3
+                }
+                break
+            case 'qwen-image-2512':
+                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
+                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'webp'
+                break
+            case 'gpt-image-low':
+            case 'gpt-image-medium':
+            case 'gpt-image-high':
+                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
+                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'webp'
+                break
         }
 
         console.log('✅ Built model settings:', JSON.stringify(baseSettings, null, 2))

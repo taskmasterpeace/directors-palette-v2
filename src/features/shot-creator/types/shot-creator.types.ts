@@ -54,4 +54,7 @@ export interface ShotCreatorSettings {
     outputFormat?: string // webp, jpg, png
     // Style injection (supports preset IDs like 'claymation' or custom IDs like 'custom-123...')
     selectedStyle?: string | null // Selected style ID for auto-injection (preset or custom)
+    // Seedream-specific settings
+    sequentialGeneration?: boolean // Enable sequential image generation mode
+    maxImages?: number // Max images when sequential generation is enabled (1-15)
 }

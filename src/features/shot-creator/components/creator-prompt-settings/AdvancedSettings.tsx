@@ -8,6 +8,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
+import { Checkbox } from "@/components/ui/checkbox"
+import { Slider } from "@/components/ui/slider"
 import React, { useCallback, useMemo } from 'react'
 import { useShotCreatorSettings } from "../../hooks"
 import { getModelConfig, ModelId } from '@/config'
@@ -32,6 +34,14 @@ const AdvancedSettings = () => {
     )
     const supportsSafetyFilterLevel = useMemo(() =>
         modelConfig.supportedParameters.includes('safetyFilterLevel'),
+        [modelConfig]
+    )
+    const supportsSequentialGeneration = useMemo(() =>
+        modelConfig.supportedParameters.includes('sequentialGeneration'),
+        [modelConfig]
+    )
+    const supportsMaxImages = useMemo(() =>
+        modelConfig.supportedParameters.includes('maxImages'),
         [modelConfig]
     )
 
@@ -86,6 +96,52 @@ const AdvancedSettings = () => {
                         </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">Content safety filtering level</p>
+                </div>
+            )}
+
+            {/* Sequential Generation - for Seedream 4.5 */}
+            {supportsSequentialGeneration && (
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                        <Checkbox
+                            id="sequentialGeneration"
+                            checked={shotCreatorSettings.sequentialGeneration || false}
+                            onCheckedChange={(checked) => updateSettings({
+                                sequentialGeneration: checked === true,
+                                // Reset maxImages when disabling
+                                maxImages: checked === true ? (shotCreatorSettings.maxImages || 3) : undefined
+                            })}
+                        />
+                        <Label htmlFor="sequentialGeneration" className="text-sm text-foreground cursor-pointer">
+                            Sequential Generation
+                        </Label>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        Generate multiple related images (e.g., story scenes, character variations)
+                    </p>
+
+                    {/* Max Images slider - only shows when sequential is enabled */}
+                    {shotCreatorSettings.sequentialGeneration && supportsMaxImages && (
+                        <div className="space-y-2 pl-6">
+                            <div className="flex items-center justify-between">
+                                <Label className="text-sm text-foreground">Max Images</Label>
+                                <span className="text-sm text-amber-400 font-medium">
+                                    {shotCreatorSettings.maxImages || 3}
+                                </span>
+                            </div>
+                            <Slider
+                                value={[shotCreatorSettings.maxImages || 3]}
+                                onValueChange={([val]) => updateSettings({ maxImages: val })}
+                                min={2}
+                                max={15}
+                                step={1}
+                                className="w-full"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Generate 2-15 related images. Cost multiplied by count.
+                            </p>
+                        </div>
+                    )}
                 </div>
             )}
 
