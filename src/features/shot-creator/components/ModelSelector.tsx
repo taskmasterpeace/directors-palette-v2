@@ -23,7 +23,7 @@ import {
   Type,
   Clock
 } from 'lucide-react'
-import { getAvailableModels, ModelId, getModelConfig } from "@/config/index"
+import { getAvailableModels, ModelId } from "@/config/index"
 
 // Enhanced model capability info
 const MODEL_CAPABILITIES: Record<ModelId, {

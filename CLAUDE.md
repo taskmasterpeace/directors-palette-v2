@@ -45,6 +45,33 @@ git add -A && git commit -m "type: description" && git push origin main
 
 ---
 
+# 🚨 CRITICAL: BUILD VERIFICATION BEFORE COMMIT 🚨
+
+**INCIDENT DATE: January 6, 2026** - Unused import caused Vercel build failure. `tsc --noEmit` does NOT catch ESLint errors!
+
+## BEFORE EVERY COMMIT (MANDATORY)
+```bash
+npm run build
+```
+
+**NEVER use `tsc --noEmit` alone** - it only checks TypeScript types, NOT ESLint rules.
+
+### Why This Matters
+- Vercel runs `npm run build` which includes ESLint
+- ESLint treats **unused imports as ERRORS** (not warnings)
+- `tsc --noEmit` does NOT run ESLint
+- If you only run `tsc --noEmit`, you WILL break the Vercel build
+
+### Common ESLint Errors That Break Builds
+- ❌ Unused imports: `'getModelConfig' is defined but never used`
+- ❌ Missing alt text: `Image elements must have an alt prop`
+- ❌ Unused variables: `'foo' is assigned but never used`
+
+### The Fix
+Always run `npm run build` and check for **both** TypeScript errors AND ESLint errors before committing.
+
+---
+
 ## Project Overview
 
 **directors-palette-v2** is a Next.js 15 application using React 19, TypeScript, and Tailwind CSS v4. The project uses Turbopack for faster builds and development.
