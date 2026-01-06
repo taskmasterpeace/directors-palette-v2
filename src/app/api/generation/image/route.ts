@@ -6,7 +6,7 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { creditsService } from '@/features/credits';
 import { isAdminEmail } from '@/features/admin/types/admin.types';
 import { generationEventsService } from '@/features/admin/services/generation-events.service';
-import { getModelConfig } from '@/config';
+import { getModelConfig, getModelCost, type ModelId } from '@/config';
 import { StorageService } from '@/features/generation/services/storage.service';
 import { StorageLimitsService } from '@/features/storage/services/storage-limits.service';
 import type { Database } from '../../../../../supabase/database.types';
@@ -208,15 +208,24 @@ export async function POST(request: NextRequest) {
 
     // ✅ CREDITS: Check if user has sufficient credits (admins bypass)
     const userIsAdmin = isAdminEmail(user.email)
+
+    // Get resolution-aware cost for tiered pricing (nano-banana-pro)
+    const resolution = modelSettings?.resolution as string | undefined;
+    const modelCost = getModelCost(model as ModelId, resolution);
+    const modelCostCents = Math.round(modelCost * 100); // Convert to cents/points
+
     if (!userIsAdmin) {
-      const creditCheck = await creditsService.hasSufficientCredits(user.id, model, 'image')
-      if (!creditCheck.sufficient) {
+      // Use resolution-specific cost for credit check
+      const balance = await creditsService.getBalance(user.id);
+      const currentBalance = balance?.balance ?? 0;
+
+      if (currentBalance < modelCostCents) {
         return NextResponse.json(
           {
             error: 'Insufficient credits',
-            details: `You need ${creditCheck.required} points but only have ${creditCheck.balance} points.`,
-            required: creditCheck.required,
-            balance: creditCheck.balance,
+            details: `You need ${modelCostCents} points but only have ${currentBalance} points.`,
+            required: modelCostCents,
+            balance: currentBalance,
           },
           { status: 402 } // Payment Required
         );
@@ -508,13 +517,14 @@ export async function POST(request: NextRequest) {
               const deductResult = await creditsService.deductCredits(user.id, model, {
                 generationType: 'image',
                 predictionId: prediction.id,
-                description: `Image generation (${model})`,
+                description: `Image generation (${model}${resolution ? ` @ ${resolution}` : ''})`,
+                overrideAmount: modelCostCents, // Use resolution-specific cost
                 user_email: user.email,
               })
               if (!deductResult.success) {
                 console.error('Failed to deduct credits:', deductResult.error)
               } else {
-                console.log(`Deducted credits for user ${user.id}. New balance: ${deductResult.newBalance}`)
+                console.log(`Deducted ${modelCostCents} credits for user ${user.id}. New balance: ${deductResult.newBalance}`)
               }
             }
 

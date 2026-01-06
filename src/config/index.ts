@@ -45,6 +45,7 @@ export interface ModelConfig {
     textColor: string
     endpoint: string
     costPerImage: number
+    costByResolution?: Record<string, number> // For tiered pricing (e.g., nano-banana-pro)
     supportedParameters: string[]
     parameters: Record<string, ModelParameter>
     maxReferenceImages?: number
@@ -325,7 +326,12 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         badgeColor: 'bg-amber-600',
         textColor: 'text-amber-300',
         endpoint: 'google/nano-banana-pro',
-        costPerImage: 0.40, // Price we charge users (40 pts = $0.40) - 4K costs $0.30, 1K/2K costs $0.15
+        costPerImage: 0.25, // Default price (1K/2K) - 25 pts = $0.25
+        costByResolution: {
+            '1K': 0.25,  // 25 pts - Replicate cost $0.15 (66% margin)
+            '2K': 0.25,  // 25 pts - Replicate cost $0.15 (66% margin)
+            '4K': 0.45,  // 45 pts - Replicate cost $0.30 (50% margin)
+        },
         supportedParameters: ['outputFormat', 'aspectRatio', 'resolution', 'safetyFilterLevel'],
         parameters: {
             outputFormat: MODEL_PARAMETERS.outputFormat,
@@ -346,7 +352,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         badgeColor: 'bg-purple-600',
         textColor: 'text-purple-300',
         endpoint: 'prunaai/z-image-turbo',
-        costPerImage: 0.05, // 5 points = 5 cents
+        costPerImage: 0.03, // 3 points = 3 cents
         supportedParameters: ['outputFormat', 'aspectRatio', 'numInferenceSteps', 'guidanceScale'],
         parameters: {
             outputFormat: MODEL_PARAMETERS.outputFormat,
@@ -474,6 +480,24 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
 
 export function getModelConfig(modelId: ModelId): ModelConfig {
     return MODEL_CONFIGS[modelId] || MODEL_CONFIGS['nano-banana']
+}
+
+/**
+ * Get the cost for a model, considering resolution for tiered pricing
+ * @param modelId - The model ID
+ * @param resolution - Optional resolution (e.g., '1K', '2K', '4K')
+ * @returns Cost in dollars (e.g., 0.25 for 25 cents)
+ */
+export function getModelCost(modelId: ModelId, resolution?: string): number {
+    const config = getModelConfig(modelId)
+
+    // If model has tiered pricing and resolution is specified, use that
+    if (config.costByResolution && resolution && config.costByResolution[resolution]) {
+        return config.costByResolution[resolution]
+    }
+
+    // Fall back to default cost
+    return config.costPerImage
 }
 
 export function getModelsByType(type: ModelType): ModelConfig[] {

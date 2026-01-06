@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import { useShotCreatorSettings } from "../../hooks"
 import { aspectRatios, resolutions } from "../../constants"
-import { getModelConfig, ModelId } from '@/config'
+import { getModelConfig, getModelCost, ModelId } from '@/config'
 import {
     Select,
     SelectContent,
@@ -92,7 +92,15 @@ const BasicSettings = () => {
                 {/* Resolution */}
                 {supportsResolution && (
                     <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Resolution</Label>
+                        <Label className="text-xs text-muted-foreground">
+                            Resolution
+                            {/* Show current cost if model has tiered pricing */}
+                            {modelConfig.costByResolution && (
+                                <span className="ml-1 text-amber-400">
+                                    ({Math.round(getModelCost(selectedModel as ModelId, shotCreatorSettings.resolution) * 100)} pts)
+                                </span>
+                            )}
+                        </Label>
                         <Select
                             value={shotCreatorSettings.resolution}
                             onValueChange={(value) => updateSettings({ resolution: value })}
@@ -101,11 +109,18 @@ const BasicSettings = () => {
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                {resolutionOptions.map((res) => (
-                                    <SelectItem key={res.value} value={res.value}>
-                                        {res.label}
-                                    </SelectItem>
-                                ))}
+                                {resolutionOptions.map((res) => {
+                                    // Show cost for tiered pricing models
+                                    const resCost = modelConfig.costByResolution
+                                        ? Math.round(getModelCost(selectedModel as ModelId, res.value) * 100)
+                                        : null;
+                                    return (
+                                        <SelectItem key={res.value} value={res.value}>
+                                            {res.label}
+                                            {resCost && <span className="ml-1 text-amber-400">({resCost} pts)</span>}
+                                        </SelectItem>
+                                    );
+                                })}
                             </SelectContent>
                         </Select>
                     </div>

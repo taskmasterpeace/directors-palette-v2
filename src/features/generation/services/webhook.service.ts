@@ -6,6 +6,7 @@ import { isAdminEmail } from '@/features/admin/types/admin.types';
 import { VideoGenerationService } from '@/features/shot-animator/services/video-generation.service';
 import type { AnimationModel } from '@/features/shot-animator/types';
 import type { Database } from '../../../../supabase/database.types';
+import { getModelCost, type ModelId } from '@/config';
 
 // Lazy-load Supabase client to avoid build-time errors when env vars aren't available
 let _supabase: SupabaseClient | null = null;
@@ -211,9 +212,10 @@ export class WebhookService {
       const defaultModel = generationType === 'video' ? 'seedance-lite' : 'nano-banana';
       const model = (currentMetadata.model as string) || defaultModel;
 
-      // For video, calculate actual cost based on duration and resolution
+      // Calculate actual cost based on type-specific factors
       let overrideAmount: number | undefined;
       if (generationType === 'video') {
+        // Video: calculate based on duration and resolution
         const duration = (currentMetadata.duration as number) || 5;
         const resolution = (currentMetadata.resolution as '480p' | '720p' | '1080p') || '720p';
         overrideAmount = VideoGenerationService.calculateCost(
@@ -222,6 +224,13 @@ export class WebhookService {
           resolution
         );
         console.log(`Video cost calculated: ${model} @ ${resolution} for ${duration}s = ${overrideAmount} pts`);
+      } else {
+        // Image: use resolution-based pricing (e.g., nano-banana-pro tiered pricing)
+        const modelSettings = currentMetadata.modelSettings as Record<string, unknown> | undefined;
+        const imageResolution = modelSettings?.resolution as string | undefined;
+        const imageCost = getModelCost(model as ModelId, imageResolution);
+        overrideAmount = Math.round(imageCost * 100); // Convert to cents/points
+        console.log(`Image cost calculated: ${model}${imageResolution ? ` @ ${imageResolution}` : ''} = ${overrideAmount} pts`);
       }
 
       const deductResult = await creditsService.deductCredits(galleryEntry.user_id, model, {

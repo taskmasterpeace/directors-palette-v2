@@ -23,7 +23,7 @@ import {
   Type,
   Clock
 } from 'lucide-react'
-import { getAvailableModels, ModelId } from "@/config/index"
+import { getAvailableModels, ModelId, getModelConfig } from "@/config/index"
 
 // Enhanced model capability info
 const MODEL_CAPABILITIES: Record<ModelId, {
@@ -185,9 +185,14 @@ export function ModelSelector({
                 {model.displayName}
               </span>
 
-              {/* Cost Badge */}
+              {/* Cost Badge - show range for tiered pricing */}
               <Badge className={`${model.badgeColor} text-white text-xs`}>
-                {Math.round(model.costPerImage * 100)} pts
+                {model.costByResolution ? (
+                  // Show range for tiered pricing (e.g., nano-banana-pro)
+                  `${Math.round(Math.min(...Object.values(model.costByResolution)) * 100)}-${Math.round(Math.max(...Object.values(model.costByResolution)) * 100)} pts`
+                ) : (
+                  `${Math.round(model.costPerImage * 100)} pts`
+                )}
               </Badge>
 
               {/* Description for selected */}
