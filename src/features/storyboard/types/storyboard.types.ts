@@ -438,7 +438,7 @@ export interface StyleGuideRef {
     id: string
     name: string
     isPreset: boolean
-    presetId?: PresetStyleId
+    presetId?: string  // Can be PresetStyleId or custom style ID
 }
 
 /**

@@ -12,6 +12,7 @@ import { Grid3X3, CheckCircle, AlertCircle, Maximize2 } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { DEFAULT_CONTACT_SHEET_CONFIG, PRESET_STYLES, ANGLE_PROMPTS } from '../../types/storyboard.types'
+import { useCustomStylesStore } from '@/features/shot-creator/store/custom-styles.store'
 import type { CinematicAngle, GeneratedShotPrompt } from '../../types/storyboard.types'
 import {
     contactSheetServiceV2,
@@ -36,19 +37,43 @@ export function ContactSheetModal({
 }: ContactSheetModalProps) {
     const { currentStyleGuide, selectedPresetStyle, setContactSheetVariants } = useStoryboardStore()
 
-    // Get effective style guide - preset takes precedence
-    const effectiveStyleGuide = selectedPresetStyle
-        ? {
-            id: `preset-${selectedPresetStyle}`,
-            user_id: '',
-            name: PRESET_STYLES.find(s => s.id === selectedPresetStyle)?.name || '',
-            style_prompt: PRESET_STYLES.find(s => s.id === selectedPresetStyle)?.stylePrompt,
-            reference_image_url: PRESET_STYLES.find(s => s.id === selectedPresetStyle)?.imagePath,
-            metadata: {},
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+    // Get effective style guide - preset/custom takes precedence
+    const getEffectiveStyleGuide = () => {
+        if (!selectedPresetStyle) return currentStyleGuide
+
+        // Check preset styles first
+        const preset = PRESET_STYLES.find(s => s.id === selectedPresetStyle)
+        if (preset) {
+            return {
+                id: `preset-${selectedPresetStyle}`,
+                user_id: '',
+                name: preset.name,
+                style_prompt: preset.stylePrompt,
+                reference_image_url: preset.imagePath,
+                metadata: {},
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            }
         }
-        : currentStyleGuide
+
+        // Check custom styles
+        const customStyle = useCustomStylesStore.getState().getStyleById(selectedPresetStyle)
+        if (customStyle) {
+            return {
+                id: customStyle.id,
+                user_id: '',
+                name: customStyle.name,
+                style_prompt: customStyle.stylePrompt,
+                reference_image_url: customStyle.imagePath,
+                metadata: {},
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            }
+        }
+
+        return currentStyleGuide
+    }
+    const effectiveStyleGuide = getEffectiveStyleGuide()
 
     const [isGenerating, setIsGenerating] = useState(false)
     const [progress, setProgress] = useState<ContactSheetProgress>({ total: 2, current: 0, status: 'idle' })

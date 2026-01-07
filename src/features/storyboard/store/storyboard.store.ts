@@ -15,7 +15,6 @@ import type {
     ExtractionResult,
     GeneratedShotPrompt,
     GeneratedImageData,
-    PresetStyleId
 } from "../types/storyboard.types";
 import type { StoryChapter, ChapterDetectionResult } from "../services/chapter-detection.service";
 
@@ -53,7 +52,7 @@ export interface StoryboardStore {
     // ---- Style Guides State ----
     styleGuides: StyleGuide[]
     currentStyleGuide: StyleGuide | null
-    selectedPresetStyle: PresetStyleId | null
+    selectedPresetStyle: string | null  // Can be PresetStyleId or custom style ID
     loadingStyleGuides: boolean
 
     // ---- Shots State ----
@@ -155,7 +154,7 @@ export interface StoryboardStore {
     // ---- Style Guide Actions ----
     setStyleGuides: (guides: StyleGuide[]) => void
     setCurrentStyleGuide: (guide: StyleGuide | null) => void
-    setSelectedPresetStyle: (presetId: PresetStyleId | null) => void
+    setSelectedPresetStyle: (presetId: string | null) => void
     addStyleGuide: (guide: StyleGuide) => void
     updateStyleGuide: (id: string, updates: Partial<StyleGuide>) => void
     deleteStyleGuide: (id: string) => void
