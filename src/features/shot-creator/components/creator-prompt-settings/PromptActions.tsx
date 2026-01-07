@@ -137,8 +137,8 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 activeRecipe.stages.some(s => (s.referenceImages?.length || 0) > 0)
             return (validation?.isValid ?? false) && hasRefs
         }
-        // Regular mode: needs prompt and refs
-        return shotCreatorPrompt.length > 0 && shotCreatorReferenceImages.length > 0
+        // Regular mode: needs prompt only (reference images are optional for all models)
+        return shotCreatorPrompt.length > 0
     }, [shotCreatorPrompt, shotCreatorReferenceImages, activeFieldValues, getActiveRecipe, getActiveValidation])
 
     // Get references grouped by category from library items
