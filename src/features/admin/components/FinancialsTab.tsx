@@ -22,7 +22,7 @@ import {
     Coins,
     Download,
     RefreshCw,
-    Image,
+    Image as ImageIcon,
     Video,
     Wallet
 } from 'lucide-react'
@@ -241,7 +241,7 @@ export function FinancialsTab() {
                 <Card className="bg-zinc-900 border-zinc-800">
                     <CardHeader>
                         <CardTitle className="text-white flex items-center gap-2">
-                            <Image className="w-4 h-4 text-blue-500" />
+                            <ImageIcon className="w-4 h-4 text-blue-500" />
                             Image Generations
                         </CardTitle>
                     </CardHeader>

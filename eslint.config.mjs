@@ -32,6 +32,9 @@ const eslintConfig = [
           ignoreRestSiblings: true,
         },
       ],
+      // Disable img element warning - this app uses many dynamic/external images
+      // where Next.js Image isn't practical (user uploads, AI-generated content, etc.)
+      "@next/next/no-img-element": "off",
     },
   },
 ];

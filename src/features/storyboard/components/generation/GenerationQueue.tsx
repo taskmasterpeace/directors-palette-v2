@@ -137,7 +137,8 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
         } else {
             setSelectedShots(new Set())
         }
-    }, [chapterIndex]) // Only re-run when chapter changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally only trigger on chapter change
+    }, [chapterIndex])
 
     // Initialize selected shots on first load
     useEffect(() => {

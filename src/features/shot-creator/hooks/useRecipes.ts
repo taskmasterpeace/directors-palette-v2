@@ -23,6 +23,7 @@ export function useRecipes() {
     if (!authLoading && user?.id && !store.isInitialized) {
       store.initialize(user.id)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Zustand store properties are stable
   }, [authLoading, user?.id, store.isInitialized, store.initialize])
 
   // Re-initialize if user changes
@@ -30,6 +31,7 @@ export function useRecipes() {
     if (user?.id && store.currentUserId && user.id !== store.currentUserId) {
       store.initialize(user.id)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Zustand store properties are stable
   }, [user?.id, store.currentUserId, store.initialize])
 
   return {
@@ -113,6 +115,7 @@ export function useQuickAccess() {
     if (!authLoading && user?.id && !store.isInitialized) {
       store.initialize(user.id)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Zustand store properties are stable
   }, [authLoading, user?.id, store.isInitialized, store.initialize])
 
   return {

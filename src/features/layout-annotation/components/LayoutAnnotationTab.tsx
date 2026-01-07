@@ -99,6 +99,7 @@ The final image should look natural as if the edits were always part of the orig
             localStorage.removeItem('layout-nano-banana-system-prompt')
             setSystemPrompt(DEFAULT_SYSTEM_PROMPT)
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run once on mount
     }, [])
 
     // Save system prompt to localStorage when it changes (but not if empty)

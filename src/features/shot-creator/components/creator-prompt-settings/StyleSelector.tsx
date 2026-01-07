@@ -203,7 +203,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                     <div className="w-4 h-4 rounded overflow-hidden flex-shrink-0">
                                         {currentStyle.imagePath ? (
                                             currentStyle.imagePath.startsWith('data:') ? (
-                                                // eslint-disable-next-line @next/next/no-img-element
+                                                
                                                 <img
                                                     src={currentStyle.imagePath}
                                                     alt={currentStyle.name}
@@ -248,7 +248,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                     <div className="w-5 h-5 rounded overflow-hidden flex-shrink-0">
                                         {style.imagePath ? (
                                             style.imagePath.startsWith('data:') ? (
-                                                // eslint-disable-next-line @next/next/no-img-element
+                                                
                                                 <img src={style.imagePath} alt={style.name} className="w-full h-full object-cover" />
                                             ) : (
                                                 <Image src={style.imagePath} alt={style.name} width={20} height={20} className="w-full h-full object-cover" />
@@ -287,7 +287,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                 >
                                     {newStyleImage ? (
                                         <div className="relative w-full aspect-video rounded overflow-hidden">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            
                                             <img src={newStyleImage} alt="Style preview" className="w-full h-full object-cover" />
                                             <Button variant="destructive" size="sm" className="absolute top-2 right-2 min-h-[44px] min-w-[44px]" onClick={(e) => { e.stopPropagation(); setNewStyleImage(''); }}>
                                                 <X className="w-4 h-4" />
@@ -354,7 +354,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                 <div className="w-5 h-5 rounded overflow-hidden flex-shrink-0 relative">
                                     {currentStyle.imagePath ? (
                                         currentStyle.imagePath.startsWith('data:') ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
+                                            
                                             <img
                                                 src={currentStyle.imagePath}
                                                 alt={currentStyle.name}
@@ -408,7 +408,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                     <div className="w-6 h-6 rounded overflow-hidden flex-shrink-0">
                                         {style.imagePath ? (
                                             style.imagePath.startsWith('data:') ? (
-                                                // eslint-disable-next-line @next/next/no-img-element
+                                                
                                                 <img
                                                     src={style.imagePath}
                                                     alt={style.name}
@@ -482,7 +482,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                             >
                                 {newStyleImage ? (
                                     <div className="relative w-full aspect-video rounded overflow-hidden">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        
                                         <img
                                             src={newStyleImage}
                                             alt="Style preview"

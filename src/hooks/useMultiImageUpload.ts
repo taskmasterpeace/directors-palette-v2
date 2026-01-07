@@ -216,6 +216,7 @@ export function useMultiImageUpload(maxFiles = 10, targetAspectRatio?: string) {
     } finally {
       setIsUploading(false)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- processFile is stable within component lifecycle
   }, [maxFiles, targetAspectRatio, toast])
 
   /**

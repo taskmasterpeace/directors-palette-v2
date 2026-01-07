@@ -405,6 +405,7 @@ export function useStoryGeneration() {
                 variant: 'destructive',
             })
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- progress accessed via closure for latest value
     }, [currentQueue, generateShot, setCurrentQueue, toast])
 
     /**

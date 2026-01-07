@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useAdminAuth } from '@/features/admin/hooks/useAdminAuth'
 import {
@@ -77,11 +77,13 @@ export function SidebarNavigation() {
     }, [])
 
     // Persist collapsed state
-    const toggleCollapse = () => {
-        const newState = !isCollapsed
-        setIsCollapsed(newState)
-        localStorage.setItem('sidebar-collapsed', String(newState))
-    }
+    const toggleCollapse = useCallback(() => {
+        setIsCollapsed(prev => {
+            const newState = !prev
+            localStorage.setItem('sidebar-collapsed', String(newState))
+            return newState
+        })
+    }, [])
 
     // Keyboard shortcut for collapse
     useEffect(() => {
@@ -93,7 +95,7 @@ export function SidebarNavigation() {
         }
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [isCollapsed])
+    }, [toggleCollapse])
 
     // Fetch User
     useEffect(() => {

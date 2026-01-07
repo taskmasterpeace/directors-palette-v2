@@ -204,7 +204,7 @@ export function StyleSheetsTab() {
                   <TableRow key={style.id}>
                     <TableCell>
                       {style.image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                        
                         <img
                           src={style.image_url}
                           alt={style.name}
@@ -326,7 +326,7 @@ export function StyleSheetsTab() {
                 placeholder="https://..."
               />
               {imageUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
+                
                 <img
                   src={imageUrl}
                   alt="Preview"

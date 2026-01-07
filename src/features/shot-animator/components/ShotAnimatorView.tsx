@@ -199,6 +199,7 @@ export function ShotAnimatorView() {
         })
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Only trigger on model change, not on state updates
   }, [selectedModel, currentModelConfig.supportsLastFrame, currentModelConfig.displayName])
 
   // Reset aspect ratio when switching to a model that doesn't support the current ratio
@@ -227,6 +228,7 @@ export function ShotAnimatorView() {
         description: `${currentModelConfig.displayName} doesn't support ${currentAspectRatio}. Changed to ${newRatio}.`,
       })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Only trigger on model change, not on state updates
   }, [selectedModel, currentModelConfig.displayName, currentModelConfig.supportedAspectRatios])
 
   // Transform gallery images for the modal

@@ -187,7 +187,8 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
     return () => {
       canvas.dispose()
     }
-  }, []) // Remove canvasWidth/height dependencies to prevent re-init on resize
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally empty: canvas should only initialize once, not on resize
+  }, [])
 
   // Update background color when it changes
   useEffect(() => {
@@ -682,7 +683,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
       canvas.off('mouse:up', handleMouseUp)
       canvas.off('object:scaling', handleScaling)
     }
-  }, [color, brushSize, fillMode, isDrawingShape, shapeStartPoint, currentShape])
+  }, [color, brushSize, fillMode, fontSize, isDrawingShape, shapeStartPoint, currentShape])
 
   // Clear background only (preserves canvas size and other objects)
   const clearBackground = useCallback(() => {

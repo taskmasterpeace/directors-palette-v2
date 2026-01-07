@@ -19,7 +19,7 @@ import {
   Info,
   Flame,
   Zap,
-  Image,
+  Image as ImageIcon,
   Type,
   Clock
 } from 'lucide-react'
@@ -239,7 +239,7 @@ export function ModelSelector({
                         <span className="text-white">{capabilities.textRendering}</span>
                       </div>
                       <div className="flex items-center gap-1.5 col-span-2">
-                        <Image className="w-3 h-3 text-amber-400" />
+                        <ImageIcon className="w-3 h-3 text-amber-400" />
                         <span className="text-muted-foreground">References:</span>
                         <span className="text-white">{capabilities.refImages}</span>
                       </div>

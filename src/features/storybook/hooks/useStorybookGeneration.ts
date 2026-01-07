@@ -140,7 +140,7 @@ export function useStorybookGeneration() {
       setError(errorMessage)
       return { success: false, error: errorMessage }
     }
-  }, [setStyle, setGenerating, setError])
+  }, [setStyle, setGenerating, setError, getRecipeName, project?.recipeConfig?.styleGuideRecipeId])
 
   /**
    * Generate a character sheet from a photo OR description
@@ -235,7 +235,7 @@ export function useStorybookGeneration() {
       setError(errorMessage)
       return { success: false, error: errorMessage }
     }
-  }, [project, updateCharacter, setGenerating, setError])
+  }, [project, updateCharacter, setGenerating, setError, getRecipeName])
 
   /**
    * Generate book cover with embedded title, author, and main character
@@ -315,7 +315,7 @@ export function useStorybookGeneration() {
       setError(errorMessage)
       return { success: false, error: errorMessage }
     }
-  }, [project, setGenerating, setError])
+  }, [project, setGenerating, setError, getRecipeName])
 
   /**
    * Generate a single page illustration (renamed from generatePageVariations)
@@ -430,7 +430,7 @@ export function useStorybookGeneration() {
       setError(errorMessage)
       return { success: false, error: errorMessage }
     }
-  }, [project, updatePage, setGenerating, setError])
+  }, [project, updatePage, setGenerating, setError, getRecipeName])
 
   return {
     // State

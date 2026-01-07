@@ -208,7 +208,7 @@ export function ContactSheetModal({
                     {/* Template Preview */}
                     {useTemplateReference && variants.length === 0 && (
                         <div className="flex items-center gap-3 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            
                             <img
                                 src={CONTACT_SHEET_TEMPLATE_PATH}
                                 alt="Contact Sheet Template"
@@ -257,7 +257,7 @@ export function ContactSheetModal({
                     {/* Full Grid Image Display */}
                     {showFullGrid && gridImageUrl && (
                         <div className="rounded-lg border overflow-hidden">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            
                             <img
                                 src={gridImageUrl}
                                 alt="Full 3x3 grid"
@@ -274,7 +274,7 @@ export function ContactSheetModal({
                                 className="aspect-square rounded-lg border bg-muted/20 flex flex-col items-center justify-center p-2 relative overflow-hidden"
                             >
                                 {variant.imageUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
+                                    
                                     <img
                                         src={variant.imageUrl}
                                         alt={ANGLE_LABELS[variant.angle]}

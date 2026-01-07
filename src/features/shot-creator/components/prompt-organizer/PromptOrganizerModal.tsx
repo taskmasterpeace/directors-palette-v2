@@ -142,20 +142,7 @@ export function PromptOrganizerModal({
     const [references, setReferences] = useState<DetectedReference[]>([])
     const [previewPrompt, setPreviewPrompt] = useState('')
 
-    // Parse prompt when modal opens
-    useEffect(() => {
-        if (open && prompt) {
-            parsePrompt()
-        }
-    }, [open, prompt])
-
-    // Update preview when structured changes
-    useEffect(() => {
-        if (structured) {
-            setPreviewPrompt(promptParserService.reconstruct(structured))
-        }
-    }, [structured])
-
+    // Define parsePrompt before using it in useEffect
     const parsePrompt = useCallback(async () => {
         setIsParsing(true)
         try {
@@ -168,6 +155,20 @@ export function PromptOrganizerModal({
             setIsParsing(false)
         }
     }, [prompt])
+
+    // Parse prompt when modal opens
+    useEffect(() => {
+        if (open && prompt) {
+            parsePrompt()
+        }
+    }, [open, prompt, parsePrompt])
+
+    // Update preview when structured changes
+    useEffect(() => {
+        if (structured) {
+            setPreviewPrompt(promptParserService.reconstruct(structured))
+        }
+    }, [structured])
 
     const handleFieldChange = (field: string, value: string) => {
         if (!structured) return

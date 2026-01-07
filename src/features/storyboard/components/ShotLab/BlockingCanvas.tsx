@@ -60,6 +60,7 @@ export function BlockingCanvas({ shot, onUpdate }: BlockingCanvasProps) {
             resizeObserver.disconnect()
             canvas.dispose()
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Canvas should only initialize once
     }, [])
 
     const addActor = () => {

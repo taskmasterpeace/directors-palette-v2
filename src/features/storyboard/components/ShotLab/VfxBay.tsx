@@ -157,7 +157,7 @@ export function VfxBay({ shot, onUpdate: _onUpdate }: VfxBayProps) {
                 className="flex-1 relative bg-zinc-900/50 flex items-center justify-center overflow-hidden"
             >
                 {/* Background Image */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+                
                 <img
                     src={imageUrl}
                     alt="Shot Preview"

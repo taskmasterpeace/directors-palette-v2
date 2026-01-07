@@ -40,7 +40,7 @@ export function PresetStyleSelector({ selectedPresetId, onSelect }: PresetStyleS
                         >
                             <div className="relative aspect-video bg-muted flex items-center justify-center overflow-hidden">
                                 {style.imagePath ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
+                                    
                                     <img
                                         src={style.imagePath}
                                         alt={style.name}
