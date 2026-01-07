@@ -14,8 +14,7 @@ import { Play, CheckCircle, AlertCircle, SplitSquareVertical, Wand2, CheckSquare
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { storyboardGenerationService } from '../../services/storyboard-generation.service'
-import { PRESET_STYLES } from '../../types/storyboard.types'
-import { useCustomStylesStore } from '@/features/shot-creator/store/custom-styles.store'
+import { useEffectiveStyleGuide } from '../../hooks/useEffectiveStyleGuide'
 import { Input } from '@/components/ui/input'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { ChevronDown, Settings2 } from 'lucide-react'
@@ -53,7 +52,6 @@ const SHOT_TYPE_COLORS: Record<string, string> = {
 export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
     const {
         breakdownResult,
-        currentStyleGuide,
         selectedPresetStyle,
         characters,
         locations,
@@ -73,41 +71,7 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
     } = useStoryboardStore()
 
     // Get effective style guide - preset takes precedence, then custom styles, then user style guide
-    const effectiveStyleGuide = useMemo(() => {
-        if (!selectedPresetStyle) return currentStyleGuide
-
-        // Check preset styles first
-        const preset = PRESET_STYLES.find(s => s.id === selectedPresetStyle)
-        if (preset) {
-            return {
-                id: `preset-${selectedPresetStyle}`,
-                user_id: '',
-                name: preset.name,
-                style_prompt: preset.stylePrompt,
-                reference_image_url: preset.imagePath,
-                metadata: {},
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            }
-        }
-
-        // Check custom styles
-        const customStyle = useCustomStylesStore.getState().getStyleById(selectedPresetStyle)
-        if (customStyle) {
-            return {
-                id: customStyle.id,
-                user_id: '',
-                name: customStyle.name,
-                style_prompt: customStyle.stylePrompt,
-                reference_image_url: customStyle.imagePath,
-                metadata: {},
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            }
-        }
-
-        return currentStyleGuide
-    }, [selectedPresetStyle, currentStyleGuide])
+    const effectiveStyleGuide = useEffectiveStyleGuide()
 
     // Filter prompts by chapter
     // chapterIndex of -1 means "All Chapters" view - show all prompts

@@ -105,14 +105,18 @@ export function PresetStyleSelector({ selectedPresetId, onSelect }: PresetStyleS
                             </button>
 
                             <div className="relative aspect-video bg-muted flex items-center justify-center overflow-hidden">
-                                {style.imagePath ? (
+                                {/* Fallback letter - always rendered, hidden by image when loaded */}
+                                <span className="text-xs text-muted-foreground/50 absolute">{style.name[0]}</span>
+                                {style.imagePath && (
                                     <img
                                         src={style.imagePath}
                                         alt={style.name}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-cover relative z-10"
+                                        onError={(e) => {
+                                            // Hide broken image to show fallback letter
+                                            e.currentTarget.style.display = 'none'
+                                        }}
                                     />
-                                ) : (
-                                    <span className="text-xs text-muted-foreground/50">{style.name[0]}</span>
                                 )}
                                 {isSelected && (
                                     <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
@@ -125,16 +129,18 @@ export function PresetStyleSelector({ selectedPresetId, onSelect }: PresetStyleS
                             <CardContent className="p-2">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs font-medium truncate">{style.name}</span>
-                                    {isCustom && (
-                                        <Badge variant="secondary" className="text-[10px] px-1 py-0 ml-1">
-                                            Custom
-                                        </Badge>
-                                    )}
-                                    {isSelected && !isCustom && (
-                                        <Badge variant="default" className="text-[10px] px-1 py-0">
-                                            Active
-                                        </Badge>
-                                    )}
+                                    <div className="flex items-center gap-1">
+                                        {isCustom && (
+                                            <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                                                Custom
+                                            </Badge>
+                                        )}
+                                        {isSelected && (
+                                            <Badge variant="default" className="text-[10px] px-1 py-0">
+                                                Active
+                                            </Badge>
+                                        )}
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
