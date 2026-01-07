@@ -607,6 +607,55 @@ useEffect(() => {
 3. Add error event listener
 4. Verify audio URL is set before calling play()
 
+## API: "Unexpected token '<'" JSON parsing error
+**Error**: Server returned HTML error page but code assumed JSON
+**Fix**: Check content-type before parsing
+```typescript
+// ❌ Crashes if server returns HTML error
+const data = await response.json()
+
+// ✅ Check content-type first
+if (!response.ok) {
+    const contentType = response.headers.get('content-type')
+    if (contentType?.includes('application/json')) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Request failed')
+    } else {
+        throw new Error(`Request failed (HTTP ${response.status})`)
+    }
+}
+```
+
+## Model Settings: Missing switch cases in buildModelSettings()
+**Error**: Model-specific params not passed to API (only nano-banana worked)
+**Fix**: Add cases for ALL models in `PromptActions.tsx` buildModelSettings()
+```typescript
+// ❌ Missing cases = params silently dropped
+switch (model) {
+    case 'nano-banana': ...
+    case 'nano-banana-pro': ...
+    // z-image-turbo, seedream-4.5, etc. MISSING!
+}
+
+// ✅ Handle ALL models
+switch (model) {
+    case 'nano-banana': ...
+    case 'nano-banana-pro': ...
+    case 'z-image-turbo': ...
+    case 'seedream-4.5': ...
+    case 'qwen-image-2512': ...
+    case 'gpt-image-low':
+    case 'gpt-image-medium':
+    case 'gpt-image-high': ...
+}
+```
+
+## Service Layer: Check before adding conversion logic
+**Lesson**: Before adding parameter conversion code, check if the service layer already handles it.
+- `image-generation.service.ts` already converts `aspect_ratio` → `width/height` for Z-Image Turbo
+- Service already converts `sequentialGeneration` boolean → `'auto'/'disabled'` string for Seedream
+- API route already converts `webp` → `jpg` for nano-banana
+
 ---
 
 # 📁 PLAN FILE LOCATION
