@@ -202,7 +202,7 @@ export async function POST(
           recipe_id: recipe.id,
           recipe_name: recipe.name,
           stage_count: recipe.stages.length,
-          prompt_preview: prompt.slice(0, 100),
+          prompt: prompt,
           prompt_length: prompt.length,
           model,
           prediction_id: predictionId,

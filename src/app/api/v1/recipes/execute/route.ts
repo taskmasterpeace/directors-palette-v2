@@ -330,7 +330,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<RecipeExe
       event: 'recipe_executed',
       user_id: validatedKey.userId,
       stage_count: stages.length,
-      prompt_preview: results[0]?.prompt.slice(0, 100),
+      prompt: results[0]?.prompt,
       prompt_length: results[0]?.prompt.length,
       model,
     })

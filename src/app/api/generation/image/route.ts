@@ -325,7 +325,7 @@ export async function POST(request: NextRequest) {
         model: replicateModelId,
         prediction_id: prediction.id,
         prompt_length: prompt?.length,
-        prompt_preview: prompt?.substring(0, 50),
+        prompt: prompt,
         user_id: user.id,
         user_email: user.email,
       });
