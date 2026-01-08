@@ -22,6 +22,7 @@ interface GalleryImage {
   id: string
   url: string
   name: string
+  originalPrompt?: string // Original prompt used to generate the image
   createdAt: Date
 }
 

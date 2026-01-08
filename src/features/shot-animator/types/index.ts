@@ -27,6 +27,7 @@ export interface ShotAnimationConfig {
   imageUrl: string
   imageName: string
   prompt: string
+  originalPrompt?: string // Original prompt used to generate the image (for AI animation prompt generation)
   referenceImages: string[]
   lastFrameImage?: string
   includeInBatch: boolean

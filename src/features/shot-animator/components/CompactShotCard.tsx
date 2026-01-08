@@ -1,8 +1,8 @@
 'use client'
 
-import React, { memo } from 'react'
+import React, { memo, useState } from 'react'
 import Image from 'next/image'
-import { Image as ImageIcon, Film, Trash2 } from 'lucide-react'
+import { Image as ImageIcon, Film, Trash2, Wand2 } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,7 @@ import { ShotAnimationConfig } from '../types'
 import { Textarea } from "@/components/ui/textarea"
 import { CompactVideoCard } from './CompactVideoCard'
 import { VideoGalleryService } from '../services/gallery.service'
+import { generateAnimationPrompt } from '../services/animation-prompt.service'
 import { toast } from '@/hooks/use-toast'
 
 interface CompactShotCardProps {
@@ -35,8 +36,41 @@ const CompactShotCardComponent = ({
   onManageLastFrame,
   onRetryVideo
 }: CompactShotCardProps) => {
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false)
+
   const handleToggleSelect = () => {
     onUpdate({ ...config, includeInBatch: !config.includeInBatch })
+  }
+
+  const handleGenerateAnimationPrompt = async () => {
+    // Need original prompt to generate animation prompt
+    if (!config.originalPrompt) {
+      toast({
+        title: 'Cannot Generate',
+        description: 'No original prompt available. Try images from the gallery.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setIsGeneratingPrompt(true)
+    try {
+      const result = await generateAnimationPrompt(config.imageUrl, config.originalPrompt)
+      onUpdate({ ...config, prompt: result.animationPrompt })
+      toast({
+        title: 'Prompt Generated',
+        description: 'AI animation prompt has been added.',
+      })
+    } catch (error) {
+      console.error('Failed to generate animation prompt:', error)
+      toast({
+        title: 'Generation Failed',
+        description: error instanceof Error ? error.message : 'Could not generate animation prompt.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsGeneratingPrompt(false)
+    }
   }
 
   const handleDeleteGeneratedVideo = async (galleryId: string) => {
@@ -177,13 +211,33 @@ const CompactShotCardComponent = ({
         <p className="text-xs text-foreground truncate font-medium">
           {config.imageName}
         </p>
-        {/* Prompt Textarea - Compact on mobile */}
-        <Textarea
-          value={config.prompt}
-          onChange={(e) => onUpdate({ ...config, prompt: e.target.value })}
-          placeholder="Describe the animation..."
-          className="bg-secondary text-white text-sm sm:text-xs min-h-[80px] sm:min-h-[100px] resize-none touch-manipulation focus:ring-2 focus:ring-ring transition-shadow p-2"
-        />
+        {/* Prompt Textarea with AI Generate Button */}
+        <div className="relative">
+          <Textarea
+            value={config.prompt}
+            onChange={(e) => onUpdate({ ...config, prompt: e.target.value })}
+            placeholder="Describe the animation..."
+            className="bg-secondary text-white text-sm sm:text-xs min-h-[80px] sm:min-h-[100px] resize-none touch-manipulation focus:ring-2 focus:ring-ring transition-shadow p-2 pr-10"
+          />
+          {/* AI Generate Button - Only show if originalPrompt exists */}
+          {config.originalPrompt && (
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleGenerateAnimationPrompt}
+              disabled={isGeneratingPrompt}
+              className="absolute top-1 right-1 w-8 h-8 bg-secondary hover:bg-muted text-primary border border-primary/30 touch-manipulation"
+              aria-label="Generate animation prompt with AI"
+              title="Generate animation prompt with AI"
+            >
+              {isGeneratingPrompt ? (
+                <LoadingSpinner size="xs" color="current" />
+              ) : (
+                <Wand2 className="w-4 h-4" />
+              )}
+            </Button>
+          )}
+        </div>
         {/* Action Buttons - Compact on mobile */}
         <div className="flex w-full items-center gap-1 sm:gap-2 pb-2">
           {/* Reference Images Button */}
@@ -244,6 +298,7 @@ export const CompactShotCard = memo(CompactShotCardComponent, (prevProps, nextPr
   return (
     prevProps.config.id === nextProps.config.id &&
     prevProps.config.prompt === nextProps.config.prompt &&
+    prevProps.config.originalPrompt === nextProps.config.originalPrompt &&
     prevProps.config.includeInBatch === nextProps.config.includeInBatch &&
     prevProps.config.imageUrl === nextProps.config.imageUrl &&
     prevProps.config.referenceImages.length === nextProps.config.referenceImages.length &&

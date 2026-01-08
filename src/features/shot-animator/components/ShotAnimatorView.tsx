@@ -237,22 +237,25 @@ export function ShotAnimatorView() {
       .filter((item) => item.public_url) // Only images with URLs
       .map((item) => {
         const metadata = (item.metadata as Record<string, unknown>) || {}
+        const originalPrompt = (metadata.prompt as string) || ''
         return {
           id: item.id,
           url: item.public_url!,
-          name: (metadata.prompt as string) || `Image ${item.id.slice(0, 8)}`,
+          name: originalPrompt || `Image ${item.id.slice(0, 8)}`,
+          originalPrompt, // Store for animation prompt generation
           createdAt: new Date(item.created_at),
         }
       })
   }, [galleryImages])
 
   // Handlers
-  const handleGallerySelect = (images: typeof transformedGalleryImages) => {
+  const handleGallerySelect = (images: { id: string; url: string; name: string; originalPrompt?: string; createdAt: Date }[]) => {
     const newConfigs: ShotAnimationConfig[] = images.map((img) => ({
       id: `shot-${Date.now()}-${Math.random()}`,
       imageUrl: img.url,
       imageName: img.name,
       prompt: "",
+      originalPrompt: img.originalPrompt, // Store for AI animation prompt generation
       referenceImages: [],
       includeInBatch: true,
       generatedVideos: [] // Initialize empty array
