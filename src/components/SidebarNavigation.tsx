@@ -70,16 +70,14 @@ const NAV_SECTIONS: NavSection[] = [
                 label: 'Shot Creator',
                 icon: Sparkles,
                 banner: '/banners/shot-creator.webp',
-                tooltipExpanded: 'Generate single images with recipes and presets',
-                children: [
-                    {
-                        id: 'layout-annotation',
-                        label: 'Canvas Editor',
-                        icon: Layout,
-                        banner: '/banners/canvas-editor.webp',
-                        tooltipExpanded: 'Annotate and inpaint specific areas'
-                    }
-                ]
+                tooltipExpanded: 'Generate single images with recipes and presets'
+            },
+            {
+                id: 'layout-annotation',
+                label: 'Canvas Editor',
+                icon: Layout,
+                banner: '/banners/canvas-editor.webp',
+                tooltipExpanded: 'Annotate and inpaint specific areas'
             },
             {
                 id: 'shot-animator',
