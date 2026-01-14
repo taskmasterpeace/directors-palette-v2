@@ -13,6 +13,8 @@ import {
     BookOpen,
     BookHeart,
     ChevronLeft,
+    ChevronDown,
+    ChevronUp,
     HelpCircle,
     Menu,
     ShieldCheck,
@@ -44,21 +46,125 @@ interface NavItem {
     id: TabValue
     label: string
     icon: React.ElementType
-    banner: string // Banner image path
+    banner: string
     comingSoon?: boolean
+    children?: NavItem[]  // Support nesting
+    tooltipExpanded?: string
 }
 
-const NAV_ITEMS: NavItem[] = [
-    { id: 'shot-creator', label: 'Shot Creator', icon: Sparkles, banner: '/banners/shot-creator.webp' },
-    { id: 'shot-animator', label: 'Shot Animator', icon: Film, banner: '/banners/shot-animator.webp' },
-    { id: 'layout-annotation', label: 'Canvas Editor', icon: Layout, banner: '/banners/canvas-editor.webp' },
-    { id: 'storyboard', label: 'Storyboard', icon: BookOpen, banner: '/banners/storyboard.webp' },
-    { id: 'storybook', label: 'Storybook', icon: BookHeart, banner: '/banners/storybook-banner.webp' },
-    { id: 'music-lab', label: 'Music Lab', icon: Music, banner: '/banners/music-lab.webp' },
-    { id: 'prompt-tools', label: 'Prompt Tools', icon: FlaskConical, banner: '/banners/prompt-tools.webp' },
-    { id: 'gallery', label: 'Gallery', icon: Images, banner: '/banners/gallery.webp' },
-    { id: 'community', label: 'Community', icon: Users, banner: '/banners/community.webp' },
+interface NavSection {
+    id: string
+    label: string
+    items: NavItem[]
+    defaultExpanded?: boolean
+}
+
+const NAV_SECTIONS: NavSection[] = [
+    {
+        id: 'creation-tools',
+        label: 'CREATION TOOLS',
+        defaultExpanded: true,
+        items: [
+            {
+                id: 'shot-creator',
+                label: 'Shot Creator',
+                icon: Sparkles,
+                banner: '/banners/shot-creator.webp',
+                tooltipExpanded: 'Generate single images with recipes and presets',
+                children: [
+                    {
+                        id: 'layout-annotation',
+                        label: 'Canvas Editor',
+                        icon: Layout,
+                        banner: '/banners/canvas-editor.webp',
+                        tooltipExpanded: 'Annotate and inpaint specific areas'
+                    }
+                ]
+            },
+            {
+                id: 'shot-animator',
+                label: 'Shot Animator',
+                icon: Film,
+                banner: '/banners/shot-animator.webp',
+                tooltipExpanded: 'Animate still images into video'
+            }
+        ]
+    },
+    {
+        id: 'projects',
+        label: 'PROJECTS',
+        defaultExpanded: true,
+        items: [
+            {
+                id: 'storyboard',
+                label: 'Storyboard',
+                icon: BookOpen,
+                banner: '/banners/storyboard.webp',
+                tooltipExpanded: 'Cinematic shot sequences'
+            },
+            {
+                id: 'storybook',
+                label: 'Storybook',
+                icon: BookHeart,
+                banner: '/banners/storybook-banner.webp',
+                tooltipExpanded: "Children's illustrated books"
+            },
+            {
+                id: 'music-lab',
+                label: 'Music Lab',
+                icon: Music,
+                banner: '/banners/music-lab.webp',
+                tooltipExpanded: 'Music video treatments'
+            }
+        ]
+    },
+    {
+        id: 'library',
+        label: 'LIBRARY',
+        defaultExpanded: true,
+        items: [
+            {
+                id: 'gallery',
+                label: 'Gallery',
+                icon: Images,
+                banner: '/banners/gallery.webp',
+                tooltipExpanded: 'Browse all generations'
+            },
+            {
+                id: 'community',
+                label: 'Community',
+                icon: Users,
+                banner: '/banners/community.webp',
+                tooltipExpanded: 'Explore and share'
+            }
+        ]
+    },
+    {
+        id: 'utilities',
+        label: 'UTILITIES',
+        defaultExpanded: false,
+        items: [
+            {
+                id: 'prompt-tools',
+                label: 'Prompt Tools',
+                icon: FlaskConical,
+                banner: '/banners/prompt-tools.webp',
+                tooltipExpanded: 'Wildcards and style guides'
+            }
+        ]
+    }
 ]
+
+// Flatten all items for mobile (backward compatibility)
+const NAV_ITEMS: NavItem[] = NAV_SECTIONS.flatMap(section => {
+    const flattenItems = (items: NavItem[]): NavItem[] => {
+        return items.flatMap(item => {
+            const children = item.children ? flattenItems(item.children) : []
+            return [item, ...children]
+        })
+    }
+    return flattenItems(section.items)
+})
 
 export function SidebarNavigation() {
     const { activeTab, setActiveTab } = useLayoutStore()
@@ -68,20 +174,56 @@ export function SidebarNavigation() {
     const isMobile = useIsMobile()
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
+    // Section collapse state
+    const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({})
+
     // Load collapsed state from local storage
     useEffect(() => {
+        if (typeof window === 'undefined') return
         const saved = localStorage.getItem('sidebar-collapsed')
         if (saved) {
             setIsCollapsed(saved === 'true')
         }
+
+        // Load section collapsed states
+        NAV_SECTIONS.forEach(section => {
+            const sectionSaved = localStorage.getItem(`sidebar-section-${section.id}`)
+            if (sectionSaved !== null) {
+                setCollapsedSections(prev => ({
+                    ...prev,
+                    [section.id]: sectionSaved === 'true'
+                }))
+            } else if (section.defaultExpanded === false) {
+                setCollapsedSections(prev => ({
+                    ...prev,
+                    [section.id]: true
+                }))
+            }
+        })
     }, [])
 
     // Persist collapsed state
     const toggleCollapse = useCallback(() => {
         setIsCollapsed(prev => {
             const newState = !prev
-            localStorage.setItem('sidebar-collapsed', String(newState))
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('sidebar-collapsed', String(newState))
+            }
             return newState
+        })
+    }, [])
+
+    // Toggle section collapse
+    const toggleSection = useCallback((sectionId: string) => {
+        setCollapsedSections(prev => {
+            const newState = !prev[sectionId]
+            if (typeof window !== 'undefined') {
+                localStorage.setItem(`sidebar-section-${sectionId}`, String(newState))
+            }
+            return {
+                ...prev,
+                [sectionId]: newState
+            }
         })
     }, [])
 
@@ -187,111 +329,17 @@ export function SidebarNavigation() {
             <div className="flex-1 py-4 overflow-y-auto overflow-x-hidden space-y-1.5 px-2">
                 <AdminNavItem isCollapsed={isCollapsed} />
                 <TooltipProvider delayDuration={0}>
-                    {NAV_ITEMS.map((item) => {
-                        const isActive = activeTab === item.id
-                        const label = item.label
-
-                        return (
-                            <Tooltip key={item.id}>
-                                <TooltipTrigger asChild>
-                                    <button
-                                        onClick={() => !item.comingSoon && setActiveTab(item.id)}
-                                        className={cn(
-                                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all relative group overflow-hidden",
-                                            item.comingSoon
-                                                ? "text-muted-foreground/50 cursor-not-allowed"
-                                                : isActive
-                                                    ? "text-foreground font-medium shadow-lg"
-                                                    : "text-muted-foreground hover:text-foreground hover:shadow-md"
-                                        )}
-                                    >
-                                        {/* Banner image background - visible on hover or when active */}
-                                        <div
-                                            className={cn(
-                                                "absolute inset-0 bg-cover bg-center transition-opacity duration-300",
-                                                isActive ? "opacity-40" : "opacity-0 group-hover:opacity-30"
-                                            )}
-                                            style={{
-                                                backgroundImage: `url(${item.banner})`,
-                                                filter: 'brightness(0.8) saturate(1.2)'
-                                            }}
-                                        />
-                                        {/* Gradient overlay for readability */}
-                                        <div className={cn(
-                                            "absolute inset-0 transition-opacity duration-300",
-                                            isActive
-                                                ? "bg-gradient-to-r from-amber-900/80 via-orange-900/60 to-red-900/40 opacity-100"
-                                                : "bg-gradient-to-r from-background/90 via-background/70 to-background/50 opacity-0 group-hover:opacity-100"
-                                        )} />
-                                        {/* Active state warm glow border */}
-                                        {isActive && (
-                                            <div className="absolute inset-0 rounded-lg ring-1 ring-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)]" />
-                                        )}
-                                        {/* Hover drop shadow effect */}
-                                        {!isActive && !item.comingSoon && (
-                                            <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.3)]" />
-                                        )}
-                                        <item.icon className={cn(
-                                            "w-5 h-5 flex-shrink-0 relative z-10 transition-colors",
-                                            isActive && !item.comingSoon ? "text-amber-400" : "group-hover:text-amber-300"
-                                        )} />
-                                        {!isCollapsed && (
-                                            <motion.span
-                                                initial={{ opacity: 0, x: -10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                className="truncate flex items-center gap-2 relative z-10 drop-shadow-sm"
-                                            >
-                                                {label}
-                                                {item.comingSoon && (
-                                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">
-                                                        Soon
-                                                    </span>
-                                                )}
-                                            </motion.span>
-                                        )}
-                                        {isActive && !item.comingSoon && (
-                                            <>
-                                                {/* Animated Gradient Indicator - Warm tones */}
-                                                <motion.div
-                                                    layoutId="activeTabIndicator"
-                                                    className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full overflow-hidden"
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    exit={{ opacity: 0 }}
-                                                >
-                                                    <motion.div
-                                                        className="absolute inset-0 bg-gradient-to-b from-amber-400 via-orange-500 to-red-500"
-                                                        animate={{
-                                                            backgroundPosition: ['0% 0%', '0% 100%', '0% 0%'],
-                                                        }}
-                                                        transition={{
-                                                            duration: 3,
-                                                            repeat: Infinity,
-                                                            ease: 'linear',
-                                                        }}
-                                                        style={{ backgroundSize: '100% 200%' }}
-                                                    />
-                                                </motion.div>
-                                                {/* Warm Glow Effect */}
-                                                <motion.div
-                                                    layoutId="activeTabGlow"
-                                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-gradient-to-r from-amber-500/40 via-orange-500/20 to-transparent blur-lg pointer-events-none"
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    exit={{ opacity: 0 }}
-                                                />
-                                            </>
-                                        )}
-                                    </button>
-                                </TooltipTrigger>
-                                {isCollapsed && (
-                                    <TooltipContent side="right" className="font-medium bg-popover text-popover-foreground border-border">
-                                        {label}{item.comingSoon && ' (Coming Soon)'}
-                                    </TooltipContent>
-                                )}
-                            </Tooltip>
-                        )
-                    })}
+                    {NAV_SECTIONS.map((section) => (
+                        <NavSectionComponent
+                            key={section.id}
+                            section={section}
+                            isCollapsed={isCollapsed}
+                            isSectionCollapsed={collapsedSections[section.id] || false}
+                            onToggleSection={() => toggleSection(section.id)}
+                            activeTab={activeTab}
+                            onSetActiveTab={setActiveTab}
+                        />
+                    ))}
                 </TooltipProvider>
             </div>
 
@@ -434,6 +482,235 @@ export function SidebarNavigation() {
                 )}
             </div>
         </motion.div>
+    )
+}
+
+// ============================================
+// NAVIGATION SECTION COMPONENT
+// ============================================
+
+interface NavSectionComponentProps {
+    section: NavSection
+    isCollapsed: boolean
+    isSectionCollapsed: boolean
+    onToggleSection: () => void
+    activeTab: TabValue
+    onSetActiveTab: (tab: TabValue) => void
+}
+
+function NavSectionComponent({
+    section,
+    isCollapsed,
+    isSectionCollapsed,
+    onToggleSection,
+    activeTab,
+    onSetActiveTab
+}: NavSectionComponentProps) {
+    // When sidebar is collapsed, show abbreviated section header
+    if (isCollapsed) {
+        return (
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <button
+                        onClick={onToggleSection}
+                        className="w-full flex items-center justify-center px-2 py-2 text-xs font-semibold uppercase text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                        {section.label.charAt(0)}
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="font-medium">
+                    {section.label}
+                </TooltipContent>
+            </Tooltip>
+        )
+    }
+
+    // Full section rendering when sidebar is expanded
+    return (
+        <div className="space-y-1">
+            {/* Section Header */}
+            <button
+                onClick={onToggleSection}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+                {isSectionCollapsed ? (
+                    <ChevronUp className="w-3.5 h-3.5" />
+                ) : (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                )}
+                <span>{section.label}</span>
+            </button>
+
+            {/* Section Items */}
+            {!isSectionCollapsed && (
+                <div className="space-y-0.5">
+                    {section.items.map((item) => (
+                        <NavItemComponent
+                            key={item.id}
+                            item={item}
+                            depth={0}
+                            isCollapsed={false}
+                            activeTab={activeTab}
+                            onSetActiveTab={onSetActiveTab}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
+// ============================================
+// NAVIGATION ITEM COMPONENT (Recursive)
+// ============================================
+
+interface NavItemComponentProps {
+    item: NavItem
+    depth: number
+    isCollapsed: boolean
+    activeTab: TabValue
+    onSetActiveTab: (tab: TabValue) => void
+}
+
+function NavItemComponent({
+    item,
+    depth,
+    isCollapsed,
+    activeTab,
+    onSetActiveTab
+}: NavItemComponentProps) {
+    const isActive = activeTab === item.id
+    const Icon = item.icon
+
+    // Calculate indentation based on depth
+    const paddingLeft = depth === 0 ? 12 : 12 + (depth * 16)
+
+    return (
+        <div>
+            {/* Main Item */}
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <button
+                        onClick={() => !item.comingSoon && onSetActiveTab(item.id)}
+                        disabled={item.comingSoon}
+                        className={cn(
+                            "w-full flex items-center gap-3 py-2.5 rounded-lg transition-all relative group overflow-hidden",
+                            item.comingSoon
+                                ? "text-muted-foreground/50 cursor-not-allowed"
+                                : isActive
+                                    ? "text-foreground font-medium shadow-lg"
+                                    : "text-muted-foreground hover:text-foreground hover:shadow-md",
+                            depth === 0 ? "px-3" : ""
+                        )}
+                        style={{
+                            paddingLeft: depth > 0 ? `${paddingLeft}px` : undefined
+                        }}
+                    >
+                        {/* Banner image background */}
+                        <div
+                            className={cn(
+                                "absolute inset-0 bg-cover bg-center transition-opacity duration-300",
+                                isActive ? "opacity-40" : "opacity-0 group-hover:opacity-30"
+                            )}
+                            style={{
+                                backgroundImage: `url(${item.banner})`,
+                                filter: 'brightness(0.8) saturate(1.2)'
+                            }}
+                        />
+                        {/* Gradient overlay */}
+                        <div className={cn(
+                            "absolute inset-0 transition-opacity duration-300",
+                            isActive
+                                ? "bg-gradient-to-r from-amber-900/80 via-orange-900/60 to-red-900/40 opacity-100"
+                                : "bg-gradient-to-r from-background/90 via-background/70 to-background/50 opacity-0 group-hover:opacity-100"
+                        )} />
+                        {/* Active state warm glow border */}
+                        {isActive && !item.comingSoon && (
+                            <div className="absolute inset-0 rounded-lg ring-1 ring-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)]" />
+                        )}
+                        {/* Icon */}
+                        <Icon className={cn(
+                            "flex-shrink-0 relative z-10 transition-colors",
+                            depth === 0 ? "w-5 h-5" : "w-4 h-4",
+                            isActive && !item.comingSoon ? "text-amber-400" : "group-hover:text-amber-300"
+                        )} />
+                        {/* Label */}
+                        <motion.span
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className={cn(
+                                "truncate relative z-10 drop-shadow-sm flex items-center gap-2",
+                                depth > 0 ? "text-sm" : ""
+                            )}
+                        >
+                            {item.label}
+                            {item.comingSoon && (
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">
+                                    Soon
+                                </span>
+                            )}
+                        </motion.span>
+                        {/* Active indicator */}
+                        {isActive && !item.comingSoon && (
+                            <>
+                                <motion.div
+                                    layoutId="activeTabIndicator"
+                                    className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full overflow-hidden"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                >
+                                    <motion.div
+                                        className="absolute inset-0 bg-gradient-to-b from-amber-400 via-orange-500 to-red-500"
+                                        animate={{
+                                            backgroundPosition: ['0% 0%', '0% 100%', '0% 0%'],
+                                        }}
+                                        transition={{
+                                            duration: 3,
+                                            repeat: Infinity,
+                                            ease: 'linear',
+                                        }}
+                                        style={{ backgroundSize: '100% 200%' }}
+                                    />
+                                </motion.div>
+                                <motion.div
+                                    layoutId="activeTabGlow"
+                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-gradient-to-r from-amber-500/40 via-orange-500/20 to-transparent blur-lg pointer-events-none"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                />
+                            </>
+                        )}
+                    </button>
+                </TooltipTrigger>
+                {item.tooltipExpanded && (
+                    <TooltipContent side="right" className="font-medium bg-popover text-popover-foreground border-border">
+                        {item.tooltipExpanded}
+                    </TooltipContent>
+                )}
+            </Tooltip>
+
+            {/* Nested Children */}
+            {item.children && item.children.length > 0 && (
+                <div className="mt-0.5 space-y-0.5 relative">
+                    {/* Connection line for nested items */}
+                    {depth === 0 && (
+                        <div className="absolute left-6 top-0 bottom-0 w-px bg-border/40" />
+                    )}
+                    {item.children.map((child) => (
+                        <NavItemComponent
+                            key={child.id}
+                            item={child}
+                            depth={depth + 1}
+                            isCollapsed={isCollapsed}
+                            activeTab={activeTab}
+                            onSetActiveTab={onSetActiveTab}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
     )
 }
 
