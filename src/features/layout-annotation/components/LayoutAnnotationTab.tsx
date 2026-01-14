@@ -629,9 +629,11 @@ The final image should look natural as if the edits were always part of the orig
                     backgroundImageUrl={backgroundImage}
                     canvasMode={canvasMode}
                     headerContent={toolbarContent}
-                    tool="select"
-                    brushSize={5}
-                    color="#000000"
+                    tool={canvasState.tool}
+                    brushSize={canvasState.brushSize}
+                    color={canvasState.color}
+                    fillMode={canvasState.fillMode}
+                    onToolChange={(tool) => updateCanvasState({ tool })}
                 />
 
                 {/* Export Panel */}
