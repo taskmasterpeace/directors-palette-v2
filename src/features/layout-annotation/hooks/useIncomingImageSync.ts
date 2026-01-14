@@ -19,6 +19,8 @@ export function useIncomingImageSync({ canvasRef }: IncomingImageSyncProps) {
 
   // Check localStorage for incoming images on mount and tab switch
   useEffect(() => {
+    if (typeof window === 'undefined') return
+
     const checkForIncomingImage = () => {
       const storedImage = localStorage.getItem(STORAGE_KEY)
       if (storedImage) {

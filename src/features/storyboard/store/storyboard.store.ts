@@ -738,6 +738,7 @@ export const useStoryboardStore = create<StoryboardStore>()(
             storage: {
                 getItem: (name) => {
                     try {
+                        if (typeof window === 'undefined') return null
                         const str = localStorage.getItem(name)
                         return str ? JSON.parse(str) : null
                     } catch (e) {
@@ -747,11 +748,10 @@ export const useStoryboardStore = create<StoryboardStore>()(
                 },
                 setItem: (name, value) => {
                     try {
+                        if (typeof window === 'undefined') return
                         localStorage.setItem(name, JSON.stringify(value))
                         // Trigger save indicator by dispatching custom event
-                        if (typeof window !== 'undefined') {
-                            window.dispatchEvent(new CustomEvent('storyboard-saved', { detail: Date.now() }))
-                        }
+                        window.dispatchEvent(new CustomEvent('storyboard-saved', { detail: Date.now() }))
                     } catch (e) {
                         // QuotaExceededError - selective cleanup, preserve user's core work
                         if (e instanceof Error && e.name === 'QuotaExceededError') {
@@ -826,6 +826,7 @@ export const useStoryboardStore = create<StoryboardStore>()(
                 },
                 removeItem: (name) => {
                     try {
+                        if (typeof window === 'undefined') return
                         localStorage.removeItem(name)
                     } catch (e) {
                         console.warn('Failed to remove from localStorage:', e)

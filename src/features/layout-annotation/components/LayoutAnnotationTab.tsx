@@ -88,6 +88,7 @@ The final image should look natural as if the edits were always part of the orig
 
     // Load system prompt from localStorage on mount
     React.useEffect(() => {
+        if (typeof window === 'undefined') return
         const saved = localStorage.getItem('layout-nano-banana-system-prompt')
         // Only use saved if it's not empty - otherwise use default
         if (saved && saved.trim().length > 0) {
@@ -102,6 +103,7 @@ The final image should look natural as if the edits were always part of the orig
 
     // Save system prompt to localStorage when it changes (but not if empty)
     React.useEffect(() => {
+        if (typeof window === 'undefined') return
         if (systemPrompt && systemPrompt.trim().length > 0) {
             localStorage.setItem('layout-nano-banana-system-prompt', systemPrompt)
         }
