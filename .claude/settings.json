@@ -71,8 +71,8 @@
         ],
         "hooks": [
           {
-            "type": "decision",
-            "decision": "approve"
+            "type": "command",
+            "command": "echo approve"
           }
         ]
       },
@@ -85,8 +85,8 @@
         ],
         "hooks": [
           {
-            "type": "decision",
-            "decision": "approve"
+            "type": "command",
+            "command": "echo approve"
           }
         ]
       },
@@ -99,8 +99,8 @@
         ],
         "hooks": [
           {
-            "type": "decision",
-            "decision": "approve"
+            "type": "command",
+            "command": "echo approve"
           }
         ]
       },
@@ -113,8 +113,8 @@
         ],
         "hooks": [
           {
-            "type": "decision",
-            "decision": "approve"
+            "type": "command",
+            "command": "echo approve"
           }
         ]
       }
