@@ -7,9 +7,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Button } from "@/components/ui/button"
 import { DropZone } from "@/components/ui/drop-zone"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { haptics } from "@/utils/haptics"
-import { MODEL_CONFIGS, ModelId } from "@/config/index"
 import {
     useCanvasOperations,
     useCanvasSettings,
@@ -21,6 +19,8 @@ import { useToast } from "@/hooks/use-toast"
 import { FabricCanvas, FabricCanvasRef } from "./canvas-board"
 import { CanvasExporter } from "./canvas-export"
 import { FrameExtractor } from "./frame-extractor"
+import { CanvasToolbar } from "./canvas-settings/CanvasToolbar"
+import { CanvasSettings } from "./canvas-settings/CanvasSettings"
 import type { FrameExtractionResult } from "../types/frame-extractor.types"
 
 // Accepted image types for canvas import
@@ -74,8 +74,6 @@ The final image should look natural as if the edits were always part of the orig
     // Frame Extractor state
     const [frameExtractorOpen, setFrameExtractorOpen] = useState(false)
     const [frameExtractorImage, setFrameExtractorImage] = useState<string | null>(null)
-    const [nanoBananaModel, setNanoBananaModel] = useState<ModelId>('nano-banana')
-    const [_annotationText, _setAnnotationText] = useState('')
     const [nanoBananaPrompt, setNanoBananaPrompt] = useState('')
     const [isProcessing, setIsProcessing] = useState(false)
     const [resultsQueue, setResultsQueue] = useState<QueuedResult[]>([])
@@ -111,8 +109,8 @@ The final image should look natural as if the edits were always part of the orig
 
     // Custom hooks for business logic
     const { sidebarCollapsed, setSidebarCollapsed, rightSidebarCollapsed, setRightSidebarCollapsed, imageImportMode, setImageImportMode } = useLayoutAnnotationStore()
-    const { canvasState, handleAspectRatioChange: _handleAspectRatioChange, updateCanvasState: _updateCanvasState, updateDrawingProperties: _updateDrawingProperties, updateCanvasSettings: _updateCanvasSettings } = useCanvasSettings()
-    const { handleUndo, handleClearCanvas, handleSaveCanvas: _handleSaveCanvas } = useCanvasOperations({ canvasRef })
+    const { canvasState, updateCanvasState, updateDrawingProperties, updateCanvasSettings } = useCanvasSettings()
+    const { handleUndo, handleClearCanvas } = useCanvasOperations({ canvasRef })
     const { handleImportClick, handleFileUpload, handleReceiveImage } = useImageImport({ fileInputRef })
     useIncomingImageSync({ canvasRef })
 
@@ -207,7 +205,7 @@ The final image should look natural as if the edits were always part of the orig
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        model: nanoBananaModel,
+                        model: 'nano-banana-pro',
                         prompt: nanoBananaPrompt,
                         modelSettings: {
                             aspectRatio: canvasState.aspectRatio,
@@ -224,7 +222,7 @@ The final image should look natural as if the edits were always part of the orig
                     body: JSON.stringify({
                         image: canvasImage,
                         prompt: nanoBananaPrompt,
-                        model: nanoBananaModel,
+                        model: 'nano-banana-pro',
                         systemPrompt: systemPrompt
                     })
                 })
@@ -244,7 +242,7 @@ The final image should look natural as if the edits were always part of the orig
                     imageUrl: result.imageUrl,
                     prompt: nanoBananaPrompt,
                     timestamp: Date.now(),
-                    model: nanoBananaModel
+                    model: 'nano-banana-pro'
                 }
                 setResultsQueue(prev => [...prev, queuedResult])
                 toast({
@@ -262,7 +260,7 @@ The final image should look natural as if the edits were always part of the orig
         } finally {
             setIsProcessing(false)
         }
-    }, [canvasRef, nanoBananaPrompt, nanoBananaModel, systemPrompt, toast, canvasState.aspectRatio])
+    }, [canvasRef, nanoBananaPrompt, systemPrompt, toast, canvasState.aspectRatio])
 
     // Results Queue handlers
     const handleUseResult = useCallback((result: QueuedResult) => {
@@ -479,20 +477,6 @@ The final image should look natural as if the edits were always part of the orig
                                 className="min-h-[60px] text-xs resize-none"
                                 disabled={isProcessing}
                             />
-                            <div className="flex gap-2">
-                                <Select value={nanoBananaModel} onValueChange={(value) => setNanoBananaModel(value as ModelId)}>
-                                    <SelectTrigger className="h-7 text-xs border-primary/30">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {Object.entries(MODEL_CONFIGS).map(([key, config]) => (
-                                            <SelectItem key={key} value={key}>
-                                                {config.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
                             <Button
                                 onClick={handleNanoBananaGenerate}
                                 disabled={isProcessing || !nanoBananaPrompt.trim()}
@@ -589,6 +573,15 @@ The final image should look natural as if the edits were always part of the orig
                         </CardContent>
                     </Card>
 
+                    {/* Canvas Settings */}
+                    <CanvasSettings
+                        aspectRatio={canvasState.aspectRatio}
+                        canvasWidth={canvasState.canvasWidth}
+                        canvasHeight={canvasState.canvasHeight}
+                        backgroundColor={canvasState.backgroundColor}
+                        onSettingsChange={updateCanvasSettings}
+                    />
+
                     {/* Drawing Tools */}
                     <Card className="border-border">
                         <CardContent className="p-3 space-y-2">
@@ -603,6 +596,16 @@ The final image should look natural as if the edits were always part of the orig
                                     <ChevronDown className="w-3 h-3" />
                                 )}
                             </button>
+                            {drawingToolsExpanded && (
+                                <div className="mt-2">
+                                    <CanvasToolbar
+                                        canvasState={canvasState}
+                                        onToolChange={(tool) => updateCanvasState({ tool })}
+                                        onPropertiesChange={updateDrawingProperties}
+                                        hideHeader={true}
+                                    />
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
