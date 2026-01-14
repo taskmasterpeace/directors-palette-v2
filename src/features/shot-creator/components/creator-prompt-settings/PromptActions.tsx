@@ -749,7 +749,15 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 )}
 
                 {/* Prompt syntax feedback */}
-                <PromptSyntaxFeedback prompt={shotCreatorPrompt} />
+                <PromptSyntaxFeedback
+                    prompt={shotCreatorPrompt}
+                    disablePipeSyntax={shotCreatorSettings.disablePipeSyntax}
+                    disableBracketSyntax={shotCreatorSettings.disableBracketSyntax}
+                    disableWildcardSyntax={shotCreatorSettings.disableWildcardSyntax}
+                    onTogglePipeSyntax={(disabled) => updateSettings({ disablePipeSyntax: disabled })}
+                    onToggleBracketSyntax={(disabled) => updateSettings({ disableBracketSyntax: disabled })}
+                    onToggleWildcardSyntax={(disabled) => updateSettings({ disableWildcardSyntax: disabled })}
+                />
 
                 {/* Help tooltip */}
                 <TooltipProvider>
