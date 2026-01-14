@@ -99,6 +99,34 @@
 
 ---
 
+### `/dev-server`
+**What it does:** Start Next.js dev server in background agent (context: fork)
+
+**When to use:**
+- Beginning of development session
+- When you need the app running while Claude works
+- During refactoring or testing workflows
+- To keep server alive during commits
+
+**Example:**
+```
+/dev-server
+```
+
+**What happens:**
+1. Launches `npm run dev` in background (forked agent)
+2. Server runs on http://localhost:3000 (or next available port)
+3. Terminal stays free for Claude to work
+4. Hot reload continues in background
+5. Use `/tasks` to check status or view logs
+
+**Managing Background Tasks:**
+- `/tasks` - View all background agents
+- Select task to view logs
+- Ctrl+C to stop the server
+
+---
+
 ## 📋 Existing Commands (Already Available)
 
 ### `/git-status`
