@@ -593,3 +593,57 @@ export function validateBracketSyntax(prompt: string, config: Partial<DynamicPro
 
     return { isValid: true, imageCount: 1 }
 }
+
+/**
+ * Anchor Transform (@1) - Batch transform multiple images using first image as style anchor
+ *
+ * Syntax: @1 at beginning or end of prompt
+ * Example: "@1 Transform into claymation style" or "Transform into claymation style @1"
+ *
+ * When detected:
+ * - First uploaded image = anchor/style reference
+ * - Remaining images = inputs to transform
+ * - Each input generates one output (N-1 images total)
+ * - @1 is stripped from prompt before API call
+ */
+
+/**
+ * Detect if prompt contains @1 anchor transform syntax
+ * Only triggers if @1 is at the very start or very end (not in middle)
+ */
+export function detectAnchorTransform(prompt: string): boolean {
+    const trimmed = prompt.trim()
+    return trimmed.startsWith('@1 ') || trimmed.endsWith(' @1')
+}
+
+/**
+ * Strip @1 syntax from prompt for API call
+ * Removes @1 from beginning or end, cleans up spacing
+ */
+export function stripAnchorSyntax(prompt: string): string {
+    return prompt.trim()
+        .replace(/^@1\s+/, '')  // Remove from start
+        .replace(/\s+@1$/, '')  // Remove from end
+        .trim()
+}
+
+/**
+ * Generate feedback message for anchor transform mode
+ * Shows anchor image name and number of transforms
+ */
+export function getAnchorTransformFeedback(
+    prompt: string,
+    refCount: number,
+    firstImageName?: string
+): string | null {
+    if (!detectAnchorTransform(prompt)) return null
+
+    if (refCount < 2) {
+        return '⚠️ Anchor Transform requires at least 2 images (1 anchor + 1+ inputs)'
+    }
+
+    const anchorImage = firstImageName || 'Image 1'
+    const transformCount = refCount - 1
+
+    return `📍 Anchor: ${anchorImage} → Will transform ${transformCount} image${transformCount > 1 ? 's' : ''}`
+}

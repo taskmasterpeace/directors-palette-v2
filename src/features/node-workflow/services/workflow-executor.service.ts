@@ -4,7 +4,7 @@ import type {
   PromptNodeData,
   GenerationNodeData,
   ToolNodeData,
-  OutputNodeData
+  OutputNodeData as _OutputNodeData
 } from '../types/workflow.types'
 
 // Node execution result
@@ -160,7 +160,7 @@ export class WorkflowExecutor {
    * Execute Input node - just return the image URL
    */
   private executeInputNode(node: Node): NodeResult {
-    const data = node.data as InputNodeData
+    const data = node.data as unknown as InputNodeData
 
     return {
       nodeId: node.id,
@@ -175,7 +175,7 @@ export class WorkflowExecutor {
    * Execute Prompt node - just return the prompt text
    */
   private executePromptNode(node: Node): NodeResult {
-    const data = node.data as PromptNodeData
+    const data = node.data as unknown as PromptNodeData
 
     return {
       nodeId: node.id,
@@ -190,7 +190,7 @@ export class WorkflowExecutor {
    * Execute Generation node - call image generation API
    */
   private async executeGenerationNode(node: Node): Promise<NodeResult> {
-    const data = node.data as GenerationNodeData
+    const data = node.data as unknown as GenerationNodeData
 
     // Get inputs from connected nodes
     const inputs = this.getNodeInputs(node.id)
@@ -241,7 +241,7 @@ export class WorkflowExecutor {
    * Execute Tool node - apply image processing
    */
   private async executeToolNode(node: Node): Promise<NodeResult> {
-    const data = node.data as ToolNodeData
+    const _data = node.data as unknown as ToolNodeData
 
     // Get input image
     const inputs = this.getNodeInputs(node.id)

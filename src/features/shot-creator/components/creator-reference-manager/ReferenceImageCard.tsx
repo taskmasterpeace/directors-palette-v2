@@ -19,6 +19,7 @@ import { Capacitor } from '@capacitor/core'
 import { cn } from "@/utils/utils"
 import { useShotCreatorStore } from "../../store/shot-creator.store"
 import { shotImageToLibraryReference } from "../../helpers/type-adapters"
+import { detectAnchorTransform } from "../../helpers/prompt-syntax-feedback"
 
 // Accepted image file types for reference images
 const IMAGE_ACCEPT = {
@@ -83,9 +84,14 @@ export function ReferenceImageCard({
     isRemovingBackground = false,
     isSavingToGallery = false
 }: ReferenceImageCardProps) {
-    const { setFullscreenImage } = useShotCreatorStore()
+    const { setFullscreenImage, shotCreatorPrompt } = useShotCreatorStore()
     const isNative = Capacitor.isNativePlatform()
     const dropZoneRef = React.useRef<DropZoneRef>(null)
+
+    // Check if anchor transform mode is active
+    const isAnchorMode = detectAnchorTransform(shotCreatorPrompt)
+    const isAnchor = isAnchorMode && index === 0
+    const isInput = isAnchorMode && index > 0
 
     // Handle files dropped into the DropZone
     const handleDropAccepted = React.useCallback((acceptedFiles: File[]) => {
@@ -141,6 +147,18 @@ export function ReferenceImageCard({
                                 )}
                                 onClick={() => setFullscreenImage(shotImageToLibraryReference(image))}
                             />
+
+                            {/* Anchor Transform badges */}
+                            {isAnchor && (
+                                <div className="absolute top-2 left-2 px-2 py-1 bg-blue-600 text-white text-xs font-semibold rounded-md shadow-lg">
+                                    📍 ANCHOR
+                                </div>
+                            )}
+                            {isInput && (
+                                <div className="absolute top-2 left-2 px-2 py-1 bg-green-600 text-white text-xs font-semibold rounded-md shadow-lg">
+                                    ✨ INPUT {index}
+                                </div>
+                            )}
                         </div>
                         {/* Action buttons row at bottom */}
                         <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center">

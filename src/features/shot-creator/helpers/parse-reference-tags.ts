@@ -4,6 +4,7 @@
  */
 
 // Known prompt library categories that should NOT be treated as image references
+// Also includes reserved syntax tags like @1 (Anchor Transform)
 const PROMPT_LIBRARY_CATEGORIES = new Set([
   '@cinematic',
   '@characters',
@@ -19,6 +20,7 @@ const PROMPT_LIBRARY_CATEGORIES = new Set([
   '@camera',
   '@styles',
   '@style',
+  '@1',  // Reserved: Anchor Transform syntax
 ])
 
 // Reference library categories for random selection

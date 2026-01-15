@@ -6,13 +6,22 @@ import { ImageIcon, Check, AlertCircle } from 'lucide-react'
 import type { OutputNodeData } from '../../types/workflow.types'
 import { useWorkflowStore } from '../../store/workflow.store'
 
+// Type for node execution results
+interface NodeExecutionResult {
+  success: boolean
+  data?: {
+    imageUrl?: string
+    error?: string
+  }
+}
+
 function OutputNode({ data, selected, id }: NodeProps) {
   const typedData = data as unknown as OutputNodeData
   const executionResults = useWorkflowStore(state => state.executionResults)
   const updateNode = useWorkflowStore(state => state.updateNode)
 
   // Get execution result for this node
-  const nodeResult = executionResults.get(id)
+  const nodeResult = executionResults.get(id) as NodeExecutionResult | undefined
   const resultImage = nodeResult?.data?.imageUrl
   const hasError = nodeResult && !nodeResult.success
   const errorMessage = nodeResult?.data?.error

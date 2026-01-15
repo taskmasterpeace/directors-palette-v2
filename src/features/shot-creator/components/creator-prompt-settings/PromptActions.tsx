@@ -21,7 +21,7 @@ import { getModelConfig } from "@/config"
 import { useShotCreatorSettings } from "../../hooks"
 import { useImageGeneration } from "../../hooks/useImageGeneration"
 import { PromptSyntaxFeedback } from "./PromptSyntaxFeedback"
-import { parseDynamicPrompt } from "../../helpers/prompt-syntax-feedback"
+import { parseDynamicPrompt, detectAnchorTransform, getAnchorTransformFeedback, stripAnchorSyntax } from "../../helpers/prompt-syntax-feedback"
 import { useWildCardStore } from "../../store/wildcard.store"
 import { QuickAccessBar, RecipeFormFields } from "../recipe"
 import { OrganizeButton } from "../prompt-organizer"
@@ -67,14 +67,24 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         const modelConfig = getModelConfig(model)
         const costPerImage = modelConfig.costPerImage
 
-        // Parse the prompt to get image count
-        const parsedPrompt = parseDynamicPrompt(shotCreatorPrompt, {
-            disablePipeSyntax: shotCreatorSettings.disablePipeSyntax,
-            disableBracketSyntax: shotCreatorSettings.disableBracketSyntax,
-            disableWildcardSyntax: shotCreatorSettings.disableWildcardSyntax
-        }, wildcards)
+        // Check for anchor transform mode (@1 syntax)
+        const isAnchorMode = detectAnchorTransform(shotCreatorPrompt)
 
-        const imageCount = parsedPrompt.totalCount || 1
+        let imageCount: number
+
+        if (isAnchorMode) {
+            // Anchor mode: first image is anchor, remaining are inputs (N-1 outputs)
+            imageCount = Math.max(shotCreatorReferenceImages.length - 1, 0)
+        } else {
+            // Normal mode: parse the prompt to get image count
+            const parsedPrompt = parseDynamicPrompt(shotCreatorPrompt, {
+                disablePipeSyntax: shotCreatorSettings.disablePipeSyntax,
+                disableBracketSyntax: shotCreatorSettings.disableBracketSyntax,
+                disableWildcardSyntax: shotCreatorSettings.disableWildcardSyntax
+            }, wildcards)
+            imageCount = parsedPrompt.totalCount || 1
+        }
+
         const totalCost = imageCount * costPerImage
 
         // Convert dollar cost to tokens (1 token = $0.01)
@@ -84,9 +94,10 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             imageCount,
             totalCost,
             tokenCost,
-            costPerImage
+            costPerImage,
+            isAnchorMode
         }
-    }, [shotCreatorPrompt, shotCreatorSettings, wildcards])
+    }, [shotCreatorPrompt, shotCreatorSettings, wildcards, shotCreatorReferenceImages.length])
 
     // Autocomplete state
     const [showAutocomplete, setShowAutocomplete] = useState(false)
@@ -329,6 +340,108 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     const handleGenerate = useCallback(async () => {
         if (!canGenerate || isGenerating) return
 
+        // ===== ANCHOR TRANSFORM MODE (@1 syntax) =====
+        // Check if prompt contains @1 (batch transform mode)
+        const isAnchorMode = detectAnchorTransform(shotCreatorPrompt)
+
+        if (isAnchorMode) {
+            // Validation: Need at least 2 images (1 anchor + 1 input)
+            if (shotCreatorReferenceImages.length < 2) {
+                toast.error('Anchor Transform requires at least 2 images (1 anchor + 1+ inputs)')
+                return
+            }
+
+            // Extract anchor (first image) and input images (remaining)
+            const [anchorRef, ...inputRefs] = shotCreatorReferenceImages
+            const anchorUrl = anchorRef.url || anchorRef.preview
+            const inputUrls = inputRefs
+                .map(ref => ref.url || ref.preview)
+                .filter((url): url is string => Boolean(url))
+
+            if (!anchorUrl) {
+                toast.error('The first reference image (anchor) is not valid')
+                return
+            }
+
+            // Strip @1 from prompt for API call
+            const cleanPrompt = stripAnchorSyntax(shotCreatorPrompt)
+
+            // Warn about large batch size
+            if (inputUrls.length > 10) {
+                const costEstimate = inputUrls.length * (generationCost.costPerImage || 20)
+                const confirmed = window.confirm(
+                    `You're about to transform ${inputUrls.length} images. ` +
+                    `This will cost approximately ${costEstimate} credits. Continue?`
+                )
+                if (!confirmed) return
+            }
+
+            console.log('🎯 Anchor Transform Mode')
+            console.log('  Anchor:', anchorRef.file?.name || anchorRef.url)
+            console.log('  Inputs:', inputUrls.length)
+            console.log('  Clean Prompt:', cleanPrompt)
+
+            const model = shotCreatorSettings.model || 'nano-banana'
+            const modelSettings = buildModelSettings()
+            const results = []
+            let successCount = 0
+            let failCount = 0
+
+            // Loop through input images
+            for (let i = 0; i < inputUrls.length; i++) {
+                const inputUrl = inputUrls[i]
+                const inputRef = inputRefs[i]
+                const inputName = inputRef.file?.name || `Image ${i + 1}`
+
+                try {
+                    toast.info(`Anchor Transform: ${i + 1} of ${inputUrls.length} - ${inputName}`)
+
+                    console.log(`  Transforming ${i + 1}/${inputUrls.length}:`, inputName)
+
+                    // Generate with anchor + current input
+                    await generateImage(
+                        model,
+                        cleanPrompt,
+                        [anchorUrl, inputUrl],  // Anchor first, input second
+                        modelSettings,
+                        undefined
+                    )
+
+                    successCount++
+                    results.push({
+                        success: true,
+                        inputName,
+                        index: i + 1
+                    })
+
+                } catch (error) {
+                    failCount++
+                    console.error(`Failed to transform image ${i + 1}:`, error)
+                    toast.error(`Transform failed: ${inputName}`)
+
+                    results.push({
+                        success: false,
+                        inputName,
+                        index: i + 1,
+                        error: error instanceof Error ? error.message : 'Unknown error'
+                    })
+
+                    // Continue with next image (don't fail entire batch)
+                }
+            }
+
+            // Final summary toast
+            if (failCount === 0) {
+                toast.success(`Anchor Transform complete: ${successCount}/${inputUrls.length} succeeded`)
+            } else {
+                toast.error(`Anchor Transform complete: ${successCount} succeeded, ${failCount} failed`)
+            }
+
+            console.log('🎯 Anchor Transform Results:', results)
+            return
+        }
+        // ===== END ANCHOR TRANSFORM MODE =====
+
         const activeRecipe = getActiveRecipe()
         const validation = getActiveValidation()
 
@@ -469,7 +582,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
 
         // Clear recipe tracking after generation
         setLastUsedRecipe(null)
-    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages, activeFieldValues])
+    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages, activeFieldValues, generationCost])
 
     // Handle selecting a recipe
     const _handleSelectRecipe = useCallback((recipeId: string) => {
@@ -758,6 +871,19 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                     onToggleBracketSyntax={(disabled) => updateSettings({ disableBracketSyntax: disabled })}
                     onToggleWildcardSyntax={(disabled) => updateSettings({ disableWildcardSyntax: disabled })}
                 />
+
+                {/* Anchor Transform feedback */}
+                {detectAnchorTransform(shotCreatorPrompt) && (
+                    <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg text-sm">
+                        <span className="text-blue-600 dark:text-blue-400">
+                            {getAnchorTransformFeedback(
+                                shotCreatorPrompt,
+                                shotCreatorReferenceImages.length,
+                                shotCreatorReferenceImages[0]?.file?.name
+                            )}
+                        </span>
+                    </div>
+                )}
 
                 {/* Help tooltip */}
                 <TooltipProvider>

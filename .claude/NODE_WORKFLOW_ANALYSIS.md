@@ -1,423 +1,257 @@
-# Node Workflow Analysis & UI Reorganization Proposal
-**Date**: January 14, 2026
-**Purpose**: Analyze node-banana vs BananaFlow-ZHO and propose Directors Palette reorganization
+# Node Workflow - Deep Analysis
+
+**Date**: 2026-01-14
+**Status**: ✅ Core execution working, ⚠️ Missing features identified
 
 ---
 
-## 📊 Repository Comparison
+## ✅ WHAT'S WORKING
 
-### [node-banana](https://github.com/shrimbly/node-banana)
+### Core Architecture
+- ✅ ReactFlow integration with custom nodes
+- ✅ Zustand store for state management
+- ✅ Drag-and-drop node creation (palette and click)
+- ✅ Node connections with visual feedback
+- ✅ Topological sort for execution order
+- ✅ Circular dependency detection
+- ✅ Toast notifications for all states
 
-**What It Is**: Node-based visual workflow editor for Nano Banana image generation
+### Node Types Implemented
+1. **Input Node** ✅
+   - Upload image (file picker)
+   - Select from gallery (unified gallery integration)
+   - Modal with tabs
+   - Preview thumbnail
 
-**Tech Stack**:
-- Next.js 16 (App Router) + TypeScript
-- **@xyflow/react** (React Flow) - Node editor
-- **Konva.js / react-konva** - Canvas annotation
-- Zustand for state
-- Tailwind CSS
-- Google Gemini + OpenAI APIs
+2. **Prompt Node** ⚠️ PARTIAL
+   - Editable via modal
+   - Template text input
+   - ❌ Variable parsing NOT implemented
+   - ❌ Variable substitution NOT working
 
-**Key Features**:
-1. **Visual Node Editor** - Infinite pan/zoom canvas with drag-and-drop nodes
-2. **Image Annotation** - Full-screen drawing tools (shapes, arrows, freehand, text)
-3. **AI Quickstart** - Generate workflows from natural language descriptions
-4. **Type-Safe Connections** - Image handles → image, text handles → text
-5. **Workflow Chaining** - Connect multiple operations
-6. **Save/Load** - Export/import workflows as JSON
-7. **Lock Node Groups** - Skip execution for sections
+3. **Generation Node** ✅
+   - Calls `/api/generate`
+   - Supports nano-banana, nano-banana-pro, z-image-turbo
+   - Aspect ratio, format, negative prompt
+   - Two input handles (prompt + image)
 
-**Node Types**:
-- Image generation nodes
-- Text generation nodes
-- Annotation nodes
-- Multiple image inputs, single text inputs
+4. **Tool Node** ⚠️ PLACEHOLDER
+   - 4 tools defined (remove-bg, cinematic-grid, grid-split, before-after)
+   - ❌ No actual tool execution
+   - Just passes through input image
 
-**Status**:
-- MIT License
-- 4 contributors
-- Early development
-- Built primarily with Claude Opus 4.5
+5. **Output Node** ✅
+   - Displays execution results
+   - Shows error states
+   - Preview image
+   - ❌ Gallery save not implemented
 
-**Strengths**:
-- ✅ Clean React Flow implementation
-- ✅ Type-safe node connections
-- ✅ Built-in annotation tools (Konva)
-- ✅ Simple, focused feature set
-- ✅ MIT license (easy to learn from)
-
-**Weaknesses**:
-- ⚠️ Early stage, small community
-- ⚠️ Google Gemini only (no Replicate/nano-banana-pro)
-- ⚠️ Limited node types
-- ⚠️ No video support
-
----
-
-### [BananaFlow-ZHO](https://github.com/ZHO-ZHO-ZHO/BananaFlow-ZHO)
-
-**What It Is**: Open-source workflow automation platform with Nano Banana + Veo3 (video)
-
-**Tech Stack**:
-- React + TypeScript (99.4%)
-- Vite build tool
-- Google Gemini API
-- Veo3 for video generation
-- Node.js runtime
-
-**Key Features**:
-1. **Dual-Mode Interface** - Workflow mode AND window mode
-2. **High-Fidelity UI** - Polished design, extensive customization
-3. **AI-Powered Automation** - Gemini 2.5 Flash integration
-4. **Preset Workflows** - Template-based patterns
-5. **Video Generation** - Veo3 integration (unique!)
-6. **Scene-by-Scene Workflows** - Storyboard iteration
-
-**Integration Points**:
-- **Nano Banana** (Gemini 2.5 Flash Image) - Image generation/editing
-- **Veo3** - Video generation with camera controls
-- **Gemini Flow** - Scene builder, asset management
-
-**Status**:
-- Created: September 9, 2025
-- 319 stars, 57 forks
-- Active development (major UI refresh Sept 11)
-- Chinese developer community
-
-**Strengths**:
-- ✅ More mature, polished UI
-- ✅ Video generation (Veo3) - Directors Palette needs this!
-- ✅ Dual-mode flexibility
-- ✅ Larger community (319 stars vs node-banana's smaller base)
-- ✅ Template/preset system
-- ✅ Scene-by-scene workflow (perfect for film/music video work)
-
-**Weaknesses**:
-- ⚠️ Less documentation (Chinese-focused)
-- ⚠️ Harder to extract code patterns
-- ⚠️ Vite (we use Next.js/Turbopack)
-- ⚠️ Potentially more complex to integrate
+### Execution System
+- ✅ Topological sort (Kahn's algorithm)
+- ✅ Node-by-node sequential execution
+- ✅ Data passing via edges (prompt/image)
+- ✅ Handle-specific routing (targetHandle: 'prompt' vs 'image')
+- ✅ Error propagation
+- ✅ Results stored in Map
+- ✅ Visual feedback (toasts)
 
 ---
 
-## 🎯 Head-to-Head Comparison
+## ❌ CRITICAL MISSING FEATURES
 
-| Feature | node-banana | BananaFlow-ZHO | Winner |
-|---------|-------------|----------------|--------|
-| **Tech Alignment** | Next.js (matches ours) | Vite | node-banana |
-| **UI Maturity** | Early stage | Polished | BananaFlow |
-| **Video Support** | ❌ No | ✅ Veo3 | BananaFlow |
-| **Code Clarity** | ✅ Clean, MIT | ⚠️ Less docs | node-banana |
-| **Node Editor** | React Flow | Unknown | node-banana |
-| **Canvas Tools** | Konva | Unknown | node-banana |
-| **Community** | Small (4) | Medium (319⭐) | BananaFlow |
-| **Presets** | ❌ No | ✅ Yes | BananaFlow |
-| **Dual Modes** | ❌ No | ✅ Yes | BananaFlow |
-| **License** | MIT (clear) | Unknown | node-banana |
+### 1. **Prompt Variables NOT Implemented**
 
----
-
-## 💡 Recommendation for Directors Palette
-
-### Primary Inspiration: **node-banana**
-
-**Why**:
-1. **Tech stack match** - Next.js 16 + React + TypeScript (exactly our stack)
-2. **React Flow** - Industry-standard node editor, well-documented
-3. **Konva canvas** - Proven annotation library
-4. **MIT license** - Can study implementation freely
-5. **Simpler to integrate** - Smaller surface area, cleaner code
-
-### Secondary Inspiration: **BananaFlow-ZHO**
-
-**What to borrow**:
-1. **Dual-mode concept** - Workflow mode vs. simplified mode
-2. **Preset/template system** - Pre-built workflows for common tasks
-3. **Scene-by-scene approach** - Fits music video/storyboard workflows
-4. **Video integration roadmap** - Plan for Veo3 later
-
----
-
-## 🏗️ Implementation Strategy
-
-### Phase 1: Core Node Workflow (Inspired by node-banana)
-
-**Features to build**:
-- React Flow canvas (infinite pan/zoom)
-- Node types:
-  - **Input Node** - Upload image/video
-  - **Prompt Node** - Text prompt with style controls
-  - **Generation Node** - nano-banana/nano-banana-pro
-  - **Annotation Node** - Opens Canvas Editor inline
-  - **Recipe Node** - Execute recipe from Shot Creator
-  - **Output Node** - Preview/download
-- Type-safe connections (image → image, text → text)
-- Save/load workflows as JSON
-- Execute workflow (run all nodes in sequence)
-
-**Tech Stack**:
-```
-@xyflow/react (React Flow) - Node editor
-zustand - Workflow state
-Our existing services:
-  - image-generation.service.ts
-  - recipe-execution.service.ts
-  - canvas annotation (FabricCanvas)
+**Type Definition Exists:**
+```typescript
+interface PromptNodeData {
+  template: string
+  variables: Record<string, string>  // ⚠️ Defined but unused!
+}
 ```
 
-### Phase 2: Advanced Features (Inspired by BananaFlow-ZHO)
+**What's Missing:**
+- ❌ Parse \`{{variable}}\` syntax from template
+- ❌ Extract variables into the \`variables\` record
+- ❌ UI to set variable values
+- ❌ Variable substitution during execution
+- ❌ Variable preview in node
 
-- **Preset Workflows**:
-  - "Character Turnaround" (4 angles)
-  - "Before/After" (2 variations)
-  - "Style Exploration" (5 styles, same prompt)
-  - "Storyboard Sequence" (8 shots from story)
-- **Dual Mode**:
-  - Expert Mode: Full node editor
-  - Simple Mode: Template-based form
-- **Video Nodes** (future):
-  - Integrate Veo via Replicate
-  - Scene-by-scene video generation
+**Current Behavior:**
+- User types: "A photo of {{character}}"
+- Nothing happens - it's sent as literal text to API
+- Variables object stays empty
 
----
+**What Should Happen:**
+1. User types: "A photo of {{character}} in {{location}}"
+2. System extracts: \`variables: { character: '', location: '' }\`
+3. Modal shows inputs for each variable
+4. During execution, substitute: "A photo of Sarah in Paris"
 
-## 🗂️ CRITICAL: UI Reorganization Proposal
-
-### Current Problem
-
-After adding Node Workflow, you'll have:
-- **Canvas Editor** - Annotation/inpainting (form-based)
-- **Shot Creator** - Single shot generation (form-based)
-- **Node Workflow** - Multi-step visual pipeline (node-based)
-
-These are all IMAGE GENERATION tools but with different UX. Users will be confused about which to use when.
+**Implementation Needed:**
+- Add variable parsing function
+- Update PromptNodeModal to show variable inputs
+- Update workflow executor to substitute variables
+- Save variable values in node data
 
 ---
 
-## 🎨 Proposed New Navigation Structure
+### 2. **Tool Node Execution Empty**
 
-### Option 1: "By Creation Method" (Recommended)
-
-```
-🎬 PROJECTS (what you're making)
-├── 📖 Storybook (children's books)
-├── 🎞️ Storyboard (cinematic sequences)
-└── 🎵 Music Lab (music video treatments)
-
-⚡ TOOLS (how you create)
-├── 🎯 Quick Shot (single image, form-based) [was: Shot Creator]
-├── 🔀 Workflow (multi-step, node-based) [NEW]
-└── ✏️ Canvas Editor (annotation/inpainting)
-
-📁 LIBRARY
-├── 🖼️ Gallery (all generations)
-└── 📦 Recipes (saved templates)
-
-⚙️ ADMIN
-└── 👑 Admin Panel
+**Current Code:**
+```typescript
+private async executeToolNode(node: Node): Promise<NodeResult> {
+  // TODO: Implement tool processing
+  // For now, just pass through the image
+  return {
+    nodeId: node.id,
+    success: true,
+    data: { imageUrl: inputImage }
+  }
+}
 ```
 
-**Why this works**:
-- **Projects** = Goal-oriented (user knows what they want to make)
-- **Tools** = Creation method (user picks based on complexity)
-- **Library** = Storage/organization
-- Clear hierarchy: Make project → Use tool → Store in library
+**Tools Defined But Not Implemented:**
+1. \`remove-background\` - Should call background removal API
+2. \`cinematic-grid\` - Should create 2x2 grid with letterboxing
+3. \`grid-split\` - Should split image into panels
+4. \`before-after-grid\` - Should create comparison layout
 
-**Tool Selection Guide** (shown as tooltips):
-- **Quick Shot**: "Single image, fastest way. Use presets or custom prompts."
-- **Workflow**: "Multi-step pipeline. Chain operations, test variations, complex editing."
-- **Canvas Editor**: "Annotate and inpaint. Fix specific areas with masks/arrows/text."
+**Implementation Needed:**
+- Create tool service layer
+- Call existing tool APIs (src/features/shot-creator/services/)
+- Handle tool-specific parameters
+- Add settings modal for tools
 
 ---
 
-### Option 2: "By Complexity"
+### 3. **Save/Load Workflow NOT Implemented**
 
-```
-🚀 QUICK CREATE
-├── 🎯 Shot Creator (single image)
-├── ✏️ Canvas Editor (quick edits)
+**Current Code:**
+```typescript
+const handleSave = () => {
+  // TODO: Implement save workflow
+  console.log('Save workflow')
+}
 
-🔬 ADVANCED
-├── 🔀 Node Workflow (pipelines)
-├── 📖 Storybook (projects)
-├── 🎞️ Storyboard (projects)
-└── 🎵 Music Lab (projects)
-
-📁 LIBRARY
-├── 🖼️ Gallery
-└── 📦 Recipes
-
-⚙️ ADMIN
+const handleLoad = () => {
+  // TODO: Implement load workflow
+  console.log('Load workflow')
+}
 ```
 
-**Why this could work**:
-- Beginner-friendly (Quick Create = easy tools)
-- Power users go to Advanced
-- Clear progression
-
-**Concerns**:
-- Storybook/Storyboard aren't necessarily "advanced"
-- Mixing tools and projects in same category
+**What's Needed:**
+- Save workflow to database (Supabase)
+- Load workflow by ID
+- List saved workflows
+- Export/import as JSON
+- Autosave functionality
 
 ---
 
-### Option 3: "Tabs with Submenus"
+### 4. **Gallery Integration Incomplete**
 
-```
-CREATE ▼
-├── Quick Shot
-├── Node Workflow
-└── Canvas Editor
-
-PROJECTS ▼
-├── Storybook
-├── Storyboard
-└── Music Lab
-
-LIBRARY ▼
-├── Gallery
-└── Recipes
+**Current State:**
+```typescript
+interface OutputNodeData {
+  preview?: string
+  savedToGallery: boolean  // ⚠️ Flag exists but no save logic
+}
 ```
 
-**Why this could work**:
-- Compact navigation
-- Clear separation
-- Scalable (can add more tools/projects)
-
-**Concerns**:
-- Requires submenu interaction (extra click)
-- Mobile experience?
+**What's Missing:**
+- ❌ Button to save to gallery
+- ❌ Actual save API call
+- ❌ Tag/prompt metadata
+- ❌ Confirmation toast
 
 ---
 
-## 🎯 Final Recommendation
+### 5. **Generation Node Settings Not Editable**
 
-**Use Option 1: "By Creation Method"** with these modifications:
+**Issue:**
+- GenerationNode displays model, aspect ratio, format
+- ❌ No way to change these settings after creation
+- Hardcoded to defaults in page.tsx
 
-### Top Navigation Structure
-
-```
-[Logo]  Projects ▼  |  Tools ▼  |  Library ▼  |  Admin
-
-PROJECTS DROPDOWN:
-├── 📖 Storybook
-├── 🎞️ Storyboard
-└── 🎵 Music Lab
-
-TOOLS DROPDOWN:
-├── 🎯 Quick Shot (form-based, single image)
-├── 🔀 Workflow (node-based, multi-step)
-└── ✏️ Canvas (annotation & inpainting)
-
-LIBRARY DROPDOWN:
-├── 🖼️ Gallery
-└── 📦 Recipes
-```
-
-### Homepage Redesign
-
-**Hero Section**: "What do you want to make today?"
-
-**Quick Actions**:
-```
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│  🎯 Quick    │  │  🔀 Workflow │  │  📖 Story-   │
-│     Shot     │  │              │  │     book     │
-│              │  │              │  │              │
-│  Generate a  │  │  Build multi-│  │  Create a    │
-│  single      │  │  step image  │  │  children's  │
-│  image fast  │  │  pipeline    │  │  book        │
-└──────────────┘  └──────────────┘  └──────────────┘
-
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│  🎞️ Story-   │  │  🎵 Music    │  │  ✏️ Canvas   │
-│     board    │  │     Lab      │  │     Editor   │
-│              │  │              │  │              │
-│  Cinematic   │  │  Music video │  │  Annotate &  │
-│  sequences   │  │  treatments  │  │  inpaint     │
-└──────────────┘  └──────────────┘  └──────────────┘
-```
-
-**User Flow**:
-1. User lands on homepage
-2. Sees 6 clear options (Projects + Tools)
-3. Clicks based on WHAT they want (project) or HOW they want to work (tool)
-4. Projects route to project-specific UIs
-5. Tools route to creation UIs
+**What's Needed:**
+- Settings modal for Generation node
+- Dropdowns for model, aspect ratio, format
+- Textarea for negative prompt
+- Save settings to node data
 
 ---
 
-## 🚧 Implementation Checklist
+### 6. **Handle Positioning Inconsistent**
 
-### Week 1-2: Research & Prototype
-- [ ] Install React Flow: `npm install @xyflow/react`
-- [ ] Study node-banana implementation (clone repo, run locally)
-- [ ] Prototype basic node canvas with 3 node types
-- [ ] Test workflow execution engine
-- [ ] Design node UI components
+**ToolNode Still Has Old Positioning** - Custom offsets should be removed
 
-### Week 3-4: Core Node Workflow
-- [ ] Create `src/features/node-workflow/` structure
-- [ ] Implement node types (Input, Prompt, Generation, Output)
-- [ ] Build workflow execution service
-- [ ] Connect to existing image-generation.service.ts
-- [ ] Save/load workflow JSON
-
-### Week 5: Integration
-- [ ] Add "Workflow" to navigation
-- [ ] Create workflow gallery/library
-- [ ] Build 3 preset workflows
-- [ ] Connect Recipe Node to Shot Creator recipes
-
-### Week 6: Polish & Reorganization
-- [ ] Implement new navigation structure (Option 1)
-- [ ] Redesign homepage
-- [ ] Add tooltips/help system
-- [ ] Update documentation (CLAUDE.md)
-- [ ] User testing
+**Other nodes correctly simplified:**
+- ✅ InputNode - clean
+- ✅ PromptNode - clean
+- ✅ GenerationNode - clean (uses top: '30%' / '70%' for multi-handle)
+- ✅ OutputNode - clean
+- ❌ ToolNode - still has old positioning
 
 ---
 
-## 📚 Key Learnings from Both Repos
+## 🎯 PRIORITY FIXES
 
-### From node-banana:
-1. **React Flow is THE standard** for node editors (well-maintained, huge community)
-2. **Konva.js** for canvas annotation (used by both projects)
-3. **Type-safe connections** prevent user errors
-4. **JSON serialization** for save/load (portable, debuggable)
-5. **Infinite canvas** is expected UX for node editors
+### HIGH Priority (Breaks User Expectations)
+1. **Prompt Variables** - Type system promises this, users expect it
+2. **Generation Settings** - Can't change model/aspect after creation
+3. **Tool Node Handle Positioning** - Inconsistent with other nodes
 
-### From BananaFlow-ZHO:
-1. **Preset workflows** massively improve UX for beginners
-2. **Dual-mode interface** serves both experts and beginners
-3. **Video integration** (Veo3) is a killer feature for Directors Palette's use case
-4. **Scene-by-scene** workflow fits music videos perfectly
-5. **Asset management** is crucial for complex projects
+### MEDIUM Priority (Core Features)
+4. **Tool Node Execution** - Tools defined but don't work
+5. **Save/Load Workflow** - Users expect to save their work
+6. **Gallery Save** - Output node should save results
 
----
-
-## 🎬 Why This Matters for Directors Palette
-
-You're building a **professional creative tool for filmmakers**. Node workflows unlock:
-
-1. **Experimentation** - Test 10 variations of a character design in one workflow
-2. **Repeatability** - Save and reuse complex pipelines
-3. **Collaboration** - Share workflows as JSON files
-4. **Power User Features** - Without cluttering the simple UI
-5. **Bridge to Video** - Foundation for Veo3 video workflows later
-
-The reorganization is CRITICAL because:
-- Users need to know **when to use which tool**
-- Projects vs. Tools separation makes this obvious
-- Scalable for future features (more tools, more project types)
+### LOW Priority (Nice to Have)
+7. **Workflow Validation** - Better error messages
+8. **Node Delete Confirmation** - Prevent accidents
+9. **Keyboard Shortcuts** - Delete, copy, paste
+10. **Node Search/Filter** - For large workflows
 
 ---
 
-## 🚀 Next Steps
+## 📋 RECOMMENDED IMPLEMENTATION ORDER
 
-1. **Clone node-banana** and run it locally to study implementation
-2. **Prototype** a basic 3-node workflow in Directors Palette
-3. **Design** the new navigation system (Option 1)
-4. **Get user feedback** on navigation structure before building
+### Phase 1: Fix Broken Promises (1-2 hours)
+1. Remove custom positioning from ToolNode
+2. Implement prompt variable parsing
+3. Add variable inputs to PromptNodeModal
+4. Add variable substitution to executor
 
-**Want me to start prototyping the node workflow feature or redesigning the navigation first?**
+### Phase 2: Core Missing Features (2-3 hours)
+5. Add GenerationNodeModal for settings
+6. Implement tool execution logic
+7. Add gallery save button to OutputNode
+
+### Phase 3: Workflow Management (1-2 hours)
+8. Implement save workflow (Supabase)
+9. Implement load workflow (modal with list)
+10. Add workflow metadata (name, description, tags)
+
+---
+
+## 🔍 CODE LOCATIONS
+
+### Key Files
+- **Types**: \`src/features/node-workflow/types/workflow.types.ts\`
+- **Store**: \`src/features/node-workflow/store/workflow.store.ts\`
+- **Executor**: \`src/features/node-workflow/services/workflow-executor.service.ts\`
+- **Canvas**: \`src/features/node-workflow/components/NodeWorkflowCanvas.tsx\`
+- **Page**: \`src/app/node-workflow/page.tsx\`
+
+### Node Components
+- \`src/features/node-workflow/components/nodes/InputNode.tsx\` ✅
+- \`src/features/node-workflow/components/nodes/PromptNode.tsx\` ⚠️
+- \`src/features/node-workflow/components/nodes/GenerationNode.tsx\` ⚠️
+- \`src/features/node-workflow/components/nodes/ToolNode.tsx\` ❌
+- \`src/features/node-workflow/components/nodes/OutputNode.tsx\` ✅
+
+### Modals
+- \`src/features/node-workflow/components/nodes/InputNodeModal.tsx\` ✅
+- \`src/features/node-workflow/components/nodes/PromptNodeModal.tsx\` ⚠️
+- ❌ MISSING: \`GenerationNodeModal.tsx\`
+- ❌ MISSING: \`ToolNodeModal.tsx\`
