@@ -8,21 +8,38 @@ import { useEffect } from 'react'
  */
 export function DragDropPrevention() {
     useEffect(() => {
-        const preventDefault = (e: DragEvent) => {
-            // Only prevent default if NOT over a drop zone
+        const handleDragOver = (e: DragEvent) => {
+            // Check if we're over a drop zone (or any of its children)
             const target = e.target as HTMLElement
-            if (!target.closest('[data-drop-zone="true"]')) {
+            const isOverDropZone = target.closest('[data-drop-zone="true"]')
+
+            // Only prevent default if NOT over a drop zone
+            if (!isOverDropZone) {
                 e.preventDefault()
+                e.dataTransfer!.dropEffect = 'none'
             }
         }
 
-        // Prevent default on document to stop browser from opening files
-        document.addEventListener('dragover', preventDefault, false)
-        document.addEventListener('drop', preventDefault, false)
+        const handleDrop = (e: DragEvent) => {
+            // Check if we're over a drop zone
+            const target = e.target as HTMLElement
+            const isOverDropZone = target.closest('[data-drop-zone="true"]')
+
+            // Only prevent default if NOT over a drop zone
+            if (!isOverDropZone) {
+                e.preventDefault()
+                e.stopPropagation()
+            }
+        }
+
+        // Use capture phase to intercept events before they reach react-dropzone
+        // But only prevent them if NOT over a drop zone
+        document.addEventListener('dragover', handleDragOver, false)
+        document.addEventListener('drop', handleDrop, false)
 
         return () => {
-            document.removeEventListener('dragover', preventDefault)
-            document.removeEventListener('drop', preventDefault)
+            document.removeEventListener('dragover', handleDragOver, false)
+            document.removeEventListener('drop', handleDrop, false)
         }
     }, [])
 
