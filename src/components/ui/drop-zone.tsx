@@ -575,6 +575,7 @@ const DropZone = React.forwardRef<DropZoneRef, DropZoneProps>(
         aria-label={getAriaLabel()}
         aria-disabled={disabled || undefined}
         aria-busy={isUploading || undefined}
+        data-drop-zone="true"
         data-slot="drop-zone"
         data-drag-active={isActive || undefined}
         data-drag-accept={isAccepting || undefined}

@@ -17,6 +17,7 @@ import {
     Square
 } from 'lucide-react'
 import { useShotCreatorStore } from "@/features/shot-creator/store/shot-creator.store"
+import { useCustomStylesStore } from "../../store/custom-styles.store"
 import { getModelConfig } from "@/config"
 import { useShotCreatorSettings } from "../../hooks"
 import { useImageGeneration } from "../../hooks/useImageGeneration"
@@ -73,8 +74,9 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         let imageCount: number
 
         if (isAnchorMode) {
-            // Anchor mode: first image is anchor, remaining are inputs (N-1 outputs)
-            imageCount = Math.max(shotCreatorReferenceImages.length - 1, 0)
+            // Calculate based on inputs (total - 1 anchor)
+            const totalImages = shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)
+            imageCount = Math.max(totalImages - 1, 0)
         } else {
             // Normal mode: parse the prompt to get image count
             const parsedPrompt = parseDynamicPrompt(shotCreatorPrompt, {
@@ -366,23 +368,59 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 return
             }
 
-            // Extract anchor and inputs
-            // If we have a style guide and no reference images, style is the anchor
-            // If we have a style guide + reference images, first reference is anchor
-            // If we have 2+ reference images, first reference is anchor
-            const [anchorRef, ...inputRefs] = shotCreatorReferenceImages
-            const anchorUrl = anchorRef?.url || anchorRef?.preview
+            // Determine anchor and inputs
+            let anchorUrl: string | null = null
+            let anchorName: string = ''
+            let inputRefs: typeof shotCreatorReferenceImages = []
+
+            if (shotCreatorSettings.selectedStyle) {
+                // Style guide is the anchor
+                const selectedStyle = useCustomStylesStore.getState().getStyleById(shotCreatorSettings.selectedStyle)
+                if (!selectedStyle) {
+                    toast.error('Selected style not found')
+                    return
+                }
+
+                // Get style image URL
+                const styleImageUrl = selectedStyle.imagePath
+                anchorUrl = styleImageUrl.startsWith('data:') || styleImageUrl.startsWith('http')
+                    ? styleImageUrl
+                    : `${window.location.origin}${styleImageUrl}`
+
+                anchorName = selectedStyle.name || 'Style Guide'
+
+                // ALL reference images are inputs
+                inputRefs = shotCreatorReferenceImages
+
+                if (inputRefs.length === 0) {
+                    toast.error('Anchor Transform with style guide requires at least 1 reference image to transform')
+                    return
+                }
+            } else {
+                // No style guide: First reference is anchor, rest are inputs
+                if (shotCreatorReferenceImages.length < 2) {
+                    toast.error('Anchor Transform requires at least 2 reference images (or 1 style + 1 image)')
+                    return
+                }
+
+                const [anchorRef, ...restRefs] = shotCreatorReferenceImages
+                anchorUrl = anchorRef.url || anchorRef.preview || null
+                anchorName = anchorRef.file?.name || 'Image 1'
+                inputRefs = restRefs
+
+                if (!anchorUrl) {
+                    toast.error('The first reference image (anchor) is not valid')
+                    return
+                }
+            }
+
+            // Extract input URLs
             const inputUrls = inputRefs
                 .map(ref => ref.url || ref.preview)
                 .filter((url): url is string => Boolean(url))
 
-            if (!anchorUrl && shotCreatorReferenceImages.length === 0) {
-                toast.error('Anchor Transform requires at least 1 reference image (style guide alone is not enough)')
-                return
-            }
-
-            if (!anchorUrl) {
-                toast.error('The first reference image (anchor) is not valid')
+            if (inputUrls.length === 0) {
+                toast.error('No valid input images to transform')
                 return
             }
 
@@ -400,7 +438,8 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             }
 
             console.log('🎯 Anchor Transform Mode')
-            console.log('  Anchor:', anchorRef.file?.name || anchorRef.url)
+            console.log('  Anchor:', anchorName)
+            console.log('  Anchor URL:', anchorUrl)
             console.log('  Inputs:', inputUrls.length)
             console.log('  Clean Prompt:', cleanPrompt)
 

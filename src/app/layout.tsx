@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { PromptProvider } from "@/components/providers/PromptProvider"
 import { CapacitorProvider } from "@/components/providers/CapacitorProvider"
+import { DragDropPrevention } from "@/components/DragDropPrevention"
 
 export const dynamic = 'force-dynamic'
 
@@ -65,6 +66,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen antialiased" suppressHydrationWarning>
+        <DragDropPrevention />
         <CapacitorProvider>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
             <PromptProvider>
