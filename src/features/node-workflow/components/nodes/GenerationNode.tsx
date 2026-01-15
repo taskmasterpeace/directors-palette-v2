@@ -27,10 +27,14 @@ function GenerationNode({ data, selected }: NodeProps) {
         position={Position.Left}
         id="prompt"
         isConnectable={true}
-        className="!w-4 !h-4 !top-[30%]"
         style={{
+          width: '16px',
+          height: '16px',
           background: '#3b82f6',
-          border: '2px solid #18181b'
+          border: '2px solid #18181b',
+          left: '-8px',
+          top: '30%',
+          transform: 'translateY(-50%)'
         }}
       />
       <Handle
@@ -38,10 +42,14 @@ function GenerationNode({ data, selected }: NodeProps) {
         position={Position.Left}
         id="image"
         isConnectable={true}
-        className="!w-4 !h-4 !top-[70%]"
         style={{
+          width: '16px',
+          height: '16px',
           background: '#f59e0b',
-          border: '2px solid #18181b'
+          border: '2px solid #18181b',
+          left: '-8px',
+          top: '70%',
+          transform: 'translateY(-50%)'
         }}
       />
 
@@ -79,10 +87,14 @@ function GenerationNode({ data, selected }: NodeProps) {
         type="source"
         position={Position.Right}
         isConnectable={true}
-        className="!w-4 !h-4"
         style={{
+          width: '16px',
+          height: '16px',
           background: '#a855f7',
-          border: '2px solid #18181b'
+          border: '2px solid #18181b',
+          right: '-8px',
+          top: '50%',
+          transform: 'translateY(-50%)'
         }}
       />
     </div>

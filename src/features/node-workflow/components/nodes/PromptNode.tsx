@@ -1,22 +1,33 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import { Handle, Position, NodeProps } from '@xyflow/react'
 import { FileText } from 'lucide-react'
 import type { PromptNodeData } from '../../types/workflow.types'
+import { useWorkflowStore } from '../../store/workflow.store'
+import { PromptNodeModal } from './PromptNodeModal'
 
-function PromptNode({ data, selected }: NodeProps) {
+function PromptNode({ data, selected, id }: NodeProps) {
   const typedData = data as unknown as PromptNodeData
   const hasVariables = Object.keys(typedData.variables || {}).length > 0
+  const [showModal, setShowModal] = useState(false)
+  const updateNode = useWorkflowStore(state => state.updateNode)
+
+  const handleSavePrompt = (template: string) => {
+    updateNode(id, { template })
+    setShowModal(false)
+  }
 
   return (
-    <div
-      className={`
-        bg-zinc-900 border-2 rounded-lg p-4 min-w-[240px]
-        ${selected ? 'border-amber-500 shadow-lg shadow-amber-500/20' : 'border-zinc-700'}
-        transition-all duration-200
-      `}
-    >
+    <>
+      <div
+        onClick={() => setShowModal(true)}
+        className={`
+          bg-zinc-900 border-2 rounded-lg p-4 min-w-[240px] cursor-pointer
+          ${selected ? 'border-amber-500 shadow-lg shadow-amber-500/20' : 'border-zinc-700'}
+          hover:border-amber-500/50 transition-all duration-200
+        `}
+      >
       {/* Input Handle */}
       <Handle
         type="target"
@@ -86,6 +97,14 @@ function PromptNode({ data, selected }: NodeProps) {
         }}
       />
     </div>
+
+    <PromptNodeModal
+      isOpen={showModal}
+      onClose={() => setShowModal(false)}
+      onSave={handleSavePrompt}
+      currentTemplate={typedData.template}
+    />
+  </>
   )
 }
 

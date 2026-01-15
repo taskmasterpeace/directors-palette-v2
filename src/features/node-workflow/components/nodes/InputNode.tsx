@@ -70,10 +70,14 @@ function InputNode({ data, selected, id }: NodeProps) {
           type="source"
           position={Position.Right}
           isConnectable={true}
-          className="!w-4 !h-4"
           style={{
+            width: '16px',
+            height: '16px',
             background: '#f59e0b',
-            border: '2px solid #18181b'
+            border: '2px solid #18181b',
+            right: '-8px',
+            top: '50%',
+            transform: 'translateY(-50%)'
           }}
         />
       </div>
