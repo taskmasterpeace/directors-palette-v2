@@ -18,7 +18,8 @@ import {
     HelpCircle,
     Menu,
     ShieldCheck,
-    Users
+    Users,
+    Workflow
 } from 'lucide-react'
 import { useLayoutStore, TabValue } from '@/store/layout.store'
 import { cn } from '@/utils/utils'
@@ -85,6 +86,13 @@ const NAV_SECTIONS: NavSection[] = [
                 icon: Film,
                 banner: '/banners/shot-animator.webp',
                 tooltipExpanded: 'Animate still images into video'
+            },
+            {
+                id: 'node-workflow',
+                label: 'Node Workflow',
+                icon: Workflow,
+                banner: '/banners/shot-creator.webp',
+                tooltipExpanded: 'Visual workflow editor for complex generation pipelines'
             }
         ]
     },

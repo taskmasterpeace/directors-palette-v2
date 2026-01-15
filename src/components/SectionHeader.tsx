@@ -39,6 +39,12 @@ const SECTION_CONFIG: Record<TabValue, { banner: string; title: string; subtitle
     subtitle: 'Annotate and edit your images',
     helpTip: 'Draw, add text, shapes, and annotations to your images for storyboards'
   },
+  'node-workflow': {
+    banner: '/banners/shot-creator.webp',
+    title: 'Node Workflow',
+    subtitle: 'Build complex generation pipelines visually',
+    helpTip: 'Drag nodes onto the canvas, connect them, and execute workflows to generate images'
+  },
   'storyboard': {
     banner: '/banners/storyboard.webp',
     title: 'Storyboard',

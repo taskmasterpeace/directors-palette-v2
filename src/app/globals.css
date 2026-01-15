@@ -510,3 +510,32 @@
 .animate-dropzone-scale {
   animation: dropzone-scale-in 0.3s ease-out;
 }
+
+/* React Flow Node Overrides - Remove wrapper backgrounds only */
+.workflow-canvas .react-flow__node {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+.workflow-canvas .react-flow__node-input,
+.workflow-canvas .react-flow__node-prompt,
+.workflow-canvas .react-flow__node-generation,
+.workflow-canvas .react-flow__node-tool,
+.workflow-canvas .react-flow__node-output {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+/* Ensure handles are interactive and visible */
+.workflow-canvas .react-flow__handle {
+  pointer-events: all !important;
+  cursor: crosshair !important;
+  opacity: 1 !important;
+}
+
+.workflow-canvas .react-flow__handle:hover {
+  transform: scale(1.2);
+  transition: transform 0.2s ease;
+}

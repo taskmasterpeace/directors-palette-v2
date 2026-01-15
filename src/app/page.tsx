@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { UserManual } from "@/features/help/components/UserManual"
 import { CommunityPage } from "@/features/community"
 import { SectionHeader } from "@/components/SectionHeader"
+import { NodeWorkflow } from "@/features/node-workflow"
 
 export default function Home() {
   const { activeTab, setActiveTab } = useLayoutStore();
@@ -54,6 +55,17 @@ export default function Home() {
                 <PageTransition>
                   <SectionHeader section="layout-annotation" />
                   <LayoutAnnotation />
+                </PageTransition>
+              </TabsContent>
+            )}
+
+            {activeTab === 'node-workflow' && (
+              <TabsContent key="node-workflow" value="node-workflow" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
+                <PageTransition>
+                  <SectionHeader section="node-workflow" />
+                  <div className="flex-1 overflow-hidden">
+                    <NodeWorkflow />
+                  </div>
                 </PageTransition>
               </TabsContent>
             )}
