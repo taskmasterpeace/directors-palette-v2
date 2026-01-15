@@ -37,10 +37,7 @@ function PromptNode({ data, selected, id }: NodeProps) {
           width: '16px',
           height: '16px',
           background: '#f59e0b',
-          border: '2px solid #18181b',
-          left: '-8px',
-          top: '50%',
-          transform: 'translateY(-50%)'
+          border: '2px solid #18181b'
         }}
       />
 
@@ -90,10 +87,7 @@ function PromptNode({ data, selected, id }: NodeProps) {
           width: '16px',
           height: '16px',
           background: '#3b82f6',
-          border: '2px solid #18181b',
-          right: '-8px',
-          top: '50%',
-          transform: 'translateY(-50%)'
+          border: '2px solid #18181b'
         }}
       />
     </div>

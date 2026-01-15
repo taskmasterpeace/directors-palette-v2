@@ -74,10 +74,7 @@ function InputNode({ data, selected, id }: NodeProps) {
             width: '16px',
             height: '16px',
             background: '#f59e0b',
-            border: '2px solid #18181b',
-            right: '-8px',
-            top: '50%',
-            transform: 'translateY(-50%)'
+            border: '2px solid #18181b'
           }}
         />
       </div>

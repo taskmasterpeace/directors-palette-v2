@@ -32,9 +32,7 @@ function GenerationNode({ data, selected }: NodeProps) {
           height: '16px',
           background: '#3b82f6',
           border: '2px solid #18181b',
-          left: '-8px',
-          top: '30%',
-          transform: 'translateY(-50%)'
+          top: '30%'
         }}
       />
       <Handle
@@ -47,9 +45,7 @@ function GenerationNode({ data, selected }: NodeProps) {
           height: '16px',
           background: '#f59e0b',
           border: '2px solid #18181b',
-          left: '-8px',
-          top: '70%',
-          transform: 'translateY(-50%)'
+          top: '70%'
         }}
       />
 
@@ -91,10 +87,7 @@ function GenerationNode({ data, selected }: NodeProps) {
           width: '16px',
           height: '16px',
           background: '#a855f7',
-          border: '2px solid #18181b',
-          right: '-8px',
-          top: '50%',
-          transform: 'translateY(-50%)'
+          border: '2px solid #18181b'
         }}
       />
     </div>

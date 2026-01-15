@@ -81,7 +81,6 @@ export default function NodeWorkflowCanvas() {
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         connectionMode={ConnectionMode.Loose}
-        connectOnClick={false}
         fitView
         className="bg-zinc-950"
         defaultEdgeOptions={{
