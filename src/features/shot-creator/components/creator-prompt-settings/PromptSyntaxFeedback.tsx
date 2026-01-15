@@ -334,15 +334,15 @@ export function PromptSyntaxFeedback({
                             }`}
                         title={
                             referenceImageCount < 2
-                                ? 'Anchor Transform - Requires 2+ reference images'
+                                ? 'Anchor Transform - Requires 2+ reference images. Type @1 in prompt or click here.'
                                 : enableAnchorTransform
                                     ? 'Anchor Transform enabled - First image transforms all others. Click to disable.'
-                                    : 'Anchor Transform disabled - Click to enable. Use first image as style anchor to transform remaining images'
+                                    : 'Anchor Transform disabled - Click to enable or type @1 in your prompt. Use first image as style anchor to transform remaining images.'
                         }
                         aria-label={enableAnchorTransform ? 'Disable Anchor Transform' : 'Enable Anchor Transform'}
                         aria-pressed={enableAnchorTransform}
                     >
-                        <span className="font-bold text-xs">📍</span>
+                        <span className="font-mono font-bold">¡</span>
                         <X className={`h-2.5 w-2.5 ${enableAnchorTransform ? 'hidden' : 'block'}`} />
                     </button>
                 </div>

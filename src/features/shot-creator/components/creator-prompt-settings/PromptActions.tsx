@@ -21,7 +21,7 @@ import { getModelConfig } from "@/config"
 import { useShotCreatorSettings } from "../../hooks"
 import { useImageGeneration } from "../../hooks/useImageGeneration"
 import { PromptSyntaxFeedback } from "./PromptSyntaxFeedback"
-import { parseDynamicPrompt } from "../../helpers/prompt-syntax-feedback"
+import { parseDynamicPrompt, detectAnchorTransform, stripAnchorSyntax } from "../../helpers/prompt-syntax-feedback"
 import { useWildCardStore } from "../../store/wildcard.store"
 import { QuickAccessBar, RecipeFormFields } from "../recipe"
 import { OrganizeButton } from "../prompt-organizer"
@@ -111,6 +111,18 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
 
     // Track last used recipe for generation metadata
     const [lastUsedRecipe, setLastUsedRecipe] = useState<{ recipeId: string; recipeName: string } | null>(null)
+
+    // Auto-enable Anchor Transform when @1 is detected in prompt
+    React.useEffect(() => {
+        const hasAnchorSyntax = detectAnchorTransform(shotCreatorPrompt)
+        if (hasAnchorSyntax && !shotCreatorSettings.enableAnchorTransform && shotCreatorReferenceImages.length >= 2) {
+            // Auto-enable when @1 is typed and we have 2+ references
+            updateSettings({ enableAnchorTransform: true })
+        } else if (!hasAnchorSyntax && shotCreatorSettings.enableAnchorTransform) {
+            // Auto-disable when @1 is removed from prompt
+            updateSettings({ enableAnchorTransform: false })
+        }
+    }, [shotCreatorPrompt, shotCreatorSettings.enableAnchorTransform, shotCreatorReferenceImages.length, updateSettings])
 
     // Get textarea height class based on size
     const getTextareaHeight = (size: TextareaSize) => {
@@ -363,8 +375,8 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 return
             }
 
-            // Use the prompt as-is (no syntax to strip)
-            const cleanPrompt = shotCreatorPrompt
+            // Strip @1 from prompt before sending to API
+            const cleanPrompt = stripAnchorSyntax(shotCreatorPrompt)
 
             // Warn about large batch size
             if (inputUrls.length > 10) {
@@ -882,7 +894,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                             {shotCreatorReferenceImages.length < 2 ? (
                                 '⚠️ Anchor Transform requires at least 2 images (1 anchor + 1+ inputs)'
                             ) : (
-                                `📍 Anchor: ${shotCreatorReferenceImages[0]?.file?.name || 'Image 1'} → Will transform ${shotCreatorReferenceImages.length - 1} image${shotCreatorReferenceImages.length - 1 > 1 ? 's' : ''}`
+                                `¡ Anchor: ${shotCreatorReferenceImages[0]?.file?.name || 'Image 1'} → Will transform ${shotCreatorReferenceImages.length - 1} image${shotCreatorReferenceImages.length - 1 > 1 ? 's' : ''}`
                             )}
                         </span>
                     </div>
