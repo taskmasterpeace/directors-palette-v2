@@ -21,7 +21,7 @@ import { getModelConfig } from "@/config"
 import { useShotCreatorSettings } from "../../hooks"
 import { useImageGeneration } from "../../hooks/useImageGeneration"
 import { PromptSyntaxFeedback } from "./PromptSyntaxFeedback"
-import { parseDynamicPrompt, detectAnchorTransform, getAnchorTransformFeedback, stripAnchorSyntax } from "../../helpers/prompt-syntax-feedback"
+import { parseDynamicPrompt } from "../../helpers/prompt-syntax-feedback"
 import { useWildCardStore } from "../../store/wildcard.store"
 import { QuickAccessBar, RecipeFormFields } from "../recipe"
 import { OrganizeButton } from "../prompt-organizer"
@@ -67,8 +67,8 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         const modelConfig = getModelConfig(model)
         const costPerImage = modelConfig.costPerImage
 
-        // Check for anchor transform mode (@1 syntax)
-        const isAnchorMode = detectAnchorTransform(shotCreatorPrompt)
+        // Check for anchor transform mode (toggle button)
+        const isAnchorMode = shotCreatorSettings.enableAnchorTransform
 
         let imageCount: number
 
@@ -340,9 +340,9 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     const handleGenerate = useCallback(async () => {
         if (!canGenerate || isGenerating) return
 
-        // ===== ANCHOR TRANSFORM MODE (@1 syntax) =====
-        // Check if prompt contains @1 (batch transform mode)
-        const isAnchorMode = detectAnchorTransform(shotCreatorPrompt)
+        // ===== ANCHOR TRANSFORM MODE (Toggle Button) =====
+        // Check if Anchor Transform is enabled via toggle
+        const isAnchorMode = shotCreatorSettings.enableAnchorTransform
 
         if (isAnchorMode) {
             // Validation: Need at least 2 images (1 anchor + 1 input)
@@ -363,8 +363,8 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 return
             }
 
-            // Strip @1 from prompt for API call
-            const cleanPrompt = stripAnchorSyntax(shotCreatorPrompt)
+            // Use the prompt as-is (no syntax to strip)
+            const cleanPrompt = shotCreatorPrompt
 
             // Warn about large batch size
             if (inputUrls.length > 10) {
@@ -867,19 +867,22 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                     disablePipeSyntax={shotCreatorSettings.disablePipeSyntax}
                     disableBracketSyntax={shotCreatorSettings.disableBracketSyntax}
                     disableWildcardSyntax={shotCreatorSettings.disableWildcardSyntax}
+                    enableAnchorTransform={shotCreatorSettings.enableAnchorTransform}
+                    referenceImageCount={shotCreatorReferenceImages.length}
                     onTogglePipeSyntax={(disabled) => updateSettings({ disablePipeSyntax: disabled })}
                     onToggleBracketSyntax={(disabled) => updateSettings({ disableBracketSyntax: disabled })}
                     onToggleWildcardSyntax={(disabled) => updateSettings({ disableWildcardSyntax: disabled })}
+                    onToggleAnchorTransform={(enabled) => updateSettings({ enableAnchorTransform: enabled })}
                 />
 
                 {/* Anchor Transform feedback */}
-                {detectAnchorTransform(shotCreatorPrompt) && (
-                    <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg text-sm">
-                        <span className="text-blue-600 dark:text-blue-400">
-                            {getAnchorTransformFeedback(
-                                shotCreatorPrompt,
-                                shotCreatorReferenceImages.length,
-                                shotCreatorReferenceImages[0]?.file?.name
+                {shotCreatorSettings.enableAnchorTransform && (
+                    <div className="flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg text-sm">
+                        <span className="text-orange-600 dark:text-orange-400">
+                            {shotCreatorReferenceImages.length < 2 ? (
+                                '⚠️ Anchor Transform requires at least 2 images (1 anchor + 1+ inputs)'
+                            ) : (
+                                `📍 Anchor: ${shotCreatorReferenceImages[0]?.file?.name || 'Image 1'} → Will transform ${shotCreatorReferenceImages.length - 1} image${shotCreatorReferenceImages.length - 1 > 1 ? 's' : ''}`
                             )}
                         </span>
                     </div>

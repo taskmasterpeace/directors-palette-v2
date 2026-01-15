@@ -19,7 +19,6 @@ import { Capacitor } from '@capacitor/core'
 import { cn } from "@/utils/utils"
 import { useShotCreatorStore } from "../../store/shot-creator.store"
 import { shotImageToLibraryReference } from "../../helpers/type-adapters"
-import { detectAnchorTransform } from "../../helpers/prompt-syntax-feedback"
 
 // Accepted image file types for reference images
 const IMAGE_ACCEPT = {
@@ -84,12 +83,12 @@ export function ReferenceImageCard({
     isRemovingBackground = false,
     isSavingToGallery = false
 }: ReferenceImageCardProps) {
-    const { setFullscreenImage, shotCreatorPrompt } = useShotCreatorStore()
+    const { setFullscreenImage, settings } = useShotCreatorStore()
     const isNative = Capacitor.isNativePlatform()
     const dropZoneRef = React.useRef<DropZoneRef>(null)
 
-    // Check if anchor transform mode is active
-    const isAnchorMode = detectAnchorTransform(shotCreatorPrompt)
+    // Check if anchor transform mode is active via toggle
+    const isAnchorMode = settings.enableAnchorTransform
     const isAnchor = isAnchorMode && index === 0
     const isInput = isAnchorMode && index > 0
 

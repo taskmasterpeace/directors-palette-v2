@@ -48,6 +48,7 @@ export interface ShotCreatorSettings {
     disablePipeSyntax?: boolean // Treat | as literal text, not separator
     disableBracketSyntax?: boolean // Treat [...] as literal text, not options
     disableWildcardSyntax?: boolean // Treat _word_ as literal text, not wildcard
+    enableAnchorTransform?: boolean // Enable Anchor Transform: use first ref image to transform remaining images
     // Nano-Banana-Pro specific settings
     safetyFilterLevel?: 'block_low_and_above' | 'block_medium_and_above' | 'block_only_high'
     // Output settings

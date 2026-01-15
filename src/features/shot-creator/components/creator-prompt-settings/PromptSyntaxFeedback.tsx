@@ -13,9 +13,12 @@ interface PromptSyntaxFeedbackProps {
     disablePipeSyntax?: boolean;
     disableBracketSyntax?: boolean;
     disableWildcardSyntax?: boolean;
+    enableAnchorTransform?: boolean;
+    referenceImageCount?: number;
     onTogglePipeSyntax?: (disabled: boolean) => void;
     onToggleBracketSyntax?: (disabled: boolean) => void;
     onToggleWildcardSyntax?: (disabled: boolean) => void;
+    onToggleAnchorTransform?: (enabled: boolean) => void;
 }
 
 export function PromptSyntaxFeedback({
@@ -23,9 +26,12 @@ export function PromptSyntaxFeedback({
     disablePipeSyntax,
     disableBracketSyntax,
     disableWildcardSyntax,
+    enableAnchorTransform,
+    referenceImageCount = 0,
     onTogglePipeSyntax,
     onToggleBracketSyntax,
-    onToggleWildcardSyntax
+    onToggleWildcardSyntax,
+    onToggleAnchorTransform
 }: PromptSyntaxFeedbackProps) {
     const { wildcards, loadWildCards } = useWildCardStore();
     const [feedback, setFeedback] = useState<{
@@ -314,6 +320,30 @@ export function PromptSyntaxFeedback({
                     >
                         <span className="font-mono font-bold">_</span>
                         <X className={`h-2.5 w-2.5 ${disableWildcardSyntax ? 'block' : 'hidden'}`} />
+                    </button>
+                    {/* Anchor Transform toggle */}
+                    <button
+                        onClick={() => onToggleAnchorTransform?.(!enableAnchorTransform)}
+                        disabled={referenceImageCount < 2}
+                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all cursor-pointer ${
+                            referenceImageCount < 2
+                                ? 'border-border bg-card/30 opacity-30 cursor-not-allowed'
+                                : enableAnchorTransform
+                                    ? 'border-orange-500/30 bg-orange-500/10 text-orange-400 hover:bg-orange-500/20'
+                                    : 'border-border bg-card/30 opacity-50 hover:opacity-75'
+                            }`}
+                        title={
+                            referenceImageCount < 2
+                                ? 'Anchor Transform - Requires 2+ reference images'
+                                : enableAnchorTransform
+                                    ? 'Anchor Transform enabled - First image transforms all others. Click to disable.'
+                                    : 'Anchor Transform disabled - Click to enable. Use first image as style anchor to transform remaining images'
+                        }
+                        aria-label={enableAnchorTransform ? 'Disable Anchor Transform' : 'Enable Anchor Transform'}
+                        aria-pressed={enableAnchorTransform}
+                    >
+                        <span className="font-bold text-xs">📍</span>
+                        <X className={`h-2.5 w-2.5 ${enableAnchorTransform ? 'hidden' : 'block'}`} />
                     </button>
                 </div>
             )}
