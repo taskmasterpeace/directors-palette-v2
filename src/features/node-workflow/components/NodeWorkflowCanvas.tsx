@@ -22,6 +22,7 @@ import GenerationNode from './nodes/GenerationNode'
 import ToolNode from './nodes/ToolNode'
 import OutputNode from './nodes/OutputNode'
 import { Play, Save, FolderOpen, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function NodeWorkflowCanvas() {
   const {
@@ -57,8 +58,33 @@ export default function NodeWorkflowCanvas() {
   )
 
   const handleExecute = async () => {
-    // TODO: Implement workflow execution
+    // Validate workflow
+    if (nodes.length === 0) {
+      toast.error('No nodes in workflow')
+      return
+    }
+
+    if (edges.length === 0) {
+      toast.error('No connections in workflow')
+      return
+    }
+
+    // Check for output node
+    const hasOutputNode = nodes.some(n => n.type === 'output')
+    if (!hasOutputNode) {
+      toast.warning('Add an Output node to save results')
+    }
+
+    // Show execution started
+    toast.success(`Executing workflow: ${nodes.length} nodes, ${edges.length} connections`)
+
     console.log('Execute workflow', { nodes, edges })
+
+    // TODO: Implement actual workflow execution
+    // - Topologically sort nodes based on edges
+    // - Execute each node in order
+    // - Pass data between connected nodes
+    // - Display results in Output node
   }
 
   const handleSave = () => {
