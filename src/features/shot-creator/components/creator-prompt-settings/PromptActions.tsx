@@ -357,18 +357,29 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         const isAnchorMode = shotCreatorSettings.enableAnchorTransform
 
         if (isAnchorMode) {
+            // Calculate total images (reference images + style guide if selected)
+            const totalImages = shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)
+
             // Validation: Need at least 2 images (1 anchor + 1 input)
-            if (shotCreatorReferenceImages.length < 2) {
+            if (totalImages < 2) {
                 toast.error('Anchor Transform requires at least 2 images (1 anchor + 1+ inputs)')
                 return
             }
 
-            // Extract anchor (first image) and input images (remaining)
+            // Extract anchor and inputs
+            // If we have a style guide and no reference images, style is the anchor
+            // If we have a style guide + reference images, first reference is anchor
+            // If we have 2+ reference images, first reference is anchor
             const [anchorRef, ...inputRefs] = shotCreatorReferenceImages
-            const anchorUrl = anchorRef.url || anchorRef.preview
+            const anchorUrl = anchorRef?.url || anchorRef?.preview
             const inputUrls = inputRefs
                 .map(ref => ref.url || ref.preview)
                 .filter((url): url is string => Boolean(url))
+
+            if (!anchorUrl && shotCreatorReferenceImages.length === 0) {
+                toast.error('Anchor Transform requires at least 1 reference image (style guide alone is not enough)')
+                return
+            }
 
             if (!anchorUrl) {
                 toast.error('The first reference image (anchor) is not valid')
@@ -880,7 +891,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                     disableBracketSyntax={shotCreatorSettings.disableBracketSyntax}
                     disableWildcardSyntax={shotCreatorSettings.disableWildcardSyntax}
                     enableAnchorTransform={shotCreatorSettings.enableAnchorTransform}
-                    referenceImageCount={shotCreatorReferenceImages.length}
+                    referenceImageCount={shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)}
                     onTogglePipeSyntax={(disabled) => updateSettings({ disablePipeSyntax: disabled })}
                     onToggleBracketSyntax={(disabled) => updateSettings({ disableBracketSyntax: disabled })}
                     onToggleWildcardSyntax={(disabled) => updateSettings({ disableWildcardSyntax: disabled })}
@@ -888,17 +899,26 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 />
 
                 {/* Anchor Transform feedback */}
-                {shotCreatorSettings.enableAnchorTransform && (
-                    <div className="flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg text-sm">
-                        <span className="text-orange-600 dark:text-orange-400">
-                            {shotCreatorReferenceImages.length < 2 ? (
-                                '⚠️ Anchor Transform requires at least 2 images (1 anchor + 1+ inputs)'
-                            ) : (
-                                `¡ Anchor: ${shotCreatorReferenceImages[0]?.file?.name || 'Image 1'} → Will transform ${shotCreatorReferenceImages.length - 1} image${shotCreatorReferenceImages.length - 1 > 1 ? 's' : ''}`
-                            )}
-                        </span>
-                    </div>
-                )}
+                {shotCreatorSettings.enableAnchorTransform && (() => {
+                    const totalImages = shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)
+                    const hasStyle = !!shotCreatorSettings.selectedStyle
+                    const anchorName = hasStyle && shotCreatorReferenceImages.length === 0
+                        ? 'Style Guide'
+                        : shotCreatorReferenceImages[0]?.file?.name || 'Image 1'
+                    const transformCount = totalImages - 1
+
+                    return (
+                        <div className="flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg text-sm">
+                            <span className="text-orange-600 dark:text-orange-400">
+                                {totalImages < 2 ? (
+                                    '⚠️ Anchor Transform requires at least 2 images (1 anchor + 1+ inputs)'
+                                ) : (
+                                    `¡ Anchor: ${anchorName} → Will transform ${transformCount} image${transformCount > 1 ? 's' : ''}`
+                                )}
+                            </span>
+                        </div>
+                    )
+                })()}
 
                 {/* Help tooltip */}
                 <TooltipProvider>
