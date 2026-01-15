@@ -23,6 +23,7 @@ import ToolNode from './nodes/ToolNode'
 import OutputNode from './nodes/OutputNode'
 import { Play, Save, FolderOpen, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { WorkflowExecutor } from '../services/workflow-executor.service'
 
 export default function NodeWorkflowCanvas() {
   const {
@@ -32,7 +33,9 @@ export default function NodeWorkflowCanvas() {
     onEdgesChange,
     setEdges,
     clearWorkflow,
-    isExecuting
+    isExecuting,
+    setIsExecuting,
+    setExecutionResults
   } = useWorkflowStore()
 
   // Define custom node types
@@ -75,16 +78,47 @@ export default function NodeWorkflowCanvas() {
       toast.warning('Add an Output node to save results')
     }
 
-    // Show execution started
-    toast.success(`Executing workflow: ${nodes.length} nodes, ${edges.length} connections`)
+    // Start execution
+    setIsExecuting(true)
+    toast.loading(`Executing workflow: ${nodes.length} nodes, ${edges.length} connections`, {
+      id: 'workflow-execution'
+    })
 
-    console.log('Execute workflow', { nodes, edges })
+    try {
+      // Create executor and run workflow
+      const executor = new WorkflowExecutor(nodes, edges)
+      const results = await executor.execute()
 
-    // TODO: Implement actual workflow execution
-    // - Topologically sort nodes based on edges
-    // - Execute each node in order
-    // - Pass data between connected nodes
-    // - Display results in Output node
+      // Store results
+      const resultsMap = new Map()
+      results.forEach(result => {
+        resultsMap.set(result.nodeId, result)
+      })
+      setExecutionResults(resultsMap)
+
+      // Check for failures
+      const failedNodes = results.filter(r => !r.success)
+      if (failedNodes.length > 0) {
+        toast.error(`Workflow completed with ${failedNodes.length} errors`, {
+          id: 'workflow-execution'
+        })
+        console.error('Failed nodes:', failedNodes)
+      } else {
+        toast.success('Workflow executed successfully!', {
+          id: 'workflow-execution'
+        })
+      }
+
+      console.log('Execution results:', results)
+    } catch (error) {
+      console.error('Workflow execution error:', error)
+      toast.error(
+        error instanceof Error ? error.message : 'Workflow execution failed',
+        { id: 'workflow-execution' }
+      )
+    } finally {
+      setIsExecuting(false)
+    }
   }
 
   const handleSave = () => {

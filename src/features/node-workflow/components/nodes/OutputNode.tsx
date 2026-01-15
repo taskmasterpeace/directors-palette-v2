@@ -1,12 +1,28 @@
 'use client'
 
-import { memo } from 'react'
+import { memo, useEffect } from 'react'
 import { Handle, Position, NodeProps } from '@xyflow/react'
-import { ImageIcon, Check } from 'lucide-react'
+import { ImageIcon, Check, AlertCircle } from 'lucide-react'
 import type { OutputNodeData } from '../../types/workflow.types'
+import { useWorkflowStore } from '../../store/workflow.store'
 
-function OutputNode({ data, selected }: NodeProps) {
+function OutputNode({ data, selected, id }: NodeProps) {
   const typedData = data as unknown as OutputNodeData
+  const executionResults = useWorkflowStore(state => state.executionResults)
+  const updateNode = useWorkflowStore(state => state.updateNode)
+
+  // Get execution result for this node
+  const nodeResult = executionResults.get(id)
+  const resultImage = nodeResult?.data?.imageUrl
+  const hasError = nodeResult && !nodeResult.success
+  const errorMessage = nodeResult?.data?.error
+
+  // Update preview when we have a result
+  useEffect(() => {
+    if (resultImage && resultImage !== typedData.preview) {
+      updateNode(id, { preview: resultImage })
+    }
+  }, [resultImage, typedData.preview, id, updateNode])
   return (
     <div
       className={`
@@ -24,10 +40,7 @@ function OutputNode({ data, selected }: NodeProps) {
           width: '16px',
           height: '16px',
           background: '#22c55e',
-          border: '2px solid #18181b',
-          left: '-8px',
-          top: '50%',
-          transform: 'translateY(-50%)'
+          border: '2px solid #18181b'
         }}
       />
 
@@ -55,8 +68,19 @@ function OutputNode({ data, selected }: NodeProps) {
         </div>
       )}
 
+      {/* Error State */}
+      {hasError && (
+        <div className="mb-3 border-2 border-red-500/30 bg-red-500/10 rounded p-4 text-center">
+          <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+          <div className="text-xs text-red-400">Execution failed</div>
+          {errorMessage && (
+            <div className="text-xs text-zinc-500 mt-1">{errorMessage}</div>
+          )}
+        </div>
+      )}
+
       {/* Placeholder */}
-      {!typedData.preview && (
+      {!typedData.preview && !hasError && (
         <div className="border-2 border-dashed border-zinc-700 rounded p-6 text-center">
           <ImageIcon className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
           <div className="text-xs text-zinc-500">Waiting for execution</div>
