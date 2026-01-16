@@ -988,9 +988,10 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                                 <p className="font-medium mb-1.5">Prompt Syntax:</p>
                                 <ul className="space-y-1">
                                     <li>• Use @tag references to automatically attach images</li>
+                                    <li>• Use @! for Anchor Transform (first image transforms others)</li>
                                     <li>• Use pipe (|) syntax for multi-stage generation</li>
-                                    <li>• Use {'{'}x,y{'}}'} for variation syntax</li>
-                                    <li>• Use * for wildcard expansion</li>
+                                    <li>• Use [option1, option2] for variations</li>
+                                    <li>• Use _wildcard_ for random selection from lists</li>
                                 </ul>
                             </div>
                         </TooltipContent>

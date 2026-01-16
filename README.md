@@ -69,6 +69,19 @@ Tag and reuse images:
 ```
 Automatically loads your tagged "hero_john" reference image.
 
+### Anchor Transform (@!)
+Transform multiple images using one anchor image as a style guide:
+```
+@! Transform into claymation style
+```
+**How it works:**
+- Upload 2+ images (first = anchor/style guide, rest = inputs to transform)
+- Click the **¡** button OR type `@!` at start/end of your prompt
+- First image defines the style, remaining images get transformed
+- Cost-effective: Only pay for input images (anchor is free)
+
+**Example use case:** Upload a style guide + 5 character photos = 5 transformed images in that style (costs 5 images, not 6)
+
 ---
 
 ## Character Consistency

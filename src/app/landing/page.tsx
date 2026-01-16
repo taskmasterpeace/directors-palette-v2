@@ -471,7 +471,7 @@ export default function LandingPage() {
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
                         {/* Variations */}
                         <div className="bg-card/50 border border-border rounded-xl p-6 hover:border-amber-500/50 transition-colors">
                             <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center mb-4">
@@ -535,6 +535,25 @@ export default function LandingPage() {
                             </div>
                             <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
                                 <ArrowRight className="w-3 h-3" /> Pulls random items from your wildcard lists
+                            </p>
+                        </div>
+
+                        {/* Anchor Transform */}
+                        <div className="bg-card/50 border border-border rounded-xl p-6 hover:border-amber-500/50 transition-colors">
+                            <div className="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center mb-4">
+                                <span className="text-3xl font-bold text-orange-400">¡</span>
+                            </div>
+                            <h4 className="text-xl font-semibold text-white mb-2">Anchor Transform</h4>
+                            <p className="text-muted-foreground text-sm mb-4">
+                                Use one image to transform multiple others. Cost-effective batch styling.
+                            </p>
+                            <div className="bg-background/50 rounded-lg p-4 font-mono text-sm">
+                                <span className="text-orange-400">@!</span>
+                                <span className="text-muted-foreground"> Transform to </span>
+                                <span className="text-amber-400">claymation</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
+                                <ArrowRight className="w-3 h-3" /> First image anchors style for all others
                             </p>
                         </div>
                     </div>
@@ -609,6 +628,48 @@ export default function LandingPage() {
                             <p className="text-xs text-muted-foreground mt-3">
                                 Wildcards substitute first, then brackets expand → Random character in 3 locations = 3 images
                             </p>
+                        </div>
+                    </div>
+
+                    {/* Anchor Transform Example */}
+                    <div className="mt-12 max-w-3xl mx-auto">
+                        <div className="bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-500/30 rounded-xl p-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                                    <span className="text-2xl font-bold text-orange-400">¡</span>
+                                </div>
+                                <div>
+                                    <h4 className="text-lg font-semibold text-white">Anchor Transform in Action</h4>
+                                    <p className="text-sm text-muted-foreground">Transform multiple images using one style anchor</p>
+                                </div>
+                            </div>
+                            <div className="bg-background/50 rounded-lg p-4 mb-4">
+                                <p className="text-xs text-muted-foreground mb-2">Upload: 1 style guide + 5 character photos</p>
+                                <div className="font-mono text-sm mb-3">
+                                    <span className="text-orange-400">@!</span>
+                                    <span className="text-muted-foreground"> Transform into </span>
+                                    <span className="text-amber-400">claymation style</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs">
+                                    <span className="px-2 py-1 bg-orange-500/20 text-orange-400 rounded">1st image = Anchor (FREE)</span>
+                                    <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                                    <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded">5 transformed images</span>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                                    <CheckCircle2 className="w-4 h-4 text-green-400" />
+                                    <span>Cost: Only 5 images (not 6!) - anchor is free</span>
+                                </p>
+                                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                                    <CheckCircle2 className="w-4 h-4 text-green-400" />
+                                    <span>Perfect for: Applying one style to multiple photos</span>
+                                </p>
+                                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                                    <CheckCircle2 className="w-4 h-4 text-green-400" />
+                                    <span>Activate: Click ¡ button or type @! in your prompt</span>
+                                </p>
+                            </div>
                         </div>
                     </div>
 
