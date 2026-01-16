@@ -10,6 +10,10 @@ export const DEFAULT_SETTINGS: ShotCreatorSettings = {
     seed: undefined,
     model: "nano-banana",
     rawPromptMode: false, // Default: process brackets/pipes/wildcards normally
+    disablePipeSyntax: false,
+    disableBracketSyntax: false,
+    disableWildcardSyntax: false,
+    enableAnchorTransform: false, // Default: Anchor Transform off
 };
 export interface ShotCreatorStore {
     // ---- State ----
