@@ -252,7 +252,11 @@ export function CharacterStep() {
   // Handle character sheet generation using recipe-based pipeline
   // Now supports both main characters (with photos) and supporting characters (with or without photos)
   const handleGenerateCharacterSheet = useCallback(async (characterId: string) => {
-    // Find character in unified list
+    // Small delay to ensure React state has propagated from textarea onChange
+    // This prevents race condition where user types description and immediately clicks generate
+    await new Promise(resolve => setTimeout(resolve, 150))
+
+    // Find character in unified list (AFTER delay to get latest state)
     const unifiedChar = allCharacters.find(c => c.id === characterId)
     if (!unifiedChar) {
       console.error('Character not found:', characterId)
@@ -263,6 +267,16 @@ export function CharacterStep() {
     if (!recipesInitialized) {
       console.error('[CharacterStep] Recipe store not initialized yet')
       alert('Recipe system is still loading. Please wait a moment and try again.')
+      return
+    }
+
+    // CRITICAL: Validate that we have either a photo OR a description before generating
+    const hasPhoto = !!unifiedChar.sourcePhotoUrl
+    const hasDescription = !!unifiedChar.description?.trim()
+
+    if (!hasPhoto && !hasDescription) {
+      console.error('[CharacterStep] Cannot generate without photo or description')
+      alert('Please add a visual description before generating a character sheet. Describe the character\'s age, appearance, and outfit.')
       return
     }
 
