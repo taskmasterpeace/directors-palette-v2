@@ -924,29 +924,18 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 )}
 
                 {/* Prompt syntax feedback */}
-                {(() => {
-                    const refCount = shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0);
-                    console.log('📊 Reference Count Calculation:', {
-                        referenceImages: shotCreatorReferenceImages.length,
-                        selectedStyle: shotCreatorSettings.selectedStyle,
-                        totalCount: refCount,
-                        shouldEnableButton: refCount >= 2
-                    });
-                    return (
-                        <PromptSyntaxFeedback
-                            prompt={shotCreatorPrompt}
-                            disablePipeSyntax={shotCreatorSettings.disablePipeSyntax}
-                            disableBracketSyntax={shotCreatorSettings.disableBracketSyntax}
-                            disableWildcardSyntax={shotCreatorSettings.disableWildcardSyntax}
-                            enableAnchorTransform={shotCreatorSettings.enableAnchorTransform}
-                            referenceImageCount={refCount}
-                            onTogglePipeSyntax={(disabled) => updateSettings({ disablePipeSyntax: disabled })}
-                            onToggleBracketSyntax={(disabled) => updateSettings({ disableBracketSyntax: disabled })}
-                            onToggleWildcardSyntax={(disabled) => updateSettings({ disableWildcardSyntax: disabled })}
-                            onToggleAnchorTransform={(enabled) => updateSettings({ enableAnchorTransform: enabled })}
-                        />
-                    );
-                })()}
+                <PromptSyntaxFeedback
+                    prompt={shotCreatorPrompt}
+                    disablePipeSyntax={shotCreatorSettings.disablePipeSyntax}
+                    disableBracketSyntax={shotCreatorSettings.disableBracketSyntax}
+                    disableWildcardSyntax={shotCreatorSettings.disableWildcardSyntax}
+                    enableAnchorTransform={shotCreatorSettings.enableAnchorTransform}
+                    referenceImageCount={shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)}
+                    onTogglePipeSyntax={(disabled) => updateSettings({ disablePipeSyntax: disabled })}
+                    onToggleBracketSyntax={(disabled) => updateSettings({ disableBracketSyntax: disabled })}
+                    onToggleWildcardSyntax={(disabled) => updateSettings({ disableWildcardSyntax: disabled })}
+                    onToggleAnchorTransform={(enabled) => updateSettings({ enableAnchorTransform: enabled })}
+                />
 
                 {/* Anchor Transform feedback */}
                 {shotCreatorSettings.enableAnchorTransform && (() => {

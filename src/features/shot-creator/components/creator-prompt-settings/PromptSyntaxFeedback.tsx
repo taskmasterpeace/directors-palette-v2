@@ -186,15 +186,6 @@ export function PromptSyntaxFeedback({
     // Show toggle bar when there's a prompt with potential syntax or any toggle is disabled
     const showToggleBar = prompt && prompt.trim().length > 0;
 
-    // Debug: Log anchor button state
-    useEffect(() => {
-        console.log('🔍 Anchor Button Debug:', {
-            referenceImageCount,
-            isDisabled: (referenceImageCount || 0) < 2,
-            enableAnchorTransform
-        });
-    }, [referenceImageCount, enableAnchorTransform]);
-
     if (!feedback && !showToggleBar) return null;
 
     const getIcon = () => {
