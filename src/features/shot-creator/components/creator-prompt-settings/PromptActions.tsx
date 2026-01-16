@@ -117,14 +117,16 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     // Auto-enable Anchor Transform when @1 is detected in prompt
     React.useEffect(() => {
         const hasAnchorSyntax = detectAnchorTransform(shotCreatorPrompt)
-        if (hasAnchorSyntax && !shotCreatorSettings.enableAnchorTransform && shotCreatorReferenceImages.length >= 2) {
-            // Auto-enable when @1 is typed and we have 2+ references
+        const totalImages = shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)
+
+        if (hasAnchorSyntax && !shotCreatorSettings.enableAnchorTransform && totalImages >= 2) {
+            // Auto-enable when @1 is typed and we have 2+ total images (refs + style)
             updateSettings({ enableAnchorTransform: true })
         } else if (!hasAnchorSyntax && shotCreatorSettings.enableAnchorTransform) {
             // Auto-disable when @1 is removed from prompt
             updateSettings({ enableAnchorTransform: false })
         }
-    }, [shotCreatorPrompt, shotCreatorSettings.enableAnchorTransform, shotCreatorReferenceImages.length, updateSettings])
+    }, [shotCreatorPrompt, shotCreatorSettings.enableAnchorTransform, shotCreatorSettings.selectedStyle, shotCreatorReferenceImages.length, updateSettings])
 
     // Get textarea height class based on size
     const getTextareaHeight = (size: TextareaSize) => {
