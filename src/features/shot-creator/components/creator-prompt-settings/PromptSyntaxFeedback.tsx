@@ -183,8 +183,8 @@ export function PromptSyntaxFeedback({
     // Check if any syntax is disabled (for displaying disabled state)
     const hasAnyDisabled = disablePipeSyntax || disableBracketSyntax || disableWildcardSyntax;
 
-    // Show toggle bar when there's a prompt with potential syntax or any toggle is disabled
-    const showToggleBar = prompt && prompt.trim().length > 0;
+    // Show toggle bar when there's a prompt OR when Anchor Transform could be enabled (2+ images)
+    const showToggleBar = (prompt && prompt.trim().length > 0) || referenceImageCount >= 2;
 
     if (!feedback && !showToggleBar) return null;
 
@@ -272,6 +272,7 @@ export function PromptSyntaxFeedback({
                     {hasAnyDisabled && <span>Syntax:</span>}
                     {/* Pipe toggle */}
                     <button
+                        type="button"
                         onClick={() => onTogglePipeSyntax?.(!disablePipeSyntax)}
                         className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all cursor-pointer ${disablePipeSyntax
                                 ? 'border-border bg-card/30 opacity-50 hover:opacity-75'
@@ -289,6 +290,7 @@ export function PromptSyntaxFeedback({
                     </button>
                     {/* Bracket toggle */}
                     <button
+                        type="button"
                         onClick={() => onToggleBracketSyntax?.(!disableBracketSyntax)}
                         className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all cursor-pointer ${disableBracketSyntax
                                 ? 'border-border bg-card/30 opacity-50 hover:opacity-75'
@@ -306,6 +308,7 @@ export function PromptSyntaxFeedback({
                     </button>
                     {/* Wildcard toggle */}
                     <button
+                        type="button"
                         onClick={() => onToggleWildcardSyntax?.(!disableWildcardSyntax)}
                         className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all cursor-pointer ${disableWildcardSyntax
                                 ? 'border-border bg-card/30 opacity-50 hover:opacity-75'
@@ -323,6 +326,7 @@ export function PromptSyntaxFeedback({
                     </button>
                     {/* Anchor Transform toggle */}
                     <button
+                        type="button"
                         onClick={() => onToggleAnchorTransform?.(!enableAnchorTransform)}
                         disabled={referenceImageCount < 2}
                         className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all cursor-pointer ${
