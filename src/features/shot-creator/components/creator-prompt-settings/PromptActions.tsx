@@ -463,10 +463,16 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                     console.log(`  Transforming ${i + 1}/${inputUrls.length}:`, inputName)
 
                     // Generate with anchor + current input
+                    // CRITICAL: If style is the anchor, don't send it in referenceImages
+                    // because useImageGeneration will auto-inject it at the front
+                    const refsToSend = shotCreatorSettings.selectedStyle
+                        ? [inputUrl]  // Style anchor: only send input (style auto-injected)
+                        : [anchorUrl, inputUrl]  // Ref anchor: send both explicitly
+
                     await generateImage(
                         model,
                         cleanPrompt,
-                        [anchorUrl, inputUrl],  // Anchor first, input second
+                        refsToSend,
                         modelSettings,
                         undefined
                     )
