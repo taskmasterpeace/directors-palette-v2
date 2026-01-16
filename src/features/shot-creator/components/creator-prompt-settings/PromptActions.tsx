@@ -114,16 +114,16 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     // Track last used recipe for generation metadata
     const [lastUsedRecipe, setLastUsedRecipe] = useState<{ recipeId: string; recipeName: string } | null>(null)
 
-    // Auto-enable Anchor Transform when @1 is detected in prompt
+    // Auto-enable Anchor Transform when @! is detected in prompt
     React.useEffect(() => {
         const hasAnchorSyntax = detectAnchorTransform(shotCreatorPrompt)
         const totalImages = shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)
 
         if (hasAnchorSyntax && !shotCreatorSettings.enableAnchorTransform && totalImages >= 2) {
-            // Auto-enable when @1 is typed and we have 2+ total images (refs + style)
+            // Auto-enable when @! is typed and we have 2+ total images (refs + style)
             updateSettings({ enableAnchorTransform: true })
         } else if (!hasAnchorSyntax && shotCreatorSettings.enableAnchorTransform) {
-            // Auto-disable when @1 is removed from prompt
+            // Auto-disable when @! is removed from prompt
             updateSettings({ enableAnchorTransform: false })
         }
     }, [shotCreatorPrompt, shotCreatorSettings.enableAnchorTransform, shotCreatorSettings.selectedStyle, shotCreatorReferenceImages.length, updateSettings])
@@ -426,7 +426,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 return
             }
 
-            // Strip @1 from prompt before sending to API
+            // Strip @! from prompt before sending to API
             const cleanPrompt = stripAnchorSyntax(shotCreatorPrompt)
 
             // Warn about large batch size
@@ -949,18 +949,25 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 {shotCreatorSettings.enableAnchorTransform && (() => {
                     const totalImages = shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)
                     const hasStyle = !!shotCreatorSettings.selectedStyle
-                    const anchorName = hasStyle && shotCreatorReferenceImages.length === 0
-                        ? 'Style Guide'
-                        : shotCreatorReferenceImages[0]?.file?.name || 'Image 1'
+
+                    // Get anchor name (style or first ref image)
+                    let anchorName = 'Image 1'
+                    if (hasStyle) {
+                        const selectedStyle = useCustomStylesStore.getState().getStyleById(shotCreatorSettings.selectedStyle!)
+                        anchorName = selectedStyle?.name || 'Style Guide'
+                    } else if (shotCreatorReferenceImages[0]?.file?.name) {
+                        anchorName = shotCreatorReferenceImages[0].file.name
+                    }
+
                     const transformCount = totalImages - 1
 
                     return (
                         <div className="flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg text-sm">
                             <span className="text-orange-600 dark:text-orange-400">
                                 {totalImages < 2 ? (
-                                    '⚠️ Anchor Transform requires at least 2 images (1 anchor + 1+ inputs)'
+                                    '⚠️ Anchor requires at least 2 images (1 anchor + 1+ inputs)'
                                 ) : (
-                                    `¡ Anchor: ${anchorName} → Will transform ${transformCount} image${transformCount > 1 ? 's' : ''}`
+                                    `¡ ${anchorName} will anchor ${transformCount} image${transformCount > 1 ? 's' : ''}`
                                 )}
                             </span>
                         </div>
