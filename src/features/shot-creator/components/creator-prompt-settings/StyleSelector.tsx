@@ -32,7 +32,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Palette, X, Plus, Trash2, Upload, Pencil } from 'lucide-react'
+import { Palette, X, Plus, Trash2, Upload, Pencil, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import { toast } from '@/hooks/use-toast'
@@ -64,6 +64,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
     const [newStyleDescription, setNewStyleDescription] = useState('')
     const [newStylePrompt, setNewStylePrompt] = useState('')
     const [newStyleImage, setNewStyleImage] = useState<string>('')
+    const [aiAnalyzing, setAiAnalyzing] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Get all visible styles
@@ -106,6 +107,55 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
             setNewStyleImage(dataUrl)
         }
         reader.readAsDataURL(file)
+    }
+
+    const handleAiAnalyze = async () => {
+        if (!newStyleImage) {
+            toast({
+                title: 'Image required',
+                description: 'Please upload an image first',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        setAiAnalyzing(true)
+
+        try {
+            const response = await fetch('/api/styles/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: newStyleImage })
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null)
+                throw new Error(errorData?.error || `Analysis failed (${response.status})`)
+            }
+
+            const data = await response.json()
+
+            // Auto-fill form with AI-generated data
+            setNewStyleName(data.name)
+            setNewStyleDescription(data.description)
+            setNewStylePrompt(data.stylePrompt)
+
+            toast({
+                title: 'AI Analysis Complete',
+                description: 'Style details have been auto-filled. You can edit them before saving.'
+            })
+        } catch (error) {
+            console.error('AI analysis error:', error)
+            toast({
+                title: 'Analysis Failed',
+                description: error instanceof Error ? error.message : 'Failed to analyze image',
+                variant: 'destructive'
+            })
+        } finally {
+            setAiAnalyzing(false)
+        }
     }
 
     const handleCreateStyle = () => {
@@ -356,7 +406,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                 >
                                     {newStyleImage ? (
                                         <div className="relative w-full aspect-video rounded overflow-hidden">
-                                            
+
                                             <img src={newStyleImage} alt="Style preview" className="w-full h-full object-cover" />
                                             <Button variant="destructive" size="sm" className="absolute top-2 right-2 min-h-[44px] min-w-[44px]" onClick={(e) => { e.stopPropagation(); setNewStyleImage(''); }}>
                                                 <X className="w-4 h-4" />
@@ -370,6 +420,18 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                     )}
                                 </div>
                                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                                {/* AI Analyze Button */}
+                                {newStyleImage && (
+                                    <Button
+                                        type="button"
+                                        onClick={handleAiAnalyze}
+                                        disabled={aiAnalyzing}
+                                        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white min-h-[44px]"
+                                    >
+                                        <Sparkles className="w-4 h-4 mr-2" />
+                                        {aiAnalyzing ? 'Analyzing with AI...' : 'AI Analyze Style'}
+                                    </Button>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="style-name-compact">Style Name *</Label>
@@ -565,7 +627,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                             >
                                 {newStyleImage ? (
                                     <div className="relative w-full aspect-video rounded overflow-hidden">
-                                        
+
                                         <img
                                             src={newStyleImage}
                                             alt="Style preview"
@@ -598,6 +660,18 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                 className="hidden"
                                 onChange={handleImageUpload}
                             />
+                            {/* AI Analyze Button */}
+                            {newStyleImage && (
+                                <Button
+                                    type="button"
+                                    onClick={handleAiAnalyze}
+                                    disabled={aiAnalyzing}
+                                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white min-h-[44px]"
+                                >
+                                    <Sparkles className="w-4 h-4 mr-2" />
+                                    {aiAnalyzing ? 'Analyzing with AI...' : 'AI Analyze Style'}
+                                </Button>
+                            )}
                         </div>
 
                         {/* Style Name */}
