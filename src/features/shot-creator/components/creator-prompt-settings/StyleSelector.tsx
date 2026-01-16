@@ -32,7 +32,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Palette, X, Plus, Trash2, Upload } from 'lucide-react'
+import { Palette, X, Plus, Trash2, Upload, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import { toast } from '@/hooks/use-toast'
@@ -45,6 +45,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
     const { settings, updateSettings } = useShotCreatorSettings()
     const {
         addCustomStyle,
+        updateCustomStyle,
         deleteCustomStyle,
         hidePresetStyle,
         getAllStyles,
@@ -53,10 +54,12 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
 
     const selectedStyleId = settings.selectedStyle
     const [createDialogOpen, setCreateDialogOpen] = useState(false)
+    const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [styleToDelete, setStyleToDelete] = useState<AnyStyle | null>(null)
+    const [styleToEdit, setStyleToEdit] = useState<CustomStyle | null>(null)
 
-    // Form state for creating new style
+    // Form state for creating/editing style
     const [newStyleName, setNewStyleName] = useState('')
     const [newStyleDescription, setNewStyleDescription] = useState('')
     const [newStylePrompt, setNewStylePrompt] = useState('')
@@ -146,6 +149,72 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
         toast({
             title: 'Style created',
             description: `"${newStyleName}" has been added to your styles`
+        })
+    }
+
+    const openEditDialog = () => {
+        if (!selectedStyleId) return
+
+        const style = getStyleById(selectedStyleId)
+        if (!style || !('isCustom' in style && style.isCustom)) {
+            toast({
+                title: 'Cannot edit',
+                description: 'Only custom styles can be edited',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        // Pre-fill form with current style values
+        setStyleToEdit(style as CustomStyle)
+        setNewStyleName(style.name)
+        setNewStyleDescription(style.description || '')
+        setNewStylePrompt(style.stylePrompt)
+        setNewStyleImage(style.imagePath)
+        setEditDialogOpen(true)
+    }
+
+    const handleEditStyle = () => {
+        if (!styleToEdit) return
+
+        if (!newStyleName.trim()) {
+            toast({
+                title: 'Name required',
+                description: 'Please enter a name for your style',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        if (!newStyleImage) {
+            toast({
+                title: 'Image required',
+                description: 'Please upload a reference image for your style',
+                variant: 'destructive'
+            })
+            return
+        }
+
+        const stylePrompt = newStylePrompt.trim() || `in the ${newStyleName} style of the reference image`
+
+        updateCustomStyle(styleToEdit.id, {
+            name: newStyleName.trim(),
+            description: newStyleDescription.trim() || 'Custom style',
+            imagePath: newStyleImage,
+            stylePrompt
+        })
+
+        // Reset form
+        setNewStyleName('')
+        setNewStyleDescription('')
+        setNewStylePrompt('')
+        setNewStyleImage('')
+        setStyleToEdit(null)
+        setEditDialogOpen(false)
+
+        toast({
+            title: 'Style updated',
+            description: `"${newStyleName}" has been updated`
         })
     }
 
@@ -332,15 +401,29 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                     Style
                 </Label>
                 {selectedStyleId && (
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={clearStyle}
-                        className="h-6 px-2 text-xs text-muted-foreground hover:text-white flex-shrink-0"
-                    >
-                        <X className="w-3 h-3 mr-1" />
-                        Clear
-                    </Button>
+                    <div className="flex items-center gap-1">
+                        {/* Edit button - only for custom styles */}
+                        {currentStyle && 'isCustom' in currentStyle && currentStyle.isCustom && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={openEditDialog}
+                                className="h-6 px-2 text-xs text-muted-foreground hover:text-amber-500 flex-shrink-0"
+                            >
+                                <Pencil className="w-3 h-3 mr-1" />
+                                Edit
+                            </Button>
+                        )}
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearStyle}
+                            className="h-6 px-2 text-xs text-muted-foreground hover:text-white flex-shrink-0"
+                        >
+                            <X className="w-3 h-3 mr-1" />
+                            Clear
+                        </Button>
+                    </div>
                 )}
             </div>
             <Select
@@ -573,6 +656,124 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                         >
                             <Plus className="w-4 h-4 mr-2" />
                             Create Style
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit Style Dialog */}
+            <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+                <DialogContent className="bg-zinc-900 border-zinc-800 max-w-[calc(100%-2rem)] sm:max-w-md max-h-[85vh] flex flex-col">
+                    <DialogHeader className="flex-shrink-0">
+                        <DialogTitle className="text-white flex items-center gap-2">
+                            <Pencil className="w-5 h-5 text-amber-500" />
+                            Edit Custom Style
+                        </DialogTitle>
+                        <DialogDescription>
+                            Update your custom style
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex-1 overflow-y-auto space-y-4 py-4">
+                        {/* Style Image */}
+                        <div className="space-y-2">
+                            <Label>Reference Image *</Label>
+                            <div
+                                className="border-2 border-dashed border-zinc-700 rounded-lg p-4 text-center cursor-pointer hover:border-amber-500/50 transition-colors active:border-amber-500/70"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                {newStyleImage ? (
+                                    <div className="relative w-full aspect-video rounded overflow-hidden">
+
+                                        <img
+                                            src={newStyleImage}
+                                            alt="Style preview"
+                                            className="w-full h-full object-cover"
+                                        />
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            className="absolute top-2 right-2 min-h-[44px] min-w-[44px]"
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                setNewStyleImage('')
+                                            }}
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="py-8">
+                                        <Upload className="w-8 h-8 mx-auto text-zinc-500 mb-2" />
+                                        <p className="text-sm text-zinc-400">Tap to upload image</p>
+                                        <p className="text-xs text-zinc-500 mt-1">PNG, JPG, WebP up to 5MB</p>
+                                    </div>
+                                )}
+                            </div>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleImageUpload}
+                            />
+                        </div>
+
+                        {/* Style Name */}
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-style-name">Style Name *</Label>
+                            <Input
+                                id="edit-style-name"
+                                placeholder="e.g., Anime, Watercolor, Vintage"
+                                value={newStyleName}
+                                onChange={(e) => setNewStyleName(e.target.value)}
+                                className="bg-zinc-800 border-zinc-700 text-base"
+                            />
+                        </div>
+
+                        {/* Description */}
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-style-desc">Description</Label>
+                            <Input
+                                id="edit-style-desc"
+                                placeholder="Brief description of the style"
+                                value={newStyleDescription}
+                                onChange={(e) => setNewStyleDescription(e.target.value)}
+                                className="bg-zinc-800 border-zinc-700 text-base"
+                            />
+                        </div>
+
+                        {/* Style Prompt */}
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-style-prompt">
+                                Style Prompt
+                                <span className="text-xs text-muted-foreground ml-2">(optional)</span>
+                            </Label>
+                            <Textarea
+                                id="edit-style-prompt"
+                                placeholder={`Default: "in the ${newStyleName || '[style name]'} style of the reference image"`}
+                                value={newStylePrompt}
+                                onChange={(e) => setNewStylePrompt(e.target.value)}
+                                className="bg-zinc-800 border-zinc-700 min-h-[80px] text-base"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                This text is appended to your prompt when this style is selected
+                            </p>
+                        </div>
+                    </div>
+                    <DialogFooter className="flex-shrink-0 border-t border-zinc-800 pt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setEditDialogOpen(false)}
+                            className="min-h-[44px]"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleEditStyle}
+                            className="bg-amber-500 text-black hover:bg-amber-600 min-h-[44px]"
+                        >
+                            <Pencil className="w-4 h-4 mr-2" />
+                            Save Changes
                         </Button>
                     </DialogFooter>
                 </DialogContent>
