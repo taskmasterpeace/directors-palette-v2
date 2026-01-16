@@ -176,6 +176,7 @@ export async function POST(request: NextRequest) {
       modelSettings,
       recipeId,
       recipeName,
+      enableAnchorTransform = false,
     } = body;
 
     // Debug logging for reference images
@@ -262,6 +263,201 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Handle Anchor Transform mode
+    if (enableAnchorTransform) {
+      // Validate: Need at least 2 reference images (1 anchor + 1+ inputs)
+      if (!referenceImages || referenceImages.length < 2) {
+        return NextResponse.json(
+          { error: 'Anchor Transform requires at least 2 reference images (1 anchor + 1+ inputs)' },
+          { status: 400 }
+        )
+      }
+
+      // Extract anchor and inputs
+      const [anchorUrl, ...inputUrls] = referenceImages
+
+      // Process anchor and inputs separately
+      const processedAnchor = await processReferenceImages([anchorUrl], replicate)
+      const processedInputs = await processReferenceImages(inputUrls, replicate)
+
+      if (processedAnchor.length === 0) {
+        return NextResponse.json(
+          { error: 'Failed to process anchor image' },
+          { status: 500 }
+        )
+      }
+
+      // Get model config for cost calculation
+      const modelConfig = getModelConfig(model as ImageModel)
+      if (!modelConfig) {
+        return NextResponse.json(
+          { error: `Invalid model: ${model}` },
+          { status: 400 }
+        )
+      }
+
+      // Calculate total cost: 1 image per input (anchor is free)
+      const numImages = inputUrls.length
+      const resolution = modelSettings?.resolution as string | undefined
+      const modelCost = getModelCost(model as ModelId, resolution)
+      const totalCostCents = Math.round(modelCost * 100) * numImages
+
+      // Check credits (admins bypass)
+      if (!userIsAdmin) {
+        const balance = await creditsService.getBalance(user.id)
+        const currentBalance = balance?.balance ?? 0
+
+        if (currentBalance < totalCostCents) {
+          return NextResponse.json(
+            {
+              error: 'Insufficient credits for Anchor Transform',
+              details: `You need ${totalCostCents} points but only have ${currentBalance} points.`,
+              required: totalCostCents,
+              balance: currentBalance,
+            },
+            { status: 402 }
+          )
+        }
+      }
+
+      // Generate one image per input (using anchor + input)
+      const generatedImages: { predictionId: string; galleryId: string; imageUrl: string }[] = []
+      let totalCreditsUsed = 0
+
+      for (let i = 0; i < processedInputs.length; i++) {
+        const inputUrl = processedInputs[i]
+        const refsToSend = [processedAnchor[0], inputUrl]
+
+        // Extract string URLs (buildReplicateInput expects string[] not objects)
+        const refUrls = refsToSend.map(ref =>
+          typeof ref === 'string' ? ref : ref.url
+        )
+
+        // Build Replicate input
+        const replicateInput = ImageGenerationService.buildReplicateInput({
+          model: model as ImageModel,
+          prompt,
+          referenceImages: refUrls,
+          modelSettings: modelSettings as ImageModelSettings,
+          userId: user.id,
+        })
+
+        // Get model identifier
+        const replicateModelId = ImageGenerationService.getReplicateModelId(model as ImageModel)
+
+        // Create prediction
+        const prediction = await replicate.predictions.create({
+          model: replicateModelId,
+          input: replicateInput,
+        })
+
+        // Build metadata
+        const metadata = ImageGenerationService.buildMetadata({
+          model: model as ImageModel,
+          prompt,
+          referenceImages: refUrls,
+          modelSettings: modelSettings as ImageModelSettings,
+          userId: user.id,
+          recipeId,
+          recipeName,
+        })
+
+        // Create gallery entry
+        const { data: gallery, error: galleryError } = await supabase
+          .from('gallery')
+          .insert({
+            user_id: user.id,
+            prediction_id: prediction.id,
+            generation_type: 'image',
+            status: 'pending',
+            metadata: metadata as Database['public']['Tables']['gallery']['Insert']['metadata']
+          })
+          .select()
+          .single()
+
+        if (galleryError || !gallery) {
+          console.error('Gallery creation error:', galleryError)
+          continue
+        }
+
+        // Wait for completion
+        const completedPrediction = await replicate.wait(prediction, { interval: 1000 })
+
+        if (completedPrediction.status === 'succeeded' && completedPrediction.output) {
+          const replicateUrl = Array.isArray(completedPrediction.output)
+            ? completedPrediction.output[0]
+            : completedPrediction.output
+
+          // Upload to storage
+          const { buffer } = await StorageService.downloadAsset(replicateUrl)
+          const { ext, mimeType } = StorageService.getMimeType(replicateUrl, modelSettings?.outputFormat)
+          const { publicUrl, storagePath, fileSize } = await StorageService.uploadToStorage(
+            buffer,
+            user.id,
+            prediction.id,
+            ext,
+            mimeType
+          )
+
+          // Update gallery
+          await supabase
+            .from('gallery')
+            .update({
+              status: 'completed',
+              public_url: publicUrl,
+              storage_path: storagePath,
+              file_size: fileSize,
+              mime_type: mimeType,
+            })
+            .eq('id', gallery.id)
+
+          // Deduct credits (admins bypass)
+          if (!userIsAdmin) {
+            const deductResult = await creditsService.deductCredits(user.id, model, {
+              generationType: 'image',
+              predictionId: prediction.id,
+              description: `Anchor Transform image ${i + 1}/${inputUrls.length} (${model})`,
+              overrideAmount: Math.round(modelCost * 100),
+              user_email: user.email,
+            })
+            if (deductResult.success) {
+              totalCreditsUsed += modelCost
+            }
+          }
+
+          generatedImages.push({
+            predictionId: prediction.id,
+            galleryId: gallery.id,
+            imageUrl: publicUrl,
+          })
+
+          // Log generation event
+          await generationEventsService.logGeneration({
+            user_id: user.id,
+            user_email: user.email,
+            gallery_id: gallery.id,
+            prediction_id: prediction.id,
+            generation_type: 'image',
+            model_id: model,
+            model_name: modelConfig.name || model,
+            credits_cost: userIsAdmin ? 0 : modelCost,
+            is_admin_generation: userIsAdmin,
+            prompt: prompt,
+            settings: modelSettings
+          })
+        }
+      }
+
+      // Return all generated images
+      return NextResponse.json({
+        anchorTransformUsed: true,
+        images: generatedImages,
+        status: 'completed',
+        creditsUsed: totalCreditsUsed,
+      })
+    }
+
+    // Normal mode (not Anchor Transform)
     // Process reference images - upload local/inaccessible URLs to Replicate
     let processedReferenceImages = referenceImages;
     if (referenceImages && referenceImages.length > 0) {

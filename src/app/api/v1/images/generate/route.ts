@@ -114,6 +114,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
       outputFormat = 'webp',
       referenceImages = [],
       seed,
+      enableAnchorTransform = false,
       resolution,
       safetyFilterLevel,
       numInferenceSteps,
@@ -136,6 +137,160 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
       )
     }
 
+    // Handle Anchor Transform mode
+    if (enableAnchorTransform) {
+      // Validate: Need at least 2 reference images (1 anchor + 1+ inputs)
+      if (referenceImages.length < 2) {
+        return NextResponse.json(
+          { success: false, error: 'Anchor Transform requires at least 2 reference images (1 anchor + 1+ inputs)' },
+          { status: 400 }
+        )
+      }
+
+      // Extract anchor and inputs
+      const [anchorUrl, ...inputUrls] = referenceImages
+
+      // Process anchor and inputs
+      const processedAnchor = await processReferenceImages([anchorUrl], replicate)
+      const processedInputs = await processReferenceImages(inputUrls, replicate)
+
+      if (processedAnchor.length === 0) {
+        return NextResponse.json(
+          { success: false, error: 'Failed to process anchor image' },
+          { status: 500 }
+        )
+      }
+
+      // Calculate total cost: 1 image per input (anchor is free)
+      const numImages = inputUrls.length
+      const costInCents = Math.round(modelConfig.costPerImage * 100) * numImages
+      const balance = await creditsService.getBalance(validatedKey.userId)
+
+      if (!balance || balance.balance < costInCents) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Insufficient credits',
+            remainingCredits: balance?.balance || 0,
+            creditsNeeded: costInCents,
+          },
+          { status: 402 }
+        )
+      }
+
+      // Build model settings
+      const validOutputFormat = outputFormat === 'webp' ? 'jpg' : outputFormat
+      const modelSettings: ImageModelSettings = {
+        aspectRatio,
+        outputFormat: validOutputFormat as 'jpg' | 'png',
+      }
+
+      if (model === 'nano-banana-pro') {
+        if (resolution) (modelSettings as Record<string, unknown>).resolution = resolution
+        if (safetyFilterLevel) (modelSettings as Record<string, unknown>).safetyFilterLevel = safetyFilterLevel
+      } else if (model === 'z-image-turbo') {
+        if (numInferenceSteps) (modelSettings as Record<string, unknown>).numInferenceSteps = numInferenceSteps
+        if (guidanceScale) (modelSettings as Record<string, unknown>).guidanceScale = guidanceScale
+      }
+
+      if (seed !== undefined) {
+        (modelSettings as Record<string, unknown>).seed = seed
+      }
+
+      // Generate one image per input (using anchor + input)
+      const generatedImages: string[] = []
+      let totalCreditsUsed = 0
+
+      for (let i = 0; i < processedInputs.length; i++) {
+        const inputUrl = processedInputs[i]
+        const refsToSend = [processedAnchor[0], inputUrl]
+
+        // Build Replicate input
+        const replicateInput = ImageGenerationService.buildReplicateInput({
+          prompt,
+          model: model as ImageModel,
+          modelSettings,
+          referenceImages: refsToSend,
+          userId: validatedKey.userId,
+        })
+
+        // Run the model
+        const output = await replicate.run(modelConfig.endpoint as `${string}/${string}`, {
+          input: replicateInput,
+        })
+
+        // Get the image URL from output
+        let imageUrl: string | null = null
+        if (Array.isArray(output) && output.length > 0) {
+          imageUrl = output[0]
+        } else if (typeof output === 'string') {
+          imageUrl = output
+        } else if (output && typeof output === 'object' && 'url' in output) {
+          imageUrl = (output as { url: string }).url
+        }
+
+        if (!imageUrl) {
+          throw new Error(`No image URL in model output for input ${i + 1}`)
+        }
+
+        // Download from Replicate and upload to Supabase Storage
+        const { buffer } = await StorageService.downloadAsset(imageUrl)
+        const { ext, mimeType } = StorageService.getMimeType(imageUrl, validOutputFormat)
+        const predictionId = `api_anchor_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 9)}`
+        const { publicUrl } = await StorageService.uploadToStorage(
+          buffer,
+          validatedKey.userId,
+          predictionId,
+          ext,
+          mimeType
+        )
+
+        generatedImages.push(publicUrl)
+
+        // Deduct credits for this image
+        const deductResult = await creditsService.deductCredits(validatedKey.userId, model, {
+          description: `API Anchor Transform image ${i + 1}/${inputUrls.length} (${model})`,
+        })
+
+        if (deductResult.success) {
+          totalCreditsUsed += modelConfig.costPerImage
+        }
+      }
+
+      // Get remaining balance
+      const newBalance = await creditsService.getBalance(validatedKey.userId)
+
+      // Log usage
+      await apiKeyService.logUsage({
+        apiKeyId: validatedKey.apiKey.id,
+        userId: validatedKey.userId,
+        endpoint: '/api/v1/images/generate',
+        method: 'POST',
+        statusCode: 200,
+        creditsUsed: totalCreditsUsed,
+        requestMetadata: {
+          model,
+          promptLength: prompt.length,
+          referenceImagesCount: referenceImages.length,
+          anchorTransform: true,
+          imagesGenerated: generatedImages.length,
+        },
+        responseTimeMs: Date.now() - startTime,
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] || undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+      })
+
+      return NextResponse.json({
+        success: true,
+        images: generatedImages,
+        anchorTransformUsed: true,
+        creditsUsed: totalCreditsUsed,
+        remainingCredits: newBalance?.balance || 0,
+        requestId: `anchor_${Date.now()}`,
+      })
+    }
+
+    // Normal mode (not Anchor Transform)
     // Check credits - costPerImage is in "credits" (dollars), but balance is in cents
     const costInCents = Math.round(modelConfig.costPerImage * 100)
     const balance = await creditsService.getBalance(validatedKey.userId)
@@ -326,6 +481,12 @@ export async function GET(): Promise<NextResponse> {
         description: 'Array of image URLs for style reference',
       },
       seed: { type: 'number', required: false, description: 'Seed for reproducibility' },
+      enableAnchorTransform: {
+        type: 'boolean',
+        required: false,
+        default: false,
+        description: 'Anchor Transform (@!): Use first image to transform remaining images. Requires 2+ reference images. Cost = (N-1) images (anchor is free). Returns multiple images.',
+      },
     },
     modelCosts: {
       'nano-banana': '8 points/image ($0.08)',
@@ -389,11 +550,51 @@ export async function GET(): Promise<NextResponse> {
         bestFor: 'High-quality 4K images, sequential generation',
       },
     },
+    anchorTransform: {
+      description: 'Use one image (anchor) to transform multiple other images in a consistent style',
+      howItWorks: [
+        '1. Provide 2+ reference images in the referenceImages array',
+        '2. Set enableAnchorTransform: true',
+        '3. First image becomes the anchor/style guide',
+        '4. Remaining images are transformed to match the anchor style',
+        '5. Returns array of images (one per input)',
+      ],
+      costSaving: 'Only pay for input images. If you send 6 images with anchor transform enabled, you pay for 5 images (not 6)',
+      example: {
+        request: {
+          prompt: 'Transform into claymation style',
+          model: 'nano-banana',
+          enableAnchorTransform: true,
+          referenceImages: [
+            'https://example.com/claymation-style.jpg',
+            'https://example.com/character1.jpg',
+            'https://example.com/character2.jpg',
+            'https://example.com/character3.jpg',
+          ],
+        },
+        response: {
+          success: true,
+          images: [
+            'https://storage.supabase.co/...character1-claymation.jpg',
+            'https://storage.supabase.co/...character2-claymation.jpg',
+            'https://storage.supabase.co/...character3-claymation.jpg',
+          ],
+          anchorTransformUsed: true,
+          creditsUsed: 0.24,
+          remainingCredits: 1500,
+        },
+        note: 'Cost = 3 images × $0.08 = $0.24 (anchor image is free)',
+      },
+    },
     example: {
       curl: `curl -X POST https://directorspalette.app/api/v1/images/generate \\
   -H "Authorization: Bearer dp_your_api_key" \\
   -H "Content-Type: application/json" \\
   -d '{"prompt": "A serene mountain landscape at sunset", "model": "nano-banana", "aspectRatio": "16:9"}'`,
+      anchorTransform: `curl -X POST https://directorspalette.app/api/v1/images/generate \\
+  -H "Authorization: Bearer dp_your_api_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{"prompt": "Transform to claymation", "model": "nano-banana", "enableAnchorTransform": true, "referenceImages": ["https://example.com/style.jpg", "https://example.com/input1.jpg", "https://example.com/input2.jpg"]}'`,
     },
   })
 }

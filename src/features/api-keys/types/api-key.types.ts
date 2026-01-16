@@ -91,6 +91,8 @@ export interface GenerateImageRequest {
   outputFormat?: 'webp' | 'jpg' | 'png'
   referenceImages?: string[]  // URLs
   seed?: number
+  // Anchor Transform (@!)
+  enableAnchorTransform?: boolean  // If true, first image is anchor, rest are inputs
   // Model-specific settings
   resolution?: string  // For nano-banana-pro
   safetyFilterLevel?: string  // For nano-banana-pro
@@ -103,11 +105,13 @@ export interface GenerateImageRequest {
 
 export interface GenerateImageResponse {
   success: boolean
-  imageUrl?: string
+  imageUrl?: string  // Single image URL (when not using Anchor Transform)
+  images?: string[]  // Multiple image URLs (when using Anchor Transform)
   creditsUsed?: number
   remainingCredits?: number
   error?: string
   requestId?: string
+  anchorTransformUsed?: boolean  // Indicates if Anchor Transform was used
 }
 
 export interface ExecuteRecipeRequest {
