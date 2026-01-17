@@ -100,6 +100,17 @@ export async function POST(
       fieldValues
     )
 
+    // DEBUG: Log recipe execution details
+    console.log('[Recipe Execute] DEBUG:', {
+      recipeName: recipe.name,
+      recipeId: recipe.id,
+      stageCount: recipe.stages.length,
+      promptsCount: prompts.length,
+      fieldValues,
+      referenceImages,
+      prompts: prompts.map((p, i) => ({ stage: i, promptPreview: p.substring(0, 150) + '...' }))
+    })
+
     // For now, only support single-stage recipes for storybook
     if (prompts.length > 1) {
       return NextResponse.json(

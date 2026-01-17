@@ -314,7 +314,7 @@ export function buildStagePrompt(
     // Also check if any field with this name has a value set
     if (!value) {
       for (const [id, val] of Object.entries(values)) {
-        if (id.includes(field.name.toLowerCase()) && val) {
+        if (id.toLowerCase().includes(field.name.toLowerCase()) && val) {
           value = val
           break
         }
@@ -2160,21 +2160,30 @@ CHARACTER: @<<CHARACTER_NAME:name!>>
 ROLE: <<CHARACTER_ROLE:text!>>
 DESCRIPTION: <<CHARACTER_DESCRIPTION:text!>>
 
-CRITICAL INSTRUCTIONS:
-- Follow the attached style guide reference EXACTLY
-- The style guide is the definitive visual reference - match its art style precisely
-- Create a full-body standing pose on clean WHITE background
+CRITICAL - PHYSICAL APPEARANCE:
+The character's physical appearance MUST match the DESCRIPTION above EXACTLY:
+- Hair color, hair style, hair length
+- Clothing colors, clothing style
+- Age, build, body type
+- Skin tone, eye color
+- Any distinguishing features mentioned
+
+CRITICAL - ART STYLE ONLY:
+The attached style guide reference shows the ART STYLE to use:
+- Rendering approach (cartoon style, line quality, edge treatment)
+- Color saturation and palette approach
+- Level of detail and stylization
+- Lighting and shading technique
+
+DO NOT copy the physical appearance, hair, or clothing from the style guide characters.
+ONLY use the style guide for the art style/rendering approach.
+
+SETUP:
+- Full-body standing pose on clean WHITE background
 - Neutral expression, relaxed posture
 - Soft studio lighting
-- Match the style guide's color palette and level of stylization
-- Match line quality, rendering approach, and edge treatment from the style guide
 
-The character must:
-1. Match the description provided exactly (age, build, hair color, distinguishing features)
-2. Be rendered in the EXACT art style shown in the style guide
-3. Look like they belong in the same world as the style guide characters
-
-Output: Full-body character portrait on clean white background.`,
+Output: Full-body character portrait matching the DESCRIPTION exactly, rendered in the art style shown in the style guide.`,
         fields: [],
         referenceImages: [],  // Style guide attached at runtime
       },
