@@ -2192,33 +2192,108 @@ Output: Full-body character portrait matching the DESCRIPTION exactly, rendered 
         id: 'stage_desc_1',
         order: 1,
         type: 'generation',
-        template: `CHARACTER: @<<CHARACTER_NAME:name!>>
+        template: `Universal Character Sheet Template V3 - Precise Generation with Separated Sources
 
-Create a professional character reference sheet matching the attached template layout.
+CHARACTER: @<<CHARACTER_NAME:name!>>
+STYLE: <<STYLE_NAME:text!>>
 
-CRITICAL: Every view and expression must clearly be the SAME PERSON from previous stage.
-Facial structure, proportions, and distinctive features must remain IDENTICAL across all views.
+INPUT SOURCES:
+This generation uses THREE separate reference images:
+1. LAYOUT REFERENCE (character sheet template): Use ONLY for structural layout - panel positions, grid lines, labels
+2. CHARACTER REFERENCE (previous stage output): Source for character's physical features, clothing, identity
+3. STYLE REFERENCE (style guide): Defines the art style/rendering approach for final output
 
-CHARACTER SHEET LAYOUT (21:9 aspect ratio):
+CRITICAL: Do NOT copy the sketch/placeholder art from the template. Only use it for structure.
 
-LEFT SECTION - FULL BODY:
-- Large neutral standing pose, front view (primary reference)
-- Smaller side profile view
-- Smaller back view (if space permits)
-- Color palette strip: skin tone, hair color, eye color, main clothing colors
+---
 
-RIGHT SECTION - EXPRESSIONS (2 rows × 5 columns):
-Row 1: Neutral, Happy, Sad, Angry, Surprised
-Row 2: Speaking, Shouting, Whispering, Smug/Confident, Scared
+HEADER SECTION:
+- Top Left: Display "CHARACTER @<<CHARACTER_NAME:name!>>" prominently
+- Top Right: "DESCRIPTION/DETAILS" box (grey background, leave empty)
 
-TOP: Character name "@<<CHARACTER_NAME:name!>>" prominently displayed
+---
+
+FULL BODY VIEWS (Left Section - Large Grid):
+Label: "FULL BODY VIEWS"
+Panels (3 columns):
+1. Front View - Orthographic neutral standing pose, feet on baseline
+2. Side Profile View (Left facing) - Orthographic side view
+3. Back View - Orthographic back view
+
+---
+
+EXPRESSIONS & DETAILS (Upper Middle - 3×2 Grid):
+Label: "EXPRESSIONS & DETAILS"
+Style: Head and shoulders shot, consistent character model
+
+Row 1 (Talking States):
+1. TALKING-NEUTRAL: mouth slightly open, neutral brows
+2. TALKING-HAPPY: mouth open smiling, eyebrows raised
+3. TALKING-ANGRY: mouth open yelling, eyebrows furrowed
+
+Row 2 (Emotions):
+4. SAD: mouth closed down-turn, tearful eyes, sad brows
+5. SURPRISED: mouth small 'O' shape, eyes wide, brows high
+6. SMUG/CONFIDENT: slight smirk, confident gaze
+
+---
+
+TALKING VIEWS (Top Right - 1×3 Grid):
+Label: "TALKING VIEWS"
+Style: Angled headshots focusing on jaw movement
+
+Panels:
+1. 3/4 Rear Left - jawline and back of head while talking
+2. 3/4 Front Right - standard dialogue angle
+3. Profile Right - side profile talking mouth shape
+
+---
+
+CLOSE-UP DETAILS (Bottom Middle - 1×3 Strip):
+Label: "CLOSE-UP DETAILS"
+Style: Tight zoom on specific head features
+
+Panels:
+1. Front Face (Crop: Chin to Forehead)
+2. Side Profile/Ear Detail
+3. Rear Neck/Hairline Detail
+
+---
+
+ACCESSORIES (Bottom Right - 3×3 Grid):
+Label: "ACCESSORIES"
+If character has accessories (hat, glasses, shoes, props), render isolated views here.
+If no accessories, leave panels as empty grey placeholders.
+
+CRITICAL: Accessories must match the character reference and be rendered in <<STYLE_NAME:text!>> style.
+
+---
+
+COLOR PALETTE (Bottom Left Strip):
+Label: "COLOR PALETTE"
+Fill swatches with exact colors from character:
+- FRONT: Main body color from front view
+- HAPPY: Key highlight from happy expression
+- YELLOW: Yellow elements (if present, else neutral grey)
+- HAIR: Character hair color
+- ANGRY: Shadow/highlight from angry expression
+- SAD: Shadow from sad expression
+- SURPRISED: Highlight from surprised expression
+- SMUG: Color from smug expression
+
+---
 
 CRITICAL REQUIREMENTS:
-- All expressions maintain the SAME face structure - only expression changes
-- Maintain EXACT art style from previous stage
-- Clean white/light gray background
-- Black separator lines between expression cells (4-6 pixels)
-- Production-ready layout following the template reference`,
+✓ Every panel shows the SAME CHARACTER from previous stage
+✓ Maintain IDENTICAL facial structure, proportions, distinctive features across ALL views
+✓ Render entire sheet in <<STYLE_NAME:text!>> art style (from style guide reference)
+✓ Follow template layout EXACTLY - match panel positions, grid lines, label positions
+✓ Neutral background (white/light grey) - NO texture
+✓ Black separator lines between cells (4-6 pixels)
+✓ Character name "@<<CHARACTER_NAME:name!>>" clearly visible at top
+✓ Production-ready reference sheet for animation/illustration use
+
+FINAL OUTPUT: Complete character sheet with all panels filled, matching template structure, rendered consistently in <<STYLE_NAME:text!>> style.`,
         fields: [],
         referenceImages: [
           {
