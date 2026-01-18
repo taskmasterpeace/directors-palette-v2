@@ -5,6 +5,7 @@ import { useStorybookStore } from "../../../store/storybook.store"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Select,
@@ -28,6 +29,7 @@ export function CharacterSetupStep() {
 
   const [name, setName] = useState(project?.mainCharacterName || "")
   const [age, setAge] = useState<number>(project?.mainCharacterAge || 5)
+  const [description, setDescription] = useState(project?.characters?.[0]?.description || "")
   // Photo upload removed - users will add photos in the Characters step (step 8)
 
   // Additional character state
@@ -42,7 +44,7 @@ export function CharacterSetupStep() {
 
   const handleContinue = () => {
     if (name.trim()) {
-      setMainCharacter(name.trim(), age)
+      setMainCharacter(name.trim(), age, description.trim() || undefined)
       nextStep()
     }
   }
@@ -137,6 +139,24 @@ export function CharacterSetupStep() {
                 </Select>
                 <p className="text-xs text-muted-foreground">
                   Story content will be tailored to this age
+                </p>
+              </div>
+
+              {/* Character Description */}
+              <div className="space-y-2">
+                <Label htmlFor="character-description" className="text-sm text-zinc-400">
+                  Visual Description <span className="text-xs text-muted-foreground">(optional)</span>
+                </Label>
+                <Textarea
+                  id="character-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Describe your character's appearance (e.g., 5-year-old Black girl with curly natural hair, light blue dress)"
+                  className="bg-zinc-800 border-zinc-700 focus:border-amber-500 min-h-[80px] placeholder:text-zinc-600"
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground">
+                  This description helps the AI generate consistent artwork that matches your character. You can add photos later.
                 </p>
               </div>
             </div>

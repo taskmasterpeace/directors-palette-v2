@@ -71,7 +71,7 @@ interface StorybookState {
   setDefaultLayout: (layout: PageLayout) => void
 
   // Education actions (NEW)
-  setMainCharacter: (name: string, age: number) => void
+  setMainCharacter: (name: string, age: number, description?: string) => void
   setEducationCategory: (category: string) => void
   setEducationTopic: (topic: string) => void
   setBookSettings: (pageCount: number, sentencesPerPage: number, bookFormat?: BookFormat) => void
@@ -151,14 +151,23 @@ function createInitialProject(
 function createGenerateProject(
   characterName: string,
   characterAge: number,
+  characterDescription?: string,
   bookFormat: BookFormat = 'square'
 ): StorybookProject {
+  // Create initial main character with description (if provided)
+  const mainCharacter: StorybookCharacter = {
+    id: generateId(),
+    name: characterName,
+    tag: `@${characterName.replace(/\s+/g, '')}`,
+    description: characterDescription,
+  }
+
   return {
     id: generateId(),
     title: `${characterName}'s Story`,
     storyText: '',
     pages: [],
-    characters: [],
+    characters: [mainCharacter],
     style: undefined,
     coverImageUrl: undefined,
     status: 'draft',
@@ -622,14 +631,31 @@ export const useStorybookStore = create<StorybookState>()(
   setError: (error) => set({ error }),
 
   // Education actions (NEW)
-  setMainCharacter: (name, age) => {
+  setMainCharacter: (name, age, description) => {
     const { project } = get()
     if (project) {
+      // Update or create main character with description
+      const existingMainChar = project.characters[0]
+      const updatedMainChar: StorybookCharacter = existingMainChar
+        ? {
+            ...existingMainChar,
+            name,
+            tag: `@${name.replace(/\s+/g, '')}`,
+            description,
+          }
+        : {
+            id: generateId(),
+            name,
+            tag: `@${name.replace(/\s+/g, '')}`,
+            description,
+          }
+
       set({
         project: {
           ...project,
           mainCharacterName: name,
           mainCharacterAge: age,
+          characters: [updatedMainChar, ...project.characters.slice(1)],
           // mainCharacterPhotoUrl removed - deprecated field
           title: `${name}'s Story`,
           targetAge: age,
@@ -638,7 +664,7 @@ export const useStorybookStore = create<StorybookState>()(
       })
     } else {
       // Create new project for generate mode
-      const newProject = createGenerateProject(name, age)
+      const newProject = createGenerateProject(name, age, description)
       // No photoUrl assignment needed
       set({ project: newProject })
     }

@@ -56,6 +56,7 @@ export function StoryApproachStep() {
         body: JSON.stringify({
           characterName: project?.mainCharacterName,
           characterAge: project?.mainCharacterAge || 5,
+          characterDescription: project?.characters?.[0]?.description,  // Pass main character description
           category: project?.educationCategory,
           topic: project?.educationTopic,
           pageCount: project?.pageCount || 8,

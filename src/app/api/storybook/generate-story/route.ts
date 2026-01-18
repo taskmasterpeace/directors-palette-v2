@@ -19,6 +19,7 @@ import { lognog } from '@/lib/lognog'
 interface GenerateStoryRequest {
   characterName: string
   characterAge: number
+  characterDescription?: string  // Visual description of main character
   category: string
   topic: string
   pageCount: PageCount
@@ -88,6 +89,7 @@ const GENERATE_STORY_TOOL = {
 function buildSystemPrompt(
   characterName: string,
   characterAge: number,
+  characterDescription: string | undefined,
   categoryId: string,
   categoryName: string,
   topicName: string,
@@ -201,9 +203,15 @@ CREATIVITY REQUIREMENTS:
     charactersSection = `\n\nADDITIONAL CHARACTERS (must appear in the story):\n${characterDescriptions}\nMake sure each additional character plays a meaningful role in at least 2-3 pages.`
   }
 
+  // Build main character description line
+  let mainCharacterLine = `MAIN CHARACTER: ${characterName}, age ${characterAge}`
+  if (characterDescription?.trim()) {
+    mainCharacterLine += ` — ${characterDescription}`
+  }
+
   return `You are an expert children's book author creating educational content.
 
-MAIN CHARACTER: ${characterName}, age ${characterAge}${charactersSection}
+${mainCharacterLine}${charactersSection}
 CATEGORY: ${categoryName}
 TOPIC: ${topicName} - ${topicDescription}
 KEYWORDS: ${topicKeywords.join(', ')}
@@ -239,6 +247,7 @@ Make the story engaging, fun, and educational for a ${characterAge}-year-old!`
 function buildCustomSystemPrompt(
   characterName: string,
   characterAge: number,
+  characterDescription: string | undefined,
   pageCount: number,
   sentencesPerPage: number,
   customStoryIdea: string,
@@ -285,9 +294,15 @@ function buildCustomSystemPrompt(
     charactersSection = `\n\nADDITIONAL CHARACTERS (must appear in the story):\n${characterDescriptions}\nMake sure each additional character plays a meaningful role in at least 2-3 pages.`
   }
 
+  // Build main character description line
+  let mainCharacterLine = `MAIN CHARACTER: ${characterName}, age ${characterAge}`
+  if (characterDescription?.trim()) {
+    mainCharacterLine += ` — ${characterDescription}`
+  }
+
   return `You are a creative children's book author who writes magical, engaging stories.
 
-MAIN CHARACTER: ${characterName}, age ${characterAge}${charactersSection}
+${mainCharacterLine}${charactersSection}
 ${storyContext}${customizationSection}
 
 STORY STRUCTURE:
@@ -334,6 +349,7 @@ export async function POST(request: NextRequest) {
     const {
       characterName,
       characterAge,
+      characterDescription,
       category,
       topic,
       pageCount,
@@ -399,6 +415,7 @@ export async function POST(request: NextRequest) {
       systemPrompt = buildCustomSystemPrompt(
         characterName,
         characterAge,
+        characterDescription,
         pageCount,
         sentencesPerPage,
         customStoryIdea || approachSummary || '',
@@ -424,6 +441,7 @@ export async function POST(request: NextRequest) {
       systemPrompt = buildSystemPrompt(
         characterName,
         characterAge,
+        characterDescription,
         category,
         categoryData.name,
         topicData.name,
