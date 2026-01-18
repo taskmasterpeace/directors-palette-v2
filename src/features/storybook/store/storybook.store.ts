@@ -983,10 +983,6 @@ export const useStorybookStore = create<StorybookState>()(
         if (state?.project) {
           state.project.createdAt = new Date(state.project.createdAt)
           state.project.updatedAt = new Date(state.project.updatedAt)
-          // Handle generatedStory dates if present
-          if (state.project.generatedStory) {
-            state.project.generatedStory.createdAt = new Date(state.project.generatedStory.createdAt)
-          }
         }
       },
     }
