@@ -74,7 +74,7 @@ interface StorybookState {
   setMainCharacter: (name: string, age: number) => void
   setEducationCategory: (category: string) => void
   setEducationTopic: (topic: string) => void
-  setBookSettings: (pageCount: number, sentencesPerPage: number) => void
+  setBookSettings: (pageCount: number, sentencesPerPage: number, bookFormat?: BookFormat) => void
   setCustomization: (storySetting?: string, customSetting?: string, customElements?: string[], customNotes?: string) => void
   setStoryIdeas: (ideas: StoryIdea[]) => void
   selectStoryApproach: (id: string, title: string, summary: string) => void
@@ -671,7 +671,7 @@ export const useStorybookStore = create<StorybookState>()(
     }
   },
 
-  setBookSettings: (pageCount, sentencesPerPage) => {
+  setBookSettings: (pageCount, sentencesPerPage, bookFormat) => {
     const { project } = get()
     if (project) {
       set({
@@ -679,6 +679,7 @@ export const useStorybookStore = create<StorybookState>()(
           ...project,
           pageCount,
           sentencesPerPage,
+          ...(bookFormat && { bookFormat }),
           updatedAt: new Date(),
         },
       })

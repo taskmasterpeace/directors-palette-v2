@@ -17,6 +17,7 @@ import {
   type PageCount,
   type SentencesPerPage
 } from "../../../types/education.types"
+import { BOOK_FORMATS, type BookFormat } from "../../../types/storybook.types"
 
 // Preset story settings/locations
 const PRESET_SETTINGS = [
@@ -61,6 +62,7 @@ export function BookSettingsStep() {
 
   const [pageCount, setPageCount] = useState<PageCount>((project?.pageCount as PageCount) || 8)
   const [sentencesPerPage, setSentencesPerPage] = useState<SentencesPerPage>((project?.sentencesPerPage as SentencesPerPage) || 3)
+  const [bookFormat, setBookFormat] = useState<BookFormat>(project?.bookFormat || 'square')
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -113,7 +115,7 @@ export function BookSettingsStep() {
 
     try {
       // Save settings first
-      setBookSettings(pageCount, sentencesPerPage)
+      setBookSettings(pageCount, sentencesPerPage, bookFormat)
 
       // Save customization options
       const finalSetting = showCustomSetting ? customSetting : selectedSetting
@@ -292,6 +294,52 @@ export function BookSettingsStep() {
             ))}
           </div>
         </div>
+
+        {/* Book Format Selector - NEW */}
+        <Card className="bg-zinc-900/50 border-zinc-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg text-white">Book Format</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Choose your book shape (Amazon KDP-compliant)
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {(Object.keys(BOOK_FORMATS) as BookFormat[]).map((format) => {
+              const formatInfo = BOOK_FORMATS[format]
+              return (
+                <button
+                  key={format}
+                  onClick={() => setBookFormat(format)}
+                  className={cn(
+                    "w-full p-4 rounded-lg border text-left transition-all hover:scale-[1.01]",
+                    bookFormat === format
+                      ? "bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/50"
+                      : "bg-zinc-800/50 border-zinc-700 hover:border-amber-500/50"
+                  )}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="font-semibold text-white mb-1">
+                        {formatInfo.name} ({formatInfo.aspectRatio})
+                      </div>
+                      <div className="text-xs text-muted-foreground mb-2">
+                        {formatInfo.dimensions} - {formatInfo.description}
+                      </div>
+                      <div className="text-xs text-amber-400">
+                        {formatInfo.bestFor}
+                      </div>
+                    </div>
+                    {bookFormat === format && (
+                      <div className="ml-3 flex-shrink-0 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">
+                        <div className="w-2 h-2 bg-white rounded-full" />
+                      </div>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
+          </CardContent>
+        </Card>
 
         {/* Sentences Per Page with Live Preview */}
         <Card className="bg-zinc-900/50 border-zinc-800">
