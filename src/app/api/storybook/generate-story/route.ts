@@ -460,7 +460,7 @@ export async function POST(request: NextRequest) {
       userMessage = `Generate a ${pageCount}-page story for ${characterName} about ${topicData.name}. Each page should have exactly ${sentencesPerPage} sentence(s).`
     }
 
-    // Use GPT-4o for better story quality (not mini)
+    // Use GPT-4o-mini (fast, cheap, good enough for children's stories)
     const openRouterStart = Date.now()
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -471,7 +471,7 @@ export async function POST(request: NextRequest) {
         'X-Title': 'Directors Palette - Story Generation'
       },
       body: JSON.stringify({
-        model: 'openai/gpt-4o', // Use full GPT-4o for better story quality
+        model: 'openai/gpt-4o-mini', // Fast and cheap, perfect for children's stories
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userMessage }
@@ -486,13 +486,13 @@ export async function POST(request: NextRequest) {
       console.error('OpenRouter API error:', error)
 
       // Log OpenRouter failure
-      lognog.warn(`openrouter FAIL ${Date.now() - openRouterStart}ms openai/gpt-4o`, {
+      lognog.warn(`openrouter FAIL ${Date.now() - openRouterStart}ms openai/gpt-4o-mini`, {
         type: 'integration',
         integration: 'openrouter',
         success: false,
         latency_ms: Date.now() - openRouterStart,
         http_status: response.status,
-        model: 'openai/gpt-4o',
+        model: 'openai/gpt-4o-mini',
         error,
         user_id: userId,
         user_email: userEmail,
@@ -505,13 +505,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Log OpenRouter success
-    lognog.debug(`openrouter OK ${Date.now() - openRouterStart}ms openai/gpt-4o`, {
+    lognog.debug(`openrouter OK ${Date.now() - openRouterStart}ms openai/gpt-4o-mini`, {
       type: 'integration',
       integration: 'openrouter',
       success: true,
       latency_ms: Date.now() - openRouterStart,
       http_status: 200,
-      model: 'openai/gpt-4o',
+      model: 'openai/gpt-4o-mini',
       prompt_length: systemPrompt.length + userMessage.length,
       user_id: userId,
       user_email: userEmail,
@@ -570,7 +570,7 @@ export async function POST(request: NextRequest) {
         user_id: userId,
         user_email: userEmail,
         integration: 'openrouter',
-        model: 'openai/gpt-4o',
+        model: 'openai/gpt-4o-mini',
       })
 
       return NextResponse.json(story)
