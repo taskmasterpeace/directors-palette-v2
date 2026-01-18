@@ -16,10 +16,9 @@ interface PageProps {
 
 const Page = forwardRef<HTMLDivElement, PageProps>(({ page, pageNumber }, ref) => {
   return (
-    <div className="page bg-white shadow-lg overflow-hidden" style={{ width: '100%', height: '100%' }}>
+    <div ref={ref} className="page bg-white shadow-lg overflow-hidden relative" style={{ width: '100%', height: '100%' }}>
       {/* Use PageLayoutRenderer for all layout types */}
       <PageLayoutRenderer
-        ref={ref}
         layout={page.layout || 'image-with-text'}
         imageUrl={page.imageUrl}
         text={page.text}

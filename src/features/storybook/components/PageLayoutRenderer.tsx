@@ -10,7 +10,6 @@
  * 5. text-left-image-right - Spread layout (v2)
  */
 
-import { forwardRef } from 'react'
 import Image from 'next/image'
 import { cn } from '@/utils/utils'
 import { PageLayout, TextPosition } from '../types/storybook.types'
@@ -43,15 +42,20 @@ function getTextPositionClasses(position: TextPosition): string {
 }
 
 /**
- * PageLayoutRenderer - Forward ref required for react-pageflip
+ * PageLayoutRenderer - Regular component (ref handled by parent Page component)
  */
-export const PageLayoutRenderer = forwardRef<HTMLDivElement, PageLayoutRendererProps>(
-  ({ layout = 'image-with-text', imageUrl, text, textPosition, className }, ref) => {
+export function PageLayoutRenderer({
+  layout = 'image-with-text',
+  imageUrl,
+  text,
+  textPosition,
+  className
+}: PageLayoutRendererProps) {
 
     // Layout 1: Image with text overlay (default, improved)
     if (layout === 'image-with-text') {
       return (
-        <div ref={ref} className={cn('relative w-full h-full bg-white overflow-hidden', className)}>
+        <div className={cn('relative w-full h-full bg-white overflow-hidden', className)}>
           {/* Background Image */}
           {imageUrl ? (
             <Image
@@ -85,7 +89,7 @@ export const PageLayoutRenderer = forwardRef<HTMLDivElement, PageLayoutRendererP
     // Layout 2: Image only (full bleed, no text)
     if (layout === 'image-only') {
       return (
-        <div ref={ref} className={cn('relative w-full h-full bg-white overflow-hidden', className)}>
+        <div className={cn('relative w-full h-full bg-white overflow-hidden', className)}>
           {imageUrl ? (
             <Image
               src={imageUrl}
@@ -106,7 +110,7 @@ export const PageLayoutRenderer = forwardRef<HTMLDivElement, PageLayoutRendererP
     // Layout 3: Text only (with decorative border)
     if (layout === 'text-only') {
       return (
-        <div ref={ref} className={cn('relative w-full h-full bg-white overflow-hidden', className)}>
+        <div className={cn('relative w-full h-full bg-white overflow-hidden', className)}>
           {/* Decorative border */}
           <div className="absolute inset-0 border-8 border-amber-200 rounded-lg m-4" />
 
@@ -125,7 +129,7 @@ export const PageLayoutRenderer = forwardRef<HTMLDivElement, PageLayoutRendererP
     // Layout 4 & 5: Spread layouts (deferred to v2)
     if (layout === 'image-left-text-right' || layout === 'text-left-image-right') {
       return (
-        <div ref={ref} className={cn('relative w-full h-full bg-white overflow-hidden', className)}>
+        <div className={cn('relative w-full h-full bg-white overflow-hidden', className)}>
           <div className="absolute inset-0 flex items-center justify-center p-8">
             <div className="text-center space-y-4">
               <p className="text-zinc-600 text-sm font-medium">
@@ -152,13 +156,10 @@ export const PageLayoutRenderer = forwardRef<HTMLDivElement, PageLayoutRendererP
 
     // Fallback: Default to image-with-text
     return (
-      <div ref={ref} className={cn('relative w-full h-full bg-white overflow-hidden', className)}>
+      <div className={cn('relative w-full h-full bg-white overflow-hidden', className)}>
         <div className="absolute inset-0 bg-gradient-to-br from-zinc-100 to-zinc-200 flex items-center justify-center">
           <p className="text-zinc-500 text-sm">Unknown layout: {layout}</p>
         </div>
       </div>
     )
-  }
-)
-
-PageLayoutRenderer.displayName = 'PageLayoutRenderer'
+}
