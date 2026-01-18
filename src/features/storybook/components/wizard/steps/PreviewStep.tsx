@@ -14,6 +14,7 @@ import { cn } from "@/utils/utils"
 import Image from "next/image"
 import { AudioPlayer } from "../../AudioPlayer"
 import { BookViewer, BookViewerRef } from "../../BookViewer"
+import { getThumbnailDimensions } from "../../../utils/book-dimensions"
 
 export function PreviewStep() {
   const { project, updatePage } = useStorybookStore()
@@ -21,6 +22,9 @@ export function PreviewStep() {
   const bookRef = useRef<BookViewerRef>(null)
 
   const pages = project?.pages || []
+
+  // Calculate thumbnail dimensions based on book format
+  const thumbnailDims = getThumbnailDimensions(project?.bookFormat || 'square')
 
   const handlePageChange = (pageIndex: number) => {
     setCurrentPreviewPage(pageIndex)
@@ -82,6 +86,7 @@ export function PreviewStep() {
                   coverUrl={project?.coverImageUrl}
                   currentPage={currentPreviewPage}
                   onPageChange={handlePageChange}
+                  bookFormat={project?.bookFormat || 'square'}
                 />
               ) : (
                 <div className="text-center text-zinc-500">
@@ -148,11 +153,15 @@ export function PreviewStep() {
             key={page.id}
             onClick={() => handleThumbnailClick(index)}
             className={cn(
-              "relative w-20 h-12 rounded overflow-hidden border-2 transition-all flex-shrink-0",
+              "relative rounded overflow-hidden border-2 transition-all flex-shrink-0",
               index === currentPreviewPage
                 ? "border-amber-500 ring-2 ring-amber-500/50"
                 : "border-zinc-700 hover:border-zinc-500"
             )}
+            style={{
+              width: `${thumbnailDims.width}px`,
+              height: `${thumbnailDims.height}px`,
+            }}
           >
             {page.imageUrl ? (
               <Image

@@ -4,7 +4,9 @@ import { forwardRef, useRef, useCallback, useImperativeHandle } from "react"
 import HTMLFlipBook from "react-pageflip"
 import Image from "next/image"
 import { cn } from "@/utils/utils"
-import type { StorybookPage, TextPosition } from "../types/storybook.types"
+import type { StorybookPage, BookFormat } from "../types/storybook.types"
+import { calculateBookDimensions } from "../utils/book-dimensions"
+import { PageLayoutRenderer } from "./PageLayoutRenderer"
 
 // Page component must use forwardRef for react-pageflip
 interface PageProps {
@@ -13,60 +15,20 @@ interface PageProps {
 }
 
 const Page = forwardRef<HTMLDivElement, PageProps>(({ page, pageNumber }, ref) => {
-  const getTextPositionClasses = (position: TextPosition): string => {
-    switch (position) {
-      case 'top':
-        return 'top-0 left-0 right-0'
-      case 'bottom':
-        return 'bottom-0 left-0 right-0'
-      case 'left':
-        return 'left-0 top-0 bottom-0 w-1/3'
-      case 'right':
-        return 'right-0 top-0 bottom-0 w-1/3'
-      default:
-        return 'hidden'
-    }
-  }
-
   return (
-    <div
-      ref={ref}
-      className="page bg-white shadow-lg overflow-hidden"
-      style={{ width: '100%', height: '100%' }}
-    >
-      <div className="relative w-full h-full">
-        {page.imageUrl ? (
-          <Image
-            src={page.imageUrl}
-            alt={`Page ${pageNumber}`}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 50vw"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-amber-100 flex items-center justify-center">
-            <span className="text-amber-400 text-lg">Page {pageNumber}</span>
-          </div>
-        )}
+    <div className="page bg-white shadow-lg overflow-hidden" style={{ width: '100%', height: '100%' }}>
+      {/* Use PageLayoutRenderer for all layout types */}
+      <PageLayoutRenderer
+        ref={ref}
+        layout={page.layout || 'image-with-text'}
+        imageUrl={page.imageUrl}
+        text={page.text}
+        textPosition={page.textPosition}
+      />
 
-        {/* Text Overlay */}
-        {page.text && page.textPosition !== 'none' && (
-          <div
-            className={cn(
-              "absolute p-4 bg-white/90 backdrop-blur-sm",
-              getTextPositionClasses(page.textPosition)
-            )}
-          >
-            <p className="text-zinc-800 text-sm md:text-base leading-relaxed font-serif">
-              {page.text}
-            </p>
-          </div>
-        )}
-
-        {/* Page Number */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-zinc-400 bg-white/80 px-2 py-0.5 rounded">
-          {pageNumber}
-        </div>
+      {/* Page Number */}
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-zinc-400 bg-white/80 px-2 py-0.5 rounded z-10">
+        {pageNumber}
       </div>
     </div>
   )
@@ -141,6 +103,7 @@ interface BookViewerProps {
   currentPage?: number
   onPageChange?: (pageIndex: number) => void
   className?: string
+  bookFormat?: BookFormat // NEW: Book format for responsive dimensions
 }
 
 export const BookViewer = forwardRef<BookViewerRef, BookViewerProps>(({
@@ -151,9 +114,13 @@ export const BookViewer = forwardRef<BookViewerRef, BookViewerProps>(({
   currentPage = 0,
   onPageChange,
   className,
+  bookFormat = 'square', // Default to square format
 }, ref) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const bookRef = useRef<any>(null)
+
+  // Calculate responsive dimensions based on book format
+  const dimensions = calculateBookDimensions(bookFormat)
 
   const handleFlip = useCallback((e: { data?: number }) => {
     // react-pageflip uses 0-based indexing
@@ -186,13 +153,13 @@ export const BookViewer = forwardRef<BookViewerRef, BookViewerProps>(({
     <div className={cn("flex items-center justify-center", className)}>
       <HTMLFlipBook
         ref={bookRef}
-        width={400}
-        height={533}
+        width={dimensions.width}
+        height={dimensions.height}
         size="stretch"
-        minWidth={280}
-        maxWidth={600}
-        minHeight={373}
-        maxHeight={800}
+        minWidth={dimensions.minWidth}
+        maxWidth={dimensions.maxWidth}
+        minHeight={Math.round(dimensions.minWidth / dimensions.aspectRatio)}
+        maxHeight={Math.round(dimensions.maxWidth / dimensions.aspectRatio)}
         maxShadowOpacity={0.5}
         showCover={true}
         mobileScrollSupport={true}
