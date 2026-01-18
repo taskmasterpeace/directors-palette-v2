@@ -20,6 +20,7 @@ import { CharacterStep } from "./steps/CharacterStep"
 import { PageGenerationStep } from "./steps/PageGenerationStep"
 import { PreviewStep } from "./steps/PreviewStep"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, ChevronRight, Save, FolderOpen, FilePlus, Trash2, Check } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import {
@@ -53,11 +54,27 @@ export function WizardContainer() {
 
   const { toast } = useToast()
   const [showSaved, setShowSaved] = useState(false)
+  const [hasShownDraftToast, setHasShownDraftToast] = useState(false)
 
   // Fetch saved projects on mount
   useEffect(() => {
     fetchSavedProjects()
   }, [fetchSavedProjects])
+
+  // Show toast if draft was restored from localStorage
+  useEffect(() => {
+    if (!hasShownDraftToast && project && !savedProjectId) {
+      // Check if we have localStorage data (indicating restoration)
+      const storedData = localStorage.getItem('directors-palette-storybook-draft')
+      if (storedData) {
+        toast({
+          title: 'Draft Restored',
+          description: 'Your progress has been restored from your last session.',
+        })
+        setHasShownDraftToast(true)
+      }
+    }
+  }, [project, savedProjectId, hasShownDraftToast, toast])
 
   // Get the appropriate wizard steps based on story mode
   const storyMode = project?.storyMode || 'generate'
@@ -192,6 +209,13 @@ export function WizardContainer() {
 
         {/* Project Actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Unsaved Draft Badge */}
+          {project && !savedProjectId && (
+            <Badge variant="outline" className="text-amber-500 border-amber-500/50">
+              Unsaved Draft
+            </Badge>
+          )}
+
           {/* Save Button */}
           <Button
             variant="outline"

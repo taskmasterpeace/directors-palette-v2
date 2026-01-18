@@ -338,7 +338,7 @@ export interface StepInfo {
 export const GENERATE_WIZARD_STEPS: StepInfo[] = [
   {
     id: 'character-setup',
-    label: 'Character',
+    label: 'Main Character',
     description: 'Create your main character',
     backgroundImage: '/storybook/step-character.webp', // Black girl + Asian boy reading in treehouse
     icon: 'User',

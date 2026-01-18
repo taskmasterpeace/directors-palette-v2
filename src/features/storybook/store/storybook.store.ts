@@ -4,6 +4,7 @@
  */
 
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 // Generate unique IDs without uuid dependency
 function generateId(): string {
@@ -303,7 +304,9 @@ function extractCharacterNames(storyText: string): { name: string; tag: string }
   return characters
 }
 
-export const useStorybookStore = create<StorybookState>((set, get) => ({
+export const useStorybookStore = create<StorybookState>()(
+  persist(
+    (set, get) => ({
   // Initial state
   currentStep: 'character-setup',
   storyMode: 'generate',
@@ -860,6 +863,10 @@ export const useStorybookStore = create<StorybookState>((set, get) => ({
       }
 
       const data = await response.json()
+
+      // Clear localStorage draft after successful save
+      localStorage.removeItem('directors-palette-storybook-draft')
+
       set({
         savedProjectId: data.project.id,
         isSaving: false,
@@ -888,6 +895,9 @@ export const useStorybookStore = create<StorybookState>((set, get) => ({
 
       const data = await response.json()
       const projectData = data.project.projectData as StorybookProject
+
+      // Clear localStorage draft when explicitly loading a saved project
+      localStorage.removeItem('directors-palette-storybook-draft')
 
       set({
         project: projectData,
@@ -957,4 +967,28 @@ export const useStorybookStore = create<StorybookState>((set, get) => ({
       error: null,
     })
   },
-}))
+    }),
+    {
+      name: 'directors-palette-storybook-draft',
+      version: 1,
+      partialize: (state) => ({
+        currentStep: state.currentStep,
+        storyMode: state.storyMode,
+        project: state.project,
+        currentPageIndex: state.currentPageIndex,
+        storyIdeas: state.storyIdeas,
+      }),
+      onRehydrateStorage: () => (state) => {
+        // Convert date strings back to Date objects
+        if (state?.project) {
+          state.project.createdAt = new Date(state.project.createdAt)
+          state.project.updatedAt = new Date(state.project.updatedAt)
+          // Handle generatedStory dates if present
+          if (state.project.generatedStory) {
+            state.project.generatedStory.createdAt = new Date(state.project.generatedStory.createdAt)
+          }
+        }
+      },
+    }
+  )
+)

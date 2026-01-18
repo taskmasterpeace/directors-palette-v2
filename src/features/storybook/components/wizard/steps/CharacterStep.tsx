@@ -18,6 +18,8 @@ import { cn } from "@/utils/utils"
 import Image from "next/image"
 import { compressImage } from "@/utils/image-compression"
 import { StoryCharacter } from "../../../types/storybook.types"
+import { ErrorDialog } from "../ErrorDialog"
+import { validateCharacterDescription } from "../../../utils/validation"
 
 // Unified character type for display (combines main and supporting characters)
 interface UnifiedCharacter {
@@ -102,6 +104,14 @@ export function CharacterStep() {
   // State for description enhancement
   const [isEnhancing, setIsEnhancing] = useState(false)
   const [enhancingCharacterId, setEnhancingCharacterId] = useState<string | null>(null)
+  // State for error dialog
+  const [errorDialog, setErrorDialog] = useState({
+    open: false,
+    title: '',
+    message: '',
+  })
+  // State for inline description validation errors
+  const [descriptionErrors, setDescriptionErrors] = useState<Record<string, string>>({})
 
   // Handler to enhance character description using AI
   const handleEnhanceDescription = async (characterId: string) => {
@@ -228,7 +238,11 @@ export function CharacterStep() {
       updateCharacter(characterId, { sourcePhotoUrl: photoUrl })
     } catch (err) {
       console.error('Upload error:', err)
-      alert(err instanceof Error ? err.message : 'Upload failed. Try a smaller image.')
+      setErrorDialog({
+        open: true,
+        title: 'Upload Failed',
+        message: err instanceof Error ? err.message : 'Upload failed. Please try a smaller image.',
+      })
     } finally {
       setUploadingCharacterId(null)
     }
@@ -266,7 +280,11 @@ export function CharacterStep() {
     // Ensure recipes are loaded BEFORE setting generating state
     if (!recipesInitialized) {
       console.error('[CharacterStep] Recipe store not initialized yet')
-      alert('Recipe system is still loading. Please wait a moment and try again.')
+      setErrorDialog({
+        open: true,
+        title: 'System Loading',
+        message: 'Recipe system is still loading. Please wait a moment and try again.',
+      })
       return
     }
 
@@ -274,10 +292,37 @@ export function CharacterStep() {
     const hasPhoto = !!unifiedChar.sourcePhotoUrl
     const hasDescription = !!unifiedChar.description?.trim()
 
+    // Clear previous validation errors for this character
+    setDescriptionErrors(prev => {
+      const newErrors = { ...prev }
+      delete newErrors[characterId]
+      return newErrors
+    })
+
     if (!hasPhoto && !hasDescription) {
       console.error('[CharacterStep] Cannot generate without photo or description')
-      alert('Please add a visual description before generating a character sheet. Describe the character\'s age, appearance, and outfit.')
+      setDescriptionErrors(prev => ({
+        ...prev,
+        [characterId]: 'Description cannot be empty',
+      }))
+      setErrorDialog({
+        open: true,
+        title: 'Description Required',
+        message: 'Please add a visual description before generating a character sheet. Describe the character\'s age, appearance, and outfit.',
+      })
       return
+    }
+
+    // Validate description format if no photo
+    if (!hasPhoto && hasDescription) {
+      const validationResult = validateCharacterDescription(unifiedChar.description || '')
+      if (!validationResult.isValid) {
+        setDescriptionErrors(prev => ({
+          ...prev,
+          [characterId]: validationResult.error || 'Invalid description',
+        }))
+        return
+      }
     }
 
     setGeneratingCharacterId(characterId)
@@ -291,7 +336,11 @@ export function CharacterStep() {
 
       if (!styleGuideUrl) {
         console.error('[CharacterStep] Style guide is required for character sheet generation')
-        alert('Please select an art style first (Step 7) before generating character sheets.')
+        setErrorDialog({
+          open: true,
+          title: 'Style Guide Required',
+          message: 'Please select an art style first (Step 7) before generating character sheets.',
+        })
         setGeneratingCharacterId(null)
         return
       }
@@ -306,7 +355,11 @@ export function CharacterStep() {
       const recipe = systemRecipes.find(r => r.name === recipeName)
       if (!recipe) {
         console.error(`[CharacterStep] Recipe not found: ${recipeName}`)
-        alert(`Character sheet recipe "${recipeName}" not found. Please refresh the page and try again.`)
+        setErrorDialog({
+          open: true,
+          title: 'Recipe Not Found',
+          message: `Character sheet recipe "${recipeName}" not found. Please refresh the page and try again.`,
+        })
         setGeneratingCharacterId(null)
         return
       }
@@ -394,7 +447,11 @@ export function CharacterStep() {
         console.log('[CharacterStep] Recipe generation succeeded:', result.finalImageUrl)
       } else {
         console.error('[CharacterStep] Recipe generation failed:', result.error)
-        alert(`Character sheet generation failed: ${result.error || 'Unknown error'}. Please try again.`)
+        setErrorDialog({
+          open: true,
+          title: 'Generation Failed',
+          message: `Character sheet generation failed: ${result.error || 'Unknown error'}. Please try again.`,
+        })
       }
     } finally {
       setGeneratingCharacterId(null)
@@ -402,7 +459,7 @@ export function CharacterStep() {
   }, [allCharacters, project, getSystemOnlyRecipes, executeSystemRecipe, updateCharacter, updateSupportingCharacter, recipesInitialized])
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-bold text-white flex items-center justify-center gap-2">
@@ -487,7 +544,7 @@ export function CharacterStep() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {allCharacters.map((character) => (
             <Card
               key={character.id}
@@ -611,6 +668,14 @@ export function CharacterStep() {
                       onChange={(e) => {
                         const charId = character.id
                         const desc = e.target.value
+                        // Clear validation error when user types
+                        if (descriptionErrors[charId]) {
+                          setDescriptionErrors(prev => {
+                            const newErrors = { ...prev }
+                            delete newErrors[charId]
+                            return newErrors
+                          })
+                        }
                         if (character.isSupporting) {
                           // Update supporting character description
                           const sc = project?.storyCharacters?.find(c => c.id === charId)
@@ -627,7 +692,10 @@ export function CharacterStep() {
                         }
                       }}
                       rows={4}
-                      className="text-sm flex-1 placeholder:text-zinc-600"
+                      className={cn(
+                        "text-sm flex-1 placeholder:text-zinc-600",
+                        descriptionErrors[character.id] && "border-red-500 focus-visible:ring-red-500"
+                      )}
                     />
                     <Button
                       variant="outline"
@@ -647,15 +715,19 @@ export function CharacterStep() {
                       )}
                     </Button>
                   </div>
-                  <p className="text-xs text-zinc-500">
-                    {!character.sourcePhotoUrl && !character.description ? (
-                      <span className="text-amber-500/80">
-                        ✓ Good: &quot;7yo girl, Asian, pigtails, pink tutu&quot; — ✗ Avoid: &quot;a nice friendly child&quot;
-                      </span>
-                    ) : (
-                      <span>Click Enhance to expand your hints into a detailed visual description</span>
-                    )}
-                  </p>
+                  {descriptionErrors[character.id] ? (
+                    <p className="text-xs text-red-500">{descriptionErrors[character.id]}</p>
+                  ) : (
+                    <p className="text-xs text-zinc-500">
+                      {!character.sourcePhotoUrl && !character.description ? (
+                        <span className="text-amber-500/80">
+                          ✓ Good: &quot;7yo girl, Asian, pigtails, pink tutu&quot; — ✗ Avoid: &quot;a nice friendly child&quot;
+                        </span>
+                      ) : (
+                        <span>Click Enhance to expand your hints into a detailed visual description</span>
+                      )}
+                    </p>
+                  )}
                 </div>
 
                 {/* Character Sheet Preview */}
@@ -740,6 +812,15 @@ export function CharacterStep() {
           Character sheets include full-body views, expressions (neutral, happy, sad, angry, surprised, speaking, shouting, whispering), and accessories.
         </p>
       </div>
+
+      {/* Error Dialog */}
+      <ErrorDialog
+        open={errorDialog.open}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        variant="error"
+        onOpenChange={(open) => setErrorDialog({ ...errorDialog, open })}
+      />
     </div>
   )
 }

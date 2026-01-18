@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
 import { compressImage } from "@/utils/image-compression"
+import { ErrorDialog } from "../ErrorDialog"
 
 interface ExpandedStyle {
   originalStyle: string
@@ -75,6 +76,12 @@ export function StyleSelectionStep() {
     }
     return true
   })
+  // State for error dialog
+  const [errorDialog, setErrorDialog] = useState({
+    open: false,
+    title: '',
+    message: '',
+  })
 
   // Persist toggle state
   useEffect(() => {
@@ -99,7 +106,19 @@ export function StyleSelectionStep() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to expand style')
+        // Enhanced error messages based on HTTP status codes
+        let errorMessage = 'Failed to expand style. You can still use your description.'
+
+        if (response.status === 429) {
+          errorMessage = 'AI assistant is busy. Please wait a moment and try again.'
+        } else if (response.status >= 500) {
+          errorMessage = 'AI service temporarily unavailable. You can still use your description.'
+        } else if (response.status === 400) {
+          errorMessage = 'Invalid style name. Please try a different style.'
+        }
+
+        setExpandError(errorMessage)
+        return
       }
 
       const data: ExpandedStyle = await response.json()
@@ -111,7 +130,7 @@ export function StyleSelectionStep() {
       }
     } catch (err) {
       console.error('Error expanding style:', err)
-      setExpandError('Failed to expand style. You can still use your description.')
+      setExpandError('Network error. Please check your connection and try again.')
     } finally {
       setIsExpanding(false)
     }
@@ -150,7 +169,11 @@ export function StyleSelectionStep() {
       setReferenceImageUrl(data.url)
     } catch (err) {
       console.error('Upload error:', err)
-      alert('Upload failed. Try a smaller image.')
+      setErrorDialog({
+        open: true,
+        title: 'Upload Failed',
+        message: err instanceof Error ? err.message : 'Upload failed. Please try a smaller image.',
+      })
     } finally {
       setIsUploading(false)
     }
@@ -502,6 +525,15 @@ export function StyleSelectionStep() {
           </span>
         </div>
       )}
+
+      {/* Error Dialog */}
+      <ErrorDialog
+        open={errorDialog.open}
+        title={errorDialog.title}
+        message={errorDialog.message}
+        variant="error"
+        onOpenChange={(open) => setErrorDialog({ ...errorDialog, open })}
+      />
     </div>
   )
 }
