@@ -336,11 +336,17 @@ export function useStorybookGeneration() {
       const pageIndex = project?.pages.findIndex(p => p.id === pageId) ?? -1
       const isFirstPage = pageIndex === 0
 
-      // Build field values from page data - include both main and supporting characters
-      const mainCharacterTags = project?.characters.map(c => `@${c.tag || c.name.replace(/\s+/g, '')}`) || []
-      const supportingCharacterTags = project?.storyCharacters?.map(c => `@${c.name.replace(/\s+/g, '')}`) || []
-      const allCharacterTags = [...mainCharacterTags, ...supportingCharacterTags]
-      const characterTags = allCharacterTags.length > 0 ? allCharacterTags.join(', ') : 'No named characters'
+      // Build field values from page data - include both main and supporting characters WITH descriptions
+      const mainCharacterDescriptions = project?.characters.map(c => {
+        const tag = `@${c.tag || c.name.replace(/\s+/g, '')}`
+        return c.description ? `${tag}: ${c.description}` : tag
+      }) || []
+      const supportingCharacterDescriptions = project?.storyCharacters?.map(c => {
+        const tag = `@${c.name.replace(/\s+/g, '')}`
+        return c.description ? `${tag}: ${c.description}` : tag
+      }) || []
+      const allCharacterDescriptions = [...mainCharacterDescriptions, ...supportingCharacterDescriptions]
+      const characterTags = allCharacterDescriptions.length > 0 ? allCharacterDescriptions.join(', ') : 'No named characters'
 
       // Build field values and select recipe based on page type
       let fieldValues: Record<string, string>

@@ -41,6 +41,8 @@ export function PageGenerationStep() {
   const { generatePage, isGenerating, progress, error } = useStorybookGeneration()
 
   const [generatingPageId, setGeneratingPageId] = useState<string | null>(null)
+  const [regeneratingAll, setRegeneratingAll] = useState(false)
+  const [regeneratingProgress, setRegeneratingProgress] = useState<string>('')
 
   const pages = project?.pages || []
   const currentPage = pages[currentPageIndex]
@@ -72,6 +74,42 @@ export function PageGenerationStep() {
     }
   }, [currentPage, generatePage])
 
+  const handleRegenerateAllPages = useCallback(async () => {
+    if (!pages || pages.length === 0) return
+
+    setRegeneratingAll(true)
+
+    try {
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i]
+        setRegeneratingProgress(`Regenerating page ${i + 1} of ${pages.length}...`)
+        setGeneratingPageId(page.id)
+        setCurrentPageIndex(i) // Show progress by navigating to current page
+
+        const result = await generatePage(page.id)
+        if (!result.success) {
+          console.error(`Generation failed for page ${i + 1}:`, result.error)
+          // Continue with next page even if one fails
+        }
+
+        // Small delay between pages to avoid overwhelming the API
+        if (i < pages.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
+      }
+
+      setRegeneratingProgress('All pages regenerated successfully!')
+      setTimeout(() => setRegeneratingProgress(''), 3000)
+    } catch (err) {
+      console.error('Error regenerating all pages:', err)
+      setRegeneratingProgress('Error during regeneration')
+      setTimeout(() => setRegeneratingProgress(''), 3000)
+    } finally {
+      setRegeneratingAll(false)
+      setGeneratingPageId(null)
+    }
+  }, [pages, generatePage, setCurrentPageIndex])
+
   // Check if this page is currently generating
   const isCurrentPageGenerating = generatingPageId === currentPage?.id && isGenerating
 
@@ -92,6 +130,34 @@ export function PageGenerationStep() {
           Generate Page Illustrations
         </h2>
       </div>
+
+      {/* Regenerate All Button */}
+      <div className="flex justify-center">
+        <Button
+          onClick={handleRegenerateAllPages}
+          disabled={regeneratingAll || pages.length === 0}
+          className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-semibold px-6"
+        >
+          {regeneratingAll ? (
+            <>
+              <LoadingSpinner size="sm" color="current" />
+              {regeneratingProgress}
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4" />
+              Regenerate All {pages.length} Pages
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* Progress Message */}
+      {regeneratingProgress && !regeneratingAll && (
+        <div className="text-center">
+          <p className="text-sm text-green-400">{regeneratingProgress}</p>
+        </div>
+      )}
 
       {/* Page Navigator */}
       <div className="flex items-center justify-center gap-4">

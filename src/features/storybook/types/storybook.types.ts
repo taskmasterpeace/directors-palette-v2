@@ -38,6 +38,8 @@ export type PageLayout =
   | 'text-only'            // Text page with decorative border
 
 // Book format configurations
+// Based on Amazon KDP-compliant trim sizes for children's books
+// Reference: https://kdp.amazon.com/en_US/help/topic/G201834180
 export const BOOK_FORMATS: Record<BookFormat, {
   name: string
   description: string
@@ -48,7 +50,7 @@ export const BOOK_FORMATS: Record<BookFormat, {
 }> = {
   square: {
     name: 'Square',
-    description: 'Classic picture book format',
+    description: 'Classic picture book format (KDP)',
     aspectRatio: '1:1',
     dimensions: '8.5" x 8.5"',
     wordsPerPage: { min: 20, max: 50 },
@@ -56,25 +58,25 @@ export const BOOK_FORMATS: Record<BookFormat, {
   },
   landscape: {
     name: 'Landscape',
-    description: 'Wide format for scenic illustrations',
-    aspectRatio: '4:3',
-    dimensions: '10" x 8"',
+    description: 'Vertical format for scenic illustrations (KDP)',
+    aspectRatio: '7:10',
+    dimensions: '7" x 10"',
     wordsPerPage: { min: 25, max: 60 },
     bestFor: 'Adventure stories, nature scenes'
   },
   portrait: {
     name: 'Portrait',
-    description: 'Tall format for character illustrations',
-    aspectRatio: '3:4',
+    description: 'Traditional picture book format (KDP)',
+    aspectRatio: '4:5',
     dimensions: '8" x 10"',
     wordsPerPage: { min: 30, max: 70 },
     bestFor: 'Character stories, fairy tales'
   },
   wide: {
-    name: 'Wide Cinematic',
-    description: 'Panoramic spreads for epic scenes',
-    aspectRatio: '16:9',
-    dimensions: '11" x 6.2"',
+    name: 'Wide Panoramic',
+    description: 'Panoramic landscape format (KDP)',
+    aspectRatio: '11:8',
+    dimensions: '8.25" x 6"',
     wordsPerPage: { min: 15, max: 40 },
     bestFor: 'Action scenes, environmental storytelling'
   }

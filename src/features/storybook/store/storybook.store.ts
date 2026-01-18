@@ -754,6 +754,7 @@ export const useStorybookStore = create<StorybookState>()(
           id: generateId(),
           name: char.name,
           tag: `@${char.name.replace(/\s+/g, '')}`,
+          description: char.description || '',
         }))
 
       // Supporting characters go to storyCharacters array
