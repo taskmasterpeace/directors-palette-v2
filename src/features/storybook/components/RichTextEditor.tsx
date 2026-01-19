@@ -1,154 +1,9 @@
 "use client"
 
-import { useEffect } from 'react'
-import { LexicalComposer } from '@lexical/react/LexicalComposer'
-import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin'
-import { ContentEditable } from '@lexical/react/LexicalContentEditable'
-import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin'
-import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin'
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import LexicalErrorBoundary from '@lexical/react/LexicalErrorBoundary'
-import { $getRoot, $getSelection, EditorState, LexicalEditor } from 'lexical'
-import { $isRangeSelection } from 'lexical'
-import { $patchStyleText } from '@lexical/selection'
+import { useRef, useEffect, useState } from 'react'
 import { Bold, Type } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/utils'
-
-// Editor theme configuration
-const theme = {
-  paragraph: 'mb-2',
-  text: {
-    bold: 'font-bold',
-    italic: 'italic',
-    underline: 'underline',
-  },
-}
-
-// Toolbar component
-function ToolbarPlugin() {
-  const [editor] = useLexicalComposerContext()
-
-  const formatBold = () => {
-    editor.update(() => {
-      const selection = $getSelection()
-      if ($isRangeSelection(selection)) {
-        $patchStyleText(selection, {
-          'font-weight': selection.hasFormat('bold') ? 'normal' : 'bold',
-        })
-      }
-    })
-  }
-
-  const formatColor = (color: string) => {
-    editor.update(() => {
-      const selection = $getSelection()
-      if ($isRangeSelection(selection)) {
-        $patchStyleText(selection, { color })
-      }
-    })
-  }
-
-  const formatFont = (fontFamily: string) => {
-    editor.update(() => {
-      const selection = $getSelection()
-      if ($isRangeSelection(selection)) {
-        $patchStyleText(selection, { 'font-family': fontFamily })
-      }
-    })
-  }
-
-  const colors = [
-    { name: 'Black', value: '#000000' },
-    { name: 'Red', value: '#ef4444' },
-    { name: 'Blue', value: '#3b82f6' },
-    { name: 'Green', value: '#22c55e' },
-    { name: 'Yellow', value: '#eab308' },
-    { name: 'Purple', value: '#a855f7' },
-    { name: 'Orange', value: '#f97316' },
-    { name: 'Pink', value: '#ec4899' },
-  ]
-
-  const fonts = [
-    'Arial',
-    'Comic Sans MS',
-    'Courier New',
-    'Georgia',
-    'Times New Roman',
-    'Verdana',
-    'Pacifico',
-    'Permanent Marker',
-  ]
-
-  return (
-    <div className="flex items-center gap-2 p-2 border-b border-zinc-700 bg-zinc-900/50 flex-wrap">
-      {/* Bold Button */}
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={formatBold}
-        className="gap-1"
-        title="Bold (Ctrl+B)"
-      >
-        <Bold className="w-4 h-4" />
-        <span className="hidden sm:inline">Bold</span>
-      </Button>
-
-      {/* Font Selector */}
-      <select
-        onChange={(e) => formatFont(e.target.value)}
-        className="text-sm bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1"
-        title="Font Family"
-      >
-        <option value="">Default Font</option>
-        {fonts.map((font) => (
-          <option key={font} value={font} style={{ fontFamily: font }}>
-            {font}
-          </option>
-        ))}
-      </select>
-
-      {/* Color Picker */}
-      <div className="flex items-center gap-1">
-        <Type className="w-4 h-4 text-zinc-400" />
-        <div className="flex gap-1">
-          {colors.map((color) => (
-            <button
-              key={color.value}
-              onClick={() => formatColor(color.value)}
-              className="w-6 h-6 rounded border border-zinc-700 hover:scale-110 transition-transform"
-              style={{ backgroundColor: color.value }}
-              title={color.name}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Plugin to initialize content
-function InitialContentPlugin({ initialContent }: { initialContent: string }) {
-  const [editor] = useLexicalComposerContext()
-
-  useEffect(() => {
-    if (initialContent) {
-      editor.update(() => {
-        const root = $getRoot()
-        root.clear()
-        const paragraph = root.getFirstChild()
-        if (paragraph) {
-          // Parse HTML and insert
-          const tempDiv = document.createElement('div')
-          tempDiv.innerHTML = initialContent
-          paragraph.append(tempDiv.textContent || '')
-        }
-      })
-    }
-  }, [editor, initialContent])
-
-  return null
-}
 
 interface RichTextEditorProps {
   value: string
@@ -163,51 +18,141 @@ export function RichTextEditor({
   placeholder = 'Enter your story text...',
   className,
 }: RichTextEditorProps) {
-  const initialConfig = {
-    namespace: 'StoryPageEditor',
-    theme,
-    onError: (error: Error) => {
-      console.error('Lexical Error:', error)
-    },
+  const editorRef = useRef<HTMLDivElement>(null)
+  const [isFocused, setIsFocused] = useState(false)
+
+  // Initialize content
+  useEffect(() => {
+    if (editorRef.current && editorRef.current.innerHTML !== value) {
+      editorRef.current.innerHTML = value || ''
+    }
+  }, [value])
+
+  const handleInput = () => {
+    if (!editorRef.current) return
+
+    const html = editorRef.current.innerHTML
+    const plainText = editorRef.current.innerText || ''
+
+    onChange(html, plainText)
   }
 
-  const handleChange = (editorState: EditorState, editor: LexicalEditor) => {
-    editorState.read(() => {
-      const root = $getRoot()
-      const plainText = root.getTextContent()
-
-      // Generate HTML with inline styles
-      let html = ''
-      root.getChildren().forEach((child) => {
-        const childText = child.getTextContent()
-        html += `<p>${childText}</p>`
-      })
-
-      onChange(html, plainText)
-    })
+  const formatBold = () => {
+    document.execCommand('bold', false)
+    editorRef.current?.focus()
+    handleInput()
   }
+
+  const formatColor = (color: string) => {
+    document.execCommand('foreColor', false, color)
+    editorRef.current?.focus()
+    handleInput()
+  }
+
+  const formatFont = (fontFamily: string) => {
+    document.execCommand('fontName', false, fontFamily)
+    editorRef.current?.focus()
+    handleInput()
+  }
+
+  const colors = [
+    { name: 'Black', value: '#000000' },
+    { name: 'Red', value: '#ef4444' },
+    { name: 'Blue', value: '#3b82f6' },
+    { name: 'Green', value: '#22c55e' },
+    { name: 'Yellow', value: '#eab308' },
+    { name: 'Purple', value: '#a855f7' },
+    { name: 'Orange', value: '#f97316' },
+    { name: 'Pink', value: '#ec4899' },
+  ]
+
+  const fonts = [
+    { name: 'Default', value: 'ui-sans-serif, system-ui' },
+    { name: 'Arial', value: 'Arial, sans-serif' },
+    { name: 'Comic Sans', value: 'Comic Sans MS, cursive' },
+    { name: 'Courier', value: 'Courier New, monospace' },
+    { name: 'Georgia', value: 'Georgia, serif' },
+    { name: 'Times', value: 'Times New Roman, serif' },
+    { name: 'Verdana', value: 'Verdana, sans-serif' },
+    { name: 'Pacifico', value: 'Pacifico, cursive' },
+    { name: 'Marker', value: 'Permanent Marker, cursive' },
+  ]
 
   return (
-    <LexicalComposer initialConfig={initialConfig}>
-      <div className={cn('border border-zinc-700 rounded-lg overflow-hidden bg-zinc-900', className)}>
-        <ToolbarPlugin />
-        <div className="relative">
-          <RichTextPlugin
-            contentEditable={
-              <ContentEditable className="min-h-[200px] p-4 text-white outline-none" />
-            }
-            placeholder={
-              <div className="absolute top-4 left-4 text-zinc-500 pointer-events-none">
-                {placeholder}
-              </div>
-            }
-            ErrorBoundary={LexicalErrorBoundary}
-          />
+    <div className={cn('border border-zinc-700 rounded-lg overflow-hidden bg-zinc-900', className)}>
+      {/* Toolbar */}
+      <div className="flex items-center gap-2 p-2 border-b border-zinc-700 bg-zinc-900/50 flex-wrap">
+        {/* Bold Button */}
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={formatBold}
+          className="gap-1 h-8"
+          title="Bold (Ctrl+B)"
+          type="button"
+        >
+          <Bold className="w-4 h-4" />
+          <span className="hidden sm:inline text-xs">Bold</span>
+        </Button>
+
+        {/* Font Selector */}
+        <select
+          onChange={(e) => formatFont(e.target.value)}
+          className="text-xs bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1.5 h-8 min-w-[120px]"
+          title="Font Family"
+        >
+          {fonts.map((font) => (
+            <option key={font.value} value={font.value}>
+              {font.name}
+            </option>
+          ))}
+        </select>
+
+        {/* Color Label */}
+        <div className="flex items-center gap-1.5 ml-2">
+          <Type className="w-4 h-4 text-zinc-400" />
+          <span className="text-xs text-zinc-400 hidden sm:inline">Color:</span>
         </div>
-        <HistoryPlugin />
-        <OnChangePlugin onChange={handleChange} />
-        <InitialContentPlugin initialContent={value} />
+
+        {/* Color Picker */}
+        <div className="flex gap-1.5">
+          {colors.map((color) => (
+            <button
+              key={color.value}
+              onClick={() => formatColor(color.value)}
+              className="w-7 h-7 rounded border-2 border-zinc-700 hover:scale-110 hover:border-zinc-500 transition-all"
+              style={{ backgroundColor: color.value }}
+              title={color.name}
+              type="button"
+            />
+          ))}
+        </div>
       </div>
-    </LexicalComposer>
+
+      {/* Content Editable Editor */}
+      <div className="relative">
+        <div
+          ref={editorRef}
+          contentEditable
+          onInput={handleInput}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          className="min-h-[200px] max-h-[400px] overflow-y-auto p-4 text-white outline-none focus:bg-zinc-900/50"
+          suppressContentEditableWarning
+        />
+
+        {/* Placeholder */}
+        {!value && !isFocused && (
+          <div className="absolute top-4 left-4 text-zinc-500 pointer-events-none">
+            {placeholder}
+          </div>
+        )}
+      </div>
+
+      {/* Helper Text */}
+      <div className="px-4 py-2 text-xs text-zinc-500 border-t border-zinc-800 bg-zinc-900/30">
+        Select text to format • Bold: Ctrl+B • Plain text preserved for narration
+      </div>
+    </div>
   )
 }
