@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
+import { useStorybookGeneration } from "../../../hooks/useStorybookGeneration"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -10,7 +11,11 @@ import {
   ChevronRight,
   Maximize2,
   X,
+  Sparkles,
+  Check,
+  RefreshCw,
 } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
 import { AudioPlayer } from "../../AudioPlayer"
@@ -18,7 +23,21 @@ import { BookViewer, BookViewerRef } from "../../BookViewer"
 import { getThumbnailDimensions } from "../../../utils/book-dimensions"
 
 export function PreviewStep() {
-  const { project, updatePage } = useStorybookStore()
+  const {
+    project,
+    updatePage,
+    updateProject,
+    pendingCoverVariations,
+    isGeneratingCoverVariations,
+    coverGenerationError,
+    setPendingCoverVariations,
+    setGeneratingCoverVariations,
+    selectCoverVariation,
+    setCoverGenerationError,
+  } = useStorybookStore()
+
+  const { generateBookCover, generateCoverVariations } = useStorybookGeneration()
+
   const [currentPreviewPage, setCurrentPreviewPage] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const bookRef = useRef<BookViewerRef>(null)
@@ -47,6 +66,39 @@ export function PreviewStep() {
 
   const handleAudioGenerated = (pageId: string, audioUrl: string) => {
     updatePage(pageId, { audioUrl })
+  }
+
+  const handleGenerateVariations = async () => {
+    setGeneratingCoverVariations(true)
+    setCoverGenerationError(undefined)
+
+    const results = await generateCoverVariations()
+    const successfulUrls = results
+      .filter(r => r.success)
+      .map(r => r.imageUrl!)
+
+    if (successfulUrls.length > 0) {
+      setPendingCoverVariations(successfulUrls)
+    } else {
+      setCoverGenerationError('Failed to generate cover variations. Please try again.')
+    }
+
+    setGeneratingCoverVariations(false)
+  }
+
+  const handleSelectCover = (url: string) => {
+    selectCoverVariation(url)
+  }
+
+  const handleRetryGeneration = async () => {
+    setCoverGenerationError(undefined)
+    const result = await generateBookCover()
+
+    if (result.success) {
+      updateProject({ coverImageUrl: result.imageUrl })
+    } else {
+      setCoverGenerationError(result.error || 'Failed to generate cover')
+    }
   }
 
   // Fullscreen mode rendering
@@ -260,6 +312,113 @@ export function PreviewStep() {
             autoAdvance={true}
             onAudioGenerated={handleAudioGenerated}
           />
+        </CardContent>
+      </Card>
+
+      {/* Book Cover Section */}
+      <Card className="bg-zinc-900/50 border-zinc-800">
+        <CardContent className="p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Book Cover</h3>
+
+          {/* Default Cover Display */}
+          {project?.coverImageUrl && !pendingCoverVariations.length && (
+            <div className="space-y-4">
+              <div className="relative w-full max-w-xs mx-auto aspect-[3/4] bg-zinc-800 rounded-lg overflow-hidden">
+                <Image
+                  src={project.coverImageUrl}
+                  alt="Book cover"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+
+              <Button
+                onClick={handleGenerateVariations}
+                disabled={isGeneratingCoverVariations}
+                className="w-full gap-2"
+                variant="outline"
+              >
+                {isGeneratingCoverVariations ? (
+                  <>
+                    <LoadingSpinner size="sm" />
+                    Generating Options...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    Generate More Options
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+
+          {/* Variation Selection Grid */}
+          {pendingCoverVariations.length > 0 && (
+            <div className="space-y-4">
+              <p className="text-sm text-zinc-400 text-center">
+                Select your favorite cover:
+              </p>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Current cover + 3 variations */}
+                {[project?.coverImageUrl, ...pendingCoverVariations].map((url, index) => (
+                  <div
+                    key={index}
+                    onClick={() => url && handleSelectCover(url)}
+                    className={cn(
+                      "relative aspect-[3/4] bg-zinc-800 rounded-lg overflow-hidden cursor-pointer",
+                      "border-2 transition-all hover:border-amber-500",
+                      url === project?.coverImageUrl
+                        ? "border-amber-500 ring-2 ring-amber-500"
+                        : "border-zinc-700"
+                    )}
+                  >
+                    {url && (
+                      <Image
+                        src={url}
+                        alt={`Cover option ${index + 1}`}
+                        fill
+                        className="object-contain"
+                      />
+                    )}
+
+                    {/* Selected indicator */}
+                    {url === project?.coverImageUrl && (
+                      <div className="absolute top-2 right-2 bg-amber-500 text-black rounded-full p-1">
+                        <Check className="w-4 h-4" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <Button
+                onClick={() => setPendingCoverVariations([])}
+                variant="ghost"
+                className="w-full"
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
+
+          {/* Error Display */}
+          {coverGenerationError && !project?.coverImageUrl && (
+            <div className="space-y-4 text-center">
+              <div className="text-red-400 text-sm">
+                {coverGenerationError}
+              </div>
+              <Button
+                onClick={handleRetryGeneration}
+                variant="outline"
+                className="gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Try Again
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

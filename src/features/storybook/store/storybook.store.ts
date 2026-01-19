@@ -50,6 +50,11 @@ interface StorybookState {
   // Story ideas (for generate mode)
   storyIdeas: StoryIdea[]
 
+  // Cover variation state (UI-only, not persisted)
+  pendingCoverVariations: string[]
+  isGeneratingCoverVariations: boolean
+  coverGenerationError?: string
+
   // Project persistence state
   savedProjectId: string | null
   isSaving: boolean
@@ -112,6 +117,12 @@ interface StorybookState {
   // Generation state
   setGenerating: (isGenerating: boolean) => void
   setError: (error: string | null) => void
+
+  // Cover variation actions
+  setPendingCoverVariations: (urls: string[]) => void
+  setGeneratingCoverVariations: (isGenerating: boolean) => void
+  selectCoverVariation: (url: string) => void
+  setCoverGenerationError: (error?: string) => void
 
   // Project persistence actions
   saveProject: () => Promise<void>
@@ -324,6 +335,11 @@ export const useStorybookStore = create<StorybookState>()(
   project: null,
   currentPageIndex: 0,
   storyIdeas: [],
+
+  // Cover variation state
+  pendingCoverVariations: [],
+  isGeneratingCoverVariations: false,
+  coverGenerationError: undefined,
 
   // Project persistence state
   savedProjectId: null,
@@ -629,6 +645,29 @@ export const useStorybookStore = create<StorybookState>()(
   // Generation state
   setGenerating: (isGenerating) => set({ isGenerating }),
   setError: (error) => set({ error }),
+
+  // Cover variation actions
+  setPendingCoverVariations: (urls) => set({ pendingCoverVariations: urls }),
+
+  setGeneratingCoverVariations: (isGenerating) => set({ isGeneratingCoverVariations: isGenerating }),
+
+  selectCoverVariation: (url) => {
+    const { project } = get()
+    if (!project) return
+
+    // Apply selected cover to project
+    set({
+      project: {
+        ...project,
+        coverImageUrl: url,
+        updatedAt: new Date(),
+      },
+      // Clear variations after selection
+      pendingCoverVariations: [],
+    })
+  },
+
+  setCoverGenerationError: (error) => set({ coverGenerationError: error }),
 
   // Education actions (NEW)
   setMainCharacter: (name, age, description) => {

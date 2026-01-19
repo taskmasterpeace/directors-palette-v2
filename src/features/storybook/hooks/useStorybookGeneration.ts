@@ -261,7 +261,10 @@ export function useStorybookGeneration() {
   /**
    * Generate book cover with embedded title, author, and main character
    */
-  const generateBookCover = useCallback(async (): Promise<GenerationResult> => {
+  const generateBookCover = useCallback(async (options?: {
+    includeStoryText?: boolean
+    storyText?: string
+  }): Promise<GenerationResult> => {
     if (!project) {
       return { success: false, error: 'No project found' }
     }
@@ -280,9 +283,14 @@ export function useStorybookGeneration() {
     try {
       // Get main character description
       const mainCharacter = project.characters[0] // Assuming first character is main
-      const mainCharacterDescription = mainCharacter
+      let mainCharacterDescription = mainCharacter
         ? `${mainCharacter.name}: A child character with distinctive features`
         : project.mainCharacterName || 'A child character'
+
+      // Append story context if requested (for narrative-driven cover)
+      if (options?.includeStoryText && options?.storyText) {
+        mainCharacterDescription += `\n\nFull Story:\n${options.storyText}`
+      }
 
       const fieldValues = {
         'stage0_field0_book_title': project.title,
@@ -306,6 +314,9 @@ export function useStorybookGeneration() {
         DEFAULT_RECIPE_NAMES.BOOK_COVER
       )
 
+      // Use dynamic aspect ratio based on book format
+      const aspectRatio = getAspectRatioForBookFormat(project?.bookFormat)
+
       const response = await fetch(`/api/recipes/${recipeName}/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -313,7 +324,7 @@ export function useStorybookGeneration() {
           fieldValues,
           referenceImages,
           modelSettings: {
-            aspectRatio: '3:4',
+            aspectRatio,
             outputFormat: 'png',
           },
         }),
@@ -462,6 +473,52 @@ export function useStorybookGeneration() {
     }
   }, [project, updatePage, setGenerating, setError, getRecipeName])
 
+  /**
+   * Generate 3 additional cover variations on demand
+   * Uses different approaches: one story-aware, two standard with AI randomness
+   */
+  const generateCoverVariations = useCallback(async (): Promise<GenerationResult[]> => {
+    if (!project) return []
+
+    setState({
+      isGenerating: true,
+      progress: 'Generating 3 cover variations...',
+      error: null
+    })
+    setGenerating(true)
+
+    try {
+      // Generate 3 variations in parallel with different approaches:
+      // 1. Story-aware: Include full story text for narrative interpretation
+      // 2-3. Standard: Same prompt (AI randomness produces different results)
+
+      const fullStoryText = project.pages.map(p => p.text).join('\n\n')
+
+      const variations = await Promise.all([
+        // Variation 1: With full story context (creative interpretation)
+        generateBookCover({
+          includeStoryText: true,
+          storyText: fullStoryText
+        }),
+
+        // Variation 2-3: Standard approach (AI randomness)
+        generateBookCover(),
+        generateBookCover(),
+      ])
+
+      setState({ isGenerating: false, progress: null })
+      setGenerating(false)
+
+      return variations
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate variations'
+      setState({ isGenerating: false, progress: '', error: errorMessage })
+      setGenerating(false)
+      setError(errorMessage)
+      return []
+    }
+  }, [project, generateBookCover, setGenerating, setError])
+
   return {
     // State
     isGenerating: state.isGenerating,
@@ -472,6 +529,7 @@ export function useStorybookGeneration() {
     generateStyleGuide,
     generateCharacterSheet,
     generateBookCover,
+    generateCoverVariations,
     generatePage,  // ← Renamed from generatePageVariations
   }
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
 import { useStorybookGeneration } from "../../../hooks/useStorybookGeneration"
 import { Button } from "@/components/ui/button"
@@ -36,16 +36,49 @@ export function PageGenerationStep() {
     setCurrentPageIndex,
     updatePage,
     setPageTextPosition,
+    updateProject,
   } = useStorybookStore()
 
-  const { generatePage, isGenerating, progress, error } = useStorybookGeneration()
+  const { generatePage, generateBookCover, isGenerating, progress, error } = useStorybookGeneration()
 
   const [generatingPageId, setGeneratingPageId] = useState<string | null>(null)
   const [regeneratingAll, setRegeneratingAll] = useState(false)
   const [regeneratingProgress, setRegeneratingProgress] = useState<string>('')
+  const [isGeneratingCover, setIsGeneratingCover] = useState(false)
 
   const pages = project?.pages || []
   const currentPage = pages[currentPageIndex]
+
+  // Auto-generate cover when all pages are complete
+  useEffect(() => {
+    const allPagesComplete = pages.length > 0 && pages.every(p => p.imageUrl)
+    const noCoverYet = !project?.coverImageUrl
+
+    if (allPagesComplete && noCoverYet && !isGeneratingCover) {
+      handleGenerateDefaultCover()
+    }
+  }, [pages, project?.coverImageUrl, isGeneratingCover, handleGenerateDefaultCover])
+
+  const handleGenerateDefaultCover = useCallback(async () => {
+    if (isGeneratingCover) return
+
+    setIsGeneratingCover(true)
+    setRegeneratingProgress('Generating book cover...')
+
+    try {
+      const result = await generateBookCover()
+      if (result.success) {
+        updateProject({ coverImageUrl: result.imageUrl })
+        setRegeneratingProgress('Book cover generated successfully!')
+        setTimeout(() => setRegeneratingProgress(''), 3000)
+      } else {
+        setRegeneratingProgress('Failed to generate cover. You can retry from the Preview step.')
+        setTimeout(() => setRegeneratingProgress(''), 5000)
+      }
+    } finally {
+      setIsGeneratingCover(false)
+    }
+  }, [generateBookCover, updateProject, isGeneratingCover])
 
   const handlePreviousPage = () => {
     if (currentPageIndex > 0) {
