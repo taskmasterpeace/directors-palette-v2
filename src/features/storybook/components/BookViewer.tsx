@@ -24,6 +24,7 @@ const Page = forwardRef<HTMLDivElement, PageProps>(({ page, pageNumber }, ref) =
         text={page.text}
         richText={page.richText}
         textPosition={page.textPosition}
+        textBoxPosition={page.textBoxPosition}
       />
 
       {/* Page Number */}

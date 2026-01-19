@@ -15,7 +15,7 @@ import Image from 'next/image'
 // import Zoom from 'react-medium-image-zoom'
 // import 'react-medium-image-zoom/dist/styles.css'
 import { cn } from '@/utils/utils'
-import { PageLayout, TextPosition } from '../types/storybook.types'
+import { PageLayout, TextPosition, TextBoxPosition } from '../types/storybook.types'
 
 export interface PageLayoutRendererProps {
   layout?: PageLayout
@@ -23,6 +23,7 @@ export interface PageLayoutRendererProps {
   text: string
   richText?: string
   textPosition: TextPosition
+  textBoxPosition?: TextBoxPosition // Custom draggable position
   className?: string
 }
 
@@ -54,6 +55,7 @@ export function PageLayoutRenderer({
   text,
   richText,
   textPosition,
+  textBoxPosition,
   className
 }: PageLayoutRendererProps) {
 
@@ -74,13 +76,19 @@ export function PageLayoutRenderer({
             <div className="absolute inset-0 bg-gradient-to-br from-zinc-100 to-zinc-200" />
           )}
 
-          {/* Text Overlay - Transparent with shadow for readability */}
+          {/* Text Overlay - Use custom position if available, otherwise use preset */}
           {textPosition !== 'none' && (
             <div
               className={cn(
                 'absolute p-6',
-                getTextPositionClasses(textPosition)
+                textBoxPosition ? '' : getTextPositionClasses(textPosition)
               )}
+              style={textBoxPosition ? {
+                left: `${textBoxPosition.x}px`,
+                top: `${textBoxPosition.y}px`,
+                width: `${textBoxPosition.width}px`,
+                height: `${textBoxPosition.height}px`,
+              } : undefined}
             >
               {richText ? (
                 <div

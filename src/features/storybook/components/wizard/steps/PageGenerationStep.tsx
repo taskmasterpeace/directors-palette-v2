@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { RichTextEditor } from "../../RichTextEditor"
+import { DraggableTextEditor } from "../../DraggableTextEditor"
 import {
   Images,
   ChevronLeft,
@@ -353,20 +354,19 @@ export function PageGenerationStep() {
           )}
         </div>
 
-        {/* Right: Page Preview */}
+        {/* Right: Page Preview with Draggable Text */}
         <Card className="bg-zinc-900/50 border-zinc-800">
           <CardContent className="p-4">
-            <Label className="mb-3 block">Page Preview</Label>
+            <Label className="mb-3 block">Page Preview - Position Your Text</Label>
 
             {currentPage.imageUrl ? (
-              <div className="relative aspect-video rounded-lg overflow-hidden border border-zinc-700">
-                <Image
-                  src={currentPage.imageUrl}
-                  alt={`Page ${currentPageIndex + 1}`}
-                  fill
-                  className="object-cover"
-                />
-              </div>
+              <DraggableTextEditor
+                imageUrl={currentPage.imageUrl}
+                richText={currentPage.richText}
+                text={currentPage.text}
+                position={currentPage.textBoxPosition}
+                onPositionChange={(position) => updatePage(currentPage.id, { textBoxPosition: position })}
+              />
             ) : (
               <div
                 className={cn(

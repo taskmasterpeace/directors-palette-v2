@@ -90,6 +90,7 @@
     "react-medium-image-zoom": "^5.2.10",
     "react-pageflip": "^2.0.3",
     "react-resizable-panels": "^3.0.6",
+    "react-rnd": "^10.4.13",
     "replicate": "^1.2.0",
     "sonner": "^1.7.4",
     "stripe": "^20.0.0",

@@ -192,12 +192,21 @@ export interface SceneJSON {
   }
 }
 
+// Text box positioning for draggable text
+export interface TextBoxPosition {
+  x: number // X coordinate in pixels (or percentage)
+  y: number // Y coordinate in pixels (or percentage)
+  width: number // Width in pixels (or percentage)
+  height: number // Height in pixels (or percentage)
+}
+
 // A single page in the storybook
 export interface StorybookPage {
   id: string
   pageNumber: number
   text: string // The story text for this page (plain text for TTS)
   richText?: string // Rich formatted text with HTML (bold, colors, fonts)
+  textBoxPosition?: TextBoxPosition // Draggable text box coordinates (x, y, width, height)
   sceneJSON?: SceneJSON // Parsed scene (generated automatically)
   imageUrl?: string // Generated page image (single final image)
   // DEPRECATED: Grid-based variation system (removed in favor of recipe-based single image generation)
