@@ -2,7 +2,11 @@
 
 import { useState, useRef } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
-import { useStorybookGeneration } from "../../../hooks/useStorybookGeneration"
+import {
+  useStorybookGeneration,
+  getAspectRatioForBookFormat,
+  aspectRatioToCss,
+} from "../../../hooks/useStorybookGeneration"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -318,47 +322,87 @@ export function PreviewStep() {
       {/* Book Cover Section */}
       <Card className="bg-zinc-900/50 border-zinc-800">
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Book Cover</h3>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-semibold text-white">Book Cover</h3>
+              <p className="text-sm text-zinc-400 mt-1">
+                {project?.coverImageUrl
+                  ? pendingCoverVariations.length > 0
+                    ? 'Choose your favorite design'
+                    : `Generated for ages ${project.targetAge}+`
+                  : 'Cover will be generated automatically'}
+              </p>
+            </div>
+            {project?.coverImageUrl && !pendingCoverVariations.length && (
+              <div className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">
+                {getAspectRatioForBookFormat(project.bookFormat)} format
+              </div>
+            )}
+          </div>
 
           {/* Default Cover Display */}
           {project?.coverImageUrl && !pendingCoverVariations.length && (
-            <div className="space-y-4">
-              <div className="relative w-full max-w-xs mx-auto aspect-[3/4] bg-zinc-800 rounded-lg overflow-hidden">
+            <div className="space-y-6">
+              <div className="relative w-full max-w-sm mx-auto bg-zinc-800/50 rounded-xl overflow-hidden shadow-2xl border border-zinc-700/50"
+                   style={{ aspectRatio: aspectRatioToCss(getAspectRatioForBookFormat(project.bookFormat)) }}>
                 <Image
                   src={project.coverImageUrl}
                   alt="Book cover"
                   fill
-                  className="object-contain"
+                  className="object-contain p-2"
+                  priority
                 />
               </div>
 
-              <Button
-                onClick={handleGenerateVariations}
-                disabled={isGeneratingCoverVariations}
-                className="w-full gap-2"
-                variant="outline"
-              >
-                {isGeneratingCoverVariations ? (
-                  <>
-                    <LoadingSpinner size="sm" />
-                    Generating Options...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    Generate More Options
-                  </>
-                )}
-              </Button>
+              <div className="text-center space-y-2">
+                <p className="text-xs text-zinc-500">
+                  {project.characters.length > 1
+                    ? `Featuring ${project.characters.slice(0, 3).map(c => c.name).join(', ')}`
+                    : project.mainCharacterName
+                      ? `Featuring ${project.mainCharacterName}`
+                      : 'Your personalized book cover'
+                  }
+                </p>
+
+                <Button
+                  onClick={handleGenerateVariations}
+                  disabled={isGeneratingCoverVariations}
+                  className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-semibold"
+                  size="lg"
+                >
+                  {isGeneratingCoverVariations ? (
+                    <>
+                      <LoadingSpinner size="sm" color="current" />
+                      Generating 3 Variations...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      Generate More Options
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-zinc-600">
+                  {isGeneratingCoverVariations
+                    ? 'Creating unique cover designs...'
+                    : 'Get 3 alternative cover designs to choose from'
+                  }
+                </p>
+              </div>
             </div>
           )}
 
           {/* Variation Selection Grid */}
           {pendingCoverVariations.length > 0 && (
-            <div className="space-y-4">
-              <p className="text-sm text-zinc-400 text-center">
-                Select your favorite cover:
-              </p>
+            <div className="space-y-6">
+              <div className="text-center space-y-2">
+                <p className="text-sm text-amber-400 font-medium">
+                  ✨ 4 Cover Options Generated
+                </p>
+                <p className="text-xs text-zinc-500">
+                  Click any cover to select it as your book cover
+                </p>
+              </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {/* Current cover + 3 variations */}
@@ -367,46 +411,66 @@ export function PreviewStep() {
                     key={index}
                     onClick={() => url && handleSelectCover(url)}
                     className={cn(
-                      "relative aspect-[3/4] bg-zinc-800 rounded-lg overflow-hidden cursor-pointer",
-                      "border-2 transition-all hover:border-amber-500",
+                      "relative bg-zinc-800/50 rounded-lg overflow-hidden cursor-pointer",
+                      "border-2 transition-all hover:scale-105 hover:shadow-xl",
                       url === project?.coverImageUrl
-                        ? "border-amber-500 ring-2 ring-amber-500"
-                        : "border-zinc-700"
+                        ? "border-amber-500 ring-2 ring-amber-500 shadow-lg shadow-amber-500/20"
+                        : "border-zinc-700 hover:border-amber-400"
                     )}
+                    style={{ aspectRatio: aspectRatioToCss(getAspectRatioForBookFormat(project?.bookFormat)) }}
                   >
                     {url && (
-                      <Image
-                        src={url}
-                        alt={`Cover option ${index + 1}`}
-                        fill
-                        className="object-contain"
-                      />
+                      <>
+                        <Image
+                          src={url}
+                          alt={`Cover option ${index + 1}`}
+                          fill
+                          className="object-contain p-1"
+                        />
+                        {/* Option number */}
+                        <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                          Option {index + 1}
+                        </div>
+                      </>
                     )}
 
                     {/* Selected indicator */}
                     {url === project?.coverImageUrl && (
-                      <div className="absolute top-2 right-2 bg-amber-500 text-black rounded-full p-1">
+                      <div className="absolute top-2 right-2 bg-amber-500 text-black rounded-full p-1.5 shadow-lg">
                         <Check className="w-4 h-4" />
                       </div>
                     )}
+
+                    {/* Hover overlay */}
+                    <div className={cn(
+                      "absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 hover:opacity-100 transition-opacity",
+                      "flex items-end justify-center pb-2"
+                    )}>
+                      <span className="text-white text-xs font-medium">
+                        {url === project?.coverImageUrl ? 'Selected' : 'Click to select'}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
 
-              <Button
-                onClick={() => setPendingCoverVariations([])}
-                variant="ghost"
-                className="w-full"
-              >
-                Cancel
-              </Button>
+              <div className="flex gap-3 justify-center">
+                <Button
+                  onClick={() => setPendingCoverVariations([])}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  Cancel
+                </Button>
+              </div>
             </div>
           )}
 
           {/* Error Display */}
           {coverGenerationError && !project?.coverImageUrl && (
-            <div className="space-y-4 text-center">
-              <div className="text-red-400 text-sm">
+            <div className="space-y-4 text-center py-8">
+              <div className="text-red-400 text-sm bg-red-950/20 border border-red-900/50 rounded-lg p-4">
                 {coverGenerationError}
               </div>
               <Button

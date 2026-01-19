@@ -20,7 +20,7 @@ const DEFAULT_RECIPE_NAMES = {
  * CRITICAL: Images must be generated at the same aspect ratio as the book pages
  * to avoid cropping or letterboxing in the preview
  */
-function getAspectRatioForBookFormat(format: BookFormat = 'square'): string {
+export function getAspectRatioForBookFormat(format: BookFormat = 'square'): string {
   switch (format) {
     case 'square':
       return '1:1'  // 8.5" x 8.5" - most popular for children's books
@@ -33,6 +33,14 @@ function getAspectRatioForBookFormat(format: BookFormat = 'square'): string {
     default:
       return '1:1'
   }
+}
+
+/**
+ * Convert aspect ratio string to CSS aspect-ratio value
+ * e.g., "4:5" -> "4/5"
+ */
+export function aspectRatioToCss(aspectRatio: string): string {
+  return aspectRatio.replace(':', '/')
 }
 
 interface GenerationResult {
@@ -281,15 +289,37 @@ export function useStorybookGeneration() {
     setGenerating(true)
 
     try {
-      // Get main character description
-      const mainCharacter = project.characters[0] // Assuming first character is main
-      let mainCharacterDescription = mainCharacter
-        ? `${mainCharacter.name}: A child character with distinctive features`
-        : project.mainCharacterName || 'A child character'
+      // Build comprehensive character description for cover
+      // Include ALL characters with descriptions (main + supporting) for multi-character covers
+      const characterDescriptions: string[] = []
+
+      // Main character (first character)
+      const mainCharacter = project.characters[0]
+      if (mainCharacter) {
+        const desc = mainCharacter.description ||
+                    `${mainCharacter.name}: A ${project.targetAge}-year-old child with distinctive features`
+        characterDescriptions.push(`MAIN CHARACTER: ${desc}`)
+      }
+
+      // Supporting characters (if any) - up to 2 additional for multi-character covers
+      const supportingCharacters = project.characters.slice(1, 3)
+      supportingCharacters.forEach((char, index) => {
+        if (char.description || char.name) {
+          const desc = char.description || `${char.name}: A supporting character`
+          characterDescriptions.push(`SUPPORTING CHARACTER ${index + 1}: ${desc}`)
+        }
+      })
+
+      // Fallback if no characters defined
+      let mainCharacterDescription = characterDescriptions.length > 0
+        ? characterDescriptions.join('\n\n')
+        : project.mainCharacterName
+          ? `${project.mainCharacterName}: A ${project.targetAge}-year-old child`
+          : `A ${project.targetAge}-year-old child character`
 
       // Append story context if requested (for narrative-driven cover)
       if (options?.includeStoryText && options?.storyText) {
-        mainCharacterDescription += `\n\nFull Story:\n${options.storyText}`
+        mainCharacterDescription += `\n\nSTORY CONTEXT:\n${options.storyText}`
       }
 
       const fieldValues = {
@@ -299,14 +329,18 @@ export function useStorybookGeneration() {
         'stage0_field3_main_character_description': mainCharacterDescription,
       }
 
-      // Auto-attach reference images: style guide + main character sheet
+      // Auto-attach reference images: style guide + ALL character sheets (up to 3)
       const referenceImages: string[] = []
       if (project.style?.styleGuideUrl) {
         referenceImages.push(project.style.styleGuideUrl)
       }
-      if (mainCharacter?.characterSheetUrl) {
-        referenceImages.push(mainCharacter.characterSheetUrl)
-      }
+
+      // Add character sheets for all characters (main + supporting, up to 3 total)
+      project.characters.slice(0, 3).forEach(char => {
+        if (char.characterSheetUrl) {
+          referenceImages.push(char.characterSheetUrl)
+        }
+      })
 
       // Get recipe name from config or use default
       const recipeName = getRecipeName(
