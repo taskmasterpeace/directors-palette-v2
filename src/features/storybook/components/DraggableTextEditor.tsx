@@ -36,6 +36,19 @@ export function DraggableTextEditor({
     }
   }
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (textBoxRef.current && containerRef.current && e.touches.length === 1) {
+      const touch = e.touches[0]
+      const rect = textBoxRef.current.getBoundingClientRect()
+      setIsDragging(true)
+      setDragStart({
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top,
+      })
+      e.preventDefault()
+    }
+  }
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging && containerRef.current) {
@@ -51,16 +64,36 @@ export function DraggableTextEditor({
       }
     }
 
-    const handleMouseUp = () => {
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isDragging && containerRef.current && e.touches.length === 1) {
+        const touch = e.touches[0]
+        const containerRect = containerRef.current.getBoundingClientRect()
+        const newX = Math.max(0, Math.min(touch.clientX - containerRect.left - dragStart.x, containerRect.width - position.width))
+        const newY = Math.max(0, Math.min(touch.clientY - containerRect.top - dragStart.y, containerRect.height - position.height))
+
+        onPositionChange({
+          ...position,
+          x: newX,
+          y: newY,
+        })
+        e.preventDefault()
+      }
+    }
+
+    const handleEnd = () => {
       setIsDragging(false)
     }
 
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove)
-      document.addEventListener('mouseup', handleMouseUp)
+      document.addEventListener('mouseup', handleEnd)
+      document.addEventListener('touchmove', handleTouchMove, { passive: false })
+      document.addEventListener('touchend', handleEnd)
       return () => {
         document.removeEventListener('mousemove', handleMouseMove)
-        document.removeEventListener('mouseup', handleMouseUp)
+        document.removeEventListener('mouseup', handleEnd)
+        document.removeEventListener('touchmove', handleTouchMove)
+        document.removeEventListener('touchend', handleEnd)
       }
     }
   }, [isDragging, dragStart, position, onPositionChange])
@@ -87,7 +120,7 @@ export function DraggableTextEditor({
       {/* Draggable Text Box */}
       <div
         ref={textBoxRef}
-        className="absolute border-2 border-dashed border-amber-500 bg-transparent hover:border-amber-400 transition-colors cursor-move"
+        className="absolute border-2 border-dashed border-amber-500 bg-transparent hover:border-amber-400 transition-colors cursor-move touch-none"
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
@@ -95,6 +128,7 @@ export function DraggableTextEditor({
           minHeight: `${position.height}px`,
         }}
         onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
       >
         {/* Drag Handle */}
         <div className="absolute -top-8 left-0 bg-amber-500 text-black text-xs px-2 py-1 rounded flex items-center gap-1 pointer-events-none">
