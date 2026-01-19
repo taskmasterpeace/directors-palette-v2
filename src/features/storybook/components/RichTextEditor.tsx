@@ -117,11 +117,12 @@ export function RichTextEditor({
         {/* Size Selector - Touch optimized */}
         <select
           onChange={(e) => formatSize(e.target.value)}
+          defaultValue="4"
           className="text-xs bg-zinc-800 text-white border border-zinc-700 rounded px-3 py-2 h-10 touch-manipulation"
           title="Font Size"
         >
           <option value="3">Small (12px)</option>
-          <option value="4" defaultValue>Normal (16px)</option>
+          <option value="4">Normal (16px)</option>
           <option value="5">Medium (20px)</option>
           <option value="6">Large (28px)</option>
           <option value="7">X-Large (36px)</option>
