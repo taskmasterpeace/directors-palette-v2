@@ -45,6 +45,36 @@ git add -A && git commit -m "type: description" && git push origin main
 
 ---
 
+# 🚨 CRITICAL: DEV SERVER STARTUP 🚨
+
+**INCIDENT DATE: January 18, 2026** - Dev server must be started automatically by Claude, NEVER ask user to start it manually.
+
+## ALWAYS START DEV SERVER AUTOMATICALLY
+
+When testing is required or user requests to see the app:
+
+```bash
+cd D:/git/directors-palette-v2 && node node_modules/next/dist/bin/next dev --port 3002 2>&1 &
+```
+
+**NEVER:**
+- ❌ Ask user to start the dev server
+- ❌ Tell user "please start the server"
+- ❌ Use `npm run dev` (doesn't work in background)
+- ❌ Use port 3000 (use 3002 instead)
+
+**ALWAYS:**
+- ✅ Start server automatically when needed
+- ✅ Use port 3002
+- ✅ Run directly with node (not npm)
+- ✅ Verify server is running with `curl http://localhost:3002`
+
+## Server URL
+- Local: `http://localhost:3002`
+- NEVER use `/storybook` route - click "Storybook" in sidebar
+
+---
+
 # 🚨 CRITICAL: BUILD VERIFICATION BEFORE COMMIT 🚨
 
 **INCIDENT DATE: January 6, 2026** - Unused import caused Vercel build failure. `tsc --noEmit` does NOT catch ESLint errors!
