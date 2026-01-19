@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useMemo } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
 import { useStorybookGeneration } from "../../../hooks/useStorybookGeneration"
 import { Button } from "@/components/ui/button"
@@ -46,7 +46,8 @@ export function PageGenerationStep() {
   const [regeneratingProgress, setRegeneratingProgress] = useState<string>('')
   const [isGeneratingCover, setIsGeneratingCover] = useState(false)
 
-  const pages = project?.pages || []
+  // Memoize pages to prevent dependency changes on every render
+  const pages = useMemo(() => project?.pages || [], [project?.pages])
   const currentPage = pages[currentPageIndex]
 
   // Auto-generate cover when all pages are complete

@@ -30,8 +30,8 @@ export function StoryApproachStep() {
   const [isRegenerating, setIsRegenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const category = project?.educationCategory ? getCategoryById(project.educationCategory) : null
-  const topic = project?.educationCategory && project?.educationTopic
+  const _category = project?.educationCategory ? getCategoryById(project.educationCategory) : null
+  const _topic = project?.educationCategory && project?.educationTopic
     ? getTopicById(project.educationCategory, project.educationTopic)
     : null
 

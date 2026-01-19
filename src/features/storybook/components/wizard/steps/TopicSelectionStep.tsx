@@ -19,7 +19,7 @@ export function TopicSelectionStep() {
   const characterAge = project?.mainCharacterAge || 5
 
   const category = selectedCategory ? getCategoryById(selectedCategory) : null
-  const availableTopics = selectedCategory ? getTopicsForAge(selectedCategory, characterAge) : []
+  const _availableTopics = selectedCategory ? getTopicsForAge(selectedCategory, characterAge) : []
   const allTopics = category?.topics || []
 
   const handleSelectTopic = (topicId: string) => {

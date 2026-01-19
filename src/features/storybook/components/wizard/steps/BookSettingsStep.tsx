@@ -86,7 +86,7 @@ export function BookSettingsStep() {
   }
 
   const isCustomCategory = project?.educationCategory === 'custom'
-  const category = project?.educationCategory ? getCategoryById(project.educationCategory) : null
+  const _category = project?.educationCategory ? getCategoryById(project.educationCategory) : null
   const topic = project?.educationCategory && project?.educationTopic
     ? getTopicById(project.educationCategory, project.educationTopic)
     : null
