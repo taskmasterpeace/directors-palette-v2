@@ -45,6 +45,64 @@ git add -A && git commit -m "type: description" && git push origin main
 
 ---
 
+# 🚨 CRITICAL: CLEAN BUILD VERIFICATION BEFORE EVERY COMMIT 🚨
+
+**INCIDENT DATE: January 19, 2026** - Multiple Vercel build failures due to not testing with clean builds locally.
+
+## BEFORE EVERY COMMIT (MANDATORY)
+
+**ALWAYS run a CLEAN BUILD exactly like Vercel does:**
+
+```bash
+rm -rf .next && npm run build
+```
+
+### Why Clean Builds?
+- Next.js caches build artifacts in `.next` directory
+- Cached builds can hide TypeScript errors
+- Vercel ALWAYS does clean builds (no cache for type checking)
+- If you don't clean, you'll get false positives locally
+
+### The Verification Process (MANDATORY):
+
+1. **Clean the build cache:**
+   ```bash
+   rm -rf .next
+   ```
+
+2. **Run FULL production build:**
+   ```bash
+   npm run build
+   ```
+   - This runs TypeScript type checking
+   - This runs ESLint
+   - This catches ALL errors Vercel will catch
+
+3. **Check for errors:**
+   - ANY error = DO NOT COMMIT
+   - Fix the error and repeat from step 1
+
+4. **Only commit if build succeeds:**
+   ```bash
+   git add -A && git commit -m "..." && git push origin main
+   ```
+
+### NEVER SKIP THIS
+
+- ❌ Don't use `tsc --noEmit` alone (doesn't catch ESLint errors)
+- ❌ Don't use `next lint` alone (doesn't catch TypeScript errors)
+- ❌ Don't assume cached builds are accurate
+- ✅ **ALWAYS** `rm -rf .next && npm run build` before committing
+
+### If Build Fails:
+1. **DO NOT COMMIT**
+2. **DO NOT PUSH**
+3. Fix the error
+4. Run clean build again
+5. Repeat until successful
+
+---
+
 # 🚨 CRITICAL: DEV SERVER STARTUP 🚨
 
 **INCIDENT DATE: January 18, 2026** - Dev server must be started automatically by Claude, NEVER ask user to start it manually.
