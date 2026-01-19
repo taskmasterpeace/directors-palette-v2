@@ -1,0 +1,42 @@
+   ▲ Next.js 15.5.7
+   - Local:        http://localhost:3002
+   - Network:      http://100.120.206.8:3002
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1539ms
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 1191ms (230 modules)
+ ○ Compiling /landing ...
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (114kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ✓ Compiled /landing in 4.1s (972 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3002". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /landing 200 in 4594ms
+ ○ Compiling /favicon.ico ...
+ ✓ Compiled /favicon.ico in 1052ms (599 modules)
+ GET /favicon.ico 200 in 822ms
+ GET /favicon.ico 200 in 1283ms
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3002". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /landing 200 in 255ms
+ GET /landing 200 in 93ms
+ ○ Compiling /auth/signin ...
+ ✓ Compiled /auth/signin in 1596ms (1323 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3002". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET /auth/signin 200 in 1735ms
+ GET /auth/signin 200 in 32ms
+ GET /landing 200 in 209ms
+ GET /auth/signin 200 in 28ms
+ ○ Compiling / ...
+ ✓ Compiled / in 13.4s (3971 modules)
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3002". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+(node:34896) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ GET / 200 in 11457ms
+ ○ Compiling /favicon.ico ...
+ ✓ Compiled /api/admin/check in 4.2s (2146 modules)
+ ✓ Compiled in 513ms (1829 modules)
+ GET /favicon.ico 200 in 5502ms
+ GET /api/credits 200 in 2893ms
+ GET /api/admin/check 200 in 2409ms
+ GET /api/admin/check 200 in 145ms
+ GET /api/admin/check 200 in 122ms

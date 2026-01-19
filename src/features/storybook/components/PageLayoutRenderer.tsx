@@ -74,21 +74,27 @@ export function PageLayoutRenderer({
             <div className="absolute inset-0 bg-gradient-to-br from-zinc-100 to-zinc-200" />
           )}
 
-          {/* Text Overlay - Improved readability */}
+          {/* Text Overlay - Transparent with shadow for readability */}
           {textPosition !== 'none' && (
             <div
               className={cn(
-                'absolute p-6 bg-white/95 backdrop-blur-md shadow-lg',
+                'absolute p-6',
                 getTextPositionClasses(textPosition)
               )}
             >
               {richText ? (
                 <div
-                  className="text-gray-900 text-base leading-relaxed font-medium rich-text-content"
+                  className="text-white text-base leading-relaxed font-bold rich-text-content"
+                  style={{
+                    textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.8)'
+                  }}
                   dangerouslySetInnerHTML={{ __html: richText }}
                 />
               ) : (
-                <p className="text-gray-900 text-base leading-relaxed font-medium">
+                <p className="text-white text-base leading-relaxed font-bold"
+                   style={{
+                     textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.8)'
+                   }}>
                   {text}
                 </p>
               )}

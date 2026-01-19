@@ -55,6 +55,12 @@ export function RichTextEditor({
     handleInput()
   }
 
+  const formatSize = (size: string) => {
+    document.execCommand('fontSize', false, size)
+    editorRef.current?.focus()
+    handleInput()
+  }
+
   const colors = [
     { name: 'Black', value: '#000000' },
     { name: 'Red', value: '#ef4444' },
@@ -106,6 +112,19 @@ export function RichTextEditor({
               {font.name}
             </option>
           ))}
+        </select>
+
+        {/* Size Selector */}
+        <select
+          onChange={(e) => formatSize(e.target.value)}
+          className="text-xs bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1.5 h-8"
+          title="Font Size"
+        >
+          <option value="3">Small (12px)</option>
+          <option value="4" selected>Normal (16px)</option>
+          <option value="5">Medium (20px)</option>
+          <option value="6">Large (28px)</option>
+          <option value="7">X-Large (36px)</option>
         </select>
 
         {/* Color Label */}
