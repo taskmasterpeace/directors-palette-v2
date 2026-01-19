@@ -50,16 +50,7 @@ export function PageGenerationStep() {
   const pages = useMemo(() => project?.pages || [], [project?.pages])
   const currentPage = pages[currentPageIndex]
 
-  // Auto-generate cover when all pages are complete
-  useEffect(() => {
-    const allPagesComplete = pages.length > 0 && pages.every(p => p.imageUrl)
-    const noCoverYet = !project?.coverImageUrl
-
-    if (allPagesComplete && noCoverYet && !isGeneratingCover) {
-      handleGenerateDefaultCover()
-    }
-  }, [pages, project?.coverImageUrl, isGeneratingCover, handleGenerateDefaultCover])
-
+  // Define cover generation handler before useEffect
   const handleGenerateDefaultCover = useCallback(async () => {
     if (isGeneratingCover) return
 
@@ -80,6 +71,16 @@ export function PageGenerationStep() {
       setIsGeneratingCover(false)
     }
   }, [generateBookCover, updateProject, isGeneratingCover])
+
+  // Auto-generate cover when all pages are complete
+  useEffect(() => {
+    const allPagesComplete = pages.length > 0 && pages.every(p => p.imageUrl)
+    const noCoverYet = !project?.coverImageUrl
+
+    if (allPagesComplete && noCoverYet && !isGeneratingCover) {
+      handleGenerateDefaultCover()
+    }
+  }, [pages, project?.coverImageUrl, isGeneratingCover, handleGenerateDefaultCover])
 
   const handlePreviousPage = () => {
     if (currentPageIndex > 0) {
