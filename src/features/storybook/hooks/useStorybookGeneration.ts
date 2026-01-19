@@ -540,7 +540,7 @@ export function useStorybookGeneration() {
         generateBookCover(),
       ])
 
-      setState({ isGenerating: false, progress: null })
+      setState({ isGenerating: false, progress: '', error: null })
       setGenerating(false)
 
       return variations
