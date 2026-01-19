@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useStorybookStore, type SavedProjectSummary } from "../../store/storybook.store"
 import { getWizardSteps, getStepIndex } from "../../types/storybook.types"
+import { useAutoSave } from "../../hooks/useAutoSave"
 import { StepIndicator } from "./StepIndicator"
 import { StepCard } from "./StepCard"
 // Paste mode steps (original flow)
@@ -75,6 +76,9 @@ function getStepIcon(stepId: string) {
 }
 
 export function WizardContainer() {
+  // Auto-save project every 30 seconds
+  useAutoSave()
+
   const {
     currentStep,
     project,

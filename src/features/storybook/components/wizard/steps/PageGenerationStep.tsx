@@ -146,8 +146,56 @@ export function PageGenerationStep() {
     }
   }, [pages, generatePage, setCurrentPageIndex])
 
+  const handleGenerateAllPages = useCallback(async () => {
+    if (!pages || pages.length === 0) return
+
+    // Only generate pages that don't have images yet
+    const pagesToGenerate = pages.filter(p => !p.imageUrl)
+    if (pagesToGenerate.length === 0) {
+      setRegeneratingProgress('All pages already have images! Use "Regenerate All" to remake them.')
+      setTimeout(() => setRegeneratingProgress(''), 3000)
+      return
+    }
+
+    setRegeneratingAll(true)
+
+    try {
+      for (let i = 0; i < pagesToGenerate.length; i++) {
+        const page = pagesToGenerate[i]
+        const pageIndex = pages.findIndex(p => p.id === page.id)
+        setRegeneratingProgress(`Generating page ${pageIndex + 1} of ${pages.length}... (${i + 1}/${pagesToGenerate.length} remaining)`)
+        setGeneratingPageId(page.id)
+        setCurrentPageIndex(pageIndex) // Show progress
+
+        const result = await generatePage(page.id)
+        if (!result.success) {
+          console.error(`Generation failed for page ${pageIndex + 1}:`, result.error)
+          // Continue with next page even if one fails
+        }
+
+        // Small delay between pages
+        if (i < pagesToGenerate.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
+      }
+
+      setRegeneratingProgress(`Successfully generated ${pagesToGenerate.length} pages!`)
+      setTimeout(() => setRegeneratingProgress(''), 3000)
+    } catch (err) {
+      console.error('Error generating all pages:', err)
+      setRegeneratingProgress('Error during generation')
+      setTimeout(() => setRegeneratingProgress(''), 3000)
+    } finally {
+      setRegeneratingAll(false)
+      setGeneratingPageId(null)
+    }
+  }, [pages, generatePage, setCurrentPageIndex])
+
   // Check if this page is currently generating
   const isCurrentPageGenerating = generatingPageId === currentPage?.id && isGenerating
+
+  // Check if there are pages without images
+  const hasUngeneratedPages = pages.some(p => !p.imageUrl)
 
   if (!currentPage) {
     return (
@@ -159,12 +207,34 @@ export function PageGenerationStep() {
 
   return (
     <div className="space-y-4 max-w-6xl mx-auto">
-      {/* Regenerate All Button */}
-      <div className="flex justify-center">
+      {/* Batch Generation Buttons */}
+      <div className="flex justify-center gap-3 flex-wrap">
+        {/* Generate All Pages - for first-time batch generation */}
+        {hasUngeneratedPages && (
+          <Button
+            onClick={handleGenerateAllPages}
+            disabled={regeneratingAll || pages.length === 0}
+            className="gap-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold px-6 touch-manipulation"
+          >
+            {regeneratingAll ? (
+              <>
+                <LoadingSpinner size="sm" color="current" />
+                {regeneratingProgress}
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                Generate All Pages ({pages.filter(p => !p.imageUrl).length} remaining)
+              </>
+            )}
+          </Button>
+        )}
+
+        {/* Regenerate All - for remaking existing pages */}
         <Button
           onClick={handleRegenerateAllPages}
           disabled={regeneratingAll || pages.length === 0}
-          className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-semibold px-6"
+          className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-semibold px-6 touch-manipulation"
         >
           {regeneratingAll ? (
             <>
