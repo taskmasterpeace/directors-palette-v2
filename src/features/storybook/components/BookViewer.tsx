@@ -22,6 +22,7 @@ const Page = forwardRef<HTMLDivElement, PageProps>(({ page, pageNumber }, ref) =
         layout={page.layout || 'image-with-text'}
         imageUrl={page.imageUrl}
         text={page.text}
+        richText={page.richText}
         textPosition={page.textPosition}
       />
 

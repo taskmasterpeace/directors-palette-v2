@@ -5,8 +5,8 @@ import { useStorybookStore } from "../../../store/storybook.store"
 import { useStorybookGeneration } from "../../../hooks/useStorybookGeneration"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { RichTextEditor } from "../../RichTextEditor"
 import {
   Images,
   ChevronLeft,
@@ -233,10 +233,13 @@ export function PageGenerationStep() {
             <CardContent className="p-4 space-y-4">
               <div className="space-y-2">
                 <Label>Page {currentPageIndex + 1} Text</Label>
-                <Textarea
-                  value={currentPage.text}
-                  onChange={(e) => updatePage(currentPage.id, { text: e.target.value })}
-                  className="min-h-[150px] bg-zinc-800/50 border-zinc-700 font-serif"
+                <RichTextEditor
+                  value={currentPage.richText || currentPage.text}
+                  onChange={(html, plainText) => updatePage(currentPage.id, {
+                    richText: html,
+                    text: plainText // Keep plain text for TTS
+                  })}
+                  placeholder={`Enter the story text for page ${currentPageIndex + 1}...`}
                 />
               </div>
 

@@ -21,6 +21,7 @@ export interface PageLayoutRendererProps {
   layout?: PageLayout
   imageUrl?: string
   text: string
+  richText?: string
   textPosition: TextPosition
   className?: string
 }
@@ -51,6 +52,7 @@ export function PageLayoutRenderer({
   layout = 'image-with-text',
   imageUrl,
   text,
+  richText,
   textPosition,
   className
 }: PageLayoutRendererProps) {
@@ -80,9 +82,16 @@ export function PageLayoutRenderer({
                 getTextPositionClasses(textPosition)
               )}
             >
-              <p className="text-gray-900 text-base leading-relaxed font-medium">
-                {text}
-              </p>
+              {richText ? (
+                <div
+                  className="text-gray-900 text-base leading-relaxed font-medium rich-text-content"
+                  dangerouslySetInnerHTML={{ __html: richText }}
+                />
+              ) : (
+                <p className="text-gray-900 text-base leading-relaxed font-medium">
+                  {text}
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -120,9 +129,16 @@ export function PageLayoutRenderer({
           {/* Text content - centered */}
           <div className="absolute inset-0 flex items-center justify-center p-12">
             <div className="max-w-md">
-              <p className="text-gray-900 text-lg leading-relaxed font-medium text-center">
-                {text}
-              </p>
+              {richText ? (
+                <div
+                  className="text-gray-900 text-lg leading-relaxed font-medium text-center rich-text-content"
+                  dangerouslySetInnerHTML={{ __html: richText }}
+                />
+              ) : (
+                <p className="text-gray-900 text-lg leading-relaxed font-medium text-center">
+                  {text}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -138,9 +154,16 @@ export function PageLayoutRenderer({
               <p className="text-zinc-600 text-sm font-medium">
                 Spread Layout (Coming Soon)
               </p>
-              <p className="text-gray-900 text-base leading-relaxed max-w-md">
-                {text}
-              </p>
+              {richText ? (
+                <div
+                  className="text-gray-900 text-base leading-relaxed max-w-md rich-text-content"
+                  dangerouslySetInnerHTML={{ __html: richText }}
+                />
+              ) : (
+                <p className="text-gray-900 text-base leading-relaxed max-w-md">
+                  {text}
+                </p>
+              )}
               {imageUrl && (
                 <div className="relative w-48 h-48 mx-auto">
                   <Image

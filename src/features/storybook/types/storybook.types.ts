@@ -196,7 +196,8 @@ export interface SceneJSON {
 export interface StorybookPage {
   id: string
   pageNumber: number
-  text: string // The story text for this page
+  text: string // The story text for this page (plain text for TTS)
+  richText?: string // Rich formatted text with HTML (bold, colors, fonts)
   sceneJSON?: SceneJSON // Parsed scene (generated automatically)
   imageUrl?: string // Generated page image (single final image)
   // DEPRECATED: Grid-based variation system (removed in favor of recipe-based single image generation)
