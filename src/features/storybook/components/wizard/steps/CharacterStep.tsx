@@ -460,17 +460,6 @@ export function CharacterStep() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-white flex items-center justify-center gap-2">
-          <Users className="w-6 h-6 text-amber-400" />
-          Create Characters
-        </h2>
-        <p className="text-zinc-400">
-          Create character sheets for consistent illustrations. Upload photos or generate from scratch.
-        </p>
-      </div>
-
       {/* Auto-detect Button */}
       <div className="flex justify-center gap-4">
         <Button

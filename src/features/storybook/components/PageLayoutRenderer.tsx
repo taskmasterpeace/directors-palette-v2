@@ -11,6 +11,8 @@
  */
 
 import Image from 'next/image'
+import Zoom from 'react-medium-image-zoom'
+import 'react-medium-image-zoom/dist/styles.css'
 import { cn } from '@/utils/utils'
 import { PageLayout, TextPosition } from '../types/storybook.types'
 
@@ -58,13 +60,15 @@ export function PageLayoutRenderer({
         <div className={cn('relative w-full h-full bg-white overflow-hidden', className)}>
           {/* Background Image */}
           {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt="Page illustration"
-              fill
-              className="object-contain"
-              priority
-            />
+            <Zoom>
+              <Image
+                src={imageUrl}
+                alt="Page illustration"
+                fill
+                className="object-contain cursor-zoom-in"
+                priority
+              />
+            </Zoom>
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-zinc-100 to-zinc-200" />
           )}
@@ -91,13 +95,15 @@ export function PageLayoutRenderer({
       return (
         <div className={cn('relative w-full h-full bg-white overflow-hidden', className)}>
           {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt="Page illustration"
-              fill
-              className="object-contain"
-              priority
-            />
+            <Zoom>
+              <Image
+                src={imageUrl}
+                alt="Page illustration"
+                fill
+                className="object-contain cursor-zoom-in"
+                priority
+              />
+            </Zoom>
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-zinc-100 to-zinc-200 flex items-center justify-center">
               <span className="text-zinc-400 text-sm">No image</span>
@@ -139,14 +145,16 @@ export function PageLayoutRenderer({
                 {text}
               </p>
               {imageUrl && (
-                <div className="relative w-48 h-48 mx-auto">
-                  <Image
-                    src={imageUrl}
-                    alt="Page illustration"
-                    fill
-                    className="object-cover rounded-lg"
-                  />
-                </div>
+                <Zoom>
+                  <div className="relative w-48 h-48 mx-auto">
+                    <Image
+                      src={imageUrl}
+                      alt="Page illustration"
+                      fill
+                      className="object-cover rounded-lg cursor-zoom-in"
+                    />
+                  </div>
+                </Zoom>
               )}
             </div>
           </div>

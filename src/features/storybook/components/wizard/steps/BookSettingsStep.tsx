@@ -181,18 +181,6 @@ export function BookSettingsStep() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">Configure Your Book</h2>
-        <p className="text-muted-foreground">
-          {isCustomCategory ? (
-            <>✨ Custom Story - Tell us what kind of story you want!</>
-          ) : (
-            <>{category?.icon} {category?.name} → {topic?.icon} {topic?.name}</>
-          )}
-        </p>
-      </div>
-
       {/* Settings Cards */}
       <div className="flex-1 space-y-6 overflow-y-auto">
         {/* Custom Story Idea (only for custom category) */}

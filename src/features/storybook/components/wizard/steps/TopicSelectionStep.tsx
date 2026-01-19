@@ -50,24 +50,6 @@ export function TopicSelectionStep() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-2xl">{category.icon}</span>
-          <h2 className="text-2xl font-bold text-white">
-            {category.name} for {project?.mainCharacterName || "your character"}
-          </h2>
-        </div>
-        <p className="text-muted-foreground">
-          Topics available for age {characterAge}
-          {availableTopics.length < allTopics.length && (
-            <span className="text-zinc-500 ml-2">
-              ({allTopics.length - availableTopics.length} topics for other ages)
-            </span>
-          )}
-        </p>
-      </div>
-
       {/* Topic Grid */}
       <div className="flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {allTopics.map((topic) => {

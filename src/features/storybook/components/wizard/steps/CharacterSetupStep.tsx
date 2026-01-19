@@ -84,15 +84,6 @@ export function CharacterSetupStep() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">Who is your story about?</h2>
-        <p className="text-muted-foreground">
-          Create your main character. They&apos;ll be the star of your educational storybook!
-          You can add photos later in the Characters step.
-        </p>
-      </div>
-
       {/* Main Content */}
       <div className="flex-1 flex flex-col gap-6">
         {/* Character Details Card */}

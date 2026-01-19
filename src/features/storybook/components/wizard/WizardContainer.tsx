@@ -21,7 +21,21 @@ import { PageGenerationStep } from "./steps/PageGenerationStep"
 import { PreviewStep } from "./steps/PreviewStep"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, Save, FolderOpen, FilePlus, Trash2, Check } from "lucide-react"
+import {
+  ChevronLeft,
+  ChevronRight,
+  Save,
+  FolderOpen,
+  FilePlus,
+  Trash2,
+  Check,
+  BookCheck,
+  PenTool,
+  Sparkles,
+  Image as ImageIcon,
+  Users,
+  BookOpen
+} from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import {
   DropdownMenu,
@@ -32,6 +46,33 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast"
+
+// Get icon for each wizard step
+function getStepIcon(stepId: string) {
+  switch (stepId) {
+    case 'character-setup':
+      return Users
+    case 'category':
+    case 'topic':
+    case 'settings':
+      return BookOpen
+    case 'approach':
+    case 'review':
+      return PenTool
+    case 'story':
+      return PenTool
+    case 'style':
+      return Sparkles
+    case 'characters':
+      return Users
+    case 'pages':
+      return ImageIcon
+    case 'preview':
+      return BookCheck
+    default:
+      return BookOpen
+  }
+}
 
 export function WizardContainer() {
   const {
@@ -305,6 +346,31 @@ export function WizardContainer() {
             New
           </Button>
         </div>
+      </div>
+
+      {/* Centralized Title Bar */}
+      <div className="flex items-center justify-between px-6 py-3 bg-zinc-900/80 border border-zinc-800 rounded-lg">
+        <div className="flex items-center gap-3">
+          {(() => {
+            const StepIcon = getStepIcon(currentStep)
+            return <StepIcon className="w-5 h-5 text-amber-400 flex-shrink-0" />
+          })()}
+          <div>
+            <h2 className="text-lg font-semibold text-white">
+              {currentStepInfo.label}
+            </h2>
+            {project?.title && (
+              <p className="text-sm text-zinc-400">
+                {project.title}
+              </p>
+            )}
+          </div>
+        </div>
+        {project?.author && (
+          <div className="text-sm text-zinc-400">
+            by {project.author}
+          </div>
+        )}
       </div>
 
       {/* Step Content */}

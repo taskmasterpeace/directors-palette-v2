@@ -222,17 +222,6 @@ export function StyleSelectionStep() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-white flex items-center justify-center gap-2">
-          <Palette className="w-6 h-6 text-amber-400" />
-          Choose Your Style
-        </h2>
-        <p className="text-zinc-400">
-          Select an art style for your illustrations. This will be applied to all pages.
-        </p>
-      </div>
-
       {/* Style Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {PRESET_STYLES.map((style) => (

@@ -199,17 +199,6 @@ export function StoryInputStep() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-white flex items-center justify-center gap-2">
-          <BookOpen className="w-6 h-6 text-amber-400" />
-          Write Your Story
-        </h2>
-        <p className="text-zinc-400">
-          Paste your story below. Choose how many pages to split it into.
-        </p>
-      </div>
-
       {/* Title Input */}
       <div className="space-y-2">
         <Label htmlFor="title">Book Title</Label>

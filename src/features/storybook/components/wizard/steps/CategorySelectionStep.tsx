@@ -41,16 +41,6 @@ export function CategorySelectionStep() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">
-          What kind of story for {project?.mainCharacterName || "your character"}?
-        </h2>
-        <p className="text-muted-foreground">
-          Choose an educational category or create a custom story
-        </p>
-      </div>
-
       {/* Category Grid */}
       <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-4">
         {allCategories.map((category) => (

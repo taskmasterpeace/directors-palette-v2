@@ -123,14 +123,6 @@ export function PageGenerationStep() {
 
   return (
     <div className="space-y-4 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-white flex items-center justify-center gap-2">
-          <Images className="w-6 h-6 text-amber-400" />
-          Generate Page Illustrations
-        </h2>
-      </div>
-
       {/* Regenerate All Button */}
       <div className="flex justify-center">
         <Button

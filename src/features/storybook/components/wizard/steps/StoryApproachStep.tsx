@@ -167,14 +167,6 @@ export function StoryApproachStep() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">Choose Your Story</h2>
-        <p className="text-muted-foreground">
-          {category?.icon} {topic?.name} for {project?.mainCharacterName}
-        </p>
-      </div>
-
       {/* Story Ideas Grid */}
       <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
         {storyIdeas.map((idea) => {

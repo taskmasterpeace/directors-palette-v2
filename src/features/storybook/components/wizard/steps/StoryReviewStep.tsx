@@ -76,12 +76,6 @@ export function StoryReviewStep() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="mb-4">
-        <h2 className="text-2xl font-bold text-white mb-1">{generatedStory.title}</h2>
-        <p className="text-muted-foreground text-sm">{generatedStory.summary}</p>
-      </div>
-
       {/* Main Content */}
       <div className="flex-1 flex gap-4 min-h-0">
         {/* Story Pages */}

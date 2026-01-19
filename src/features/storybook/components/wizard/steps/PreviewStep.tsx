@@ -5,10 +5,11 @@ import { useStorybookStore } from "../../../store/storybook.store"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
-  BookCheck,
   Download,
   ChevronLeft,
   ChevronRight,
+  Maximize2,
+  X,
 } from "lucide-react"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
@@ -19,6 +20,7 @@ import { getThumbnailDimensions } from "../../../utils/book-dimensions"
 export function PreviewStep() {
   const { project, updatePage } = useStorybookStore()
   const [currentPreviewPage, setCurrentPreviewPage] = useState(0)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const bookRef = useRef<BookViewerRef>(null)
 
   const pages = project?.pages || []
@@ -47,22 +49,82 @@ export function PreviewStep() {
     updatePage(pageId, { audioUrl })
   }
 
-  return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-white flex items-center justify-center gap-2">
-          <BookCheck className="w-6 h-6 text-amber-400" />
-          Preview Your Storybook
-        </h2>
-        <p className="text-zinc-400">
-          {project?.title || "Untitled Storybook"}
-        </p>
-      </div>
+  // Fullscreen mode rendering
+  if (isFullscreen) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
+        {/* Close button */}
+        <Button
+          onClick={() => setIsFullscreen(false)}
+          variant="ghost"
+          size="icon"
+          className="absolute top-4 right-4 text-white hover:bg-white/10 z-10"
+        >
+          <X className="w-8 h-8" />
+        </Button>
 
+        {/* Navigation buttons in fullscreen */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handlePrevPage}
+          disabled={currentPreviewPage === 0}
+          className="absolute left-4 text-white hover:bg-white/10"
+        >
+          <ChevronLeft className="w-8 h-8" />
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleNextPage}
+          disabled={currentPreviewPage === pages.length - 1}
+          className="absolute right-4 text-white hover:bg-white/10"
+        >
+          <ChevronRight className="w-8 h-8" />
+        </Button>
+
+        {/* Book viewer - larger in fullscreen */}
+        <div className="h-[95vh] flex items-center justify-center">
+          {pages.length > 0 ? (
+            <BookViewer
+              ref={bookRef}
+              pages={pages}
+              title={project?.title || "My Storybook"}
+              author={project?.author}
+              coverUrl={project?.coverImageUrl}
+              currentPage={currentPreviewPage}
+              onPageChange={handlePageChange}
+              bookFormat={project?.bookFormat || 'square'}
+            />
+          ) : (
+            <div className="text-center text-zinc-400">
+              <p>No pages to preview yet</p>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4 max-w-6xl mx-auto">
       {/* Main Book Preview Area */}
       <Card className="bg-zinc-900/50 border-zinc-800 overflow-hidden">
         <CardContent className="p-6">
+          {/* Fullscreen button */}
+          <div className="flex justify-end mb-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsFullscreen(true)}
+              className="gap-2 text-zinc-400 hover:text-white"
+            >
+              <Maximize2 className="w-4 h-4" />
+              Fullscreen
+            </Button>
+          </div>
+
           <div className="flex items-center justify-center gap-4">
             {/* Previous Button */}
             <Button
