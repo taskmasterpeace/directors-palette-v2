@@ -10,7 +10,7 @@ import { useStorybookStore } from '../store/storybook.store'
 export function useAutoSave() {
   const { project, saveProject, isSaving } = useStorybookStore()
   const lastSavedRef = useRef<string>('')
-  const saveIntervalRef = useRef<ReturnType<typeof setInterval>>()
+  const saveIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
 
   useEffect(() => {
     // Don't auto-save if no project or already saving
