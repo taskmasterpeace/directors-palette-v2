@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { useStorybookStore } from '../store/storybook.store'
 import { useRecipes } from '@/features/shot-creator/hooks/useRecipes'
+import type { BookFormat } from '../types/storybook.types'
 
 // Default system recipe names for storybook (used as fallbacks)
 const DEFAULT_RECIPE_NAMES = {
@@ -13,6 +14,26 @@ const DEFAULT_RECIPE_NAMES = {
   PAGE_CONTINUATION: 'Storybook Page (Continuation)',
   BOOK_COVER: 'Storybook Book Cover',
 } as const
+
+/**
+ * Map BookFormat to image aspect ratio
+ * CRITICAL: Images must be generated at the same aspect ratio as the book pages
+ * to avoid cropping or letterboxing in the preview
+ */
+function getAspectRatioForBookFormat(format: BookFormat = 'square'): string {
+  switch (format) {
+    case 'square':
+      return '1:1'  // 8.5" x 8.5" - most popular for children's books
+    case 'landscape':
+      return '7:10' // 7" x 10" landscape
+    case 'portrait':
+      return '4:5'  // 8" x 10" portrait
+    case 'wide':
+      return '11:8' // 8.25" x 6" panoramic
+    default:
+      return '1:1'
+  }
+}
 
 interface GenerationResult {
   success: boolean
@@ -399,6 +420,9 @@ export function useStorybookGeneration() {
       referenceImages.push(...supportingCharacterSheetUrls)
 
       // Call recipe execution API with selected recipe
+      // Use book format's aspect ratio to ensure images fit pages properly
+      const aspectRatio = getAspectRatioForBookFormat(project?.bookFormat)
+
       const response = await fetch(`/api/recipes/${recipeName}/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -406,7 +430,7 @@ export function useStorybookGeneration() {
           fieldValues,
           referenceImages,
           modelSettings: {
-            aspectRatio: '16:9',
+            aspectRatio,
             outputFormat: 'png',
           },
         }),

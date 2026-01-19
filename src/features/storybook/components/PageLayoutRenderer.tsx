@@ -62,7 +62,7 @@ export function PageLayoutRenderer({
               src={imageUrl}
               alt="Page illustration"
               fill
-              className="object-cover"
+              className="object-contain"
               priority
             />
           ) : (
@@ -95,7 +95,7 @@ export function PageLayoutRenderer({
               src={imageUrl}
               alt="Page illustration"
               fill
-              className="object-cover"
+              className="object-contain"
               priority
             />
           ) : (
