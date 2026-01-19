@@ -1,44 +1,44 @@
 ---
 active: true
 iteration: 1
-max_iterations: 50
-completion_promise: "STORYBOOK_PERFECT"
+max_iterations: 30
+completion_promise: "STORYBOOK_TABLET_COMPLETE"
 original_prompt: |
-  Get storybook working perfectly in browser with Amazon KDP-compliant aspect ratios.
+  Implement iPad/tablet support and process improvements for Storybook.
   
-  SUCCESS CRITERIA:
-  1. Research Amazon KDP allowed aspect ratios and book formats
-  2. Update book-dimensions.ts to match KDP requirements exactly
-  3. Generate images for ALL 8 pages (use credits liberally - quality over cost)
-  4. Test all 5 page layouts work correctly in BookViewer
-  5. Ensure book takes up screen properly and looks professional
-  6. Verify aspect ratios match KDP requirements in browser
-  7. Book preview must be visually stunning (10/10 quality)
-  8. All pages flip smoothly with images visible
-  9. Thumbnails show correctly with proper aspect ratios
-  10. Text overlays are readable and well-positioned
+  HIGH PRIORITY (Must Complete):
+  1. Touch support already added - verify it works
+  2. Increase touch targets - color swatches to w-10 h-10 (40px) 
+  3. Add tablet viewport optimization (stack editor vertically on tablets)
+  4. Add "Generate All Pages" batch button in PageGenerationStep
+  5. Add auto-save progress every 30 seconds
+  6. Test all features in browser after each change
   
-  COMPLETION SIGNAL:
-  Output <promise>STORYBOOK_PERFECT</promise> only when:
-  - All 8 pages have generated images
-  - Book displays beautifully in browser
-  - Aspect ratios confirmed KDP-compliant
-  - Layout is 10/10 professional quality
-started_at: 2026-01-18T03:15:00Z
+  MEDIUM PRIORITY (If time permits):
+  7. Add undo/redo support (Ctrl+Z, Cmd+Z)
+  8. Add text formatting presets (Title, Body, Emphasis)
+  9. Add "Apply formatting to all pages" batch operation
+  10. Add pinch-to-zoom on book preview
+  
+  COMPLETION CRITERIA:
+  - Touch support verified working in browser
+  - Touch targets enlarged (w-10 h-10)
+  - Tablet responsive layout working
+  - Generate All Pages button functional
+  - Auto-save implemented and tested
+  - All builds pass (TypeScript, ESLint, production build)
+  - All changes committed and pushed
+  
+  When ALL high priority items complete, output: <promise>STORYBOOK_TABLET_COMPLETE</promise>
+started_at: $(date -Iseconds)
 ---
 
-# Ralph Loop Active - Storybook Perfection
+# Ralph Loop Active - Storybook Tablet Optimization
 
-Working on iteration 1 of 50
+Working on iteration 1 of 30
 
-## Current Task
-Perfect the storybook browser experience with Amazon KDP aspect ratios
-
-## What I'm Working On
-- Researching KDP requirements
-- Generating all page images
-- Testing layouts and aspect ratios
-- Iterating until visually perfect
+## Original Task
+Implement iPad/tablet support and process improvements for Storybook
 
 ## Completion Criteria
-Output `<promise>STORYBOOK_PERFECT</promise>` when genuinely complete.
+Output `<promise>STORYBOOK_TABLET_COMPLETE</promise>` when all high priority features are complete and tested.

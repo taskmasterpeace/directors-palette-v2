@@ -88,12 +88,12 @@ export function RichTextEditor({
     <div className={cn('border border-zinc-700 rounded-lg overflow-hidden bg-zinc-900', className)}>
       {/* Toolbar */}
       <div className="flex items-center gap-2 p-2 border-b border-zinc-700 bg-zinc-900/50 flex-wrap">
-        {/* Bold Button */}
+        {/* Bold Button - Touch optimized */}
         <Button
           size="sm"
           variant="outline"
           onClick={formatBold}
-          className="gap-1 h-8"
+          className="gap-1 h-10 touch-manipulation"
           title="Bold (Ctrl+B)"
           type="button"
         >
@@ -101,10 +101,10 @@ export function RichTextEditor({
           <span className="hidden sm:inline text-xs">Bold</span>
         </Button>
 
-        {/* Font Selector */}
+        {/* Font Selector - Touch optimized */}
         <select
           onChange={(e) => formatFont(e.target.value)}
-          className="text-xs bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1.5 h-8 min-w-[120px]"
+          className="text-xs bg-zinc-800 text-white border border-zinc-700 rounded px-3 py-2 h-10 min-w-[120px] touch-manipulation"
           title="Font Family"
         >
           {fonts.map((font) => (
@@ -114,14 +114,14 @@ export function RichTextEditor({
           ))}
         </select>
 
-        {/* Size Selector */}
+        {/* Size Selector - Touch optimized */}
         <select
           onChange={(e) => formatSize(e.target.value)}
-          className="text-xs bg-zinc-800 text-white border border-zinc-700 rounded px-2 py-1.5 h-8"
+          className="text-xs bg-zinc-800 text-white border border-zinc-700 rounded px-3 py-2 h-10 touch-manipulation"
           title="Font Size"
         >
           <option value="3">Small (12px)</option>
-          <option value="4" selected>Normal (16px)</option>
+          <option value="4" defaultValue>Normal (16px)</option>
           <option value="5">Medium (20px)</option>
           <option value="6">Large (28px)</option>
           <option value="7">X-Large (36px)</option>
@@ -133,13 +133,13 @@ export function RichTextEditor({
           <span className="text-xs text-zinc-400 hidden sm:inline">Color:</span>
         </div>
 
-        {/* Color Picker */}
-        <div className="flex gap-1.5">
+        {/* Color Picker - Enlarged for touch devices */}
+        <div className="flex gap-2">
           {colors.map((color) => (
             <button
               key={color.value}
               onClick={() => formatColor(color.value)}
-              className="w-7 h-7 rounded border-2 border-zinc-700 hover:scale-110 hover:border-zinc-500 transition-all"
+              className="w-10 h-10 rounded-lg border-2 border-zinc-700 hover:scale-110 hover:border-zinc-500 transition-all touch-manipulation"
               style={{ backgroundColor: color.value }}
               title={color.name}
               type="button"
