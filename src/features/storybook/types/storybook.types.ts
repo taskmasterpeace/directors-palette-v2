@@ -26,6 +26,209 @@ export type CameraAngle = 'eye-level' | 'low-angle' | 'high-angle' | 'birds-eye'
 // Text overlay position
 export type TextPosition = 'top' | 'bottom' | 'left' | 'right' | 'none'
 
+// Page type for extended book structure (Amazon KDP compliance)
+// Front matter, story pages, and back matter types
+export type PageType =
+  | 'half-title'      // Just title, simple (page 1)
+  | 'frontispiece'    // Opening illustration (page 2)
+  | 'title-page'      // Full title page (page 3)
+  | 'copyright'       // Legal page (page 4)
+  | 'dedication'      // Personal dedication (page 5)
+  | 'blank'           // Intentionally blank page
+  | 'story-single'    // Single page story content
+  | 'story-spread'    // Two-page spread (one image spans both)
+  | 'the-end'         // Closing page
+  | 'about-author'    // Author bio page
+  | 'other-books'     // Series/collection page
+
+// Spread position - where text appears on a spread
+export type SpreadTextPosition = 'left' | 'right' | 'both' | 'none'
+
+// Page type configurations for UI
+export const PAGE_TYPE_CONFIG: Record<PageType, {
+  name: string
+  description: string
+  icon: string
+  category: 'front-matter' | 'story' | 'back-matter'
+  defaultLayout: PageLayout
+  requiresImage: boolean
+  canBeSpread: boolean
+}> = {
+  'half-title': {
+    name: 'Half Title',
+    description: 'Simple page with just the book title',
+    icon: 'Type',
+    category: 'front-matter',
+    defaultLayout: 'text-only',
+    requiresImage: false,
+    canBeSpread: false,
+  },
+  'frontispiece': {
+    name: 'Frontispiece',
+    description: 'Opening illustration facing the title page',
+    icon: 'Image',
+    category: 'front-matter',
+    defaultLayout: 'image-only',
+    requiresImage: true,
+    canBeSpread: false,
+  },
+  'title-page': {
+    name: 'Title Page',
+    description: 'Full title, author, and illustrator',
+    icon: 'BookOpen',
+    category: 'front-matter',
+    defaultLayout: 'text-only',
+    requiresImage: false,
+    canBeSpread: false,
+  },
+  'copyright': {
+    name: 'Copyright',
+    description: 'Copyright notice, ISBN, publisher info',
+    icon: 'FileText',
+    category: 'front-matter',
+    defaultLayout: 'text-only',
+    requiresImage: false,
+    canBeSpread: false,
+  },
+  'dedication': {
+    name: 'Dedication',
+    description: 'Personal dedication message',
+    icon: 'Heart',
+    category: 'front-matter',
+    defaultLayout: 'text-only',
+    requiresImage: false,
+    canBeSpread: false,
+  },
+  'blank': {
+    name: 'Blank',
+    description: 'Intentionally blank page',
+    icon: 'Square',
+    category: 'front-matter',
+    defaultLayout: 'text-only',
+    requiresImage: false,
+    canBeSpread: false,
+  },
+  'story-single': {
+    name: 'Story Page',
+    description: 'Single page with illustration and text',
+    icon: 'ImageIcon',
+    category: 'story',
+    defaultLayout: 'image-with-text',
+    requiresImage: true,
+    canBeSpread: false,
+  },
+  'story-spread': {
+    name: 'Two-Page Spread',
+    description: 'Illustration spanning two pages',
+    icon: 'LayoutPanelLeft',
+    category: 'story',
+    defaultLayout: 'image-only',
+    requiresImage: true,
+    canBeSpread: true,
+  },
+  'the-end': {
+    name: 'The End',
+    description: 'Closing page with optional illustration',
+    icon: 'Flag',
+    category: 'back-matter',
+    defaultLayout: 'image-with-text',
+    requiresImage: false,
+    canBeSpread: true,
+  },
+  'about-author': {
+    name: 'About the Author',
+    description: 'Author biography and photo',
+    icon: 'User',
+    category: 'back-matter',
+    defaultLayout: 'text-only',
+    requiresImage: false,
+    canBeSpread: false,
+  },
+  'other-books': {
+    name: 'Other Books',
+    description: 'List of other books in series',
+    icon: 'BookStack',
+    category: 'back-matter',
+    defaultLayout: 'text-only',
+    requiresImage: false,
+    canBeSpread: false,
+  },
+}
+
+// KDP Page Count Options
+// Amazon KDP requires minimum 24 interior pages for children's books
+export type KDPPageCount = 24 | 28 | 32 | 36 | 40
+
+export const KDP_PAGE_COUNTS: Array<{
+  count: KDPPageCount
+  name: string
+  description: string
+  storyPages: number
+  frontMatterPages: number
+  backMatterPages: number
+  recommendedFor: string
+}> = [
+  {
+    count: 24,
+    name: '24 Pages (Minimum)',
+    description: 'KDP minimum, ideal for ages 2-4',
+    storyPages: 16,
+    frontMatterPages: 6,
+    backMatterPages: 2,
+    recommendedFor: 'Simple stories, board book style',
+  },
+  {
+    count: 28,
+    name: '28 Pages',
+    description: 'Standard picture book length',
+    storyPages: 20,
+    frontMatterPages: 6,
+    backMatterPages: 2,
+    recommendedFor: 'Most children\'s picture books',
+  },
+  {
+    count: 32,
+    name: '32 Pages (Most Common)',
+    description: 'Industry standard for picture books',
+    storyPages: 24,
+    frontMatterPages: 6,
+    backMatterPages: 2,
+    recommendedFor: 'Traditional picture book format',
+  },
+  {
+    count: 36,
+    name: '36 Pages',
+    description: 'Extended picture book',
+    storyPages: 28,
+    frontMatterPages: 6,
+    backMatterPages: 2,
+    recommendedFor: 'Longer stories, chapter books for early readers',
+  },
+  {
+    count: 40,
+    name: '40 Pages',
+    description: 'Long-form picture book',
+    storyPages: 32,
+    frontMatterPages: 6,
+    backMatterPages: 2,
+    recommendedFor: 'Complex narratives, educational books',
+  },
+]
+
+// Default front matter structure for KDP books
+export const DEFAULT_FRONT_MATTER: Array<{
+  pageType: PageType
+  physicalPage: number
+  required: boolean
+}> = [
+  { pageType: 'half-title', physicalPage: 1, required: true },
+  { pageType: 'blank', physicalPage: 2, required: false },
+  { pageType: 'title-page', physicalPage: 3, required: true },
+  { pageType: 'copyright', physicalPage: 4, required: true },
+  { pageType: 'dedication', physicalPage: 5, required: false },
+  { pageType: 'blank', physicalPage: 6, required: false },
+]
+
 // Book format/aspect ratio
 export type BookFormat = 'square' | 'landscape' | 'portrait' | 'wide'
 
@@ -219,6 +422,14 @@ export interface StorybookPage {
   audioUrl?: string // Generated narration audio URL
   layout?: PageLayout // How text and image are arranged
   isSpread?: boolean // True if this page spans two physical pages
+
+  // Extended page type support (Phase 2 - KDP compliance)
+  pageType?: PageType // Type of page (story-single, title-page, etc.)
+  spreadTextPosition?: SpreadTextPosition // Where text appears on a spread
+  physicalPageNumbers?: number[] // Physical page numbers [7, 8] for spread
+  beatId?: string // Reference to story structure beat (if applicable)
+  isFrontMatter?: boolean // True if this is a front matter page
+  isBackMatter?: boolean // True if this is a back matter page
 }
 
 // A character in the storybook
@@ -290,8 +501,19 @@ export interface StorybookProject {
   // Story structure (narrative framework)
   storyStructureId?: string // e.g., 'story-spine', 'heros-journey'
   // Book configuration
-  pageCount?: number // 4, 6, 8, 10, or 12
+  pageCount?: number // 4, 6, 8, 10, or 12 (for quick stories)
   sentencesPerPage?: number // 1-6
+
+  // KDP Extended Book Configuration (Phase 2)
+  kdpPageCount?: KDPPageCount // 24, 28, 32, 36, 40 (for print-ready books)
+  includeFrontMatter?: boolean // Whether to generate front matter pages
+  includeBackMatter?: boolean // Whether to generate back matter pages
+  dedicationText?: string // Text for dedication page
+  aboutAuthorText?: string // Text for about author page
+  authorPhotoUrl?: string // Photo URL for about author page
+  copyrightYear?: number // Year for copyright page
+  publisherName?: string // Publisher name for copyright page
+  isbnPlaceholder?: string // ISBN placeholder text
   // Customization options (NEW - Parent Power Features)
   storySetting?: string // e.g., 'park', 'beach', 'fantasy-castle'
   customSetting?: string // Free-text custom setting

@@ -111,11 +111,14 @@ export async function assignToStorybookFolder(
 ): Promise<boolean> {
   const supabase = await getClient()
 
+  // Cast metadata to JSON-compatible type for Supabase
+  const metadataJson = JSON.parse(JSON.stringify(metadata))
+
   const { error } = await supabase
     .from('gallery')
     .update({
       folder_id: folderId,
-      metadata: metadata as unknown as Record<string, unknown>,
+      metadata: metadataJson,
     })
     .eq('id', galleryItemId)
 

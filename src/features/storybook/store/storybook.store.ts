@@ -29,6 +29,7 @@ import type {
   PageLayout,
   StoryMode,
   StoryCharacter,
+  KDPPageCount,
 } from '../types/storybook.types'
 import { getNextStep, getPreviousStep } from '../types/storybook.types'
 import type { StoryIdea, GeneratedStory, ExtractedElements } from '../types/education.types'
@@ -89,6 +90,16 @@ interface StorybookState {
   setEducationTopic: (topic: string) => void
   setStoryStructure: (structureId: string) => void
   setBookSettings: (pageCount: number, sentencesPerPage: number, bookFormat?: BookFormat) => void
+  setKDPSettings: (kdpPageCount: KDPPageCount, options?: {
+    includeFrontMatter?: boolean
+    includeBackMatter?: boolean
+    dedicationText?: string
+    aboutAuthorText?: string
+    authorPhotoUrl?: string
+    copyrightYear?: number
+    publisherName?: string
+    isbnPlaceholder?: string
+  }) => void
   setCustomization: (storySetting?: string, customSetting?: string, customElements?: string[], customNotes?: string) => void
   setStoryIdeas: (ideas: StoryIdea[]) => void
   selectStoryApproach: (id: string, title: string, summary: string) => void
@@ -767,6 +778,27 @@ export const useStorybookStore = create<StorybookState>()(
           pageCount,
           sentencesPerPage,
           ...(bookFormat && { bookFormat }),
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  setKDPSettings: (kdpPageCount, options = {}) => {
+    const { project } = get()
+    if (project) {
+      set({
+        project: {
+          ...project,
+          kdpPageCount,
+          includeFrontMatter: options.includeFrontMatter ?? true,
+          includeBackMatter: options.includeBackMatter ?? true,
+          dedicationText: options.dedicationText,
+          aboutAuthorText: options.aboutAuthorText,
+          authorPhotoUrl: options.authorPhotoUrl,
+          copyrightYear: options.copyrightYear ?? new Date().getFullYear(),
+          publisherName: options.publisherName,
+          isbnPlaceholder: options.isbnPlaceholder,
           updatedAt: new Date(),
         },
       })
