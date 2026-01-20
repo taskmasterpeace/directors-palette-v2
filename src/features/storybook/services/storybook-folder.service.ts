@@ -136,12 +136,12 @@ export async function assignToStorybookFolder(
 export async function getStorybookGalleryItems(
   userId: string,
   projectId: string
-): Promise<Array<{ id: string; image_url: string; metadata: StorybookFolderMetadata }>> {
+): Promise<Array<{ id: string; public_url: string | null; metadata: StorybookFolderMetadata }>> {
   const supabase = await getClient()
 
   const { data, error } = await supabase
     .from('gallery')
-    .select('id, image_url, metadata')
+    .select('id, public_url, metadata')
     .eq('user_id', userId)
     .contains('metadata', { source: 'storybook', projectId })
     .order('created_at', { ascending: true })
@@ -151,5 +151,5 @@ export async function getStorybookGalleryItems(
     return []
   }
 
-  return data as Array<{ id: string; image_url: string; metadata: StorybookFolderMetadata }>
+  return data as Array<{ id: string; public_url: string | null; metadata: StorybookFolderMetadata }>
 }
