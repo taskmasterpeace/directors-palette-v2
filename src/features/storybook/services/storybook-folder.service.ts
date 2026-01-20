@@ -151,5 +151,6 @@ export async function getStorybookGalleryItems(
     return []
   }
 
-  return data as Array<{ id: string; public_url: string | null; metadata: StorybookFolderMetadata }>
+  // Cast through unknown since Supabase returns Json type for metadata
+  return (data as unknown) as Array<{ id: string; public_url: string | null; metadata: StorybookFolderMetadata }>
 }
