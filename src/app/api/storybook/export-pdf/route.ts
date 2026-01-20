@@ -6,8 +6,8 @@
  * Body: { project: StorybookProject, type: 'interior' | 'cover' | 'both', pageCount?: number }
  */
 
-import { NextResponse } from 'next/server'
-import { getCurrentUser } from '@/features/auth/hooks/useAuth'
+import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import type { StorybookProject, KDPPageCount } from '@/features/storybook/types/storybook.types'
 import {
   exportStorybookInterior,
@@ -15,13 +15,11 @@ import {
   mergePDFs,
 } from '@/features/storybook/services/pdf-export.service'
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     // Auth check
-    const user = await getCurrentUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
 
     const body = await request.json()
     const {
