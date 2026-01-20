@@ -677,6 +677,18 @@ useEffect(() => {
 .select('*').eq('user_id', userId).maybeSingle()
 ```
 
+## Supabase: Type casting Json column to custom interface
+**Error**: `Type 'Json' is not comparable to type 'YourInterface'`
+**Cause**: Supabase returns `Json` type for JSONB columns, TypeScript won't allow direct casting
+**Fix**: Cast through `unknown` first
+```typescript
+// ❌ TypeScript error - can't cast Json directly
+return data as Array<{ id: string; metadata: MyInterface }>
+
+// ✅ Cast through unknown first
+return (data as unknown) as Array<{ id: string; metadata: MyInterface }>
+```
+
 ## React: Missing exhaustive deps warning
 **Fix**: Add all dependencies or use refs for stable values
 ```typescript
