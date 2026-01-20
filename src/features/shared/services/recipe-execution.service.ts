@@ -25,6 +25,9 @@ export interface RecipeExecutionOptions {
   model?: ImageModel
   aspectRatio?: string
   onProgress?: (stage: number, totalStages: number, status: string) => void
+  // Gallery organization (for storybook projects)
+  folderId?: string
+  extraMetadata?: Record<string, unknown>
 }
 
 export interface RecipeExecutionResult {
@@ -356,7 +359,9 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
     stageReferenceImages,
     model = 'nano-banana-pro' as ImageModel,
     aspectRatio = '21:9',
-    onProgress
+    onProgress,
+    folderId,
+    extraMetadata,
   } = options
 
   try {
@@ -481,6 +486,9 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
           modelSettings,
           recipeId: recipe.id,
           recipeName: recipe.name,
+          // Gallery organization (for storybook projects)
+          folderId,
+          extraMetadata,
         }
 
         // Generate image

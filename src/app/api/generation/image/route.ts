@@ -177,6 +177,9 @@ export async function POST(request: NextRequest) {
       recipeId,
       recipeName,
       enableAnchorTransform = false,
+      // Gallery organization fields
+      folderId,
+      extraMetadata, // For storybook: { source, projectId, projectTitle, assetType, ... }
     } = body;
 
     // Debug logging for reference images
@@ -615,6 +618,11 @@ export async function POST(request: NextRequest) {
 
     // ✅ SECURITY: Create gallery entry with authenticated user's ID
     // This respects RLS policies since we're using the user's session
+    // Merge extraMetadata (storybook, etc.) into metadata if provided
+    const finalMetadata = extraMetadata
+      ? { ...metadata, ...extraMetadata }
+      : metadata;
+
     const { data: gallery, error: galleryError } = await supabase
       .from('gallery')
       .insert({
@@ -622,7 +630,9 @@ export async function POST(request: NextRequest) {
         prediction_id: prediction.id,
         generation_type: 'image',
         status: 'pending',
-        metadata: metadata as Database['public']['Tables']['gallery']['Insert']['metadata']
+        metadata: finalMetadata as Database['public']['Tables']['gallery']['Insert']['metadata'],
+        // Gallery organization: assign to folder if provided (for storybook projects)
+        ...(folderId && { folder_id: folderId }),
       })
       .select()
       .single();

@@ -53,6 +53,9 @@ export async function POST(
       fieldValues = {},
       referenceImages = [],
       modelSettings = {},
+      // Gallery organization (for storybook projects)
+      folderId,
+      extraMetadata,
     }: {
       fieldValues?: RecipeFieldValues
       referenceImages?: string[]
@@ -61,6 +64,8 @@ export async function POST(
         outputFormat?: string
         model?: string
       }
+      folderId?: string
+      extraMetadata?: Record<string, unknown>
     } = body
 
     // Load recipe from database
@@ -154,6 +159,9 @@ export async function POST(
             aspectRatio,
             outputFormat,
           },
+          // Gallery organization (for storybook projects)
+          folderId,
+          extraMetadata,
         }),
       }
     )

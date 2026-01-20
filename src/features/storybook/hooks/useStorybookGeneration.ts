@@ -1,9 +1,15 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useStorybookStore } from '../store/storybook.store'
 import { useRecipes } from '@/features/shot-creator/hooks/useRecipes'
 import type { BookFormat } from '../types/storybook.types'
+import {
+  getOrCreateStorybookFolder,
+  buildStorybookMetadata,
+  type StorybookAssetType,
+} from '../services/storybook-folder.service'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 
 // Default system recipe names for storybook (used as fallbacks)
 const DEFAULT_RECIPE_NAMES = {
@@ -72,12 +78,58 @@ export function useStorybookGeneration() {
   } = useStorybookStore()
 
   const { recipes } = useRecipes()
+  const { user } = useAuth()
+
+  // Cache folder ID to avoid multiple lookups
+  const folderIdCache = useRef<{ projectId: string; folderId: string | null } | null>(null)
 
   const [state, setState] = useState<GenerationState>({
     isGenerating: false,
     progress: '',
     error: null,
   })
+
+  /**
+   * Get or create folder for current storybook project
+   * Caches result to avoid multiple DB calls
+   */
+  const getStorybookFolderId = useCallback(async (): Promise<string | null> => {
+    if (!user?.id || !project?.id) return null
+
+    // Return cached folder ID if same project
+    if (folderIdCache.current?.projectId === project.id) {
+      return folderIdCache.current.folderId
+    }
+
+    // Get or create folder
+    const folderId = await getOrCreateStorybookFolder(
+      user.id,
+      project.id,
+      project.title || 'Untitled Book'
+    )
+
+    // Cache result
+    folderIdCache.current = { projectId: project.id, folderId }
+
+    return folderId
+  }, [user?.id, project?.id, project?.title])
+
+  /**
+   * Build gallery metadata for a storybook asset
+   */
+  const getStorybookMetadata = useCallback((
+    assetType: StorybookAssetType,
+    options?: { pageNumber?: number; characterName?: string }
+  ) => {
+    if (!project) return undefined
+
+    return buildStorybookMetadata(
+      project.id,
+      project.title || 'Untitled Book',
+      assetType,
+      options
+    )
+  }, [project])
 
   /**
    * Get recipe name from config or fall back to default
@@ -129,6 +181,10 @@ export function useStorybookGeneration() {
         DEFAULT_RECIPE_NAMES.STYLE_GUIDE
       )
 
+      // Get folder and metadata for gallery organization
+      const folderId = await getStorybookFolderId()
+      const extraMetadata = getStorybookMetadata('style-guide')
+
       // Call recipe execution API
       const response = await fetch(`/api/recipes/${recipeName}/execute`, {
         method: 'POST',
@@ -140,6 +196,9 @@ export function useStorybookGeneration() {
             aspectRatio: '16:9',
             outputFormat: 'png',
           },
+          // Gallery organization
+          folderId,
+          extraMetadata,
         }),
       })
 
@@ -169,7 +228,7 @@ export function useStorybookGeneration() {
       setError(errorMessage)
       return { success: false, error: errorMessage }
     }
-  }, [setStyle, setGenerating, setError, getRecipeName, project?.recipeConfig?.styleGuideRecipeId])
+  }, [setStyle, setGenerating, setError, getRecipeName, project?.recipeConfig?.styleGuideRecipeId, getStorybookFolderId, getStorybookMetadata])
 
   /**
    * Generate a character sheet from a photo OR description
@@ -230,6 +289,12 @@ export function useStorybookGeneration() {
         recipeName = DEFAULT_RECIPE_NAMES.CHARACTER_SHEET_FROM_DESCRIPTION
       }
 
+      // Get folder and metadata for gallery organization
+      const folderId = await getStorybookFolderId()
+      const extraMetadata = getStorybookMetadata('character-sheet', {
+        characterName: character.name,
+      })
+
       // Call recipe execution API
       const response = await fetch(`/api/recipes/${recipeName}/execute`, {
         method: 'POST',
@@ -241,6 +306,9 @@ export function useStorybookGeneration() {
             aspectRatio: '21:9',
             outputFormat: 'png',
           },
+          // Gallery organization
+          folderId,
+          extraMetadata,
         }),
       })
 
@@ -264,7 +332,7 @@ export function useStorybookGeneration() {
       setError(errorMessage)
       return { success: false, error: errorMessage }
     }
-  }, [project, updateCharacter, setGenerating, setError, getRecipeName])
+  }, [project, updateCharacter, setGenerating, setError, getRecipeName, getStorybookFolderId, getStorybookMetadata])
 
   /**
    * Generate book cover with embedded title, author, and main character
@@ -351,6 +419,10 @@ export function useStorybookGeneration() {
       // Use dynamic aspect ratio based on book format
       const aspectRatio = getAspectRatioForBookFormat(project?.bookFormat)
 
+      // Get folder and metadata for gallery organization
+      const folderId = await getStorybookFolderId()
+      const extraMetadata = getStorybookMetadata('cover')
+
       const response = await fetch(`/api/recipes/${recipeName}/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -361,6 +433,9 @@ export function useStorybookGeneration() {
             aspectRatio,
             outputFormat: 'png',
           },
+          // Gallery organization
+          folderId,
+          extraMetadata,
         }),
       })
 
@@ -381,7 +456,7 @@ export function useStorybookGeneration() {
       setError(errorMessage)
       return { success: false, error: errorMessage }
     }
-  }, [project, setGenerating, setError, getRecipeName])
+  }, [project, setGenerating, setError, getRecipeName, getStorybookFolderId, getStorybookMetadata])
 
   /**
    * Generate a single page illustration (renamed from generatePageVariations)
@@ -468,6 +543,10 @@ export function useStorybookGeneration() {
       // Use book format's aspect ratio to ensure images fit pages properly
       const aspectRatio = getAspectRatioForBookFormat(project?.bookFormat)
 
+      // Get folder and metadata for gallery organization
+      const folderId = await getStorybookFolderId()
+      const extraMetadata = getStorybookMetadata('page', { pageNumber: pageIndex + 1 })
+
       const response = await fetch(`/api/recipes/${recipeName}/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -478,6 +557,9 @@ export function useStorybookGeneration() {
             aspectRatio,
             outputFormat: 'png',
           },
+          // Gallery organization
+          folderId,
+          extraMetadata,
         }),
       })
 
@@ -505,7 +587,7 @@ export function useStorybookGeneration() {
       setError(errorMessage)
       return { success: false, error: errorMessage }
     }
-  }, [project, updatePage, setGenerating, setError, getRecipeName])
+  }, [project, updatePage, setGenerating, setError, getRecipeName, getStorybookFolderId, getStorybookMetadata])
 
   /**
    * Generate 3 additional cover variations on demand

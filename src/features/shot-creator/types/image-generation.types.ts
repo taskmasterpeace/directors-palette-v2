@@ -161,6 +161,9 @@ export interface ImageGenerationRequest {
   // Recipe tracking
   recipeId?: string
   recipeName?: string
+  // Gallery organization (for storybook, etc.)
+  folderId?: string
+  extraMetadata?: Record<string, unknown>
   // Note: user_id removed - now extracted from session cookie server-side
 }
 
