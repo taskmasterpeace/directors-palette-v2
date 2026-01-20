@@ -86,6 +86,81 @@ const GENERATE_STORY_TOOL = {
   }
 }
 
+/**
+ * Generate story structure guidance based on page count
+ * Provides beat-by-beat pacing for different book lengths
+ */
+function getStoryStructureGuidance(characterName: string, pageCount: number): string {
+  if (pageCount <= 12) {
+    // Short story (12 pages)
+    return `STORY PACING (12-page structure):
+- Pages 1-2: SETUP - Introduce ${characterName}, their world, and hint at the problem
+- Pages 3-4: INCITING INCIDENT - Something happens that starts the adventure
+- Pages 5-6: FIRST ATTEMPT - ${characterName} tries to solve the problem (fails or partial success)
+- Pages 7-8: ESCALATION - Things get harder, stakes increase
+- Pages 9-10: CLIMAX - The big moment, ${characterName} faces the main challenge
+- Pages 11-12: RESOLUTION - Problem solved, lesson learned, satisfying ending`
+  } else if (pageCount <= 24) {
+    // Standard picture book (24 pages)
+    return `STORY PACING (24-page structure - Standard Picture Book):
+- Pages 1-3: OPENING - Introduce ${characterName}, their personality, and everyday world
+- Pages 4-6: SETUP - Establish the situation, hint at what ${characterName} wants or needs
+- Pages 7-9: INCITING INCIDENT - Something disrupts the normal, adventure begins
+- Pages 10-12: FIRST CHALLENGE - ${characterName} faces first obstacle (Rule of Three: attempt 1)
+- Pages 13-15: RISING ACTION - Stakes increase, second attempt (Rule of Three: attempt 2)
+- Pages 16-18: MIDPOINT TWIST - Something changes, new information or setback
+- Pages 19-20: DARK MOMENT - Things look hopeless, ${characterName} must dig deep
+- Pages 21-22: CLIMAX - Final attempt, ${characterName} overcomes the challenge (Rule of Three: attempt 3)
+- Pages 23-24: RESOLUTION - Celebration, lesson learned, return home transformed
+
+PACING TIPS:
+- Each spread (2 pages) should have one clear story beat
+- Vary emotional tone: funny → tense → heartwarming
+- End odd pages with mini-cliffhangers to encourage page turning`
+  } else if (pageCount <= 28) {
+    // Extended picture book (28 pages)
+    return `STORY PACING (28-page structure - Extended Picture Book):
+- Pages 1-3: OPENING - Introduce ${characterName}, their personality, world, and daily life
+- Pages 4-6: DESIRE - Show what ${characterName} wants or needs (the story goal)
+- Pages 7-9: INCITING INCIDENT - The call to adventure, something changes everything
+- Pages 10-12: FIRST CHALLENGE - ${characterName} faces first obstacle, learns something
+- Pages 13-15: ALLY/MENTOR - ${characterName} meets someone who helps or teaches
+- Pages 16-18: RISING ACTION - Bigger challenges, stakes increase
+- Pages 19-21: MIDPOINT REVELATION - A twist, new information changes the approach
+- Pages 22-23: DARK MOMENT - All seems lost, ${characterName} must find inner strength
+- Pages 24-25: CLIMAX - The big confrontation or final challenge
+- Pages 26-27: RESOLUTION - Victory! The problem is solved
+- Page 28: EPILOGUE - Brief glimpse of the new normal, lesson reinforced
+
+PACING TIPS:
+- Build emotional investment in first third
+- Escalate tension in middle third
+- Deliver satisfying payoff in final third`
+  } else {
+    // Long-form picture book (32 pages)
+    return `STORY PACING (32-page structure - Long-Form Picture Book):
+- Pages 1-4: WORLD BUILDING - Introduce ${characterName}, their personality, relationships, and world
+- Pages 5-7: DESIRE & STAKES - What ${characterName} wants and why it matters
+- Pages 8-10: INCITING INCIDENT - The event that launches the adventure
+- Pages 11-13: FIRST CHALLENGE - Initial obstacle, first lesson learned
+- Pages 14-16: ALLY/MENTOR - Someone joins or helps ${characterName}
+- Pages 17-19: RISING ACTION - Challenges escalate, skills are tested
+- Pages 20-22: MIDPOINT TWIST - Major revelation or setback changes everything
+- Pages 23-25: DARK MOMENT - Crisis point, ${characterName} doubts themselves
+- Pages 26-27: RALLY - ${characterName} finds courage, makes a plan
+- Pages 28-29: CLIMAX - The ultimate challenge is faced
+- Pages 30-31: RESOLUTION - Victory and its immediate aftermath
+- Page 32: EPILOGUE - The new normal, growth shown, door open for more adventures
+
+PACING TIPS:
+- Use subplots or secondary characters for depth
+- Create memorable set pieces every 4-5 pages
+- Each spread should move the story forward
+- Balance action with emotional beats
+- The longer format allows for richer character development`
+  }
+}
+
 function buildSystemPrompt(
   characterName: string,
   characterAge: number,
@@ -235,10 +310,7 @@ REQUIREMENTS FOR EACH PAGE:
    - Color palette suggestions
 3. learningNote (optional but encouraged): Interactive prompt or educational callout
 
-STORY STRUCTURE:
-- Beginning (first 1-2 pages): Introduce ${characterName} and the situation
-- Middle (${pageCount - 3} pages): The adventure/learning unfolds
-- End (last 1-2 pages): Resolution and what ${characterName} learned
+${getStoryStructureGuidance(characterName, pageCount)}
 
 Make the story engaging, fun, and educational for a ${characterAge}-year-old!`
 }
@@ -322,10 +394,7 @@ REQUIREMENTS FOR EACH PAGE:
    - Color palette suggestions
 3. learningNote (optional): Fun fact, question, or interactive prompt
 
-STORY STRUCTURE:
-- Beginning (first 1-2 pages): Introduce ${characterName} and the situation
-- Middle (${pageCount - 3} pages): The adventure unfolds
-- End (last 1-2 pages): Satisfying resolution
+${getStoryStructureGuidance(characterName, pageCount)}
 
 Create a fun, imaginative story that a ${characterAge}-year-old will love!`
 }

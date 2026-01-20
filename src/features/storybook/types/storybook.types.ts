@@ -501,7 +501,7 @@ export interface StorybookProject {
   // Story structure (narrative framework)
   storyStructureId?: string // e.g., 'story-spine', 'heros-journey'
   // Book configuration
-  pageCount?: number // 4, 6, 8, 10, or 12 (for quick stories)
+  pageCount?: number // 12, 24, 28, or 32 story pages
   sentencesPerPage?: number // 1-6
 
   // KDP Extended Book Configuration (Phase 2)

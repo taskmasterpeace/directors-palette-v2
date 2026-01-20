@@ -113,7 +113,7 @@ export function StoryInputStep() {
       setStoryText(storyText)
     }
 
-    const targetPages = pageCount === 'auto' ? 8 : parseInt(pageCount, 10)
+    const targetPages = pageCount === 'auto' ? 12 : parseInt(pageCount, 10)
 
     // If keeping exact words, use local splitting
     if (keepExactWords) {

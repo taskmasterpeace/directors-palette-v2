@@ -185,9 +185,14 @@ export function getRandomApproaches(count: number = 4): StoryApproach[] {
 }
 
 /**
- * Page count options
+ * Page count options for storybooks
+ * These are STORY PAGES only (not including front/back matter)
+ * - 12 pages: Quick story (minimum viable)
+ * - 24 pages: Standard picture book (KDP 32-page book with 6 front + 2 back)
+ * - 28 pages: Extended picture book (KDP 36-page book)
+ * - 32 pages: Long-form picture book (KDP 40-page book)
  */
-export const PAGE_COUNT_OPTIONS = [4, 6, 8, 10, 12] as const
+export const PAGE_COUNT_OPTIONS = [12, 24, 28, 32] as const
 export type PageCount = typeof PAGE_COUNT_OPTIONS[number]
 
 /**

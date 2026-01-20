@@ -60,7 +60,7 @@ const STORY_THEMES = [
 export function BookSettingsStep() {
   const { project, setBookSettings, setCustomization, setStoryIdeas, nextStep, previousStep, setStep } = useStorybookStore()
 
-  const [pageCount, setPageCount] = useState<PageCount>((project?.pageCount as PageCount) || 8)
+  const [pageCount, setPageCount] = useState<PageCount>((project?.pageCount as PageCount) || 12)
   const [sentencesPerPage, setSentencesPerPage] = useState<SentencesPerPage>((project?.sentencesPerPage as SentencesPerPage) || 3)
   const [bookFormat, setBookFormat] = useState<BookFormat>(project?.bookFormat || 'square')
   const [isGenerating, setIsGenerating] = useState(false)

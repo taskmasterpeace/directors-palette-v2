@@ -59,7 +59,7 @@ export function StoryApproachStep() {
           characterDescription: project?.characters?.[0]?.description,  // Pass main character description
           category: project?.educationCategory,
           topic: project?.educationTopic,
-          pageCount: project?.pageCount || 8,
+          pageCount: project?.pageCount || 12,
           sentencesPerPage: project?.sentencesPerPage || 3,
           approach: idea.approach,
           approachTitle: idea.title,
