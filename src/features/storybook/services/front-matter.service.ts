@@ -11,7 +11,7 @@
  * Page 6: Blank
  */
 
-import { v4 as uuidv4 } from 'uuid'
+import { randomUUID } from 'crypto'
 import type { StorybookPage, PageType, KDPPageCount, StorybookProject } from '../types/storybook.types'
 import { KDP_PAGE_COUNTS } from '../types/storybook.types'
 
@@ -54,7 +54,7 @@ export function generateFrontMatterPages(config: FrontMatterConfig): StorybookPa
 
   // Page 1: Half-title
   pages.push({
-    id: uuidv4(),
+    id: randomUUID(),
     pageNumber: 1,
     text: config.title,
     textPosition: 'none',
@@ -67,7 +67,7 @@ export function generateFrontMatterPages(config: FrontMatterConfig): StorybookPa
   // Page 2: Frontispiece or Blank
   if (config.includeFrontispiece && config.frontispieceImageUrl) {
     pages.push({
-      id: uuidv4(),
+      id: randomUUID(),
       pageNumber: 2,
       text: '',
       textPosition: 'none',
@@ -79,7 +79,7 @@ export function generateFrontMatterPages(config: FrontMatterConfig): StorybookPa
     })
   } else {
     pages.push({
-      id: uuidv4(),
+      id: randomUUID(),
       pageNumber: 2,
       text: '',
       textPosition: 'none',
@@ -97,7 +97,7 @@ export function generateFrontMatterPages(config: FrontMatterConfig): StorybookPa
   const authorLine = config.author ? `\n\nBy ${config.author}` : ''
 
   pages.push({
-    id: uuidv4(),
+    id: randomUUID(),
     pageNumber: 3,
     text: `${config.title}${authorLine}${illustratorLine}`,
     textPosition: 'none',
@@ -109,7 +109,7 @@ export function generateFrontMatterPages(config: FrontMatterConfig): StorybookPa
 
   // Page 4: Copyright Page
   pages.push({
-    id: uuidv4(),
+    id: randomUUID(),
     pageNumber: 4,
     text: generateCopyrightText(config),
     textPosition: 'none',
@@ -122,7 +122,7 @@ export function generateFrontMatterPages(config: FrontMatterConfig): StorybookPa
   // Page 5: Dedication Page
   if (config.dedicationText) {
     pages.push({
-      id: uuidv4(),
+      id: randomUUID(),
       pageNumber: 5,
       text: config.dedicationText,
       textPosition: 'none',
@@ -133,7 +133,7 @@ export function generateFrontMatterPages(config: FrontMatterConfig): StorybookPa
     })
   } else {
     pages.push({
-      id: uuidv4(),
+      id: randomUUID(),
       pageNumber: 5,
       text: '',
       textPosition: 'none',
@@ -146,7 +146,7 @@ export function generateFrontMatterPages(config: FrontMatterConfig): StorybookPa
 
   // Page 6: Blank
   pages.push({
-    id: uuidv4(),
+    id: randomUUID(),
     pageNumber: 6,
     text: '',
     textPosition: 'none',
@@ -179,7 +179,7 @@ export function generateBackMatterPages(
   // The End page
   if (config.includeTheEnd !== false) {
     pages.push({
-      id: uuidv4(),
+      id: randomUUID(),
       pageNumber: currentPage,
       text: 'The End',
       textPosition: 'bottom',
@@ -194,7 +194,7 @@ export function generateBackMatterPages(
   // About the Author page
   if (config.includeAboutAuthor && config.aboutAuthorText) {
     pages.push({
-      id: uuidv4(),
+      id: randomUUID(),
       pageNumber: currentPage,
       text: config.aboutAuthorText,
       textPosition: 'none',
@@ -210,7 +210,7 @@ export function generateBackMatterPages(
   // Other Books page
   if (config.includeOtherBooks && config.otherBooksText) {
     pages.push({
-      id: uuidv4(),
+      id: randomUUID(),
       pageNumber: currentPage,
       text: config.otherBooksText,
       textPosition: 'none',
