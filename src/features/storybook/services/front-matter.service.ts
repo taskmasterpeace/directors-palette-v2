@@ -13,7 +13,7 @@
 
 import { v4 as uuidv4 } from 'uuid'
 import type { StorybookPage, PageType, KDPPageCount, StorybookProject } from '../types/storybook.types'
-import { DEFAULT_FRONT_MATTER, KDP_PAGE_COUNTS } from '../types/storybook.types'
+import { KDP_PAGE_COUNTS } from '../types/storybook.types'
 
 export interface FrontMatterConfig {
   title: string

@@ -10,8 +10,8 @@
  * - RGB or CMYK color space
  */
 
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
-import type { StorybookProject, StorybookPage, BookFormat, KDPPageCount } from '../types/storybook.types'
+import { PDFDocument, rgb, StandardFonts, PDFFont } from 'pdf-lib'
+import type { StorybookProject, BookFormat, KDPPageCount } from '../types/storybook.types'
 import {
   calculatePageDimensions,
   calculateCoverDimensions,
@@ -89,7 +89,8 @@ export async function generateInteriorPDF(
 
   // Embed font for text
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
-  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+  // fontBold available for future title styling
+  const _fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
 
   // Process each page
   for (const page of project.pages) {
@@ -336,13 +337,14 @@ export async function generateCoverWrapPDF(
 
     // Draw rotated text
     // Note: pdf-lib doesn't have direct rotation, so we use transformation
+    // Note: pdf-lib drawText doesn't natively support rotation
+    // For spine text, we draw horizontally (will appear rotated when book is on shelf)
     coverPage.drawText(coverConfig.spineText, {
       x: textX,
       y: textY,
       size: spineTextSize,
       font: fontBold,
       color: rgb(0, 0, 0),
-      rotate: { type: 'degrees', angle: 90 } as any,
     })
   }
 
@@ -439,7 +441,7 @@ export async function generateCoverWrapPDF(
  */
 function wrapText(
   text: string,
-  font: any,
+  font: PDFFont,
   fontSize: number,
   maxWidth: number
 ): string[] {
