@@ -3195,4 +3195,94 @@ CRITICAL:
     isSystem: true,
     isSystemOnly: false,
   },
+
+  // Storybook Dual Page - Generates 2 pages in 1 image for cost savings
+  // This recipe creates a DIPTYCH (side-by-side) image that gets split into two separate pages
+  // Cost: 20 points for 2 pages instead of 40 points = 50% savings
+  {
+    name: 'Storybook Dual Page',
+    description: 'Generates two story pages as a single diptych image for 50% cost savings',
+    recipeNote: 'Creates a 2:1 aspect ratio image with LEFT and RIGHT panels. The image is then split into two separate pages using the grid-split tool.',
+    stages: [
+      {
+        id: generateStageId(),
+        order: 0,
+        type: 'generation',
+        template: `Create a DIPTYCH illustration for a children's book - TWO SCENES side by side.
+
+CRITICAL: This is ONE image split into LEFT PANEL and RIGHT PANEL with a subtle visual divider.
+
+STORY CONTEXT:
+
+Previous Page (for continuity):
+<<PREVIOUS_PAGE_TEXT:text>>
+
+LEFT PANEL (Page <<LEFT_PAGE_NUMBER:name!>>):
+Text: "<<LEFT_PAGE_TEXT:text!>>"
+Scene: <<LEFT_SCENE_DESCRIPTION:text>>
+
+RIGHT PANEL (Page <<RIGHT_PAGE_NUMBER:name!>>):
+Text: "<<RIGHT_PAGE_TEXT:text!>>"
+Scene: <<RIGHT_SCENE_DESCRIPTION:text>>
+
+CHARACTERS IN SCENES:
+<<CHARACTER_NAMES:text>>
+
+MOOD: <<MOOD:select(Happy,Sad,Excited,Calm,Mysterious,Adventurous)!>>
+
+DIPTYCH REQUIREMENTS:
+
+1. VISUAL SEPARATION:
+   - Create a CLEAR visual distinction between left and right panels
+   - Use a subtle vertical divider (thin line, shadow, or natural scene break)
+   - Each panel should work as a standalone illustration when split
+
+2. NARRATIVE CONTINUITY:
+   - Both panels share the same art style, lighting, and color palette
+   - Show clear story progression from left to right
+   - Characters should be consistent across both panels
+   - Visual flow should feel natural when reading left to right
+
+3. COMPOSITION FOR EACH PANEL:
+   - Leave appropriate space for text overlay in each panel
+   - Each panel has its own focal point
+   - Balance illustration with text space
+
+4. STORYTELLING:
+   - LEFT PANEL: Set up the moment
+   - RIGHT PANEL: Show the result, reaction, or next beat
+   - Together they should feel like turning a page
+
+CRITICAL STYLE REQUIREMENTS:
+- A STYLE GUIDE reference image is attached - analyze it carefully
+- Extract the EXACT art style from the style guide (rendering technique, line work, color palette, shading approach)
+- Apply this style CONSISTENTLY to BOTH panels
+- Maintain character consistency using attached character sheets (if provided)
+- Characters should have EXACT same appearance in both panels
+
+TECHNICAL REQUIREMENTS:
+- NO text overlays on image (text will be added separately)
+- Age-appropriate for <<TARGET_AGE:text!>> year olds
+- Diverse, inclusive representation
+- EXACT 2:1 aspect ratio (twice as wide as tall)
+- Clean separation point at center for splitting
+
+QUALITY STANDARDS:
+- Professional children's book illustration quality
+- Both panels should work independently when split
+- Vibrant, engaging colors appropriate to the mood
+- Fine details that reward close inspection
+
+CRITICAL: Use the attached STYLE GUIDE reference image to determine the exact art style, rendering technique, and visual aesthetic. Match it precisely in BOTH panels.`,
+        fields: [],
+        referenceImages: [],
+      },
+    ],
+    suggestedAspectRatio: '2:1',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: false,
+    categoryId: 'storybook',
+    isSystem: true,
+    isSystemOnly: true,
+  },
 ]

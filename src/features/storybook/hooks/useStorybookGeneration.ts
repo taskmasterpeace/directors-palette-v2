@@ -19,6 +19,7 @@ const DEFAULT_RECIPE_NAMES = {
   PAGE_FIRST: 'Storybook Page (First)',
   PAGE_CONTINUATION: 'Storybook Page (Continuation)',
   BOOK_COVER: 'Storybook Book Cover',
+  DUAL_PAGE: 'Storybook Dual Page',
 } as const
 
 /**
@@ -42,6 +43,15 @@ export function getAspectRatioForBookFormat(format: BookFormat = 'square'): stri
 }
 
 /**
+ * Get 2:1 aspect ratio for dual-page generation (two pages side by side)
+ * This creates an image twice as wide as tall, which gets split into two pages
+ */
+export function getDualAspectRatio(): string {
+  // All book formats use 2:1 for dual-page - the image is split exactly in half
+  return '2:1'
+}
+
+/**
  * Convert aspect ratio string to CSS aspect-ratio value
  * e.g., "4:5" -> "4/5"
  */
@@ -55,6 +65,18 @@ interface GenerationResult {
   error?: string
   predictionId?: string
   galleryId?: string
+}
+
+/**
+ * Result for dual-page generation
+ * Contains two image URLs: one for left page, one for right page
+ */
+interface DualPageResult {
+  success: boolean
+  leftPageImageUrl?: string
+  rightPageImageUrl?: string
+  error?: string
+  predictionId?: string
 }
 
 interface GenerationState {
@@ -590,6 +612,155 @@ export function useStorybookGeneration() {
   }, [project, updatePage, setGenerating, setError, getRecipeName, getStorybookFolderId, getStorybookMetadata])
 
   /**
+   * Generate a dual-page spread (two pages in one image, then split)
+   * This costs 50% less than generating pages individually
+   *
+   * @param leftPageId - ID of the left page
+   * @param rightPageId - ID of the right page
+   * @returns Result with both page image URLs
+   */
+  const generateDualPage = useCallback(async (
+    leftPageId: string,
+    rightPageId: string
+  ): Promise<DualPageResult> => {
+    const leftPage = project?.pages.find(p => p.id === leftPageId)
+    const rightPage = project?.pages.find(p => p.id === rightPageId)
+
+    if (!leftPage || !rightPage) {
+      return { success: false, error: 'One or both pages not found' }
+    }
+
+    // Get page indices for logging
+    const leftPageIndex = project?.pages.findIndex(p => p.id === leftPageId) ?? -1
+    const rightPageIndex = project?.pages.findIndex(p => p.id === rightPageId) ?? -1
+
+    setState({ isGenerating: true, progress: `Generating pages ${leftPageIndex + 1}-${rightPageIndex + 1} as spread...`, error: null })
+    setGenerating(true)
+
+    try {
+      // Build character descriptions (same as single page)
+      const mainCharacterDescriptions = project?.characters.map(c => {
+        const tag = `@${c.tag || c.name.replace(/\s+/g, '')}`
+        return c.description ? `${tag}: ${c.description}` : tag
+      }) || []
+      const supportingCharacterDescriptions = project?.storyCharacters?.map(c => {
+        const tag = `@${c.name.replace(/\s+/g, '')}`
+        return c.description ? `${tag}: ${c.description}` : tag
+      }) || []
+      const allCharacterDescriptions = [...mainCharacterDescriptions, ...supportingCharacterDescriptions]
+      const characterTags = allCharacterDescriptions.length > 0 ? allCharacterDescriptions.join(', ') : 'No named characters'
+
+      // Get previous page text for continuity (page before leftPage)
+      const previousPage = leftPageIndex > 0 ? project?.pages[leftPageIndex - 1] : null
+
+      // Build field values for dual-page recipe
+      const fieldValues: Record<string, string> = {
+        'stage0_field0_previous_page_text': previousPage?.text || '',
+        'stage0_field1_left_page_number': (leftPageIndex + 1).toString(),
+        'stage0_field2_left_page_text': leftPage.text,
+        'stage0_field3_left_scene_description': leftPage.sceneJSON ? JSON.stringify(leftPage.sceneJSON.scene) : '',
+        'stage0_field4_right_page_number': (rightPageIndex + 1).toString(),
+        'stage0_field5_right_page_text': rightPage.text,
+        'stage0_field6_right_scene_description': rightPage.sceneJSON ? JSON.stringify(rightPage.sceneJSON.scene) : '',
+        'stage0_field7_character_names': characterTags,
+        'stage0_field8_mood': leftPage.sceneJSON?.scene.mood || rightPage.sceneJSON?.scene.mood || 'Happy',
+        'stage0_field9_target_age': project?.targetAge.toString() || '5',
+      }
+
+      // Auto-attach reference images: style guide + all character sheets
+      const referenceImages: string[] = []
+      if (project?.style?.styleGuideUrl) {
+        referenceImages.push(project.style.styleGuideUrl)
+      }
+      const mainCharacterSheetUrls = project?.characters
+        .filter(c => c.characterSheetUrl)
+        .map(c => c.characterSheetUrl!) || []
+      referenceImages.push(...mainCharacterSheetUrls)
+      const supportingCharacterSheetUrls = project?.storyCharacters
+        ?.filter(c => c.characterSheetUrl)
+        .map(c => c.characterSheetUrl!) || []
+      referenceImages.push(...supportingCharacterSheetUrls)
+
+      // Get folder and metadata for gallery organization
+      const folderId = await getStorybookFolderId()
+      const extraMetadata = getStorybookMetadata('page', { pageNumber: leftPageIndex + 1 })
+
+      // Step 1: Generate the dual-page image (2:1 aspect ratio)
+      const recipeName = DEFAULT_RECIPE_NAMES.DUAL_PAGE
+
+      const response = await fetch(`/api/recipes/${recipeName}/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fieldValues,
+          referenceImages,
+          modelSettings: {
+            aspectRatio: getDualAspectRatio(),
+            outputFormat: 'png',
+          },
+          folderId,
+          extraMetadata,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to generate dual page')
+      }
+
+      // Step 2: Split the image using grid-split tool (cols=2, rows=1)
+      const splitResponse = await fetch('/api/tools/grid-split', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageUrl: data.imageUrl,
+          cols: 2,
+          rows: 1,
+        }),
+      })
+
+      const splitData = await splitResponse.json()
+
+      if (!splitResponse.ok || !splitData.success) {
+        throw new Error(splitData.error || 'Failed to split dual page image')
+      }
+
+      // Extract the two page images from the split result
+      const [leftPageImageUrl, rightPageImageUrl] = splitData.imageUrls
+
+      // Update both pages with their respective images
+      updatePage(leftPageId, {
+        imageUrl: leftPageImageUrl,
+        gridImageUrl: undefined,
+        variationUrls: [],
+      })
+
+      updatePage(rightPageId, {
+        imageUrl: rightPageImageUrl,
+        gridImageUrl: undefined,
+        variationUrls: [],
+      })
+
+      setState({ isGenerating: false, progress: '', error: null })
+      setGenerating(false)
+
+      return {
+        success: true,
+        leftPageImageUrl,
+        rightPageImageUrl,
+        predictionId: data.predictionId,
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Dual page generation failed'
+      setState({ isGenerating: false, progress: '', error: errorMessage })
+      setGenerating(false)
+      setError(errorMessage)
+      return { success: false, error: errorMessage }
+    }
+  }, [project, updatePage, setGenerating, setError, getStorybookFolderId, getStorybookMetadata])
+
+  /**
    * Generate 3 additional cover variations on demand
    * Uses different approaches: one story-aware, two standard with AI randomness
    */
@@ -646,6 +817,7 @@ export function useStorybookGeneration() {
     generateCharacterSheet,
     generateBookCover,
     generateCoverVariations,
-    generatePage,  // ← Renamed from generatePageVariations
+    generatePage,
+    generateDualPage, // ← NEW: Generates 2 pages in 1 image for 50% cost savings
   }
 }
