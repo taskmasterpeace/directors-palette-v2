@@ -87,6 +87,7 @@ interface StorybookState {
   setMainCharacter: (name: string, age: number, description?: string) => void
   setEducationCategory: (category: string) => void
   setEducationTopic: (topic: string) => void
+  setStoryStructure: (structureId: string) => void
   setBookSettings: (pageCount: number, sentencesPerPage: number, bookFormat?: BookFormat) => void
   setCustomization: (storySetting?: string, customSetting?: string, customElements?: string[], customNotes?: string) => void
   setStoryIdeas: (ideas: StoryIdea[]) => void
@@ -738,6 +739,19 @@ export const useStorybookStore = create<StorybookState>()(
         project: {
           ...project,
           educationTopic: topic,
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  setStoryStructure: (structureId) => {
+    const { project } = get()
+    if (project) {
+      set({
+        project: {
+          ...project,
+          storyStructureId: structureId,
           updatedAt: new Date(),
         },
       })

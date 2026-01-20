@@ -117,11 +117,12 @@ export const PAGE_LAYOUTS: Record<PageLayout, {
 
 // Wizard step - expanded for educational flow
 // Original flow: story -> style -> characters -> pages -> preview
-// New flow: character-setup -> category -> topic -> settings -> approach -> review -> style -> characters -> pages -> preview
+// New flow: character-setup -> category -> topic -> story-structure -> settings -> approach -> review -> style -> characters -> pages -> preview
 export type WizardStep =
   | 'character-setup'  // NEW: Name, age, photo
   | 'category'         // NEW: Select educational category
   | 'topic'            // NEW: Select specific topic
+  | 'story-structure'  // NEW: Select narrative structure (Story Spine, Hero's Journey, etc.)
   | 'settings'         // NEW: Page count, sentences per page
   | 'approach'         // NEW: Choose from 4 story ideas
   | 'review'           // NEW: Review generated story
@@ -286,6 +287,8 @@ export interface StorybookProject {
   // Educational category and topic
   educationCategory?: string // e.g., 'math', 'narrative', 'reading'
   educationTopic?: string // e.g., 'counting-10', 'honesty'
+  // Story structure (narrative framework)
+  storyStructureId?: string // e.g., 'story-spine', 'heros-journey'
   // Book configuration
   pageCount?: number // 4, 6, 8, 10, or 12
   sentencesPerPage?: number // 1-6
@@ -368,6 +371,13 @@ export const GENERATE_WIZARD_STEPS: StepInfo[] = [
     description: 'Pick a specific topic',
     backgroundImage: '/storybook/step-topic.webp', // Black girl with braids discovering forest animals
     icon: 'Target',
+  },
+  {
+    id: 'story-structure',
+    label: 'Structure',
+    description: 'Choose your story style',
+    backgroundImage: '/storybook/step-approach.webp', // Reuse approach image for now
+    icon: 'Workflow',
   },
   {
     id: 'settings',
