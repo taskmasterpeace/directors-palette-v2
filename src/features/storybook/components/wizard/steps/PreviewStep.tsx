@@ -661,6 +661,50 @@ export function PreviewStep() {
             <p className="text-xs text-zinc-500 mt-3 text-center">
               Files are formatted for Amazon KDP print-on-demand with proper bleed margins
             </p>
+
+            {/* KDP Quick Links */}
+            <div className="mt-4 pt-4 border-t border-zinc-700">
+              <p className="text-xs text-zinc-400 mb-2 text-center">
+                📚 Finish your book on Amazon KDP:
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                <a
+                  href="https://kdp.amazon.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-amber-400 hover:text-amber-300 underline"
+                >
+                  KDP Dashboard
+                </a>
+                <span className="text-zinc-600">•</span>
+                <a
+                  href="https://kdp.amazon.com/cover-calculator"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-amber-400 hover:text-amber-300 underline"
+                >
+                  Cover Calculator
+                </a>
+                <span className="text-zinc-600">•</span>
+                <a
+                  href="https://kdp.amazon.com/en_US/help/topic/G201834190"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-amber-400 hover:text-amber-300 underline"
+                >
+                  Formatting Guide
+                </a>
+                <span className="text-zinc-600">•</span>
+                <a
+                  href="https://kdp.amazon.com/en_US/help/topic/G201834170"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-amber-400 hover:text-amber-300 underline"
+                >
+                  Free ISBN
+                </a>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

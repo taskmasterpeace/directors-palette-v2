@@ -572,6 +572,7 @@ export interface StorybookProject {
   characters: StorybookCharacter[]
   style?: StorybookStyle
   coverImageUrl?: string
+  titlePageImageUrl?: string  // Interior title page illustration
   status: 'draft' | 'in-progress' | 'completed'
   creditsUsed: number
   createdAt: Date

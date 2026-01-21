@@ -807,6 +807,175 @@ export function useStorybookGeneration() {
   }, [project, generateBookCover, setGenerating, setError])
 
   /**
+   * Generate title page variations
+   * Creates 4 title page options: 2 different compositions × 2 variations each
+   *
+   * Composition 1: Character Portrait - waist-up portrait with decorative elements
+   * Composition 2: Character with Story Element - character interacting with key story prop
+   */
+  const generateTitlePageVariations = useCallback(async (): Promise<GenerationResult[]> => {
+    if (!project) return []
+
+    setState({
+      isGenerating: true,
+      progress: 'Generating 4 title page variations...',
+      error: null
+    })
+    setGenerating(true)
+
+    try {
+      // Build character description
+      const mainCharacter = project.characters[0]
+      const characterDescription = mainCharacter?.description ||
+        `${mainCharacter?.name || project.mainCharacterName || 'Main character'}: A ${project.targetAge}-year-old child`
+
+      // Get folder and metadata for gallery organization
+      const folderId = await getStorybookFolderId()
+      const extraMetadata = getStorybookMetadata('title-page')
+
+      // Build reference images: style guide + character sheets
+      const referenceImages: string[] = []
+      if (project.style?.styleGuideUrl) {
+        referenceImages.push(project.style.styleGuideUrl)
+      }
+      project.characters.slice(0, 2).forEach(char => {
+        if (char.characterSheetUrl) {
+          referenceImages.push(char.characterSheetUrl)
+        }
+      })
+
+      // Get aspect ratio based on book format
+      const aspectRatio = getAspectRatioForBookFormat(project?.bookFormat)
+
+      // Extract a key story element from the first beat/page for Composition 2
+      // Beats have sceneDescription, pages only have text
+      const firstBeat = project.beats?.[0]
+      const firstPage = project.pages[0]
+      const storyContext = firstBeat?.sceneDescription || firstBeat?.text || firstPage?.text || project.storyText?.slice(0, 500) || ''
+
+      // ========================================
+      // COMPOSITION 1: Character Portrait
+      // Waist-up portrait, looking at viewer, decorative border
+      // ========================================
+      const portraitPrompt = `Create an interior TITLE PAGE illustration for a children's book (NOT a cover).
+
+BOOK: "${project.title}" by ${project.author || 'Author'}
+TARGET AGE: ${project.targetAge} years old
+
+CHARACTER TO FEATURE:
+${characterDescription}
+
+TITLE PAGE DESIGN:
+1. ILLUSTRATION (Center focus, 70% of page):
+   - Character PORTRAIT - waist-up or three-quarter view
+   - Character looking warmly at the viewer, inviting them into the story
+   - Gentle, welcoming expression
+   - Simple, soft background (gradient, subtle pattern, or single color)
+   - Decorative frame or border elements (vines, stars, swirls, etc.)
+
+2. TEXT AREA (Leave clear space):
+   - TOP: Space for title "${project.title}"
+   - BOTTOM: Space for "by ${project.author || 'Author'}"
+   - DO NOT render the text - just leave appropriate white/clear space
+
+3. STYLE:
+   - Match the attached style guide EXACTLY
+   - Softer, more intimate than a cover
+   - Warm, inviting atmosphere
+   - Professional children's book interior quality
+   - Character must match the character sheet reference
+
+This is an INTERIOR page, not a cover. It should feel welcoming and intimate, like meeting a friend.`
+
+      // ========================================
+      // COMPOSITION 2: Character with Story Element
+      // Character interacting with a key prop or in story setting
+      // ========================================
+      const storyElementPrompt = `Create an interior TITLE PAGE illustration for a children's book (NOT a cover).
+
+BOOK: "${project.title}" by ${project.author || 'Author'}
+TARGET AGE: ${project.targetAge} years old
+
+CHARACTER TO FEATURE:
+${characterDescription}
+
+STORY CONTEXT (use for inspiration):
+${storyContext}
+
+TITLE PAGE DESIGN:
+1. ILLUSTRATION (Center focus, 70% of page):
+   - Character in a SCENE that hints at the story to come
+   - Character interacting with a key story element or prop
+   - Setting that foreshadows the adventure
+   - Curious or anticipatory pose/expression
+   - More environmental detail than a simple portrait
+
+2. TEXT AREA (Leave clear space):
+   - TOP: Space for title "${project.title}"
+   - BOTTOM: Space for "by ${project.author || 'Author'}"
+   - DO NOT render the text - just leave appropriate white/clear space
+
+3. STYLE:
+   - Match the attached style guide EXACTLY
+   - Scene-based composition, not just a portrait
+   - Warm lighting, inviting atmosphere
+   - Professional children's book interior quality
+   - Character must match the character sheet reference
+
+This is an INTERIOR page, not a cover. It should tease the story and build anticipation.`
+
+      // Generate all 4 variations in parallel
+      // 2x Portrait, 2x Story Element
+      const generateSingleTitlePage = async (prompt: string): Promise<GenerationResult> => {
+        try {
+          const response = await fetch('/api/generation/image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt,
+              model: 'nano-banana-pro',
+              aspectRatio,
+              referenceImages,
+              folderId,
+              extraMetadata,
+            }),
+          })
+
+          const data = await response.json()
+
+          if (!response.ok || !data.imageUrl) {
+            return { success: false, error: data.error || 'Failed to generate title page' }
+          }
+
+          return { success: true, imageUrl: data.imageUrl, predictionId: data.predictionId }
+        } catch (error) {
+          return { success: false, error: error instanceof Error ? error.message : 'Generation failed' }
+        }
+      }
+
+      const variations = await Promise.all([
+        // 2x Portrait composition
+        generateSingleTitlePage(portraitPrompt),
+        generateSingleTitlePage(portraitPrompt),
+        // 2x Story Element composition
+        generateSingleTitlePage(storyElementPrompt),
+        generateSingleTitlePage(storyElementPrompt),
+      ])
+
+      setState({ isGenerating: false, progress: '', error: null })
+      setGenerating(false)
+
+      return variations
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate title page variations'
+      setState({ isGenerating: false, progress: '', error: errorMessage })
+      setGenerating(false)
+      setError(errorMessage)
+      return []
+    }
+  }, [project, setGenerating, setError, getStorybookFolderId, getStorybookMetadata])
+
+  /**
    * Generate a spread image for the new beats/spreads architecture
    * Takes a BookSpread and generates the appropriate image(s)
    *
@@ -947,6 +1116,7 @@ export function useStorybookGeneration() {
     generateCharacterSheet,
     generateBookCover,
     generateCoverVariations,
+    generateTitlePageVariations, // NEW: Generates 4 title page options (2 compositions x 2)
     generatePage,
     generateDualPage, // Generates 2 pages in 1 image for 50% cost savings (legacy)
     generateSpreadImage, // NEW: Generates spread image for beats/spreads architecture

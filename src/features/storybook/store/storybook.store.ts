@@ -68,6 +68,11 @@ interface StorybookState {
   isGeneratingCoverVariations: boolean
   coverGenerationError?: string
 
+  // Title page variation state (UI-only, not persisted)
+  pendingTitlePageVariations: string[]
+  isGeneratingTitlePageVariations: boolean
+  titlePageGenerationError?: string
+
   // Project persistence state
   savedProjectId: string | null
   isSaving: boolean
@@ -160,6 +165,12 @@ interface StorybookState {
   selectCoverVariation: (url: string) => void
   setCoverGenerationError: (error?: string) => void
 
+  // Title page variation actions
+  setPendingTitlePageVariations: (urls: string[]) => void
+  setGeneratingTitlePageVariations: (isGenerating: boolean) => void
+  selectTitlePageVariation: (url: string) => void
+  setTitlePageGenerationError: (error?: string) => void
+
   // Project persistence actions
   saveProject: () => Promise<void>
   loadProject: (projectId: string) => Promise<void>
@@ -183,6 +194,7 @@ function createInitialProject(
     characters: [],
     style: undefined,
     coverImageUrl: undefined,
+    titlePageImageUrl: undefined,
     status: 'draft',
     creditsUsed: 0,
     createdAt: new Date(),
@@ -217,6 +229,7 @@ function createGenerateProject(
     characters: [mainCharacter],
     style: undefined,
     coverImageUrl: undefined,
+    titlePageImageUrl: undefined,
     status: 'draft',
     creditsUsed: 0,
     createdAt: new Date(),
@@ -376,6 +389,11 @@ export const useStorybookStore = create<StorybookState>()(
   pendingCoverVariations: [],
   isGeneratingCoverVariations: false,
   coverGenerationError: undefined,
+
+  // Title page variation state
+  pendingTitlePageVariations: [],
+  isGeneratingTitlePageVariations: false,
+  titlePageGenerationError: undefined,
 
   // Project persistence state
   savedProjectId: null,
@@ -704,6 +722,29 @@ export const useStorybookStore = create<StorybookState>()(
   },
 
   setCoverGenerationError: (error) => set({ coverGenerationError: error }),
+
+  // Title page variation actions
+  setPendingTitlePageVariations: (urls) => set({ pendingTitlePageVariations: urls }),
+
+  setGeneratingTitlePageVariations: (isGenerating) => set({ isGeneratingTitlePageVariations: isGenerating }),
+
+  selectTitlePageVariation: (url) => {
+    const { project } = get()
+    if (!project) return
+
+    // Apply selected title page to project
+    set({
+      project: {
+        ...project,
+        titlePageImageUrl: url,
+        updatedAt: new Date(),
+      },
+      // Clear variations after selection
+      pendingTitlePageVariations: [],
+    })
+  },
+
+  setTitlePageGenerationError: (error) => set({ titlePageGenerationError: error }),
 
   // Education actions (NEW)
   setMainCharacter: (name, age, description) => {

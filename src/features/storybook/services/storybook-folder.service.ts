@@ -17,6 +17,7 @@ export type StorybookAssetType =
   | 'page'
   | 'cover'
   | 'cover-variation'
+  | 'title-page'
 
 export interface StorybookFolderMetadata {
   source: 'storybook'
