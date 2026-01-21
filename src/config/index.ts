@@ -8,12 +8,15 @@
  * Based on best practices for Replicate API
  */
 export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number }> = {
-    '1:1': { width: 1024, height: 1024 },
+    // nano-banana-pro supported ratios
+    '1:1': { width: 1024, height: 1024 },   // Square page ✅
+    '4:5': { width: 1024, height: 1280 },   // Portrait page ✅
+    '5:4': { width: 1280, height: 1024 },
     '16:9': { width: 1280, height: 720 },
     '9:16': { width: 720, height: 1280 },
     '4:3': { width: 1024, height: 768 },
     '3:4': { width: 768, height: 1024 },
-    '21:9': { width: 1344, height: 576 },
+    '21:9': { width: 1344, height: 576 },   // For spread blending
     '3:2': { width: 1152, height: 768 },
     '2:3': { width: 768, height: 1152 },
 };
