@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import {
   getCategoryById,
   getTopicById,
+  calculateStoryBeats,
   type PageCount,
   type SentencesPerPage,
   type GeneratedStory,
@@ -87,75 +88,86 @@ const GENERATE_STORY_TOOL = {
 }
 
 /**
- * Generate story structure guidance based on page count
+ * Generate story structure guidance based on beat count
  * Provides beat-by-beat pacing for different book lengths
+ * @param characterName - The main character's name
+ * @param beatCount - Number of story beats (spreads), not pages
  */
-function getStoryStructureGuidance(characterName: string, pageCount: number): string {
-  if (pageCount <= 12) {
-    // Short story (12 pages)
-    return `STORY PACING (12-page structure):
-- Pages 1-2: SETUP - Introduce ${characterName}, their world, and hint at the problem
-- Pages 3-4: INCITING INCIDENT - Something happens that starts the adventure
-- Pages 5-6: FIRST ATTEMPT - ${characterName} tries to solve the problem (fails or partial success)
-- Pages 7-8: ESCALATION - Things get harder, stakes increase
-- Pages 9-10: CLIMAX - The big moment, ${characterName} faces the main challenge
-- Pages 11-12: RESOLUTION - Problem solved, lesson learned, satisfying ending`
-  } else if (pageCount <= 24) {
-    // Standard picture book (24 pages)
-    return `STORY PACING (24-page structure - Standard Picture Book):
-- Pages 1-3: OPENING - Introduce ${characterName}, their personality, and everyday world
-- Pages 4-6: SETUP - Establish the situation, hint at what ${characterName} wants or needs
-- Pages 7-9: INCITING INCIDENT - Something disrupts the normal, adventure begins
-- Pages 10-12: FIRST CHALLENGE - ${characterName} faces first obstacle (Rule of Three: attempt 1)
-- Pages 13-15: RISING ACTION - Stakes increase, second attempt (Rule of Three: attempt 2)
-- Pages 16-18: MIDPOINT TWIST - Something changes, new information or setback
-- Pages 19-20: DARK MOMENT - Things look hopeless, ${characterName} must dig deep
-- Pages 21-22: CLIMAX - Final attempt, ${characterName} overcomes the challenge (Rule of Three: attempt 3)
-- Pages 23-24: RESOLUTION - Celebration, lesson learned, return home transformed
+function getStoryStructureGuidance(characterName: string, beatCount: number): string {
+  if (beatCount <= 6) {
+    // Short story (6 beats = 12 pages)
+    return `STORY PACING (6 beats):
+- Beat 1: SETUP - Introduce ${characterName}, their world, and hint at the problem
+- Beat 2: INCITING INCIDENT - Something happens that starts the adventure
+- Beat 3: FIRST ATTEMPT - ${characterName} tries to solve the problem (fails or partial success)
+- Beat 4: ESCALATION - Things get harder, stakes increase
+- Beat 5: CLIMAX - The big moment, ${characterName} faces the main challenge
+- Beat 6: RESOLUTION - Problem solved, lesson learned, satisfying ending`
+  } else if (beatCount <= 12) {
+    // Standard picture book (12 beats = 24 pages)
+    return `STORY PACING (12 beats - Standard Picture Book):
+- Beat 1: OPENING - Introduce ${characterName} and their everyday world
+- Beat 2: SETUP - Establish what ${characterName} wants or needs
+- Beat 3: INCITING INCIDENT - Something disrupts the normal, adventure begins
+- Beat 4: FIRST CHALLENGE - ${characterName} faces first obstacle (attempt 1)
+- Beat 5: COMPLICATION - Things don't go as planned
+- Beat 6: RISING ACTION - Stakes increase, second attempt (attempt 2)
+- Beat 7: MIDPOINT TWIST - Something changes, new information or setback
+- Beat 8: DARK MOMENT - Things look hopeless
+- Beat 9: RALLY - ${characterName} finds courage, new approach
+- Beat 10: CLIMAX - Final attempt, ${characterName} overcomes (attempt 3)
+- Beat 11: RESOLUTION - Victory! The problem is solved
+- Beat 12: ENDING - Lesson learned, new normal established
 
 PACING TIPS:
-- Each spread (2 pages) should have one clear story beat
+- Each beat = one spread (2 pages)
 - Vary emotional tone: funny → tense → heartwarming
-- End odd pages with mini-cliffhangers to encourage page turning`
-  } else if (pageCount <= 28) {
-    // Extended picture book (28 pages)
-    return `STORY PACING (28-page structure - Extended Picture Book):
-- Pages 1-3: OPENING - Introduce ${characterName}, their personality, world, and daily life
-- Pages 4-6: DESIRE - Show what ${characterName} wants or needs (the story goal)
-- Pages 7-9: INCITING INCIDENT - The call to adventure, something changes everything
-- Pages 10-12: FIRST CHALLENGE - ${characterName} faces first obstacle, learns something
-- Pages 13-15: ALLY/MENTOR - ${characterName} meets someone who helps or teaches
-- Pages 16-18: RISING ACTION - Bigger challenges, stakes increase
-- Pages 19-21: MIDPOINT REVELATION - A twist, new information changes the approach
-- Pages 22-23: DARK MOMENT - All seems lost, ${characterName} must find inner strength
-- Pages 24-25: CLIMAX - The big confrontation or final challenge
-- Pages 26-27: RESOLUTION - Victory! The problem is solved
-- Page 28: EPILOGUE - Brief glimpse of the new normal, lesson reinforced
+- End each beat with something that makes reader want to continue`
+  } else if (beatCount <= 14) {
+    // Extended picture book (14 beats = 28 pages)
+    return `STORY PACING (14 beats - Extended Picture Book):
+- Beat 1: OPENING - Introduce ${characterName}, personality, and world
+- Beat 2: DESIRE - Show what ${characterName} wants (the story goal)
+- Beat 3: INCITING INCIDENT - The call to adventure begins
+- Beat 4: FIRST CHALLENGE - ${characterName} faces first obstacle
+- Beat 5: LEARNING - ${characterName} learns something important
+- Beat 6: ALLY/MENTOR - ${characterName} meets someone who helps
+- Beat 7: RISING ACTION - Bigger challenges, stakes increase
+- Beat 8: MIDPOINT - A twist changes the approach
+- Beat 9: SETBACK - Things go wrong
+- Beat 10: DARK MOMENT - All seems lost
+- Beat 11: RALLY - ${characterName} finds inner strength
+- Beat 12: CLIMAX - The big confrontation
+- Beat 13: RESOLUTION - Victory and aftermath
+- Beat 14: EPILOGUE - New normal, lesson reinforced
 
 PACING TIPS:
 - Build emotional investment in first third
 - Escalate tension in middle third
 - Deliver satisfying payoff in final third`
   } else {
-    // Long-form picture book (32 pages)
-    return `STORY PACING (32-page structure - Long-Form Picture Book):
-- Pages 1-4: WORLD BUILDING - Introduce ${characterName}, their personality, relationships, and world
-- Pages 5-7: DESIRE & STAKES - What ${characterName} wants and why it matters
-- Pages 8-10: INCITING INCIDENT - The event that launches the adventure
-- Pages 11-13: FIRST CHALLENGE - Initial obstacle, first lesson learned
-- Pages 14-16: ALLY/MENTOR - Someone joins or helps ${characterName}
-- Pages 17-19: RISING ACTION - Challenges escalate, skills are tested
-- Pages 20-22: MIDPOINT TWIST - Major revelation or setback changes everything
-- Pages 23-25: DARK MOMENT - Crisis point, ${characterName} doubts themselves
-- Pages 26-27: RALLY - ${characterName} finds courage, makes a plan
-- Pages 28-29: CLIMAX - The ultimate challenge is faced
-- Pages 30-31: RESOLUTION - Victory and its immediate aftermath
-- Page 32: EPILOGUE - The new normal, growth shown, door open for more adventures
+    // Long-form picture book (16 beats = 32 pages)
+    return `STORY PACING (16 beats - Long-Form Picture Book):
+- Beat 1: WORLD BUILDING - Introduce ${characterName} and their world
+- Beat 2: CHARACTER - Show ${characterName}'s personality and relationships
+- Beat 3: DESIRE - What ${characterName} wants and why it matters
+- Beat 4: INCITING INCIDENT - The event that launches the adventure
+- Beat 5: FIRST CHALLENGE - Initial obstacle
+- Beat 6: LEARNING - First lesson learned
+- Beat 7: ALLY/MENTOR - Someone joins or helps ${characterName}
+- Beat 8: RISING ACTION - Challenges escalate
+- Beat 9: MIDPOINT TWIST - Major revelation or setback
+- Beat 10: COMPLICATIONS - New problems arise
+- Beat 11: DARK MOMENT - Crisis point, ${characterName} doubts themselves
+- Beat 12: RALLY - ${characterName} finds courage, makes a plan
+- Beat 13: APPROACH - Moving toward the final challenge
+- Beat 14: CLIMAX - The ultimate challenge is faced
+- Beat 15: RESOLUTION - Victory and its aftermath
+- Beat 16: EPILOGUE - The new normal, growth shown
 
 PACING TIPS:
 - Use subplots or secondary characters for depth
-- Create memorable set pieces every 4-5 pages
-- Each spread should move the story forward
+- Create memorable moments every 3-4 beats
 - Balance action with emotional beats
 - The longer format allows for richer character development`
   }
@@ -293,24 +305,30 @@ KEYWORDS: ${topicKeywords.join(', ')}
 ${storyContext}${customizationSection}
 
 STORY STRUCTURE:
-- NUMBER OF PAGES: Exactly ${pageCount} pages
-- SENTENCES PER PAGE: Exactly ${sentencesPerPage} sentences per page
-- Total story length: ${pageCount * sentencesPerPage} sentences
+- NUMBER OF STORY BEATS: Exactly ${calculateStoryBeats(pageCount)} beats (one per spread)
+- This creates a ${pageCount}-page book with ${calculateStoryBeats(pageCount)} spreads
+- SENTENCES PER BEAT: ${sentencesPerPage} sentence(s) per beat
+- Total story length: ~${calculateStoryBeats(pageCount) * sentencesPerPage} sentences (~${calculateStoryBeats(pageCount) * sentencesPerPage * 10} words)
 
 VOCABULARY GUIDANCE:
 ${vocabularyGuidance}
 ${categoryGuidance}
 
-REQUIREMENTS FOR EACH PAGE:
-1. text: Exactly ${sentencesPerPage} sentence(s) of story content
-2. sceneDescription: Detailed visual description for AI image generation including:
+WHAT IS A STORY BEAT?
+A "beat" is one story moment that will span a 2-page spread in the final book.
+Each beat has text + an image. User will decide text placement (left page, right page, or both) later.
+
+REQUIREMENTS FOR EACH BEAT:
+1. text: ${sentencesPerPage} sentence(s) - this is the story text for this spread
+2. sceneDescription: Detailed visual description for the spread illustration:
    - Character positions, expressions, actions
    - Setting details (time of day, weather, environment)
    - Key objects that should be visible
-   - Color palette suggestions
-3. learningNote (optional but encouraged): Interactive prompt or educational callout
+   - Mood and color palette
+   - This image will span TWO pages as a spread
+3. learningNote (optional): Interactive prompt or educational callout
 
-${getStoryStructureGuidance(characterName, pageCount)}
+${getStoryStructureGuidance(characterName, calculateStoryBeats(pageCount))}
 
 Make the story engaging, fun, and educational for a ${characterAge}-year-old!`
 }
@@ -363,7 +381,7 @@ function buildCustomSystemPrompt(
       if (c.description) desc += ` - ${c.description}`
       return desc
     }).join('\n')
-    charactersSection = `\n\nADDITIONAL CHARACTERS (must appear in the story):\n${characterDescriptions}\nMake sure each additional character plays a meaningful role in at least 2-3 pages.`
+    charactersSection = `\n\nADDITIONAL CHARACTERS (must appear in the story):\n${characterDescriptions}\nMake sure each additional character plays a meaningful role in at least 2-3 beats.`
   }
 
   // Build main character description line
@@ -378,23 +396,29 @@ ${mainCharacterLine}${charactersSection}
 ${storyContext}${customizationSection}
 
 STORY STRUCTURE:
-- NUMBER OF PAGES: Exactly ${pageCount} pages
-- SENTENCES PER PAGE: Exactly ${sentencesPerPage} sentences per page
-- Total story length: ${pageCount * sentencesPerPage} sentences
+- NUMBER OF STORY BEATS: Exactly ${calculateStoryBeats(pageCount)} beats (one per spread)
+- This creates a ${pageCount}-page book with ${calculateStoryBeats(pageCount)} spreads
+- SENTENCES PER BEAT: ${sentencesPerPage} sentence(s) per beat
+- Total story length: ~${calculateStoryBeats(pageCount) * sentencesPerPage} sentences (~${calculateStoryBeats(pageCount) * sentencesPerPage * 10} words)
 
 VOCABULARY GUIDANCE:
 ${vocabularyGuidance}
 
-REQUIREMENTS FOR EACH PAGE:
-1. text: Exactly ${sentencesPerPage} sentence(s) of story content
-2. sceneDescription: Detailed visual description for AI image generation including:
+WHAT IS A STORY BEAT?
+A "beat" is one story moment that will span a 2-page spread in the final book.
+Each beat has text + an image. User will decide text placement (left page, right page, or both) later.
+
+REQUIREMENTS FOR EACH BEAT:
+1. text: ${sentencesPerPage} sentence(s) - this is the story text for this spread
+2. sceneDescription: Detailed visual description for the spread illustration:
    - Character positions, expressions, actions
    - Setting details (time of day, weather, environment)
    - Key objects that should be visible
-   - Color palette suggestions
+   - Mood and color palette
+   - This image will span TWO pages as a spread
 3. learningNote (optional): Fun fact, question, or interactive prompt
 
-${getStoryStructureGuidance(characterName, pageCount)}
+${getStoryStructureGuidance(characterName, calculateStoryBeats(pageCount))}
 
 Create a fun, imaginative story that a ${characterAge}-year-old will love!`
 }
@@ -494,7 +518,7 @@ export async function POST(request: NextRequest) {
         customElements,
         storyCharacters
       )
-      userMessage = `Generate a ${pageCount}-page custom story for ${characterName}. Each page should have exactly ${sentencesPerPage} sentence(s).`
+      userMessage = `Generate a ${calculateStoryBeats(pageCount)}-beat story for ${characterName} (${pageCount} pages, ${calculateStoryBeats(pageCount)} spreads). Each beat should have exactly ${sentencesPerPage} sentence(s).`
     } else {
       // Educational story
       const categoryData = getCategoryById(category)
@@ -526,7 +550,7 @@ export async function POST(request: NextRequest) {
         customNotes,
         storyCharacters
       )
-      userMessage = `Generate a ${pageCount}-page story for ${characterName} about ${topicData.name}. Each page should have exactly ${sentencesPerPage} sentence(s).`
+      userMessage = `Generate a ${calculateStoryBeats(pageCount)}-beat story for ${characterName} about ${topicData.name} (${pageCount} pages, ${calculateStoryBeats(pageCount)} spreads). Each beat should have exactly ${sentencesPerPage} sentence(s).`
     }
 
     // Use GPT-4o-mini (fast, cheap, good enough for children's stories)

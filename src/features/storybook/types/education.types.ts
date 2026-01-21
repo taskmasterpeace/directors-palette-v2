@@ -187,19 +187,38 @@ export function getRandomApproaches(count: number = 4): StoryApproach[] {
 /**
  * Page count options for storybooks
  * These are STORY PAGES only (not including front/back matter)
- * - 12 pages: Quick story (minimum viable)
- * - 24 pages: Standard picture book (KDP 32-page book with 6 front + 2 back)
- * - 28 pages: Extended picture book (KDP 36-page book)
- * - 32 pages: Long-form picture book (KDP 40-page book)
+ * - 12 pages: Quick story (6 spreads = 6 story beats)
+ * - 24 pages: Standard picture book (12 spreads = 12 story beats)
+ * - 28 pages: Extended picture book (14 spreads = 14 story beats)
+ * - 32 pages: Long-form picture book (16 spreads = 16 story beats)
+ *
+ * FORMULA: Story beats = pageCount / 2 (one beat per spread)
+ * User decides text placement per spread after generation
  */
 export const PAGE_COUNT_OPTIONS = [12, 24, 28, 32] as const
 export type PageCount = typeof PAGE_COUNT_OPTIONS[number]
 
 /**
- * Sentences per page options
+ * Calculate story beats from page count
+ * One beat per spread (2 pages)
  */
-export const SENTENCES_PER_PAGE_OPTIONS = [1, 2, 3, 4, 5, 6] as const
-export type SentencesPerPage = typeof SENTENCES_PER_PAGE_OPTIONS[number]
+export function calculateStoryBeats(pageCount: number): number {
+  return Math.floor(pageCount / 2)
+}
+
+/**
+ * Sentences per beat options (not per page!)
+ * Each beat spans a spread, so 2-3 sentences per beat is typical
+ */
+export const SENTENCES_PER_BEAT_OPTIONS = [1, 2, 3, 4] as const
+export type SentencesPerBeat = typeof SENTENCES_PER_BEAT_OPTIONS[number]
+
+/**
+ * @deprecated Use SENTENCES_PER_BEAT_OPTIONS instead
+ * Kept for backward compatibility
+ */
+export const SENTENCES_PER_PAGE_OPTIONS = SENTENCES_PER_BEAT_OPTIONS
+export type SentencesPerPage = SentencesPerBeat
 
 /**
  * Story generation input
