@@ -30,6 +30,10 @@ import type {
   StoryMode,
   StoryCharacter,
   KDPPageCount,
+  StoryBeat,
+  BookSpread,
+  SpreadImageMode,
+  SpreadTextPosition,
 } from '../types/storybook.types'
 import { getNextStep, getPreviousStep } from '../types/storybook.types'
 import type { StoryIdea, GeneratedStory, ExtractedElements } from '../types/education.types'
@@ -110,6 +114,18 @@ interface StorybookState {
   addStoryCharacter: (character: Omit<StoryCharacter, 'id'>) => void
   updateStoryCharacter: (id: string, updates: Partial<StoryCharacter>) => void
   removeStoryCharacter: (id: string) => void
+
+  // Beat actions (AI-generated story moments)
+  setBeats: (beats: StoryBeat[]) => void
+  updateBeat: (beatId: string, updates: Partial<StoryBeat>) => void
+
+  // Spread actions (user-designed layouts)
+  initializeSpreadsFromBeats: () => void
+  updateSpread: (spreadId: string, updates: Partial<BookSpread>) => void
+  setSpreadImage: (spreadId: string, imageUrl: string, imageMode: SpreadImageMode) => void
+  setSpreadTextPlacement: (spreadId: string, placement: SpreadTextPosition, leftText?: string, rightText?: string) => void
+  markSpreadGenerated: (spreadId: string, leftImageUrl: string, rightImageUrl?: string) => void
+  setSpreadGenerating: (spreadId: string, isGenerating: boolean) => void
 
   // Story actions
   setStoryText: (text: string) => void
@@ -950,6 +966,163 @@ export const useStorybookStore = create<StorybookState>()(
         project: {
           ...project,
           storyCharacters: project.storyCharacters.filter(c => c.id !== id),
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  // Beat actions (AI-generated story moments)
+  setBeats: (beats) => {
+    const { project } = get()
+    if (project) {
+      set({
+        project: {
+          ...project,
+          beats,
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  updateBeat: (beatId, updates) => {
+    const { project } = get()
+    if (project && project.beats) {
+      set({
+        project: {
+          ...project,
+          beats: project.beats.map(b =>
+            b.id === beatId ? { ...b, ...updates } : b
+          ),
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  // Spread actions (user-designed layouts)
+  initializeSpreadsFromBeats: () => {
+    const { project } = get()
+    if (!project || !project.beats) return
+
+    // Calculate first story page number (after front matter if applicable)
+    const frontMatterPages = project.includeFrontMatter ? 6 : 0
+    const firstStoryPage = frontMatterPages + 1
+
+    // Create spreads from beats
+    const spreads: BookSpread[] = project.beats.map((beat, index) => ({
+      id: generateId(),
+      spreadNumber: index + 1,
+      beatId: beat.id,
+      text: beat.text,
+      sceneDescription: beat.sceneDescription,
+      imageMode: 'full-spread' as const,
+      textPlacement: 'left' as const,
+      leftPageText: beat.text,
+      rightPageText: undefined,
+      textPosition: 'bottom' as const,
+      leftPageNumber: firstStoryPage + index * 2,
+      rightPageNumber: firstStoryPage + index * 2 + 1,
+      isGenerated: false,
+      isGenerating: false,
+    }))
+
+    set({
+      project: {
+        ...project,
+        spreads,
+        updatedAt: new Date(),
+      },
+    })
+  },
+
+  updateSpread: (spreadId, updates) => {
+    const { project } = get()
+    if (project && project.spreads) {
+      set({
+        project: {
+          ...project,
+          spreads: project.spreads.map(s =>
+            s.id === spreadId ? { ...s, ...updates } : s
+          ),
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  setSpreadImage: (spreadId, imageUrl, imageMode) => {
+    const { project } = get()
+    if (project && project.spreads) {
+      set({
+        project: {
+          ...project,
+          spreads: project.spreads.map(s =>
+            s.id === spreadId
+              ? { ...s, spreadImageUrl: imageUrl, imageMode }
+              : s
+          ),
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  setSpreadTextPlacement: (spreadId, placement, leftText, rightText) => {
+    const { project } = get()
+    if (project && project.spreads) {
+      set({
+        project: {
+          ...project,
+          spreads: project.spreads.map(s =>
+            s.id === spreadId
+              ? {
+                  ...s,
+                  textPlacement: placement,
+                  leftPageText: leftText,
+                  rightPageText: rightText,
+                }
+              : s
+          ),
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  markSpreadGenerated: (spreadId, leftImageUrl, rightImageUrl) => {
+    const { project } = get()
+    if (project && project.spreads) {
+      set({
+        project: {
+          ...project,
+          spreads: project.spreads.map(s =>
+            s.id === spreadId
+              ? {
+                  ...s,
+                  leftImageUrl,
+                  rightImageUrl: rightImageUrl || leftImageUrl, // Use same image if not split
+                  isGenerated: true,
+                  isGenerating: false,
+                }
+              : s
+          ),
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  setSpreadGenerating: (spreadId, isGenerating) => {
+    const { project } = get()
+    if (project && project.spreads) {
+      set({
+        project: {
+          ...project,
+          spreads: project.spreads.map(s =>
+            s.id === spreadId ? { ...s, isGenerating } : s
+          ),
           updatedAt: new Date(),
         },
       })

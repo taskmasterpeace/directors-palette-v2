@@ -551,13 +551,171 @@ export async function mergePDFs(pdfBuffers: Uint8Array[]): Promise<Uint8Array> {
 }
 
 /**
+ * Generate interior PDF from spreads (new beats/spreads architecture)
+ * Each spread generates 2 pages in the PDF
+ */
+export async function generateInteriorFromSpreads(
+  project: StorybookProject,
+  options: Partial<PDFExportOptions> = {}
+): Promise<Uint8Array> {
+  const opts = { ...DEFAULT_OPTIONS, ...options }
+  const dims = calculatePageDimensions(project.bookFormat)
+
+  // Use bleed dimensions for full-bleed printing
+  const pageWidth = opts.includeBleed ? dims.bleedWidth : dims.trimWidth
+  const pageHeight = opts.includeBleed ? dims.bleedHeight : dims.trimHeight
+
+  // Convert to PDF points (72 points per inch)
+  const pdfWidth = pageWidth * 72
+  const pdfHeight = pageHeight * 72
+
+  // Create PDF document
+  const pdfDoc = await PDFDocument.create()
+
+  // Embed font for text
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
+
+  const spreads = project.spreads || []
+
+  // Process each spread (creates 2 pages)
+  for (const spread of spreads) {
+    // === LEFT PAGE ===
+    const leftPage = pdfDoc.addPage([pdfWidth, pdfHeight])
+
+    if (spread.leftImageUrl) {
+      try {
+        const imageBytes = await fetchImageBytes(spread.leftImageUrl)
+        const imageType = detectImageType(spread.leftImageUrl, imageBytes)
+        const image = imageType === 'png'
+          ? await pdfDoc.embedPng(imageBytes)
+          : await pdfDoc.embedJpg(imageBytes)
+
+        // Scale image to fill page
+        const { width: imgWidth, height: imgHeight } = image.scale(1)
+        const scale = Math.max(pdfWidth / imgWidth, pdfHeight / imgHeight)
+        const scaledWidth = imgWidth * scale
+        const scaledHeight = imgHeight * scale
+        const x = (pdfWidth - scaledWidth) / 2
+        const y = (pdfHeight - scaledHeight) / 2
+
+        leftPage.drawImage(image, { x, y, width: scaledWidth, height: scaledHeight })
+      } catch (error) {
+        console.error(`Failed to embed left image for spread ${spread.spreadNumber}:`, error)
+        leftPage.drawRectangle({ x: 0, y: 0, width: pdfWidth, height: pdfHeight, color: rgb(0.9, 0.9, 0.9) })
+      }
+    }
+
+    // Add text to left page if configured
+    if (spread.leftPageText && (spread.textPlacement === 'left' || spread.textPlacement === 'both')) {
+      drawPageText(leftPage, spread.leftPageText, font, pdfWidth, pdfHeight, spread.textPosition, opts.includeBleed)
+    }
+
+    // === RIGHT PAGE ===
+    const rightPage = pdfDoc.addPage([pdfWidth, pdfHeight])
+
+    if (spread.rightImageUrl) {
+      try {
+        const imageBytes = await fetchImageBytes(spread.rightImageUrl)
+        const imageType = detectImageType(spread.rightImageUrl, imageBytes)
+        const image = imageType === 'png'
+          ? await pdfDoc.embedPng(imageBytes)
+          : await pdfDoc.embedJpg(imageBytes)
+
+        const { width: imgWidth, height: imgHeight } = image.scale(1)
+        const scale = Math.max(pdfWidth / imgWidth, pdfHeight / imgHeight)
+        const scaledWidth = imgWidth * scale
+        const scaledHeight = imgHeight * scale
+        const x = (pdfWidth - scaledWidth) / 2
+        const y = (pdfHeight - scaledHeight) / 2
+
+        rightPage.drawImage(image, { x, y, width: scaledWidth, height: scaledHeight })
+      } catch (error) {
+        console.error(`Failed to embed right image for spread ${spread.spreadNumber}:`, error)
+        rightPage.drawRectangle({ x: 0, y: 0, width: pdfWidth, height: pdfHeight, color: rgb(0.9, 0.9, 0.9) })
+      }
+    }
+
+    // Add text to right page if configured
+    if (spread.rightPageText && (spread.textPlacement === 'right' || spread.textPlacement === 'both')) {
+      drawPageText(rightPage, spread.rightPageText, font, pdfWidth, pdfHeight, spread.textPosition, opts.includeBleed)
+    }
+  }
+
+  // Set PDF metadata
+  pdfDoc.setTitle(project.title)
+  pdfDoc.setAuthor(project.author || 'Unknown')
+  pdfDoc.setCreator('Directors Palette Storybook')
+  pdfDoc.setProducer('pdf-lib')
+
+  return pdfDoc.save()
+}
+
+/**
+ * Helper to draw text on a page with background
+ */
+function drawPageText(
+  page: import('pdf-lib').PDFPage,
+  text: string,
+  font: PDFFont,
+  pdfWidth: number,
+  pdfHeight: number,
+  position: 'top' | 'bottom' | undefined,
+  includeBleed: boolean
+): void {
+  const bleedOffset = includeBleed ? 0.125 * 72 : 0
+  const safeMargin = 0.25 * 72
+  const fontSize = 14
+
+  const textX = bleedOffset + safeMargin
+  let textY: number
+  const textWidth = pdfWidth - (bleedOffset + safeMargin) * 2
+
+  if (position === 'top') {
+    textY = pdfHeight - bleedOffset - safeMargin - fontSize
+  } else {
+    textY = bleedOffset + safeMargin + fontSize * 2
+  }
+
+  const textLines = wrapText(text, font, fontSize, textWidth)
+  const textHeight = textLines.length * (fontSize + 4)
+
+  // Draw semi-transparent background
+  page.drawRectangle({
+    x: textX - 10,
+    y: textY - textHeight - 10,
+    width: textWidth + 20,
+    height: textHeight + 20,
+    color: rgb(1, 1, 1),
+    opacity: 0.8,
+  })
+
+  // Draw text
+  let currentY = textY
+  for (const line of textLines) {
+    page.drawText(line, {
+      x: textX,
+      y: currentY,
+      size: fontSize,
+      font: font,
+      color: rgb(0, 0, 0),
+    })
+    currentY -= fontSize + 4
+  }
+}
+
+/**
  * Export complete storybook as interior PDF
+ * Supports both legacy pages array and new spreads array
  */
 export async function exportStorybookInterior(
   project: StorybookProject,
   options: Partial<PDFExportOptions> = {}
 ): Promise<{ pdf: Uint8Array; filename: string }> {
-  const pdf = await generateInteriorPDF(project, options)
+  // Use spreads if available, otherwise fall back to pages
+  const pdf = project.spreads && project.spreads.length > 0
+    ? await generateInteriorFromSpreads(project, options)
+    : await generateInteriorPDF(project, options)
+
   const filename = `${project.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-interior.pdf`
 
   return { pdf, filename }

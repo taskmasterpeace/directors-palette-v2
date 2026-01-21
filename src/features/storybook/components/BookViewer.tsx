@@ -1,10 +1,10 @@
 "use client"
 
-import { forwardRef, useRef, useCallback, useImperativeHandle } from "react"
+import { forwardRef, useRef, useCallback, useImperativeHandle, useMemo } from "react"
 import HTMLFlipBook from "react-pageflip"
 import Image from "next/image"
 import { cn } from "@/utils/utils"
-import type { StorybookPage, BookFormat } from "../types/storybook.types"
+import type { StorybookPage, BookFormat, BookSpread } from "../types/storybook.types"
 import { calculateBookDimensions } from "../utils/book-dimensions"
 import { PageLayoutRenderer } from "./PageLayoutRenderer"
 
@@ -88,6 +88,59 @@ const BackCover = forwardRef<HTMLDivElement, { title: string }>(({ title }, ref)
 
 BackCover.displayName = 'BackCover'
 
+// Spread-based page component (for new beats/spreads architecture)
+interface SpreadPageProps {
+  spread: BookSpread
+  side: 'left' | 'right'
+  pageNumber: number
+}
+
+const SpreadPage = forwardRef<HTMLDivElement, SpreadPageProps>(({ spread, side, pageNumber }, ref) => {
+  const imageUrl = side === 'left' ? spread.leftImageUrl : spread.rightImageUrl
+  const text = side === 'left' ? spread.leftPageText : spread.rightPageText
+  const hasText = side === 'left'
+    ? spread.textPlacement === 'left' || spread.textPlacement === 'both'
+    : spread.textPlacement === 'right' || spread.textPlacement === 'both'
+
+  return (
+    <div ref={ref} className="page bg-white shadow-lg overflow-hidden relative" style={{ width: '100%', height: '100%' }}>
+      {/* Image */}
+      {imageUrl && (
+        <div className="absolute inset-0">
+          <Image
+            src={imageUrl}
+            alt={`Page ${pageNumber}`}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
+        </div>
+      )}
+
+      {/* Text overlay */}
+      {hasText && text && (
+        <div
+          className={cn(
+            "absolute left-0 right-0 p-4 z-10",
+            spread.textPosition === 'top' ? 'top-0' : 'bottom-0',
+            "bg-gradient-to-b from-black/60 to-transparent",
+            spread.textPosition === 'bottom' && "bg-gradient-to-t from-black/60 to-transparent"
+          )}
+        >
+          <p className="text-white text-sm leading-relaxed">{text}</p>
+        </div>
+      )}
+
+      {/* Page Number */}
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-zinc-400 bg-white/80 px-2 py-0.5 rounded z-10">
+        {pageNumber}
+      </div>
+    </div>
+  )
+})
+
+SpreadPage.displayName = 'SpreadPage'
+
 // Main BookViewer component
 export interface BookViewerRef {
   flipToPage: (pageIndex: number) => void
@@ -98,17 +151,19 @@ export interface BookViewerRef {
 
 interface BookViewerProps {
   pages: StorybookPage[]
+  spreads?: BookSpread[] // NEW: Spread-based pages (takes precedence over pages)
   title: string
   author?: string
   coverUrl?: string
   currentPage?: number
   onPageChange?: (pageIndex: number) => void
   className?: string
-  bookFormat?: BookFormat // NEW: Book format for responsive dimensions
+  bookFormat?: BookFormat // Book format for responsive dimensions
 }
 
 export const BookViewer = forwardRef<BookViewerRef, BookViewerProps>(({
   pages,
+  spreads,
   title,
   author,
   coverUrl,
@@ -122,6 +177,20 @@ export const BookViewer = forwardRef<BookViewerRef, BookViewerProps>(({
 
   // Calculate responsive dimensions based on book format
   const dimensions = calculateBookDimensions(bookFormat)
+
+  // Determine if we're using spreads or pages
+  const useSpreads = spreads && spreads.length > 0
+
+  // Generate pages from spreads if available
+  const spreadPages = useMemo(() => {
+    if (!spreads || spreads.length === 0) return null
+
+    // Each spread generates 2 pages (left and right)
+    return spreads.flatMap(spread => [
+      { spread, side: 'left' as const, pageNumber: spread.leftPageNumber },
+      { spread, side: 'right' as const, pageNumber: spread.rightPageNumber },
+    ])
+  }, [spreads])
 
   const handleFlip = useCallback((e: { data?: number }) => {
     // react-pageflip uses 0-based indexing
@@ -182,10 +251,23 @@ export const BookViewer = forwardRef<BookViewerRef, BookViewerProps>(({
         {/* Front Cover */}
         <CoverPage title={title} author={author} coverUrl={coverUrl} />
 
-        {/* Content Pages */}
-        {pages.map((page, index) => (
-          <Page key={page.id} page={page} pageNumber={index + 1} />
-        ))}
+        {/* Content Pages - render from spreads or pages */}
+        {useSpreads && spreadPages ? (
+          // Spread-based rendering (new architecture)
+          spreadPages.map(({ spread, side, pageNumber }) => (
+            <SpreadPage
+              key={`${spread.id}-${side}`}
+              spread={spread}
+              side={side}
+              pageNumber={pageNumber}
+            />
+          ))
+        ) : (
+          // Legacy page-based rendering
+          pages.map((page, index) => (
+            <Page key={page.id} page={page} pageNumber={index + 1} />
+          ))
+        )}
 
         {/* Back Cover */}
         <BackCover title={title} />

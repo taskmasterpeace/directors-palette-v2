@@ -13,44 +13,49 @@ import { cn } from "@/utils/utils"
 export function StoryReviewStep() {
   const { project, setGeneratedStory, updateProject, nextStep, previousStep } = useStorybookStore()
 
-  const [editingPage, setEditingPage] = useState<number | null>(null)
+  // Note: "page" in generatedStory.pages actually represents a "beat" (1 beat = 1 spread = 2 pages)
+  // We use "beat" terminology in the UI but keep "page" in internal state for backward compat
+  const [editingBeat, setEditingBeat] = useState<number | null>(null)
   const [editText, setEditText] = useState("")
 
   const generatedStory = project?.generatedStory
   const extractedCharacters = project?.extractedCharacters || []
   const extractedLocations = project?.extractedLocations || []
 
-  const handleEditPage = (pageNumber: number) => {
-    const page = generatedStory?.pages.find(p => p.pageNumber === pageNumber)
-    if (page) {
-      setEditText(page.text)
-      setEditingPage(pageNumber)
+  // Total beats = generatedStory pages (each "page" is actually a beat in new architecture)
+  const totalBeats = generatedStory?.pages?.length || 0
+
+  const handleEditBeat = (beatNumber: number) => {
+    const beat = generatedStory?.pages.find(p => p.pageNumber === beatNumber)
+    if (beat) {
+      setEditText(beat.text)
+      setEditingBeat(beatNumber)
     }
   }
 
   const handleSaveEdit = () => {
-    if (editingPage === null || !generatedStory) return
+    if (editingBeat === null || !generatedStory) return
 
     const updatedPages = generatedStory.pages.map(p =>
-      p.pageNumber === editingPage ? { ...p, text: editText } : p
+      p.pageNumber === editingBeat ? { ...p, text: editText } : p
     )
 
-    // Update generatedStory with edited pages
+    // Update generatedStory with edited beats
     setGeneratedStory({
       ...generatedStory,
       pages: updatedPages
     })
 
-    // SYNC storyText with edited pages
+    // SYNC storyText with edited beats
     const updatedStoryText = updatedPages.map(p => p.text).join('\n\n')
     updateProject({ storyText: updatedStoryText })
 
-    setEditingPage(null)
+    setEditingBeat(null)
     setEditText("")
   }
 
   const handleCancelEdit = () => {
-    setEditingPage(null)
+    setEditingBeat(null)
     setEditText("")
   }
 
@@ -78,28 +83,33 @@ export function StoryReviewStep() {
     <div className="flex flex-col h-full">
       {/* Main Content */}
       <div className="flex-1 flex gap-4 min-h-0">
-        {/* Story Pages */}
+        {/* Story Beats */}
         <div className="flex-1 min-w-0">
           <ScrollArea className="h-full pr-4">
             <div className="space-y-4">
-              {generatedStory.pages.map((page) => (
+              {/* Header showing total beats */}
+              <div className="text-sm text-zinc-400 mb-2">
+                {totalBeats} story beats ({totalBeats * 2} pages when printed)
+              </div>
+
+              {generatedStory.pages.map((beat) => (
                 <Card
-                  key={page.pageNumber}
+                  key={beat.pageNumber}
                   className={cn(
                     "bg-zinc-900/50 border-zinc-800",
-                    editingPage === page.pageNumber && "ring-2 ring-amber-500"
+                    editingBeat === beat.pageNumber && "ring-2 ring-amber-500"
                   )}
                 >
                   <CardHeader className="py-3 px-4">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm text-amber-400">
-                        Page {page.pageNumber}
+                        Beat {beat.pageNumber} <span className="text-zinc-500 font-normal">of {totalBeats}</span>
                       </CardTitle>
-                      {editingPage !== page.pageNumber && (
+                      {editingBeat !== beat.pageNumber && (
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleEditPage(page.pageNumber)}
+                          onClick={() => handleEditBeat(beat.pageNumber)}
                           className="h-7 text-xs text-muted-foreground hover:text-white"
                         >
                           <Edit2 className="w-3 h-3 mr-1" />
@@ -109,7 +119,7 @@ export function StoryReviewStep() {
                     </div>
                   </CardHeader>
                   <CardContent className="py-2 px-4">
-                    {editingPage === page.pageNumber ? (
+                    {editingBeat === beat.pageNumber ? (
                       <div className="space-y-3">
                         <Textarea
                           value={editText}
@@ -138,17 +148,17 @@ export function StoryReviewStep() {
                       </div>
                     ) : (
                       <>
-                        <p className="text-white text-sm leading-relaxed">{page.text}</p>
-                        {page.learningNote && (
+                        <p className="text-white text-sm leading-relaxed">{beat.text}</p>
+                        {beat.learningNote && (
                           <div className="mt-3 p-2 bg-amber-500/10 rounded border border-amber-500/20">
                             <div className="flex items-start gap-2">
                               <Lightbulb className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
-                              <p className="text-xs text-amber-300">{page.learningNote}</p>
+                              <p className="text-xs text-amber-300">{beat.learningNote}</p>
                             </div>
                           </div>
                         )}
                         <p className="text-xs text-zinc-500 mt-2 italic">
-                          Scene: {page.sceneDescription}
+                          Scene: {beat.sceneDescription}
                         </p>
                       </>
                     )}
@@ -187,7 +197,7 @@ export function StoryReviewStep() {
                         {char.description}
                       </p>
                       <p className="text-xs text-zinc-500 mt-1">
-                        Pages: {char.appearances.join(", ")}
+                        Beats: {char.appearances.join(", ")}
                       </p>
                     </div>
                   ))}
@@ -216,7 +226,7 @@ export function StoryReviewStep() {
                         {loc.description}
                       </p>
                       <p className="text-xs text-zinc-500 mt-1">
-                        Pages: {loc.appearances.join(", ")}
+                        Beats: {loc.appearances.join(", ")}
                       </p>
                     </div>
                   ))}

@@ -39,11 +39,12 @@ interface GenerateStoryRequest {
 }
 
 // Tool schema for structured output
+// Uses "beats" terminology - each beat represents one spread (2 facing pages)
 const GENERATE_STORY_TOOL = {
   type: 'function' as const,
   function: {
     name: 'generate_story',
-    description: 'Generate a complete children\'s story with pages',
+    description: 'Generate a complete children\'s story with beats (each beat = 1 spread = 2 pages)',
     parameters: {
       type: 'object',
       properties: {
@@ -55,34 +56,34 @@ const GENERATE_STORY_TOOL = {
           type: 'string',
           description: 'A brief summary of the story (1-2 sentences)'
         },
-        pages: {
+        beats: {
           type: 'array',
-          description: 'Array of story pages',
+          description: 'Array of story beats (each beat = one spread = two facing pages)',
           items: {
             type: 'object',
             properties: {
-              pageNumber: {
+              beatNumber: {
                 type: 'number',
-                description: 'The page number (starting from 1)'
+                description: 'The beat number (starting from 1)'
               },
               text: {
                 type: 'string',
-                description: 'The story text for this page'
+                description: 'The story text for this beat/spread'
               },
               sceneDescription: {
                 type: 'string',
-                description: 'Visual description of the scene for image generation'
+                description: 'Visual description of the scene for spread image generation'
               },
               learningNote: {
                 type: 'string',
                 description: 'Optional educational callout or interactive prompt for the reader'
               }
             },
-            required: ['pageNumber', 'text', 'sceneDescription']
+            required: ['beatNumber', 'text', 'sceneDescription']
           }
         }
       },
-      required: ['title', 'summary', 'pages']
+      required: ['title', 'summary', 'beats']
     }
   }
 }
@@ -624,18 +625,23 @@ export async function POST(request: NextRequest) {
     try {
       const result = JSON.parse(toolCall.function.arguments)
 
-      // Ensure pages are properly numbered
-      const pages: GeneratedStoryPage[] = result.pages.map((page: GeneratedStoryPage, index: number) => ({
-        pageNumber: index + 1,
-        text: page.text,
-        sceneDescription: page.sceneDescription,
-        learningNote: page.learningNote
+      // Handle both old 'pages' format and new 'beats' format for backward compatibility
+      const rawBeats = result.beats || result.pages || []
+
+      // Ensure beats are properly numbered
+      const pages: GeneratedStoryPage[] = rawBeats.map((beat: { beatNumber?: number; pageNumber?: number; text: string; sceneDescription: string; learningNote?: string }, index: number) => ({
+        pageNumber: index + 1,  // Keep as pageNumber for GeneratedStoryPage compatibility
+        text: beat.text,
+        sceneDescription: beat.sceneDescription,
+        learningNote: beat.learningNote
       }))
 
+      // Response uses 'pages' for backward compatibility with existing consumers
+      // The pages are actually beats (1 per spread), terminology is just for compat
       const story: GeneratedStory = {
         title: result.title,
         summary: result.summary,
-        pages
+        pages  // Note: these are actually beats, named 'pages' for backward compat
       }
 
       // Log story generation success

@@ -806,6 +806,136 @@ export function useStorybookGeneration() {
     }
   }, [project, generateBookCover, setGenerating, setError])
 
+  /**
+   * Generate a spread image for the new beats/spreads architecture
+   * Takes a BookSpread and generates the appropriate image(s)
+   *
+   * @param spread - The BookSpread to generate an image for
+   * @returns Result with spread image URL and optionally split left/right URLs
+   */
+  const generateSpreadImage = useCallback(async (
+    spread: { id: string; text: string; sceneDescription: string; spreadNumber: number }
+  ): Promise<{ success: boolean; imageUrl?: string; rightImageUrl?: string; error?: string }> => {
+    if (!project) {
+      return { success: false, error: 'No project found' }
+    }
+
+    setState({
+      isGenerating: true,
+      progress: `Generating spread ${spread.spreadNumber}...`,
+      error: null
+    })
+    setGenerating(true)
+
+    try {
+      // Build character descriptions
+      const mainCharacterDescriptions = project?.characters.map(c => {
+        const tag = `@${c.tag || c.name.replace(/\s+/g, '')}`
+        return c.description ? `${tag}: ${c.description}` : tag
+      }) || []
+      const supportingCharacterDescriptions = project?.storyCharacters?.map(c => {
+        const tag = `@${c.name.replace(/\s+/g, '')}`
+        return c.description ? `${tag}: ${c.description}` : tag
+      }) || []
+      const allCharacterDescriptions = [...mainCharacterDescriptions, ...supportingCharacterDescriptions]
+      const characterTags = allCharacterDescriptions.length > 0 ? allCharacterDescriptions.join(', ') : 'No named characters'
+
+      // Get previous spread text for continuity
+      const spreadIndex = (project.spreads || []).findIndex(s => s.id === spread.id)
+      const previousSpread = spreadIndex > 0 ? project.spreads?.[spreadIndex - 1] : null
+
+      // Build field values for dual-page recipe (reusing existing recipe)
+      const fieldValues: Record<string, string> = {
+        'stage0_field0_previous_page_text': previousSpread?.text || '',
+        'stage0_field1_left_page_number': ((spreadIndex * 2) + 1).toString(),
+        'stage0_field2_left_page_text': spread.text,
+        'stage0_field3_left_scene_description': spread.sceneDescription,
+        'stage0_field4_right_page_number': ((spreadIndex * 2) + 2).toString(),
+        'stage0_field5_right_page_text': '', // Right page uses same scene for spread
+        'stage0_field6_right_scene_description': spread.sceneDescription,
+        'stage0_field7_character_names': characterTags,
+        'stage0_field8_mood': 'Warm',
+        'stage0_field9_target_age': project?.targetAge.toString() || '5',
+      }
+
+      // Auto-attach reference images: style guide + all character sheets
+      const referenceImages: string[] = []
+      if (project?.style?.styleGuideUrl) {
+        referenceImages.push(project.style.styleGuideUrl)
+      }
+      const mainCharacterSheetUrls = project?.characters
+        .filter(c => c.characterSheetUrl)
+        .map(c => c.characterSheetUrl!) || []
+      referenceImages.push(...mainCharacterSheetUrls)
+      const supportingCharacterSheetUrls = project?.storyCharacters
+        ?.filter(c => c.characterSheetUrl)
+        .map(c => c.characterSheetUrl!) || []
+      referenceImages.push(...supportingCharacterSheetUrls)
+
+      // Get folder and metadata for gallery organization
+      const folderId = await getStorybookFolderId()
+      const extraMetadata = getStorybookMetadata('page', { pageNumber: spread.spreadNumber })
+
+      // Generate the spread image (2:1 aspect ratio for dual-page)
+      const recipeName = DEFAULT_RECIPE_NAMES.DUAL_PAGE
+
+      const response = await fetch(`/api/recipes/${recipeName}/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fieldValues,
+          referenceImages,
+          modelSettings: {
+            aspectRatio: getDualAspectRatio(),
+            outputFormat: 'png',
+          },
+          folderId,
+          extraMetadata,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to generate spread image')
+      }
+
+      // Split the image into left and right pages
+      const splitResponse = await fetch('/api/tools/grid-split', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageUrl: data.imageUrl,
+          cols: 2,
+          rows: 1,
+        }),
+      })
+
+      const splitData = await splitResponse.json()
+
+      if (!splitResponse.ok || !splitData.success) {
+        throw new Error(splitData.error || 'Failed to split spread image')
+      }
+
+      const [leftImageUrl, rightImageUrl] = splitData.imageUrls
+
+      setState({ isGenerating: false, progress: '', error: null })
+      setGenerating(false)
+
+      return {
+        success: true,
+        imageUrl: leftImageUrl,
+        rightImageUrl: rightImageUrl,
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Spread generation failed'
+      setState({ isGenerating: false, progress: '', error: errorMessage })
+      setGenerating(false)
+      setError(errorMessage)
+      return { success: false, error: errorMessage }
+    }
+  }, [project, setGenerating, setError, getStorybookFolderId, getStorybookMetadata])
+
   return {
     // State
     isGenerating: state.isGenerating,
@@ -818,6 +948,7 @@ export function useStorybookGeneration() {
     generateBookCover,
     generateCoverVariations,
     generatePage,
-    generateDualPage, // ← NEW: Generates 2 pages in 1 image for 50% cost savings
+    generateDualPage, // Generates 2 pages in 1 image for 50% cost savings (legacy)
+    generateSpreadImage, // NEW: Generates spread image for beats/spreads architecture
   }
 }

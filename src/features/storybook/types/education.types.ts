@@ -234,22 +234,60 @@ export interface StoryGenerationInput {
 }
 
 /**
- * Generated story page
+ * Generated story page (legacy - kept for backward compatibility)
+ * Note: In the new architecture, these are actually "beats" (1 beat = 1 spread = 2 pages)
  */
 export interface GeneratedStoryPage {
-  pageNumber: number
+  pageNumber: number  // Actually beatNumber - kept as pageNumber for compat
   text: string
   sceneDescription: string
   learningNote?: string
 }
 
 /**
+ * Generated story beat (new architecture)
+ * Each beat represents one story moment = one spread = two facing pages
+ */
+export interface GeneratedStoryBeat {
+  beatNumber: number           // 1, 2, 3... (sequential)
+  text: string                 // Story text for this moment
+  sceneDescription: string     // Visual description for image generation
+  learningNote?: string        // Educational callout (optional)
+}
+
+/**
  * Generated story output
+ * Uses 'pages' array for backward compatibility, but each entry is actually a beat
  */
 export interface GeneratedStory {
   title: string
   summary: string
-  pages: GeneratedStoryPage[]
+  pages: GeneratedStoryPage[]  // Actually beats - named 'pages' for backward compat
+}
+
+/**
+ * Generated story output (new format with explicit beats)
+ */
+export interface GeneratedStoryWithBeats {
+  title: string
+  summary: string
+  beats: GeneratedStoryBeat[]
+}
+
+/**
+ * Convert GeneratedStory to GeneratedStoryWithBeats format
+ */
+export function convertToBeatsFormat(story: GeneratedStory): GeneratedStoryWithBeats {
+  return {
+    title: story.title,
+    summary: story.summary,
+    beats: story.pages.map((page, index) => ({
+      beatNumber: index + 1,
+      text: page.text,
+      sceneDescription: page.sceneDescription,
+      learningNote: page.learningNote,
+    })),
+  }
 }
 
 /**

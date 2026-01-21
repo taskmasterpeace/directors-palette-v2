@@ -5,12 +5,16 @@
  * Story structures provide a template for how AI generates and organizes
  * the narrative beats of a children's story. Each structure produces
  * stories of varying lengths (4-12+ scenes).
+ *
+ * NOTE: This file defines the TEMPLATE structures (e.g., Story Spine, Hero's Journey).
+ * The actual generated story beats are defined as `StoryBeat` in storybook.types.ts.
  */
 
 /**
- * A single beat/step in a story structure
+ * A single beat/step in a story structure TEMPLATE
+ * (Renamed from StoryBeat to avoid conflict with generated StoryBeat in storybook.types.ts)
  */
-export interface StoryBeat {
+export interface StoryStructureBeat {
   id: string
   order: number
   name: string // e.g., "Once upon a time"
@@ -18,6 +22,7 @@ export interface StoryBeat {
   promptGuidance: string // AI instruction for this beat
   canBeSpread: boolean // Can this beat span 2 pages?
   suggestedImageCount: number // 1 or 2 images for this beat
+  emotionalTone?: string // Expected emotional state (e.g., "curious", "triumphant")
 }
 
 /**
@@ -31,7 +36,7 @@ export interface StoryStructure {
   description: string // Brief explanation for users
   longDescription: string // Detailed explanation for AI
   beatCount: number // Total number of beats
-  beats: StoryBeat[] // The actual structure
+  beats: StoryStructureBeat[] // The structural template beats
   suggestedPageCounts: number[] // e.g., [6, 8, 12] - works well with
   ageRanges: AgeRange[] // Target age ranges
   bestFor: string[] // e.g., ["adventure", "growth", "transformation"]
@@ -111,6 +116,49 @@ export function getTotalSuggestedImages(structure: StoryStructure): number {
 /**
  * Get beats that can be rendered as spreads
  */
-export function getSpreadCandidates(structure: StoryStructure): StoryBeat[] {
+export function getSpreadCandidates(structure: StoryStructure): StoryStructureBeat[] {
   return structure.beats.filter(beat => beat.canBeSpread)
+}
+
+/**
+ * Convert numeric age to age range
+ */
+export function getAgeRangeFromAge(age: number): AgeRange {
+  if (age <= 4) return '2-4'
+  if (age <= 5) return '3-5'
+  if (age <= 7) return '5-7'
+  if (age <= 8) return '6-8'
+  if (age <= 10) return '8-10'
+  return '9-12'
+}
+
+/**
+ * Check if a story structure is appropriate for a given age
+ */
+export function isStructureAppropriateForAge(
+  structure: StoryStructure,
+  age: number
+): boolean {
+  const ageRange = getAgeRangeFromAge(age)
+  return structure.ageRanges.includes(ageRange)
+}
+
+/**
+ * Get recommended structures for a given page count
+ */
+export function getRecommendedStructures(
+  structures: StoryStructure[],
+  pageCount: number
+): StoryStructure[] {
+  return structures.filter(s => s.suggestedPageCounts.includes(pageCount))
+}
+
+/**
+ * Get structures appropriate for a given age
+ */
+export function getStructuresForAge(
+  structures: StoryStructure[],
+  age: number
+): StoryStructure[] {
+  return structures.filter(s => isStructureAppropriateForAge(s, age))
 }
