@@ -19,6 +19,7 @@ import {
   inchesToPixels,
   type PaperType,
 } from '../utils/kdp-dimensions'
+import { generateCopyrightText, type CopyrightInfo } from '../utils/copyright-generator'
 
 export interface PDFExportOptions {
   includeBleed: boolean
@@ -87,11 +88,104 @@ export async function generateInteriorPDF(
   // Create PDF document
   const pdfDoc = await PDFDocument.create()
 
-  // Embed font for text
+  // Embed fonts for text
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
-  // fontBold available for future title styling
-  const _fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+  const fontItalic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique)
 
+  // ========================================
+  // FRONT MATTER: Title Page
+  // ========================================
+  const titlePage = pdfDoc.addPage([pdfWidth, pdfHeight])
+
+  // Add title page image if available
+  if (project.titlePageImageUrl) {
+    try {
+      const imageBytes = await fetchImageBytes(project.titlePageImageUrl)
+      const imageType = detectImageType(project.titlePageImageUrl, imageBytes)
+      const image = imageType === 'png'
+        ? await pdfDoc.embedPng(imageBytes)
+        : await pdfDoc.embedJpg(imageBytes)
+
+      const { width: imgWidth, height: imgHeight } = image.scale(1)
+      const scale = Math.max(pdfWidth / imgWidth, pdfHeight / imgHeight)
+      const scaledWidth = imgWidth * scale
+      const scaledHeight = imgHeight * scale
+      const x = (pdfWidth - scaledWidth) / 2
+      const y = (pdfHeight - scaledHeight) / 2
+
+      titlePage.drawImage(image, { x, y, width: scaledWidth, height: scaledHeight })
+    } catch (error) {
+      console.error('Failed to embed title page image:', error)
+    }
+  }
+
+  // Draw title and author text on title page
+  const titleFontSize = 28
+  const authorFontSize = 16
+  const titleText = project.title || 'Untitled'
+  const authorText = project.author ? `by ${project.author}` : ''
+
+  // Center title at top third
+  const titleWidth = fontBold.widthOfTextAtSize(titleText, titleFontSize)
+  titlePage.drawText(titleText, {
+    x: (pdfWidth - titleWidth) / 2,
+    y: pdfHeight * 0.75,
+    size: titleFontSize,
+    font: fontBold,
+    color: rgb(0.1, 0.1, 0.1),
+  })
+
+  // Center author below title
+  if (authorText) {
+    const authorWidth = fontItalic.widthOfTextAtSize(authorText, authorFontSize)
+    titlePage.drawText(authorText, {
+      x: (pdfWidth - authorWidth) / 2,
+      y: pdfHeight * 0.75 - titleFontSize - 20,
+      size: authorFontSize,
+      font: fontItalic,
+      color: rgb(0.3, 0.3, 0.3),
+    })
+  }
+
+  // ========================================
+  // FRONT MATTER: Copyright Page
+  // ========================================
+  const copyrightPage = pdfDoc.addPage([pdfWidth, pdfHeight])
+
+  // Generate copyright text from project info
+  const copyrightInfo: CopyrightInfo = {
+    authorName: project.author || 'Author',
+    year: project.copyrightYear || new Date().getFullYear(),
+    publisherName: project.publisherName,
+    isbn: project.isbnPlaceholder,
+  }
+  const copyrightText = generateCopyrightText(copyrightInfo)
+
+  // Draw copyright text centered on page
+  const copyrightFontSize = 10
+  const copyrightLines = copyrightText.split('\n')
+  const lineHeight = copyrightFontSize + 4
+  const totalHeight = copyrightLines.length * lineHeight
+  let currentY = (pdfHeight + totalHeight) / 2
+
+  for (const line of copyrightLines) {
+    if (line.trim()) {
+      const lineWidth = font.widthOfTextAtSize(line, copyrightFontSize)
+      copyrightPage.drawText(line, {
+        x: (pdfWidth - lineWidth) / 2,
+        y: currentY,
+        size: copyrightFontSize,
+        font: font,
+        color: rgb(0.2, 0.2, 0.2),
+      })
+    }
+    currentY -= lineHeight
+  }
+
+  // ========================================
+  // STORY PAGES
+  // ========================================
   // Process each page
   for (const page of project.pages) {
     const pdfPage = pdfDoc.addPage([pdfWidth, pdfHeight])
