@@ -24,7 +24,7 @@ import {
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
-import type { SpreadTextPosition, SpreadImageMode, BookSpread } from "../../../types/storybook.types"
+import type { SpreadTextPosition, BookSpread } from "../../../types/storybook.types"
 
 /**
  * LayoutEditorStep

@@ -607,7 +607,15 @@ export async function generateInteriorFromSpreads(
 
     // Add text to left page if configured
     if (spread.leftPageText && (spread.textPlacement === 'left' || spread.textPlacement === 'both')) {
-      drawPageText(leftPage, spread.leftPageText, font, pdfWidth, pdfHeight, spread.textPosition, opts.includeBleed)
+      // Convert textPosition to drawPageText format (only accepts 'top' | 'bottom' | undefined)
+      const position: 'top' | 'bottom' | undefined =
+        spread.textPosition === 'top' ? 'top' :
+        spread.textPosition === 'bottom' ? 'bottom' :
+        spread.textPosition === 'none' ? undefined :
+        'bottom' // Default fallback for 'left' or 'right'
+      if (position) {
+        drawPageText(leftPage, spread.leftPageText, font, pdfWidth, pdfHeight, position, opts.includeBleed)
+      }
     }
 
     // === RIGHT PAGE ===
@@ -637,7 +645,15 @@ export async function generateInteriorFromSpreads(
 
     // Add text to right page if configured
     if (spread.rightPageText && (spread.textPlacement === 'right' || spread.textPlacement === 'both')) {
-      drawPageText(rightPage, spread.rightPageText, font, pdfWidth, pdfHeight, spread.textPosition, opts.includeBleed)
+      // Convert textPosition to drawPageText format (only accepts 'top' | 'bottom' | undefined)
+      const rightPosition: 'top' | 'bottom' | undefined =
+        spread.textPosition === 'top' ? 'top' :
+        spread.textPosition === 'bottom' ? 'bottom' :
+        spread.textPosition === 'none' ? undefined :
+        'bottom' // Default fallback for 'left' or 'right'
+      if (rightPosition) {
+        drawPageText(rightPage, spread.rightPageText, font, pdfWidth, pdfHeight, rightPosition, opts.includeBleed)
+      }
     }
   }
 

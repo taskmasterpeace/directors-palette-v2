@@ -44,6 +44,8 @@ export function PreviewStep() {
 
   const [currentPreviewPage, setCurrentPreviewPage] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isExportingPDF, setIsExportingPDF] = useState<'interior' | 'cover' | 'both' | null>(null)
+  const [pdfExportError, setPdfExportError] = useState<string | null>(null)
   const bookRef = useRef<BookViewerRef>(null)
 
   const pages = project?.pages || []
@@ -102,6 +104,60 @@ export function PreviewStep() {
       updateProject({ coverImageUrl: result.imageUrl })
     } else {
       setCoverGenerationError(result.error || 'Failed to generate cover')
+    }
+  }
+
+  const handleExportPDF = async (exportType: 'interior' | 'cover' | 'both') => {
+    if (!project) return
+
+    setIsExportingPDF(exportType)
+    setPdfExportError(null)
+
+    try {
+      const response = await fetch('/api/storybook/export-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          project,
+          type: exportType,
+          options: {
+            includeBleed: true,
+            quality: 'print',
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type')
+        if (contentType?.includes('application/json')) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'PDF export failed')
+        } else {
+          throw new Error(`PDF export failed (HTTP ${response.status})`)
+        }
+      }
+
+      // Get the PDF blob
+      const blob = await response.blob()
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${project.title || 'storybook'}-${exportType}.pdf`
+      document.body.appendChild(a)
+      a.click()
+
+      // Cleanup
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('PDF export error:', error)
+      setPdfExportError(error instanceof Error ? error.message : 'Failed to export PDF')
+    } finally {
+      setIsExportingPDF(null)
     }
   }
 
@@ -490,6 +546,14 @@ export function PreviewStep() {
       <Card className="bg-zinc-900/50 border-zinc-800">
         <CardContent className="p-4">
           <h3 className="font-semibold text-white mb-4">Download Options</h3>
+
+          {/* PDF Export Error */}
+          {pdfExportError && (
+            <div className="text-red-400 text-sm bg-red-950/20 border border-red-900/50 rounded-lg p-3 mb-4">
+              {pdfExportError}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Button variant="outline" className="gap-2">
               <Download className="w-4 h-4" />
@@ -503,10 +567,100 @@ export function PreviewStep() {
               <Download className="w-4 h-4" />
               Style Guide
             </Button>
-            <Button variant="outline" className="gap-2" disabled>
-              <Download className="w-4 h-4" />
-              PDF (Coming Soon)
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => handleExportPDF('interior')}
+              disabled={isExportingPDF !== null || pages.length === 0}
+            >
+              {isExportingPDF === 'interior' ? (
+                <>
+                  <LoadingSpinner size="sm" color="current" />
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  Interior PDF
+                </>
+              )}
             </Button>
+          </div>
+
+          {/* KDP Export Section */}
+          <div className="mt-6 pt-6 border-t border-zinc-700">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h4 className="font-semibold text-white">Amazon KDP Export</h4>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Print-ready files for publishing
+                </p>
+              </div>
+              <div className="text-xs text-amber-500 bg-amber-500/10 px-2 py-1 rounded">
+                300 DPI + Bleed
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Button
+                variant="outline"
+                className="gap-2 border-amber-500/30 hover:border-amber-500 hover:bg-amber-500/10"
+                onClick={() => handleExportPDF('interior')}
+                disabled={isExportingPDF !== null || pages.length === 0}
+              >
+                {isExportingPDF === 'interior' ? (
+                  <>
+                    <LoadingSpinner size="sm" color="current" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Interior PDF
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-2 border-amber-500/30 hover:border-amber-500 hover:bg-amber-500/10"
+                onClick={() => handleExportPDF('cover')}
+                disabled={isExportingPDF !== null || !project?.coverImageUrl}
+              >
+                {isExportingPDF === 'cover' ? (
+                  <>
+                    <LoadingSpinner size="sm" color="current" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Cover Wrap PDF
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="default"
+                className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-semibold"
+                onClick={() => handleExportPDF('both')}
+                disabled={isExportingPDF !== null || pages.length === 0 || !project?.coverImageUrl}
+              >
+                {isExportingPDF === 'both' ? (
+                  <>
+                    <LoadingSpinner size="sm" color="current" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Download All
+                  </>
+                )}
+              </Button>
+            </div>
+
+            <p className="text-xs text-zinc-500 mt-3 text-center">
+              Files are formatted for Amazon KDP print-on-demand with proper bleed margins
+            </p>
           </div>
         </CardContent>
       </Card>
