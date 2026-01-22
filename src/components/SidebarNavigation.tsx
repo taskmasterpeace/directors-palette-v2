@@ -22,18 +22,7 @@ import {
     Workflow,
     Check,
     Circle,
-    ArrowRight,
-    Palette,
-    Target,
-    Settings,
-    Lightbulb,
-    FileText,
-    Image as ImageIcon,
-    FileImage,
-    BookMarked,
-    BookCheck,
-    User,
-    Grid3X3
+    ArrowRight
 } from 'lucide-react'
 import { useLayoutStore, TabValue } from '@/store/layout.store'
 import { useSidebarWizardSteps, useNavigateToWizardStep } from '@/features/storybook/hooks/useSidebarWizardSteps'
@@ -176,24 +165,6 @@ const NAV_SECTIONS: NavSection[] = [
         ]
     }
 ]
-
-// Wizard step icon mapping
-const WIZARD_STEP_ICONS: Record<string, React.ElementType> = {
-    'character-setup': User,
-    'category': Grid3X3,
-    'topic': Target,
-    'story-structure': Workflow,
-    'settings': Settings,
-    'approach': Lightbulb,
-    'review': FileText,
-    'story': BookOpen,
-    'style': Palette,
-    'characters': Users,
-    'pages': ImageIcon,
-    'title-page': FileImage,
-    'back-cover': BookMarked,
-    'preview': BookCheck,
-}
 
 // Flatten all items for mobile (backward compatibility)
 const NAV_ITEMS: NavItem[] = NAV_SECTIONS.flatMap(section => {
