@@ -14,7 +14,8 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 // Default system recipe names for storybook (used as fallbacks)
 const DEFAULT_RECIPE_NAMES = {
   STYLE_GUIDE: 'Storybook Style Guide',
-  CHARACTER_SHEET: 'Storybook Character Sheet',
+  // Character sheet uses optimized single-stage recipe (3.7x faster than 3-stage)
+  CHARACTER_SHEET: 'Storybook Character Sheet (Single-Stage)',
   CHARACTER_SHEET_FROM_DESCRIPTION: 'Storybook Character Sheet (From Description)',
   PAGE_FIRST: 'Storybook Page (First)',
   PAGE_CONTINUATION: 'Storybook Page (Continuation)',
@@ -280,13 +281,29 @@ export function useStorybookGeneration() {
       let recipeName: string
 
       if (hasPhoto) {
-        // Photo-based generation: use original 3-stage recipe
+        // Photo-based generation: use optimized single-stage recipe
+        // Single-stage is ~3.7x faster than 3-stage pipeline
         fieldValues = {
           'stage0_field0_character_name': character.tag || character.name,
         }
 
-        // Reference images: source photo + style guide
-        referenceImages.push(character.sourcePhotoUrl!)
+        // Include outfit description if available
+        if (character.outfitDescription?.trim()) {
+          fieldValues['stage0_field1_outfit_description'] = character.outfitDescription.trim()
+        }
+
+        // Reference images ORDER is critical for single-stage:
+        // [subject photo(s), style guide, template (added by recipe)]
+
+        // 1. Add subject photos (support multiple photos for better likeness)
+        const photoUrls = character.sourcePhotoUrls?.filter(Boolean) || []
+        if (photoUrls.length > 0) {
+          photoUrls.forEach(url => referenceImages.push(url))
+        } else if (character.sourcePhotoUrl) {
+          referenceImages.push(character.sourcePhotoUrl)
+        }
+
+        // 2. Add style guide
         if (project?.style?.styleGuideUrl) {
           referenceImages.push(project.style.styleGuideUrl)
         }

@@ -2210,6 +2210,68 @@ CRITICAL REQUIREMENTS:
     isSystemOnly: true,  // Hidden from regular users - used internally by Storybook
   },
 
+  // Storybook Character Sheet (Single-Stage) - OPTIMIZED single generation with all references
+  // ~3.7x faster than 3-stage pipeline (avg 37s vs 138s)
+  // Uses all references at once: [subject photo, style guide, template]
+  // Based on pipeline comparison tests (Jan 22, 2026)
+  {
+    name: 'Storybook Character Sheet (Single-Stage)',
+    description: 'Generate character sheet from photo in single generation (faster, cheaper than 3-stage)',
+    recipeNote: 'Optimized single-stage approach: provides subject photo, style guide, and template all at once. ~3.7x faster than multi-stage pipeline.',
+    stages: [
+      {
+        id: 'stage_single_0',
+        order: 0,
+        type: 'generation',
+        template: `Professional character sheet for children's book illustration.
+
+CHARACTER: @<<CHARACTER_NAME:name!>>
+<<OUTFIT_DESCRIPTION:text>>
+
+EXACT 21:9 ultrawide format with 4 main panels showing the same character from the reference photo:
+
+PANELS (left to right):
+1. FRONT-FACING PORTRAIT - Head and shoulders, looking at viewer
+2. THREE-QUARTER VIEW - Slight turn showing depth and dimension
+3. PROFILE SILHOUETTE - Clean side profile
+4. ACTION POSE - Full body showing personality and movement
+
+CRITICAL REQUIREMENTS:
+- PRESERVE EXACT LIKENESS from the subject photo reference:
+  * Facial structure, bone structure, nose shape, eye shape
+  * Exact skin tone and features
+  * Hair style, color, and texture
+  * Distinctive features (beard, glasses, moles, etc.)
+- MATCH ART STYLE from the style guide reference exactly:
+  * Rendering technique, line quality, color palette
+  * Level of stylization
+  * Lighting and shading approach
+- FOLLOW LAYOUT from the template reference:
+  * Panel arrangement and proportions
+  * Clean white background
+  * Thin black borders between panels
+
+The result should be this SPECIFIC PERSON rendered in the art style from the style guide.
+NOT a generic character - the likeness must be unmistakable.`,
+        fields: [],
+        referenceImages: [
+          {
+            id: 'template_charsheet_advanced',
+            url: SYSTEM_TEMPLATE_URLS.characterSheetAdvanced,
+            name: 'Character Sheet Layout Template',
+            aspectRatio: '21:9',
+          }
+        ],
+      },
+    ],
+    suggestedAspectRatio: '21:9',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: false,
+    categoryId: 'storybook',
+    isSystem: true,
+    isSystemOnly: true,  // Hidden from regular users - used internally by Storybook
+  },
+
   // Storybook Character Sheet (From Description) - 2-stage pipeline for generating character sheets without photos
   // Stage 0: Generate character appearance from text description
   // Stage 1: Generate character sheet with expressions
