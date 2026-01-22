@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAdminAuth } from '@/features/admin/hooks/useAdminAuth'
 import {
     Layout,
@@ -19,9 +19,25 @@ import {
     Menu,
     ShieldCheck,
     Users,
-    Workflow
+    Workflow,
+    Check,
+    Circle,
+    ArrowRight,
+    Palette,
+    Target,
+    Settings,
+    Lightbulb,
+    FileText,
+    Image as ImageIcon,
+    FileImage,
+    BookMarked,
+    BookCheck,
+    User,
+    Grid3X3
 } from 'lucide-react'
 import { useLayoutStore, TabValue } from '@/store/layout.store'
+import { useSidebarWizardSteps, useNavigateToWizardStep } from '@/features/storybook/hooks/useSidebarWizardSteps'
+import type { SidebarWizardStep } from '@/features/storybook/hooks/useSidebarWizardSteps'
 import { cn } from '@/utils/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -160,6 +176,24 @@ const NAV_SECTIONS: NavSection[] = [
         ]
     }
 ]
+
+// Wizard step icon mapping
+const WIZARD_STEP_ICONS: Record<string, React.ElementType> = {
+    'character-setup': User,
+    'category': Grid3X3,
+    'topic': Target,
+    'story-structure': Workflow,
+    'settings': Settings,
+    'approach': Lightbulb,
+    'review': FileText,
+    'story': BookOpen,
+    'style': Palette,
+    'characters': Users,
+    'pages': ImageIcon,
+    'title-page': FileImage,
+    'back-cover': BookMarked,
+    'preview': BookCheck,
+}
 
 // Flatten all items for mobile (backward compatibility)
 const NAV_ITEMS: NavItem[] = NAV_SECTIONS.flatMap(section => {
@@ -512,6 +546,10 @@ function NavSectionComponent({
     activeTab,
     onSetActiveTab
 }: NavSectionComponentProps) {
+    // Get wizard steps for storybook (only when on storybook tab)
+    const wizardData = useSidebarWizardSteps()
+    const showWizardSteps = activeTab === 'storybook' && wizardData && !isCollapsed
+
     // When sidebar is collapsed, show abbreviated section header
     if (isCollapsed) {
         return (
@@ -551,14 +589,23 @@ function NavSectionComponent({
             {!isSectionCollapsed && (
                 <div className="space-y-0.5">
                     {section.items.map((item) => (
-                        <NavItemComponent
-                            key={item.id}
-                            item={item}
-                            depth={0}
-                            isCollapsed={false}
-                            activeTab={activeTab}
-                            onSetActiveTab={onSetActiveTab}
-                        />
+                        <React.Fragment key={item.id}>
+                            <NavItemComponent
+                                item={item}
+                                depth={0}
+                                isCollapsed={false}
+                                activeTab={activeTab}
+                                onSetActiveTab={onSetActiveTab}
+                            />
+                            {/* Show wizard steps under Storybook when active */}
+                            {item.id === 'storybook' && showWizardSteps && wizardData && (
+                                <WizardStepsSubMenu
+                                    steps={wizardData.steps}
+                                    onStepClick={() => {}}
+                                    isExpanded={true}
+                                />
+                            )}
+                        </React.Fragment>
                     ))}
                 </div>
             )}
@@ -717,6 +764,81 @@ function NavItemComponent({
                 </div>
             )}
         </div>
+    )
+}
+
+// ============================================
+// WIZARD STEPS SUBMENU COMPONENT
+// ============================================
+
+interface WizardStepsSubMenuProps {
+    steps: SidebarWizardStep[]
+    onStepClick: (stepId: string) => void
+    isExpanded: boolean
+}
+
+function WizardStepsSubMenu({ steps, onStepClick, isExpanded }: WizardStepsSubMenuProps) {
+    const navigateToStep = useNavigateToWizardStep()
+
+    if (!isExpanded) return null
+
+    return (
+        <AnimatePresence mode="wait">
+            <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="ml-4 mt-1 space-y-0.5 relative"
+            >
+                {/* Connection line */}
+                <div className="absolute left-2 top-0 bottom-2 w-px bg-border/40" />
+
+                {steps.map((step) => {
+                    const Icon = WIZARD_STEP_ICONS[step.id] || BookOpen
+                    const isCompleted = step.status === 'completed'
+                    const isCurrent = step.status === 'current'
+                    const isLocked = step.status === 'locked'
+
+                    return (
+                        <button
+                            key={step.id}
+                            onClick={() => step.canNavigate && navigateToStep(step.id as Parameters<typeof navigateToStep>[0])}
+                            disabled={isLocked}
+                            className={cn(
+                                "w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-xs transition-all relative group",
+                                isLocked
+                                    ? "text-zinc-600 cursor-not-allowed"
+                                    : isCurrent
+                                        ? "text-amber-400 bg-amber-500/10 font-medium"
+                                        : isCompleted
+                                            ? "text-green-400 hover:bg-green-500/10 cursor-pointer"
+                                            : "text-zinc-400 hover:text-zinc-300 cursor-pointer"
+                            )}
+                        >
+                            {/* Status indicator */}
+                            <div className={cn(
+                                "w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all",
+                                isCurrent && "bg-amber-500/20 ring-1 ring-amber-500/50",
+                                isCompleted && "bg-green-500/20",
+                                isLocked && "bg-zinc-800"
+                            )}>
+                                {isCompleted ? (
+                                    <Check className="w-3 h-3 text-green-400" />
+                                ) : isCurrent ? (
+                                    <ArrowRight className="w-3 h-3 text-amber-400" />
+                                ) : (
+                                    <Circle className="w-2 h-2 text-zinc-600" />
+                                )}
+                            </div>
+
+                            {/* Step label */}
+                            <span className="truncate">{step.label}</span>
+                        </button>
+                    )
+                })}
+            </motion.div>
+        </AnimatePresence>
     )
 }
 

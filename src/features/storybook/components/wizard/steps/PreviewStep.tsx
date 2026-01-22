@@ -18,6 +18,7 @@ import {
   Sparkles,
   Check,
   RefreshCw,
+  Ruler,
 } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { cn } from "@/utils/utils"
@@ -25,6 +26,10 @@ import Image from "next/image"
 import { AudioPlayer } from "../../AudioPlayer"
 import { BookViewer, BookViewerRef } from "../../BookViewer"
 import { getThumbnailDimensions } from "../../../utils/book-dimensions"
+import { KDPPageValidator } from "../../KDPPageValidator"
+import { PaperTypeSelector } from "../../PaperTypeSelector"
+import { PrintGuidesLegend } from "../../PrintGuidesOverlay"
+import type { KDPPaperType } from "../../../types/storybook.types"
 
 export function PreviewStep() {
   const {
@@ -40,12 +45,18 @@ export function PreviewStep() {
     setCoverGenerationError,
   } = useStorybookStore()
 
+  // Handle paper type change
+  const handlePaperTypeChange = (paperType: KDPPaperType) => {
+    updateProject({ paperType })
+  }
+
   const { generateBookCover, generateCoverVariations } = useStorybookGeneration()
 
   const [currentPreviewPage, setCurrentPreviewPage] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isExportingPDF, setIsExportingPDF] = useState<'interior' | 'cover' | 'both' | null>(null)
   const [pdfExportError, setPdfExportError] = useState<string | null>(null)
+  const [showPrintGuides, setShowPrintGuides] = useState(false)
   const bookRef = useRef<BookViewerRef>(null)
 
   const pages = project?.pages || []
@@ -208,6 +219,7 @@ export function PreviewStep() {
               currentPage={currentPreviewPage}
               onPageChange={handlePageChange}
               bookFormat={project?.bookFormat || 'square'}
+              showPrintGuides={showPrintGuides}
             />
           ) : (
             <div className="text-center text-zinc-400">
@@ -224,8 +236,22 @@ export function PreviewStep() {
       {/* Main Book Preview Area */}
       <Card className="bg-zinc-900/50 border-zinc-800 overflow-hidden">
         <CardContent className="p-6">
-          {/* Fullscreen button */}
-          <div className="flex justify-end mb-2">
+          {/* Viewer controls */}
+          <div className="flex justify-end gap-2 mb-2">
+            <Button
+              variant={showPrintGuides ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setShowPrintGuides(!showPrintGuides)}
+              className={cn(
+                "gap-2",
+                showPrintGuides
+                  ? "bg-amber-500 hover:bg-amber-600 text-black"
+                  : "text-zinc-400 hover:text-white"
+              )}
+            >
+              <Ruler className="w-4 h-4" />
+              {showPrintGuides ? "Hide" : "Show"} Print Guides
+            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -261,6 +287,7 @@ export function PreviewStep() {
                   currentPage={currentPreviewPage}
                   onPageChange={handlePageChange}
                   bookFormat={project?.bookFormat || 'square'}
+                  showPrintGuides={showPrintGuides}
                 />
               ) : (
                 <div className="text-center text-zinc-500">
@@ -317,6 +344,13 @@ export function PreviewStep() {
           <div className="text-center mt-4 text-zinc-500 text-sm hidden md:block">
             Page {currentPreviewPage + 1} of {pages.length || 1} • Click pages or use arrows to navigate
           </div>
+
+          {/* Print Guides Legend */}
+          {showPrintGuides && (
+            <div className="mt-4 pt-4 border-t border-zinc-700">
+              <PrintGuidesLegend className="justify-center" />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -586,6 +620,24 @@ export function PreviewStep() {
               )}
             </Button>
           </div>
+
+          {/* KDP Page Validator */}
+          {project && (
+            <div className="mt-6 pt-6 border-t border-zinc-700">
+              <KDPPageValidator project={project} defaultExpanded={false} />
+            </div>
+          )}
+
+          {/* Paper Type Selector */}
+          {project && (
+            <div className="mt-6 pt-6 border-t border-zinc-700">
+              <PaperTypeSelector
+                value={project.paperType || 'premium-color'}
+                onChange={handlePaperTypeChange}
+                pageCount={project.pages?.length || project.kdpPageCount || 24}
+              />
+            </div>
+          )}
 
           {/* KDP Export Section */}
           <div className="mt-6 pt-6 border-t border-zinc-700">

@@ -1,12 +1,13 @@
 "use client"
 
-import { forwardRef, useRef, useCallback, useImperativeHandle, useMemo } from "react"
+import { forwardRef, useRef, useCallback, useImperativeHandle, useMemo, useState, useEffect } from "react"
 import HTMLFlipBook from "react-pageflip"
 import Image from "next/image"
 import { cn } from "@/utils/utils"
 import type { StorybookPage, BookFormat, BookSpread } from "../types/storybook.types"
 import { calculateBookDimensions } from "../utils/book-dimensions"
 import { PageLayoutRenderer } from "./PageLayoutRenderer"
+import { PrintGuidesOverlay } from "./PrintGuidesOverlay"
 
 // Page component must use forwardRef for react-pageflip
 interface PageProps {
@@ -159,6 +160,7 @@ interface BookViewerProps {
   onPageChange?: (pageIndex: number) => void
   className?: string
   bookFormat?: BookFormat // Book format for responsive dimensions
+  showPrintGuides?: boolean // Show bleed/trim/safe zone overlay
 }
 
 export const BookViewer = forwardRef<BookViewerRef, BookViewerProps>(({
@@ -171,12 +173,32 @@ export const BookViewer = forwardRef<BookViewerRef, BookViewerProps>(({
   onPageChange,
   className,
   bookFormat = 'square', // Default to square format
+  showPrintGuides = false,
 }, ref) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const bookRef = useRef<any>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
 
   // Calculate responsive dimensions based on book format
   const dimensions = calculateBookDimensions(bookFormat)
+
+  // Track actual rendered size for print guides overlay
+  useEffect(() => {
+    if (!containerRef.current || !showPrintGuides) return
+
+    const updateSize = () => {
+      const flipBook = containerRef.current?.querySelector('.stf__wrapper')
+      if (flipBook) {
+        const rect = flipBook.getBoundingClientRect()
+        setContainerSize({ width: rect.width / 2, height: rect.height }) // Divide by 2 for single page
+      }
+    }
+
+    updateSize()
+    window.addEventListener('resize', updateSize)
+    return () => window.removeEventListener('resize', updateSize)
+  }, [showPrintGuides])
 
   // Determine if we're using spreads or pages
   const useSpreads = spreads && spreads.length > 0
@@ -220,7 +242,7 @@ export const BookViewer = forwardRef<BookViewerRef, BookViewerProps>(({
   }), [])
 
   return (
-    <div className={cn("flex items-center justify-center", className)}>
+    <div ref={containerRef} className={cn("flex items-center justify-center relative", className)}>
       <HTMLFlipBook
         ref={bookRef}
         width={dimensions.width}
@@ -272,6 +294,24 @@ export const BookViewer = forwardRef<BookViewerRef, BookViewerProps>(({
         {/* Back Cover */}
         <BackCover title={title} />
       </HTMLFlipBook>
+
+      {/* Print Guides Overlay - shows bleed/trim/safe zones */}
+      {showPrintGuides && containerSize.width > 0 && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {/* Left page guides */}
+          <PrintGuidesOverlay
+            pageWidth={containerSize.width}
+            pageHeight={containerSize.height}
+            visible={showPrintGuides}
+          />
+          {/* Right page guides */}
+          <PrintGuidesOverlay
+            pageWidth={containerSize.width}
+            pageHeight={containerSize.height}
+            visible={showPrintGuides}
+          />
+        </div>
+      )}
     </div>
   )
 })

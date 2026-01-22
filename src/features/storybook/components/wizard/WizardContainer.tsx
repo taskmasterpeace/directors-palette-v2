@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useStorybookStore, type SavedProjectSummary } from "../../store/storybook.store"
 import { getWizardSteps, getStepIndex } from "../../types/storybook.types"
 import { useAutoSave } from "../../hooks/useAutoSave"
-import { StepIndicator } from "./StepIndicator"
+import { WizardTopNav } from "./WizardTopNav"
 import { StepCard } from "./StepCard"
 // Paste mode steps (original flow)
 import { StoryInputStep } from "./steps/StoryInputStep"
@@ -19,23 +19,17 @@ import { StoryReviewStep } from "./steps/StoryReviewStep"
 import { StyleSelectionStep } from "./steps/StyleSelectionStep"
 import { CharacterStep } from "./steps/CharacterStep"
 import { PageGenerationStep } from "./steps/PageGenerationStep"
+import { TitlePageStep } from "./steps/TitlePageStep"
+import { BackCoverStep } from "./steps/BackCoverStep"
 import { PreviewStep } from "./steps/PreviewStep"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
-  ChevronLeft,
-  ChevronRight,
   Save,
   FolderOpen,
   FilePlus,
   Trash2,
-  Check,
-  BookCheck,
-  PenTool,
-  Sparkles,
-  Image as ImageIcon,
-  Users,
-  BookOpen
+  Check
 } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import {
@@ -47,33 +41,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast"
-
-// Get icon for each wizard step
-function getStepIcon(stepId: string) {
-  switch (stepId) {
-    case 'character-setup':
-      return Users
-    case 'category':
-    case 'topic':
-    case 'settings':
-      return BookOpen
-    case 'approach':
-    case 'review':
-      return PenTool
-    case 'story':
-      return PenTool
-    case 'style':
-      return Sparkles
-    case 'characters':
-      return Users
-    case 'pages':
-      return ImageIcon
-    case 'preview':
-      return BookCheck
-    default:
-      return BookOpen
-  }
-}
 
 export function WizardContainer() {
   // Auto-save project every 30 seconds
@@ -162,6 +129,12 @@ export function WizardContainer() {
         // They can come back to generate images later
         // Fix for Issue #2: Removed validation catch-22 that blocked proceeding
         return true
+      case 'title-page':
+        // Title page is optional - users can generate or skip
+        return true
+      case 'back-cover':
+        // Back cover is optional - users can generate synopsis/image or skip
+        return true
       case 'preview':
         return true
       default:
@@ -222,6 +195,10 @@ export function WizardContainer() {
         return <CharacterStep />
       case 'pages':
         return <PageGenerationStep />
+      case 'title-page':
+        return <TitlePageStep />
+      case 'back-cover':
+        return <BackCoverStep />
       case 'preview':
         return <PreviewStep />
       default:
@@ -233,214 +210,130 @@ export function WizardContainer() {
   const stepHandlesOwnNavigation = ['character-setup', 'category', 'topic', 'settings', 'approach', 'review'].includes(currentStep)
 
   return (
-    <div className="h-full flex flex-col p-4 space-y-4">
-      {/* Header with Project Actions */}
-      <div className="flex items-center justify-between gap-4">
-        {/* Step Indicator */}
-        <div className="flex-1">
-          <StepIndicator
-            steps={wizardSteps}
-            currentStep={currentStep}
-            storyMode={storyMode}
-            onStepClick={(step) => {
-              // Only allow clicking on completed steps
-              const stepIndex = getStepIndex(step, storyMode)
-              if (stepIndex < currentStepIndex) {
-                useStorybookStore.getState().setStep(step)
-              }
-            }}
-          />
-        </div>
+    <div className="h-full flex flex-col p-4 space-y-3">
+      {/* Project Actions Bar */}
+      <div className="flex items-center justify-end gap-2 flex-shrink-0">
+        {/* Unsaved Draft Badge */}
+        {project && !savedProjectId && (
+          <Badge variant="outline" className="text-amber-500 border-amber-500/50 mr-auto">
+            Unsaved Draft
+          </Badge>
+        )}
 
-        {/* Project Actions */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Unsaved Draft Badge */}
-          {project && !savedProjectId && (
-            <Badge variant="outline" className="text-amber-500 border-amber-500/50">
-              Unsaved Draft
-            </Badge>
+        {/* Save Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => saveProject()}
+          disabled={!project || isSaving}
+          className="gap-2"
+          title={savedProjectId ? "Update saved project" : "Save project"}
+        >
+          {isSaving ? (
+            <LoadingSpinner size="sm" color="current" />
+          ) : savedProjectId ? (
+            <Check className="w-4 h-4 text-green-500" />
+          ) : (
+            <Save className="w-4 h-4" />
           )}
+          {savedProjectId ? "Saved" : "Save"}
+        </Button>
 
-          {/* Save Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => saveProject()}
-            disabled={!project || isSaving}
-            className="gap-2"
-            title={savedProjectId ? "Update saved project" : "Save project"}
-          >
-            {isSaving ? (
-              <LoadingSpinner size="sm" color="current" />
-            ) : savedProjectId ? (
-              <Check className="w-4 h-4 text-green-500" />
+        {/* Load/Projects Dropdown */}
+        <DropdownMenu open={showSaved} onOpenChange={setShowSaved}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2">
+              <FolderOpen className="w-4 h-4" />
+              Load
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuLabel>Saved Projects</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {savedProjects.length === 0 ? (
+              <div className="px-2 py-4 text-sm text-zinc-500 text-center">
+                No saved projects yet
+              </div>
             ) : (
-              <Save className="w-4 h-4" />
-            )}
-            {savedProjectId ? "Saved" : "Save"}
-          </Button>
-
-          {/* Load/Projects Dropdown */}
-          <DropdownMenu open={showSaved} onOpenChange={setShowSaved}>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <FolderOpen className="w-4 h-4" />
-                Load
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              <DropdownMenuLabel>Saved Projects</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {savedProjects.length === 0 ? (
-                <div className="px-2 py-4 text-sm text-zinc-500 text-center">
-                  No saved projects yet
-                </div>
-              ) : (
-                savedProjects.map((proj: SavedProjectSummary) => (
-                  <DropdownMenuItem
-                    key={proj.id}
-                    className="flex items-center justify-between group cursor-pointer"
-                    onClick={() => {
-                      loadProject(proj.id)
-                      setShowSaved(false)
+              savedProjects.map((proj: SavedProjectSummary) => (
+                <DropdownMenuItem
+                  key={proj.id}
+                  className="flex items-center justify-between group cursor-pointer"
+                  onClick={() => {
+                    loadProject(proj.id)
+                    setShowSaved(false)
+                  }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{proj.title}</div>
+                    <div className="text-xs text-zinc-500">
+                      {new Date(proj.updatedAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (confirm("Delete this project?")) {
+                        deleteSavedProject(proj.id)
+                      }
                     }}
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">{proj.title}</div>
-                      <div className="text-xs text-zinc-500">
-                        {new Date(proj.updatedAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        if (confirm("Delete this project?")) {
-                          deleteSavedProject(proj.id)
-                        }
-                      }}
-                    >
-                      <Trash2 className="w-3 h-3 text-red-500" />
-                    </Button>
-                  </DropdownMenuItem>
-                ))
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                    <Trash2 className="w-3 h-3 text-red-500" />
+                  </Button>
+                </DropdownMenuItem>
+              ))
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-          {/* New/Clear Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              if (project && !savedProjectId) {
-                if (confirm("Discard unsaved changes and start fresh?")) {
-                  clearProject()
-                }
-              } else {
+        {/* New/Clear Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (project && !savedProjectId) {
+              if (confirm("Discard unsaved changes and start fresh?")) {
                 clearProject()
               }
-            }}
-            className="gap-2"
-            title="Start a new project"
-          >
-            <FilePlus className="w-4 h-4" />
-            New
-          </Button>
-        </div>
+            } else {
+              clearProject()
+            }
+          }}
+          className="gap-2"
+          title="Start a new project"
+        >
+          <FilePlus className="w-4 h-4" />
+          New
+        </Button>
       </div>
 
-      {/* Centralized Title Bar */}
-      <div className="flex items-center justify-between px-6 py-3 bg-zinc-900/80 border border-zinc-800 rounded-lg">
-        <div className="flex items-center gap-3">
-          {(() => {
-            const StepIcon = getStepIcon(currentStep)
-            return <StepIcon className="w-5 h-5 text-amber-400 flex-shrink-0" />
-          })()}
-          <div>
-            <h2 className="text-lg font-semibold text-white">
-              {currentStepInfo.label}
-            </h2>
-            {project?.title && (
-              <p className="text-sm text-zinc-400">
-                {project.title}
-              </p>
-            )}
-          </div>
-        </div>
-        {project?.author && (
-          <div className="text-sm text-zinc-400">
-            by {project.author}
-          </div>
-        )}
-      </div>
+      {/* Compact Top Navigation */}
+      <WizardTopNav
+        currentStepInfo={currentStepInfo}
+        stepIndex={currentStepIndex}
+        totalSteps={wizardSteps.length}
+        projectTitle={project?.title}
+        canProceed={canProceed()}
+        onBack={previousStep}
+        onNext={nextStep}
+        onFinish={handleFinish}
+        isFirstStep={isFirstStep}
+        isLastStep={isLastStep}
+        isGenerating={isGenerating}
+        isSaving={isSaving}
+        hideNavigation={stepHandlesOwnNavigation}
+      />
 
-      {/* Step Content */}
+      {/* Step Content - Now has more vertical space */}
       <StepCard
         backgroundImage={currentStepInfo.backgroundImage}
         className="flex-1 min-h-0"
       >
         {renderStepContent()}
       </StepCard>
-
-      {/* Navigation Buttons - Only show for steps that don't handle their own navigation */}
-      {!stepHandlesOwnNavigation && (
-        <div className="flex-shrink-0 flex justify-between items-center px-2 py-3 bg-zinc-950/90 border-t border-zinc-800">
-          <Button
-            variant="outline"
-            onClick={previousStep}
-            disabled={isFirstStep || isGenerating}
-            className="gap-2 hover:bg-zinc-700/50 dark:hover:bg-zinc-800"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back
-          </Button>
-
-          <div className="text-sm text-zinc-500">
-            Step {currentStepIndex + 1} of {wizardSteps.length}
-          </div>
-
-          {!isLastStep ? (
-            <Button
-              onClick={nextStep}
-              disabled={!canProceed()}
-              className="gap-2 bg-amber-500 hover:bg-amber-600 text-black"
-            >
-              {isGenerating ? (
-                <>
-                  <LoadingSpinner size="sm" color="current" />
-                  Working...
-                </>
-              ) : (
-                <>
-                  Next
-                  <ChevronRight className="w-4 h-4" />
-                </>
-              )}
-            </Button>
-          ) : (
-            <Button
-              onClick={handleFinish}
-              disabled={isGenerating || isSaving}
-              className="gap-2 bg-green-500 hover:bg-green-600 text-white"
-            >
-              {isSaving ? (
-                <>
-                  <LoadingSpinner size="sm" color="current" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4" />
-                  Finish
-                </>
-              )}
-            </Button>
-          )}
-        </div>
-      )}
     </div>
   )
 }

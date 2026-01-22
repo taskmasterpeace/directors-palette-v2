@@ -73,6 +73,12 @@ interface StorybookState {
   isGeneratingTitlePageVariations: boolean
   titlePageGenerationError?: string
 
+  // Back cover state (UI-only, not persisted)
+  pendingBackCoverVariations: string[]
+  isGeneratingBackCoverSynopsis: boolean
+  isGeneratingBackCoverVariations: boolean
+  backCoverGenerationError?: string
+
   // Project persistence state
   savedProjectId: string | null
   isSaving: boolean
@@ -170,6 +176,15 @@ interface StorybookState {
   setGeneratingTitlePageVariations: (isGenerating: boolean) => void
   selectTitlePageVariation: (url: string) => void
   setTitlePageGenerationError: (error?: string) => void
+
+  // Back cover actions
+  setBackCoverSynopsis: (text: string) => void
+  setBackCoverImageUrl: (url: string) => void
+  setPendingBackCoverVariations: (urls: string[]) => void
+  selectBackCoverVariation: (url: string) => void
+  setGeneratingBackCoverSynopsis: (isGenerating: boolean) => void
+  setGeneratingBackCoverVariations: (isGenerating: boolean) => void
+  setBackCoverGenerationError: (error?: string) => void
 
   // Project persistence actions
   saveProject: () => Promise<void>
@@ -394,6 +409,12 @@ export const useStorybookStore = create<StorybookState>()(
   pendingTitlePageVariations: [],
   isGeneratingTitlePageVariations: false,
   titlePageGenerationError: undefined,
+
+  // Back cover state
+  pendingBackCoverVariations: [],
+  isGeneratingBackCoverSynopsis: false,
+  isGeneratingBackCoverVariations: false,
+  backCoverGenerationError: undefined,
 
   // Project persistence state
   savedProjectId: null,
@@ -745,6 +766,57 @@ export const useStorybookStore = create<StorybookState>()(
   },
 
   setTitlePageGenerationError: (error) => set({ titlePageGenerationError: error }),
+
+  // Back cover actions
+  setBackCoverSynopsis: (text) => {
+    const { project } = get()
+    if (project) {
+      set({
+        project: {
+          ...project,
+          backCoverSynopsis: text,
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  setBackCoverImageUrl: (url) => {
+    const { project } = get()
+    if (project) {
+      set({
+        project: {
+          ...project,
+          backCoverImageUrl: url,
+          updatedAt: new Date(),
+        },
+      })
+    }
+  },
+
+  setPendingBackCoverVariations: (urls) => set({ pendingBackCoverVariations: urls }),
+
+  setGeneratingBackCoverSynopsis: (isGenerating) => set({ isGeneratingBackCoverSynopsis: isGenerating }),
+
+  setGeneratingBackCoverVariations: (isGenerating) => set({ isGeneratingBackCoverVariations: isGenerating }),
+
+  selectBackCoverVariation: (url) => {
+    const { project } = get()
+    if (!project) return
+
+    // Apply selected back cover to project
+    set({
+      project: {
+        ...project,
+        backCoverImageUrl: url,
+        updatedAt: new Date(),
+      },
+      // Clear variations after selection
+      pendingBackCoverVariations: [],
+    })
+  },
+
+  setBackCoverGenerationError: (error) => set({ backCoverGenerationError: error }),
 
   // Education actions (NEW)
   setMainCharacter: (name, age, description) => {

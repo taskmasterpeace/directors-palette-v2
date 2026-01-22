@@ -843,12 +843,18 @@ export async function exportStorybookCover(
     return null
   }
 
+  // Map project's paperType to PaperType (they use the same values)
+  const paperType: PaperType = (project.paperType as PaperType) || 'premium-color'
+
   const pdf = await generateCoverWrapPDF(
     project,
     {
       frontCoverUrl: project.coverImageUrl,
+      backCoverUrl: project.backCoverImageUrl,
+      backCoverText: project.backCoverSynopsis,
       spineText: project.title,
       pageCount,
+      paperType,
     },
     options
   )

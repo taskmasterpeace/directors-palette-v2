@@ -1105,6 +1105,226 @@ This is an INTERIOR page, not a cover. It should tease the story and build antic
     }
   }, [project, setGenerating, setError, getStorybookFolderId, getStorybookMetadata])
 
+  /**
+   * Generate a synopsis for the back cover
+   * Calls the AI synopsis generation API
+   */
+  const generateSynopsis = useCallback(async (): Promise<{ success: boolean; synopsis?: string; tagline?: string; error?: string }> => {
+    if (!project) {
+      return { success: false, error: 'No project found' }
+    }
+
+    setState({
+      isGenerating: true,
+      progress: 'Generating synopsis...',
+      error: null
+    })
+
+    try {
+      // Build story text from pages or beats
+      const storyText = project.storyText ||
+        project.beats?.map(b => b.text).join('\n\n') ||
+        project.pages.map(p => p.text).join('\n\n') || ''
+
+      const response = await fetch('/api/storybook/generate-synopsis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: project.title,
+          mainCharacter: project.mainCharacterName || project.characters[0]?.name || 'Main character',
+          storyText,
+          targetAge: project.targetAge || 5,
+          educationTopic: project.educationTopic,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate synopsis')
+      }
+
+      setState({ isGenerating: false, progress: '', error: null })
+
+      return {
+        success: true,
+        synopsis: data.synopsis,
+        tagline: data.tagline,
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Synopsis generation failed'
+      setState({ isGenerating: false, progress: '', error: errorMessage })
+      return { success: false, error: errorMessage }
+    }
+  }, [project])
+
+  /**
+   * Generate back cover variations
+   * Creates 4 back cover options: 2 "closing scene" + 2 "decorative"
+   */
+  const generateBackCoverVariations = useCallback(async (): Promise<GenerationResult[]> => {
+    if (!project) return []
+
+    setState({
+      isGenerating: true,
+      progress: 'Generating 4 back cover variations...',
+      error: null
+    })
+    setGenerating(true)
+
+    try {
+      // Build character description
+      const mainCharacter = project.characters[0]
+      const characterDescription = mainCharacter?.description ||
+        `${mainCharacter?.name || project.mainCharacterName || 'Main character'}: A ${project.targetAge}-year-old child`
+
+      // Get folder and metadata for gallery organization
+      const folderId = await getStorybookFolderId()
+      const extraMetadata = getStorybookMetadata('back-cover')
+
+      // Build reference images: style guide + character sheets
+      const referenceImages: string[] = []
+      if (project.style?.styleGuideUrl) {
+        referenceImages.push(project.style.styleGuideUrl)
+      }
+      project.characters.slice(0, 2).forEach(char => {
+        if (char.characterSheetUrl) {
+          referenceImages.push(char.characterSheetUrl)
+        }
+      })
+
+      // Get aspect ratio based on book format
+      const aspectRatio = getAspectRatioForBookFormat(project?.bookFormat)
+
+      // Get story ending for closing scene
+      const lastBeat = project.beats?.[project.beats.length - 1]
+      const lastPage = project.pages[project.pages.length - 1]
+      const storyEnding = lastBeat?.text || lastPage?.text || ''
+
+      // ========================================
+      // COMPOSITION 1: Closing Scene
+      // Character in a hopeful/triumphant moment
+      // ========================================
+      const closingScenePrompt = `Create a BACK COVER illustration for a children's book.
+
+BOOK: "${project.title}"
+TARGET AGE: ${project.targetAge} years old
+
+CHARACTER TO FEATURE:
+${characterDescription}
+
+STORY ENDING (for context):
+${storyEnding}
+
+BACK COVER DESIGN - CLOSING SCENE:
+1. ILLUSTRATION:
+   - Character in a peaceful, hopeful, or triumphant moment
+   - Suggests the story has reached a happy resolution
+   - Character looking content, proud, or satisfied
+   - Can include elements from the story's ending
+   - Position character in LOWER portion of image
+
+2. TEXT AREAS (Leave clear space):
+   - TOP HALF: Large clear area for synopsis text (white or very light)
+   - BOTTOM-LEFT CORNER: 2" x 1.2" clear area for barcode
+   - These areas should be light colored or have a subtle pattern
+
+3. STYLE:
+   - Match the attached style guide EXACTLY
+   - Warm, conclusive atmosphere
+   - Softer, more reflective than action-oriented
+   - Professional children's book back cover quality
+   - Character must match the character sheet reference
+
+The illustration should feel like a satisfying conclusion, making readers smile.`
+
+      // ========================================
+      // COMPOSITION 2: Decorative
+      // Stylized pattern with small character vignette
+      // ========================================
+      const decorativePrompt = `Create a BACK COVER illustration for a children's book.
+
+BOOK: "${project.title}"
+TARGET AGE: ${project.targetAge} years old
+
+CHARACTER TO FEATURE:
+${characterDescription}
+
+BACK COVER DESIGN - DECORATIVE:
+1. DECORATIVE PATTERN:
+   - Stylized decorative border or pattern that matches the book's style
+   - Whimsical elements (stars, leaves, swirls, clouds, etc.)
+   - Pattern should frame the text areas
+   - Colors from the style guide
+
+2. SMALL CHARACTER VIGNETTE:
+   - Small portrait or vignette of the character in a corner
+   - Character looking friendly and inviting
+   - Not the main focus - decorative accent
+
+3. TEXT AREAS (Primary focus - most of the space):
+   - LARGE CENTER AREA: Clear space for synopsis text (white or cream)
+   - BOTTOM-LEFT CORNER: 2" x 1.2" clear area for barcode
+   - Text areas should be the dominant feature
+
+4. STYLE:
+   - Match the attached style guide EXACTLY
+   - Elegant, decorative, pattern-focused
+   - Professional children's book back cover quality
+   - Character vignette must match the character sheet reference
+
+The design should prioritize readability with beautiful decorative framing.`
+
+      // Generate single back cover image
+      const generateSingleBackCover = async (prompt: string): Promise<GenerationResult> => {
+        try {
+          const response = await fetch('/api/generation/image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt,
+              model: 'nano-banana-pro',
+              aspectRatio,
+              referenceImages,
+              folderId,
+              extraMetadata,
+            }),
+          })
+
+          const data = await response.json()
+
+          if (!response.ok || !data.imageUrl) {
+            return { success: false, error: data.error || 'Failed to generate back cover' }
+          }
+
+          return { success: true, imageUrl: data.imageUrl, predictionId: data.predictionId }
+        } catch (error) {
+          return { success: false, error: error instanceof Error ? error.message : 'Generation failed' }
+        }
+      }
+
+      // Generate all 4 variations in parallel
+      // 2x Closing Scene, 2x Decorative
+      const variations = await Promise.all([
+        generateSingleBackCover(closingScenePrompt),
+        generateSingleBackCover(closingScenePrompt),
+        generateSingleBackCover(decorativePrompt),
+        generateSingleBackCover(decorativePrompt),
+      ])
+
+      setState({ isGenerating: false, progress: '', error: null })
+      setGenerating(false)
+
+      return variations
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate back cover variations'
+      setState({ isGenerating: false, progress: '', error: errorMessage })
+      setGenerating(false)
+      setError(errorMessage)
+      return []
+    }
+  }, [project, setGenerating, setError, getStorybookFolderId, getStorybookMetadata])
+
   return {
     // State
     isGenerating: state.isGenerating,
@@ -1116,9 +1336,11 @@ This is an INTERIOR page, not a cover. It should tease the story and build antic
     generateCharacterSheet,
     generateBookCover,
     generateCoverVariations,
-    generateTitlePageVariations, // NEW: Generates 4 title page options (2 compositions x 2)
+    generateTitlePageVariations, // Generates 4 title page options (2 compositions x 2)
+    generateBackCoverVariations, // NEW: Generates 4 back cover options (2 closing scene + 2 decorative)
+    generateSynopsis, // NEW: Generates AI synopsis for back cover
     generatePage,
     generateDualPage, // Generates 2 pages in 1 image for 50% cost savings (legacy)
-    generateSpreadImage, // NEW: Generates spread image for beats/spreads architecture
+    generateSpreadImage, // Generates spread image for beats/spreads architecture
   }
 }

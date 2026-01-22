@@ -256,6 +256,39 @@ export const PAGE_TYPE_CONFIG: Record<PageType, {
 // Amazon KDP requires minimum 24 interior pages for children's books
 export type KDPPageCount = 24 | 28 | 32 | 36 | 40
 
+// KDP Paper Type Options
+// Different paper types have different thicknesses, affecting spine width
+export type KDPPaperType = 'premium-color' | 'standard-color' | 'white-paper' | 'cream-paper'
+
+export const PAPER_TYPES: Record<KDPPaperType, {
+  name: string
+  description: string
+  thicknessPerPage: number  // inches
+  recommended?: boolean
+}> = {
+  'premium-color': {
+    name: 'Premium Color',
+    description: 'Thinnest pages, vibrant colors',
+    thicknessPerPage: 0.00225,
+    recommended: true,
+  },
+  'standard-color': {
+    name: 'Standard Color',
+    description: 'Slightly thicker, good value',
+    thicknessPerPage: 0.0032,
+  },
+  'white-paper': {
+    name: 'White Paper',
+    description: 'Economy option, matte finish',
+    thicknessPerPage: 0.002252,
+  },
+  'cream-paper': {
+    name: 'Cream Paper',
+    description: 'Warmer tone, easy on eyes',
+    thicknessPerPage: 0.0025,
+  },
+}
+
 export const KDP_PAGE_COUNTS: Array<{
   count: KDPPageCount
   name: string
@@ -430,6 +463,8 @@ export type WizardStep =
   | 'style'            // EXISTING: Art style selection
   | 'characters'       // EXISTING: Character sheets
   | 'pages'            // EXISTING: Page generation
+  | 'title-page'       // NEW: Title page generation (4 variations)
+  | 'back-cover'       // NEW: Back cover synopsis + image (4 variations)
   | 'preview'          // EXISTING: Final preview
 
 // Story creation mode
@@ -612,6 +647,7 @@ export interface StorybookProject {
 
   // KDP Extended Book Configuration (Phase 2)
   kdpPageCount?: KDPPageCount // 24, 28, 32, 36, 40 (for print-ready books)
+  paperType?: KDPPaperType // Paper type for accurate spine width calculation
   includeFrontMatter?: boolean // Whether to generate front matter pages
   includeBackMatter?: boolean // Whether to generate back matter pages
   dedicationText?: string // Text for dedication page
@@ -620,6 +656,9 @@ export interface StorybookProject {
   copyrightYear?: number // Year for copyright page
   publisherName?: string // Publisher name for copyright page
   isbnPlaceholder?: string // ISBN placeholder text
+  // Back cover (NEW - KDP Publishing Polish)
+  backCoverSynopsis?: string // AI-generated or edited back cover synopsis
+  backCoverImageUrl?: string // Selected back cover image
   // Customization options (NEW - Parent Power Features)
   storySetting?: string // e.g., 'park', 'beach', 'fantasy-castle'
   customSetting?: string // Free-text custom setting
@@ -750,6 +789,20 @@ export const GENERATE_WIZARD_STEPS: StepInfo[] = [
     icon: 'Images',
   },
   {
+    id: 'title-page',
+    label: 'Title Page',
+    description: 'Create your interior title page',
+    backgroundImage: '/storybook/step-preview.webp', // Reuse preview image for now
+    icon: 'FileImage',
+  },
+  {
+    id: 'back-cover',
+    label: 'Back Cover',
+    description: 'Create your back cover',
+    backgroundImage: '/storybook/step-preview.webp', // Reuse preview image for now
+    icon: 'BookMarked',
+  },
+  {
     id: 'preview',
     label: 'Preview',
     description: 'Review and export',
@@ -788,6 +841,20 @@ export const PASTE_WIZARD_STEPS: StepInfo[] = [
     description: 'Generate page illustrations',
     backgroundImage: '/storybook/step-pages.webp', // Asian girl + mixed-race boy with flying pages
     icon: 'Images',
+  },
+  {
+    id: 'title-page',
+    label: 'Title Page',
+    description: 'Create your interior title page',
+    backgroundImage: '/storybook/step-preview.webp', // Reuse preview image for now
+    icon: 'FileImage',
+  },
+  {
+    id: 'back-cover',
+    label: 'Back Cover',
+    description: 'Create your back cover',
+    backgroundImage: '/storybook/step-preview.webp', // Reuse preview image for now
+    icon: 'BookMarked',
   },
   {
     id: 'preview',
