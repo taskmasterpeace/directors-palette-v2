@@ -17,55 +17,67 @@ const STYLE_GUIDE_GRID_COST_POINTS = 20
 
 /**
  * Build the style guide grid prompt
- * Creates a 3x3 grid with diverse examples demonstrating a visual style
+ * Creates a 2x4 ultrawide grid (21:9) with diverse examples demonstrating a visual style
  *
- * Grid layout:
- *   TOP:    Title area | Character Close-Up | Action Scene
- *   MIDDLE: Environment Detail | Unusual Character | Dynamic Pose
- *   BOTTOM: Set/Location | Mood Shot | Key Prop Detail
+ * Grid layout (2 rows x 4 columns):
+ *   TOP:    Title + Style Name | Character Close-Up | Action Scene | Environment
+ *   BOTTOM: Creature/Fantasy | Dynamic Pose | Location/Set | Props & Details
  */
-function buildStyleGuidePrompt(styleName: string): string {
-  return `A professional 3x3 visual style guide reference sheet for "${styleName}" style.
+function buildStyleGuidePrompt(styleName: string, styleDescription?: string): string {
+  const styleDetails = styleDescription
+    ? `\n\nSTYLE CHARACTERISTICS TO CAPTURE:\n${styleDescription}`
+    : ''
 
-Create a cohesive style guide grid showing DIVERSE examples that demonstrate the visual style. All cells must share the SAME artistic style, color palette, and visual treatment.
+  return `Create a professional 21:9 ultrawide visual style guide reference sheet for "${styleName}" style.
 
-Grid layout (left to right, top to bottom):
+ANALYZE THE REFERENCE IMAGE CAREFULLY and replicate its visual style EXACTLY:
+- Color palette and color relationships
+- Line work quality (thick/thin, clean/sketchy, visible/invisible)
+- Shading technique (cel-shaded, soft gradients, crosshatch, flat)
+- Texture treatment (smooth, grainy, painterly, digital)
+- Lighting approach (dramatic, soft, stylized, realistic)
+- Level of detail and stylization
+- Overall mood and atmosphere${styleDetails}
 
-TOP ROW:
-1. TITLE CELL - Clean text banner with style name "${styleName}" in stylized typography that matches the aesthetic. Decorative border or frame elements.
-2. CHARACTER CLOSE-UP - A detailed face portrait showing how characters look in this style. Focus on facial features, expressions, skin texture, and lighting treatment.
-3. ACTION SCENE - A dynamic moment with movement and energy. Shows how motion, impact, and dramatic moments are rendered in this style.
+Create a cohesive 2-row × 4-column style guide grid. All 8 cells must share the IDENTICAL artistic style matching the reference.
 
-MIDDLE ROW:
-4. ENVIRONMENT DETAIL - A detailed background or setting element. Shows architectural details, nature elements, or world-building visuals in this style.
-5. UNUSUAL CHARACTER/CREATURE - A fantastical, stylized, or unique being. Demonstrates how the style handles non-human or exaggerated designs.
-6. DYNAMIC POSE - A full-body character in an expressive action pose. Shows anatomy, proportions, costume design, and movement.
+GRID LAYOUT (left to right):
 
-BOTTOM ROW:
-7. SET/LOCATION DESIGN - A wide establishing shot of a complete environment. Shows depth, atmosphere, scale, and world design.
-8. MOOD/ATMOSPHERE SHOT - An evocative scene emphasizing lighting, color, and emotional tone. Could be a silhouette, dramatic lighting, or atmospheric moment.
-9. KEY PROP/OBJECT DETAIL - A close-up of an important object, weapon, vehicle, or detailed item. Shows how props and details are rendered.
+TOP ROW (4 cells):
+1. TITLE BANNER - Style name "${styleName}" in decorative typography matching the aesthetic. Include ornamental borders or design elements that reflect the style.
+2. CHARACTER PORTRAIT - Detailed face/head shot of a character. Show how the style renders facial features, expressions, skin, hair, and lighting on faces.
+3. ACTION MOMENT - Dynamic scene with movement and energy. Demonstrate how the style handles motion blur, impact effects, and dramatic compositions.
+4. ENVIRONMENT WIDE - Panoramic landscape or interior establishing shot. Show depth, atmosphere, architectural details, and how backgrounds are rendered.
 
-CRITICAL REQUIREMENTS:
-- All 9 cells MUST share the SAME visual style, matching the reference
-- Clean black separator lines between cells (thin borders)
-- Consistent color palette and artistic treatment across all cells
+BOTTOM ROW (4 cells):
+5. FANTASY CREATURE - A stylized non-human being (dragon, robot, alien, or mythical creature). Show how the style handles unusual anatomy and imaginative designs.
+6. FULL BODY POSE - Character in expressive action stance. Demonstrate anatomy proportions, costume design, and full-figure rendering in this style.
+7. LOCATION DETAIL - Medium shot of a specific place (room corner, street scene, forest clearing). Show environmental storytelling and mid-ground details.
+8. OBJECTS & PROPS - Collection of 3-4 detailed items (weapons, tools, artifacts, vehicles). Show how the style renders hard surfaces, materials, and fine details.
+
+CRITICAL TECHNICAL REQUIREMENTS:
+- 21:9 ultrawide aspect ratio (cinematic format)
+- 2 rows × 4 columns = 8 total cells
+- Clean BLACK separator lines between all cells (4-6 pixels wide)
+- Each cell is roughly square within the grid
+- ALL cells must use IDENTICAL visual style from the reference
 - Professional style reference sheet aesthetic
-- Square 1:1 aspect ratio for the overall grid
-- Each cell is also square (equal width/height)
-- The style name "${styleName}" should be clearly visible in the title cell
+- Style name "${styleName}" clearly visible in title cell
 
-Use the reference image to match the visual style EXACTLY. Copy the color palette, line work, shading technique, and overall aesthetic.`
+MATCH THE REFERENCE IMAGE EXACTLY. Every cell must look like it came from the same artist/production.`
 }
 
 /**
  * Style Guide Grid Tool API
  *
- * Takes a reference image and style name, generates a 3x3 grid demonstrating
- * the visual style across diverse subjects (characters, environments, objects).
+ * Takes a reference image, style name, and optional style description.
+ * Generates a 2x4 ultrawide (21:9) grid demonstrating the visual style
+ * across diverse subjects (characters, environments, objects).
  * Uses Nano Banana Pro for high-quality generation.
  *
  * Cost: 20 points (same as nano-banana-pro)
+ *
+ * Tip: Use /api/styles/analyze first to auto-generate styleDescription from the reference image
  */
 export async function POST(request: NextRequest) {
   try {
@@ -76,7 +88,7 @@ export async function POST(request: NextRequest) {
     const { user } = auth
 
     const body = await request.json()
-    const { imageUrl, styleName } = body
+    const { imageUrl, styleName, styleDescription } = body
 
     // Validate required fields
     if (!imageUrl) {
@@ -109,20 +121,22 @@ export async function POST(request: NextRequest) {
 
     console.log('[Style Guide Grid] Starting generation')
     console.log('  - Style name:', styleName)
+    console.log('  - Style description:', styleDescription || '(none - will analyze from reference)')
     console.log('  - Reference image:', imageUrl)
 
     // Build the style guide grid prompt
-    const gridPrompt = buildStyleGuidePrompt(styleName.trim())
+    const gridPrompt = buildStyleGuidePrompt(styleName.trim(), styleDescription?.trim())
 
     console.log('[Style Guide Grid] Using Nano Banana Pro model')
     console.log('[Style Guide Grid] Prompt length:', gridPrompt.length)
 
     // Call Replicate API using nano-banana-pro
+    // Using 21:9 ultrawide for cinematic style guide layout
     const rawOutput = await replicate.run(NANO_BANANA_PRO_MODEL, {
       input: {
         prompt: gridPrompt,
         reference_images: [imageUrl], // Reference image for style consistency
-        aspect_ratio: '1:1', // Square for 3x3 grid
+        aspect_ratio: '21:9', // Ultrawide for 2x4 grid layout
       },
     })
 

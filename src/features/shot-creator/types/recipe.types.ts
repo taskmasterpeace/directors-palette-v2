@@ -3296,57 +3296,60 @@ CRITICAL: Use the attached STYLE GUIDE reference image to determine the exact ar
   },
 
   // Style Guide Generator - Creates visual style reference grid from reference image
+  // Ultrawide 21:9 format with 2x4 grid layout
   {
     name: 'Style Guide Generator',
-    description: 'Generate a 3x3 visual style guide grid from a reference image',
-    recipeNote: 'Attach a reference image showing the visual style you want to capture. The generator will create a 3x3 grid demonstrating that style across diverse subjects (characters, environments, objects).',
+    description: 'Generate an ultrawide 21:9 visual style guide grid from a reference image',
+    recipeNote: 'Attach a reference image showing the visual style you want to capture. Optionally describe the style characteristics to help capture the look accurately. The generator will create an 8-panel ultrawide grid demonstrating that style across diverse subjects.',
     stages: [
       {
         id: generateStageId(),
         order: 0,
         type: 'generation',
-        template: `Create a professional 3x3 visual style guide reference sheet for "<<STYLE_NAME:name!>>" style.
+        template: `Create a professional 21:9 ultrawide visual style guide reference sheet for "<<STYLE_NAME:name!>>" style.
 
-ANALYZE THE REFERENCE IMAGE CAREFULLY:
-- Extract the EXACT visual style, color palette, and artistic technique
-- Match the rendering approach (line work, shading, texturing)
-- Capture the lighting treatment and mood
-- Replicate the level of detail and stylization
+ANALYZE THE REFERENCE IMAGE CAREFULLY and replicate its visual style EXACTLY:
+- Color palette and color relationships
+- Line work quality (thick/thin, clean/sketchy, visible/invisible)
+- Shading technique (cel-shaded, soft gradients, crosshatch, flat)
+- Texture treatment (smooth, grainy, painterly, digital)
+- Lighting approach (dramatic, soft, stylized, realistic)
+- Level of detail and stylization
+- Overall mood and atmosphere
 
-Create a cohesive style guide grid showing DIVERSE examples that demonstrate this visual style. All cells must share the SAME artistic style matching the reference.
+<<STYLE_DESCRIPTION:text>>
 
-Grid layout (left to right, top to bottom):
+Create a cohesive 2-row × 4-column style guide grid. All 8 cells must share the IDENTICAL artistic style matching the reference.
 
-TOP ROW:
-1. TITLE CELL - Clean text banner with style name "<<STYLE_NAME:name!>>" in stylized typography that matches the aesthetic. Decorative border or frame elements.
-2. CHARACTER CLOSE-UP - A detailed face portrait showing how characters look in this style. Focus on facial features, expressions, skin texture, and lighting treatment.
-3. ACTION SCENE - A dynamic moment with movement and energy. Shows how motion, impact, and dramatic moments are rendered in this style.
+GRID LAYOUT (left to right):
 
-MIDDLE ROW:
-4. ENVIRONMENT DETAIL - A detailed background or setting element. Shows architectural details, nature elements, or world-building visuals in this style.
-5. UNUSUAL CHARACTER/CREATURE - A fantastical, stylized, or unique being. Demonstrates how the style handles non-human or exaggerated designs.
-6. DYNAMIC POSE - A full-body character in an expressive action pose. Shows anatomy, proportions, costume design, and movement.
+TOP ROW (4 cells):
+1. TITLE BANNER - Style name "<<STYLE_NAME:name!>>" in decorative typography matching the aesthetic. Include ornamental borders or design elements that reflect the style.
+2. CHARACTER PORTRAIT - Detailed face/head shot of a character. Show how the style renders facial features, expressions, skin, hair, and lighting on faces.
+3. ACTION MOMENT - Dynamic scene with movement and energy. Demonstrate how the style handles motion blur, impact effects, and dramatic compositions.
+4. ENVIRONMENT WIDE - Panoramic landscape or interior establishing shot. Show depth, atmosphere, architectural details, and how backgrounds are rendered.
 
-BOTTOM ROW:
-7. SET/LOCATION DESIGN - A wide establishing shot of a complete environment. Shows depth, atmosphere, scale, and world design.
-8. MOOD/ATMOSPHERE SHOT - An evocative scene emphasizing lighting, color, and emotional tone. Could be a silhouette, dramatic lighting, or atmospheric moment.
-9. KEY PROP/OBJECT DETAIL - A close-up of an important object, weapon, vehicle, or detailed item. Shows how props and details are rendered.
+BOTTOM ROW (4 cells):
+5. FANTASY CREATURE - A stylized non-human being (dragon, robot, alien, or mythical creature). Show how the style handles unusual anatomy and imaginative designs.
+6. FULL BODY POSE - Character in expressive action stance. Demonstrate anatomy proportions, costume design, and full-figure rendering in this style.
+7. LOCATION DETAIL - Medium shot of a specific place (room corner, street scene, forest clearing). Show environmental storytelling and mid-ground details.
+8. OBJECTS & PROPS - Collection of 3-4 detailed items (weapons, tools, artifacts, vehicles). Show how the style renders hard surfaces, materials, and fine details.
 
-CRITICAL REQUIREMENTS:
-- All 9 cells MUST share the SAME visual style, matching the reference image EXACTLY
-- Clean black separator lines between cells (thin borders)
-- Consistent color palette and artistic treatment across all cells
+CRITICAL TECHNICAL REQUIREMENTS:
+- 21:9 ultrawide aspect ratio (cinematic format)
+- 2 rows × 4 columns = 8 total cells
+- Clean BLACK separator lines between all cells (4-6 pixels wide)
+- Each cell is roughly square within the grid
+- ALL cells must use IDENTICAL visual style from the reference
 - Professional style reference sheet aesthetic
-- Square 1:1 aspect ratio for the overall grid
-- Each cell is also square (equal width/height)
-- The style name "<<STYLE_NAME:name!>>" should be clearly visible in the title cell
+- Style name "<<STYLE_NAME:name!>>" clearly visible in title cell
 
-Use the reference image to match the visual style EXACTLY. Copy the color palette, line work, shading technique, and overall aesthetic.`,
+MATCH THE REFERENCE IMAGE EXACTLY. Every cell must look like it came from the same artist/production.`,
         fields: [],
         referenceImages: [],
       },
     ],
-    suggestedAspectRatio: '1:1',
+    suggestedAspectRatio: '21:9',
     suggestedModel: 'nano-banana-pro',
     isQuickAccess: true,
     quickAccessLabel: 'Style',
