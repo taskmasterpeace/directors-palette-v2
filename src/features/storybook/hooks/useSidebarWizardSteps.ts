@@ -15,17 +15,12 @@ export interface SidebarWizardStep {
 
 /**
  * Hook to provide wizard step information for the sidebar navigation.
- * Returns null if not in storybook mode or no project exists.
+ * Always returns wizard steps when on the storybook tab, even without a project.
  */
 export function useSidebarWizardSteps() {
   const { project, currentStep, storyMode } = useStorybookStore()
 
   return useMemo(() => {
-    // Only show wizard steps when we have an active project
-    if (!project) {
-      return null
-    }
-
     const wizardSteps = getWizardSteps(storyMode)
     const currentStepIndex = getStepIndex(currentStep, storyMode)
 
@@ -47,7 +42,7 @@ export function useSidebarWizardSteps() {
       steps: sidebarSteps,
       currentStepIndex,
       totalSteps: wizardSteps.length,
-      projectTitle: project.title,
+      projectTitle: project?.title || 'New Story',
     }
   }, [project, currentStep, storyMode])
 }
