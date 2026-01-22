@@ -17,54 +17,47 @@ const STYLE_GUIDE_GRID_COST_POINTS = 20
 
 /**
  * Build the style guide grid prompt
- * Creates a 2x4 ultrawide grid (21:9) with diverse examples demonstrating a visual style
+ * Creates a title banner + 3x3 grid (16:9) with diverse examples demonstrating a visual style
  *
- * Grid layout (2 rows x 4 columns):
- *   TOP:    Title + Style Name | Character Close-Up | Action Scene | Environment
- *   BOTTOM: Creature/Fantasy | Dynamic Pose | Location/Set | Props & Details
+ * Layout:
+ *   TOP: Title banner with @stylename
+ *   BELOW: 3x3 grid of 9 panels showing diverse subjects
  */
 function buildStyleGuidePrompt(styleName: string, styleDescription?: string): string {
   const styleDetails = styleDescription
     ? `\n\nSTYLE CHARACTERISTICS TO CAPTURE:\n${styleDescription}`
     : ''
 
-  return `Create a professional 21:9 ultrawide visual style guide reference sheet for "${styleName}" style.
+  return `Professional visual style guide sheet with this EXACT layout:
 
-ANALYZE THE REFERENCE IMAGE CAREFULLY and replicate its visual style EXACTLY:
-- Color palette and color relationships
-- Line work quality (thick/thin, clean/sketchy, visible/invisible)
-- Shading technique (cel-shaded, soft gradients, crosshatch, flat)
-- Texture treatment (smooth, grainy, painterly, digital)
-- Lighting approach (dramatic, soft, stylized, realistic)
-- Level of detail and stylization
-- Overall mood and atmosphere${styleDetails}
+TOP SECTION: A dark gray horizontal banner spanning the full width containing centered white text "@${styleName}" as the title. This title banner is ABOVE and SEPARATE from the image grid.
 
-Create a cohesive 2-row × 4-column style guide grid. All 8 cells must share the IDENTICAL artistic style matching the reference.
+BELOW THE BANNER: A 3x3 grid of 9 image panels, each showing DIFFERENT unique characters and scenes in identical artistic style matching the reference image. Each panel has a white label bar at the bottom with black text describing the shot type.
 
-GRID LAYOUT (left to right):
+ANALYZE THE REFERENCE IMAGE and replicate its style EXACTLY in all 9 panels:
+- Art style, rendering technique, and visual aesthetic
+- Color palette and lighting approach
+- Line work and shading technique
+- Level of detail and stylization${styleDetails}
 
-TOP ROW (4 cells):
-1. TITLE BANNER - Style name "${styleName}" in decorative typography matching the aesthetic. Include ornamental borders or design elements that reflect the style.
-2. CHARACTER PORTRAIT - Detailed face/head shot of a character. Show how the style renders facial features, expressions, skin, hair, and lighting on faces.
-3. ACTION MOMENT - Dynamic scene with movement and energy. Demonstrate how the style handles motion blur, impact effects, and dramatic compositions.
-4. ENVIRONMENT WIDE - Panoramic landscape or interior establishing shot. Show depth, atmosphere, architectural details, and how backgrounds are rendered.
+THE 9 PANELS (left to right, top to bottom):
+1. CHARACTER CLOSE-UP - Face portrait with expressive features
+2. EVERYDAY SCENE - Character in a casual daily activity
+3. ENVIRONMENT DETAIL - Interior or exterior setting with atmosphere
+4. ANIMAL/CREATURE - A stylized animal or fantastical creature in this style
+5. DYNAMIC POSE - Character mid-action with energy and movement
+6. SET DESIGN - Wide establishing shot of a location
+7. CHARACTER INTERACTION - Two characters together
+8. VEHICLE/OBJECT - A vehicle, machine, or detailed prop
+9. GROUP SHOT - Three or more diverse characters together
 
-BOTTOM ROW (4 cells):
-5. FANTASY CREATURE - A stylized non-human being (dragon, robot, alien, or mythical creature). Show how the style handles unusual anatomy and imaginative designs.
-6. FULL BODY POSE - Character in expressive action stance. Demonstrate anatomy proportions, costume design, and full-figure rendering in this style.
-7. LOCATION DETAIL - Medium shot of a specific place (room corner, street scene, forest clearing). Show environmental storytelling and mid-ground details.
-8. OBJECTS & PROPS - Collection of 3-4 detailed items (weapons, tools, artifacts, vehicles). Show how the style renders hard surfaces, materials, and fine details.
-
-CRITICAL TECHNICAL REQUIREMENTS:
-- 21:9 ultrawide aspect ratio (cinematic format)
-- 2 rows × 4 columns = 8 total cells
-- Clean BLACK separator lines between all cells (4-6 pixels wide)
-- Each cell is roughly square within the grid
-- ALL cells must use IDENTICAL visual style from the reference
-- Professional style reference sheet aesthetic
-- Style name "${styleName}" clearly visible in title cell
-
-MATCH THE REFERENCE IMAGE EXACTLY. Every cell must look like it came from the same artist/production.`
+CRITICAL REQUIREMENTS:
+- Title banner at TOP shows "@${styleName}" in large white text on dark gray
+- Each panel shows DIFFERENT unique characters (not the same person repeated)
+- Black border lines separating all 9 panels
+- White label bars with shot type text at bottom of each panel
+- ALL panels match the reference image style EXACTLY
+- 16:9 aspect ratio overall`
 }
 
 /**
@@ -131,12 +124,12 @@ export async function POST(request: NextRequest) {
     console.log('[Style Guide Grid] Prompt length:', gridPrompt.length)
 
     // Call Replicate API using nano-banana-pro
-    // Using 21:9 ultrawide for cinematic style guide layout
+    // Using 16:9 for title banner + 3x3 grid layout
     const rawOutput = await replicate.run(NANO_BANANA_PRO_MODEL, {
       input: {
         prompt: gridPrompt,
         reference_images: [imageUrl], // Reference image for style consistency
-        aspect_ratio: '21:9', // Ultrawide for 2x4 grid layout
+        aspect_ratio: '16:9', // 16:9 for title + 3x3 grid
       },
     })
 
