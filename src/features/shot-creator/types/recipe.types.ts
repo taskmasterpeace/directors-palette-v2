@@ -95,6 +95,15 @@ export const RECIPE_TOOLS = {
     endpoint: '/api/tools/before-after-grid',
     outputType: 'single' as RecipeToolOutputType,
   },
+  'style-guide-grid': {
+    id: 'style-guide-grid',
+    name: 'Style Guide Grid',
+    description: 'Generates 3x3 visual style guide with diverse examples (characters, environments, objects)',
+    icon: '🎨',
+    cost: 20,  // Same as nano-banana-pro (uses it internally)
+    endpoint: '/api/tools/style-guide-grid',
+    outputType: 'single' as RecipeToolOutputType,
+  },
 } as const
 
 export type RecipeToolId = keyof typeof RECIPE_TOOLS
@@ -3284,5 +3293,65 @@ CRITICAL: Use the attached STYLE GUIDE reference image to determine the exact ar
     categoryId: 'storybook',
     isSystem: true,
     isSystemOnly: true,
+  },
+
+  // Style Guide Generator - Creates visual style reference grid from reference image
+  {
+    name: 'Style Guide Generator',
+    description: 'Generate a 3x3 visual style guide grid from a reference image',
+    recipeNote: 'Attach a reference image showing the visual style you want to capture. The generator will create a 3x3 grid demonstrating that style across diverse subjects (characters, environments, objects).',
+    stages: [
+      {
+        id: generateStageId(),
+        order: 0,
+        type: 'generation',
+        template: `Create a professional 3x3 visual style guide reference sheet for "<<STYLE_NAME:name!>>" style.
+
+ANALYZE THE REFERENCE IMAGE CAREFULLY:
+- Extract the EXACT visual style, color palette, and artistic technique
+- Match the rendering approach (line work, shading, texturing)
+- Capture the lighting treatment and mood
+- Replicate the level of detail and stylization
+
+Create a cohesive style guide grid showing DIVERSE examples that demonstrate this visual style. All cells must share the SAME artistic style matching the reference.
+
+Grid layout (left to right, top to bottom):
+
+TOP ROW:
+1. TITLE CELL - Clean text banner with style name "<<STYLE_NAME:name!>>" in stylized typography that matches the aesthetic. Decorative border or frame elements.
+2. CHARACTER CLOSE-UP - A detailed face portrait showing how characters look in this style. Focus on facial features, expressions, skin texture, and lighting treatment.
+3. ACTION SCENE - A dynamic moment with movement and energy. Shows how motion, impact, and dramatic moments are rendered in this style.
+
+MIDDLE ROW:
+4. ENVIRONMENT DETAIL - A detailed background or setting element. Shows architectural details, nature elements, or world-building visuals in this style.
+5. UNUSUAL CHARACTER/CREATURE - A fantastical, stylized, or unique being. Demonstrates how the style handles non-human or exaggerated designs.
+6. DYNAMIC POSE - A full-body character in an expressive action pose. Shows anatomy, proportions, costume design, and movement.
+
+BOTTOM ROW:
+7. SET/LOCATION DESIGN - A wide establishing shot of a complete environment. Shows depth, atmosphere, scale, and world design.
+8. MOOD/ATMOSPHERE SHOT - An evocative scene emphasizing lighting, color, and emotional tone. Could be a silhouette, dramatic lighting, or atmospheric moment.
+9. KEY PROP/OBJECT DETAIL - A close-up of an important object, weapon, vehicle, or detailed item. Shows how props and details are rendered.
+
+CRITICAL REQUIREMENTS:
+- All 9 cells MUST share the SAME visual style, matching the reference image EXACTLY
+- Clean black separator lines between cells (thin borders)
+- Consistent color palette and artistic treatment across all cells
+- Professional style reference sheet aesthetic
+- Square 1:1 aspect ratio for the overall grid
+- Each cell is also square (equal width/height)
+- The style name "<<STYLE_NAME:name!>>" should be clearly visible in the title cell
+
+Use the reference image to match the visual style EXACTLY. Copy the color palette, line work, shading technique, and overall aesthetic.`,
+        fields: [],
+        referenceImages: [],
+      },
+    ],
+    suggestedAspectRatio: '1:1',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: true,
+    quickAccessLabel: 'Style',
+    categoryId: 'styles',
+    isSystem: true,
+    isSystemOnly: false,  // Visible to all users in Shot Creator
   },
 ]
