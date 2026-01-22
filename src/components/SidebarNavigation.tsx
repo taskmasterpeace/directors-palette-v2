@@ -601,7 +601,6 @@ function NavSectionComponent({
                             {item.id === 'storybook' && showWizardSteps && wizardData && (
                                 <WizardStepsSubMenu
                                     steps={wizardData.steps}
-                                    onStepClick={() => {}}
                                     isExpanded={true}
                                 />
                             )}
@@ -773,11 +772,10 @@ function NavItemComponent({
 
 interface WizardStepsSubMenuProps {
     steps: SidebarWizardStep[]
-    onStepClick: (stepId: string) => void
     isExpanded: boolean
 }
 
-function WizardStepsSubMenu({ steps, onStepClick, isExpanded }: WizardStepsSubMenuProps) {
+function WizardStepsSubMenu({ steps, isExpanded }: WizardStepsSubMenuProps) {
     const navigateToStep = useNavigateToWizardStep()
 
     if (!isExpanded) return null
@@ -795,7 +793,6 @@ function WizardStepsSubMenu({ steps, onStepClick, isExpanded }: WizardStepsSubMe
                 <div className="absolute left-2 top-0 bottom-2 w-px bg-border/40" />
 
                 {steps.map((step) => {
-                    const Icon = WIZARD_STEP_ICONS[step.id] || BookOpen
                     const isCompleted = step.status === 'completed'
                     const isCurrent = step.status === 'current'
                     const isLocked = step.status === 'locked'

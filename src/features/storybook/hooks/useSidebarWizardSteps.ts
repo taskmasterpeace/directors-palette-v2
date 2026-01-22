@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import { useStorybookStore } from "../store/storybook.store"
 import { getWizardSteps, getStepIndex } from "../types/storybook.types"
-import type { WizardStep, StepInfo } from "../types/storybook.types"
+import type { WizardStep } from "../types/storybook.types"
 
 export interface SidebarWizardStep {
   id: WizardStep
@@ -32,7 +32,6 @@ export function useSidebarWizardSteps() {
     const sidebarSteps: SidebarWizardStep[] = wizardSteps.map((step, index) => {
       const isCompleted = index < currentStepIndex
       const isCurrent = index === currentStepIndex
-      const isLocked = index > currentStepIndex
 
       return {
         id: step.id,

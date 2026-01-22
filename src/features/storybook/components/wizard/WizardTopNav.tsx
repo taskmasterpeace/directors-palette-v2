@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Check } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import type { WizardStep, StepInfo } from "../../types/storybook.types"
+import type { StepInfo } from "../../types/storybook.types"
 import { cn } from "@/utils/utils"
 
 // Get icon for each wizard step
