@@ -27,6 +27,8 @@ interface UnifiedCharacter {
   name: string
   tag: string
   sourcePhotoUrl?: string
+  sourcePhotoUrls?: string[] // Multiple reference photos (1-3)
+  outfitDescription?: string // What they wear in the book
   characterSheetUrl?: string
   isSupporting: boolean
   role?: string
@@ -51,6 +53,8 @@ export function CharacterStep() {
       name: c.name,
       tag: c.tag,
       sourcePhotoUrl: c.sourcePhotoUrl,
+      sourcePhotoUrls: c.sourcePhotoUrls || (c.sourcePhotoUrl ? [c.sourcePhotoUrl] : []), // Backwards compat
+      outfitDescription: c.outfitDescription,
       characterSheetUrl: c.characterSheetUrl,
       isSupporting: false,
       description: c.description, // Include main character descriptions
@@ -61,6 +65,7 @@ export function CharacterStep() {
       name: sc.name,
       tag: `@${sc.name.replace(/\s+/g, '')}`,
       sourcePhotoUrl: sc.photoUrl,
+      sourcePhotoUrls: sc.photoUrl ? [sc.photoUrl] : [],
       characterSheetUrl: sc.characterSheetUrl,
       isSupporting: true,
       role: sc.role,
@@ -208,8 +213,8 @@ export function CharacterStep() {
     addCharacter(name, `@${name.replace(/\s+/g, '')}`)
   }
 
-  // Handle photo upload for a character
-  const handlePhotoUpload = useCallback(async (characterId: string, file: File) => {
+  // Handle photo upload for a character (supports multiple photos)
+  const handlePhotoUpload = useCallback(async (characterId: string, file: File, slotIndex?: number) => {
     setUploadingCharacterId(characterId)
 
     try {
@@ -234,8 +239,25 @@ export function CharacterStep() {
       const data = await response.json()
       const photoUrl = data.url
 
-      // Update the character with the source photo URL
-      updateCharacter(characterId, { sourcePhotoUrl: photoUrl })
+      // Get current photos array
+      const character = allCharacters.find(c => c.id === characterId)
+      const currentPhotos = character?.sourcePhotoUrls || []
+
+      // Update the specific slot or append
+      let updatedPhotos: string[]
+      if (slotIndex !== undefined && slotIndex < 3) {
+        updatedPhotos = [...currentPhotos]
+        updatedPhotos[slotIndex] = photoUrl
+      } else {
+        // Append to array (max 3)
+        updatedPhotos = [...currentPhotos, photoUrl].slice(0, 3)
+      }
+
+      // Update the character with the new photos array
+      updateCharacter(characterId, {
+        sourcePhotoUrls: updatedPhotos,
+        sourcePhotoUrl: updatedPhotos[0], // Keep legacy field in sync
+      })
     } catch (err) {
       console.error('Upload error:', err)
       setErrorDialog({
@@ -246,22 +268,17 @@ export function CharacterStep() {
     } finally {
       setUploadingCharacterId(null)
     }
-  }, [updateCharacter])
+  }, [updateCharacter, allCharacters])
 
-  // Handle file input change
-  const handleFileChange = useCallback((characterId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle file input change (with optional slot index for multi-photo)
+  const handleFileChange = useCallback((characterId: string, event: React.ChangeEvent<HTMLInputElement>, slotIndex?: number) => {
     const file = event.target.files?.[0]
     if (file) {
-      handlePhotoUpload(characterId, file)
+      handlePhotoUpload(characterId, file, slotIndex)
     }
     // Reset the input so the same file can be selected again
     event.target.value = ''
   }, [handlePhotoUpload])
-
-  // Trigger file input click
-  const triggerFileUpload = useCallback((characterId: string) => {
-    fileInputRefs.current[characterId]?.click()
-  }, [])
 
   // Handle character sheet generation using recipe-based pipeline
   // Now supports both main characters (with photos) and supporting characters (with or without photos)
@@ -288,8 +305,8 @@ export function CharacterStep() {
       return
     }
 
-    // CRITICAL: Validate that we have either a photo OR a description before generating
-    const hasPhoto = !!unifiedChar.sourcePhotoUrl
+    // CRITICAL: Validate that we have either photo(s) OR a description before generating
+    const hasPhoto = (unifiedChar.sourcePhotoUrls?.filter(Boolean).length || 0) > 0
     const hasDescription = !!unifiedChar.description?.trim()
 
     // Clear previous validation errors for this character
@@ -300,7 +317,7 @@ export function CharacterStep() {
     })
 
     if (!hasPhoto && !hasDescription) {
-      console.error('[CharacterStep] Cannot generate without photo or description')
+      console.error('[CharacterStep] Cannot generate without photo(s) or description')
       setDescriptionErrors(prev => ({
         ...prev,
         [characterId]: 'Description cannot be empty',
@@ -308,7 +325,7 @@ export function CharacterStep() {
       setErrorDialog({
         open: true,
         title: 'Description Required',
-        message: 'Please add a visual description before generating a character sheet. Describe the character\'s age, appearance, and outfit.',
+        message: 'Please add reference photo(s) or a visual description before generating a character sheet.',
       })
       return
     }
@@ -345,10 +362,12 @@ export function CharacterStep() {
         return
       }
 
-      const hasPhoto = !!unifiedChar.sourcePhotoUrl
+      // Check for photos (support multiple)
+      const photoUrls = unifiedChar.sourcePhotoUrls?.filter(Boolean) || []
+      const hasPhotos = photoUrls.length > 0
 
-      // Choose recipe based on whether we have a photo
-      const recipeName = hasPhoto
+      // Choose recipe based on whether we have photo(s)
+      const recipeName = hasPhotos
         ? 'Storybook Character Sheet'  // 3-stage: isolate → stylize → sheet
         : 'Storybook Character Sheet (From Description)'  // 2-stage: generate from description → sheet
 
@@ -397,18 +416,28 @@ export function CharacterStep() {
         STYLE_NAME: project?.style?.name || 'illustrated',
       }
 
+      // Add outfit description if provided
+      if (unifiedChar.outfitDescription?.trim()) {
+        fieldValues.OUTFIT_DESCRIPTION = unifiedChar.outfitDescription.trim()
+      }
+
       // Add description fields for description-based recipe
-      if (!hasPhoto) {
+      if (!hasPhotos) {
         fieldValues.CHARACTER_ROLE = unifiedChar.role || 'character'
-        fieldValues.CHARACTER_DESCRIPTION = characterDescription
+        // Combine appearance description with outfit if both exist
+        const baseDescription = characterDescription
+        const outfitPart = unifiedChar.outfitDescription?.trim()
+          ? `, wearing ${unifiedChar.outfitDescription.trim()}`
+          : ''
+        fieldValues.CHARACTER_DESCRIPTION = baseDescription + outfitPart
       }
 
       // Build stage reference images
       let stageReferenceImages: string[][]
-      if (hasPhoto) {
-        // Photo-based: Stage 0 = photo, Stage 1 = style guide, Stage 2 = template
+      if (hasPhotos) {
+        // Photo-based: Stage 0 = ALL photos (1-3), Stage 1 = style guide, Stage 2 = template
         stageReferenceImages = [
-          [unifiedChar.sourcePhotoUrl!],
+          photoUrls, // All reference photos for better likeness
           [styleGuideUrl],
           [SYSTEM_TEMPLATES.characterSheet.advanced],
         ]
@@ -422,7 +451,9 @@ export function CharacterStep() {
 
       console.log('[CharacterStep] Recipe execution:', {
         recipeName: recipe.name,
-        hasPhoto,
+        hasPhotos,
+        photoCount: photoUrls.length,
+        outfitDescription: unifiedChar.outfitDescription || '(none)',
         fieldValues,
         stageRefs: stageReferenceImages.map((refs, i) => `Stage ${i}: ${refs.length} refs`),
       })
@@ -590,58 +621,102 @@ export function CharacterStep() {
                   </div>
                 )}
 
-                {/* Hidden file input */}
-                <input
-                  ref={(el) => { fileInputRefs.current[character.id] = el }}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => handleFileChange(character.id, e)}
-                />
+                {/* Hidden file inputs for each photo slot */}
+                {[0, 1, 2].map(slotIndex => (
+                  <input
+                    key={`file-${character.id}-${slotIndex}`}
+                    ref={(el) => { fileInputRefs.current[`${character.id}-${slotIndex}`] = el }}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleFileChange(character.id, e, slotIndex)}
+                  />
+                ))}
 
-                {/* Source Photo Upload - optional for supporting characters */}
+                {/* Source Photos Upload (1-3 photos) */}
                 <div className="space-y-2">
                   <Label>
-                    Source Photo
-                    {character.isSupporting && (
-                      <span className="text-xs text-zinc-500 ml-2">(optional - can generate from description)</span>
-                    )}
+                    Reference Photos
+                    <span className="text-xs text-zinc-500 ml-2">
+                      {character.isSupporting
+                        ? "(optional - upload 1-3 photos or use description)"
+                        : "(upload 1-3 photos for better likeness)"}
+                    </span>
                   </Label>
-                  {character.sourcePhotoUrl ? (
-                    <div
-                      className="relative aspect-square w-32 rounded-lg overflow-hidden border border-zinc-700 cursor-pointer hover:border-amber-500/50 transition-colors"
-                      onClick={() => triggerFileUpload(character.id)}
-                    >
-                      <Image
-                        src={character.sourcePhotoUrl}
-                        alt={`${character.name} source photo`}
-                        fill
-                        className="object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
-                        <span className="text-xs text-white">Change</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      className={cn(
-                        "aspect-square w-32 rounded-lg border-2 border-dashed border-zinc-700",
-                        "flex flex-col items-center justify-center gap-1",
-                        "hover:border-amber-500/50 transition-colors cursor-pointer",
-                        uploadingCharacterId === character.id && "opacity-50 pointer-events-none"
-                      )}
-                      onClick={() => triggerFileUpload(character.id)}
-                    >
-                      {uploadingCharacterId === character.id ? (
-                        <LoadingSpinner color="muted" />
-                      ) : (
-                        <>
-                          <Upload className="w-6 h-6 text-zinc-500" />
-                          <span className="text-xs text-zinc-500">Upload</span>
-                        </>
-                      )}
-                    </div>
-                  )}
+                  <div className="flex gap-2">
+                    {[0, 1, 2].map(slotIndex => {
+                      const photoUrl = character.sourcePhotoUrls?.[slotIndex]
+                      return (
+                        <div
+                          key={slotIndex}
+                          className={cn(
+                            "relative aspect-square w-20 rounded-lg overflow-hidden cursor-pointer transition-colors",
+                            photoUrl
+                              ? "border border-zinc-700 hover:border-amber-500/50"
+                              : "border-2 border-dashed border-zinc-700 hover:border-amber-500/50",
+                            uploadingCharacterId === character.id && "opacity-50 pointer-events-none"
+                          )}
+                          onClick={() => fileInputRefs.current[`${character.id}-${slotIndex}`]?.click()}
+                        >
+                          {photoUrl ? (
+                            <>
+                              <Image
+                                src={photoUrl}
+                                alt={`${character.name} photo ${slotIndex + 1}`}
+                                fill
+                                className="object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <span className="text-xs text-white">Change</span>
+                              </div>
+                              {slotIndex === 0 && (
+                                <div className="absolute bottom-0 left-0 right-0 bg-amber-500/80 text-black text-[10px] text-center py-0.5">
+                                  Main
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center h-full gap-1">
+                              {uploadingCharacterId === character.id ? (
+                                <LoadingSpinner size="sm" color="muted" />
+                              ) : (
+                                <>
+                                  <Upload className="w-4 h-4 text-zinc-500" />
+                                  <span className="text-[10px] text-zinc-500">
+                                    {slotIndex === 0 ? 'Main' : `+${slotIndex + 1}`}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <p className="text-xs text-zinc-500">
+                    Multiple angles help capture likeness. First photo is primary reference.
+                  </p>
+                </div>
+
+                {/* Outfit Description Field */}
+                <div className="space-y-2">
+                  <Label htmlFor={`outfit-${character.id}`}>
+                    Outfit / Costume
+                    <span className="text-xs text-zinc-500 ml-2">(what they wear in the book)</span>
+                  </Label>
+                  <Input
+                    id={`outfit-${character.id}`}
+                    placeholder="e.g., blue superhero cape, red mask, yellow boots"
+                    value={character.outfitDescription || ''}
+                    onChange={(e) => {
+                      if (character.isSupporting) {
+                        updateSupportingCharacter(character.id, { description: e.target.value })
+                      } else {
+                        updateCharacter(character.id, { outfitDescription: e.target.value })
+                      }
+                    }}
+                    className="bg-zinc-800/50 border-zinc-700"
+                  />
                 </div>
 
                 {/* Description Input - for all characters (especially when no photo) */}
@@ -747,11 +822,11 @@ export function CharacterStep() {
                         <>
                           <ImageIcon className="w-8 h-8 text-zinc-600" />
                           <span className="text-sm text-zinc-500">
-                            {character.sourcePhotoUrl
-                              ? 'Ready to generate from photo'
+                            {(character.sourcePhotoUrls?.filter(Boolean).length || 0) > 0
+                              ? `Ready to generate from ${character.sourcePhotoUrls?.filter(Boolean).length} photo(s)`
                               : character.description
                                 ? 'Ready to generate from description'
-                                : 'Add photo or description above'}
+                                : 'Add photo(s) or description above'}
                           </span>
                         </>
                       )}
@@ -783,8 +858,8 @@ export function CharacterStep() {
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4" />
-                      {character.sourcePhotoUrl
-                        ? 'Generate from Photo'
+                      {(character.sourcePhotoUrls?.filter(Boolean).length || 0) > 0
+                        ? `Generate from ${character.sourcePhotoUrls?.filter(Boolean).length} Photo(s)`
                         : 'Generate from Description'}
                     </>
                   )}

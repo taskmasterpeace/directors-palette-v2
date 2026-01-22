@@ -41,7 +41,8 @@ export class AdminService {
     async checkAdminEmailAsync(email: string): Promise<boolean> {
         try {
             const client = this.supabase || await getClient()
-            const { data } = await client
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data } = await (client as any)
                 .from('admin_users')
                 .select('*')
                 .eq('email', email)
@@ -67,12 +68,14 @@ export class AdminService {
             const client = this.supabase || await getClient()
 
             // Get user count from user_credits table (proxy for registered users)
-            const { count: userCount } = await client
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { count: userCount } = await (client as any)
                 .from('user_credits')
                 .select('*', { count: 'exact', head: true })
 
             // Get aggregated credit stats
-            const { data: creditStats } = await client
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data: creditStats } = await (client as any)
                 .from('user_credits')
                 .select('balance, lifetime_purchased, lifetime_used')
 
@@ -204,7 +207,8 @@ export class AdminService {
             const client = this.supabase || await getClient()
 
             // Get current balance
-            const { data: currentCredits, error: fetchError } = await client
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data: currentCredits, error: fetchError } = await (client as any)
                 .from('user_credits')
                 .select('balance')
                 .eq('user_id', userId)
@@ -219,7 +223,8 @@ export class AdminService {
             const newBalance = currentBalance + amount
 
             // Update or insert credits
-            const { error: updateError } = await client
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error: updateError } = await (client as any)
                 .from('user_credits')
                 .upsert({
                     user_id: userId,

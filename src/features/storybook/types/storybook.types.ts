@@ -569,7 +569,9 @@ export interface StorybookCharacter {
   id: string
   name: string // Display name
   tag: string // @name format for prompts
-  sourcePhotoUrl?: string // Original photo (if created from photo)
+  sourcePhotoUrl?: string // Original photo (if created from photo) - legacy, use sourcePhotoUrls
+  sourcePhotoUrls?: string[] // Multiple reference photos (1-3) for better likeness capture
+  outfitDescription?: string // What the character wears in the book (separate from appearance)
   characterSheetUrl?: string // Generated character sheet
   artStyle?: string // The style used for this character
   isFromLibrary?: boolean // Whether loaded from saved library
