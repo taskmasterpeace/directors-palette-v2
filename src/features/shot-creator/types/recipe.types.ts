@@ -50,8 +50,45 @@ export interface RecipeReferenceImage {
   isStatic?: boolean            // Static reference images are always included
 }
 
-// Stage type - generation (default) or tool
-export type RecipeStageType = 'generation' | 'tool'
+// Stage type - generation (default), tool, or analysis
+export type RecipeStageType = 'generation' | 'tool' | 'analysis'
+
+// Analysis types - what kind of analysis to perform
+export type RecipeAnalysisType = 'style' | 'character' | 'scene'
+
+// Available analysis endpoints
+export const RECIPE_ANALYSIS = {
+  'style': {
+    id: 'style',
+    name: 'Style Analysis',
+    description: 'Analyzes image(s) to extract visual style characteristics using GPT-4 Vision',
+    icon: '🎨',
+    cost: 1,  // OpenRouter API cost (minimal)
+    endpoint: '/api/styles/analyze',
+    // Output variables that will be available for subsequent stages
+    outputVariables: ['ANALYZED_STYLE_NAME', 'ANALYZED_STYLE_DESCRIPTION', 'ANALYZED_STYLE_PROMPT'],
+  },
+  'character': {
+    id: 'character',
+    name: 'Character Analysis',
+    description: 'Analyzes image(s) to extract character visual descriptions',
+    icon: '👤',
+    cost: 1,
+    endpoint: '/api/storybook/extract-character-description',
+    outputVariables: ['ANALYZED_CHARACTER_DESCRIPTION'],
+  },
+  'scene': {
+    id: 'scene',
+    name: 'Scene Analysis',
+    description: 'Analyzes image(s) to extract scene elements and composition',
+    icon: '🏞️',
+    cost: 1,
+    endpoint: '/api/storybook/extract-elements',
+    outputVariables: ['ANALYZED_SCENE_ELEMENTS'],
+  },
+} as const
+
+export type RecipeAnalysisId = keyof typeof RECIPE_ANALYSIS
 
 // Tool output type
 export type RecipeToolOutputType = 'single' | 'multi'
@@ -112,9 +149,10 @@ export type RecipeToolId = keyof typeof RECIPE_TOOLS
 export interface RecipeStage {
   id: string
   order: number                 // Stage order (0, 1, 2...)
-  type?: RecipeStageType        // 'generation' (default) or 'tool'
-  template: string              // The prompt template for this stage (empty for tool stages)
+  type?: RecipeStageType        // 'generation' (default), 'tool', or 'analysis'
+  template: string              // The prompt template for this stage (empty for tool/analysis stages)
   toolId?: RecipeToolId         // For tool stages: which tool to use
+  analysisId?: RecipeAnalysisId // For analysis stages: which analysis to perform
   fields: RecipeField[]         // Parsed fields from this stage's template
   referenceImages: RecipeReferenceImage[]  // Fixed reference images for this stage
 }
@@ -3297,14 +3335,26 @@ CRITICAL: Use the attached STYLE GUIDE reference image to determine the exact ar
 
   // Style Guide Generator - Creates visual style reference grid from reference image
   // 16:9 format with title banner + 3x3 grid
+  // Uses AI analysis to automatically extract style characteristics
   {
     name: 'Style Guide Generator',
     description: 'Generate a visual style guide with title banner and 3x3 grid from a reference image',
-    recipeNote: 'Attach a reference image showing the visual style you want to capture. Enter the style name (it will appear as @stylename at the top). The generator creates a professional style guide with 9 diverse panels.',
+    recipeNote: 'Attach a reference image showing the visual style you want to capture. The AI will analyze it to extract style characteristics. Enter a style name (appears as @stylename at the top). The generator creates a professional style guide with 9 diverse panels.',
     stages: [
+      // Stage 0: Analyze the reference image to extract style characteristics
       {
         id: generateStageId(),
         order: 0,
+        type: 'analysis',
+        analysisId: 'style',
+        template: '', // Analysis stages don't need a template
+        fields: [],
+        referenceImages: [],
+      },
+      // Stage 1: Generate the style guide grid using analyzed characteristics
+      {
+        id: generateStageId(),
+        order: 1,
         type: 'generation',
         template: `Professional visual style guide sheet with this EXACT layout:
 
@@ -3312,13 +3362,15 @@ TOP SECTION: A dark gray horizontal banner spanning the full width containing ce
 
 BELOW THE BANNER: A 3x3 grid of 9 image panels, each showing DIFFERENT unique characters and scenes in identical artistic style matching the reference image. Each panel has a white label bar at the bottom with black text describing the shot type.
 
-ANALYZE THE REFERENCE IMAGE and replicate its style EXACTLY in all 9 panels:
+STYLE CHARACTERISTICS (from AI analysis of your reference image):
+<<ANALYZED_STYLE_DESCRIPTION>>
+<<ANALYZED_STYLE_PROMPT>>
+
+Replicate this style EXACTLY in all 9 panels:
 - Art style, rendering technique, and visual aesthetic
 - Color palette and lighting approach
 - Line work and shading technique
 - Level of detail and stylization
-
-<<STYLE_DESCRIPTION:text>>
 
 THE 9 PANELS (left to right, top to bottom):
 1. CHARACTER CLOSE-UP - Face portrait with expressive features

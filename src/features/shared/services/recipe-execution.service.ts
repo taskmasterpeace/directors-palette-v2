@@ -12,6 +12,7 @@ import {
   RecipeFieldValues,
   RecipeStage,
   RECIPE_TOOLS,
+  RECIPE_ANALYSIS,
   buildRecipePrompts,
 } from '@/features/shot-creator/types/recipe.types'
 import { imageGenerationService } from '@/features/shot-creator/services/image-generation.service'
@@ -346,11 +347,110 @@ async function pollToolCompletion(predictionId: string, maxWaitTime: number = 60
 }
 
 /**
+ * Analysis results storage - maps variable names to their values
+ */
+export interface AnalysisVariables {
+  [variableName: string]: string
+}
+
+/**
+ * Execute an analysis stage - calls vision AI to analyze image(s)
+ * Returns variables that can be used in subsequent stage templates
+ */
+async function executeAnalysisStage(
+  stage: RecipeStage,
+  inputImageUrls: string[],
+  onProgress?: (message: string) => void
+): Promise<AnalysisVariables> {
+  if (!stage.analysisId) {
+    throw new Error('Analysis stage missing analysisId')
+  }
+
+  const analysis = RECIPE_ANALYSIS[stage.analysisId]
+  if (!analysis) {
+    throw new Error(`Unknown analysis: ${stage.analysisId}`)
+  }
+
+  onProgress?.(`Analyzing image(s) with ${analysis.name}...`)
+  console.log(`[Recipe Execution] Executing analysis: ${analysis.name} on ${inputImageUrls.length} image(s)`)
+
+  // For style analysis, we need to convert URLs to base64 or use the API properly
+  // The /api/styles/analyze endpoint expects a base64 data URL
+  // For now, we'll fetch the image and convert it
+  const imageUrl = inputImageUrls[0] // Use first image for analysis
+
+  let imageData: string
+
+  // Check if it's already a data URL
+  if (imageUrl.startsWith('data:image/')) {
+    imageData = imageUrl
+  } else {
+    // Fetch and convert to base64
+    try {
+      const imageResponse = await fetch(imageUrl)
+      const blob = await imageResponse.blob()
+      const arrayBuffer = await blob.arrayBuffer()
+      const base64 = Buffer.from(arrayBuffer).toString('base64')
+      const mimeType = blob.type || 'image/jpeg'
+      imageData = `data:${mimeType};base64,${base64}`
+    } catch (fetchError) {
+      console.error('[Recipe Execution] Failed to fetch image for analysis:', fetchError)
+      throw new Error(`Failed to fetch image for analysis: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`)
+    }
+  }
+
+  // Call the analysis API
+  const response = await fetch(analysis.endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: imageData }),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(`Analysis ${analysis.name} failed: ${errorData.error || response.statusText}`)
+  }
+
+  const data = await response.json()
+  console.log(`[Recipe Execution] Analysis completed:`, data)
+
+  // Map response to output variables based on analysis type
+  const variables: AnalysisVariables = {}
+
+  if (stage.analysisId === 'style') {
+    variables['ANALYZED_STYLE_NAME'] = data.name || ''
+    variables['ANALYZED_STYLE_DESCRIPTION'] = data.description || ''
+    variables['ANALYZED_STYLE_PROMPT'] = data.stylePrompt || ''
+  } else if (stage.analysisId === 'character') {
+    variables['ANALYZED_CHARACTER_DESCRIPTION'] = data.description || ''
+  } else if (stage.analysisId === 'scene') {
+    variables['ANALYZED_SCENE_ELEMENTS'] = data.elements || ''
+  }
+
+  onProgress?.(`Analysis complete: ${Object.keys(variables).length} variables extracted`)
+  return variables
+}
+
+/**
+ * Substitute analysis variables in a template string
+ * Replaces <<VARIABLE_NAME>> with actual values
+ */
+function substituteAnalysisVariables(template: string, variables: AnalysisVariables): string {
+  let result = template
+  for (const [varName, value] of Object.entries(variables)) {
+    // Replace both <<VAR_NAME>> and <<VAR_NAME:type>> patterns
+    const regex = new RegExp(`<<${varName}(?::[^>]+)?>>`, 'g')
+    result = result.replace(regex, value)
+  }
+  return result
+}
+
+/**
  * Execute a multi-stage recipe with pipe chaining
  *
  * Each stage's output becomes the input for the next stage.
  * Stage reference images are combined with the previous output.
- * Supports both generation stages and tool stages.
+ * Supports generation, tool, and analysis stages.
  */
 export async function executeRecipe(options: RecipeExecutionOptions): Promise<RecipeExecutionResult> {
   const {
@@ -382,20 +482,29 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
       id: s.id,
       type: s.type,
       toolId: s.toolId,
+      analysisId: s.analysisId,
       order: s.order
     })))
 
     const imageUrls: string[] = []
     let previousImageUrl: string | undefined = undefined
     let previousImageUrls: string[] | undefined = undefined // For multi-output stages
+    let analysisVariables: AnalysisVariables = {} // Variables from analysis stages
 
     // Execute each stage sequentially (pipe chaining)
     for (let i = 0; i < totalStages; i++) {
       const stage = recipe.stages[i]
-      const stagePrompt = prompts[i]
+      let stagePrompt = prompts[i]
       const isFirstStage = i === 0
       const isLastStage = i === totalStages - 1
       const isToolStage = stage.type === 'tool'
+      const isAnalysisStage = stage.type === 'analysis'
+
+      // Substitute analysis variables in the prompt
+      if (Object.keys(analysisVariables).length > 0 && stagePrompt) {
+        stagePrompt = substituteAnalysisVariables(stagePrompt, analysisVariables)
+        console.log(`[Recipe Execution] Substituted analysis variables in prompt`)
+      }
 
       onProgress?.(i, totalStages, `Processing stage ${i + 1}...`)
 
@@ -432,14 +541,41 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
       }
 
       console.log(`[Recipe Execution] Stage ${i + 1}/${totalStages}:`, {
-        type: isToolStage ? 'tool' : 'generation',
+        type: isAnalysisStage ? 'analysis' : isToolStage ? 'tool' : 'generation',
         toolId: stage.toolId || '(none)',
+        analysisId: stage.analysisId || '(none)',
         isFirstStage,
         previousImageUrl: previousImageUrl || '(none)',
         preparedStageRefs: preparedStageRefs.length ? `${preparedStageRefs.length} ref(s)` : '(none)',
         inputImages: inputImages?.length ? `${inputImages.length} image(s)` : '(none)',
-        prompt: isToolStage ? '(tool stage)' : stagePrompt.slice(0, 50) + '...'
+        prompt: isToolStage || isAnalysisStage ? `(${stage.type} stage)` : stagePrompt.slice(0, 50) + '...'
       })
+
+      // Handle analysis stages - extract info from images for use in later stages
+      if (isAnalysisStage) {
+        const analysisInputImages = inputImages || preparedStageRefs
+        if (!analysisInputImages || analysisInputImages.length === 0) {
+          throw new Error(`Stage ${i + 1} (analysis): No input images provided`)
+        }
+
+        try {
+          const newVariables = await executeAnalysisStage(
+            stage,
+            analysisInputImages,
+            (msg) => onProgress?.(i, totalStages, msg)
+          )
+
+          // Merge new variables with existing ones
+          analysisVariables = { ...analysisVariables, ...newVariables }
+          console.log(`[Recipe Execution] Stage ${i + 1} (analysis) completed. Variables:`, Object.keys(analysisVariables))
+
+          // Analysis stages don't produce images, so continue to next stage
+          continue
+        } catch (analysisError) {
+          const errorMsg = analysisError instanceof Error ? analysisError.message : 'Unknown error'
+          throw new Error(`Stage ${i + 1} (analysis) failed: ${errorMsg}`)
+        }
+      }
 
       // Handle tool stages differently from generation stages
       if (isToolStage) {
