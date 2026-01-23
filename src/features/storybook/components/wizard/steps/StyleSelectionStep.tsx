@@ -72,13 +72,9 @@ export function StyleSelectionStep() {
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Quick Style from Image state
-  const [showQuickStyle, setShowQuickStyle] = useState(false)
-  const [quickStyleImage, setQuickStyleImage] = useState<string | null>(null)
-  const [quickStyleImageUrl, setQuickStyleImageUrl] = useState<string | null>(null)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [analyzedStyle, setAnalyzedStyle] = useState<{ name: string; description: string; stylePrompt: string } | null>(null)
-  const quickStyleFileRef = useRef<HTMLInputElement>(null)
+  // Simple "Upload & Make Style Sheet" state
+  const [uploadedStyleImage, setUploadedStyleImage] = useState<string | null>(null)
+  const styleSheetFileRef = useRef<HTMLInputElement>(null)
 
   // LLM Style Expansion state
   const [expandedStyle, setExpandedStyle] = useState<ExpandedStyle | null>(null)
@@ -238,30 +234,19 @@ export function StyleSelectionStep() {
     }
   }, [customStyleName, customStyleDescription, referenceImageUrl, generateStyleGuide, useExpandedDescription, expandedStyle])
 
-  // Quick Style: Handle image upload and convert to base64 for analysis
-  const handleQuickStyleUpload = useCallback(async (file: File) => {
+  // Simple style sheet upload handler
+  const handleStyleSheetUpload = useCallback(async (file: File) => {
     setIsUploading(true)
     try {
-      // Convert to base64 for the analyze API
-      const reader = new FileReader()
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string)
-        reader.onerror = reject
-      })
-      reader.readAsDataURL(file)
-      const base64 = await base64Promise
-      setQuickStyleImage(base64)
-
-      // Also upload to get a URL for style guide generation
       const compressedFile = await compressImage(file)
       const formData = new FormData()
       formData.append('file', compressedFile)
       const response = await fetch('/api/upload-file', { method: 'POST', body: formData })
       if (!response.ok) throw new Error('Upload failed')
       const data = await response.json()
-      setQuickStyleImageUrl(data.url)
+      setUploadedStyleImage(data.url)
     } catch (err) {
-      console.error('Quick style upload error:', err)
+      console.error('Style image upload error:', err)
       setErrorDialog({
         open: true,
         title: 'Upload Failed',
@@ -272,73 +257,41 @@ export function StyleSelectionStep() {
     }
   }, [])
 
-  const handleQuickStyleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleStyleSheetFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) handleQuickStyleUpload(file)
+    if (file) handleStyleSheetUpload(file)
     e.target.value = ''
-  }, [handleQuickStyleUpload])
+  }, [handleStyleSheetUpload])
 
-  // Quick Style: Analyze the uploaded image
-  const handleAnalyzeStyle = useCallback(async () => {
-    if (!quickStyleImage) return
-
-    setIsAnalyzing(true)
-    try {
-      const response = await fetch('/api/styles/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: quickStyleImage })
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to analyze style')
-      }
-
-      const data = await response.json()
-      setAnalyzedStyle(data)
-    } catch (err) {
-      console.error('Style analysis error:', err)
-      setErrorDialog({
-        open: true,
-        title: 'Analysis Failed',
-        message: err instanceof Error ? err.message : 'Failed to analyze image style',
-      })
-    } finally {
-      setIsAnalyzing(false)
-    }
-  }, [quickStyleImage])
-
-  // Quick Style: Generate style guide from analyzed style
-  const handleGenerateQuickStyle = useCallback(async () => {
-    if (!analyzedStyle || !quickStyleImageUrl) return
+  // Generate style sheet from uploaded image
+  const handleMakeStyleSheet = useCallback(async () => {
+    if (!uploadedStyleImage) return
 
     const result = await generateStyleGuide(
-      analyzedStyle.name,
-      analyzedStyle.stylePrompt,
-      quickStyleImageUrl
+      'Custom Style',
+      undefined,
+      uploadedStyleImage
     )
 
     if (result.success) {
       setSelectedStyleId('custom')
-      setShowQuickStyle(false)
-      setQuickStyleImage(null)
-      setQuickStyleImageUrl(null)
-      setAnalyzedStyle(null)
+      setUploadedStyleImage(null)
     }
-  }, [analyzedStyle, quickStyleImageUrl, generateStyleGuide])
-
-  // Reset quick style state
-  const resetQuickStyle = useCallback(() => {
-    setShowQuickStyle(false)
-    setQuickStyleImage(null)
-    setQuickStyleImageUrl(null)
-    setAnalyzedStyle(null)
-  }, [])
+  }, [uploadedStyleImage, generateStyleGuide])
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Style Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Hidden file input for style sheet upload */}
+      <input
+        ref={styleSheetFileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleStyleSheetFileChange}
+      />
+
+      {/* Style Grid - Presets + Upload Your Own */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {PRESET_STYLES.map((style) => (
           <Card
             key={style.id}
@@ -371,166 +324,93 @@ export function StyleSelectionStep() {
             </CardContent>
           </Card>
         ))}
+
+        {/* Upload Your Own Card */}
+        <Card
+          className={cn(
+            "cursor-pointer transition-all hover:scale-105",
+            "bg-zinc-900/50 border-zinc-800 overflow-hidden border-dashed",
+            uploadedStyleImage && "ring-2 ring-amber-500 border-amber-500 border-solid",
+            isGenerating && "pointer-events-none opacity-50"
+          )}
+          onClick={() => !uploadedStyleImage && styleSheetFileRef.current?.click()}
+        >
+          <div className="relative aspect-video flex flex-col items-center justify-center bg-zinc-800/30">
+            {isUploading ? (
+              <LoadingSpinner color="muted" />
+            ) : uploadedStyleImage ? (
+              <>
+                <Image
+                  src={uploadedStyleImage}
+                  alt="Your uploaded style"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2">
+                  <Button
+                    size="sm"
+                    className="gap-2 bg-amber-500 hover:bg-amber-600 text-black"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleMakeStyleSheet()
+                    }}
+                    disabled={isGenerating}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <LoadingSpinner size="sm" color="current" />
+                        {progress || 'Generating...'}
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Make Style Sheet
+                      </>
+                    )}
+                  </Button>
+                  <button
+                    className="text-xs text-zinc-400 hover:text-white"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setUploadedStyleImage(null)
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <Upload className="w-8 h-8 text-zinc-500 mb-2" />
+                <span className="text-xs text-zinc-500">Upload Image</span>
+              </>
+            )}
+          </div>
+          <CardContent className="p-3">
+            <h3 className="font-semibold text-white">Your Own Style</h3>
+            <p className="text-xs text-zinc-400 mt-1">Upload any image to create a style guide</p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Custom Style Section */}
-      {!showCustomForm && !showQuickStyle ? (
-        <div className="flex justify-center gap-4 pt-4">
+      {error && (
+        <p className="text-sm text-red-400 text-center">{error}</p>
+      )}
+
+      {/* Custom Style Section (Advanced) */}
+      {!showCustomForm ? (
+        <div className="flex justify-center pt-2">
           <Button
-            variant="outline"
-            className="gap-2"
-            onClick={() => setShowQuickStyle(true)}
-            disabled={isGenerating}
-          >
-            <Upload className="w-4 h-4" />
-            Style from Image
-          </Button>
-          <Button
-            variant="outline"
-            className="gap-2"
+            variant="ghost"
+            size="sm"
+            className="gap-2 text-zinc-500 hover:text-zinc-300"
             onClick={() => setShowCustomForm(true)}
             disabled={isGenerating}
           >
             <Plus className="w-4 h-4" />
-            Create Custom Style
+            Advanced: Create with description
           </Button>
         </div>
-      ) : showQuickStyle ? (
-        /* Quick Style from Image */
-        <Card className="bg-zinc-900/50 border-zinc-800">
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                <Upload className="w-5 h-5 text-amber-400" />
-                Create Style from Image
-              </h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={resetQuickStyle}
-                disabled={isGenerating}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <p className="text-sm text-zinc-400">
-              Upload any image and we&apos;ll analyze its art style, then generate a style guide for your storybook.
-            </p>
-
-            <input
-              ref={quickStyleFileRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleQuickStyleFileChange}
-            />
-
-            {/* Step 1: Upload */}
-            {!quickStyleImage ? (
-              <div
-                className={cn(
-                  "border-2 border-dashed border-zinc-700 rounded-lg p-8",
-                  "flex flex-col items-center justify-center gap-3",
-                  "hover:border-amber-500/50 transition-colors cursor-pointer",
-                  isUploading && "opacity-50 pointer-events-none"
-                )}
-                onClick={() => quickStyleFileRef.current?.click()}
-              >
-                {isUploading ? (
-                  <LoadingSpinner color="muted" />
-                ) : (
-                  <>
-                    <Upload className="w-10 h-10 text-zinc-500" />
-                    <span className="text-zinc-400 font-medium">Click to upload an image</span>
-                    <span className="text-xs text-zinc-500">PNG, JPG, WebP up to 10MB</span>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Preview uploaded image */}
-                <div className="flex items-start gap-4">
-                  <div
-                    className="relative w-40 h-40 rounded-lg overflow-hidden border border-zinc-700 cursor-pointer hover:border-amber-500/50 transition-colors shrink-0"
-                    onClick={() => quickStyleFileRef.current?.click()}
-                  >
-                    <Image
-                      src={quickStyleImage}
-                      alt="Reference image"
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <span className="text-xs text-white">Change</span>
-                    </div>
-                  </div>
-
-                  <div className="flex-1 space-y-3">
-                    {/* Step 2: Analyze */}
-                    {!analyzedStyle ? (
-                      <div className="space-y-2">
-                        <p className="text-sm text-zinc-400">
-                          Click &quot;Analyze Style&quot; to identify the art style in this image.
-                        </p>
-                        <Button
-                          onClick={handleAnalyzeStyle}
-                          disabled={isAnalyzing || isGenerating}
-                          className="gap-2"
-                        >
-                          {isAnalyzing ? (
-                            <>
-                              <LoadingSpinner size="sm" color="current" />
-                              Analyzing...
-                            </>
-                          ) : (
-                            <>
-                              <Wand2 className="w-4 h-4" />
-                              Analyze Style
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    ) : (
-                      /* Step 3: Review & Generate */
-                      <div className="space-y-3">
-                        <div className="p-3 bg-zinc-800/50 rounded-lg border border-amber-500/20">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Check className="w-4 h-4 text-green-500" />
-                            <span className="text-sm font-medium text-white">Style Detected</span>
-                          </div>
-                          <h4 className="font-semibold text-amber-400">{analyzedStyle.name}</h4>
-                          <p className="text-sm text-zinc-400 mt-1">{analyzedStyle.description}</p>
-                        </div>
-                        <Button
-                          onClick={handleGenerateQuickStyle}
-                          disabled={isGenerating}
-                          className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-black"
-                        >
-                          {isGenerating ? (
-                            <>
-                              <LoadingSpinner size="sm" color="current" />
-                              {progress || 'Generating...'}
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="w-4 h-4" />
-                              Generate Style Guide
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {error && (
-              <p className="text-sm text-red-400">{error}</p>
-            )}
-          </CardContent>
-        </Card>
       ) : (
         <Card className="bg-zinc-900/50 border-zinc-800">
           <CardContent className="p-6 space-y-4">
