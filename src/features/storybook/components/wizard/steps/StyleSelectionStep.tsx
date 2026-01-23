@@ -23,6 +23,10 @@ interface ExpandedStyle {
 }
 
 // Preset styles (can be expanded)
+// To add new presets:
+// 1. Generate a style guide image (9-panel grid showing the art style)
+// 2. Save it to /public/storybook/styles/ as {id}-preset.jpg
+// 3. Add entry to this array with id, name, preview path, and description
 const PRESET_STYLES = [
   {
     id: 'watercolor',
@@ -47,6 +51,12 @@ const PRESET_STYLES = [
     name: '3D Animated',
     preview: '/storybook/styles/pixar-preset.webp',
     description: 'Pixar-style 3D rendering',
+  },
+  {
+    id: 'comic-book',
+    name: 'Comic Book',
+    preview: '/storybook/styles/comic-book-preset.jpg',
+    description: 'Bold ink outlines, cel shading, vibrant colors',
   },
 ]
 
