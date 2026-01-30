@@ -1,8 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { HelpCircle, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { HelpCircle, X, ChevronDown, ChevronUp, BookOpen } from 'lucide-react'
 import { cn } from '@/utils/utils'
+import Image from 'next/image'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 interface InfoTipProps {
   title: string
@@ -213,5 +216,142 @@ export function ReferenceImagesInfoTip() {
         </p>
       </div>
     </InfoTip>
+  )
+}
+
+/**
+ * Full architecture diagram modal
+ * Shows the complete Adhub system architecture with explanations
+ */
+export function ArchitectureHelpModal() {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+          <BookOpen className="w-4 h-4" />
+          <span className="hidden sm:inline">How It Works</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-purple-400" />
+            Adhub Architecture
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6 mt-4">
+          {/* Architecture Diagram */}
+          <div className="rounded-lg overflow-hidden border border-border">
+            <Image
+              src="/docs/adhub-architecture-diagram.jpg"
+              alt="Adhub Architecture Diagram"
+              width={1200}
+              height={600}
+              className="w-full h-auto"
+            />
+          </div>
+
+          {/* Explanation */}
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* Inputs */}
+            <div className="p-4 rounded-lg border border-purple-500/30 bg-purple-500/5">
+              <h4 className="font-semibold text-purple-400 mb-2">1. Inputs (Three Pillars)</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <strong className="text-foreground">Templates:</strong> What the ad does - goal prompt with {`{{placeholders}}`} and input fields
+                </li>
+                <li>
+                  <strong className="text-foreground">Styles:</strong> How it looks - detailed visual instructions (typography, color, tone)
+                </li>
+                <li>
+                  <strong className="text-foreground">Brands:</strong> Who it&apos;s for - logo, context text, reference images
+                </li>
+              </ul>
+            </div>
+
+            {/* Composition */}
+            <div className="p-4 rounded-lg border border-amber-500/30 bg-amber-500/5">
+              <h4 className="font-semibold text-amber-400 mb-2">2. Prompt Composition</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <strong className="text-foreground">Step 1:</strong> Replace {`{{placeholders}}`} with your field values
+                </li>
+                <li>
+                  <strong className="text-foreground">Step 2:</strong> Add brand context (target audience, tone, values)
+                </li>
+                <li>
+                  <strong className="text-foreground">Step 3:</strong> Append style modifiers (visual direction)
+                </li>
+                <li>
+                  <strong className="text-foreground">Images:</strong> Collect logo + selected refs + image fields
+                </li>
+              </ul>
+            </div>
+
+            {/* Output */}
+            <div className="p-4 rounded-lg border border-green-500/30 bg-green-500/5">
+              <h4 className="font-semibold text-green-400 mb-2">3. Generation & Output</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <strong className="text-foreground">AI Model:</strong> Replicate nano-banana-pro processes the composed prompt
+                </li>
+                <li>
+                  <strong className="text-foreground">Inputs:</strong> Final prompt + reference images + aspect ratio
+                </li>
+                <li>
+                  <strong className="text-foreground">Output:</strong> Professional ad image saved to your gallery
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Flow Summary */}
+          <div className="p-4 rounded-lg border border-border bg-muted/30">
+            <h4 className="font-semibold mb-3">The Complete Flow</h4>
+            <div className="flex items-center justify-center gap-2 text-sm flex-wrap">
+              <span className="px-3 py-1 rounded bg-purple-500/20 text-purple-400">Your Selections</span>
+              <span className="text-muted-foreground">→</span>
+              <span className="px-3 py-1 rounded bg-amber-500/20 text-amber-400">Composition Engine</span>
+              <span className="text-muted-foreground">→</span>
+              <span className="px-3 py-1 rounded bg-blue-500/20 text-blue-400">AI Model</span>
+              <span className="text-muted-foreground">→</span>
+              <span className="px-3 py-1 rounded bg-green-500/20 text-green-400">Final Ad</span>
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-3">
+              Brand + Template + Style = Composed Prompt → AI Generation → Professional Ad
+            </p>
+          </div>
+
+          {/* Key Insights */}
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="flex items-start gap-2 text-sm">
+              <span className="text-green-400">✓</span>
+              <span className="text-muted-foreground">
+                <strong className="text-foreground">Reusable:</strong> Same template works across multiple brands
+              </span>
+            </div>
+            <div className="flex items-start gap-2 text-sm">
+              <span className="text-green-400">✓</span>
+              <span className="text-muted-foreground">
+                <strong className="text-foreground">Consistent:</strong> Style presets ensure visual consistency
+              </span>
+            </div>
+            <div className="flex items-start gap-2 text-sm">
+              <span className="text-green-400">✓</span>
+              <span className="text-muted-foreground">
+                <strong className="text-foreground">Fast:</strong> No prompt engineering needed - just fill in fields
+              </span>
+            </div>
+            <div className="flex items-start gap-2 text-sm">
+              <span className="text-green-400">✓</span>
+              <span className="text-muted-foreground">
+                <strong className="text-foreground">Brand-safe:</strong> Logo and context auto-included
+              </span>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

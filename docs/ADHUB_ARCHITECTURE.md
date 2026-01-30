@@ -6,6 +6,82 @@ Adhub is an AI-powered ad generation system that combines **templates**, **style
 
 ---
 
+## Architecture Diagram
+
+![Adhub Architecture Diagram](/docs/adhub-architecture-diagram.jpg)
+
+The diagram above illustrates the complete flow from user inputs to generated ad output:
+
+### Visual Flow Explanation
+
+**1. INPUTS (The Three Pillars)** - Left side of diagram
+
+The system takes three types of inputs that work together:
+
+| Pillar | What It Defines | Key Components |
+|--------|-----------------|----------------|
+| **Templates** | What the ad does | Goal Prompt (with `{{placeholders}}`), Fields (text & image inputs) |
+| **Styles** | How the ad looks | Prompt Modifiers across 10+ categories (Core Idea, Structure, Typography, Color, Tone) |
+| **Brands** | Who the ad is for | Context Text (brand values/description), Logo URL, Reference Images (product/brand assets) |
+
+**2. PROMPT COMPOSITION (The Magic)** - Center of diagram
+
+The Prompt Composition Engine (`AdhubGenerationService`) performs three operations in sequence:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    PROMPT COMPOSITION ENGINE                        │
+├─────────────────────────────────────────────────────────────────────┤
+│  Step 1: Substitute Field Values into Goal Prompt                   │
+│          {{product_name}} → "Premium Headphones"                    │
+│                                                                     │
+│  Step 2: Concatenate Brand Context Text                             │
+│          "Our brand targets professionals who value quality..."     │
+│                                                                     │
+│  Step 3: Append Style Prompt Modifiers                              │
+│          "[CORE IDEA] One sentence of truth... [TYPOGRAPHY]..."     │
+│                                                                     │
+│  Output: FINAL_PROMPT (Composed Text Block)                         │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+Simultaneously, the **Reference Image Collection** gathers visual inputs:
+- Brand Logo (auto-included)
+- Selected Brand Images (user picks from uploaded assets)
+- Template Image Fields (e.g., product photos from template fields)
+
+**3. GENERATION & OUTPUT** - Right side of diagram
+
+The composed prompt and reference images are sent to the AI model:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    AI IMAGE GENERATION MODEL                        │
+│                    (Replicate nano-banana-pro API)                  │
+├─────────────────────────────────────────────────────────────────────┤
+│  Input:                                                             │
+│    • prompt: FINAL_PROMPT (composed text)                           │
+│    • image_input: referenceImages[] (visual input list)             │
+│    • aspect_ratio: "1:1", "16:9", etc.                              │
+│    • metadata: { source: 'adhub', adId, brandId, ... }              │
+│                                                                     │
+│  Output:                                                            │
+│    • AI-Generated Ad Image                                          │
+│    • Stored in Gallery (gallery_id)                                 │
+│    • URL returned to frontend                                       │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### The Complete Data Flow
+
+```
+User Selection & Data → Composition Engine → AI Model → Final Ad Visual
+        │                      │                │              │
+   (3 Pillars)         (Prompt + Images)    (Generation)   (Result)
+```
+
+---
+
 ## Core Concepts
 
 ### The Three Pillars

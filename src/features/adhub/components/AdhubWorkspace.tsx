@@ -9,6 +9,7 @@ import { StyleSelectStep } from './steps/StyleSelectStep'
 import { FillTemplateStep } from './steps/FillTemplateStep'
 import { ResultStep } from './steps/ResultStep'
 import { AdhubStepper } from './AdhubStepper'
+import { ArchitectureHelpModal } from './InfoTip'
 import type { AdhubStep } from '../types/adhub.types'
 
 const STEP_COMPONENTS: Record<AdhubStep, React.FC> = {
@@ -28,7 +29,10 @@ export function AdhubWorkspace() {
     <div className="flex flex-col h-full bg-background">
       {/* Stepper */}
       <div className="flex-shrink-0 border-b border-border/50 px-6 py-4 bg-card/50">
-        <AdhubStepper />
+        <div className="flex items-center justify-between">
+          <AdhubStepper />
+          <ArchitectureHelpModal />
+        </div>
       </div>
 
       {/* Error Display */}
