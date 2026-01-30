@@ -151,9 +151,12 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           prompt,
           model: model || 'nano-banana-pro',
-          aspectRatio: aspectRatio || '1:1',
           referenceImages,
-          metadata: {
+          modelSettings: {
+            aspectRatio: aspectRatio || '1:1',
+            outputFormat: 'webp',
+          },
+          extraMetadata: {
             source: 'adhub',
             adId,
             brandId,
