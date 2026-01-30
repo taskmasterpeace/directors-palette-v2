@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
           referenceImages,
           modelSettings: {
             aspectRatio: aspectRatio || '1:1',
-            outputFormat: 'webp',
+            outputFormat: 'png',
           },
           extraMetadata: {
             source: 'adhub',
