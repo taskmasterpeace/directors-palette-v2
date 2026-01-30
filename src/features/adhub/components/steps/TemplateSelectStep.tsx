@@ -11,6 +11,7 @@ import { cn } from '@/utils/utils'
 import { useAdhubStore } from '../../store/adhub.store'
 import type { AdhubTemplate, AdhubTemplateFieldInput } from '../../types/adhub.types'
 import { TemplateInfoTip } from '../InfoTip'
+import { useIsAdmin } from '@/hooks/useIsAdmin'
 
 export function TemplateSelectStep() {
   const {
@@ -26,6 +27,7 @@ export function TemplateSelectStep() {
   const [isCreating, setIsCreating] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<AdhubTemplate | null>(null)
+  const isAdmin = useIsAdmin()
 
   // Form state
   const [name, setName] = useState('')
@@ -368,27 +370,31 @@ export function TemplateSelectStep() {
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleOpenDialog(template)
-                }}
-                className="p-1.5 rounded hover:bg-accent"
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleDelete(template.id)
-                }}
-                className="p-1.5 rounded hover:bg-destructive/10 text-destructive"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            {/* Actions - Admin only */}
+            {isAdmin && (
+              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleOpenDialog(template)
+                  }}
+                  className="p-1.5 rounded hover:bg-accent"
+                  title="Edit template"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDelete(template.id)
+                  }}
+                  className="p-1.5 rounded hover:bg-destructive/10 text-destructive"
+                  title="Delete template"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>

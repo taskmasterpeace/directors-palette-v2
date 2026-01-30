@@ -16,7 +16,11 @@ import {
     Brackets,
     GitBranch,
     Shuffle,
-    Zap
+    Zap,
+    Megaphone,
+    Target,
+    Layers,
+    Rocket
 } from "lucide-react"
 
 export default function LandingPage() {
@@ -448,6 +452,133 @@ export default function LandingPage() {
                                 </p>
                             </CardContent>
                         </Card>
+                    </div>
+                </div>
+            </section>
+
+            {/* Ad Hub Section */}
+            <section className="py-20 relative overflow-hidden bg-gradient-to-b from-background to-purple-950/20">
+                {/* Background accent */}
+                <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-pink-500/10 rounded-full blur-3xl" />
+
+                <div className="container mx-auto px-4 relative z-10">
+                    <div className="text-center mb-12">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-full text-purple-400 text-sm font-medium mb-6">
+                            <Megaphone className="w-4 h-4" />
+                            NEW: Ad Hub
+                        </div>
+                        <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                            Stop Paying Designers.<br />
+                            <span className="text-purple-400">Start Creating Ads.</span>
+                        </h3>
+                        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                            Professional marketing visuals in 60 seconds. No templates to hunt. No Canva skills needed.
+                            Just your brand, your message, your ad - done.
+                        </p>
+                    </div>
+
+                    {/* Value Props */}
+                    <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-12">
+                        <div className="bg-card/50 border border-purple-500/30 rounded-xl p-6 text-center hover:border-purple-500/50 transition-colors">
+                            <div className="w-14 h-14 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto mb-4">
+                                <Target className="w-7 h-7 text-purple-400" />
+                            </div>
+                            <h4 className="text-xl font-semibold text-white mb-2">Brand-Locked</h4>
+                            <p className="text-muted-foreground text-sm">
+                                Upload your logo once. Every ad automatically includes your brand identity. No more off-brand disasters.
+                            </p>
+                        </div>
+
+                        <div className="bg-card/50 border border-purple-500/30 rounded-xl p-6 text-center hover:border-purple-500/50 transition-colors">
+                            <div className="w-14 h-14 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto mb-4">
+                                <Layers className="w-7 h-7 text-purple-400" />
+                            </div>
+                            <h4 className="text-xl font-semibold text-white mb-2">Template System</h4>
+                            <p className="text-muted-foreground text-sm">
+                                Fill in the blanks. Product name, tagline, offer - the system handles the prompt engineering.
+                            </p>
+                        </div>
+
+                        <div className="bg-card/50 border border-purple-500/30 rounded-xl p-6 text-center hover:border-purple-500/50 transition-colors">
+                            <div className="w-14 h-14 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto mb-4">
+                                <Rocket className="w-7 h-7 text-purple-400" />
+                            </div>
+                            <h4 className="text-xl font-semibold text-white mb-2">Style Presets</h4>
+                            <p className="text-muted-foreground text-sm">
+                                Minimalist. Bold. Luxury. Pick a visual style and every ad follows it. Consistent feed, zero effort.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* How It Works - Ad Hub Style */}
+                    <div className="max-w-4xl mx-auto">
+                        <div className="bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-purple-500/10 border border-purple-500/30 rounded-xl p-8">
+                            <h4 className="text-xl font-semibold text-white text-center mb-8">How It Works</h4>
+
+                            <div className="grid md:grid-cols-4 gap-6">
+                                <div className="text-center">
+                                    <div className="w-12 h-12 rounded-full bg-purple-500/20 border-2 border-purple-500 flex items-center justify-center mx-auto mb-3">
+                                        <span className="text-lg font-bold text-purple-400">1</span>
+                                    </div>
+                                    <h5 className="font-medium text-white mb-1">Pick Brand</h5>
+                                    <p className="text-xs text-muted-foreground">Select your brand with logo and context</p>
+                                </div>
+
+                                <div className="text-center">
+                                    <div className="w-12 h-12 rounded-full bg-purple-500/20 border-2 border-purple-500 flex items-center justify-center mx-auto mb-3">
+                                        <span className="text-lg font-bold text-purple-400">2</span>
+                                    </div>
+                                    <h5 className="font-medium text-white mb-1">Choose Template</h5>
+                                    <p className="text-xs text-muted-foreground">Product promo, testimonial, sale...</p>
+                                </div>
+
+                                <div className="text-center">
+                                    <div className="w-12 h-12 rounded-full bg-purple-500/20 border-2 border-purple-500 flex items-center justify-center mx-auto mb-3">
+                                        <span className="text-lg font-bold text-purple-400">3</span>
+                                    </div>
+                                    <h5 className="font-medium text-white mb-1">Select Style</h5>
+                                    <p className="text-xs text-muted-foreground">Minimalist, bold, luxury aesthetic</p>
+                                </div>
+
+                                <div className="text-center">
+                                    <div className="w-12 h-12 rounded-full bg-green-500/20 border-2 border-green-500 flex items-center justify-center mx-auto mb-3">
+                                        <CheckCircle2 className="w-6 h-6 text-green-400" />
+                                    </div>
+                                    <h5 className="font-medium text-white mb-1">Generate</h5>
+                                    <p className="text-xs text-muted-foreground">Pro ad in 60 seconds</p>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 pt-6 border-t border-purple-500/20 text-center">
+                                <p className="text-sm text-muted-foreground mb-4">
+                                    <span className="text-purple-400 font-medium">Solo entrepreneurs love this:</span> No more DIY Canva at 2am. No more $500 designer invoices.
+                                    Just consistent, professional ads whenever you need them.
+                                </p>
+                                <div className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
+                                    <span className="flex items-center gap-1">
+                                        <CheckCircle2 className="w-3 h-3 text-green-400" />
+                                        Instagram ads
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                        <CheckCircle2 className="w-3 h-3 text-green-400" />
+                                        Facebook promos
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                        <CheckCircle2 className="w-3 h-3 text-green-400" />
+                                        Product launches
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                        <CheckCircle2 className="w-3 h-3 text-green-400" />
+                                        Sale announcements
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                        <CheckCircle2 className="w-3 h-3 text-green-400" />
+                                        Testimonial cards
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
