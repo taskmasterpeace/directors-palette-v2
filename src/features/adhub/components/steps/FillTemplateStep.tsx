@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/utils/utils'
-import { useAdhubStore, ASPECT_RATIO_OPTIONS, type AspectRatio } from '../../store/adhub.store'
+import { useAdhubStore, ASPECT_RATIO_OPTIONS } from '../../store/adhub.store'
 import type { AdhubBrandImage } from '../../types/adhub.types'
 
 export function FillTemplateStep() {
