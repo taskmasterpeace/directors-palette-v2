@@ -50,14 +50,20 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     }
 
     const body = await request.json()
-    const { name, iconUrl, goalPrompt, isPublic } = body
+    const { name, iconUrl, goalPrompt, isPublic, fields } = body
 
+    // Update template basic info
     const template = await AdhubTemplateService.updateTemplate(templateId, user.id, {
       name: name?.trim(),
       iconUrl: iconUrl?.trim(),
       goalPrompt: goalPrompt?.trim(),
       isPublic,
     })
+
+    // Sync fields if provided
+    if (fields !== undefined) {
+      template.fields = await AdhubTemplateService.syncFields(templateId, fields)
+    }
 
     return NextResponse.json({ template })
   } catch (error) {

@@ -118,7 +118,7 @@ export function TemplateSelectStep() {
           iconUrl: iconUrl.trim() || undefined,
           goalPrompt: goalPrompt.trim(),
           isPublic,
-          fields: editingTemplate ? undefined : fields, // Only send fields on create
+          fields, // Send fields on both create and edit
         }),
       })
 
@@ -254,65 +254,63 @@ export function TemplateSelectStep() {
               </div>
 
               {/* Fields Section */}
-              {!editingTemplate && (
-                <div className="border-t pt-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="text-sm font-medium">Template Fields</label>
-                    <Button variant="outline" size="sm" onClick={handleAddField}>
-                      <Plus className="w-4 h-4 mr-1" />
-                      Add Field
-                    </Button>
-                  </div>
-
-                  {fields.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No fields yet. Add fields that users will fill in.
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      {fields.map((field, index) => (
-                        <div key={index} className="border rounded-lg p-3 space-y-2">
-                          <div className="flex gap-2">
-                            <select
-                              value={field.fieldType}
-                              onChange={(e) => handleUpdateField(index, { fieldType: e.target.value as 'text' | 'image' })}
-                              className="w-24 text-sm border rounded px-2 py-1"
-                            >
-                              <option value="text">Text</option>
-                              <option value="image">Image</option>
-                            </select>
-                            <Input
-                              value={field.fieldName}
-                              onChange={(e) => handleUpdateField(index, { fieldName: e.target.value })}
-                              placeholder="field_name"
-                              className="flex-1"
-                            />
-                            <Input
-                              value={field.fieldLabel}
-                              onChange={(e) => handleUpdateField(index, { fieldLabel: e.target.value })}
-                              placeholder="Field Label"
-                              className="flex-1"
-                            />
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleRemoveField(index)}
-                            >
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </div>
-                          <Input
-                            value={field.placeholder || ''}
-                            onChange={(e) => handleUpdateField(index, { placeholder: e.target.value })}
-                            placeholder="Placeholder text"
-                            className="text-sm"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-sm font-medium">Template Fields</label>
+                  <Button variant="outline" size="sm" onClick={handleAddField}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Field
+                  </Button>
                 </div>
-              )}
+
+                {fields.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No fields yet. Add fields that users will fill in.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {fields.map((field, index) => (
+                      <div key={index} className="border rounded-lg p-3 space-y-2">
+                        <div className="flex gap-2">
+                          <select
+                            value={field.fieldType}
+                            onChange={(e) => handleUpdateField(index, { fieldType: e.target.value as 'text' | 'image' })}
+                            className="w-24 text-sm border rounded px-2 py-1 bg-background"
+                          >
+                            <option value="text">Text</option>
+                            <option value="image">Image</option>
+                          </select>
+                          <Input
+                            value={field.fieldName}
+                            onChange={(e) => handleUpdateField(index, { fieldName: e.target.value })}
+                            placeholder="field_name"
+                            className="flex-1"
+                          />
+                          <Input
+                            value={field.fieldLabel}
+                            onChange={(e) => handleUpdateField(index, { fieldLabel: e.target.value })}
+                            placeholder="Field Label"
+                            className="flex-1"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveField(index)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                        <Input
+                          value={field.placeholder || ''}
+                          onChange={(e) => handleUpdateField(index, { placeholder: e.target.value })}
+                          placeholder="Placeholder text"
+                          className="text-sm"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>

@@ -291,4 +291,49 @@ export class AdhubTemplateService {
 
     return (data || []).map((row: AdhubTemplateFieldRow) => templateFieldFromRow(row))
   }
+
+  /**
+   * Sync all fields for a template (delete old, insert new)
+   */
+  static async syncFields(templateId: string, fields: AdhubTemplateFieldInput[]): Promise<AdhubTemplateField[]> {
+    const supabase = await getAdhubClient()
+
+    // Delete all existing fields
+    const { error: deleteError } = await supabase
+      .from('adhub_template_fields')
+      .delete()
+      .eq('template_id', templateId)
+
+    if (deleteError) {
+      console.error('Error deleting existing fields:', deleteError)
+      throw new Error(`Failed to sync fields: ${deleteError.message}`)
+    }
+
+    // Insert new fields if any
+    if (fields.length === 0) {
+      return []
+    }
+
+    const fieldsToInsert = fields.map((field, index) => ({
+      template_id: templateId,
+      field_type: field.fieldType,
+      field_name: field.fieldName,
+      field_label: field.fieldLabel,
+      is_required: field.isRequired ?? true,
+      placeholder: field.placeholder ?? null,
+      field_order: field.fieldOrder ?? index,
+    }))
+
+    const { data, error: insertError } = await supabase
+      .from('adhub_template_fields')
+      .insert(fieldsToInsert)
+      .select()
+
+    if (insertError) {
+      console.error('Error inserting fields:', insertError)
+      throw new Error(`Failed to sync fields: ${insertError.message}`)
+    }
+
+    return (data || []).map((row: AdhubTemplateFieldRow) => templateFieldFromRow(row))
+  }
 }
