@@ -1,13 +1,14 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { Plus, Building2, Trash2, Edit2, ChevronRight, ImageIcon } from 'lucide-react'
+import React, { useEffect, useState, useRef } from 'react'
+import { Plus, Building2, Trash2, Edit2, ChevronRight, ImageIcon, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { cn } from '@/utils/utils'
 import { useAdhubStore } from '../../store/adhub.store'
+import { getClient } from '@/lib/db/client'
 import type { AdhubBrand } from '../../types/adhub.types'
 
 export function BrandSelectStep() {
@@ -28,6 +29,75 @@ export function BrandSelectStep() {
   const [name, setName] = useState('')
   const [logoUrl, setLogoUrl] = useState('')
   const [contextText, setContextText] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Handle logo file upload
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be less than 5MB')
+      return
+    }
+
+    setIsUploading(true)
+    try {
+      // Create preview
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        setLogoPreview(ev.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+
+      // Upload to Supabase storage
+      const supabase = await getClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const fileExt = file.name.split('.').pop() || 'png'
+      const fileName = `${user.id}/brand-logos/${Date.now()}.${fileExt}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('directors-palette')
+        .upload(fileName, file, {
+          contentType: file.type,
+          upsert: true,
+        })
+
+      if (uploadError) throw uploadError
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('directors-palette')
+        .getPublicUrl(fileName)
+
+      setLogoUrl(publicUrl)
+    } catch (error) {
+      console.error('Failed to upload logo:', error)
+      alert('Failed to upload logo. Please try again.')
+      setLogoPreview(null)
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const clearLogo = () => {
+    setLogoUrl('')
+    setLogoPreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
 
   // Fetch brands
   useEffect(() => {
@@ -52,6 +122,10 @@ export function BrandSelectStep() {
     setLogoUrl('')
     setContextText('')
     setEditingBrand(null)
+    setLogoPreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }
 
   const handleOpenDialog = (brand?: AdhubBrand) => {
@@ -59,6 +133,7 @@ export function BrandSelectStep() {
       setEditingBrand(brand)
       setName(brand.name)
       setLogoUrl(brand.logoUrl || '')
+      setLogoPreview(brand.logoUrl || null)
       setContextText(brand.contextText || '')
     } else {
       resetForm()
@@ -181,12 +256,67 @@ export function BrandSelectStep() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Logo URL</label>
-                <Input
-                  value={logoUrl}
-                  onChange={(e) => setLogoUrl(e.target.value)}
-                  placeholder="https://example.com/logo.png"
+                <label className="text-sm font-medium mb-1.5 block">Brand Logo</label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="hidden"
                 />
+
+                {logoPreview || logoUrl ? (
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-16 h-16 rounded-lg border overflow-hidden bg-muted">
+                      <img
+                        src={logoPreview || logoUrl}
+                        alt="Logo preview"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                      >
+                        {isUploading ? 'Uploading...' : 'Change'}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearLogo}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <X className="w-3 h-3 mr-1" />
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="w-full border-2 border-dashed border-border rounded-lg p-4 flex flex-col items-center gap-2 hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                  >
+                    {isUploading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                        <span className="text-sm text-muted-foreground">Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-6 h-6 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">Click to upload logo</span>
+                        <span className="text-xs text-muted-foreground">PNG, JPG up to 5MB</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
 
               <div>
