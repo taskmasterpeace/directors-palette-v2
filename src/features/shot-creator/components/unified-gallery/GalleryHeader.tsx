@@ -6,13 +6,14 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { ImageIcon, Search, Grid3x3, Grid2x2, Menu, Square, RectangleHorizontal } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
-import { GridSize } from '../../store/unified-gallery-store'
+import { GridSize, GeneratedImage } from '../../store/unified-gallery-store'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { SourceFilter } from './SourceFilter'
 
 // Storage limits constants
 const IMAGE_LIMIT = 500
@@ -26,10 +27,12 @@ interface GalleryHeaderProps {
   gridSize: GridSize
   currentFolderName?: string
   useNativeAspectRatio: boolean
+  sourceFilter: GeneratedImage['source'] | null
   onSearchChange: (query: string) => void
   onSelectAll: () => void
   onGridSizeChange: (size: GridSize) => void
   onAspectRatioChange: (useNative: boolean) => void
+  onSourceFilterChange: (source: GeneratedImage['source'] | null) => void
   onOpenMobileMenu?: () => void
 }
 
@@ -41,10 +44,12 @@ export function GalleryHeader({
   gridSize,
   currentFolderName,
   useNativeAspectRatio,
+  sourceFilter,
   onSearchChange,
   onSelectAll,
   onGridSizeChange,
   onAspectRatioChange,
+  onSourceFilterChange,
   onOpenMobileMenu,
 }: GalleryHeaderProps) {
 
@@ -144,6 +149,12 @@ export function GalleryHeader({
               className="pl-9 w-full h-8"
             />
           </div>
+
+          {/* Source Filter */}
+          <SourceFilter
+            currentFilter={sourceFilter}
+            onFilterChange={onSourceFilterChange}
+          />
 
           {/* Grid Size Controls */}
           <div className="flex items-center border border-border rounded-md overflow-hidden">

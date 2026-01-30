@@ -83,6 +83,8 @@ export function UnifiedImageGallery({
     const totalDatabaseCount = useUnifiedGalleryStore(state => state.totalDatabaseCount)
     const useNativeAspectRatio = useUnifiedGalleryStore(state => state.useNativeAspectRatio)
     const setUseNativeAspectRatio = useUnifiedGalleryStore(state => state.setUseNativeAspectRatio)
+    const sourceFilter = useUnifiedGalleryStore(state => state.sourceFilter)
+    const setSourceFilter = useUnifiedGalleryStore(state => state.setSourceFilter)
 
     // Get infinite scroll state from store
     const hasMore = useUnifiedGalleryStore(state => state.hasMore)
@@ -659,10 +661,12 @@ export function UnifiedImageGallery({
                         currentFolderName={currentFolderName}
                         gridSize={gridSize}
                         useNativeAspectRatio={useNativeAspectRatio}
+                        sourceFilter={sourceFilter}
                         onSearchChange={handleSearchChange}
                         onSelectAll={handleSelectAll}
                         onGridSizeChange={setGridSize}
                         onAspectRatioChange={setUseNativeAspectRatio}
+                        onSourceFilterChange={setSourceFilter}
                         onOpenMobileMenu={() => setIsMobileFolderMenuOpen(true)}
                     />
 

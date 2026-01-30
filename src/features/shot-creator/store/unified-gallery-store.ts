@@ -78,6 +78,7 @@ interface UnifiedGalleryState {
   isSidebarCollapsed: boolean
   useNativeAspectRatio: boolean
   searchQuery: string // NEW: Server-side search query
+  sourceFilter: GeneratedImage['source'] | null // NEW: Filter by source module
 
   // Folder state
   folders: FolderWithCount[]
@@ -104,6 +105,7 @@ interface UnifiedGalleryState {
   setIsSidebarCollapsed: (collapsed: boolean) => void
   setUseNativeAspectRatio: (value: boolean) => void
   setSearchQuery: (query: string) => void
+  setSourceFilter: (source: GeneratedImage['source'] | null) => void
 
   // Infinite scroll actions
   appendImages: (images: GeneratedImage[], hasMore: boolean) => void
@@ -161,6 +163,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
   isSidebarCollapsed: true, // Default to collapsed
   useNativeAspectRatio: false,
   searchQuery: '',
+  sourceFilter: null, // null = all sources
 
   // Folder state
   folders: [],
@@ -358,6 +361,11 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
     get().refreshGallery()
   },
 
+  setSourceFilter: (source) => {
+    set({ sourceFilter: source, currentPage: 1, offset: 0, images: [] }) // Reset list on filter change
+    get().refreshGallery()
+  },
+
   getAllReferences: () => {
     const refs = get().images
       .filter(img => img.reference)
@@ -505,7 +513,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
         nextPage,
         state.pageSize,
         state.currentFolderId,
-        { searchQuery: state.searchQuery || undefined }
+        { searchQuery: state.searchQuery || undefined, sourceFilter: state.sourceFilter || undefined }
       )
 
       if (result.images.length > 0) {
@@ -542,12 +550,12 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       // Import GalleryService dynamically to avoid circular dependency
       const { GalleryService } = await import('../services/gallery.service')
 
-      // Fetch fresh data for the current page/folder with optional search query
+      // Fetch fresh data for the current page/folder with optional search query and source filter
       const result = await GalleryService.loadUserGalleryPaginated(
         1, // Always load first page on refresh
         state.pageSize,
         state.currentFolderId,
-        { searchQuery: state.searchQuery || undefined }
+        { searchQuery: state.searchQuery || undefined, sourceFilter: state.sourceFilter || undefined }
       )
 
       // Deduplicate images by ID before setting

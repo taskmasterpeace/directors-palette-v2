@@ -47,7 +47,7 @@ export class GalleryService {
         page: number,
         pageSize: number,
         folderId?: string | null,
-        options?: { includeProcessing?: boolean; searchQuery?: string }
+        options?: { includeProcessing?: boolean; searchQuery?: string; sourceFilter?: string }
     ): Promise<{ images: GeneratedImage[]; total: number; totalPages: number }> {
         try {
             // Include processing items to show loading states
@@ -58,7 +58,8 @@ export class GalleryService {
                 folderId,
                 {
                     includeProcessing: options?.includeProcessing ?? true,
-                    searchQuery: options?.searchQuery
+                    searchQuery: options?.searchQuery,
+                    sourceFilter: options?.sourceFilter
                 }
             )
 

@@ -112,6 +112,7 @@ export class GalleryService {
     options?: {
       includeProcessing?: boolean;
       searchQuery?: string;
+      sourceFilter?: string;
     }
   ): Promise<{ items: GalleryRow[]; total: number; totalPages: number }> {
     try {
@@ -157,7 +158,8 @@ export class GalleryService {
         pageSize,
         orderBy: 'created_at',
         ascending: false,
-        searchQuery: options?.searchQuery
+        searchQuery: options?.searchQuery,
+        sourceFilter: options?.sourceFilter
       })
 
       if (result.error) {

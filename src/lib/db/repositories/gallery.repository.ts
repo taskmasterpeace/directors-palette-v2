@@ -86,10 +86,11 @@ export class GalleryRepository {
       orderBy?: string;
       ascending?: boolean;
       searchQuery?: string;
+      sourceFilter?: string;
     }
   ): Promise<RepositoryListResult<GalleryRow> & { total: number; totalPages: number }> {
     try {
-      const { page, pageSize, orderBy = 'created_at', ascending = false, searchQuery } = options;
+      const { page, pageSize, orderBy = 'created_at', ascending = false, searchQuery, sourceFilter } = options;
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
@@ -116,6 +117,11 @@ export class GalleryRepository {
         countQuery = countQuery.or(`metadata->>prompt.ilike.%${searchQuery}%,metadata->>model.ilike.%${searchQuery}%`);
       }
 
+      // Apply source filter if provided (filter by metadata->>'source')
+      if (sourceFilter) {
+        countQuery = countQuery.eq('metadata->>source', sourceFilter);
+      }
+
       // Build data query
       let dataQuery = this.client.from('gallery').select('*');
       Object.entries(filters).forEach(([key, value]) => {
@@ -134,6 +140,11 @@ export class GalleryRepository {
       // Apply search query if provided
       if (searchQuery) {
         dataQuery = dataQuery.or(`metadata->>prompt.ilike.%${searchQuery}%,metadata->>model.ilike.%${searchQuery}%`);
+      }
+
+      // Apply source filter if provided
+      if (sourceFilter) {
+        dataQuery = dataQuery.eq('metadata->>source', sourceFilter);
       }
 
       // Apply ordering and pagination
