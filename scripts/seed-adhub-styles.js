@@ -1,18 +1,15 @@
 /**
  * Seed Adhub Styles
- * Run with: npx tsx scripts/seed-adhub-styles.ts
+ * Run with: node scripts/seed-adhub-styles.js
  */
 
-import { createClient } from '@supabase/supabase-js'
-import * as dotenv from 'dotenv'
-
-// Load environment variables
-dotenv.config({ path: '.env.local' })
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config({ path: '.env.local' });
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 const SEED_STYLES = [
   {
@@ -168,10 +165,10 @@ PRODUCTION: Lifestyle photography or cinematic renders. Warm lighting. Depth of 
 AVOID: Product as centerpiece, hard selling, feature lists, corporate models, obvious stock photos, cluttered compositions.`,
     is_active: true,
   },
-]
+];
 
 async function seedStyles() {
-  console.log('Seeding Adhub styles...')
+  console.log('Seeding Adhub styles...\n');
 
   for (const style of SEED_STYLES) {
     // Check if style already exists
@@ -179,7 +176,7 @@ async function seedStyles() {
       .from('adhub_styles')
       .select('id')
       .eq('name', style.name)
-      .maybeSingle()
+      .maybeSingle();
 
     if (existing) {
       // Update existing
@@ -192,28 +189,34 @@ async function seedStyles() {
           is_active: style.is_active,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', existing.id)
+        .eq('id', existing.id);
 
       if (error) {
-        console.error(`Error updating style ${style.name}:`, error)
+        console.error(`Error updating style ${style.name}:`, error);
       } else {
-        console.log(`✓ Updated style: ${style.display_name}`)
+        console.log(`✓ Updated style: ${style.display_name}`);
       }
     } else {
       // Insert new
       const { error } = await supabase
         .from('adhub_styles')
-        .insert(style)
+        .insert(style);
 
       if (error) {
-        console.error(`Error inserting style ${style.name}:`, error)
+        console.error(`Error inserting style ${style.name}:`, error);
       } else {
-        console.log(`✓ Created style: ${style.display_name}`)
+        console.log(`✓ Created style: ${style.display_name}`);
       }
     }
   }
 
-  console.log('Done!')
+  // Show summary
+  const { data: allStyles } = await supabase
+    .from('adhub_styles')
+    .select('name, display_name, is_active');
+
+  console.log('\n✅ Done! Total styles:', allStyles?.length || 0);
+  allStyles?.forEach(s => console.log(`  - ${s.display_name} (${s.is_active ? 'active' : 'inactive'})`));
 }
 
-seedStyles().catch(console.error)
+seedStyles().catch(console.error);
