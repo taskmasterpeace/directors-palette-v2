@@ -108,9 +108,9 @@ export class ImageGenerationService {
   private static validateZImageTurbo(input: ImageGenerationInput): string[] {
     const errors: string[] = []
 
-    // Z-Image likely takes 1 image input if doing i2i, usually
-    if (input.referenceImages && input.referenceImages.length > 1) {
-      errors.push('Z-Image Turbo supports maximum 1 reference image')
+    // Z-Image Turbo is TEXT-TO-IMAGE ONLY - no image input support
+    if (input.referenceImages && input.referenceImages.length > 0) {
+      errors.push('Z-Image Turbo is text-to-image only and does not support reference images')
     }
 
     return errors
@@ -233,24 +233,27 @@ export class ImageGenerationService {
       replicateInput.num_inference_steps = settings.numInferenceSteps
     }
 
-    if (settings.guidanceScale) {
+    if (settings.guidanceScale !== undefined) {
       replicateInput.guidance_scale = settings.guidanceScale
     }
 
     // Z-Image Turbo doesn't support aspect_ratio - convert to width/height
-    // Max dimensions: 1440px
+    // Max dimensions: 2048px (API allows 64-2048)
     if (settings.aspectRatio && settings.aspectRatio !== 'match_input_image') {
       const dimensions = ASPECT_RATIO_SIZES[settings.aspectRatio]
       if (dimensions) {
-        replicateInput.width = Math.min(dimensions.width, 1440)
-        replicateInput.height = Math.min(dimensions.height, 1440)
+        replicateInput.width = Math.min(dimensions.width, 2048)
+        replicateInput.height = Math.min(dimensions.height, 2048)
       }
     }
 
-    // Z-Image uses 'image' key for single reference image usually
-    if (input.referenceImages && input.referenceImages.length > 0) {
-      replicateInput.image = this.normalizeReferenceImages(input.referenceImages)[0]
+    // Output format - API supports png, jpg, webp
+    if (settings.outputFormat) {
+      replicateInput.output_format = settings.outputFormat
     }
+
+    // Note: Z-Image Turbo is TEXT-TO-IMAGE ONLY
+    // It does NOT support image input - reference images are ignored
 
     return replicateInput
   }
@@ -346,12 +349,11 @@ export class ImageGenerationService {
       replicateInput.size = settings.resolution // 2K, 4K, or custom
     }
 
-    if (settings.outputFormat) {
-      replicateInput.output_format = settings.outputFormat
-    }
+    // Note: Seedream 4.5 does NOT support output_format parameter
+    // Output is always JPG
 
-    // Sequential image generation
-    if (settings.sequentialGeneration) {
+    // Sequential image generation - API accepts 'auto' or 'disabled' string
+    if (settings.sequentialGeneration !== undefined) {
       replicateInput.sequential_image_generation = settings.sequentialGeneration ? 'auto' : 'disabled'
     }
 

@@ -469,9 +469,9 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         textColor: 'text-emerald-300',
         endpoint: 'bytedance/seedream-4.5',
         costPerImage: 0.06, // 6 points = 6 cents ($0.04 cost, 50% margin)
-        supportedParameters: ['outputFormat', 'aspectRatio', 'seedreamResolution', 'maxImages', 'sequentialGeneration'],
+        // Note: Seedream does NOT support outputFormat - always outputs JPG
+        supportedParameters: ['aspectRatio', 'seedreamResolution', 'maxImages', 'sequentialGeneration'],
         parameters: {
-            outputFormat: MODEL_PARAMETERS.outputFormat,
             aspectRatio: MODEL_PARAMETERS.aspectRatio,
             resolution: MODEL_PARAMETERS.seedreamResolution,
             maxImages: MODEL_PARAMETERS.maxImages,
