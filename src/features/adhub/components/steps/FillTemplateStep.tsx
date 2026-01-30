@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/utils/utils'
-import { useAdhubStore } from '../../store/adhub.store'
+import { useAdhubStore, ASPECT_RATIO_OPTIONS, type AspectRatio } from '../../store/adhub.store'
 import type { AdhubBrandImage } from '../../types/adhub.types'
 
 export function FillTemplateStep() {
@@ -18,6 +18,8 @@ export function FillTemplateStep() {
     setFieldValue,
     selectedReferenceImages,
     toggleReferenceImage,
+    aspectRatio,
+    setAspectRatio,
     setIsGenerating,
     setGenerationResult,
     setError,
@@ -77,7 +79,7 @@ export function FillTemplateStep() {
           templateId: selectedTemplate.id,
           fieldValues,
           selectedReferenceImages,
-          aspectRatio: '1:1',
+          aspectRatio,
           model: 'nano-banana-pro',
         }),
       })
@@ -120,17 +122,56 @@ export function FillTemplateStep() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column: Fields */}
-        <div className="space-y-4">
-          <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-            Template Fields
-          </h3>
+        {/* Left Column: Settings & Fields */}
+        <div className="space-y-6">
+          {/* Aspect Ratio Selector */}
+          <div className="space-y-3">
+            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+              Aspect Ratio
+            </h3>
+            <div className="grid grid-cols-5 gap-2">
+              {ASPECT_RATIO_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setAspectRatio(option.value)}
+                  className={cn(
+                    'flex flex-col items-center p-2 rounded-lg border-2 transition-all text-center',
+                    aspectRatio === option.value
+                      ? 'border-primary bg-primary/5'
+                      : 'border-transparent bg-muted/50 hover:border-primary/30'
+                  )}
+                >
+                  {/* Aspect ratio visual preview */}
+                  <div className="mb-1.5 flex items-center justify-center w-10 h-10">
+                    <div
+                      className={cn(
+                        'bg-foreground/20 rounded-sm',
+                        option.value === '1:1' && 'w-8 h-8',
+                        option.value === '4:5' && 'w-7 h-8',
+                        option.value === '9:16' && 'w-5 h-9',
+                        option.value === '16:9' && 'w-10 h-6',
+                        option.value === '4:3' && 'w-9 h-7'
+                      )}
+                    />
+                  </div>
+                  <span className="text-xs font-medium">{option.label}</span>
+                  <span className="text-[10px] text-muted-foreground">{option.value}</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
-          {fields.length === 0 ? (
-            <p className="text-muted-foreground text-sm py-4">
-              This template has no fields to fill in.
-            </p>
-          ) : (
+          {/* Template Fields */}
+          <div className="space-y-4">
+            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+              Template Fields
+            </h3>
+
+            {fields.length === 0 ? (
+              <p className="text-muted-foreground text-sm py-4">
+                This template has no fields to fill in.
+              </p>
+            ) : (
             fields.map((field) => (
               <div key={field.id}>
                 <label className="text-sm font-medium mb-1.5 block">
@@ -179,7 +220,8 @@ export function FillTemplateStep() {
                 )}
               </div>
             ))
-          )}
+            )}
+          </div>
         </div>
 
         {/* Right Column: Reference Images */}

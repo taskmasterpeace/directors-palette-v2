@@ -15,6 +15,16 @@ import type {
   AdhubGenerationResult,
 } from '../types/adhub.types'
 
+export type AspectRatio = '1:1' | '4:5' | '9:16' | '16:9' | '4:3'
+
+export const ASPECT_RATIO_OPTIONS: { value: AspectRatio; label: string; description: string }[] = [
+  { value: '1:1', label: 'Square', description: 'Instagram post' },
+  { value: '4:5', label: 'Portrait', description: 'Instagram feed' },
+  { value: '9:16', label: 'Story', description: 'Reels, TikTok' },
+  { value: '16:9', label: 'Landscape', description: 'YouTube, Twitter' },
+  { value: '4:3', label: 'Classic', description: 'Traditional' },
+]
+
 interface AdhubState extends AdhubWizardState {
   // Brand management
   brands: AdhubBrand[]
@@ -25,6 +35,9 @@ interface AdhubState extends AdhubWizardState {
 
   // Style management
   styles: AdhubStyle[]
+
+  // Generation settings
+  aspectRatio: AspectRatio
 
   // Actions - Navigation
   setStep: (step: AdhubStep) => void
@@ -53,6 +66,9 @@ interface AdhubState extends AdhubWizardState {
   toggleReferenceImage: (imageUrl: string) => void
   setSelectedReferenceImages: (images: string[]) => void
   clearSelectedReferenceImages: () => void
+
+  // Actions - Generation Settings
+  setAspectRatio: (ratio: AspectRatio) => void
 
   // Actions - Generation
   setIsGenerating: (generating: boolean) => void
@@ -89,6 +105,7 @@ const initialState: Omit<AdhubState,
   'setStyles' | 'selectStyle' |
   'setFieldValue' | 'setFieldValues' | 'clearFieldValues' |
   'toggleReferenceImage' | 'setSelectedReferenceImages' | 'clearSelectedReferenceImages' |
+  'setAspectRatio' |
   'setIsGenerating' | 'setGenerationResult' | 'setError' |
   'reset' | 'resetToStep'
 > = {
@@ -98,6 +115,7 @@ const initialState: Omit<AdhubState,
   selectedStyle: undefined,
   fieldValues: {},
   selectedReferenceImages: [],
+  aspectRatio: '1:1',
   isGenerating: false,
   generationResult: undefined,
   error: undefined,
@@ -182,6 +200,9 @@ export const useAdhubStore = create<AdhubState>()(
 
       clearSelectedReferenceImages: () => set({ selectedReferenceImages: [] }),
 
+      // Generation Settings
+      setAspectRatio: (ratio) => set({ aspectRatio: ratio }),
+
       // Generation
       setIsGenerating: (generating) => set({ isGenerating: generating }),
 
@@ -229,6 +250,7 @@ export const useAdhubStore = create<AdhubState>()(
         selectedStyle: state.selectedStyle,
         fieldValues: state.fieldValues,
         selectedReferenceImages: state.selectedReferenceImages,
+        aspectRatio: state.aspectRatio,
       }),
     }
   )
