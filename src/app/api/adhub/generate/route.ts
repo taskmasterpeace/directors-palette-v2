@@ -168,6 +168,7 @@ export async function POST(request: NextRequest) {
 
       if (!genResponse.ok) {
         const error = await genResponse.json()
+        console.error('Image generation API error:', error)
 
         // Mark ad as failed
         await apiClient
@@ -176,7 +177,9 @@ export async function POST(request: NextRequest) {
           .eq('id', adId)
 
         return NextResponse.json({
-          error: error.error || 'Failed to generate image'
+          error: error.error || 'Failed to generate image',
+          details: error.details || null,
+          suggestions: error.suggestions || null,
         }, { status: genResponse.status })
       }
 

@@ -85,8 +85,11 @@ export function FillTemplateStep() {
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to generate ad')
+        const errorData = await response.json()
+        const errorMessage = errorData.details
+          ? `${errorData.error}: ${errorData.details}`
+          : errorData.error || 'Failed to generate ad'
+        throw new Error(errorMessage)
       }
 
       const result = await response.json()
