@@ -22,7 +22,8 @@ import {
     Workflow,
     Check,
     Circle,
-    ArrowRight
+    ArrowRight,
+    Megaphone
 } from 'lucide-react'
 import { useLayoutStore, TabValue } from '@/store/layout.store'
 import { useSidebarWizardSteps, useNavigateToWizardStep } from '@/features/storybook/hooks/useSidebarWizardSteps'
@@ -126,6 +127,13 @@ const NAV_SECTIONS: NavSection[] = [
                 icon: Music,
                 banner: '/banners/music-lab.webp',
                 tooltipExpanded: 'Music video treatments'
+            },
+            {
+                id: 'adhub',
+                label: 'Adhub',
+                icon: Megaphone,
+                banner: '/banners/adhub.webp',
+                tooltipExpanded: 'Create branded static ads'
             }
         ]
     },

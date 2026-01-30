@@ -63,6 +63,12 @@ const SECTION_CONFIG: Record<TabValue, { banner: string; title: string; subtitle
     subtitle: 'Sync visuals with music',
     helpTip: 'Upload audio, transcribe lyrics, and create visual beat sheets'
   },
+  'adhub': {
+    banner: '/banners/adhub.webp',
+    title: 'Adhub',
+    subtitle: 'Generate branded static ad images',
+    helpTip: 'Create ads using brands, templates, and styles in a guided 5-step wizard'
+  },
   'prompt-tools': {
     banner: '/banners/prompt-tools.webp',
     title: 'Prompt Tools',
