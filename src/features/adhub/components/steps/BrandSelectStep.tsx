@@ -10,6 +10,7 @@ import { cn } from '@/utils/utils'
 import { useAdhubStore } from '../../store/adhub.store'
 import { getClient } from '@/lib/db/client'
 import type { AdhubBrand } from '../../types/adhub.types'
+import { BrandInfoTip, AdhubFlowGuide } from '../InfoTip'
 
 export function BrandSelectStep() {
   const {
@@ -217,8 +218,16 @@ export function BrandSelectStep() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
+      {/* Flow Guide - Collapsible */}
+      <div className="mb-4">
+        <AdhubFlowGuide />
+      </div>
+
       <div className="mb-6">
-        <h2 className="text-2xl font-bold">Select a Brand</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-bold">Select a Brand</h2>
+          <BrandInfoTip />
+        </div>
         <p className="text-muted-foreground mt-1">
           Choose an existing brand or create a new one for your ad.
         </p>

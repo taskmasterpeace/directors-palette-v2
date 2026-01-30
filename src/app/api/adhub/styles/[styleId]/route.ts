@@ -4,29 +4,46 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { AdhubStyleService } from '@/features/adhub/services/adhub-style.service'
 
-const supabase = createClient(
+const serviceClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// Check if user is admin
-async function isAdmin(request: NextRequest): Promise<boolean> {
-  const authHeader = request.headers.get('authorization')
-  if (!authHeader) return false
+// Check if user is admin using cookies
+async function isAdmin(): Promise<boolean> {
+  try {
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+        },
+      }
+    )
 
-  const token = authHeader.replace('Bearer ', '')
-  const { data: { user } } = await supabase.auth.getUser(token)
-  if (!user) return false
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return false
 
-  const { data: adminUser } = await supabase
-    .from('admin_users')
-    .select('id')
-    .eq('user_id', user.id)
-    .single()
+    // Check admin_users table with service role (bypasses RLS)
+    const { data: adminUser } = await serviceClient
+      .from('admin_users')
+      .select('id')
+      .eq('user_id', user.id)
+      .single()
 
-  return !!adminUser
+    return !!adminUser
+  } catch (error) {
+    console.error('Admin check failed:', error)
+    return false
+  }
 }
 
 interface RouteContext {
@@ -53,9 +70,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 // PUT - Update style (admin only)
 export async function PUT(request: NextRequest, context: RouteContext) {
   try {
-    const admin = await isAdmin(request)
+    const admin = await isAdmin()
     if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 })
     }
 
     const { styleId } = await context.params
@@ -78,11 +95,11 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 }
 
 // DELETE - Delete style (admin only)
-export async function DELETE(request: NextRequest, context: RouteContext) {
+export async function DELETE(_request: NextRequest, context: RouteContext) {
   try {
-    const admin = await isAdmin(request)
+    const admin = await isAdmin()
     if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 })
     }
 
     const { styleId } = await context.params
@@ -95,11 +112,11 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 }
 
 // PATCH - Toggle style active status (admin only)
-export async function PATCH(request: NextRequest, context: RouteContext) {
+export async function PATCH(_request: NextRequest, context: RouteContext) {
   try {
-    const admin = await isAdmin(request)
+    const admin = await isAdmin()
     if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 })
     }
 
     const { styleId } = await context.params

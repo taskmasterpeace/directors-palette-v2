@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/utils/utils'
 import { useAdhubStore, ASPECT_RATIO_OPTIONS } from '../../store/adhub.store'
 import type { AdhubBrandImage } from '../../types/adhub.types'
+import { ReferenceImagesInfoTip } from '../InfoTip'
 
 export function FillTemplateStep() {
   const {
@@ -229,9 +230,12 @@ export function FillTemplateStep() {
 
         {/* Right Column: Reference Images */}
         <div className="space-y-4">
-          <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-            Brand Reference Images
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+              Brand Reference Images
+            </h3>
+            <ReferenceImagesInfoTip />
+          </div>
 
           {/* Brand Logo */}
           {selectedBrand?.logoUrl && (

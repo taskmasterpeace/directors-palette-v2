@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch'
 import { cn } from '@/utils/utils'
 import { useAdhubStore } from '../../store/adhub.store'
 import type { AdhubTemplate, AdhubTemplateFieldInput } from '../../types/adhub.types'
+import { TemplateInfoTip } from '../InfoTip'
 
 export function TemplateSelectStep() {
   const {
@@ -189,7 +190,10 @@ export function TemplateSelectStep() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold">Select a Template</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl font-bold">Select a Template</h2>
+          <TemplateInfoTip />
+        </div>
         <p className="text-muted-foreground mt-1">
           Choose a template that defines what fields you&apos;ll fill in for your ad.
         </p>
