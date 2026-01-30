@@ -138,9 +138,12 @@ export class AdhubGenerationService {
         body: JSON.stringify({
           prompt,
           model: request.model || 'nano-banana-pro',
-          aspectRatio: request.aspectRatio || '1:1',
           referenceImages,
-          metadata: {
+          modelSettings: {
+            aspectRatio: request.aspectRatio || '1:1',
+            outputFormat: 'png',
+          },
+          extraMetadata: {
             source: 'adhub',
             adId,
             brandId: request.brandId,

@@ -8,6 +8,7 @@ import { useImageActions } from "../../hooks/useImageActions"
 import { ImageActionMenu } from "./ImageActionMenu"
 import { ModelBadge } from "./ModelBadge"
 import { ReferenceBadge } from "./ReferenceBadge"
+import { SourceBadge } from "./SourceBadge"
 import { MetadataBar } from "./MetadataBar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/utils/utils"
@@ -206,6 +207,9 @@ const ImageCardComponent = ({
 
       {/* Reference badge if exists */}
       <ReferenceBadge reference={image.reference || ''} />
+
+      {/* Source badge (shows which module generated the image) */}
+      <SourceBadge source={image.source} />
 
       {/* Action menu button - always visible on mobile, hover on desktop */}
       {showActions && (

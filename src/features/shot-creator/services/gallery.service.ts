@@ -142,6 +142,14 @@ export class GalleryService {
         // Extract reference from metadata if it exists
         const reference = (metadata as { reference?: string }).reference || undefined
 
+        // Extract source from metadata, default to 'shot-creator'
+        const validSources = ['shot-creator', 'shot-animator', 'layout-annotation', 'adhub', 'storybook', 'storyboard'] as const
+        type ValidSource = typeof validSources[number]
+        const rawSource = (metadata as { source?: string }).source
+        const source: ValidSource = rawSource && validSources.includes(rawSource as ValidSource)
+            ? (rawSource as ValidSource)
+            : 'shot-creator'
+
         // Extract folder info (from database row, not metadata)
         const folderId = (item as GalleryRow & { folder_id?: string | null }).folder_id || undefined
         const folderName = undefined // We don't have folder name in the row, will be populated by store if needed
@@ -164,7 +172,7 @@ export class GalleryService {
             id: item.id,
             url: item.public_url || '',
             prompt: metadata.prompt || '',
-            source: 'shot-creator' as const,
+            source,
             model,
             reference,
             folderId,

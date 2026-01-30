@@ -9,7 +9,7 @@ export interface GeneratedImage {
   id: string
   url: string // Now stores permanent Supabase Storage URL
   prompt: string
-  source: 'shot-creator' | 'shot-animator' | 'layout-annotation'
+  source: 'shot-creator' | 'shot-animator' | 'layout-annotation' | 'adhub' | 'storybook' | 'storyboard'
   originalImage?: string // For edited images, store the original
   editInstructions?: string // For edited images, store the instructions used
   model: string
