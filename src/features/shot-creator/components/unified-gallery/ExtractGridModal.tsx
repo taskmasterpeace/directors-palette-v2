@@ -198,26 +198,29 @@ export function ExtractGridModal({
             for (const cell of selectedCells) {
                 if (!cell.dataUrl) continue
 
-                // Convert data URL to blob and upload
-                const response = await fetch(cell.dataUrl)
-                const blob = await response.blob()
-
-                // Create form data for upload
-                const formData = new FormData()
-                formData.append('file', blob, `extracted-${cell.label.toLowerCase().replace(/\s+/g, '-')}.png`)
-                formData.append('source', 'shot-creator')
-                formData.append('prompt', `Extracted from grid: ${cell.label}`)
-
-                // Upload to storage and save to gallery
-                const uploadResponse = await fetch('/api/gallery/upload', {
+                // Use the save-frame API which accepts base64 data URLs
+                const saveResponse = await fetch('/api/gallery/save-frame', {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        imageData: cell.dataUrl,
+                        metadata: {
+                            row: cell.row,
+                            col: cell.col,
+                            aspectRatio: '16:9',
+                            width: 0, // Will be determined by the image
+                            height: 0,
+                        }
+                    })
                 })
 
-                if (uploadResponse.ok) {
+                if (saveResponse.ok) {
                     savedCount++
                 } else {
-                    console.warn(`Failed to save cell ${cell.index + 1}`)
+                    const errorData = await saveResponse.json().catch(() => ({}))
+                    console.warn(`Failed to save cell ${cell.index + 1}:`, errorData.error || saveResponse.statusText)
                 }
             }
 
