@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
-import { Images, Film, Grid3X3, CheckCircle, AlertCircle, Eye, Download, Info, Clock, RefreshCw } from 'lucide-react'
+import { Images, Film, Grid3X3, CheckCircle, AlertCircle, Eye, Download, Info, Clock, RefreshCw, Layers } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
@@ -62,6 +62,7 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
 
     const [selectedShot, setSelectedShot] = useState<GeneratedShotPrompt | null>(null)
     const [contactSheetOpen, setContactSheetOpen] = useState(false)
+    const [generatingBRollId, setGeneratingBRollId] = useState<number | null>(null)
     const [previewImage, setPreviewImage] = useState<string | null>(null)
 
     const handleOpenContactSheet = (sequence: number) => {
@@ -69,6 +70,55 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
         if (shot) {
             setSelectedShot(shot)
             setContactSheetOpen(true)
+        }
+    }
+
+    const handleGenerateBRollGrid = async (imageUrl: string, sequence: number) => {
+        if (generatingBRollId !== null) return // Prevent concurrent generations
+
+        setGeneratingBRollId(sequence)
+        toast.info('Generating B-Roll Grid...', { description: 'Creating 9 complementary B-roll shots.' })
+
+        try {
+            const brollPrompt = `A 3x3 grid collage of 9 different B-roll shots that complement and extend the provided reference image.
+
+IMPORTANT: Use the provided reference image to match the exact color palette, lighting conditions, and visual setting. All 9 cells should feel like they belong to the same scene.
+
+The grid layout is:
+TOP ROW (Environment): establishing wide shot with no people, foreground detail close-up, background element with depth
+MIDDLE ROW (Details): key object/prop extreme close-up, texture/material macro shot, hands or action insert
+BOTTOM ROW (Atmosphere): ambient background activity, symbolic/thematic element, architectural framing element
+
+Each cell shows a different element from the same visual world - not different angles of the same subject, but different subjects that share the same look and feel. Clear separation between cells with thin borders. Professional cinematography B-roll reference sheet style.
+
+The color temperature, lighting direction, and overall mood must match across all 9 cells, creating a cohesive visual palette.`
+
+            const response = await fetch('/api/generation/image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'nano-banana-pro',
+                    prompt: brollPrompt,
+                    referenceImages: [{ url: imageUrl, weight: 0.8 }],
+                    modelSettings: {
+                        aspectRatio: '16:9',
+                        resolution: '2K'
+                    }
+                })
+            })
+
+            const result = await response.json()
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to generate B-roll grid')
+            }
+
+            toast.success('B-Roll Grid Generated!', { description: "Use 'Extract to Gallery' to split into individual shots." })
+        } catch (error) {
+            console.error('B-Roll grid generation error:', error)
+            toast.error('Generation Failed', { description: error instanceof Error ? error.message : 'An error occurred' })
+        } finally {
+            setGeneratingBRollId(null)
         }
     }
 
@@ -438,15 +488,31 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
                                                         </Button>
                                                     )}
                                                     {generatedImage?.imageUrl && (
-                                                        <Button
-                                                            variant="secondary"
-                                                            size="sm"
-                                                            className="w-full"
-                                                            onClick={() => handleOpenContactSheet(segment.sequence)}
-                                                        >
-                                                            <Grid3X3 className="w-4 h-4 mr-1" />
-                                                            3x3 Sheet
-                                                        </Button>
+                                                        <div className="flex gap-1 w-full">
+                                                            <Button
+                                                                variant="secondary"
+                                                                size="sm"
+                                                                className="flex-1"
+                                                                onClick={() => handleOpenContactSheet(segment.sequence)}
+                                                            >
+                                                                <Grid3X3 className="w-4 h-4 mr-1" />
+                                                                Angles
+                                                            </Button>
+                                                            <Button
+                                                                variant="secondary"
+                                                                size="sm"
+                                                                className="flex-1"
+                                                                disabled={generatingBRollId === segment.sequence}
+                                                                onClick={() => handleGenerateBRollGrid(generatedImage.imageUrl!, segment.sequence)}
+                                                            >
+                                                                {generatingBRollId === segment.sequence ? (
+                                                                    <LoadingSpinner size="sm" className="w-4 h-4 mr-1" />
+                                                                ) : (
+                                                                    <Layers className="w-4 h-4 mr-1" />
+                                                                )}
+                                                                B-Roll
+                                                            </Button>
+                                                        </div>
                                                     )}
                                                     {generatedImage?.imageUrl && (
                                                         <Button
@@ -545,6 +611,7 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
                 onOpenChange={setContactSheetOpen}
                 shot={selectedShot}
             />
+
         </div>
     )
 }

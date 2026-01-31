@@ -23,6 +23,88 @@ export type CinematicAngle =
     | 'detail_low_angle'
     | 'detail_high_angle'
 
+// B-roll shot types for 3x3 grid
+export type BRollShotType =
+    | 'env_establishing'
+    | 'env_foreground'
+    | 'env_background'
+    | 'detail_object'
+    | 'detail_texture'
+    | 'detail_action'
+    | 'atmo_ambient'
+    | 'atmo_symbol'
+    | 'atmo_context'
+
+/**
+ * B-roll prompt patterns for visual continuity
+ * Each includes a description and cinematic hint
+ */
+export const BROLL_PROMPTS: Record<BRollShotType, { description: string; cinematicHint: string }> = {
+    env_establishing: {
+        description: 'the complete environment scene with no people, showing the full space where the action takes place',
+        cinematicHint: 'extreme wide shot, establishing view'
+    },
+    env_foreground: {
+        description: 'a close detail of a foreground element, something in the near space of the scene',
+        cinematicHint: 'close-up, shallow depth of field, foreground emphasis'
+    },
+    env_background: {
+        description: 'a background element with shallow depth of field, showing what lies behind the main action',
+        cinematicHint: 'medium shot, background focus, atmospheric depth'
+    },
+    detail_object: {
+        description: 'an extreme close-up of a key object or prop from the scene',
+        cinematicHint: 'extreme close-up, object hero shot, studio-like focus'
+    },
+    detail_texture: {
+        description: 'a macro shot of a texture or material surface from the environment',
+        cinematicHint: 'macro close-up, tactile detail, surface quality'
+    },
+    detail_action: {
+        description: 'hands or feet in motion, showing a specific action or gesture',
+        cinematicHint: 'close-up, action insert, dynamic motion'
+    },
+    atmo_ambient: {
+        description: 'ambient background activity, people or elements moving in the periphery',
+        cinematicHint: 'medium-wide shot, background action, environmental life'
+    },
+    atmo_symbol: {
+        description: 'a symbolic element that reflects the emotional tone of the scene',
+        cinematicHint: 'close-up, symbolic framing, thematic emphasis'
+    },
+    atmo_context: {
+        description: 'an architectural element framing the space - a doorway, window, or threshold',
+        cinematicHint: 'medium shot, architectural framing, spatial context'
+    }
+}
+
+/**
+ * Default B-roll grid configuration
+ */
+export const DEFAULT_BROLL_CONFIG = {
+    grid_layout: '3x3' as const,
+    rows: {
+        row_1: ['env_establishing', 'env_foreground', 'env_background'] as BRollShotType[],
+        row_2: ['detail_object', 'detail_texture', 'detail_action'] as BRollShotType[],
+        row_3: ['atmo_ambient', 'atmo_symbol', 'atmo_context'] as BRollShotType[]
+    }
+}
+
+/**
+ * Friendly names for B-roll shot types
+ */
+export const BROLL_NAMES: Record<BRollShotType, string> = {
+    env_establishing: 'Establishing',
+    env_foreground: 'Foreground',
+    env_background: 'Background',
+    detail_object: 'Object Detail',
+    detail_texture: 'Texture',
+    detail_action: 'Action Insert',
+    atmo_ambient: 'Ambient Life',
+    atmo_symbol: 'Symbol',
+    atmo_context: 'Context Frame'
+}
+
 /**
  * Preset Style (built-in styles)
  */

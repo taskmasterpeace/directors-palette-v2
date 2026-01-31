@@ -250,24 +250,28 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
     const state = useUnifiedGalleryStore.getState()
     const image = state.images.find(img => img.id === imageIdOrUrl || img.url === imageIdOrUrl)
 
-    if (image) {
-      // Only try to delete from Supabase if the image has a valid database ID (not local-only)
-      // and is not in a failed/pending state that was never persisted
-      const isLocalOnly = image.id.startsWith('img_') && !image.persistence?.isPermanent
+    if (!image) {
+      console.warn('Image not found in local state:', imageIdOrUrl)
+      return false
+    }
 
-      if (!isLocalOnly) {
-        // Delete from Supabase (database and storage)
-        const result = await GalleryService.deleteImage(image.id)
+    // Only try to delete from Supabase if the image has a valid database ID (not local-only)
+    // and is not in a failed/pending state that was never persisted
+    const isLocalOnly = image.id.startsWith('img_') && !image.persistence?.isPermanent
 
-        if (!result.success) {
-          console.warn('Failed to delete image from Supabase:', result.error)
-          // Continue with local removal anyway - the image might have been already deleted
-          // or never existed in Supabase (failed generations)
-        }
+    if (!isLocalOnly) {
+      // Delete from Supabase (database and storage)
+      const result = await GalleryService.deleteImage(image.id)
+
+      if (!result.success) {
+        console.error('Failed to delete image from Supabase:', result.error)
+        // DON'T remove from local state if database delete failed
+        // This prevents the image from "coming back" on refresh
+        return false
       }
     }
 
-    // Always remove from local store
+    // Only remove from local store AFTER successful database deletion
     set((state) => ({
       images: state.images.filter(img =>
         img.id !== imageIdOrUrl && img.url !== imageIdOrUrl

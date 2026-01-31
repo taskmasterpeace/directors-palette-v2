@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import Image from 'next/image'
-import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, ImagePlus, Eraser, Clapperboard } from 'lucide-react'
+import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, Eraser, Clapperboard, Layers } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 import { GeneratedImage } from "../../store/unified-gallery-store"
 import { useIsMobile } from '@/hooks/useMediaQuery'
 import { clipboardManager } from '@/utils/clipboard-manager'
+import { ExtractGridModal } from './ExtractGridModal'
 
 interface FullscreenModalProps {
     fullscreenImage: GeneratedImage | null
@@ -26,6 +27,8 @@ interface FullscreenModalProps {
     isRemovingBackground?: boolean
     onGenerateCinematicGrid?: () => void
     isGeneratingCinematic?: boolean
+    onGenerateBRollGrid?: () => void
+    isGeneratingBRoll?: boolean
     showReferenceNamePrompt: (defaultValue?: string) => Promise<string | null>
 }
 
@@ -47,11 +50,14 @@ function FullscreenModal({
     isRemovingBackground,
     onGenerateCinematicGrid,
     isGeneratingCinematic,
+    onGenerateBRollGrid,
+    isGeneratingBRoll,
     showReferenceNamePrompt
 }: FullscreenModalProps) {
     const { toast } = useToast()
     const isMobile = useIsMobile()
     const [showDetails, setShowDetails] = useState(false)
+    const [extractModalOpen, setExtractModalOpen] = useState(false)
 
     // Keyboard navigation
     useEffect(() => {
@@ -106,7 +112,7 @@ function FullscreenModal({
         }
     }
 
-    if (!fullscreenImage) return null
+    if (!fullscreenImage || !fullscreenImage.url) return null
     return (
         <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-0 md:p-4">
             <div className="relative w-full h-full md:max-w-[90vw] md:h-auto">
@@ -446,61 +452,69 @@ function FullscreenModal({
                                 </Button>
                             </div>
 
-                            {/* Extract Frames - Desktop: Download option */}
-                            {onExtractFrames && (
-                                <div className="hidden md:flex gap-2">
+                            {/* Extract Grid Cells */}
+                            {(onExtractFrames || onExtractFramesToGallery) && (
+                                <div className="flex gap-2">
                                     <Button
                                         size="sm"
                                         variant="outline"
                                         className="w-full text-white border-border"
-                                        onClick={onExtractFrames}
-                                        title="Extract Frames (Download)"
+                                        onClick={() => setExtractModalOpen(true)}
+                                        title="Extract grid cells - download or save to gallery"
                                     >
                                         <Grid3x3 className="w-3.5 h-3.5 mr-1" />
-                                        Extract (Download)
+                                        Extract Cells
                                     </Button>
                                 </div>
                             )}
 
-                            {/* Extract Frames - Both: Add to Gallery option */}
-                            {onExtractFramesToGallery && (
+                            {/* Generate Grids: Cinematic Angles + B-Roll */}
+                            {(onGenerateCinematicGrid || onGenerateBRollGrid) && (
                                 <div className="flex gap-2">
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="w-full text-white border-border"
-                                        onClick={onExtractFramesToGallery}
-                                        title="Extract Frames to Gallery"
-                                    >
-                                        <ImagePlus className="w-3.5 h-3.5 mr-1" />
-                                        Extract to Gallery
-                                    </Button>
-                                </div>
-                            )}
-
-                            {/* Generate 9-Shot Cinematic */}
-                            {onGenerateCinematicGrid && (
-                                <div className="flex gap-2">
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="w-full text-white border-border"
-                                        onClick={onGenerateCinematicGrid}
-                                        disabled={isGeneratingCinematic}
-                                        title="Generate 9-Shot Cinematic Grid"
-                                    >
-                                        {isGeneratingCinematic ? (
-                                            <>
-                                                <LoadingSpinner size="xs" color="current" className="w-3.5 h-3.5 mr-1" />
-                                                Generating...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Clapperboard className="w-3.5 h-3.5 mr-1" />
-                                                9-Shot Cinematic
-                                            </>
-                                        )}
-                                    </Button>
+                                    {onGenerateCinematicGrid && (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="flex-1 text-white border-border"
+                                            onClick={onGenerateCinematicGrid}
+                                            disabled={isGeneratingCinematic}
+                                            title="Generate 9 Camera Angles"
+                                        >
+                                            {isGeneratingCinematic ? (
+                                                <>
+                                                    <LoadingSpinner size="xs" color="current" className="w-3.5 h-3.5 mr-1" />
+                                                    Generating...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Clapperboard className="w-3.5 h-3.5 mr-1" />
+                                                    Angles
+                                                </>
+                                            )}
+                                        </Button>
+                                    )}
+                                    {onGenerateBRollGrid && (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="flex-1 text-white border-border"
+                                            onClick={onGenerateBRollGrid}
+                                            disabled={isGeneratingBRoll}
+                                            title="Generate 9 B-Roll Shots"
+                                        >
+                                            {isGeneratingBRoll ? (
+                                                <>
+                                                    <LoadingSpinner size="xs" color="current" className="w-3.5 h-3.5 mr-1" />
+                                                    Generating...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Layers className="w-3.5 h-3.5 mr-1" />
+                                                    B-Roll
+                                                </>
+                                            )}
+                                        </Button>
+                                    )}
                                 </div>
                             )}
 
@@ -633,6 +647,14 @@ function FullscreenModal({
                     )}
                 </div>
             </div>
+
+            {/* Extract Grid Modal */}
+            <ExtractGridModal
+                open={extractModalOpen}
+                onOpenChange={setExtractModalOpen}
+                gridImageUrl={fullscreenImage?.url || null}
+                sourceImageId={fullscreenImage?.id}
+            />
         </div>
     )
 }

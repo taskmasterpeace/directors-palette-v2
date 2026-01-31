@@ -121,6 +121,7 @@ export function UnifiedImageGallery({
     const [generatingCinematicId, setGeneratingCinematicId] = useState<string | null>(null)
     const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
 
+
     // Handle background removal
     const handleRemoveBackground = useCallback(async (image: GeneratedImage) => {
         if (removingBackgroundId) return // Prevent multiple concurrent removals
@@ -184,8 +185,35 @@ export function UnifiedImageGallery({
             const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://directorspalette.app'
             const cinematicTemplateUrl = `${siteUrl}/templates/cinematic-reference.png`
 
-            // Proper cinematic grid prompt with detailed instructions
-            const cinematicPrompt = `<instruction> Analyze the entire composition of the input image. Identify all key subjects present (whether it's a single person, a group/couple, a vehicle, or a specific object) and their spatial relationship or interaction. Generate a cohesive 3x3 cinematic contact sheet featuring 9 distinct camera shots of exactly these subjects in the same environment. These shots must cover the full range from wide environmental framing to intimate close detail. Adapt the framing to fit the content: if the subject is a group, keep the group together; if the subject is an object, frame the entire object appropriately. Row 1 should consist of three progressively closer environmental/context shots, beginning with a very distant wide view, followed by a full-body view, and then a slightly tighter long-framing view. Row 2 should cover the core subject area: a waist-up framing, a chest-up framing, and a tight facial or frontal framing. Row 3 should focus on intimate details and angle variations: a macro detail shot, a dramatic low-angle upward shot, and a high-angle downward shot. Ensure strict consistency across all 9 frames: identical subjects, identical outfits, identical environment, identical lighting, and coherent scene continuity. Depth of field should become increasingly shallow as the framing moves closer, especially in the final row. </instruction> A professional 3x3 cinematic storyboard grid containing 9 panels, covering the entire visual range from wide environmental shots to macro detail. No labels, text, overlays, icons, or shot-type captions in any frame. Only clean cinematic imagery. Top row: wide environment, full-body, medium-long view. Middle row: waist-up, chest-up, tight face/front framing. Bottom row: macro detail, low-angle, high-angle. All frames must feature consistent photorealistic textures, cinematic color grading, and faithful continuity of subjects and scene. maintain the provided style`
+            // Cinematic 9-shot grid prompt - each cell MUST be a different camera angle
+            const cinematicPrompt = `Create a 3x3 cinematic contact sheet grid showing the SAME SUBJECT from 9 COMPLETELY DIFFERENT camera angles. Each cell must be visually distinct - NO DUPLICATE ANGLES.
+
+CRITICAL: Every single cell must show a DIFFERENT camera position and framing. The subject, lighting, and environment stay consistent, but the CAMERA ANGLE changes dramatically for each cell.
+
+THE 9 REQUIRED SHOTS (in grid order, left to right, top to bottom):
+
+ROW 1 - WIDE SHOTS:
+Cell 1: ESTABLISHING SHOT - Extreme wide, subject tiny in frame, showing full environment
+Cell 2: WIDE SHOT - Full body visible, environmental context, subject clearly seen
+Cell 3: MEDIUM WIDE - Knee-up framing, closer but still showing surroundings
+
+ROW 2 - MEDIUM SHOTS:
+Cell 4: MEDIUM SHOT - Waist-up framing, conversational distance
+Cell 5: MEDIUM CLOSE-UP - Chest and shoulders, more intimate
+Cell 6: CLOSE-UP - Face/front fills most of frame, emotional connection
+
+ROW 3 - DETAIL & ANGLE SHOTS:
+Cell 7: EXTREME CLOSE-UP - Macro detail (eyes, hands, texture)
+Cell 8: LOW ANGLE - Camera looking UP at subject, heroic/powerful perspective
+Cell 9: HIGH ANGLE - Camera looking DOWN at subject, overhead view
+
+RULES:
+- Same subject, same outfit, same environment, same lighting in ALL 9 cells
+- Each cell MUST be a distinctly different shot - if two cells look similar, you've failed
+- Clear thin borders between cells
+- No text, labels, or overlays
+- Cinematic color grading throughout
+- Maintain the visual style of the reference image`
 
             // Send BOTH the user's selected image AND the template image
             const response = await fetch('/api/generation/image', {
@@ -231,6 +259,77 @@ export function UnifiedImageGallery({
             setGeneratingCinematicId(null)
         }
     }, [generatingCinematicId, toast])
+
+    // State for B-Roll generation
+    const [generatingBRollId, setGeneratingBRollId] = useState<string | null>(null)
+
+    // Handle B-Roll Grid generation (same pattern as Cinematic Grid)
+    const handleGenerateBRollGrid = useCallback(async (image: GeneratedImage) => {
+        if (generatingBRollId) return // Prevent multiple concurrent generations
+
+        setGeneratingBRollId(image.id)
+        toast({
+            title: "Generating B-Roll Grid",
+            description: "Creating 9 complementary B-roll shots... This may take a moment."
+        })
+
+        try {
+            // B-Roll prompt - generates 9 different scene elements that match the reference
+            const brollPrompt = `A 3x3 grid collage of 9 different B-roll shots that complement and extend the provided reference image.
+
+IMPORTANT: Use the provided reference image to match the exact color palette, lighting conditions, and visual setting. All 9 cells should feel like they belong to the same scene.
+
+The grid layout is:
+TOP ROW (Environment): establishing wide shot with no people, foreground detail close-up, background element with depth
+MIDDLE ROW (Details): key object/prop extreme close-up, texture/material macro shot, hands or action insert
+BOTTOM ROW (Atmosphere): ambient background activity, symbolic/thematic element, architectural framing element
+
+Each cell shows a different element from the same visual world - not different angles of the same subject, but different subjects that share the same look and feel. Clear separation between cells with thin borders. Professional cinematography B-roll reference sheet style.
+
+The color temperature, lighting direction, and overall mood must match across all 9 cells, creating a cohesive visual palette.`
+
+            const response = await fetch('/api/generation/image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'nano-banana-pro',
+                    prompt: brollPrompt,
+                    referenceImages: [
+                        { url: image.url, weight: 0.8 } // User's selected image as reference
+                    ],
+                    modelSettings: {
+                        aspectRatio: '16:9',
+                        resolution: '2K'
+                    }
+                })
+            })
+
+            const result = await response.json()
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to generate B-roll grid')
+            }
+
+            toast({
+                title: "B-Roll Grid Generated!",
+                description: "Grid saved to gallery. Use 'Extract to Gallery' to split into individual shots."
+            })
+
+            // Refresh gallery to show the new image
+            setTimeout(async () => {
+                await useUnifiedGalleryStore.getState().refreshGallery()
+            }, 1000)
+        } catch (error) {
+            console.error('B-Roll grid generation error:', error)
+            toast({
+                title: "Generation Failed",
+                description: error instanceof Error ? error.message : "An error occurred",
+                variant: "destructive"
+            })
+        } finally {
+            setGeneratingBRollId(null)
+        }
+    }, [generatingBRollId, toast])
 
     // Sidebar collapsed state from store (persisted)
     const isSidebarCollapsed = useUnifiedGalleryStore(state => state.isSidebarCollapsed)
@@ -838,6 +937,8 @@ export function UnifiedImageGallery({
                             isRemovingBackground={removingBackgroundId === fullscreenImage.id}
                             onGenerateCinematicGrid={() => handleGenerateCinematicGrid(fullscreenImage)}
                             isGeneratingCinematic={generatingCinematicId === fullscreenImage.id}
+                            onGenerateBRollGrid={() => handleGenerateBRollGrid(fullscreenImage)}
+                            isGeneratingBRoll={generatingBRollId === fullscreenImage.id}
                             showReferenceNamePrompt={showReferenceNamePrompt}
                         />
                     )}
@@ -851,6 +952,7 @@ export function UnifiedImageGallery({
                         status={downloadProgress?.status || 'downloading'}
                         error={downloadProgress?.error}
                     />
+
                 </Card>
 
                 {/* Bulk Actions Toolbar - floating at bottom of viewport when items selected */}
