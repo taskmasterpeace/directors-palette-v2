@@ -115,6 +115,14 @@ export function UnifiedImageGallery({
     // Mobile detection for responsive scroll behavior
     const isMobile = useIsMobile()
 
+    // Helper to check if an image is a 3x3 grid (for Extract Cells feature)
+    const isGridImage = useCallback((image: GeneratedImage): boolean => {
+        // Check metadata flags
+        if (image.metadata?.isGrid) return true
+        if (image.metadata?.gridType) return true
+        return false
+    }, [])
+
     // Local UI state
     const [isMobileFolderMenuOpen, setIsMobileFolderMenuOpen] = useState(false)
     const [removingBackgroundId, setRemovingBackgroundId] = useState<string | null>(null)
@@ -681,8 +689,8 @@ The color temperature, lighting direction, and overall mood must match across al
                             }}
                             onAddToLibrary={() => onSendToLibrary?.(image.url, image.id)}
                             onMoveToFolder={(folderId) => handleMoveToFolder(image.id, folderId)}
-                            onExtractFrames={() => handleExtractFrames(image.url)}
-                            onExtractFramesToGallery={() => handleExtractFramesToGallery(image.url, image.id)}
+                            onExtractFrames={isGridImage(image) ? () => handleExtractFrames(image.url) : undefined}
+                            onExtractFramesToGallery={isGridImage(image) ? () => handleExtractFramesToGallery(image.url, image.id) : undefined}
                             onRemoveBackground={() => handleRemoveBackground(image)}
                             isRemovingBackground={removingBackgroundId === image.id}
                             currentFolderId={image.folderId}
@@ -824,8 +832,8 @@ The color temperature, lighting direction, and overall mood must match across al
                                                     }
                                                 }}
                                                 onMoveToFolder={(folderId) => handleMoveToFolder(image.id, folderId)}
-                                                onExtractFrames={() => handleExtractFrames(image.url)}
-                                                onExtractFramesToGallery={() => handleExtractFramesToGallery(image.url, image.id)}
+                                                onExtractFrames={isGridImage(image) ? () => handleExtractFrames(image.url) : undefined}
+                                                onExtractFramesToGallery={isGridImage(image) ? () => handleExtractFramesToGallery(image.url, image.id) : undefined}
                                                 onRemoveBackground={() => handleRemoveBackground(image)}
                                                 isRemovingBackground={removingBackgroundId === image.id}
                                                 currentFolderId={image.folderId}
@@ -874,8 +882,8 @@ The color temperature, lighting direction, and overall mood must match across al
                                                         }
                                                     }}
                                                     onMoveToFolder={(folderId) => handleMoveToFolder(image.id, folderId)}
-                                                    onExtractFrames={() => handleExtractFrames(image.url)}
-                                                    onExtractFramesToGallery={() => handleExtractFramesToGallery(image.url, image.id)}
+                                                    onExtractFrames={isGridImage(image) ? () => handleExtractFrames(image.url) : undefined}
+                                                    onExtractFramesToGallery={isGridImage(image) ? () => handleExtractFramesToGallery(image.url, image.id) : undefined}
                                                     onRemoveBackground={() => handleRemoveBackground(image)}
                                                     isRemovingBackground={removingBackgroundId === image.id}
                                                     currentFolderId={image.folderId}
@@ -931,8 +939,8 @@ The color temperature, lighting direction, and overall mood must match across al
                                 }
                             }}
                             onAddToLibrary={onSendToLibrary && fullscreenImage ? () => onSendToLibrary(fullscreenImage.url, fullscreenImage.id) : undefined}
-                            onExtractFrames={() => handleExtractFrames(fullscreenImage.url)}
-                            onExtractFramesToGallery={() => handleExtractFramesToGallery(fullscreenImage.url, fullscreenImage.id)}
+                            onExtractFrames={isGridImage(fullscreenImage) ? () => handleExtractFrames(fullscreenImage.url) : undefined}
+                            onExtractFramesToGallery={isGridImage(fullscreenImage) ? () => handleExtractFramesToGallery(fullscreenImage.url, fullscreenImage.id) : undefined}
                             onRemoveBackground={() => handleRemoveBackground(fullscreenImage)}
                             isRemovingBackground={removingBackgroundId === fullscreenImage.id}
                             onGenerateCinematicGrid={() => handleGenerateCinematicGrid(fullscreenImage)}

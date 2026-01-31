@@ -31,6 +31,8 @@ export interface GeneratedImage {
     creditsUsed: number
     processingTime?: number
     error?: string // Error message if generation failed
+    isGrid?: boolean // True if this is a 3x3 grid image (for extraction)
+    gridType?: 'angles' | 'broll' // Type of grid for context
   }
   createdAt?: string
   timestamp: number // NEW: Timestamp for compatibility with GalleryImage
