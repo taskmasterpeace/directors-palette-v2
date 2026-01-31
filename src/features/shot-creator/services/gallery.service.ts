@@ -169,6 +169,10 @@ export class GalleryService {
         // Extract error message from metadata if generation failed
         const errorMessage = (metadata as { error?: string }).error || undefined
 
+        // Extract grid metadata for Extract Cells feature
+        const isGrid = (metadata as { isGrid?: boolean }).isGrid || undefined
+        const gridType = (metadata as { gridType?: 'angles' | 'broll' }).gridType || undefined
+
         return {
             id: item.id,
             url: item.public_url || '',
@@ -190,6 +194,8 @@ export class GalleryService {
                 createdAt: item.created_at,
                 creditsUsed: 1,
                 error: errorMessage,
+                isGrid,
+                gridType,
             },
             createdAt: item.created_at,
             timestamp: new Date(item.created_at).getTime(),

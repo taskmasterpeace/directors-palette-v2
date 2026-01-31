@@ -237,6 +237,11 @@ RULES:
                     modelSettings: {
                         aspectRatio: '16:9', // Widescreen for cinematic output
                         resolution: '2K'
+                    },
+                    // Mark as grid for Extract Cells feature
+                    extraMetadata: {
+                        isGrid: true,
+                        gridType: 'angles'
                     }
                 })
             })
@@ -308,6 +313,11 @@ The color temperature, lighting direction, and overall mood must match across al
                     modelSettings: {
                         aspectRatio: '16:9',
                         resolution: '2K'
+                    },
+                    // Mark as grid for Extract Cells feature
+                    extraMetadata: {
+                        isGrid: true,
+                        gridType: 'broll'
                     }
                 })
             })
