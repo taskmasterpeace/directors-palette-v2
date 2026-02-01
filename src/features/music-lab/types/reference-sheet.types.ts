@@ -49,7 +49,7 @@ export interface ReferenceSheets {
     locationSheet: LocationSheet
 }
 
-// Default state factory
+// Default state factory - starts with 1 item each, user can add up to 6
 export function createDefaultReferenceSheets(): ReferenceSheets {
     return {
         identityLock: {
@@ -63,9 +63,7 @@ export function createDefaultReferenceSheets(): ReferenceSheets {
             imageUrl: null,
             characterName: '',
             wardrobes: [
-                { id: '1', name: 'Look 1', description: '' },
-                { id: '2', name: 'Look 2', description: '' },
-                { id: '3', name: 'Look 3', description: '' }
+                { id: '1', name: 'Look 1', description: '' }
             ]
         },
         locationSheet: {
@@ -73,9 +71,7 @@ export function createDefaultReferenceSheets(): ReferenceSheets {
             imageUrl: null,
             characterName: '',
             locations: [
-                { id: '1', name: 'Location 1', description: '' },
-                { id: '2', name: 'Location 2', description: '' },
-                { id: '3', name: 'Location 3', description: '' }
+                { id: '1', name: 'Location 1', description: '' }
             ]
         }
     }

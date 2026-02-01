@@ -250,7 +250,7 @@ export function ReferenceSheetGenerator() {
                             <StatusIndicator status={referenceSheets.wardrobeSheet.status} />
                         </div>
                         <CardDescription className="text-xs">
-                            Labeled wardrobe variations (3-6 looks)
+                            {referenceSheets.wardrobeSheet.wardrobes.length} of 6 looks
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -301,14 +301,16 @@ export function ReferenceSheetGenerator() {
                                                     className="h-8 text-sm"
                                                 />
                                             </div>
-                                            <Button
-                                                size="icon"
-                                                variant="ghost"
-                                                className="h-8 w-8 shrink-0"
-                                                onClick={() => handleRemoveWardrobe(wardrobe.id)}
-                                            >
-                                                <Trash2 className="w-3 h-3" />
-                                            </Button>
+                                            {referenceSheets.wardrobeSheet.wardrobes.length > 1 && (
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="h-8 w-8 shrink-0"
+                                                    onClick={() => handleRemoveWardrobe(wardrobe.id)}
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                </Button>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
@@ -360,7 +362,7 @@ export function ReferenceSheetGenerator() {
                             <StatusIndicator status={referenceSheets.locationSheet.status} />
                         </div>
                         <CardDescription className="text-xs">
-                            Labeled location variations (3-6 places)
+                            {referenceSheets.locationSheet.locations.length} of 6 locations
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -411,14 +413,16 @@ export function ReferenceSheetGenerator() {
                                                     className="h-8 text-sm"
                                                 />
                                             </div>
-                                            <Button
-                                                size="icon"
-                                                variant="ghost"
-                                                className="h-8 w-8 shrink-0"
-                                                onClick={() => handleRemoveLocation(location.id)}
-                                            >
-                                                <Trash2 className="w-3 h-3" />
-                                            </Button>
+                                            {referenceSheets.locationSheet.locations.length > 1 && (
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="h-8 w-8 shrink-0"
+                                                    onClick={() => handleRemoveLocation(location.id)}
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                </Button>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
