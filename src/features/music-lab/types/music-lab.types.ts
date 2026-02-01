@@ -166,12 +166,21 @@ export interface MusicLabProject {
 }
 
 // =============================================================================
+// REFERENCE SHEETS (for consistent character/wardrobe/location across video)
+// =============================================================================
+
+import type { ReferenceSheets, WardrobeItem, LocationItem } from './reference-sheet.types'
+
+// =============================================================================
 // STORE STATE
 // =============================================================================
 
 export interface MusicLabState {
     // Current project
     project: Partial<MusicLabProject>
+
+    // Reference sheets for character consistency
+    referenceSheets: ReferenceSheets
 
     // UI state
     isAnalyzing: boolean
@@ -192,4 +201,15 @@ export interface MusicLabState {
     setStatus: (status: MusicLabStatus) => void
     setUseVocalIsolation: (use: boolean) => void
     reset: () => void
+
+    // Reference sheet actions
+    setIdentityLockInput: (artistName: string, artistDescription: string) => void
+    setIdentityLockResult: (imageUrl: string | null, error?: string) => void
+    setIdentityLockStatus: (status: 'idle' | 'generating' | 'complete' | 'error') => void
+    setWardrobeInput: (characterName: string, wardrobes: WardrobeItem[]) => void
+    setWardrobeResult: (imageUrl: string | null, error?: string) => void
+    setWardrobeStatus: (status: 'idle' | 'generating' | 'complete' | 'error') => void
+    setLocationInput: (characterName: string, locations: LocationItem[]) => void
+    setLocationResult: (imageUrl: string | null, error?: string) => void
+    setLocationStatus: (status: 'idle' | 'generating' | 'complete' | 'error') => void
 }

@@ -9,6 +9,7 @@ export * from './types/music-lab.types'
 export * from './types/director.types'
 export * from './types/timeline.types'
 export * from './types/wardrobe.types'
+export * from './types/reference-sheet.types'
 
 // Components - Phase 1A
 export { AudioUploader } from './components/AudioUploader'
@@ -26,6 +27,9 @@ export { ProposalCard } from './components/ProposalCard'
 export { WardrobeSelector } from './components/WardrobeLookbook'
 export { WardrobeLookCard } from './components/WardrobeLookCard'
 
+// Components - Reference Sheets
+export { ReferenceSheetGenerator } from './components/ReferenceSheetGenerator'
+
 // Components - Phase 4
 export { Timeline } from './components/Timeline'
 
@@ -38,6 +42,7 @@ export { useWardrobeStore } from './store/wardrobe.store'
 export { audioAnalysisService } from './services/audio-analysis.service'
 export { directorProposalService } from './services/director-proposal.service'
 export { wardrobeService } from './services/wardrobe.service'
+export { referenceSheetService } from './services/reference-sheet.service'
 
 // Data
 export { DIRECTORS, getDirectorById, getAllDirectors } from './data/directors.data'

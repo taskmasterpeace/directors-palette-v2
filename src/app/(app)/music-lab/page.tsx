@@ -17,7 +17,8 @@ import {
     LocationRequests,
     ArtistNotes,
     SectionConfirmation,
-    useMusicLabStore
+    useMusicLabStore,
+    ReferenceSheetGenerator
 } from '@/features/music-lab'
 import { ProposalList } from '@/features/music-lab/components/ProposalList'
 import { Timeline } from '@/features/music-lab/components/Timeline'
@@ -222,6 +223,15 @@ export default function MusicLabPage() {
                     <section>
                         <h2 className="text-xl font-semibold mb-4">6. Creative Vision</h2>
                         <ArtistNotes />
+                    </section>
+
+                    {/* Reference Sheets */}
+                    <section>
+                        <h2 className="text-xl font-semibold mb-4">7. Reference Sheets</h2>
+                        <p className="text-sm text-muted-foreground mb-4">
+                            Generate visual anchors for character, wardrobe, and location consistency across your video.
+                        </p>
+                        <ReferenceSheetGenerator />
                     </section>
 
                     {/* Analyze Button */}
