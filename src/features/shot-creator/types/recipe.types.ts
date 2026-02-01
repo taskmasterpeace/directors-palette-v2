@@ -682,6 +682,99 @@ Professional character sheet suitable for animation/illustration reference.`,
     categoryId: 'characters',
   },
 
+  // Character Turnaround Sheet - Professional model turnaround (community prompt)
+  {
+    name: 'Character Turnaround',
+    description: 'Professional model turnaround sheet with 4 full-body views and 3 portrait close-ups - perfect identity consistency',
+    recipeNote: 'Attach a reference image of your character. Creates a clean turnaround sheet ideal for animation/production reference.',
+    stages: [{
+      id: 'stage_turnaround_0',
+      order: 0,
+      template: `Create a professional character reference sheet based strictly on the uploaded reference image.
+
+Use a clean, neutral plain background and present the sheet as a technical model turnaround while matching the exact visual style of the reference (same realism level, rendering approach, texture, color treatment, and overall aesthetic).
+
+Arrange the composition into two horizontal rows:
+
+TOP ROW (4 full-body standing views, placed side-by-side):
+- Front view
+- Left profile view (facing left)
+- Right profile view (facing right)
+- Back view
+
+BOTTOM ROW (3 highly detailed close-up portraits, aligned beneath the full-body row):
+- Front portrait
+- Left profile portrait (facing left)
+- Right profile portrait (facing right)
+
+CRITICAL REQUIREMENTS:
+- Maintain PERFECT identity consistency across every panel
+- Keep the subject in a relaxed A-pose
+- Consistent scale and alignment between views
+- Accurate anatomy and clear silhouette
+- Even spacing and clean panel separation
+- Uniform framing and consistent head height across the full-body lineup
+- Consistent facial scale across the portraits
+- Lighting must be consistent across all panels (same direction, intensity, and softness)
+- Natural, controlled shadows that preserve detail without dramatic mood shifts
+
+Output a crisp, print-ready reference sheet look with sharp details.
+
+<<STYLE:select(photographic,cinematic,3D render,anime,cartoon,concept art,illustrated,Pixar-style,Disney-style)>> style treatment.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '16:9',
+    isQuickAccess: true,
+    quickAccessLabel: 'Turnaround',
+    categoryId: 'characters',
+  },
+
+  // Character Turnaround from Description - No reference image needed
+  {
+    name: 'Character Turnaround (From Description)',
+    description: 'Professional model turnaround from text description only - no reference photo needed',
+    recipeNote: 'Describe your character in detail. Creates 4 full-body views and 3 portrait close-ups with perfect identity consistency.',
+    stages: [{
+      id: 'stage_turnaround_desc_0',
+      order: 0,
+      template: `Create a professional character reference sheet of <<CHARACTER_DESCRIPTION:text!>>.
+
+Use a clean, neutral plain background and present the sheet as a technical model turnaround in a <<STYLE:select(photographic,cinematic,3D render,anime,cartoon,concept art,illustrated,Pixar-style,Disney-style)>> style.
+
+Arrange the composition into two horizontal rows:
+
+TOP ROW (4 full-body standing views, placed side-by-side):
+- Front view
+- Left profile view (facing left)
+- Right profile view (facing right)
+- Back view
+
+BOTTOM ROW (3 highly detailed close-up portraits, aligned beneath the full-body row):
+- Front portrait
+- Left profile portrait (facing left)
+- Right profile portrait (facing right)
+
+CRITICAL REQUIREMENTS:
+- Maintain PERFECT identity consistency across every panel
+- Keep the subject in a relaxed A-pose
+- Consistent scale and alignment between views
+- Accurate anatomy and clear silhouette
+- Even spacing and clean panel separation
+- Uniform framing and consistent head height across the full-body lineup
+- Consistent facial scale across the portraits
+- Lighting must be consistent across all panels (same direction, intensity, and softness)
+- Natural, controlled shadows that preserve detail without dramatic mood shifts
+
+Output a crisp, print-ready reference sheet look with sharp details.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '16:9',
+    isQuickAccess: false,
+    categoryId: 'characters',
+  },
+
   // Character Sheet from Description - No photo required
   {
     name: 'Character Sheet (From Description)',

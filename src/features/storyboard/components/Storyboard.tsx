@@ -26,6 +26,8 @@ import { StoryDirectorService } from "../services/story-director.service"
 import { StoryboardHelp } from "./StoryboardHelp"
 import { ShotLab } from "./ShotLab/ShotLab"
 import { DirectorProposalDialog } from "./DirectorProposalDialog"
+import { ContactSheetModal } from "./contact-sheet/ContactSheetModal"
+import { BRollSheetModal } from "./broll-sheet/BRollSheetModal"
 
 import { DirectorPitch } from "../types"
 
@@ -47,7 +49,16 @@ export function Storyboard() {
         locations,
         currentStyleGuide,
         selectedPresetStyle,
-        generatedImages
+        generatedImages,
+        // Contact Sheet Modal
+        contactSheetModalOpen,
+        contactSheetShotId,
+        closeContactSheetModal,
+        // B-Roll Modal
+        brollModalOpen,
+        brollShotSequence,
+        brollReferenceUrl,
+        closeBRollModal
     } = useStoryboardStore()
 
     // Calculate tab completion states
@@ -94,6 +105,11 @@ export function Storyboard() {
 
     // Derived active shot for Shot Lab
     const activeShot = activeLabShotSequence !== null ? generatedPrompts.find(s => s.sequence === activeLabShotSequence) : null
+
+    // Derived shot for Contact Sheet Modal (contactSheetShotId is the sequence number as string)
+    const contactSheetShot = contactSheetShotId !== null
+        ? generatedPrompts.find(s => s.sequence === Number(contactSheetShotId))
+        : null
 
     const [directorOpen, setDirectorOpen] = useState(false)
     const [selectedDirectorId, setSelectedDirectorId] = useState<string | null>(null)
@@ -363,6 +379,21 @@ export function Storyboard() {
                     onUpdateShot={(updated) => updateGeneratedShot(updated.sequence, updated)}
                 />
             )}
+
+            {/* Contact Sheet (Angles) Modal - accessible from shot breakdown */}
+            <ContactSheetModal
+                open={contactSheetModalOpen}
+                onOpenChange={(open) => !open && closeContactSheetModal()}
+                shot={contactSheetShot || null}
+            />
+
+            {/* B-Roll Sheet Modal - accessible from shot breakdown */}
+            <BRollSheetModal
+                open={brollModalOpen}
+                onOpenChange={(open) => !open && closeBRollModal()}
+                referenceImageUrl={brollReferenceUrl}
+                shotNumber={brollShotSequence || undefined}
+            />
         </div>
     )
 }

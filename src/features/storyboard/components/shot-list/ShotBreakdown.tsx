@@ -25,7 +25,9 @@ import {
     CheckCircle,
     MessageSquare,
     Star,
-    FlaskConical
+    FlaskConical,
+    Grid3X3,
+    Film
 } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Input } from '@/components/ui/input'
@@ -48,6 +50,8 @@ interface EditableShotProps {
     onNoteChange?: (sequence: number, note: string) => void
     onMetadataChange?: (sequence: number, metadata: Partial<ShotMetadata>) => void
     onRefine?: (sequence: number) => void
+    onGetAngles?: (sequence: number) => void
+    onGetBRoll?: (sequence: number) => void
 }
 
 function EditableShot({
@@ -60,7 +64,9 @@ function EditableShot({
     onGeneratedPromptChange,
     onNoteChange,
     onMetadataChange,
-    onRefine
+    onRefine,
+    onGetAngles,
+    onGetBRoll
 }: EditableShotProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [editedPrompt, setEditedPrompt] = useState(generatedPrompt?.prompt || segment.text)
@@ -255,7 +261,31 @@ function EditableShot({
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex gap-2 w-full sm:w-auto">
+                                    <div className="flex gap-2 w-full sm:w-auto flex-wrap">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="flex-1 sm:flex-none border-blue-500/20 text-blue-500 hover:bg-blue-500/10"
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                onGetAngles?.(segment.sequence)
+                                            }}
+                                        >
+                                            <Grid3X3 className="w-4 h-4 mr-2" />
+                                            Angles
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="flex-1 sm:flex-none border-amber-500/20 text-amber-500 hover:bg-amber-500/10"
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                onGetBRoll?.(segment.sequence)
+                                            }}
+                                        >
+                                            <Film className="w-4 h-4 mr-2" />
+                                            B-Roll
+                                        </Button>
                                         <Button
                                             size="sm"
                                             variant="outline"
@@ -266,7 +296,7 @@ function EditableShot({
                                             }}
                                         >
                                             <FlaskConical className="w-4 h-4 mr-2" />
-                                            Refine Shot
+                                            Refine
                                         </Button>
                                         <Button
                                             size="sm"
@@ -444,7 +474,10 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         chapters,
         shotNotes,
         isPreviewCollapsed,
+        generatedImages,
         openShotLab,
+        openContactSheetModal,
+        openBRollModal,
         setBreakdownResult,
         addGeneratedPrompts,
         updateGeneratedPrompt,
@@ -457,6 +490,22 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
 
     const handleRefine = (sequence: number) => {
         openShotLab(sequence)
+    }
+
+    const handleGetAngles = (sequence: number) => {
+        // Open contact sheet modal with the shot
+        openContactSheetModal(String(sequence))
+    }
+
+    const handleGetBRoll = (sequence: number) => {
+        // Get the generated image URL for this shot
+        const imageData = generatedImages[sequence]
+        if (imageData?.url) {
+            openBRollModal(sequence, imageData.url)
+        } else {
+            // If no image, try to use character reference or alert user
+            console.warn('No generated image for shot', sequence)
+        }
     }
 
     const _handleUpdateLabShot = (updated: GeneratedShotPrompt) => {
@@ -862,6 +911,8 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                                     onGeneratedPromptChange={handleGeneratedPromptChange}
                                     onNoteChange={setShotNote}
                                     onMetadataChange={handleMetadataChange}
+                                    onGetAngles={handleGetAngles}
+                                    onGetBRoll={handleGetBRoll}
                                     onRefine={handleRefine}
                                 />
                             ))}

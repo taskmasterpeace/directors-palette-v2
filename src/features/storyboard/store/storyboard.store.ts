@@ -63,6 +63,9 @@ export interface StoryboardStore {
     // ---- B-Roll State ----
     brollShots: BRollShot[]
     loadingBroll: boolean
+    brollModalOpen: boolean
+    brollShotSequence: number | null
+    brollReferenceUrl: string | null
 
     // ---- Contact Sheet State ----
     contactSheetModalOpen: boolean
@@ -176,6 +179,8 @@ export interface StoryboardStore {
     updateBRollShot: (id: string, updates: Partial<BRollShot>) => void
     deleteBRollShot: (id: string) => void
     setLoadingBroll: (loading: boolean) => void
+    openBRollModal: (sequence: number, referenceUrl: string) => void
+    closeBRollModal: () => void
 
     // ---- Contact Sheet Actions ----
     openContactSheetModal: (shotId: string) => void
@@ -277,6 +282,9 @@ const initialState = {
 
     brollShots: [],
     loadingBroll: false,
+    brollModalOpen: false,
+    brollShotSequence: null,
+    brollReferenceUrl: null,
 
     contactSheetModalOpen: false,
     contactSheetShotId: null,
@@ -486,6 +494,16 @@ export const useStoryboardStore = create<StoryboardStore>()(
                 brollShots: state.brollShots.filter((s) => s.id !== id)
             })),
             setLoadingBroll: (loading) => set({ loadingBroll: loading }),
+            openBRollModal: (sequence, referenceUrl) => set({
+                brollModalOpen: true,
+                brollShotSequence: sequence,
+                brollReferenceUrl: referenceUrl
+            }),
+            closeBRollModal: () => set({
+                brollModalOpen: false,
+                brollShotSequence: null,
+                brollReferenceUrl: null
+            }),
 
             // ---- Contact Sheet Actions ----
             openContactSheetModal: (shotId) => set({
