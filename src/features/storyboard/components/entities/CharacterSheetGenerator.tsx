@@ -6,13 +6,48 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Users, Wand2, CheckCircle, AlertCircle, Image as ImageIcon } from 'lucide-react'
+import { Progress } from '@/components/ui/progress'
+import { Users, Wand2, CheckCircle, AlertCircle, Image as ImageIcon, UserCircle, Layers } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { PromptEditor, type PromptVariable } from '../shared/PromptEditor'
 import { characterSheetService, DEFAULT_SIDE1_PROMPT, DEFAULT_SIDE2_PROMPT } from '../../services/character-sheet.service'
 import { useStoryboardStore } from '../../store'
+import { toast } from 'sonner'
 
 type GenerationStatus = 'idle' | 'generating' | 'completed' | 'failed'
+
+// Build turnaround prompt from character description
+function buildTurnaroundPrompt(characterDescription: string, style: string = 'photographic'): string {
+    return `Create a professional character reference sheet of ${characterDescription}.
+
+Use a clean, neutral plain background and present the sheet as a technical model turnaround in a ${style} style.
+
+Arrange the composition into two horizontal rows:
+
+TOP ROW (4 full-body standing views, placed side-by-side):
+- Front view
+- Left profile view (facing left)
+- Right profile view (facing right)
+- Back view
+
+BOTTOM ROW (3 highly detailed close-up portraits, aligned beneath the full-body row):
+- Front portrait
+- Left profile portrait (facing left)
+- Right profile portrait (facing right)
+
+CRITICAL REQUIREMENTS:
+- Maintain PERFECT identity consistency across every panel
+- Keep the subject in a relaxed A-pose
+- Consistent scale and alignment between views
+- Accurate anatomy and clear silhouette
+- Even spacing and clean panel separation
+- Uniform framing and consistent head height across the full-body lineup
+- Consistent facial scale across the portraits
+- Lighting must be consistent across all panels (same direction, intensity, and softness)
+- Natural, controlled shadows that preserve detail without dramatic mood shifts
+
+Output a crisp, print-ready reference sheet look with sharp details.`
+}
 
 export function CharacterSheetGenerator() {
     const { characters, styleGuides, currentStyleGuide, updateCharacter } = useStoryboardStore()
@@ -25,6 +60,12 @@ export function CharacterSheetGenerator() {
     const [side1GalleryId, setSide1GalleryId] = useState<string | null>(null)
     const [side2GalleryId, setSide2GalleryId] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
+
+    // Batch generation state
+    const [isBatchGenerating, setIsBatchGenerating] = useState(false)
+    const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 })
+    const [batchResults, setBatchResults] = useState<{ name: string; success: boolean; error?: string }[]>([])
+    const [selectedBatchStyle, setSelectedBatchStyle] = useState('photographic')
 
     // Get characters that have reference images
     const charactersWithRef = useMemo(() => {
@@ -119,6 +160,73 @@ export function CharacterSheetGenerator() {
         updateCharacter(selectedCharacterId, { metadata })
     }
 
+    // Batch generate turnaround sheets for all characters
+    const handleBatchGenerate = async () => {
+        if (characters.length === 0) {
+            toast.error('No characters found', { description: 'Extract characters from your story first.' })
+            return
+        }
+
+        setIsBatchGenerating(true)
+        setBatchProgress({ current: 0, total: characters.length })
+        setBatchResults([])
+
+        const results: { name: string; success: boolean; error?: string }[] = []
+
+        for (let i = 0; i < characters.length; i++) {
+            const char = characters[i]
+            setBatchProgress({ current: i + 1, total: characters.length })
+
+            try {
+                // Build the turnaround prompt using character description
+                const description = char.description || `${char.name}, a person with no additional details`
+                const prompt = buildTurnaroundPrompt(description, selectedBatchStyle)
+
+                // Call the API to generate
+                const response = await fetch('/api/generate/image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt,
+                        model: 'nano-banana-pro',
+                        modelSettings: {
+                            aspectRatio: '16:9',
+                            resolution: '2K'
+                        },
+                        metadata: {
+                            source: 'storyboard',
+                            characterName: char.name,
+                            type: 'character-turnaround'
+                        }
+                    })
+                })
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}))
+                    throw new Error(errorData.error || `HTTP ${response.status}`)
+                }
+
+                results.push({ name: char.name, success: true })
+                toast.success(`Generated turnaround for ${char.name}`)
+            } catch (err) {
+                const errorMsg = err instanceof Error ? err.message : 'Generation failed'
+                results.push({ name: char.name, success: false, error: errorMsg })
+                toast.error(`Failed: ${char.name}`, { description: errorMsg })
+            }
+
+            // Small delay between requests to avoid rate limiting
+            await new Promise(r => setTimeout(r, 1000))
+        }
+
+        setBatchResults(results)
+        setIsBatchGenerating(false)
+
+        const successCount = results.filter(r => r.success).length
+        toast.info(`Batch generation complete`, {
+            description: `${successCount}/${characters.length} turnarounds generated`
+        })
+    }
+
     const canGenerate = selectedCharacterId && (selectedStyle || currentStyleGuide)
 
     return (
@@ -133,6 +241,93 @@ export function CharacterSheetGenerator() {
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+                {/* Batch Generate All Turnarounds */}
+                <div className="p-4 rounded-lg border border-primary/30 bg-primary/5 space-y-3">
+                    <div className="flex items-center gap-2">
+                        <Layers className="w-5 h-5 text-primary" />
+                        <Label className="text-sm font-medium">Quick: Generate All Turnarounds</Label>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        Automatically generate a turnaround sheet for each extracted character using their descriptions.
+                        No reference images needed.
+                    </p>
+
+                    {/* Style selector for batch */}
+                    <div className="flex items-center gap-2">
+                        <Label className="text-xs">Style:</Label>
+                        <Select value={selectedBatchStyle} onValueChange={setSelectedBatchStyle}>
+                            <SelectTrigger className="w-40 h-8">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="photographic">Photographic</SelectItem>
+                                <SelectItem value="cinematic">Cinematic</SelectItem>
+                                <SelectItem value="3D render">3D Render</SelectItem>
+                                <SelectItem value="anime">Anime</SelectItem>
+                                <SelectItem value="cartoon">Cartoon</SelectItem>
+                                <SelectItem value="concept art">Concept Art</SelectItem>
+                                <SelectItem value="illustrated">Illustrated</SelectItem>
+                                <SelectItem value="Pixar-style">Pixar-style</SelectItem>
+                                <SelectItem value="Disney-style">Disney-style</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Progress indicator */}
+                    {isBatchGenerating && (
+                        <div className="space-y-2">
+                            <Progress value={(batchProgress.current / batchProgress.total) * 100} />
+                            <p className="text-xs text-center text-muted-foreground">
+                                Generating {batchProgress.current} of {batchProgress.total}...
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Results summary */}
+                    {batchResults.length > 0 && !isBatchGenerating && (
+                        <div className="flex flex-wrap gap-1">
+                            {batchResults.map((result, i) => (
+                                <Badge
+                                    key={i}
+                                    variant={result.success ? "secondary" : "destructive"}
+                                    className="text-xs"
+                                >
+                                    {result.success ? <CheckCircle className="w-3 h-3 mr-1" /> : <AlertCircle className="w-3 h-3 mr-1" />}
+                                    {result.name}
+                                </Badge>
+                            ))}
+                        </div>
+                    )}
+
+                    <Button
+                        onClick={handleBatchGenerate}
+                        disabled={isBatchGenerating || characters.length === 0}
+                        size="sm"
+                        className="w-full"
+                    >
+                        {isBatchGenerating ? (
+                            <>
+                                <LoadingSpinner size="sm" color="current" className="mr-2" />
+                                Generating...
+                            </>
+                        ) : (
+                            <>
+                                <UserCircle className="w-4 h-4 mr-2" />
+                                Generate All ({characters.length} characters)
+                            </>
+                        )}
+                    </Button>
+                </div>
+
+                <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">Or select individual</span>
+                    </div>
+                </div>
+
                 {/* Character Selector */}
                 <div className="space-y-2">
                     <Label>Select Character</Label>

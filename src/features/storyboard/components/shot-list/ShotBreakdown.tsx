@@ -500,8 +500,8 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
     const handleGetBRoll = (sequence: number) => {
         // Get the generated image URL for this shot
         const imageData = generatedImages[sequence]
-        if (imageData?.url) {
-            openBRollModal(sequence, imageData.url)
+        if (imageData?.imageUrl) {
+            openBRollModal(sequence, imageData.imageUrl)
         } else {
             // If no image, try to use character reference or alert user
             console.warn('No generated image for shot', sequence)
