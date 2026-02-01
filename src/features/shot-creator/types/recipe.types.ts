@@ -1541,17 +1541,19 @@ No text labels. Black grid lines between cells.`,
     categoryId: 'characters',
   },
 
-  // Wardrobe Variations - Character in different outfits (user specifies each)
+  // Wardrobe Sheet - Character in different outfits with labels
   {
-    name: 'Wardrobe Variations',
-    description: 'Generate 6 variations of your character in different outfits you specify',
-    recipeNote: 'Attach your character reference. Specify what outfit/look goes in each cell, or leave blank for random luxury outfits.',
+    name: 'Wardrobe Sheet',
+    description: 'Generate a labeled wardrobe reference sheet with 6 outfit variations',
+    recipeNote: 'Attach your character reference. Name each outfit (e.g., "Street Look", "Club Fit", "Formal"). Labels appear below each cell.',
     stages: [{
       id: 'stage_0',
       order: 0,
       template: `Analyze the character in the reference image. This is @<<CHARACTER_NAME:name!>>.
 
-Create a 2x3 grid (2 rows, 3 columns) showing this EXACT same character in 6 different outfits.
+Create a LABELED 2x3 wardrobe reference sheet (2 rows, 3 columns) showing this EXACT same character in 6 different outfits.
+
+HEADER: "WARDROBE - @<<CHARACTER_NAME:name!>>" at the top of the sheet
 
 CRITICAL - MAINTAIN ACROSS ALL 6 CELLS:
 - Identical face, facial features, expression style
@@ -1564,18 +1566,22 @@ EACH CELL LAYOUT:
 - <<BACKGROUND_COLOR:select(white,light gray,soft blue,cream,pale pink,mint green)!>> background
 - Full body view showing complete outfit
 - Clean, production-ready framing
+- TEXT LABEL below each cell with the outfit name
 
-THE 6 OUTFITS (Row 1, Col 1 → Row 2, Col 3):
-Row 1, Col 1: <<OUTFIT_1:text>>
-Row 1, Col 2: <<OUTFIT_2:text>>
-Row 1, Col 3: <<OUTFIT_3:text>>
-Row 2, Col 1: <<OUTFIT_4:text>>
-Row 2, Col 2: <<OUTFIT_5:text>>
-Row 2, Col 3: <<OUTFIT_6:text>>
+THE 6 OUTFITS WITH LABELS:
+Cell 1 (Row 1, Col 1): <<OUTFIT_1_NAME:name!>> - <<OUTFIT_1_DESC:text>>
+Cell 2 (Row 1, Col 2): <<OUTFIT_2_NAME:name!>> - <<OUTFIT_2_DESC:text>>
+Cell 3 (Row 1, Col 3): <<OUTFIT_3_NAME:name!>> - <<OUTFIT_3_DESC:text>>
+Cell 4 (Row 2, Col 1): <<OUTFIT_4_NAME:name!>> - <<OUTFIT_4_DESC:text>>
+Cell 5 (Row 2, Col 2): <<OUTFIT_5_NAME:name!>> - <<OUTFIT_5_DESC:text>>
+Cell 6 (Row 2, Col 3): <<OUTFIT_6_NAME:name!>> - <<OUTFIT_6_DESC:text>>
 
-If any outfit field is empty, generate a creative luxury outfit variation.
+LABEL FORMAT: Clean sans-serif font, centered below each cell
+Example labels: "STREET", "CLUB", "FORMAL", "CASUAL", "PERFORMANCE", "LUXURY"
+
+If description is empty, generate a creative luxury outfit that contrasts with the others.
 Each outfit should be COMPLETELY DIFFERENT in style, silhouette, and color palette.
-No text labels - clean imagery only.`,
+Black separator lines between cells for easy extraction.`,
       fields: [],
       referenceImages: [
         {
@@ -1589,6 +1595,58 @@ No text labels - clean imagery only.`,
     suggestedAspectRatio: '16:9',
     isQuickAccess: true,
     quickAccessLabel: 'Wardrobe',
+    categoryId: 'characters',
+  },
+
+  // Location Sheet - Character across different shot locations (for music videos)
+  {
+    name: 'Location Sheet',
+    description: 'Plan your music video locations - same character in 6 different environments with labels',
+    recipeNote: 'Attach your character reference. Define each location (e.g., "Rooftop - Night", "Club Interior", "Street - Golden Hour"). Perfect for music video shot planning.',
+    stages: [{
+      id: 'stage_0',
+      order: 0,
+      template: `Analyze the character in the reference image. This is @<<CHARACTER_NAME:name!>>.
+
+Create a LABELED 2x3 location reference sheet (2 rows, 3 columns) showing this EXACT same character in 6 different environments/locations.
+
+HEADER: "LOCATIONS - @<<CHARACTER_NAME:name!>>" at the top of the sheet
+
+CRITICAL - MAINTAIN ACROSS ALL 6 CELLS:
+- Identical face and facial features
+- Same character identity
+- Consistent art style and rendering quality
+- Character should feel natural in each environment
+
+EACH CELL LAYOUT:
+- Full environment establishing the location
+- Character positioned naturally within the scene
+- Cinematic framing (medium or wide shot to show environment)
+- TEXT LABEL below each cell with the location name
+
+THE 6 LOCATIONS WITH LABELS:
+Cell 1 (Row 1, Col 1): <<LOCATION_1_NAME:name!>> - <<LOCATION_1_DESC:text>>
+Cell 2 (Row 1, Col 2): <<LOCATION_2_NAME:name!>> - <<LOCATION_2_DESC:text>>
+Cell 3 (Row 1, Col 3): <<LOCATION_3_NAME:name!>> - <<LOCATION_3_DESC:text>>
+Cell 4 (Row 2, Col 1): <<LOCATION_4_NAME:name!>> - <<LOCATION_4_DESC:text>>
+Cell 5 (Row 2, Col 2): <<LOCATION_5_NAME:name!>> - <<LOCATION_5_DESC:text>>
+Cell 6 (Row 2, Col 3): <<LOCATION_6_NAME:name!>> - <<LOCATION_6_DESC:text>>
+
+WARDROBE FOR THIS SHEET: <<WARDROBE:text>>
+(Apply same outfit across all locations, or specify "varies" if different per cell)
+
+LABEL FORMAT: Clean sans-serif font, centered below each cell
+Example labels: "ROOFTOP", "CLUB", "STREET", "STUDIO", "CAR", "BEACH"
+
+LIGHTING/TIME: Each location should have appropriate lighting for the setting.
+Black separator lines between cells for easy extraction.
+Cinematic quality - these are music video shot references.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '16:9',
+    isQuickAccess: true,
+    quickAccessLabel: 'Locations',
     categoryId: 'characters',
   },
 
