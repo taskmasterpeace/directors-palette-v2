@@ -38,6 +38,8 @@ export interface ShotCreatorGeneration {
     category?: Category
 }
 
+export type QuickMode = 'none' | 'style-transfer' | 'character-sheet'
+
 export interface ShotCreatorSettings {
     aspectRatio: string
     resolution: string
@@ -49,6 +51,8 @@ export interface ShotCreatorSettings {
     disableBracketSyntax?: boolean // Treat [...] as literal text, not options
     disableWildcardSyntax?: boolean // Treat _word_ as literal text, not wildcard
     enableAnchorTransform?: boolean // Enable Anchor Transform: use first ref image to transform remaining images
+    // Quick mode for one-click workflows
+    quickMode?: QuickMode
     // Nano-Banana-Pro specific settings
     safetyFilterLevel?: 'block_low_and_above' | 'block_medium_and_above' | 'block_only_high'
     // Output settings

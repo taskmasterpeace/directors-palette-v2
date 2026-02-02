@@ -151,7 +151,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     } = autocomplete
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
 
-    // Can generate: either regular mode (prompt + refs) OR recipe mode (valid recipe)
+    // Can generate: either regular mode (prompt + refs) OR recipe mode (valid recipe) OR quick mode
     const canGenerate = React.useMemo(() => {
         const activeRecipe = getActiveRecipe()
         if (activeRecipe) {
@@ -161,9 +161,15 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 activeRecipe.stages.some(s => (s.referenceImages?.length || 0) > 0)
             return (validation?.isValid ?? false) && hasRefs
         }
+
+        // Style transfer quick mode: can generate with just a reference image
+        if (shotCreatorSettings.quickMode === 'style-transfer' && shotCreatorReferenceImages.length > 0) {
+            return true
+        }
+
         // Regular mode: needs prompt only (reference images are optional for all models)
         return shotCreatorPrompt.length > 0
-    }, [shotCreatorPrompt, shotCreatorReferenceImages, getActiveRecipe, getActiveValidation])
+    }, [shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings.quickMode, getActiveRecipe, getActiveValidation])
 
     // Get references grouped by category from library items
     const getReferencesGroupedByCategory = useCallback(() => {
@@ -355,6 +361,46 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     // Handle generation - processes recipe at generation time (no separate Apply step)
     const handleGenerate = useCallback(async () => {
         if (!canGenerate || isGenerating) return
+
+        // ===== STYLE TRANSFER QUICK MODE =====
+        // Check if style-transfer quick mode is active
+        const isStyleTransferMode = shotCreatorSettings.quickMode === 'style-transfer'
+
+        if (isStyleTransferMode && shotCreatorReferenceImages.length > 0) {
+            const hasMultipleImages = shotCreatorReferenceImages.length >= 2
+
+            if (hasMultipleImages) {
+                // Use anchor transform for 2+ images
+                // First image is style anchor, rest get transformed
+                console.log('🎨 Style Transfer: Anchor mode with', shotCreatorReferenceImages.length, 'images')
+
+                // Temporarily enable anchor transform and let the anchor logic handle it
+                updateSettings({ enableAnchorTransform: true })
+                // Continue to anchor transform logic below
+            } else {
+                // Single image: prepend style instruction to prompt and generate normally
+                console.log('🎨 Style Transfer: Single reference mode')
+
+                const styledPrompt = shotCreatorPrompt
+                    ? `In the style of the reference image: ${shotCreatorPrompt}`
+                    : 'Generate an image in the style of the reference image'
+
+                const model = shotCreatorSettings.model || 'nano-banana'
+                const referenceUrls = shotCreatorReferenceImages
+                    .map(ref => ref.url || ref.preview)
+                    .filter((url): url is string => Boolean(url))
+                const modelSettings = buildModelSettings()
+
+                await generateImage(
+                    model,
+                    styledPrompt,
+                    referenceUrls,
+                    modelSettings,
+                    undefined
+                )
+                return
+            }
+        }
 
         // ===== ANCHOR TRANSFORM MODE (Toggle Button) =====
         // Check if Anchor Transform is enabled via toggle

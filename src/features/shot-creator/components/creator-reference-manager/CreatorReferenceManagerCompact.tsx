@@ -4,6 +4,8 @@ import { Clipboard, Plus, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import { useShotCreatorStore } from "../../store/shot-creator.store"
 import { useReferenceImageManager } from "../../hooks/useReferenceImageManager"
+import { useShotCreatorSettings } from "../../hooks"
+import { QuickModeIcons, QuickModePanel } from "../quick-modes"
 
 interface CreatorReferenceManagerCompactProps {
     editingMode?: boolean
@@ -13,6 +15,7 @@ interface CreatorReferenceManagerCompactProps {
 
 const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: CreatorReferenceManagerCompactProps) => {
     const { shotCreatorReferenceImages } = useShotCreatorStore()
+    const { settings } = useShotCreatorSettings()
 
     const {
         visibleSlots,
@@ -20,6 +23,8 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
         handlePasteImage,
         removeShotCreatorImage
     } = useReferenceImageManager(maxImages)
+
+    const quickMode = settings.quickMode || 'none'
 
     // For text-only models (maxImages === 0), show simplified UI
     if (maxImages === 0) {
@@ -37,19 +42,28 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
 
     return (
         <div className="space-y-2">
-            {/* Model selector and Paste on same row */}
+            {/* Model selector, Quick Mode Icons, and Paste on same row */}
             <div className="flex items-center justify-between gap-2">
                 {modelSelector}
-                <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => handlePasteImage(e)}
-                    className="h-7 px-2 border-border hover:border-border"
-                >
-                    <Clipboard className="h-3 w-3 mr-1" />
-                    Paste
-                </Button>
+                <div className="flex items-center gap-1">
+                    <QuickModeIcons />
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => handlePasteImage(e)}
+                        className="h-7 px-2 border-border hover:border-border"
+                    >
+                        <Clipboard className="h-3 w-3 mr-1" />
+                        Paste
+                    </Button>
+                </div>
             </div>
+
+            {/* Quick mode panel (only when active) */}
+            {quickMode !== 'none' && (
+                <QuickModePanel mode={quickMode} />
+            )}
+
             {/* Horizontal compact layout */}
             <div className="flex gap-2">
                 {Array.from({ length: visibleSlots }, (_, index: number) => index).map((index: number) => {

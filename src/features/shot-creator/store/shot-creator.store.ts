@@ -14,6 +14,7 @@ export const DEFAULT_SETTINGS: ShotCreatorSettings = {
     disableBracketSyntax: false,
     disableWildcardSyntax: false,
     enableAnchorTransform: false, // Default: Anchor Transform off
+    quickMode: 'none', // Default: no quick mode
 };
 export interface ShotCreatorStore {
     // ---- State ----
