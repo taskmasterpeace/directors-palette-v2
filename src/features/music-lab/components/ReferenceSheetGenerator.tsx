@@ -34,7 +34,7 @@ export function ReferenceSheetGenerator() {
     } = useMusicLabStore()
 
     // Local state for editing
-    const [expandedCard, setExpandedCard] = useState<'identity' | 'wardrobe' | 'location' | null>(null)
+    const [expandedCard, _setExpandedCard] = useState<'identity' | 'wardrobe' | 'location' | null>(null)
 
     // Identity Lock handlers
     const handleGenerateIdentityLock = async () => {

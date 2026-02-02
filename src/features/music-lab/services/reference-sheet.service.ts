@@ -33,7 +33,7 @@ class ReferenceSheetService {
      * otherwise uses "Character Turnaround (From Description)"
      */
     async generateIdentityLock(
-        artistName: string,
+        _artistName: string,
         artistDescription: string,
         referenceImageUrl?: string,
         style: string = 'photographic'
