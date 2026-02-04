@@ -123,17 +123,24 @@ export function ReferenceImageCard({
                     className="min-h-[240px] md:min-h-[160px] md:aspect-square rounded-xl bg-gradient-to-br from-card to-background touch-manipulation"
                 />
             ) : (
-            <div
-                className="relative rounded-xl overflow-hidden transition-all border-2 border-primary bg-primary/15 shadow-lg shadow-primary/20"
+            <DropZone
+                ref={dropZoneRef}
+                accept={IMAGE_ACCEPT}
+                multiple={true}
+                onDropAccepted={handleDropAccepted}
+                noClick={true}
+                className="relative rounded-xl overflow-hidden transition-all border-2 border-primary bg-primary/15 shadow-lg shadow-primary/20 !border-solid !p-0 !min-h-0"
             >
                 {image && (
                     <>
+                        {/* Clickable overlay for fullscreen - ensures click works */}
                         <div
                             className={cn(
-                                "w-full relative",
+                                "w-full relative cursor-pointer",
                                 !useNativeAspectRatio && "aspect-square"
                             )}
                             style={useNativeAspectRatio ? getAspectRatioStyle(image.detectedAspectRatio) || { aspectRatio: '16 / 9' } : undefined}
+                            onClick={() => setFullscreenImage(shotImageToLibraryReference(image))}
                         >
                             <Image
                                 src={image.preview}
@@ -141,10 +148,9 @@ export function ReferenceImageCard({
                                 fill
                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 53vw"
                                 className={cn(
-                                    "w-full h-full cursor-pointer",
+                                    "w-full h-full",
                                     useNativeAspectRatio ? "object-contain bg-black/20" : "object-cover"
                                 )}
-                                onClick={() => setFullscreenImage(shotImageToLibraryReference(image))}
                             />
 
                             {/* Anchor Transform badges */}
@@ -254,7 +260,7 @@ export function ReferenceImageCard({
                         </Button>
                     </>
                 )}
-            </div>
+            </DropZone>
             )}
 
             {/* Action buttons */}
