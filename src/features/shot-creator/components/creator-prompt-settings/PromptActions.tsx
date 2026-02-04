@@ -561,6 +561,10 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         const activeRecipe = getActiveRecipe()
         const validation = getActiveValidation()
 
+        console.log('[PromptActions] Checking for active recipe...')
+        console.log('[PromptActions] activeRecipe:', activeRecipe ? activeRecipe.name : 'NONE')
+        console.log('[PromptActions] quickMode:', shotCreatorSettings.quickMode)
+
         // Recipe mode: process recipe fields and generate
         if (activeRecipe) {
             // Validate recipe fields
@@ -657,6 +661,11 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             // Build full prompt (pipe-separated for multi-stage execution)
             const fullPrompt = result.prompts.join(' | ')
 
+            console.log('[PromptActions] 🎬 RECIPE MODE - Using recipe prompt:')
+            console.log('[PromptActions] Recipe:', activeRecipe.name)
+            console.log('[PromptActions] Prompt (first 500 chars):', fullPrompt.substring(0, 500))
+            console.log('[PromptActions] Reference images:', allRefs.length)
+
             // Set stage-specific reference images for pipe chaining
             if (result.stageReferenceImages && result.stageReferenceImages.length > 0) {
                 setStageReferenceImages(result.stageReferenceImages)
@@ -667,6 +676,8 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             // Build model settings
             const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-2512' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5'
             const modelSettings = buildModelSettings()
+
+            toast.info(`Generating with recipe: ${activeRecipe.name}`)
 
             // Generate with recipe data
             await generateImage(
@@ -682,6 +693,9 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         }
 
         // Regular mode: use prompt and refs as-is
+        console.log('[PromptActions] 📝 REGULAR MODE - Using prompt from textarea')
+        console.log('[PromptActions] No active recipe, using shotCreatorPrompt:', shotCreatorPrompt.substring(0, 200))
+
         const model = shotCreatorSettings.model || 'nano-banana'
         const referenceUrls = shotCreatorReferenceImages
             .map(ref => ref.url || ref.preview)

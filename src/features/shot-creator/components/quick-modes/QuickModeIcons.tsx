@@ -12,6 +12,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { toast } from 'sonner'
 
 const CHARACTER_TURNAROUND_RECIPE_NAME = 'Character Turnaround'
 
@@ -29,11 +30,19 @@ export function QuickModeIcons() {
     // Character sheet mode activates the Character Turnaround recipe
     if (newMode === 'character-sheet') {
       // Find the Character Turnaround recipe by name
+      console.log('[QuickModeIcons] Looking for recipe:', CHARACTER_TURNAROUND_RECIPE_NAME)
+      console.log('[QuickModeIcons] Available recipes:', recipes.map(r => r.name))
+
       const turnaroundRecipe = recipes.find(
         (r) => r.name === CHARACTER_TURNAROUND_RECIPE_NAME
       )
       if (turnaroundRecipe) {
+        console.log('[QuickModeIcons] Found recipe, activating:', turnaroundRecipe.id)
         setActiveRecipe(turnaroundRecipe.id)
+        toast.success('Character Turnaround recipe activated')
+      } else {
+        console.error('[QuickModeIcons] Recipe not found! Please refresh the page.')
+        toast.error('Character Turnaround recipe not found. Please refresh the page.')
       }
     } else if (mode === 'character-sheet' && newMode === 'none') {
       // Turning off character sheet mode - clear recipe
