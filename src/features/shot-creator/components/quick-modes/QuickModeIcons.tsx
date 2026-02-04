@@ -13,7 +13,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
-const CHARACTER_TURNAROUND_RECIPE_NAME = 'Character Turnaround'
+const CHARACTER_TURNAROUND_RECIPE_NAME = 'Character Sheet'
 
 export function QuickModeIcons() {
   const { settings, updateSettings } = useShotCreatorSettings()

@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Key, Copy, RefreshCw, Activity, Clock, Zap, AlertCircle, Check, Eye, EyeOff } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface ApiKey {
   id: string
@@ -231,15 +232,28 @@ export function ApiUsageTab() {
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
             </Button>
-            <Button
-              onClick={() => setCreateDialogOpen(true)}
-              size="sm"
-              className="bg-amber-500 text-black hover:bg-amber-600"
-              disabled={myKeys.some(k => k.isActive)}
-            >
-              <Key className="w-4 h-4 mr-2" />
-              Create Key
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button
+                      onClick={() => setCreateDialogOpen(true)}
+                      size="sm"
+                      className="bg-amber-500 text-black hover:bg-amber-600"
+                      disabled={myKeys.some(k => k.isActive)}
+                    >
+                      <Key className="w-4 h-4 mr-2" />
+                      Create Key
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {myKeys.some(k => k.isActive) && (
+                  <TooltipContent>
+                    <p>You already have an active API key. Revoke it first to create a new one.</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </CardHeader>
         <CardContent>

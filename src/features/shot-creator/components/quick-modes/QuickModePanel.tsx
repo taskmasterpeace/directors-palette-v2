@@ -10,11 +10,11 @@ interface QuickModePanelProps {
 const QUICK_MODE_CONTENT = {
   'style-transfer': {
     title: 'Style Transfer',
-    description: 'Image 1 = style, Image 2 = subject (optional)',
+    description: 'First image sets the style, additional images get transformed',
   },
   'character-sheet': {
     title: 'Character Sheet',
-    description: 'Upload reference for 7-panel turnaround',
+    description: 'Creates a multi-view character reference sheet from your image',
   },
 }
 
