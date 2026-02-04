@@ -416,9 +416,46 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 // First image is style anchor, rest get transformed
                 console.log('🎨 Style Transfer: Anchor mode with', shotCreatorReferenceImages.length, 'images')
 
-                // Temporarily enable anchor transform and let the anchor logic handle it
-                updateSettings({ enableAnchorTransform: true })
-                // Continue to anchor transform logic below
+                // Handle anchor transform directly here (can't rely on state update being immediate)
+                const [anchorRef, ...inputRefs] = shotCreatorReferenceImages
+                const anchorUrl = anchorRef.url || anchorRef.preview
+
+                if (!anchorUrl) {
+                    toast.error('The first reference image (style anchor) is not valid')
+                    return
+                }
+
+                const inputUrls = inputRefs
+                    .map(ref => ref.url || ref.preview)
+                    .filter((url): url is string => Boolean(url))
+
+                if (inputUrls.length === 0) {
+                    toast.error('No valid input images to transform')
+                    return
+                }
+
+                const model = shotCreatorSettings.model || 'nano-banana'
+                const modelSettings = buildModelSettings()
+
+                // Style transfer prompt: transform inputs into anchor's style
+                const styleTransferPrompt = shotCreatorPrompt.trim()
+                    ? `In the exact visual style of the first reference image: ${shotCreatorPrompt}`
+                    : 'Transform this image into the exact visual style of the first reference image. Maintain the subject and composition but apply the style, color palette, rendering approach, and aesthetic of the style reference.'
+
+                // Generate one image per input, each using anchor + that input
+                for (let i = 0; i < inputUrls.length; i++) {
+                    const inputUrl = inputUrls[i]
+                    toast.info(`Transforming image ${i + 1} of ${inputUrls.length}...`)
+
+                    await generateImage(
+                        model,
+                        styleTransferPrompt,
+                        [anchorUrl, inputUrl], // Anchor first, then input
+                        modelSettings,
+                        undefined
+                    )
+                }
+                return
             } else {
                 // Single image: Generate 3x3 Style Sheet
                 console.log('🎨 Style Sheet: Generating 3x3 style guide')
