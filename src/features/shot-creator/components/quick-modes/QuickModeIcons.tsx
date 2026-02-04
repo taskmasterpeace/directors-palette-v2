@@ -27,7 +27,7 @@ export function QuickModeIcons() {
     if (newMode === 'character-sheet') {
       toast.success('Character Sheet mode ON - Add an image OR type a description, then Generate')
     } else if (newMode === 'style-transfer') {
-      toast.success('Style Transfer mode ON - Add reference image(s), then Generate')
+      toast.success('Style Sheet mode ON - Add reference image + type "Style Name:" (e.g. "Noir Grit:")')
     }
   }
 
@@ -48,7 +48,7 @@ export function QuickModeIcons() {
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            <p>Style Transfer</p>
+            <p>Style Sheet</p>
           </TooltipContent>
         </Tooltip>
 

@@ -404,7 +404,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     const handleGenerate = useCallback(async () => {
         if (!canGenerate || isGenerating) return
 
-        // ===== STYLE TRANSFER QUICK MODE =====
+        // ===== STYLE SHEET QUICK MODE =====
         // Check if style-transfer quick mode is active
         const isStyleTransferMode = shotCreatorSettings.quickMode === 'style-transfer'
 
@@ -420,24 +420,72 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 updateSettings({ enableAnchorTransform: true })
                 // Continue to anchor transform logic below
             } else {
-                // Single image: prepend style instruction to prompt and generate normally
-                console.log('🎨 Style Transfer: Single reference mode')
+                // Single image: Generate 3x3 Style Sheet
+                console.log('🎨 Style Sheet: Generating 3x3 style guide')
 
-                const styledPrompt = shotCreatorPrompt
-                    ? `In the style of the reference image: ${shotCreatorPrompt}`
-                    : 'Generate an image in the style of the reference image'
+                // Parse style name from prompt (e.g., "Noir Grit:" or "Oxford Style:")
+                const promptText = shotCreatorPrompt.trim()
+                const styleNameMatch = promptText.match(/^([^:]+):/i)
+                const styleName = styleNameMatch ? styleNameMatch[1].trim() : 'Extracted Style'
+                const additionalNotes = styleNameMatch
+                    ? promptText.slice(styleNameMatch[0].length).trim()
+                    : promptText
 
-                const model = shotCreatorSettings.model || 'nano-banana'
+                const styleSheetPrompt = `Create a visual style guide titled "${styleName} – Style Guide" as a 9-image grid (3 rows × 3 columns).
+
+LAYOUT: Display "${styleName}" as a title/header at the top of the image.
+Separate each of the 9 cells with SOLID BLACK LINES (4-6 pixels wide) for clean extraction.
+
+CRITICAL STYLE EXTRACTION (match the reference image EXACTLY):
+- Color palette, contrast, saturation, and color temperature
+- Rendering approach (painterly, photorealistic, illustrated, 3D, anime, claymation, etc.)
+- Line quality and edge treatment (sharp vs soft, clean vs textured)
+- Lighting style, shadow behavior, and mood
+- Texture and material rendering quality
+- Camera language (depth of field, lens feel, framing approach)
+
+CRITICAL: Generate ALL NEW characters and subjects. DO NOT replicate, copy, or reference any specific people, characters, or subjects from the reference image. This style guide demonstrates the STYLE can be applied to entirely different subjects.
+
+THE 9 TILES (3×3 grid):
+
+ROW 1 – PEOPLE & FACES:
+1. PORTRAIT CLOSE-UP: Dramatic headshot of a NEW person (not from reference), demonstrating how this style renders skin texture, facial features, emotion, and portrait lighting
+2. MEDIUM SHOT: Different person in relaxed 3/4 pose, showing body proportions, clothing materials, and natural posture in this style
+3. GROUP INTERACTION: 2-3 diverse people (different ethnicities, ages) in conversation or activity, showing how style handles multiple figures and interpersonal dynamics
+
+ROW 2 – ACTION & DETAIL:
+4. DYNAMIC ACTION: Figure in energetic motion (running, dancing, fighting), showing movement, energy, and how the style handles blur and dynamism
+5. EMOTIONAL MOMENT: Expressive close-up capturing strong emotion (joy, grief, determination, wonder), testing emotional range
+6. HANDS & FINE DETAIL: Close-up of hands interacting with an object (holding cup, turning page, crafting), showing fine detail rendering
+
+ROW 3 – WORLD & MATERIALS:
+7. INTERIOR SCENE: Atmospheric indoor environment with props, furniture, and lighting (cozy room, dramatic hall, cluttered workshop)
+8. EXTERIOR WIDE: Landscape or cityscape establishing shot showing depth, atmosphere, scale, and environmental mood
+9. MATERIAL STUDY: Still life of varied materials (metal, glass, fabric, wood, liquid, organic) demonstrating how the style renders different surfaces
+
+${additionalNotes ? `\nADDITIONAL STYLE NOTES: ${additionalNotes}` : ''}
+
+Every tile must feel like it belongs to the SAME visual world. Consistent style language across all 9 cells.
+NO style drift between tiles. NO text labels inside the image cells. Black grid lines between all cells.
+Title "${styleName}" displayed prominently at top.`
+
+                const model = shotCreatorSettings.model || 'nano-banana-pro'
                 const referenceUrls = shotCreatorReferenceImages
                     .map(ref => ref.url || ref.preview)
                     .filter((url): url is string => Boolean(url))
                 const modelSettings = buildModelSettings()
 
+                // Force 1:1 aspect ratio for 3x3 grid
+                const styleSheetSettings = {
+                    ...modelSettings,
+                    aspectRatio: '1:1'
+                }
+
                 await generateImage(
                     model,
-                    styledPrompt,
+                    styleSheetPrompt,
                     referenceUrls,
-                    modelSettings,
+                    styleSheetSettings,
                     undefined
                 )
                 return

@@ -9,8 +9,8 @@ interface QuickModePanelProps {
 
 const QUICK_MODE_CONTENT = {
   'style-transfer': {
-    title: 'Style Transfer',
-    description: 'First image sets the style, additional images get transformed',
+    title: 'Style Sheet',
+    description: 'Add style reference image, type "Style Name:" to label it (e.g. "Noir Grit:") → Generates 3×3 style guide',
   },
   'character-sheet': {
     title: 'Character Sheet',
