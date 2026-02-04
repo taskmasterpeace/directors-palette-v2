@@ -206,7 +206,8 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         const item = libraryItems.find(item =>
             item.tags?.some(t => t.toLowerCase() === tagWithoutAt.toLowerCase())
         )
-        return item?.url || null
+        // Use preview if available, otherwise use imageData (base64)
+        return item?.preview || item?.imageData || null
     }, [libraryItems])
 
     // Filter autocomplete suggestions with category grouping
@@ -258,17 +259,19 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             item.tags?.some(tag => tag.toLowerCase() === tagWithoutAt.toLowerCase())
         )
 
-        if (matchingItem && matchingItem.url) {
+        // Get the image URL (prefer preview, fallback to imageData)
+        const imageUrl = matchingItem?.preview || matchingItem?.imageData
+        if (matchingItem && imageUrl) {
             // Check if not already added
             const isAlreadyAdded = shotCreatorReferenceImages.some(
-                refImg => refImg.url === matchingItem.url
+                refImg => refImg.url === imageUrl
             )
 
             if (!isAlreadyAdded) {
                 const newRef: ShotCreatorReferenceImage = {
                     id: `ref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    preview: matchingItem.url,
-                    url: matchingItem.url,
+                    preview: imageUrl,
+                    url: imageUrl,
                     tags: matchingItem.tags || [],
                     persistentTag: tagWithoutAt
                 }
