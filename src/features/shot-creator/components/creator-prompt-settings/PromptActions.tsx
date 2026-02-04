@@ -483,7 +483,9 @@ Output a crisp, print-ready reference sheet look with sharp details.`
                 console.log('👤 Character Sheet: Using description mode')
                 console.log('👤 Character description:', shotCreatorPrompt)
 
-                const turnaroundFromDescPrompt = `Create a professional character reference sheet of ${shotCreatorPrompt}.
+                const turnaroundFromDescPrompt = `Create a professional character reference sheet: ${shotCreatorPrompt}
+
+IMPORTANT: Match the EXACT visual style specified in the description above (photorealistic, hand drawn, anime, cartoon, oil painting, 3D render, etc.). Every panel must use this same style consistently.
 
 Use a clean, neutral plain background and present the sheet as a technical model turnaround.
 
@@ -501,6 +503,7 @@ BOTTOM ROW (3 highly detailed close-up portraits, aligned beneath the full-body 
 - Right profile portrait (facing right)
 
 CRITICAL REQUIREMENTS:
+- Maintain the EXACT visual style from the description across ALL panels
 - Maintain PERFECT identity consistency across every panel
 - Keep the subject in a relaxed A-pose
 - Consistent scale and alignment between views
@@ -511,7 +514,7 @@ CRITICAL REQUIREMENTS:
 - Lighting must be consistent across all panels (same direction, intensity, and softness)
 - Natural, controlled shadows that preserve detail without dramatic mood shifts
 
-Output a crisp, print-ready reference sheet look with sharp details.`
+Output a crisp, print-ready reference sheet with the exact style specified.`
 
                 toast.info('Creating character turnaround from description...')
 
