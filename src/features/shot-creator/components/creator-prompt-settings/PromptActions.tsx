@@ -421,10 +421,18 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 ? promptText.slice(styleNameMatch[0].length).trim()
                 : promptText
 
-            const styleSheetPrompt = `Create a visual style guide titled "${styleName} – Style Guide" as a 9-image grid (3 rows × 3 columns).
+            const styleSheetPrompt = `Create a visual style guide as a 9-image grid (3 rows × 3 columns).
 
-LAYOUT: Display "${styleName}" as a title/header at the top of the image.
-Separate each of the 9 cells with SOLID BLACK LINES (4-6 pixels wide) for clean extraction.
+TITLE BANNER (CRITICAL - DO NOT CUT OFF):
+- Reserve a dedicated horizontal banner area at the TOP of the image
+- Display the COMPLETE text "${styleName}" in large, readable font
+- The title must be FULLY VISIBLE - no cropping, no cutting off letters
+- Center the title text horizontally in the banner
+- Use a clean background behind the title for legibility
+
+GRID LAYOUT:
+Below the title banner, arrange 9 cells in a 3×3 grid.
+Separate each cell with SOLID BLACK LINES (4-6 pixels wide) for clean extraction.
 
 CRITICAL STYLE EXTRACTION (match the reference image(s) EXACTLY):
 Analyze ALL provided reference images collectively to extract the unified visual style:
@@ -457,8 +465,8 @@ ROW 3 – WORLD & MATERIALS:
 ${additionalNotes ? `\nADDITIONAL STYLE NOTES: ${additionalNotes}` : ''}
 
 Every tile must feel like it belongs to the SAME visual world. Consistent style language across all 9 cells.
-NO style drift between tiles. NO text labels inside the image cells. Black grid lines between all cells.
-Title "${styleName}" displayed prominently at top.`
+NO style drift between tiles. NO text labels inside the 9 image cells. Black grid lines between all cells.
+REMINDER: Title "${styleName}" must be COMPLETE and FULLY READABLE at the top - never cropped or cut off.`
 
             const model = shotCreatorSettings.model || 'nano-banana-pro'
             const referenceUrls = shotCreatorReferenceImages
