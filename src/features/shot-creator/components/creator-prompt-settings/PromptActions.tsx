@@ -483,11 +483,47 @@ Output a crisp, print-ready reference sheet look with sharp details.`
                 console.log('👤 Character Sheet: Using description mode')
                 console.log('👤 Character description:', shotCreatorPrompt)
 
-                const turnaroundFromDescPrompt = `Create a professional character reference sheet: ${shotCreatorPrompt}
+                // Parse character name from prompt
+                // Supports: "Marcus: description", "Marcus, description", "description named Marcus", "description called Marcus"
+                let characterName = ''
+                let characterDescription = shotCreatorPrompt.trim()
+
+                // Check for "Name: description" or "Name, description" format
+                const colonMatch = shotCreatorPrompt.match(/^([A-Z][a-zA-Z]+)\s*[:]\s*(.+)$/s)
+                const commaMatch = shotCreatorPrompt.match(/^([A-Z][a-zA-Z]+)\s*[,]\s*(.+)$/s)
+                // Check for "description named/called Name" format
+                const namedMatch = shotCreatorPrompt.match(/(.+?)\s+(?:named|called)\s+([A-Z][a-zA-Z]+)(?:\s|$|,)/i)
+
+                if (colonMatch) {
+                    characterName = colonMatch[1]
+                    characterDescription = colonMatch[2].trim()
+                } else if (commaMatch) {
+                    characterName = commaMatch[1]
+                    characterDescription = commaMatch[2].trim()
+                } else if (namedMatch) {
+                    characterName = namedMatch[2]
+                    characterDescription = namedMatch[1].trim()
+                }
+
+                // Format name for @tag (lowercase, underscores for spaces)
+                const nameTag = characterName
+                    ? `@${characterName.toLowerCase().replace(/\s+/g, '_')}`
+                    : ''
+
+                console.log('👤 Parsed name:', characterName || '(none)')
+                console.log('👤 Name tag:', nameTag || '(none)')
+                console.log('👤 Description:', characterDescription)
+
+                const characterHeader = characterName
+                    ? `CHARACTER: ${nameTag} (${characterName})\n\n`
+                    : ''
+
+                const turnaroundFromDescPrompt = `${characterHeader}Create a professional character reference sheet: ${characterDescription}
 
 IMPORTANT: Match the EXACT visual style specified in the description above (photorealistic, hand drawn, anime, cartoon, oil painting, 3D render, etc.). Every panel must use this same style consistently.
 
 Use a clean, neutral plain background and present the sheet as a technical model turnaround.
+${characterName ? `\nLabel the sheet with the character name: "${characterName}"` : ''}
 
 Arrange the composition into two horizontal rows:
 
@@ -516,7 +552,10 @@ CRITICAL REQUIREMENTS:
 
 Output a crisp, print-ready reference sheet with the exact style specified.`
 
-                toast.info('Creating character turnaround from description...')
+                const toastMsg = characterName
+                    ? `Creating character sheet for ${characterName}...`
+                    : 'Creating character turnaround from description...'
+                toast.info(toastMsg)
 
                 await generateImage(
                     model,
