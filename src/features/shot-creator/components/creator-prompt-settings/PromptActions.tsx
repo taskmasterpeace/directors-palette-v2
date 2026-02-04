@@ -413,15 +413,15 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             // Whether 1 image or multiple, they all inform the 3x3 Style Sheet generation
             console.log('🎨 Style Sheet: Generating 3x3 style guide with', shotCreatorReferenceImages.length, 'reference(s)')
 
-                // Parse style name from prompt (e.g., "Noir Grit:" or "Oxford Style:")
-                const promptText = shotCreatorPrompt.trim()
-                const styleNameMatch = promptText.match(/^([^:]+):/i)
-                const styleName = styleNameMatch ? styleNameMatch[1].trim() : 'Extracted Style'
-                const additionalNotes = styleNameMatch
-                    ? promptText.slice(styleNameMatch[0].length).trim()
-                    : promptText
+            // Parse style name from prompt (e.g., "Noir Grit:" or "Oxford Style:")
+            const promptText = shotCreatorPrompt.trim()
+            const styleNameMatch = promptText.match(/^([^:]+):/i)
+            const styleName = styleNameMatch ? styleNameMatch[1].trim() : 'Extracted Style'
+            const additionalNotes = styleNameMatch
+                ? promptText.slice(styleNameMatch[0].length).trim()
+                : promptText
 
-                const styleSheetPrompt = `Create a visual style guide titled "${styleName} – Style Guide" as a 9-image grid (3 rows × 3 columns).
+            const styleSheetPrompt = `Create a visual style guide titled "${styleName} – Style Guide" as a 9-image grid (3 rows × 3 columns).
 
 LAYOUT: Display "${styleName}" as a title/header at the top of the image.
 Separate each of the 9 cells with SOLID BLACK LINES (4-6 pixels wide) for clean extraction.
@@ -460,27 +460,26 @@ Every tile must feel like it belongs to the SAME visual world. Consistent style 
 NO style drift between tiles. NO text labels inside the image cells. Black grid lines between all cells.
 Title "${styleName}" displayed prominently at top.`
 
-                const model = shotCreatorSettings.model || 'nano-banana-pro'
-                const referenceUrls = shotCreatorReferenceImages
-                    .map(ref => ref.url || ref.preview)
-                    .filter((url): url is string => Boolean(url))
-                const modelSettings = buildModelSettings()
+            const model = shotCreatorSettings.model || 'nano-banana-pro'
+            const referenceUrls = shotCreatorReferenceImages
+                .map(ref => ref.url || ref.preview)
+                .filter((url): url is string => Boolean(url))
+            const modelSettings = buildModelSettings()
 
-                // Force 1:1 aspect ratio for 3x3 grid
-                const styleSheetSettings = {
-                    ...modelSettings,
-                    aspectRatio: '1:1'
-                }
-
-                await generateImage(
-                    model,
-                    styleSheetPrompt,
-                    referenceUrls,
-                    styleSheetSettings,
-                    undefined
-                )
-                return
+            // Force 1:1 aspect ratio for 3x3 grid
+            const styleSheetSettings = {
+                ...modelSettings,
+                aspectRatio: '1:1'
             }
+
+            await generateImage(
+                model,
+                styleSheetPrompt,
+                referenceUrls,
+                styleSheetSettings,
+                undefined
+            )
+            return
         }
 
         // ===== CHARACTER SHEET QUICK MODE =====
