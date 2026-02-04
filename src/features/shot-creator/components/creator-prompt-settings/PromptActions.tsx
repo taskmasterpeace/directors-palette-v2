@@ -200,6 +200,15 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         return grouped
     }, [libraryItems])
 
+    // Get thumbnail URL for a reference tag
+    const getThumbnailForTag = useCallback((tag: string) => {
+        const tagWithoutAt = tag.startsWith('@') ? tag.slice(1) : tag
+        const item = libraryItems.find(item =>
+            item.tags?.some(t => t.toLowerCase() === tagWithoutAt.toLowerCase())
+        )
+        return item?.url || null
+    }, [libraryItems])
+
     // Filter autocomplete suggestions with category grouping
     const autocompleteSuggestions = React.useMemo(() => {
         const grouped = getReferencesGroupedByCategory()
@@ -243,13 +252,38 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         setShowAutocomplete(false)
         setAutocompleteSearch('')
 
+        // Auto-add the reference image when selecting an @tag
+        const tagWithoutAt = suggestion.startsWith('@') ? suggestion.slice(1) : suggestion
+        const matchingItem = libraryItems.find(item =>
+            item.tags?.some(tag => tag.toLowerCase() === tagWithoutAt.toLowerCase())
+        )
+
+        if (matchingItem && matchingItem.url) {
+            // Check if not already added
+            const isAlreadyAdded = shotCreatorReferenceImages.some(
+                refImg => refImg.url === matchingItem.url
+            )
+
+            if (!isAlreadyAdded) {
+                const newRef: ShotCreatorReferenceImage = {
+                    id: `ref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    preview: matchingItem.url,
+                    url: matchingItem.url,
+                    tags: matchingItem.tags || [],
+                    persistentTag: tagWithoutAt
+                }
+                setShotCreatorReferenceImages((prev: ShotCreatorReferenceImage[]) => [...prev, newRef])
+                toast.success(`Added ${suggestion} as reference image`)
+            }
+        }
+
         // Set cursor position after the inserted tag
         setTimeout(() => {
             const newPos = atIndex + suggestion.length + 1
             textarea.focus()
             textarea.setSelectionRange(newPos, newPos)
         }, 0)
-    }, [shotCreatorPrompt, autocompleteCursorPos, textareaRef, setShotCreatorPrompt])
+    }, [shotCreatorPrompt, autocompleteCursorPos, textareaRef, setShotCreatorPrompt, libraryItems, shotCreatorReferenceImages, setShotCreatorReferenceImages])
 
     // Detect @ symbol and show autocomplete
     const handleTextareaKeyUp = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1028,18 +1062,26 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                                             {suggestions.map((suggestion, idx) => {
                                                 const globalIndex = startIndex + idx
                                                 const isSelected = globalIndex === autocompleteSelectedIndex
+                                                const thumbnailUrl = getThumbnailForTag(suggestion)
                                                 return (
                                                     <button
                                                         key={`${category}-${suggestion}`}
                                                         onClick={() => selectAutocompleteSuggestion(suggestion)}
                                                         className={cn(
-                                                            'w-full text-left px-3 py-2 text-sm transition-colors',
+                                                            'w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2',
                                                             isSelected
                                                                 ? 'bg-blue-500 text-white dark:bg-blue-600'
                                                                 : 'hover:bg-slate-100 dark:hover:bg-slate-700'
                                                         )}
                                                     >
-                                                        {suggestion}
+                                                        {thumbnailUrl && (
+                                                            <img
+                                                                src={thumbnailUrl}
+                                                                alt=""
+                                                                className="w-8 h-8 rounded object-cover flex-shrink-0"
+                                                            />
+                                                        )}
+                                                        <span>{suggestion}</span>
                                                     </button>
                                                 )
                                             })}
