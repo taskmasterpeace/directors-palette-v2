@@ -14,7 +14,7 @@ const QUICK_MODE_CONTENT = {
   },
   'character-sheet': {
     title: 'Character Sheet',
-    description: 'Add a reference image OR type a character description → 7-panel turnaround',
+    description: 'Add image OR type "Name: description" (e.g. Marcus: hand drawn black man)',
   },
 }
 

@@ -489,8 +489,8 @@ Output a crisp, print-ready reference sheet look with sharp details.`
                 let characterDescription = shotCreatorPrompt.trim()
 
                 // Check for "Name: description" or "Name, description" format
-                const colonMatch = shotCreatorPrompt.match(/^([A-Z][a-zA-Z]+)\s*[:]\s*(.+)$/s)
-                const commaMatch = shotCreatorPrompt.match(/^([A-Z][a-zA-Z]+)\s*[,]\s*(.+)$/s)
+                const colonMatch = shotCreatorPrompt.match(/^([A-Z][a-zA-Z]+)\s*[:]\s*([\s\S]+)$/)
+                const commaMatch = shotCreatorPrompt.match(/^([A-Z][a-zA-Z]+)\s*[,]\s*([\s\S]+)$/)
                 // Check for "description named/called Name" format
                 const namedMatch = shotCreatorPrompt.match(/(.+?)\s+(?:named|called)\s+([A-Z][a-zA-Z]+)(?:\s|$|,)/i)
 
@@ -523,7 +523,7 @@ Output a crisp, print-ready reference sheet look with sharp details.`
 IMPORTANT: Match the EXACT visual style specified in the description above (photorealistic, hand drawn, anime, cartoon, oil painting, 3D render, etc.). Every panel must use this same style consistently.
 
 Use a clean, neutral plain background and present the sheet as a technical model turnaround.
-${characterName ? `\nLabel the sheet with the character name: "${characterName}"` : ''}
+${nameTag ? `\nLabel the sheet with the character tag: "${nameTag}"` : ''}
 
 Arrange the composition into two horizontal rows:
 
