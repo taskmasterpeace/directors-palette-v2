@@ -167,6 +167,11 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             return true
         }
 
+        // Character sheet quick mode: can generate with image OR description
+        if (shotCreatorSettings.quickMode === 'character-sheet') {
+            return shotCreatorReferenceImages.length > 0 || shotCreatorPrompt.trim().length > 0
+        }
+
         // Regular mode: needs prompt only (reference images are optional for all models)
         return shotCreatorPrompt.length > 0
     }, [shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings.quickMode, getActiveRecipe, getActiveValidation])
@@ -397,6 +402,125 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                     referenceUrls,
                     modelSettings,
                     undefined
+                )
+                return
+            }
+        }
+
+        // ===== CHARACTER SHEET QUICK MODE =====
+        const isCharacterSheetMode = shotCreatorSettings.quickMode === 'character-sheet'
+
+        if (isCharacterSheetMode) {
+            const hasReferenceImages = shotCreatorReferenceImages.length > 0
+            const hasDescription = shotCreatorPrompt.trim().length > 0
+
+            // Must have either an image OR a description
+            if (!hasReferenceImages && !hasDescription) {
+                toast.error('Character Sheet needs either a reference image OR a character description')
+                return
+            }
+
+            const model = shotCreatorSettings.model || 'nano-banana-pro'
+            const modelSettings = buildModelSettings()
+
+            // Force 16:9 aspect ratio for character sheets
+            const characterSheetSettings = {
+                ...modelSettings,
+                aspectRatio: '16:9'
+            }
+
+            if (hasReferenceImages) {
+                // ===== IMAGE-BASED TURNAROUND =====
+                console.log('👤 Character Sheet: Using reference image mode')
+
+                const turnaroundPrompt = `Create a professional character reference sheet based strictly on the uploaded reference image.
+
+Use a clean, neutral plain background and present the sheet as a technical model turnaround while matching the exact visual style of the reference (same realism level, rendering approach, texture, color treatment, and overall aesthetic).
+
+Arrange the composition into two horizontal rows:
+
+TOP ROW (4 full-body standing views, placed side-by-side):
+- Front view
+- Left profile view (facing left)
+- Right profile view (facing right)
+- Back view
+
+BOTTOM ROW (3 highly detailed close-up portraits, aligned beneath the full-body row):
+- Front portrait
+- Left profile portrait (facing left)
+- Right profile portrait (facing right)
+
+CRITICAL REQUIREMENTS:
+- Maintain PERFECT identity consistency across every panel
+- Keep the subject in a relaxed A-pose
+- Consistent scale and alignment between views
+- Accurate anatomy and clear silhouette
+- Even spacing and clean panel separation
+- Uniform framing and consistent head height across the full-body lineup
+- Consistent facial scale across the portraits
+- Lighting must be consistent across all panels (same direction, intensity, and softness)
+- Natural, controlled shadows that preserve detail without dramatic mood shifts
+
+Output a crisp, print-ready reference sheet look with sharp details.`
+
+                const referenceUrls = shotCreatorReferenceImages
+                    .map(ref => ref.url || ref.preview)
+                    .filter((url): url is string => Boolean(url))
+
+                toast.info('Creating character turnaround from reference image...')
+
+                await generateImage(
+                    model,
+                    turnaroundPrompt,
+                    referenceUrls,
+                    characterSheetSettings,
+                    { recipeId: 'character-turnaround', recipeName: 'Character Turnaround' }
+                )
+                return
+
+            } else {
+                // ===== DESCRIPTION-BASED TURNAROUND =====
+                console.log('👤 Character Sheet: Using description mode')
+                console.log('👤 Character description:', shotCreatorPrompt)
+
+                const turnaroundFromDescPrompt = `Create a professional character reference sheet of ${shotCreatorPrompt}.
+
+Use a clean, neutral plain background and present the sheet as a technical model turnaround.
+
+Arrange the composition into two horizontal rows:
+
+TOP ROW (4 full-body standing views, placed side-by-side):
+- Front view
+- Left profile view (facing left)
+- Right profile view (facing right)
+- Back view
+
+BOTTOM ROW (3 highly detailed close-up portraits, aligned beneath the full-body row):
+- Front portrait
+- Left profile portrait (facing left)
+- Right profile portrait (facing right)
+
+CRITICAL REQUIREMENTS:
+- Maintain PERFECT identity consistency across every panel
+- Keep the subject in a relaxed A-pose
+- Consistent scale and alignment between views
+- Accurate anatomy and clear silhouette
+- Even spacing and clean panel separation
+- Uniform framing and consistent head height across the full-body lineup
+- Consistent facial scale across the portraits
+- Lighting must be consistent across all panels (same direction, intensity, and softness)
+- Natural, controlled shadows that preserve detail without dramatic mood shifts
+
+Output a crisp, print-ready reference sheet look with sharp details.`
+
+                toast.info('Creating character turnaround from description...')
+
+                await generateImage(
+                    model,
+                    turnaroundFromDescPrompt,
+                    [], // No reference images
+                    characterSheetSettings,
+                    { recipeId: 'character-turnaround-desc', recipeName: 'Character Turnaround (From Description)' }
                 )
                 return
             }

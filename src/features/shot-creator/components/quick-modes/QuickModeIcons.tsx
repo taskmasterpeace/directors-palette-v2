@@ -4,7 +4,6 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Palette, User } from 'lucide-react'
 import { useShotCreatorSettings } from '../../hooks'
-import { useRecipeStore } from '../../store/recipe.store'
 import type { QuickMode } from '../../types/shot-creator.types'
 import {
   Tooltip,
@@ -14,11 +13,8 @@ import {
 } from '@/components/ui/tooltip'
 import { toast } from 'sonner'
 
-const CHARACTER_TURNAROUND_RECIPE_NAME = 'Character Turnaround'
-
 export function QuickModeIcons() {
   const { settings, updateSettings } = useShotCreatorSettings()
-  const { recipes, setActiveRecipe } = useRecipeStore()
 
   const toggleMode = (mode: 'style-transfer' | 'character-sheet') => {
     const currentMode = settings.quickMode || 'none'
@@ -27,31 +23,11 @@ export function QuickModeIcons() {
     // Update quick mode setting
     updateSettings({ quickMode: newMode })
 
-    // Character sheet mode activates the Character Turnaround recipe
+    // Show helpful toast for each mode
     if (newMode === 'character-sheet') {
-      // Find the Character Turnaround recipe by name
-      console.log('[QuickModeIcons] Looking for recipe:', CHARACTER_TURNAROUND_RECIPE_NAME)
-      console.log('[QuickModeIcons] Available recipes:', recipes.map(r => r.name))
-
-      const turnaroundRecipe = recipes.find(
-        (r) => r.name === CHARACTER_TURNAROUND_RECIPE_NAME
-      )
-      if (turnaroundRecipe) {
-        console.log('[QuickModeIcons] Found recipe, activating:', turnaroundRecipe.id)
-        setActiveRecipe(turnaroundRecipe.id)
-        toast.success('Character Turnaround recipe activated')
-      } else {
-        console.error('[QuickModeIcons] Recipe not found! Please refresh the page.')
-        toast.error('Character Turnaround recipe not found. Please refresh the page.')
-      }
-    } else if (mode === 'character-sheet' && newMode === 'none') {
-      // Turning off character sheet mode - clear recipe
-      setActiveRecipe(null)
-    }
-
-    // Style transfer mode: if turning on with 2+ images, auto-enable anchor transform
-    if (newMode === 'style-transfer') {
-      // This will be handled in PromptActions based on image count
+      toast.success('Character Sheet mode ON - Add an image OR type a description, then Generate')
+    } else if (newMode === 'style-transfer') {
+      toast.success('Style Transfer mode ON - Add reference image(s), then Generate')
     }
   }
 

@@ -14,7 +14,7 @@ const QUICK_MODE_CONTENT = {
   },
   'character-sheet': {
     title: 'Character Sheet',
-    description: 'Creates a multi-view character reference sheet from your image',
+    description: 'Add a reference image OR type a character description → 7-panel turnaround',
   },
 }
 
