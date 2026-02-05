@@ -14,14 +14,15 @@ import {
     Redo2,
     Download,
     X,
-    Trash2
+    Trash2,
+    Eraser
 } from 'lucide-react'
 import { FabricCanvas, FabricCanvasRef } from '@/features/layout-annotation/components/canvas-board'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/utils/utils'
 import { haptics } from '@/utils/haptics'
 
-type SketchTool = 'select' | 'brush' | 'rectangle' | 'circle' | 'arrow' | 'text'
+type SketchTool = 'select' | 'brush' | 'rectangle' | 'circle' | 'arrow' | 'text' | 'eraser'
 
 /**
  * Color definitions with semantic meaning for motion guidance
@@ -56,12 +57,13 @@ interface MotionSketchProps {
 }
 
 const TOOLS = [
-    { id: 'select', icon: MousePointer2, label: 'Select', shortcut: 'V' },
+    { id: 'select', icon: MousePointer2, label: 'Select & Move', shortcut: 'V' },
     { id: 'brush', icon: Pencil, label: 'Draw', shortcut: 'P' },
     { id: 'arrow', icon: ArrowRight, label: 'Arrow', shortcut: 'A' },
     { id: 'circle', icon: Circle, label: 'Circle', shortcut: 'O' },
     { id: 'rectangle', icon: Square, label: 'Rectangle', shortcut: 'R' },
     { id: 'text', icon: Type, label: 'Text', shortcut: 'T' },
+    { id: 'eraser', icon: Eraser, label: 'Eraser', shortcut: 'E' },
 ] as const
 
 export function MotionSketch({
