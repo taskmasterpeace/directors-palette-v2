@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { Upload, Clipboard, Expand, Trash2, Edit, Camera, Eraser, Download } from "lucide-react"
+import { Upload, Clipboard, Expand, Trash2, Edit, Camera, Eraser, Download, ZoomIn } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -136,7 +136,7 @@ export function ReferenceImageCard({
                         {/* Clickable overlay for fullscreen - ensures click works */}
                         <div
                             className={cn(
-                                "w-full relative cursor-pointer",
+                                "w-full relative cursor-pointer group/zoom",
                                 !useNativeAspectRatio && "aspect-square"
                             )}
                             style={useNativeAspectRatio ? getAspectRatioStyle(image.detectedAspectRatio) || { aspectRatio: '16 / 9' } : undefined}
@@ -148,10 +148,17 @@ export function ReferenceImageCard({
                                 fill
                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 53vw"
                                 className={cn(
-                                    "w-full h-full",
+                                    "w-full h-full transition-all duration-200 group-hover/zoom:brightness-75",
                                     useNativeAspectRatio ? "object-contain bg-black/20" : "object-cover"
                                 )}
                             />
+
+                            {/* Magnifying glass overlay - appears on hover */}
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/zoom:opacity-100 transition-opacity duration-200 pointer-events-none">
+                                <div className="bg-black/60 rounded-full p-4 backdrop-blur-sm shadow-lg">
+                                    <ZoomIn className="w-8 h-8 text-white" />
+                                </div>
+                            </div>
 
                             {/* Anchor Transform badges */}
                             {isAnchor && (
