@@ -70,8 +70,6 @@ export function ReferenceEditor({
     backgroundImageUrl,
     onExport,
     onClose,
-    width = 1200,
-    height = 675
 }: ReferenceEditorProps) {
     const canvasRef = useRef<FabricCanvasRef>(null)
     const { toast } = useToast()
@@ -80,6 +78,10 @@ export function ReferenceEditor({
     const [color, setColor] = useState<AnnotationColorHex>('#FF0000') // Red = motion
     const [brushSize, setBrushSize] = useState(4)
     const [isPanning, setIsPanning] = useState(false)
+
+    // Canvas dimensions - start with viewport size, will adjust to image
+    const [canvasWidth, setCanvasWidth] = useState(window.innerWidth - 60)
+    const [canvasHeight, setCanvasHeight] = useState(window.innerHeight - 60)
 
     // Track which colors have been used for context generation
     const [usedColors, setUsedColors] = useState<Set<AnnotationColorHex>>(new Set())
@@ -90,6 +92,12 @@ export function ReferenceEditor({
             canvasRef.current.importImage(backgroundImageUrl)
         }
     }, [backgroundImageUrl])
+
+    // Handle canvas size change when image is loaded
+    const handleCanvasSizeChange = useCallback((width: number, height: number) => {
+        setCanvasWidth(width)
+        setCanvasHeight(height)
+    }, [])
 
     const handleToolChange = useCallback((newTool: EditorTool) => {
         haptics.light()
@@ -366,10 +374,11 @@ IMPORTANT: After applying the indicated changes, REMOVE all colored annotations 
                         brushSize={brushSize}
                         color={color}
                         fillMode={false}
-                        backgroundColor="#1a1a1a"
-                        canvasWidth={width}
-                        canvasHeight={height}
-                        canvasMode="canvas"
+                        backgroundColor="transparent"
+                        canvasWidth={canvasWidth}
+                        canvasHeight={canvasHeight}
+                        canvasMode="photo"
+                        onCanvasSizeChange={handleCanvasSizeChange}
                         onObjectsChange={handleCanvasChange}
                         onToolChange={(newTool) => {
                             if (newTool !== 'select') {

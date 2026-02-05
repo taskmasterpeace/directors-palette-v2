@@ -110,14 +110,12 @@ export default function FullscreenImageModal({
                 </Button>
 
                 {isEditing ? (
-                    /* Reference Editor Mode */
+                    /* Reference Editor Mode - fits viewport */
                     <div className="w-full h-full">
                         <ReferenceEditor
                             backgroundImageUrl={imageUrl}
                             onExport={handleEditExport}
                             onClose={() => setIsEditing(false)}
-                            width={1920}
-                            height={1080}
                         />
                     </div>
                 ) : (
