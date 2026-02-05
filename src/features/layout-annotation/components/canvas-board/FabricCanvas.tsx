@@ -337,7 +337,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
       });
       // Handle text tool separately - it doesn't use drag
       if (toolRef.current === 'text') {
-        const text = new fabric.IText('Double-click to edit', {
+        const text = new fabric.IText('', {
           left: pointer.x,
           top: pointer.y,
           fontSize: fontSize,
@@ -345,9 +345,22 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
           editable: true
         })
         canvas.add(text)
+
+        // Restore canvas interactions before entering edit mode
+        canvas.skipTargetFind = false
+        canvas.selection = true
+        canvas.forEachObject(obj => {
+          obj.selectable = true
+          obj.evented = true
+        })
+
         canvas.setActiveObject(text)
         text.enterEditing()
+        text.selectAll() // Select placeholder text for easy replacement
         setIsDrawingShape(false)
+
+        // Switch to select tool after placing text
+        onToolChangeRef.current?.('select')
         return
       }
 
