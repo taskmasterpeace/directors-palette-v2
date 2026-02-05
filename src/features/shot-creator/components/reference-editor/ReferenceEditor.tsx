@@ -22,20 +22,20 @@ import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/utils/utils'
 import { haptics } from '@/utils/haptics'
 
-type SketchTool = 'select' | 'brush' | 'rectangle' | 'circle' | 'arrow' | 'text' | 'eraser'
+type EditorTool = 'select' | 'brush' | 'rectangle' | 'circle' | 'arrow' | 'text' | 'eraser'
 
 /**
- * Color definitions with semantic meaning for motion guidance
+ * Color definitions with semantic meaning for annotations
  */
-const MOTION_COLORS = [
+const ANNOTATION_COLORS = [
     { hex: '#FF0000', name: 'Red', meaning: 'motion direction and movement paths' },
     { hex: '#FFFFFF', name: 'White', meaning: 'text labels and instructions' },
     { hex: '#000000', name: 'Black', meaning: 'outlines and emphasis' },
 ] as const
 
-type MotionColorHex = typeof MOTION_COLORS[number]['hex']
+type AnnotationColorHex = typeof ANNOTATION_COLORS[number]['hex']
 
-interface MotionSketchExport {
+export interface ReferenceEditorExport {
     /** Base64 data URL of the annotated image */
     imageDataUrl: string
     /** Context string describing annotations for the prompt */
@@ -44,12 +44,12 @@ interface MotionSketchExport {
     hasAnnotations: boolean
 }
 
-interface MotionSketchProps {
-    /** Background image URL to sketch over */
+interface ReferenceEditorProps {
+    /** Background image URL to annotate */
     backgroundImageUrl?: string
-    /** Callback when sketch is exported - returns image + context */
-    onExport?: (result: MotionSketchExport) => void
-    /** Callback to close the sketch panel */
+    /** Callback when export is clicked - returns image + context */
+    onExport?: (result: ReferenceEditorExport) => void
+    /** Callback to close the editor */
     onClose?: () => void
     /** Canvas dimensions */
     width?: number
@@ -66,23 +66,23 @@ const TOOLS = [
     { id: 'eraser', icon: Eraser, label: 'Eraser', shortcut: 'E' },
 ] as const
 
-export function MotionSketch({
+export function ReferenceEditor({
     backgroundImageUrl,
     onExport,
     onClose,
     width = 1200,
     height = 675
-}: MotionSketchProps) {
+}: ReferenceEditorProps) {
     const canvasRef = useRef<FabricCanvasRef>(null)
     const { toast } = useToast()
 
-    const [tool, setTool] = useState<SketchTool>('arrow') // Default to arrow for motion
-    const [color, setColor] = useState<MotionColorHex>('#FF0000') // Red = motion
+    const [tool, setTool] = useState<EditorTool>('arrow') // Default to arrow
+    const [color, setColor] = useState<AnnotationColorHex>('#FF0000') // Red = motion
     const [brushSize, setBrushSize] = useState(4)
     const [isPanning, setIsPanning] = useState(false)
 
     // Track which colors have been used for context generation
-    const [usedColors, setUsedColors] = useState<Set<MotionColorHex>>(new Set())
+    const [usedColors, setUsedColors] = useState<Set<AnnotationColorHex>>(new Set())
 
     // Load background image when provided
     useEffect(() => {
@@ -91,17 +91,15 @@ export function MotionSketch({
         }
     }, [backgroundImageUrl])
 
-    // Track color usage when drawing
-    const handleToolChange = useCallback((newTool: SketchTool) => {
+    const handleToolChange = useCallback((newTool: EditorTool) => {
         haptics.light()
         setTool(newTool)
         setIsPanning(false)
     }, [])
 
-    const handleColorChange = useCallback((newColor: MotionColorHex) => {
+    const handleColorChange = useCallback((newColor: AnnotationColorHex) => {
         haptics.light()
         setColor(newColor)
-        // Track that this color was used
         setUsedColors(prev => new Set(prev).add(newColor))
     }, [])
 
@@ -139,7 +137,7 @@ export function MotionSketch({
         const colorDescriptions: string[] = []
 
         usedColors.forEach(colorHex => {
-            const colorInfo = MOTION_COLORS.find(c => c.hex === colorHex)
+            const colorInfo = ANNOTATION_COLORS.find(c => c.hex === colorHex)
             if (colorInfo) {
                 colorDescriptions.push(`${colorInfo.name} annotations indicate ${colorInfo.meaning}`)
             }
@@ -147,11 +145,11 @@ export function MotionSketch({
 
         if (colorDescriptions.length === 0) return ''
 
-        return `MOTION GUIDANCE ANNOTATIONS:
-The image contains visual annotations that indicate desired motion and changes:
+        return `ANNOTATION GUIDANCE:
+The image contains visual annotations that indicate desired changes:
 ${colorDescriptions.map(d => `- ${d}`).join('\n')}
 
-IMPORTANT: After applying the indicated motion/changes, REMOVE all colored annotations from the final output. The result should be clean with no visible annotation marks.`
+IMPORTANT: After applying the indicated changes, REMOVE all colored annotations from the final output. The result should be clean with no visible annotation marks.`
     }, [usedColors])
 
     const handleExport = useCallback(() => {
@@ -162,7 +160,7 @@ IMPORTANT: After applying the indicated motion/changes, REMOVE all colored annot
         const isEmpty = canvasRef.current.isEmpty()
         const annotationContext = buildAnnotationContext()
 
-        const result: MotionSketchExport = {
+        const result: ReferenceEditorExport = {
             imageDataUrl: dataUrl,
             annotationContext,
             hasAnnotations: !isEmpty && usedColors.size > 0
@@ -174,23 +172,22 @@ IMPORTANT: After applying the indicated motion/changes, REMOVE all colored annot
             // Default: download the image
             const link = document.createElement('a')
             link.href = dataUrl
-            link.download = `motion-sketch-${Date.now()}.png`
+            link.download = `annotated-reference-${Date.now()}.png`
             document.body.appendChild(link)
             link.click()
             document.body.removeChild(link)
         }
 
         toast({
-            title: "Sketch Exported",
+            title: "Export Complete",
             description: result.hasAnnotations
-                ? "Motion guidance will be added to prompt"
+                ? "Annotations will be added to prompt"
                 : "Image exported (no annotations)"
         })
     }, [onExport, toast, buildAnnotationContext, usedColors])
 
-    // Track when user starts drawing with current color
+    // Track when user draws with current color
     const handleCanvasChange = useCallback(() => {
-        // Mark current color as used when objects are added
         setUsedColors(prev => new Set(prev).add(color))
     }, [color])
 
@@ -205,7 +202,7 @@ IMPORTANT: After applying the indicated motion/changes, REMOVE all colored annot
                             key={id}
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleToolChange(id as SketchTool)}
+                            onClick={() => handleToolChange(id as EditorTool)}
                             className={cn(
                                 "h-8 w-8 p-0",
                                 tool === id && !isPanning
@@ -279,7 +276,7 @@ IMPORTANT: After applying the indicated motion/changes, REMOVE all colored annot
                         className="h-8 px-3 bg-primary hover:bg-primary/90"
                     >
                         <Download className="w-4 h-4 mr-1" />
-                        Export Sketch
+                        Apply
                     </Button>
 
                     {onClose && (
@@ -299,9 +296,9 @@ IMPORTANT: After applying the indicated motion/changes, REMOVE all colored annot
             {/* Left Side Panel: Colors & Brush Size */}
             <div className="flex flex-1 min-h-0">
                 <div className="w-14 flex flex-col items-center py-3 gap-3 border-r border-zinc-700 bg-zinc-800/30">
-                    {/* Color Swatches with Labels */}
+                    {/* Color Swatches */}
                     <div className="flex flex-col gap-2">
-                        {MOTION_COLORS.map((c) => (
+                        {ANNOTATION_COLORS.map((c) => (
                             <button
                                 key={c.hex}
                                 onClick={() => handleColorChange(c.hex)}
@@ -376,7 +373,7 @@ IMPORTANT: After applying the indicated motion/changes, REMOVE all colored annot
                         onObjectsChange={handleCanvasChange}
                         onToolChange={(newTool) => {
                             if (newTool !== 'select') {
-                                setTool(newTool as SketchTool)
+                                setTool(newTool as EditorTool)
                             }
                         }}
                     />
@@ -386,4 +383,4 @@ IMPORTANT: After applying the indicated motion/changes, REMOVE all colored annot
     )
 }
 
-export default MotionSketch
+export default ReferenceEditor
