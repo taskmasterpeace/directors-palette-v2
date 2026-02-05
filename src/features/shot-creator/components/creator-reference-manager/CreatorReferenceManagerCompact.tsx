@@ -1,12 +1,15 @@
 import React, { ReactNode, useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { Clipboard, Plus, Trash2, ZoomIn } from 'lucide-react'
+import { Clipboard, Plus, Trash2, ZoomIn, Images } from 'lucide-react'
 import Image from 'next/image'
 import { useShotCreatorStore } from "../../store/shot-creator.store"
 import { useReferenceImageManager } from "../../hooks/useReferenceImageManager"
 import { useShotCreatorSettings } from "../../hooks"
 import { QuickModeIcons, QuickModePanel } from "../quick-modes"
 import { shotImageToLibraryReference } from "../../helpers/type-adapters"
+
+// Anchor Transform limit - max images when anchor mode is enabled
+const ANCHOR_TRANSFORM_MAX_IMAGES = 10
 
 interface CreatorReferenceManagerCompactProps {
     editingMode?: boolean
@@ -44,11 +47,22 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
 
     return (
         <div className="space-y-2">
-            {/* Model selector, Quick Mode Icons, and Paste on same row */}
+            {/* Model selector, Quick Mode Icons, and action buttons */}
             <div className="flex items-center justify-between gap-2">
                 {modelSelector}
                 <div className="flex items-center gap-1">
                     <QuickModeIcons />
+                    {/* Add Multiple button - visible on desktop */}
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="h-7 px-2 border-border hover:border-border hidden sm:flex"
+                        disabled={shotCreatorReferenceImages.length >= maxImages}
+                    >
+                        <Images className="h-3 w-3 mr-1" />
+                        Add
+                    </Button>
                     <Button
                         size="sm"
                         variant="outline"
