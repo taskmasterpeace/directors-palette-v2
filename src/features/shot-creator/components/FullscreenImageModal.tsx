@@ -86,7 +86,10 @@ export default function FullscreenImageModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="w-screen h-screen max-w-none max-h-none p-0 bg-black border-none rounded-none overflow-hidden">
+            <DialogContent
+                className="!w-screen !h-screen !max-w-none !max-h-none sm:!max-w-none p-0 bg-black border-none rounded-none overflow-hidden inset-0 translate-x-0 translate-y-0 top-0 left-0"
+                showCloseButton={false}
+            >
                 {/* Hidden title for accessibility */}
                 <DialogTitle className="sr-only">Image Preview</DialogTitle>
 
