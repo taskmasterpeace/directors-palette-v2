@@ -676,15 +676,15 @@ export default function LandingPage() {
                             </div>
                             <h4 className="text-xl font-semibold text-white mb-2">Anchor Transform</h4>
                             <p className="text-muted-foreground text-sm mb-4">
-                                Use one image to transform multiple others. Cost-effective batch styling.
+                                Upload 2+ reference images. The first image becomes your style &quot;anchor&quot; - all other images get transformed to match that style. Perfect for batch styling.
                             </p>
-                            <div className="bg-background/50 rounded-lg p-4 font-mono text-sm">
-                                <span className="text-orange-400">@!</span>
-                                <span className="text-muted-foreground"> Transform to </span>
-                                <span className="text-amber-400">claymation</span>
+                            <div className="bg-background/50 rounded-lg p-4 font-mono text-sm space-y-2">
+                                <p className="text-xs text-muted-foreground">1. Add style image first (the anchor)</p>
+                                <p className="text-xs text-muted-foreground">2. Add images to transform</p>
+                                <p className="text-xs text-muted-foreground">3. Click <span className="text-orange-400 font-bold">¡</span> or type <span className="text-orange-400">@!</span></p>
                             </div>
                             <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
-                                <ArrowRight className="w-3 h-3" /> First image anchors style for all others
+                                <ArrowRight className="w-3 h-3" /> Cost: 1 generation per image (minus anchor)
                             </p>
                         </div>
                     </div>

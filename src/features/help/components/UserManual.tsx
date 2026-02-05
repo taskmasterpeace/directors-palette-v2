@@ -40,6 +40,7 @@ export function UserManual() {
                     <a href="#shot-lab" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Shot Lab</a>
                     <a href="#recipes" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Recipes</a>
                     <a href="#syntax" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Prompt Syntax</a>
+                    <a href="#anchor-transform" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Anchor Transform</a>
                     <a href="#gallery" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Gallery</a>
                     <a href="#video-generation" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Video Generation</a>
                     <a href="#models" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Image Generation</a>
@@ -396,6 +397,106 @@ export function UserManual() {
                                             <p className="text-xs text-muted-foreground mt-1">Wide shot / establishing shot</p>
                                         </div>
                                     </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </section>
+
+                    {/* Anchor Transform */}
+                    <section id="anchor-transform" className="space-y-6 scroll-mt-20">
+                        <h2 className="text-2xl font-bold flex items-center gap-2">
+                            <span className="text-2xl text-orange-500">¡</span> Anchor Transform
+                        </h2>
+                        <p className="text-muted-foreground">
+                            Transform multiple images to match a single style reference. Cost-effective batch styling with consistent results.
+                        </p>
+
+                        <Card className="bg-gradient-to-br from-orange-950/20 to-background border-orange-900/30">
+                            <CardContent className="p-6 space-y-6">
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">How Anchor Transform Works</h3>
+                                    <p className="text-muted-foreground mb-4">
+                                        Upload multiple reference images. The <strong>first image</strong> becomes your style &quot;anchor&quot; -
+                                        all subsequent images will be transformed to match that style. This is perfect for converting
+                                        a batch of photos to the same art style (e.g., anime, watercolor, claymation).
+                                    </p>
+                                    <div className="grid sm:grid-cols-3 gap-4 text-center">
+                                        <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                                            <div className="text-2xl mb-2">🎨</div>
+                                            <h4 className="font-semibold text-sm text-orange-400">1. Add Style Image</h4>
+                                            <p className="text-xs text-muted-foreground mt-1">First image is your style anchor</p>
+                                        </div>
+                                        <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                                            <div className="text-2xl mb-2">📷</div>
+                                            <h4 className="font-semibold text-sm text-orange-400">2. Add Input Images</h4>
+                                            <p className="text-xs text-muted-foreground mt-1">Add images you want to transform</p>
+                                        </div>
+                                        <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                                            <div className="text-2xl mb-2">✨</div>
+                                            <h4 className="font-semibold text-sm text-orange-400">3. Generate</h4>
+                                            <p className="text-xs text-muted-foreground mt-1">Each input transforms to anchor style</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <Separator />
+
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">How to Enable</h3>
+                                    <div className="grid sm:grid-cols-2 gap-4">
+                                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                                            <h4 className="font-semibold text-sm flex items-center gap-2">
+                                                <span className="text-orange-400 font-mono">¡</span> Click the Anchor Button
+                                            </h4>
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                In the prompt area, click the <span className="text-orange-400 font-mono font-bold">¡</span> button
+                                                (requires 2+ reference images)
+                                            </p>
+                                        </div>
+                                        <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+                                            <h4 className="font-semibold text-sm flex items-center gap-2">
+                                                <span className="text-orange-400 font-mono">@!</span> Type in Prompt
+                                            </h4>
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Add <code className="px-1 bg-muted rounded text-orange-400">@!</code> anywhere in your prompt
+                                                to enable anchor mode
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <Separator />
+
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Example Use Cases</h3>
+                                    <ul className="space-y-2 text-sm text-muted-foreground">
+                                        <li className="flex gap-2">
+                                            <span className="text-orange-400">•</span>
+                                            <span><strong>Style Transfer:</strong> Convert family photos to anime style using one anime reference</span>
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <span className="text-orange-400">•</span>
+                                            <span><strong>Product Consistency:</strong> Make all product shots match the same lighting/style</span>
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <span className="text-orange-400">•</span>
+                                            <span><strong>Art Direction:</strong> Transform storyboard sketches to a consistent visual style</span>
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <span className="text-orange-400">•</span>
+                                            <span><strong>Character Consistency:</strong> Keep character appearances uniform across scenes</span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
+                                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                                        <Info className="w-4 h-4" /> Cost
+                                    </h4>
+                                    <p className="text-sm text-muted-foreground">
+                                        Anchor Transform costs <strong>1 generation per input image</strong> (the anchor image is free).
+                                        If you have 5 images total (1 anchor + 4 inputs), you&apos;ll generate 4 images.
+                                    </p>
                                 </div>
                             </CardContent>
                         </Card>
