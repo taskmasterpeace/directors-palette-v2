@@ -1,6 +1,6 @@
 'use client'
 
-import { X, Download, Copy, Film, Layout, Eraser, Trash2 } from 'lucide-react'
+import { X, Download, Copy, Film, Layout, Eraser, Trash2, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -9,6 +9,7 @@ import Image from "next/image"
 import { clipboardManager } from '@/utils/clipboard-manager'
 import { useToast } from '@/hooks/use-toast'
 import { useState } from 'react'
+import { ReferenceEditor, ReferenceEditorExport } from './reference-editor'
 
 interface FullscreenImageModalProps {
     open: boolean
@@ -18,6 +19,7 @@ interface FullscreenImageModalProps {
     onRemoveBackground?: (imageUrl: string) => Promise<void>
     onSaveToGallery?: (imageUrl: string) => Promise<void>
     onDelete?: (imageId: string) => void
+    onEditComplete?: (result: ReferenceEditorExport) => void
 }
 
 export default function FullscreenImageModal({
@@ -28,40 +30,35 @@ export default function FullscreenImageModal({
     onRemoveBackground,
     onSaveToGallery,
     onDelete,
+    onEditComplete,
 }: FullscreenImageModalProps) {
     const { fullscreenImage } = useShotCreatorStore()
     const { toast } = useToast()
     const [removingBackground, setRemovingBackground] = useState(false)
     const [savingToGallery, setSavingToGallery] = useState(false)
+    const [isEditing, setIsEditing] = useState(false)
 
     if (!fullscreenImage) return null
 
+    const imageUrl = fullscreenImage.preview || fullscreenImage.imageData
+
     const handleDownload = async () => {
         try {
-            const imageUrl = fullscreenImage.preview || fullscreenImage.imageData
-
-            // Fetch the image as a blob
             const response = await fetch(imageUrl)
             const blob = await response.blob()
-
-            // Create a temporary URL for the blob
             const blobUrl = URL.createObjectURL(blob)
-
-            // Create and trigger download
             const link = document.createElement('a')
             link.href = blobUrl
             link.download = `reference_${fullscreenImage.id}.png`
             document.body.appendChild(link)
             link.click()
             document.body.removeChild(link)
-
-            // Clean up the blob URL
             URL.revokeObjectURL(blobUrl)
         } catch (error) {
             console.error('Failed to download image:', error)
             toast({
                 title: 'Download failed',
-                description: 'Could not download image. Please try again.',
+                description: 'Could not download image.',
                 variant: 'destructive'
             })
         }
@@ -70,18 +67,25 @@ export default function FullscreenImageModal({
     const handleCopyUrl = async () => {
         try {
             await clipboardManager.writeText(fullscreenImage.imageData)
-            toast({
-                title: 'Copied',
-                description: 'Image URL copied to clipboard'
-            })
+            toast({ title: 'Copied', description: 'Image URL copied to clipboard' })
         } catch (error) {
             console.error('Failed to copy:', error)
-            toast({
-                title: 'Copy failed',
-                description: 'Could not copy to clipboard. Please try again.',
-                variant: 'destructive'
-            })
+            toast({ title: 'Copy failed', variant: 'destructive' })
         }
+    }
+
+    const handleEditExport = (result: ReferenceEditorExport) => {
+        if (onEditComplete) {
+            onEditComplete(result)
+        }
+        setIsEditing(false)
+        onOpenChange(false)
+        toast({
+            title: 'Reference Updated',
+            description: result.hasAnnotations
+                ? 'Annotations added to reference'
+                : 'Reference image updated'
+        })
     }
 
     return (
@@ -90,63 +94,84 @@ export default function FullscreenImageModal({
                 className="!w-screen !h-screen !max-w-none !max-h-none sm:!max-w-none p-0 bg-black border-none rounded-none overflow-hidden inset-0 translate-x-0 translate-y-0 top-0 left-0"
                 showCloseButton={false}
             >
-                {/* Hidden title for accessibility */}
                 <DialogTitle className="sr-only">Image Preview</DialogTitle>
 
-                {/* Close button - fixed positioning */}
+                {/* Close button */}
                 <Button
                     variant="ghost"
                     size="sm"
                     className="fixed top-4 right-4 text-white hover:bg-white/20 z-50 bg-black/50 backdrop-blur-sm rounded-full w-10 h-10 p-0"
-                    onClick={() => onOpenChange(false)}
+                    onClick={() => {
+                        setIsEditing(false)
+                        onOpenChange(false)
+                    }}
                 >
                     <X className="w-6 h-6" />
                 </Button>
 
-                <div className="flex flex-col w-full h-full">
-                    {/* Image container - TRUE fullscreen */}
-                    {fullscreenImage && (fullscreenImage.imageData || fullscreenImage.preview) && (
-                        <div className="relative flex-1 flex items-center justify-center bg-black min-h-0 overflow-hidden">
-                            <Image
-                                src={fullscreenImage.preview || fullscreenImage.imageData}
-                                alt=""
-                                className="object-contain"
-                                fill
-                                sizes="100vw"
-                                priority
-                            />
+                {isEditing ? (
+                    /* Reference Editor Mode */
+                    <div className="w-full h-full">
+                        <ReferenceEditor
+                            backgroundImageUrl={imageUrl}
+                            onExport={handleEditExport}
+                            onClose={() => setIsEditing(false)}
+                            width={1920}
+                            height={1080}
+                        />
+                    </div>
+                ) : (
+                    /* View Mode */
+                    <div className="flex flex-col w-full h-full">
+                        {fullscreenImage && imageUrl && (
+                            <div className="relative flex-1 flex items-center justify-center bg-black min-h-0 overflow-hidden">
+                                <Image
+                                    src={imageUrl}
+                                    alt=""
+                                    className="object-contain"
+                                    fill
+                                    sizes="100vw"
+                                    priority
+                                />
 
-                            {/* --- Action buttons overlay --- */}
-                            <div className="absolute bottom-4 left-4 right-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 z-20">
-                                {/* Action buttons grid */}
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                {/* Compact action bar */}
+                                <div className="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-center gap-2 z-20">
+                                    {/* Edit button - PRIMARY */}
+                                    <Button
+                                        size="sm"
+                                        className="bg-primary hover:bg-primary/90 text-white"
+                                        onClick={() => setIsEditing(true)}
+                                    >
+                                        <Pencil className="h-4 w-4 mr-1" />
+                                        Edit
+                                    </Button>
+
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        className="text-white border-zinc-600 hover:bg-zinc-700"
+                                        className="bg-black/60 text-white border-zinc-600 hover:bg-zinc-700"
                                         onClick={handleCopyUrl}
                                     >
-                                        <Copy className="h-4 w-4 mr-1" />
-                                        Copy
+                                        <Copy className="h-4 w-4" />
                                     </Button>
+
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        className="text-white border-zinc-600 hover:bg-zinc-700"
+                                        className="bg-black/60 text-white border-zinc-600 hover:bg-zinc-700"
                                         onClick={handleDownload}
                                     >
-                                        <Download className="h-4 w-4 mr-1" />
-                                        Download
+                                        <Download className="h-4 w-4" />
                                     </Button>
+
                                     {onRemoveBackground && (
                                         <Button
                                             size="sm"
                                             variant="outline"
-                                            className="text-white border-zinc-600 hover:bg-zinc-700"
+                                            className="bg-black/60 text-white border-zinc-600 hover:bg-zinc-700"
                                             onClick={async () => {
                                                 setRemovingBackground(true)
                                                 try {
-                                                    const imageUrl = fullscreenImage.preview || fullscreenImage.imageData
                                                     await onRemoveBackground(imageUrl)
                                                 } finally {
                                                     setRemovingBackground(false)
@@ -155,22 +180,21 @@ export default function FullscreenImageModal({
                                             disabled={removingBackground}
                                         >
                                             {removingBackground ? (
-                                                <LoadingSpinner size="sm" color="current" className="mr-1" />
+                                                <LoadingSpinner size="sm" color="current" />
                                             ) : (
-                                                <Eraser className="h-4 w-4 mr-1" />
+                                                <Eraser className="h-4 w-4" />
                                             )}
-                                            {removingBackground ? 'Removing...' : 'Remove BG'}
                                         </Button>
                                     )}
+
                                     {onSaveToGallery && (
                                         <Button
                                             size="sm"
                                             variant="outline"
-                                            className="text-white border-zinc-600 hover:bg-zinc-700"
+                                            className="bg-black/60 text-white border-zinc-600 hover:bg-zinc-700"
                                             onClick={async () => {
                                                 setSavingToGallery(true)
                                                 try {
-                                                    const imageUrl = fullscreenImage.preview || fullscreenImage.imageData
                                                     await onSaveToGallery(imageUrl)
                                                 } finally {
                                                     setSavingToGallery(false)
@@ -179,67 +203,59 @@ export default function FullscreenImageModal({
                                             disabled={savingToGallery}
                                         >
                                             {savingToGallery ? (
-                                                <LoadingSpinner size="sm" color="current" className="mr-1" />
+                                                <LoadingSpinner size="sm" color="current" />
                                             ) : (
-                                                <Download className="h-4 w-4 mr-1" />
+                                                <>Save</>
                                             )}
-                                            {savingToGallery ? 'Saving...' : 'Save to Gallery'}
                                         </Button>
                                     )}
+
                                     {onSendToAnimator && (
                                         <Button
                                             size="sm"
                                             variant="outline"
-                                            className="text-white border-zinc-600 hover:bg-zinc-700"
+                                            className="bg-black/60 text-white border-zinc-600 hover:bg-zinc-700"
                                             onClick={() => {
-                                                const imageUrl = fullscreenImage.preview || fullscreenImage.imageData
                                                 onSendToAnimator(imageUrl)
                                                 onOpenChange(false)
                                             }}
                                         >
-                                            <Film className="h-4 w-4 mr-1" />
-                                            Animator
+                                            <Film className="h-4 w-4" />
                                         </Button>
                                     )}
+
                                     {onSendToLayout && (
                                         <Button
                                             size="sm"
                                             variant="outline"
-                                            className="text-white border-zinc-600 hover:bg-zinc-700"
+                                            className="bg-black/60 text-white border-zinc-600 hover:bg-zinc-700"
                                             onClick={() => {
-                                                const imageUrl = fullscreenImage.preview || fullscreenImage.imageData
                                                 onSendToLayout(imageUrl)
                                                 onOpenChange(false)
                                             }}
                                         >
-                                            <Layout className="h-4 w-4 mr-1" />
-                                            Layout
+                                            <Layout className="h-4 w-4" />
                                         </Button>
                                     )}
-                                </div>
 
-                                {/* Delete button - separate row */}
-                                {onDelete && (
-                                    <div className="mt-3 pt-3 border-t border-zinc-700">
+                                    {onDelete && (
                                         <Button
                                             size="sm"
-                                            variant="destructive"
-                                            className="w-full"
+                                            variant="outline"
+                                            className="bg-black/60 text-red-400 border-red-600/50 hover:bg-red-900/50"
                                             onClick={() => {
                                                 onDelete(fullscreenImage.id)
                                                 onOpenChange(false)
                                             }}
                                         >
-                                            <Trash2 className="h-4 w-4 mr-1" />
-                                            Remove Reference
+                                            <Trash2 className="h-4 w-4" />
                                         </Button>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    )}
-
-                </div>
+                        )}
+                    </div>
+                )}
             </DialogContent>
         </Dialog>
     )
