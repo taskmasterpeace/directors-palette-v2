@@ -120,7 +120,7 @@ export function ReferenceImageCard({
                     acceptText="PNG, JPG, WEBP, GIF"
                     rejectText="Please upload image files"
                     size="large"
-                    className="min-h-[240px] md:min-h-[160px] md:aspect-square rounded-xl bg-gradient-to-br from-card to-background touch-manipulation"
+                    className="min-h-[240px] md:min-h-[160px] md:aspect-square rounded-xl bg-gradient-to-br from-card to-background touch-manipulation select-none cursor-pointer"
                 />
             ) : (
             <DropZone
