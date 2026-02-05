@@ -21,3 +21,6 @@ export { Pagination } from './unified-gallery/Pagination'
 
 // Reference library
 export { default as ShotReferenceLibrary } from './reference-library/ShotReferenceLibrary'
+
+// Motion sketch
+export { MotionSketch } from './motion-sketch'

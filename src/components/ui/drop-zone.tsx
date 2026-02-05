@@ -352,7 +352,7 @@ const DropZone = React.forwardRef<DropZoneRef, DropZoneProps>(
     const inputProps = getInputProps()
 
     // Debug: log when the dropzone is clicked
-    const handleClick = React.useCallback((e: React.MouseEvent) => {
+    const _handleClick = React.useCallback((_e: React.MouseEvent) => {
       console.log('[DropZone] Clicked, noClick:', noClick, 'disabled:', disabled)
       if (!noClick && !disabled) {
         open()

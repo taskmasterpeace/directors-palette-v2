@@ -1,8 +1,7 @@
 'use client'
 
-import { X, Tag, Download, Copy, Film, Layout, Eraser, Trash2 } from 'lucide-react'
+import { X, Download, Copy, Film, Layout, Eraser, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useShotCreatorStore } from "../store"
@@ -87,36 +86,31 @@ export default function FullscreenImageModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-[98vw] max-h-[98vh] p-0 bg-background border-border overflow-hidden">
+            <DialogContent className="w-screen h-screen max-w-none max-h-none p-0 bg-black border-none rounded-none overflow-hidden">
                 {/* Hidden title for accessibility */}
                 <DialogTitle className="sr-only">Image Preview</DialogTitle>
 
-                {/* Close button - fixed positioning for iOS */}
+                {/* Close button - fixed positioning */}
                 <Button
                     variant="ghost"
                     size="sm"
-                    className="fixed top-[calc(env(safe-area-inset-top,0rem)+3rem)] right-[calc(env(safe-area-inset-right,0rem)+1rem)] md:absolute md:top-4 md:right-4 text-white hover:bg-white/20 z-20 bg-black/20 backdrop-blur-sm"
+                    className="fixed top-4 right-4 text-white hover:bg-white/20 z-50 bg-black/50 backdrop-blur-sm rounded-full w-10 h-10 p-0"
                     onClick={() => onOpenChange(false)}
                 >
                     <X className="w-6 h-6" />
                 </Button>
 
-                <div className="flex flex-col h-full">
-                    {/* Image container - takes up most space */}
+                <div className="flex flex-col w-full h-full">
+                    {/* Image container - TRUE fullscreen */}
                     {fullscreenImage && (fullscreenImage.imageData || fullscreenImage.preview) && (
-                        <div className="relative flex-1 flex items-center justify-center bg-black/20 p-2 min-h-0 overflow-hidden">
+                        <div className="relative flex-1 flex items-center justify-center bg-black min-h-0 overflow-hidden">
                             <Image
                                 src={fullscreenImage.preview || fullscreenImage.imageData}
                                 alt=""
-                                className="w-auto h-auto max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                                width={500}
-                                height={300}
-                                style={{
-                                    maxWidth: '100%',
-                                    maxHeight: '100%',
-                                    width: 'auto',
-                                    height: 'auto'
-                                }}
+                                className="object-contain"
+                                fill
+                                sizes="100vw"
+                                priority
                             />
 
                             {/* --- Action buttons overlay --- */}
@@ -242,63 +236,6 @@ export default function FullscreenImageModal({
                         </div>
                     )}
 
-                    {/* Information panel - minimal height */}
-                    <div className="flex-shrink-0 bg-card/90 backdrop-blur-sm border-t border-border">
-                        <div className="p-3 space-y-3">
-
-                            {/* Tags section */}
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <Tag className="w-4 h-4 text-muted-foreground" />
-                                    <span className="text-sm font-medium text-foreground">Tags</span>
-                                </div>
-                                <div className="flex gap-2 flex-wrap ml-6">
-                                    {fullscreenImage.tags && fullscreenImage.tags.length > 0 ? (
-                                        fullscreenImage.tags.map(tag => (
-                                            <Badge key={tag} variant="secondary" className="bg-accent/80 hover:bg-accent text-white transition-colors">
-                                                {tag}
-                                            </Badge>
-                                        ))
-                                    ) : (
-                                        <span className="text-sm text-muted-foreground">No tags assigned</span>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Metadata and Reference Tag section */}
-                            <div className="grid grid-cols-1 lg:grid-cols-1 gap-2 items-start">
-                                {/* Category and Source */}
-                                <div className="lg:col-span-1 space-y-1">
-                                    <div className="flex justify-between items-center gap-4">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm font-medium text-foreground">Category:</span>
-                                            <Badge variant="outline" className="text-foreground border-border bg-secondary/50">
-                                                {fullscreenImage.category}
-                                            </Badge>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm font-medium text-foreground">Source:</span>
-                                            <Badge variant="outline" className="text-foreground border-border bg-secondary/50">
-                                                {fullscreenImage.source}
-                                            </Badge>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Prompt section */}
-                            {fullscreenImage.prompt && (
-                                <div className="border-t border-border pt-4">
-                                    <div className="space-y-2">
-                                        <span className="text-sm font-medium text-foreground">Generation Prompt</span>
-                                        <p className="text-sm text-foreground leading-relaxed bg-secondary/30 rounded-lg p-3 border border-border">
-                                            {fullscreenImage.prompt}
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
                 </div>
             </DialogContent>
         </Dialog>
