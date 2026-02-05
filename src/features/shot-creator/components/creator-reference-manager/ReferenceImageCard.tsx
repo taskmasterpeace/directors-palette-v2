@@ -114,13 +114,16 @@ export function ReferenceImageCard({
                     ref={dropZoneRef}
                     accept={IMAGE_ACCEPT}
                     multiple={true}
-                    onDropAccepted={handleDropAccepted}
+                    onDropAccepted={(files) => {
+                        console.log('[ReferenceImageCard] Files dropped:', files.length)
+                        handleDropAccepted(files)
+                    }}
                     idleText={`Tap to add Reference ${index + 1}`}
                     dragText="Drop images here..."
                     acceptText="PNG, JPG, WEBP, GIF"
                     rejectText="Please upload image files"
                     size="large"
-                    className="min-h-[240px] md:min-h-[160px] md:aspect-square rounded-xl bg-gradient-to-br from-card to-background touch-manipulation select-none cursor-pointer"
+                    className="min-h-[240px] md:min-h-[160px] md:aspect-square rounded-xl bg-gradient-to-br from-card to-background touch-manipulation select-none"
                 />
             ) : (
             <DropZone

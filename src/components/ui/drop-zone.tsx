@@ -351,6 +351,14 @@ const DropZone = React.forwardRef<DropZoneRef, DropZoneProps>(
     const rootProps = getRootProps()
     const inputProps = getInputProps()
 
+    // Debug: log when the dropzone is clicked
+    const handleClick = React.useCallback((e: React.MouseEvent) => {
+      console.log('[DropZone] Clicked, noClick:', noClick, 'disabled:', disabled)
+      if (!noClick && !disabled) {
+        open()
+      }
+    }, [noClick, disabled, open])
+
     // Track shake animation for reject state
     const [showShake, setShowShake] = React.useState(false)
 
@@ -570,6 +578,15 @@ const DropZone = React.forwardRef<DropZoneRef, DropZoneProps>(
         ref={internalRef}
         {...rootProps}
         {...props}
+        onClick={(e) => {
+          console.log('[DropZone] Click event triggered, noClick:', noClick)
+          // Call the original onClick from rootProps if it exists
+          rootProps.onClick?.(e)
+          // Also call the onClick from props if passed
+          if ('onClick' in props && typeof props.onClick === 'function') {
+            (props as { onClick: React.MouseEventHandler }).onClick(e)
+          }
+        }}
         role="button"
         tabIndex={disabled ? -1 : 0}
         aria-label={getAriaLabel()}
