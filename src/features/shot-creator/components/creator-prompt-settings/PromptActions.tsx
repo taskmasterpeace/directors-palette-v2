@@ -115,18 +115,39 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     const [lastUsedRecipe, setLastUsedRecipe] = useState<{ recipeId: string; recipeName: string } | null>(null)
 
     // Auto-enable Anchor Transform when @! is detected in prompt
+    // Track if we've shown the anchor notification to avoid spamming
+    const [shownAnchorNotification, setShownAnchorNotification] = React.useState(false)
+
     React.useEffect(() => {
         const hasAnchorSyntax = detectAnchorTransform(shotCreatorPrompt)
         const totalImages = shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)
 
-        if (hasAnchorSyntax && !shotCreatorSettings.enableAnchorTransform && totalImages >= 2) {
-            // Auto-enable when @! is typed and we have 2+ total images (refs + style)
+        if (hasAnchorSyntax && !shotCreatorSettings.enableAnchorTransform) {
+            // Auto-enable when @! is typed (regardless of image count)
             updateSettings({ enableAnchorTransform: true })
+
+            // Show helpful notification
+            if (!shownAnchorNotification) {
+                setShownAnchorNotification(true)
+                if (totalImages < 2) {
+                    toast.info(
+                        '🎨 Anchor Transform activated! Add 2+ images: first = style anchor, rest = images to transform.',
+                        { duration: 5000 }
+                    )
+                } else {
+                    const transforms = totalImages - 1
+                    toast.success(
+                        `🎨 Anchor Transform: ${transforms} image${transforms !== 1 ? 's' : ''} will be transformed using the first image as style reference.`,
+                        { duration: 4000 }
+                    )
+                }
+            }
         } else if (!hasAnchorSyntax && shotCreatorSettings.enableAnchorTransform) {
             // Auto-disable when @! is removed from prompt
             updateSettings({ enableAnchorTransform: false })
+            setShownAnchorNotification(false) // Reset so notification shows again if re-added
         }
-    }, [shotCreatorPrompt, shotCreatorSettings.enableAnchorTransform, shotCreatorSettings.selectedStyle, shotCreatorReferenceImages.length, updateSettings])
+    }, [shotCreatorPrompt, shotCreatorSettings.enableAnchorTransform, shotCreatorSettings.selectedStyle, shotCreatorReferenceImages.length, updateSettings, shownAnchorNotification])
 
     // Get textarea height class based on size
     const getTextareaHeight = (size: TextareaSize) => {
