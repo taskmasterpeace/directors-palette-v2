@@ -226,7 +226,10 @@ export class ImageGenerationService {
     }
 
     if (settings.outputFormat) {
-      replicateInput.output_format = settings.outputFormat
+      // nano-banana only supports jpg and png, not webp
+      // Runtime check since UI may send webp as default
+      const format = settings.outputFormat as string
+      replicateInput.output_format = format === 'webp' ? 'jpg' : settings.outputFormat
     }
 
     if (input.referenceImages && input.referenceImages.length > 0) {
@@ -249,7 +252,10 @@ export class ImageGenerationService {
     }
 
     if (settings.outputFormat) {
-      replicateInput.output_format = settings.outputFormat
+      // nano-banana-pro only supports jpg and png, not webp
+      // Runtime check since UI may send webp as default
+      const format = settings.outputFormat as string
+      replicateInput.output_format = format === 'webp' ? 'jpg' : settings.outputFormat
     }
 
     if (settings.resolution) {

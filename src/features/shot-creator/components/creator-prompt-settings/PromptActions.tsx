@@ -63,6 +63,10 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     const { wildcards } = useWildCardStore()
     const { activeRecipeId, activeFieldValues, setActiveRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts } = useRecipeStore()
 
+    // Riverflow state (tracked locally, passed to generation)
+    // Must be declared before useMemo that depends on it
+    const [riverflowState, setRiverflowState] = useState<RiverflowState | null>(null)
+
     // Calculate generation cost
     const generationCost = React.useMemo(() => {
         const model = shotCreatorSettings.model || 'nano-banana'
@@ -97,8 +101,9 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
 
         // Add font costs for Riverflow (5 pts = $0.05 per font)
         let fontCost = 0
-        if (model === 'riverflow-2-pro' && riverflowState?.fontUrls?.length > 0) {
-            fontCost = riverflowState.fontUrls.length * 0.05
+        const riverflowFontCount = riverflowState?.fontUrls?.length ?? 0
+        if (model === 'riverflow-2-pro' && riverflowFontCount > 0) {
+            fontCost = riverflowFontCount * 0.05
             totalCost += fontCost
         }
 
@@ -127,9 +132,6 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
 
     // Track last used recipe for generation metadata
     const [lastUsedRecipe, setLastUsedRecipe] = useState<{ recipeId: string; recipeName: string } | null>(null)
-
-    // Riverflow state (tracked locally, passed to generation)
-    const [riverflowState, setRiverflowState] = useState<RiverflowState | null>(null)
 
     // Auto-enable Anchor Transform when @! is detected in prompt
     // Track if we've shown the anchor notification to avoid spamming
