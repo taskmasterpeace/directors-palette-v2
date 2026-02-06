@@ -1,6 +1,6 @@
-import React, { ReactNode, useRef } from 'react'
+import React, { ReactNode, useRef, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
-import { Clipboard, Plus, Trash2, ZoomIn, Images } from 'lucide-react'
+import { Clipboard, Plus, Trash2, ZoomIn } from 'lucide-react'
 import Image from 'next/image'
 import { useShotCreatorStore } from "../../store/shot-creator.store"
 import { useReferenceImageManager } from "../../hooks/useReferenceImageManager"
@@ -21,6 +21,7 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
     const { shotCreatorReferenceImages, setFullscreenImage } = useShotCreatorStore()
     const { settings } = useShotCreatorSettings()
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [isDragOver, setIsDragOver] = useState(false)
 
     // When anchor mode is enabled, use the anchor transform limit
     const isAnchorMode = settings.enableAnchorTransform
@@ -41,6 +42,40 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
     const currentCount = shotCreatorReferenceImages.length
     const transformCount = isAnchorMode && currentCount > 0 ? currentCount - 1 : 0
 
+    // Drag and drop handlers
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (e.dataTransfer.types.includes('Files')) {
+            setIsDragOver(true)
+        }
+    }, [])
+
+    const handleDragLeave = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setIsDragOver(false)
+    }, [])
+
+    const handleDrop = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setIsDragOver(false)
+
+        const files = e.dataTransfer.files
+        if (files && files.length > 0) {
+            // Filter to only image files
+            const imageFiles = Array.from(files).filter(file =>
+                file.type.startsWith('image/')
+            )
+            if (imageFiles.length > 0) {
+                const dt = new DataTransfer()
+                imageFiles.forEach(file => dt.items.add(file))
+                handleMultipleImageUpload(dt.files)
+            }
+        }
+    }, [handleMultipleImageUpload])
+
     // For text-only models (maxImages === 0), show simplified UI
     if (maxImages === 0) {
         return (
@@ -57,22 +92,11 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
 
     return (
         <div className="space-y-2">
-            {/* Model selector, Quick Mode Icons, and action buttons */}
+            {/* Model selector, Quick Mode Icons, and Paste button */}
             <div className="flex items-center justify-between gap-2">
                 {modelSelector}
                 <div className="flex items-center gap-1">
                     <QuickModeIcons />
-                    {/* Add Multiple button - visible on desktop */}
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="h-7 px-2 border-border hover:border-border hidden sm:flex"
-                        disabled={shotCreatorReferenceImages.length >= maxImages}
-                    >
-                        <Images className="h-3 w-3 mr-1" />
-                        Add
-                    </Button>
                     <Button
                         size="sm"
                         variant="outline"
@@ -116,8 +140,26 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
                 </div>
             )}
 
-            {/* Horizontal compact layout */}
-            <div className="flex gap-2">
+            {/* Drop zone wrapper for drag & drop images */}
+            <div
+                className={`relative rounded-lg transition-all ${
+                    isDragOver
+                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/5'
+                        : ''
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+            >
+                {/* Drop overlay */}
+                {isDragOver && (
+                    <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center z-20 pointer-events-none">
+                        <div className="text-primary font-medium text-sm">Drop images here</div>
+                    </div>
+                )}
+
+                {/* Horizontal compact layout */}
+                <div className="flex gap-2">
                 {Array.from({ length: visibleSlots }, (_, index: number) => index).map((index: number) => {
                     const image = shotCreatorReferenceImages[index]
                     const isEmpty = !image
@@ -183,6 +225,7 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
                         </div>
                     )
                 })}
+                </div>
             </div>
         </div>
     )
