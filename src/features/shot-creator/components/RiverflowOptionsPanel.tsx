@@ -38,7 +38,7 @@ const DEFAULT_STATE: RiverflowState = {
   detailRefs: [],
   fontUrls: [],
   fontTexts: [],
-  resolution: '2K',
+  resolution: '1K',
   transparency: false,
   enhancePrompt: true,
   maxIterations: 3,
