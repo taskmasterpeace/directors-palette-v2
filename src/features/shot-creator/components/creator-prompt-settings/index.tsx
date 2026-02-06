@@ -22,6 +22,7 @@ import { quickPresets } from "../../constants"
 import AdvancedSettings from "./AdvancedSettings"
 import BasicSettings from "./BasicSettings"
 import { PromptActions } from "./PromptActions"
+import { PromptBrowser } from "./PromptBrowser"
 
 const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
     const [showAdvanced, setShowAdvanced] = useState(false)
@@ -133,6 +134,12 @@ const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
                                 </div>
                             </div>
                         )}
+
+                        {/* Prompt Library Browser */}
+                        {!compact && (
+                            <PromptBrowser onSelectPrompt={insertPreset} />
+                        )}
+
                         <AdvancedSettings />
                     </div>
                 )}
