@@ -13,6 +13,8 @@ import type {
   AdhubTemplate,
   AdhubStyle,
   AdhubGenerationResult,
+  AdhubModel,
+  RiverflowSettings,
 } from '../types/adhub.types'
 
 export type AspectRatio = '1:1' | '4:5' | '9:16' | '16:9' | '4:3'
@@ -38,6 +40,14 @@ interface AdhubState extends AdhubWizardState {
 
   // Generation settings
   aspectRatio: AspectRatio
+  selectedModel: AdhubModel
+
+  // Riverflow-specific state
+  riverflowSourceImages: string[]    // init_images (product photos)
+  riverflowDetailRefs: string[]      // super_resolution_refs (logo cleanup)
+  riverflowFontUrls: string[]        // uploaded font URLs
+  riverflowFontTexts: string[]       // text for each font (max 300 chars)
+  riverflowSettings: RiverflowSettings
 
   // Actions - Navigation
   setStep: (step: AdhubStep) => void
@@ -69,6 +79,20 @@ interface AdhubState extends AdhubWizardState {
 
   // Actions - Generation Settings
   setAspectRatio: (ratio: AspectRatio) => void
+  setSelectedModel: (model: AdhubModel) => void
+
+  // Actions - Riverflow
+  setRiverflowSourceImages: (images: string[]) => void
+  addRiverflowSourceImage: (url: string) => void
+  removeRiverflowSourceImage: (url: string) => void
+  setRiverflowDetailRefs: (refs: string[]) => void
+  addRiverflowDetailRef: (url: string) => void
+  removeRiverflowDetailRef: (url: string) => void
+  addRiverflowFont: (url: string, text: string) => void
+  removeRiverflowFont: (index: number) => void
+  updateRiverflowFontText: (index: number, text: string) => void
+  setRiverflowSettings: (settings: Partial<RiverflowSettings>) => void
+  clearRiverflowInputs: () => void
 
   // Actions - Generation
   setIsGenerating: (generating: boolean) => void
@@ -98,6 +122,13 @@ const getPreviousStep = (current: AdhubStep): AdhubStep | null => {
   return null
 }
 
+const DEFAULT_RIVERFLOW_SETTINGS: RiverflowSettings = {
+  resolution: '2K',
+  transparency: false,
+  enhancePrompt: true,
+  maxIterations: 3,
+}
+
 const initialState: Omit<AdhubState,
   'setStep' | 'nextStep' | 'previousStep' |
   'setBrands' | 'selectBrand' | 'setBrandImages' |
@@ -105,7 +136,11 @@ const initialState: Omit<AdhubState,
   'setStyles' | 'selectStyle' |
   'setFieldValue' | 'setFieldValues' | 'clearFieldValues' |
   'toggleReferenceImage' | 'setSelectedReferenceImages' | 'clearSelectedReferenceImages' |
-  'setAspectRatio' |
+  'setAspectRatio' | 'setSelectedModel' |
+  'setRiverflowSourceImages' | 'addRiverflowSourceImage' | 'removeRiverflowSourceImage' |
+  'setRiverflowDetailRefs' | 'addRiverflowDetailRef' | 'removeRiverflowDetailRef' |
+  'addRiverflowFont' | 'removeRiverflowFont' | 'updateRiverflowFontText' |
+  'setRiverflowSettings' | 'clearRiverflowInputs' |
   'setIsGenerating' | 'setGenerationResult' | 'setError' |
   'reset' | 'resetToStep'
 > = {
@@ -116,6 +151,7 @@ const initialState: Omit<AdhubState,
   fieldValues: {},
   selectedReferenceImages: [],
   aspectRatio: '1:1',
+  selectedModel: 'nano-banana-pro',
   isGenerating: false,
   generationResult: undefined,
   error: undefined,
@@ -124,6 +160,13 @@ const initialState: Omit<AdhubState,
   selectedBrandImages: [],
   templates: [],
   styles: [],
+
+  // Riverflow state
+  riverflowSourceImages: [],
+  riverflowDetailRefs: [],
+  riverflowFontUrls: [],
+  riverflowFontTexts: [],
+  riverflowSettings: DEFAULT_RIVERFLOW_SETTINGS,
 }
 
 export const useAdhubStore = create<AdhubState>()(
@@ -202,6 +245,62 @@ export const useAdhubStore = create<AdhubState>()(
 
       // Generation Settings
       setAspectRatio: (ratio) => set({ aspectRatio: ratio }),
+      setSelectedModel: (model) => set({ selectedModel: model }),
+
+      // Riverflow actions
+      setRiverflowSourceImages: (images) => set({ riverflowSourceImages: images }),
+
+      addRiverflowSourceImage: (url) => set((state) => ({
+        riverflowSourceImages: state.riverflowSourceImages.length < 10
+          ? [...state.riverflowSourceImages, url]
+          : state.riverflowSourceImages,
+      })),
+
+      removeRiverflowSourceImage: (url) => set((state) => ({
+        riverflowSourceImages: state.riverflowSourceImages.filter((img) => img !== url),
+      })),
+
+      setRiverflowDetailRefs: (refs) => set({ riverflowDetailRefs: refs }),
+
+      addRiverflowDetailRef: (url) => set((state) => ({
+        riverflowDetailRefs: state.riverflowDetailRefs.length < 4
+          ? [...state.riverflowDetailRefs, url]
+          : state.riverflowDetailRefs,
+      })),
+
+      removeRiverflowDetailRef: (url) => set((state) => ({
+        riverflowDetailRefs: state.riverflowDetailRefs.filter((ref) => ref !== url),
+      })),
+
+      addRiverflowFont: (url, text) => set((state) => ({
+        riverflowFontUrls: state.riverflowFontUrls.length < 2
+          ? [...state.riverflowFontUrls, url]
+          : state.riverflowFontUrls,
+        riverflowFontTexts: state.riverflowFontTexts.length < 2
+          ? [...state.riverflowFontTexts, text]
+          : state.riverflowFontTexts,
+      })),
+
+      removeRiverflowFont: (index) => set((state) => ({
+        riverflowFontUrls: state.riverflowFontUrls.filter((_, i) => i !== index),
+        riverflowFontTexts: state.riverflowFontTexts.filter((_, i) => i !== index),
+      })),
+
+      updateRiverflowFontText: (index, text) => set((state) => ({
+        riverflowFontTexts: state.riverflowFontTexts.map((t, i) => i === index ? text : t),
+      })),
+
+      setRiverflowSettings: (settings) => set((state) => ({
+        riverflowSettings: { ...state.riverflowSettings, ...settings },
+      })),
+
+      clearRiverflowInputs: () => set({
+        riverflowSourceImages: [],
+        riverflowDetailRefs: [],
+        riverflowFontUrls: [],
+        riverflowFontTexts: [],
+        riverflowSettings: DEFAULT_RIVERFLOW_SETTINGS,
+      }),
 
       // Generation
       setIsGenerating: (generating) => set({ isGenerating: generating }),
@@ -251,6 +350,8 @@ export const useAdhubStore = create<AdhubState>()(
         fieldValues: state.fieldValues,
         selectedReferenceImages: state.selectedReferenceImages,
         aspectRatio: state.aspectRatio,
+        selectedModel: state.selectedModel,
+        // Don't persist Riverflow inputs (large URLs)
       }),
     }
   )

@@ -62,4 +62,11 @@ export interface ShotCreatorSettings {
     // Seedream-specific settings
     sequentialGeneration?: boolean // Enable sequential image generation mode
     maxImages?: number // Max images when sequential generation is enabled (1-15)
+    // Riverflow-specific settings
+    riverflowDetailRefs?: string[] // Logo cleanup references (super_resolution_refs)
+    riverflowFontUrls?: string[] // Custom font file URLs
+    riverflowFontTexts?: string[] // Text to render with each font
+    riverflowTransparency?: boolean
+    riverflowEnhancePrompt?: boolean
+    riverflowMaxIterations?: 1 | 2 | 3
 }

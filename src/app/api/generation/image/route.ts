@@ -180,6 +180,10 @@ export async function POST(request: NextRequest) {
       // Gallery organization fields
       folderId,
       extraMetadata, // For storybook: { source, projectId, projectTitle, assetType, ... }
+      // Riverflow-specific inputs
+      detailRefImages,  // For logo cleanup (super_resolution_refs)
+      fontUrls,         // Custom font file URLs
+      fontTexts,        // Text to render with fonts
     } = body;
 
     // Debug logging for reference images
@@ -213,9 +217,17 @@ export async function POST(request: NextRequest) {
     // ✅ CREDITS: Check if user has sufficient credits (admins bypass)
     const userIsAdmin = isAdminEmail(user.email)
 
-    // Get resolution-aware cost for tiered pricing (nano-banana-pro)
+    // Get resolution-aware cost for tiered pricing (nano-banana-pro, riverflow)
     const resolution = modelSettings?.resolution as string | undefined;
-    const modelCost = getModelCost(model as ModelId, resolution);
+    let modelCost = getModelCost(model as ModelId, resolution);
+
+    // Add font costs for Riverflow (5 cents per font file)
+    if (model === 'riverflow-2-pro' && fontUrls && fontUrls.length > 0) {
+      const fontCost = fontUrls.length * 0.05; // $0.05 per font
+      modelCost += fontCost;
+      console.log(`[Image Generation API] Riverflow font cost: ${fontUrls.length} fonts × $0.05 = $${fontCost.toFixed(2)}`);
+    }
+
     const modelCostCents = Math.round(modelCost * 100); // Convert to cents/points
 
     if (!userIsAdmin) {
@@ -257,6 +269,10 @@ export async function POST(request: NextRequest) {
       referenceImages,
       modelSettings: modelSettings as ImageModelSettings,
       userId: user.id, // ✅ Use authenticated user
+      // Riverflow-specific inputs
+      detailRefImages,
+      fontUrls,
+      fontTexts,
     });
 
     if (!validation.valid) {
@@ -468,6 +484,13 @@ export async function POST(request: NextRequest) {
       console.log('[Image Generation API] Processed reference images:', processedReferenceImages);
     }
 
+    // Process detail ref images for Riverflow (super_resolution_refs)
+    let processedDetailRefImages = detailRefImages;
+    if (model === 'riverflow-2-pro' && detailRefImages && detailRefImages.length > 0) {
+      processedDetailRefImages = await processReferenceImages(detailRefImages, replicate);
+      console.log('[Image Generation API] Processed detail ref images:', processedDetailRefImages);
+    }
+
     // Build Replicate input
     const replicateInput = ImageGenerationService.buildReplicateInput({
       model: model as ImageModel,
@@ -475,6 +498,10 @@ export async function POST(request: NextRequest) {
       referenceImages: processedReferenceImages,
       modelSettings: modelSettings as ImageModelSettings,
       userId: user.id, // ✅ Use authenticated user
+      // Riverflow-specific inputs
+      detailRefImages: processedDetailRefImages,
+      fontUrls,
+      fontTexts,
     });
 
     // Get model identifier

@@ -4,6 +4,26 @@
  */
 
 // =============================================================================
+// MODEL TYPES
+// =============================================================================
+
+export type AdhubModel = 'nano-banana-pro' | 'riverflow-2-pro'
+
+export interface RiverflowInputs {
+  sourceImages: string[]        // init_images (product photos)
+  detailRefs: string[]          // super_resolution_refs (clean labels/logos)
+  fontUrls: string[]            // uploaded font URLs
+  fontTexts: string[]           // text to render (max 300 chars each)
+}
+
+export interface RiverflowSettings {
+  resolution: '1K' | '2K' | '4K'
+  transparency: boolean
+  enhancePrompt: boolean
+  maxIterations: 1 | 2 | 3
+}
+
+// =============================================================================
 // BRAND TYPES
 // =============================================================================
 

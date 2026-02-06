@@ -9,6 +9,9 @@ import { cn } from '@/utils/utils'
 import { useAdhubStore, ASPECT_RATIO_OPTIONS } from '../../store/adhub.store'
 import type { AdhubBrandImage } from '../../types/adhub.types'
 import { ReferenceImagesInfoTip } from '../InfoTip'
+import { AdhubModelSelector } from '../AdhubModelSelector'
+import { RiverflowInputPanel } from '../RiverflowInputPanel'
+import { RiverflowCostPreview } from '../RiverflowCostPreview'
 
 export function FillTemplateStep() {
   const {
@@ -21,6 +24,12 @@ export function FillTemplateStep() {
     toggleReferenceImage,
     aspectRatio,
     setAspectRatio,
+    selectedModel,
+    riverflowSourceImages,
+    riverflowDetailRefs,
+    riverflowFontUrls,
+    riverflowFontTexts,
+    riverflowSettings,
     setIsGenerating,
     setGenerationResult,
     setError,
@@ -71,18 +80,30 @@ export function FillTemplateStep() {
     setError(undefined)
 
     try {
+      // Build request body with model-specific inputs
+      const requestBody: Record<string, unknown> = {
+        brandId: selectedBrand.id,
+        styleId: selectedStyle.id,
+        templateId: selectedTemplate.id,
+        fieldValues,
+        selectedReferenceImages,
+        aspectRatio,
+        model: selectedModel,
+      }
+
+      // Add Riverflow-specific inputs if using Riverflow
+      if (selectedModel === 'riverflow-2-pro') {
+        requestBody.riverflowSourceImages = riverflowSourceImages
+        requestBody.riverflowDetailRefs = riverflowDetailRefs
+        requestBody.riverflowFontUrls = riverflowFontUrls
+        requestBody.riverflowFontTexts = riverflowFontTexts
+        requestBody.riverflowSettings = riverflowSettings
+      }
+
       const response = await fetch('/api/adhub/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          brandId: selectedBrand.id,
-          styleId: selectedStyle.id,
-          templateId: selectedTemplate.id,
-          fieldValues,
-          selectedReferenceImages,
-          aspectRatio,
-          model: 'nano-banana-pro',
-        }),
+        body: JSON.stringify(requestBody),
       })
 
       if (!response.ok) {
@@ -124,6 +145,12 @@ export function FillTemplateStep() {
           Complete the fields below and select any reference images to include.
         </p>
       </div>
+
+      {/* Model Selector */}
+      <AdhubModelSelector />
+
+      {/* Riverflow Panel (shown only when Riverflow selected) */}
+      {selectedModel === 'riverflow-2-pro' && <RiverflowInputPanel />}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column: Settings & Fields */}
@@ -330,6 +357,9 @@ export function FillTemplateStep() {
           </div>
         </div>
       </div>
+
+      {/* Cost Preview for Riverflow */}
+      <RiverflowCostPreview />
 
       {/* Navigation */}
       <div className="flex justify-between mt-6">

@@ -1,0 +1,96 @@
+'use client'
+
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/utils/utils'
+import { useAdhubStore } from '../store/adhub.store'
+import type { AdhubModel } from '../types/adhub.types'
+
+interface ModelOption {
+  id: AdhubModel
+  name: string
+  icon: string
+  description: string
+  badge: string
+  badgeColor: string
+  capabilities: string[]
+}
+
+const MODEL_OPTIONS: ModelOption[] = [
+  {
+    id: 'nano-banana-pro',
+    name: 'Nano Banana Pro',
+    icon: '🔥',
+    description: 'Best for general ads and compositions',
+    badge: 'Pro',
+    badgeColor: 'bg-amber-600',
+    capabilities: ['Text rendering', 'Up to 14 refs', '4K support'],
+  },
+  {
+    id: 'riverflow-2-pro',
+    name: 'Riverflow Pro',
+    icon: '🌊',
+    description: 'Custom fonts, logo cleanup, product shots',
+    badge: 'Fonts',
+    badgeColor: 'bg-blue-600',
+    capabilities: ['Brand fonts', 'Logo cleanup', 'Infographics'],
+  },
+]
+
+export function AdhubModelSelector() {
+  const { selectedModel, setSelectedModel, clearRiverflowInputs } = useAdhubStore()
+
+  const handleModelChange = (model: AdhubModel) => {
+    // Clear Riverflow inputs when switching away
+    if (selectedModel === 'riverflow-2-pro' && model !== 'riverflow-2-pro') {
+      clearRiverflowInputs()
+    }
+    setSelectedModel(model)
+  }
+
+  return (
+    <div className="space-y-3">
+      <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+        Model
+      </h3>
+      <div className="grid grid-cols-2 gap-3">
+        {MODEL_OPTIONS.map((option) => {
+          const isSelected = selectedModel === option.id
+          return (
+            <button
+              key={option.id}
+              onClick={() => handleModelChange(option.id)}
+              className={cn(
+                'p-4 rounded-lg border-2 transition-all text-left',
+                isSelected
+                  ? 'border-primary bg-primary/5'
+                  : 'border-transparent bg-muted/50 hover:border-primary/30'
+              )}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl">{option.icon}</span>
+                <span className="font-medium">{option.name}</span>
+                <Badge className={cn(option.badgeColor, 'text-white text-xs')}>
+                  {option.badge}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mb-2">
+                {option.description}
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {option.capabilities.map((cap) => (
+                  <Badge
+                    key={cap}
+                    variant="secondary"
+                    className="text-[10px] px-1.5 py-0"
+                  >
+                    {cap}
+                  </Badge>
+                ))}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}

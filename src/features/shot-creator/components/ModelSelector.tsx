@@ -79,6 +79,12 @@ const MODEL_CAPABILITIES: Record<ModelId, {
     textRendering: 'Good',
     refImages: 'Up to 14',
     bestFor: ['4K resolution', 'Sequential images', 'High quality']
+  },
+  'riverflow-2-pro': {
+    speed: '~20s (Moderate)',
+    textRendering: 'Excellent',
+    refImages: 'Up to 10 + 4 detail',
+    bestFor: ['Custom fonts', 'Logo cleanup', 'Infographics', 'Product shots']
   }
 }
 

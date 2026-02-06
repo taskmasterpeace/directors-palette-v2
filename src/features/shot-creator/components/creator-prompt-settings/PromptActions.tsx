@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import { useShotCreatorStore } from "@/features/shot-creator/store/shot-creator.store"
 import { useCustomStylesStore } from "../../store/custom-styles.store"
-import { getModelConfig } from "@/config"
+import { getModelConfig, getModelCost } from "@/config"
 import { useShotCreatorSettings } from "../../hooks"
 import { useImageGeneration } from "../../hooks/useImageGeneration"
 import { PromptSyntaxFeedback } from "./PromptSyntaxFeedback"
@@ -40,6 +40,7 @@ import { Category } from "../CategorySelectDialog"
 import { executeRecipe } from "@/features/shared/services/recipe-execution.service"
 import type { Recipe } from "../../types/recipe.types"
 import { toast } from "sonner"
+import { RiverflowOptionsPanel, type RiverflowState } from "../RiverflowOptionsPanel"
 
 /**
  * Check if a recipe has any tool stages that require special execution
@@ -66,7 +67,12 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     const generationCost = React.useMemo(() => {
         const model = shotCreatorSettings.model || 'nano-banana'
         const modelConfig = getModelConfig(model)
-        const costPerImage = modelConfig.costPerImage
+
+        // For Riverflow, use resolution-based pricing
+        let costPerImage = modelConfig.costPerImage
+        if (model === 'riverflow-2-pro' && riverflowState) {
+            costPerImage = getModelCost('riverflow-2-pro', riverflowState.resolution)
+        }
 
         // Check for anchor transform mode (toggle button)
         const isAnchorMode = shotCreatorSettings.enableAnchorTransform
@@ -87,7 +93,14 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             imageCount = parsedPrompt.totalCount || 1
         }
 
-        const totalCost = imageCount * costPerImage
+        let totalCost = imageCount * costPerImage
+
+        // Add font costs for Riverflow (5 pts = $0.05 per font)
+        let fontCost = 0
+        if (model === 'riverflow-2-pro' && riverflowState?.fontUrls?.length > 0) {
+            fontCost = riverflowState.fontUrls.length * 0.05
+            totalCost += fontCost
+        }
 
         // Convert dollar cost to tokens (1 token = $0.01)
         const tokenCost = Math.ceil(totalCost * 100)
@@ -97,9 +110,10 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             totalCost,
             tokenCost,
             costPerImage,
-            isAnchorMode
+            isAnchorMode,
+            fontCost
         }
-    }, [shotCreatorPrompt, shotCreatorSettings, wildcards, shotCreatorReferenceImages.length])
+    }, [shotCreatorPrompt, shotCreatorSettings, wildcards, shotCreatorReferenceImages.length, riverflowState])
 
     // Autocomplete state
     const [showAutocomplete, setShowAutocomplete] = useState(false)
@@ -113,6 +127,9 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
 
     // Track last used recipe for generation metadata
     const [lastUsedRecipe, setLastUsedRecipe] = useState<{ recipeId: string; recipeName: string } | null>(null)
+
+    // Riverflow state (tracked locally, passed to generation)
+    const [riverflowState, setRiverflowState] = useState<RiverflowState | null>(null)
 
     // Auto-enable Anchor Transform when @! is detected in prompt
     // Track if we've shown the anchor notification to avoid spamming
@@ -415,11 +432,29 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
                 baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'webp'
                 break
+            case 'riverflow-2-pro':
+                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
+                // Riverflow-specific settings from panel state
+                if (riverflowState) {
+                    baseSettings.resolution = riverflowState.resolution
+                    baseSettings.transparency = riverflowState.transparency
+                    baseSettings.enhancePrompt = riverflowState.enhancePrompt
+                    baseSettings.maxIterations = riverflowState.maxIterations
+                    baseSettings.outputFormat = riverflowState.transparency ? 'png' : 'webp'
+                } else {
+                    // Defaults if panel hasn't been opened
+                    baseSettings.resolution = '2K'
+                    baseSettings.transparency = false
+                    baseSettings.enhancePrompt = true
+                    baseSettings.maxIterations = 3
+                    baseSettings.outputFormat = 'webp'
+                }
+                break
         }
 
         console.log('✅ Built model settings:', JSON.stringify(baseSettings, null, 2))
         return baseSettings
-    }, [shotCreatorSettings])
+    }, [shotCreatorSettings, riverflowState])
 
     // Handle generation - processes recipe at generation time (no separate Apply step)
     const handleGenerate = useCallback(async () => {
@@ -859,7 +894,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
 
             // Apply suggested settings from recipe
             if (activeRecipe.suggestedModel) {
-                updateSettings({ model: activeRecipe.suggestedModel as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-2512' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5' })
+                updateSettings({ model: activeRecipe.suggestedModel as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-2512' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5' | 'riverflow-2-pro' })
             }
             if (activeRecipe.suggestedAspectRatio) {
                 updateSettings({ aspectRatio: activeRecipe.suggestedAspectRatio })
@@ -899,7 +934,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                     stageReferenceImages[0] = [...new Set([...allRefs, ...stageReferenceImages[0]])]
                 }
 
-                const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-pro') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-2512' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5'
+                const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-pro') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-2512' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5' | 'riverflow-2-pro'
                 const aspectRatio = activeRecipe.suggestedAspectRatio || shotCreatorSettings.aspectRatio || '16:9'
 
                 try {
@@ -951,7 +986,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
             }
 
             // Build model settings
-            const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-2512' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5'
+            const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-2512' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5' | 'riverflow-2-pro'
             const modelSettings = buildModelSettings()
 
             toast.info(`Generating with recipe: ${activeRecipe.name}`)
@@ -979,17 +1014,25 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
             .filter((url): url is string => Boolean(url))
         const modelSettings = buildModelSettings()
 
+        // Build Riverflow inputs if using Riverflow model
+        const riverflowInputs = model === 'riverflow-2-pro' && riverflowState ? {
+            detailRefImages: riverflowState.detailRefs,
+            fontUrls: riverflowState.fontUrls,
+            fontTexts: riverflowState.fontTexts,
+        } : undefined
+
         await generateImage(
             model,
             shotCreatorPrompt,
             referenceUrls,
             modelSettings,
-            lastUsedRecipe || undefined
+            lastUsedRecipe || undefined,
+            riverflowInputs
         )
 
         // Clear recipe tracking after generation
         setLastUsedRecipe(null)
-    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages, activeFieldValues, generationCost])
+    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages, activeFieldValues, generationCost, riverflowState])
 
     // Handle selecting a recipe
     const _handleSelectRecipe = useCallback((recipeId: string) => {
@@ -1172,7 +1215,9 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                     {/* Generation cost and info */}
                     <div className="flex items-center justify-between text-sm">
                         <span className="text-slate-600 dark:text-slate-400">
-                            Cost: {generationCost.imageCount} image{generationCost.imageCount !== 1 ? 's' : ''} × ${generationCost.costPerImage} = ${generationCost.totalCost.toFixed(2)} ({generationCost.tokenCost} tokens)
+                            Cost: {generationCost.imageCount} image{generationCost.imageCount !== 1 ? 's' : ''} × ${generationCost.costPerImage.toFixed(2)}
+                            {generationCost.fontCost > 0 && ` + $${generationCost.fontCost.toFixed(2)} fonts`}
+                            {' = $'}{generationCost.totalCost.toFixed(2)} ({generationCost.tokenCost} pts)
                         </span>
                         <div className="flex gap-2">
                             <Button
@@ -1242,6 +1287,14 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                     onSelectPrompt={(prompt) => setShotCreatorPrompt(shotCreatorPrompt + (shotCreatorPrompt ? ' ' : '') + prompt)}
                     onSelectRecipe={(recipeId) => setActiveRecipe(recipeId)}
                 />
+
+                {/* Riverflow Options Panel - shown when Riverflow model is selected */}
+                {shotCreatorSettings.model === 'riverflow-2-pro' && (
+                    <RiverflowOptionsPanel
+                        onChange={setRiverflowState}
+                        referenceImageCount={shotCreatorReferenceImages.length}
+                    />
+                )}
 
                 {/* Generate button */}
                 <Button

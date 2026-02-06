@@ -29,6 +29,12 @@ export async function POST(request: NextRequest) {
       selectedReferenceImages,
       aspectRatio,
       model,
+      // Riverflow-specific inputs
+      riverflowSourceImages,
+      riverflowDetailRefs,
+      riverflowFontUrls,
+      riverflowFontTexts,
+      riverflowSettings,
     } = body
 
     // Validate required fields
@@ -140,6 +146,58 @@ export async function POST(request: NextRequest) {
     const adId = adData.id
 
     try {
+      // Build model settings based on selected model
+      const selectedModel = model || 'nano-banana-pro'
+      const isRiverflow = selectedModel === 'riverflow-2-pro'
+
+      let modelSettings: Record<string, unknown> = {
+        aspectRatio: aspectRatio || '1:1',
+        outputFormat: 'png',
+      }
+
+      // Add Riverflow-specific settings
+      if (isRiverflow && riverflowSettings) {
+        modelSettings = {
+          aspectRatio: aspectRatio || '1:1',
+          outputFormat: riverflowSettings.transparency ? 'png' : 'webp',
+          resolution: riverflowSettings.resolution || '2K',
+          transparency: riverflowSettings.transparency || false,
+          enhancePrompt: riverflowSettings.enhancePrompt !== false,
+          maxIterations: riverflowSettings.maxIterations || 3,
+        }
+      }
+
+      // For Riverflow, use riverflowSourceImages as the main reference images
+      const refsToSend = isRiverflow && riverflowSourceImages?.length > 0
+        ? riverflowSourceImages
+        : referenceImages
+
+      // Build request body
+      const genRequestBody: Record<string, unknown> = {
+        prompt,
+        model: selectedModel,
+        referenceImages: refsToSend,
+        modelSettings,
+        extraMetadata: {
+          source: 'adhub',
+          adId,
+          brandId,
+          styleId,
+          templateId,
+        },
+      }
+
+      // Add Riverflow-specific inputs
+      if (isRiverflow) {
+        if (riverflowDetailRefs?.length > 0) {
+          genRequestBody.detailRefImages = riverflowDetailRefs
+        }
+        if (riverflowFontUrls?.length > 0) {
+          genRequestBody.fontUrls = riverflowFontUrls
+          genRequestBody.fontTexts = riverflowFontTexts || []
+        }
+      }
+
       // Call the internal image generation API
       const genResponse = await fetch(new URL('/api/generation/image', request.url), {
         method: 'POST',
@@ -148,22 +206,7 @@ export async function POST(request: NextRequest) {
           'Authorization': request.headers.get('Authorization') || '',
           'Cookie': request.headers.get('Cookie') || '',
         },
-        body: JSON.stringify({
-          prompt,
-          model: model || 'nano-banana-pro',
-          referenceImages,
-          modelSettings: {
-            aspectRatio: aspectRatio || '1:1',
-            outputFormat: 'png',
-          },
-          extraMetadata: {
-            source: 'adhub',
-            adId,
-            brandId,
-            styleId,
-            templateId,
-          },
-        }),
+        body: JSON.stringify(genRequestBody),
       })
 
       if (!genResponse.ok) {

@@ -15,6 +15,7 @@ export type ImageModel = Extract<ModelId,
   | 'gpt-image-medium'
   | 'gpt-image-high'
   | 'seedream-4.5'
+  | 'riverflow-2-pro'
 >
 
 // Model-specific settings interfaces
@@ -63,6 +64,17 @@ export interface GptImageSettings {
   inputFidelity?: 'low' | 'high' // How closely to match reference image features
 }
 
+export interface RiverflowProSettings {
+  aspectRatio?: string
+  resolution?: '1K' | '2K' | '4K'
+  outputFormat?: 'webp' | 'png'
+  transparency?: boolean
+  enhancePrompt?: boolean
+  maxIterations?: 1 | 2 | 3
+  // Riverflow-specific inputs (passed separately, not in modelSettings)
+  // These are tracked in store but passed as separate API params
+}
+
 // Union type for all model settings
 export type ImageModelSettings =
   | NanoBananaSettings
@@ -71,6 +83,7 @@ export type ImageModelSettings =
   | QwenImage2512Settings
   | GptImageSettings
   | SeedreamSettings
+  | RiverflowProSettings
 
 // Input for image generation service
 export interface ImageGenerationInput {
@@ -81,6 +94,10 @@ export interface ImageGenerationInput {
   userId: string
   recipeId?: string
   recipeName?: string
+  // Riverflow-specific inputs
+  detailRefImages?: string[]    // For logo cleanup (super_resolution_refs)
+  fontUrls?: string[]           // Custom font file URLs
+  fontTexts?: string[]          // Text to render with each font
 }
 
 // Replicate API input schemas
@@ -132,6 +149,20 @@ export interface SeedreamInput {
   image_input?: string[]
 }
 
+export interface RiverflowProInput {
+  instruction: string           // Note: "instruction" not "prompt"
+  init_images?: string[]        // Up to 10 source/product images
+  super_resolution_refs?: string[] // Up to 4 logo/detail cleanup refs
+  font_urls?: string[]          // Up to 2 font file URLs
+  font_texts?: string[]         // Text to render with fonts (max 300 chars each)
+  resolution?: '1K' | '2K' | '4K'
+  aspect_ratio?: string
+  output_format?: 'webp' | 'png'
+  transparency?: boolean
+  enhance_prompt?: boolean
+  max_iterations?: 1 | 2 | 3
+}
+
 export interface GptImageInput {
   prompt: string
   aspect_ratio?: '1:1' | '3:2' | '2:3'
@@ -151,6 +182,7 @@ export type ReplicateImageInput =
   | QwenImage2512Input
   | GptImageInput
   | SeedreamInput
+  | RiverflowProInput
 
 // API Request/Response types
 export interface ImageGenerationRequest {
@@ -165,6 +197,10 @@ export interface ImageGenerationRequest {
   folderId?: string
   extraMetadata?: Record<string, unknown>
   // Note: user_id removed - now extracted from session cookie server-side
+  // Riverflow-specific inputs
+  detailRefImages?: string[]    // For logo cleanup (super_resolution_refs)
+  fontUrls?: string[]           // Custom font file URLs
+  fontTexts?: string[]          // Text to render with each font
 }
 
 export interface ImageGenerationResponse {
