@@ -8,8 +8,8 @@ import { useShotCreatorSettings } from "../../hooks"
 import { QuickModeIcons, QuickModePanel } from "../quick-modes"
 import { shotImageToLibraryReference } from "../../helpers/type-adapters"
 
-// Anchor Transform limit - max images when anchor mode is enabled
-const ANCHOR_TRANSFORM_MAX_IMAGES = 10
+// Anchor Transform limit - max images when anchor mode is enabled (1 anchor + 15 transforms)
+const ANCHOR_TRANSFORM_MAX_IMAGES = 16
 
 interface CreatorReferenceManagerCompactProps {
     editingMode?: boolean
@@ -22,14 +22,24 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
     const { settings } = useShotCreatorSettings()
     const fileInputRef = useRef<HTMLInputElement>(null)
 
+    // When anchor mode is enabled, use the anchor transform limit
+    const isAnchorMode = settings.enableAnchorTransform
+    const effectiveMaxImages = isAnchorMode
+        ? Math.min(maxImages, ANCHOR_TRANSFORM_MAX_IMAGES)
+        : maxImages
+
     const {
         visibleSlots,
         handleMultipleImageUpload,
         handlePasteImage,
         removeShotCreatorImage
-    } = useReferenceImageManager(maxImages)
+    } = useReferenceImageManager(effectiveMaxImages)
 
     const quickMode = settings.quickMode || 'none'
+
+    // Calculate remaining slots for anchor mode display
+    const currentCount = shotCreatorReferenceImages.length
+    const transformCount = isAnchorMode && currentCount > 0 ? currentCount - 1 : 0
 
     // For text-only models (maxImages === 0), show simplified UI
     if (maxImages === 0) {
@@ -97,18 +107,30 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
                 }}
             />
 
+            {/* Anchor mode indicator */}
+            {isAnchorMode && currentCount >= 2 && (
+                <div className="text-xs text-orange-400 flex items-center gap-1">
+                    <span className="font-mono font-bold">¡</span>
+                    <span>Anchor mode: {transformCount} generation{transformCount !== 1 ? 's' : ''}</span>
+                    <span className="text-muted-foreground">(max 15)</span>
+                </div>
+            )}
+
             {/* Horizontal compact layout */}
             <div className="flex gap-2">
                 {Array.from({ length: visibleSlots }, (_, index: number) => index).map((index: number) => {
                     const image = shotCreatorReferenceImages[index]
                     const isEmpty = !image
+                    const isAnchorImage = isAnchorMode && index === 0 && image
 
                     return (
                         <div key={index} className="flex-1 max-w-[100px] min-w-[60px]">
                             <div
                                 className={`relative aspect-square border border-dashed rounded-md overflow-hidden ${isEmpty
                                     ? 'border-border bg-card/50 hover:border-primary hover:bg-primary/10 cursor-pointer'
-                                    : 'border-primary bg-primary/15'
+                                    : isAnchorImage
+                                        ? 'border-orange-500 bg-orange-500/15'
+                                        : 'border-primary bg-primary/15'
                                     }`}
                                 onClick={isEmpty ? () => fileInputRef.current?.click() : undefined}
                             >
@@ -124,6 +146,12 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
                                             width={250}
                                             height={250}
                                         />
+                                        {/* Anchor badge for first image in anchor mode */}
+                                        {isAnchorImage && (
+                                            <div className="absolute top-0.5 left-0.5 bg-orange-500 text-white text-[8px] font-bold px-1 rounded z-10">
+                                                ANCHOR
+                                            </div>
+                                        )}
                                         {/* Magnifying glass overlay on hover */}
                                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                                             <div className="bg-black/60 rounded-full p-2 backdrop-blur-sm">

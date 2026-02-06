@@ -724,12 +724,19 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
             // Strip @! from prompt before sending to API
             const cleanPrompt = stripAnchorSyntax(shotCreatorPrompt)
 
-            // Warn about large batch size
-            if (inputUrls.length > 10) {
+            // ANCHOR TRANSFORM LIMIT: Max 15 transforms per batch
+            const ANCHOR_TRANSFORM_MAX = 15
+            if (inputUrls.length > ANCHOR_TRANSFORM_MAX) {
+                toast.error(`Anchor Transform is limited to ${ANCHOR_TRANSFORM_MAX} images per batch. You have ${inputUrls.length}. Please remove some images.`)
+                return
+            }
+
+            // Warn about larger batch sizes (5+ images)
+            if (inputUrls.length >= 5) {
                 const costEstimate = inputUrls.length * (generationCost.costPerImage || 20)
                 const confirmed = window.confirm(
-                    `You're about to transform ${inputUrls.length} images. ` +
-                    `This will cost approximately ${costEstimate} credits. Continue?`
+                    `Anchor Transform: ${inputUrls.length} images = ${inputUrls.length} generations.\n` +
+                    `Estimated cost: ${costEstimate} credits.\n\nContinue?`
                 )
                 if (!confirmed) return
             }
