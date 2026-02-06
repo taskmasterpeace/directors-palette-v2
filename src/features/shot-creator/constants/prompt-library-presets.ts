@@ -12,6 +12,7 @@ export interface PromptPreset {
 }
 
 export const PROMPT_CATEGORIES = [
+  { id: 'consistency', name: 'Consistency Modifiers', icon: '🔒' },
   { id: 'cinematic', name: 'Cinematic Shots', icon: '🎬' },
   { id: 'characters', name: 'Character Styles', icon: '👤' },
   { id: 'lighting', name: 'Lighting Setups', icon: '💡' },
@@ -23,6 +24,100 @@ export const PROMPT_CATEGORIES = [
 ]
 
 export const NANO_BANANA_PROMPTS: PromptPreset[] = [
+  // ==================== CONSISTENCY MODIFIERS (10) ====================
+  // These prompts help maintain character/subject consistency when changing angles, lighting, or styles
+  // ALWAYS include reference images when using these!
+  {
+    id: 'cons-01',
+    title: 'Same Character, New Angle',
+    prompt: 'Maintain exact character consistency with reference image - same face, same clothing, same build. Only change the camera angle to: [DESCRIBE ANGLE]. Keep all other visual details identical to the reference.',
+    categoryId: 'consistency',
+    tags: ['consistency', 'angle', 'character', 'reference'],
+    isQuickAccess: true,
+    reference: 'Upload character reference - only camera angle will change'
+  },
+  {
+    id: 'cons-02',
+    title: 'Same Character, New Lighting',
+    prompt: 'Keep character exactly consistent with reference - identical face, clothing, pose, and expression. Only modify the lighting to: [DESCRIBE LIGHTING]. Preserve all character details from the reference image.',
+    categoryId: 'consistency',
+    tags: ['consistency', 'lighting', 'character', 'reference'],
+    isQuickAccess: true,
+    reference: 'Upload character reference - only lighting will change'
+  },
+  {
+    id: 'cons-03',
+    title: 'Same Character, New Background',
+    prompt: 'Maintain exact character consistency with reference image - preserve face, clothing, pose, and all physical details. Only change the background/environment to: [DESCRIBE SETTING]. Character should look identical to reference.',
+    categoryId: 'consistency',
+    tags: ['consistency', 'background', 'environment', 'reference'],
+    isQuickAccess: true,
+    reference: 'Upload character reference - only background will change'
+  },
+  {
+    id: 'cons-04',
+    title: 'Same Character, Art Style Transform',
+    prompt: 'Keep the character\'s identity, features, and proportions exactly consistent with reference. Transform ONLY the art style to: [DESCRIBE STYLE]. The character should be immediately recognizable as the same person/subject.',
+    categoryId: 'consistency',
+    tags: ['consistency', 'style', 'transform', 'reference'],
+    isQuickAccess: true,
+    reference: 'Upload character reference - only art style will change'
+  },
+  {
+    id: 'cons-05',
+    title: 'Same Character, New Outfit',
+    prompt: 'Maintain exact face and body consistency with reference image - same person, same features, same build. Only change their clothing/outfit to: [DESCRIBE OUTFIT]. Face and identity must be preserved exactly.',
+    categoryId: 'consistency',
+    tags: ['consistency', 'outfit', 'clothing', 'reference'],
+    isQuickAccess: true,
+    reference: 'Upload character reference - only outfit will change'
+  },
+  {
+    id: 'cons-06',
+    title: 'Same Character, New Pose',
+    prompt: 'Keep character identity exactly consistent with reference - same face, same clothing, same style. Only change their pose/action to: [DESCRIBE POSE]. Character must be immediately recognizable from the reference.',
+    categoryId: 'consistency',
+    tags: ['consistency', 'pose', 'action', 'reference'],
+    isQuickAccess: true,
+    reference: 'Upload character reference - only pose/action will change'
+  },
+  {
+    id: 'cons-07',
+    title: 'Same Character, New Expression',
+    prompt: 'Maintain exact character consistency with reference - same person, same outfit, same setting. Only change their facial expression to: [DESCRIBE EXPRESSION]. All other visual elements must match the reference exactly.',
+    categoryId: 'consistency',
+    tags: ['consistency', 'expression', 'emotion', 'reference'],
+    isQuickAccess: true,
+    reference: 'Upload character reference - only expression will change'
+  },
+  {
+    id: 'cons-08',
+    title: 'Same Product, New Context',
+    prompt: 'Keep the product exactly consistent with reference image - same design, colors, branding, and details. Only change the context/setting to: [DESCRIBE CONTEXT]. Product must be identical to the reference.',
+    categoryId: 'consistency',
+    tags: ['consistency', 'product', 'commercial', 'reference'],
+    isQuickAccess: true,
+    reference: 'Upload product reference - only context/setting will change'
+  },
+  {
+    id: 'cons-09',
+    title: 'Same Style, Different Subject',
+    prompt: 'Maintain the exact visual style, color palette, lighting approach, and artistic treatment from the reference image. Apply this identical style to a completely new subject: [DESCRIBE NEW SUBJECT].',
+    categoryId: 'consistency',
+    tags: ['consistency', 'style transfer', 'aesthetic', 'reference'],
+    isQuickAccess: true,
+    reference: 'Upload style reference - new subject will match this style'
+  },
+  {
+    id: 'cons-10',
+    title: 'Multi-Shot Consistency',
+    prompt: 'This is part of a multi-shot sequence. Maintain exact visual consistency with all reference images - same characters, same setting, same style, same lighting. This shot shows: [DESCRIBE THIS SPECIFIC SHOT]. Everything must match the established look.',
+    categoryId: 'consistency',
+    tags: ['consistency', 'sequence', 'continuity', 'storyboard'],
+    isQuickAccess: true,
+    reference: 'Upload previous shots as reference for sequence continuity'
+  },
+
   // ==================== CINEMATIC SHOTS (10) ====================
   {
     id: 'cin-01',
@@ -188,85 +283,96 @@ export const NANO_BANANA_PROMPTS: PromptPreset[] = [
   },
 
   // ==================== LIGHTING SETUPS (10) ====================
+  // TIP: Add reference images and use with "maintain character consistency" for best results
   {
     id: 'light-01',
     title: 'Golden Hour Magic',
-    prompt: 'Golden hour lighting, warm orange sunlight, long dramatic shadows, lens flare, soft diffused light, magical hour glow, backlit subject, nature photography',
+    prompt: 'Maintain subject consistency with reference. Apply golden hour lighting - warm orange sunlight, long dramatic shadows, lens flare, soft diffused light, magical hour glow, backlit subject. Keep all subject details identical to reference, only change lighting.',
     categoryId: 'lighting',
-    tags: ['golden hour', 'warm', 'sunset', 'natural'],
-    isQuickAccess: true
+    tags: ['golden hour', 'warm', 'sunset', 'natural', 'consistency'],
+    isQuickAccess: true,
+    reference: 'Upload subject reference - only lighting changes to golden hour'
   },
   {
     id: 'light-02',
     title: 'Dramatic Rembrandt',
-    prompt: 'Rembrandt lighting, triangle of light on cheek, deep shadows, single source dramatic, chiaroscuro effect, classical portrait lighting, rich contrast, painterly quality',
+    prompt: 'Maintain subject consistency with reference. Apply Rembrandt lighting - triangle of light on cheek, deep shadows, single source dramatic, chiaroscuro effect, classical portrait lighting, rich contrast. Subject must match reference exactly.',
     categoryId: 'lighting',
-    tags: ['rembrandt', 'dramatic', 'portrait', 'classical'],
-    isQuickAccess: true
+    tags: ['rembrandt', 'dramatic', 'portrait', 'classical', 'consistency'],
+    isQuickAccess: true,
+    reference: 'Upload subject reference - only lighting changes to Rembrandt style'
   },
   {
     id: 'light-03',
     title: 'Neon Glow',
-    prompt: 'Neon lighting, vibrant pink and blue glow, urban night aesthetic, colorful reflections, synthwave atmosphere, high contrast, cyberpunk mood, electric ambiance',
+    prompt: 'Maintain subject consistency with reference. Apply neon lighting - vibrant pink and blue glow, urban night aesthetic, colorful reflections, synthwave atmosphere, high contrast, cyberpunk mood. Keep subject identical to reference.',
     categoryId: 'lighting',
-    tags: ['neon', 'colorful', 'night', 'urban'],
-    isQuickAccess: true
+    tags: ['neon', 'colorful', 'night', 'urban', 'consistency'],
+    isQuickAccess: true,
+    reference: 'Upload subject reference - only lighting changes to neon'
   },
   {
     id: 'light-04',
     title: 'Soft Window Light',
-    prompt: 'Soft natural window light, gentle shadows, diffused daylight, intimate indoor setting, peaceful atmosphere, even skin tones, commercial beauty lighting',
+    prompt: 'Maintain subject consistency with reference. Apply soft natural window light - gentle shadows, diffused daylight, intimate indoor setting, peaceful atmosphere, even skin tones. Subject details must match reference.',
     categoryId: 'lighting',
-    tags: ['soft', 'natural', 'window', 'diffused'],
-    isQuickAccess: false
+    tags: ['soft', 'natural', 'window', 'diffused', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - only lighting changes to soft window'
   },
   {
     id: 'light-05',
     title: 'High-Key Bright',
-    prompt: 'High-key lighting, bright and airy, minimal shadows, white background, clean aesthetic, fashion photography style, overexposed highlights, ethereal mood',
+    prompt: 'Maintain subject consistency with reference. Apply high-key lighting - bright and airy, minimal shadows, white background, clean aesthetic, overexposed highlights, ethereal mood. Subject must be identical to reference.',
     categoryId: 'lighting',
-    tags: ['high-key', 'bright', 'clean', 'fashion'],
-    isQuickAccess: false
+    tags: ['high-key', 'bright', 'clean', 'fashion', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - only lighting changes to high-key'
   },
   {
     id: 'light-06',
     title: 'Low-Key Moody',
-    prompt: 'Low-key lighting, deep blacks, dramatic contrast, single spotlight, mysterious atmosphere, film noir style, selective illumination, mood-driven shadows',
+    prompt: 'Maintain subject consistency with reference. Apply low-key lighting - deep blacks, dramatic contrast, single spotlight, mysterious atmosphere, film noir style, selective illumination. Keep subject identical to reference.',
     categoryId: 'lighting',
-    tags: ['low-key', 'dramatic', 'noir', 'moody'],
-    isQuickAccess: false
+    tags: ['low-key', 'dramatic', 'noir', 'moody', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - only lighting changes to low-key'
   },
   {
     id: 'light-07',
     title: 'Practical Lights',
-    prompt: 'Practical lighting, visible light sources in frame, realistic interior lighting, warm tungsten bulbs, cozy atmosphere, motivated lighting, cinematic natural',
+    prompt: 'Maintain subject consistency with reference. Apply practical lighting - visible light sources in frame, realistic interior lighting, warm tungsten bulbs, cozy atmosphere, motivated lighting. Subject must match reference.',
     categoryId: 'lighting',
-    tags: ['practical', 'interior', 'warm', 'realistic'],
-    isQuickAccess: false
+    tags: ['practical', 'interior', 'warm', 'realistic', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - only lighting changes to practical'
   },
   {
     id: 'light-08',
     title: 'Silhouette Backlit',
-    prompt: 'Strong backlight, complete silhouette, rim light outline, dramatic contrast, sunrise or sunset, powerful shape definition, artistic composition',
+    prompt: 'Maintain subject consistency with reference. Apply strong backlight - complete silhouette, rim light outline, dramatic contrast, sunrise or sunset, powerful shape definition. Subject silhouette must match reference proportions.',
     categoryId: 'lighting',
-    tags: ['silhouette', 'backlit', 'dramatic', 'shape'],
-    isQuickAccess: false
+    tags: ['silhouette', 'backlit', 'dramatic', 'shape', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - transforms to silhouette'
   },
   {
     id: 'light-09',
     title: 'Studio Three-Point',
-    prompt: 'Professional three-point lighting, key light, fill light, back light separation, clean shadows, studio portrait quality, controlled environment, commercial look',
+    prompt: 'Maintain subject consistency with reference. Apply professional three-point lighting - key light, fill light, back light separation, clean shadows, studio portrait quality, commercial look. Subject must be identical to reference.',
     categoryId: 'lighting',
-    tags: ['studio', 'professional', 'three-point', 'controlled'],
-    isQuickAccess: false
+    tags: ['studio', 'professional', 'three-point', 'controlled', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - only lighting changes to studio'
   },
   {
     id: 'light-10',
     title: 'Candlelight Intimate',
-    prompt: 'Candlelight illumination, warm flickering glow, intimate atmosphere, soft shadows, romantic mood, orange color temperature, close proximity lighting',
+    prompt: 'Maintain subject consistency with reference. Apply candlelight illumination - warm flickering glow, intimate atmosphere, soft shadows, romantic mood, orange color temperature. Keep subject identical to reference.',
     categoryId: 'lighting',
-    tags: ['candlelight', 'warm', 'romantic', 'intimate'],
-    isQuickAccess: false
+    tags: ['candlelight', 'warm', 'romantic', 'intimate', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - only lighting changes to candlelight'
   },
 
   // ==================== ENVIRONMENTS (10) ====================
@@ -516,167 +622,189 @@ export const NANO_BANANA_PROMPTS: PromptPreset[] = [
   },
 
   // ==================== CAMERA ANGLES (10) ====================
+  // TIP: Add reference images and use with "maintain character consistency" for best results
   {
     id: 'cam-01',
     title: 'Extreme Low Angle',
-    prompt: 'Extreme low angle looking up, powerful imposing perspective, subject towering above, dramatic sky background, hero shot composition, dominance and power',
+    prompt: 'Maintain subject consistency with reference. Extreme low angle looking up, powerful imposing perspective, subject towering above, dramatic sky background, hero shot composition, dominance and power. Keep all character/subject details identical to reference.',
     categoryId: 'camera',
-    tags: ['low angle', 'power', 'dramatic', 'hero'],
-    isQuickAccess: true
+    tags: ['low angle', 'power', 'dramatic', 'hero', 'consistency'],
+    isQuickAccess: true,
+    reference: 'Upload subject reference - angle changes but subject stays consistent'
   },
   {
     id: 'cam-02',
     title: 'Birds Eye View',
-    prompt: 'Birds eye view directly above, unique overhead perspective, patterns revealed from above, miniature world effect, god perspective, aerial composition',
+    prompt: 'Maintain subject consistency with reference. Birds eye view directly above, unique overhead perspective, patterns revealed from above, miniature world effect, god perspective, aerial composition. Preserve all subject details from reference.',
     categoryId: 'camera',
-    tags: ['aerial', 'overhead', 'birds eye', 'unique'],
-    isQuickAccess: true
+    tags: ['aerial', 'overhead', 'birds eye', 'unique', 'consistency'],
+    isQuickAccess: true,
+    reference: 'Upload subject reference - view changes but subject stays consistent'
   },
   {
     id: 'cam-03',
     title: 'Dutch Angle',
-    prompt: 'Dutch angle tilted frame, disorientation and unease, dynamic diagonal composition, psychological tension, unconventional perspective, visual instability',
+    prompt: 'Maintain subject consistency with reference. Dutch angle tilted frame, disorientation and unease, dynamic diagonal composition, psychological tension, unconventional perspective, visual instability. Subject must match reference exactly.',
     categoryId: 'camera',
-    tags: ['dutch angle', 'tilted', 'tension', 'dynamic'],
-    isQuickAccess: true
+    tags: ['dutch angle', 'tilted', 'tension', 'dynamic', 'consistency'],
+    isQuickAccess: true,
+    reference: 'Upload subject reference - tilt changes but subject stays consistent'
   },
   {
     id: 'cam-04',
     title: 'Over-the-Shoulder',
-    prompt: 'Over-the-shoulder shot, conversational perspective, depth layers in frame, character point of view, dialogue scene composition, intimate two-shot',
+    prompt: 'Maintain character consistency with reference. Over-the-shoulder shot, conversational perspective, depth layers in frame, character point of view, dialogue scene composition, intimate two-shot. Character must be identical to reference.',
     categoryId: 'camera',
-    tags: ['over-shoulder', 'dialogue', 'pov', 'intimate'],
-    isQuickAccess: false
+    tags: ['over-shoulder', 'dialogue', 'pov', 'intimate', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload character reference for the person being viewed'
   },
   {
     id: 'cam-05',
     title: 'Extreme Wide',
-    prompt: 'Extreme wide shot, vast expanse, tiny subject in environment, sense of scale and isolation, landscape dominance, environmental context',
+    prompt: 'Maintain subject consistency with reference. Extreme wide shot, vast expanse, subject small in environment, sense of scale and isolation, landscape dominance, environmental context. Subject details must match reference.',
     categoryId: 'camera',
-    tags: ['wide', 'landscape', 'scale', 'isolation'],
-    isQuickAccess: false
+    tags: ['wide', 'landscape', 'scale', 'isolation', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - framing changes but subject stays consistent'
   },
   {
     id: 'cam-06',
     title: 'Macro Detail',
-    prompt: 'Macro extreme close-up, incredible detail revealed, shallow depth of field, hidden world exposed, texture and pattern focus, intimate detail',
+    prompt: 'Maintain subject consistency with reference. Macro extreme close-up, incredible detail revealed, shallow depth of field, hidden world exposed, texture and pattern focus, intimate detail. Focus on specific detail while maintaining overall consistency.',
     categoryId: 'camera',
-    tags: ['macro', 'detail', 'close-up', 'texture'],
-    isQuickAccess: false
+    tags: ['macro', 'detail', 'close-up', 'texture', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - shows extreme close-up detail'
   },
   {
     id: 'cam-07',
     title: 'Tracking Side',
-    prompt: 'Side tracking shot, moving alongside subject, dynamic motion feel, parallel movement, smooth camera glide, action progression',
+    prompt: 'Maintain subject consistency with reference. Side tracking shot perspective, moving alongside subject, dynamic motion feel, parallel movement, smooth camera glide, action progression. Subject must match reference exactly.',
     categoryId: 'camera',
-    tags: ['tracking', 'motion', 'dynamic', 'movement'],
-    isQuickAccess: false
+    tags: ['tracking', 'motion', 'dynamic', 'movement', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - captures dynamic side view'
   },
   {
     id: 'cam-08',
     title: 'Worms Eye View',
-    prompt: 'Worms eye view from ground level, looking up at towering elements, dramatic perspective distortion, immersive ground perspective, unusual viewpoint',
+    prompt: 'Maintain subject consistency with reference. Worms eye view from ground level, looking up at towering elements, dramatic perspective distortion, immersive ground perspective, unusual viewpoint. Subject must be identical to reference.',
     categoryId: 'camera',
-    tags: ['worms eye', 'ground', 'perspective', 'dramatic'],
-    isQuickAccess: false
+    tags: ['worms eye', 'ground', 'perspective', 'dramatic', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - extreme low angle view'
   },
   {
     id: 'cam-09',
     title: 'Through Object',
-    prompt: 'Shot through foreground object, frame within frame, creative visual layering, depth and mystery, architectural framing, discovered view',
+    prompt: 'Maintain subject consistency with reference. Shot through foreground object, frame within frame, creative visual layering, depth and mystery, architectural framing, discovered view. Subject in background must match reference.',
     categoryId: 'camera',
-    tags: ['framing', 'through', 'layered', 'creative'],
-    isQuickAccess: false
+    tags: ['framing', 'through', 'layered', 'creative', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - viewed through foreground element'
   },
   {
     id: 'cam-10',
     title: 'Reflection Shot',
-    prompt: 'Shot composed through reflection, mirror or water surface, doubled reality, creative composition, symmetry and distortion, reflective storytelling',
+    prompt: 'Maintain subject consistency with reference. Shot composed through reflection, mirror or water surface, doubled reality, creative composition, symmetry and distortion, reflective storytelling. Subject must be identical to reference.',
     categoryId: 'camera',
-    tags: ['reflection', 'mirror', 'symmetry', 'creative'],
-    isQuickAccess: false
+    tags: ['reflection', 'mirror', 'symmetry', 'creative', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - shown in reflection'
   },
 
   // ==================== ART STYLES (10) ====================
+  // TIP: Add reference images to maintain subject consistency while changing art style
   {
     id: 'style-01',
     title: 'Oil Painting Classic',
-    prompt: 'Classical oil painting style, visible brushstrokes, rich color depth, museum quality, renaissance masters influence, traditional fine art aesthetic',
+    prompt: 'Maintain subject identity with reference. Transform into classical oil painting style - visible brushstrokes, rich color depth, museum quality, renaissance masters influence, traditional fine art aesthetic. Subject must be recognizable from reference.',
     categoryId: 'styles',
-    tags: ['oil painting', 'classical', 'fine art', 'traditional'],
-    isQuickAccess: true
+    tags: ['oil painting', 'classical', 'fine art', 'traditional', 'consistency'],
+    isQuickAccess: true,
+    reference: 'Upload subject reference - transforms to oil painting style'
   },
   {
     id: 'style-02',
     title: 'Watercolor Flow',
-    prompt: 'Delicate watercolor painting, soft color bleeding, paper texture visible, flowing pigment wash, artistic imperfection, gentle impressionistic style',
+    prompt: 'Maintain subject identity with reference. Transform into delicate watercolor painting - soft color bleeding, paper texture visible, flowing pigment wash, artistic imperfection, gentle impressionistic style. Subject must be recognizable.',
     categoryId: 'styles',
-    tags: ['watercolor', 'soft', 'flowing', 'artistic'],
-    isQuickAccess: true
+    tags: ['watercolor', 'soft', 'flowing', 'artistic', 'consistency'],
+    isQuickAccess: true,
+    reference: 'Upload subject reference - transforms to watercolor style'
   },
   {
     id: 'style-03',
     title: 'Digital Concept Art',
-    prompt: 'Professional digital concept art, entertainment industry quality, painterly yet detailed, dramatic composition, AAA game or film pre-production style',
+    prompt: 'Maintain subject identity with reference. Transform into professional digital concept art - entertainment industry quality, painterly yet detailed, dramatic composition, AAA game or film style. Subject must be recognizable from reference.',
     categoryId: 'styles',
-    tags: ['concept art', 'digital', 'professional', 'entertainment'],
-    isQuickAccess: true
+    tags: ['concept art', 'digital', 'professional', 'entertainment', 'consistency'],
+    isQuickAccess: true,
+    reference: 'Upload subject reference - transforms to concept art style'
   },
   {
     id: 'style-04',
     title: 'Anime Cel-Shading',
-    prompt: 'Japanese anime style, clean cel-shading, bold outlines, vibrant flat colors, manga influence, expressive character design, kawaii or shounen aesthetic',
+    prompt: 'Maintain subject identity with reference. Transform into Japanese anime style - clean cel-shading, bold outlines, vibrant flat colors, manga influence, expressive character design. Subject features must be recognizable from reference.',
     categoryId: 'styles',
-    tags: ['anime', 'cel-shading', 'manga', 'japanese'],
-    isQuickAccess: false
+    tags: ['anime', 'cel-shading', 'manga', 'japanese', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - transforms to anime style'
   },
   {
     id: 'style-05',
     title: 'Pixel Art Retro',
-    prompt: 'Retro pixel art style, limited color palette, nostalgic 16-bit aesthetic, chunky pixels visible, video game graphics, 80s/90s gaming era',
+    prompt: 'Maintain subject identity with reference. Transform into retro pixel art style - limited color palette, nostalgic 16-bit aesthetic, chunky pixels visible, video game graphics. Subject silhouette must match reference.',
     categoryId: 'styles',
-    tags: ['pixel art', 'retro', '8-bit', 'gaming'],
-    isQuickAccess: false
+    tags: ['pixel art', 'retro', '8-bit', 'gaming', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - transforms to pixel art style'
   },
   {
     id: 'style-06',
     title: 'Art Nouveau Elegant',
-    prompt: 'Art nouveau decorative style, flowing organic lines, ornate natural patterns, Alphonse Mucha influence, elegant composition, vintage poster aesthetic',
+    prompt: 'Maintain subject identity with reference. Transform into art nouveau decorative style - flowing organic lines, ornate natural patterns, Alphonse Mucha influence, elegant composition. Subject must be recognizable from reference.',
     categoryId: 'styles',
-    tags: ['art nouveau', 'decorative', 'elegant', 'vintage'],
-    isQuickAccess: false
+    tags: ['art nouveau', 'decorative', 'elegant', 'vintage', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - transforms to art nouveau style'
   },
   {
     id: 'style-07',
     title: 'Pop Art Bold',
-    prompt: 'Bold pop art style, bright contrasting colors, halftone dots pattern, Andy Warhol influence, commercial art aesthetic, graphic bold impact',
+    prompt: 'Maintain subject identity with reference. Transform into bold pop art style - bright contrasting colors, halftone dots pattern, Andy Warhol influence, commercial art aesthetic. Subject must be immediately recognizable from reference.',
     categoryId: 'styles',
-    tags: ['pop art', 'bold', 'graphic', 'warhol'],
-    isQuickAccess: false
+    tags: ['pop art', 'bold', 'graphic', 'warhol', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - transforms to pop art style'
   },
   {
     id: 'style-08',
     title: 'Impressionist Light',
-    prompt: 'Impressionist painting style, visible brushwork capturing light, soft focus on atmosphere, Monet influence, plein air feeling, light and color study',
+    prompt: 'Maintain subject identity with reference. Transform into impressionist painting style - visible brushwork capturing light, soft focus on atmosphere, Monet influence, plein air feeling. Subject must be recognizable from reference.',
     categoryId: 'styles',
-    tags: ['impressionist', 'light', 'monet', 'atmospheric'],
-    isQuickAccess: false
+    tags: ['impressionist', 'light', 'monet', 'atmospheric', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - transforms to impressionist style'
   },
   {
     id: 'style-09',
     title: 'Comic Book Graphic',
-    prompt: 'Comic book illustration style, bold ink outlines, dynamic action lines, Ben-Day dots, superhero comics aesthetic, dramatic sequential art',
+    prompt: 'Maintain subject identity with reference. Transform into comic book illustration style - bold ink outlines, dynamic action lines, Ben-Day dots, superhero comics aesthetic. Subject must be recognizable from reference.',
     categoryId: 'styles',
-    tags: ['comic', 'graphic', 'illustration', 'superhero'],
-    isQuickAccess: false
+    tags: ['comic', 'graphic', 'illustration', 'superhero', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - transforms to comic book style'
   },
   {
     id: 'style-10',
     title: 'Photorealistic Detail',
-    prompt: 'Photorealistic rendering, indistinguishable from photograph, extreme detail and accuracy, hyperrealism, perfect lighting simulation, uncanny realism',
+    prompt: 'Maintain subject identity with reference. Transform into photorealistic rendering - indistinguishable from photograph, extreme detail and accuracy, hyperrealism, perfect lighting. Subject must match reference exactly.',
     categoryId: 'styles',
-    tags: ['photorealistic', 'hyperreal', 'detailed', 'accurate'],
-    isQuickAccess: false
+    tags: ['photorealistic', 'hyperreal', 'detailed', 'accurate', 'consistency'],
+    isQuickAccess: false,
+    reference: 'Upload subject reference - transforms to photorealistic'
   },
 
   // ==================== NEW PROMPTS FROM NANO BANANA PRO COMMUNITY ====================
