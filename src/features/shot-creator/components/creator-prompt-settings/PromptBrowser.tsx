@@ -13,7 +13,8 @@ import {
     Pencil,
     Save,
     X,
-    BookOpen
+    BookOpen,
+    Star
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -22,6 +23,8 @@ import {
     PromptPreset
 } from '../../constants/prompt-library-presets'
 import { clipboardManager } from '@/utils/clipboard-manager'
+import { usePromptLibraryStore } from '../../store/prompt-library-store'
+import { cn } from '@/lib/utils'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { isAdminEmail } from '@/features/admin/types/admin.types'
 import { Textarea } from '@/components/ui/textarea'
@@ -44,6 +47,7 @@ interface PromptBrowserProps {
 export function PromptBrowser({ onSelectPrompt }: PromptBrowserProps) {
     const { user } = useAuth()
     const isAdmin = user?.email ? isAdminEmail(user.email) : false
+    const { toggleQuickAccess, prompts: savedPrompts, addPrompt } = usePromptLibraryStore()
 
     const [isOpen, setIsOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
@@ -138,6 +142,47 @@ export function PromptBrowser({ onSelectPrompt }: PromptBrowserProps) {
             newPrompt: editedText
         })
         setEditingPrompt(null)
+    }
+
+    // Check if a preset prompt is in quick access
+    const isInQuickAccess = (promptId: string) => {
+        return savedPrompts.some(p => p.id === promptId && p.isQuickAccess)
+    }
+
+    // Toggle quick access for a preset - adds to store if not exists
+    const handleToggleQuickAccess = async (preset: PromptPreset) => {
+        const existingPrompt = savedPrompts.find(p => p.id === preset.id)
+
+        if (existingPrompt) {
+            // Prompt exists in store, just toggle quick access
+            await toggleQuickAccess(preset.id)
+            toast.success(existingPrompt.isQuickAccess
+                ? `Removed "${preset.title}" from Quick Presets`
+                : `Added "${preset.title}" to Quick Presets`
+            )
+        } else {
+            // Prompt doesn't exist in store, add it with isQuickAccess: true
+            try {
+                await addPrompt({
+                    id: preset.id,
+                    title: preset.title,
+                    prompt: preset.prompt,
+                    categoryId: preset.categoryId,
+                    tags: preset.tags,
+                    isQuickAccess: true,
+                    reference: preset.reference,
+                    metadata: {
+                        source: 'prompt-library',
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    }
+                })
+                toast.success(`Added "${preset.title}" to Quick Presets`)
+            } catch (error) {
+                console.error('Failed to add prompt:', error)
+                toast.error('Failed to add to Quick Presets')
+            }
+        }
     }
 
     return (
@@ -244,6 +289,20 @@ export function PromptBrowser({ onSelectPrompt }: PromptBrowserProps) {
                                                         </div>
 
                                                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => handleToggleQuickAccess(prompt)}
+                                                                className={cn(
+                                                                    "h-7 w-7 p-0",
+                                                                    isInQuickAccess(prompt.id)
+                                                                        ? "text-amber-400 hover:text-amber-500"
+                                                                        : "text-muted-foreground hover:text-foreground"
+                                                                )}
+                                                                title={isInQuickAccess(prompt.id) ? "Remove from Quick Presets" : "Add to Quick Presets"}
+                                                            >
+                                                                <Star className={cn("w-3 h-3", isInQuickAccess(prompt.id) && "fill-current")} />
+                                                            </Button>
                                                             {isAdmin && (
                                                                 <Button
                                                                     variant="ghost"

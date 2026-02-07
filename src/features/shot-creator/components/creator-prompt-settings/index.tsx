@@ -11,14 +11,15 @@ import {
     Settings,
     ChevronDown,
     ChevronUp,
-    Copy
+    Copy,
+    X
 } from 'lucide-react'
 import { useShotCreatorStore } from "@/features/shot-creator/store/shot-creator.store"
 import { useShotCreatorSettings } from "../../hooks"
 import { getModelConfig, ModelId } from "@/config/index"
 import { useCallback, useRef, useState } from "react"
 import { clipboardManager } from '@/utils/clipboard-manager'
-import { quickPresets } from "../../constants"
+import { usePromptLibraryStore } from "../../store/prompt-library-store"
 import AdvancedSettings from "./AdvancedSettings"
 import BasicSettings from "./BasicSettings"
 import { PromptActions } from "./PromptActions"
@@ -29,6 +30,7 @@ const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const { shotCreatorPrompt, setShotCreatorPrompt, shotCreatorReferenceImages } = useShotCreatorStore()
     const { settings: shotCreatorSettings } = useShotCreatorSettings()
+    const { quickPrompts, toggleQuickAccess } = usePromptLibraryStore()
 
     const modelConfig = getModelConfig((shotCreatorSettings.model || 'nano-banana') as ModelId)
 
@@ -115,22 +117,38 @@ const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
                 {/* Advanced Settings (expanded via gear) */}
                 {showAdvanced && (
                     <div className="space-y-4 border-t border-border pt-4">
-                        {/* Quick Presets */}
+                        {/* Quick Presets - Dynamic from store */}
                         {!compact && (
                             <div className="space-y-2">
                                 <Label className="text-sm text-foreground">Quick Presets</Label>
                                 <div className="flex flex-wrap gap-2">
-                                    {quickPresets.map((preset) => (
-                                        <Button
-                                            key={preset.name}
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => insertPreset(preset.prompt)}
-                                            className="text-xs bg-card border-border hover:bg-secondary text-foreground"
-                                        >
-                                            {preset.name}
-                                        </Button>
-                                    ))}
+                                    {quickPrompts.length === 0 ? (
+                                        <span className="text-xs text-muted-foreground">
+                                            No quick presets. Star prompts in the library to add them here.
+                                        </span>
+                                    ) : (
+                                        quickPrompts.map((prompt) => (
+                                            <div key={prompt.id} className="group relative">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => insertPreset(prompt.prompt)}
+                                                    className="text-xs bg-card border-border hover:bg-secondary text-foreground pr-6"
+                                                >
+                                                    {prompt.title}
+                                                </Button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        toggleQuickAccess(prompt.id)
+                                                    }}
+                                                    className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </button>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         )}
