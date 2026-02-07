@@ -24,7 +24,7 @@ import {
 } from '../../constants/prompt-library-presets'
 import { clipboardManager } from '@/utils/clipboard-manager'
 import { usePromptLibraryStore } from '../../store/prompt-library-store'
-import { cn } from '@/lib/utils'
+import { cn } from '@/utils/utils'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { isAdminEmail } from '@/features/admin/types/admin.types'
 import { Textarea } from '@/components/ui/textarea'
