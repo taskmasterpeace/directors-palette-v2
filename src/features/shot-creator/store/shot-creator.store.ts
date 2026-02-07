@@ -15,6 +15,9 @@ export const DEFAULT_SETTINGS: ShotCreatorSettings = {
     disableWildcardSyntax: false,
     enableAnchorTransform: false, // Default: Anchor Transform off
     quickMode: 'none', // Default: no quick mode
+    // Slot Machine syntax defaults
+    disableSlotMachineSyntax: false, // Default: expand {seed} to [variations]
+    slotMachineVariationCount: 3, // Default: 3 variations
 };
 export interface ShotCreatorStore {
     // ---- State ----

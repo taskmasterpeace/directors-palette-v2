@@ -69,4 +69,7 @@ export interface ShotCreatorSettings {
     riverflowTransparency?: boolean
     riverflowEnhancePrompt?: boolean
     riverflowMaxIterations?: 1 | 2 | 3
+    // Slot Machine syntax settings
+    disableSlotMachineSyntax?: boolean // Treat {text} as literal, don't expand to variations
+    slotMachineVariationCount?: number // Number of variations to generate (2-5, default 3)
 }

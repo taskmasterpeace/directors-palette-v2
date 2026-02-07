@@ -1337,11 +1337,13 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                     disablePipeSyntax={shotCreatorSettings.disablePipeSyntax}
                     disableBracketSyntax={shotCreatorSettings.disableBracketSyntax}
                     disableWildcardSyntax={shotCreatorSettings.disableWildcardSyntax}
+                    disableSlotMachineSyntax={shotCreatorSettings.disableSlotMachineSyntax}
                     enableAnchorTransform={shotCreatorSettings.enableAnchorTransform}
                     referenceImageCount={shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)}
                     onTogglePipeSyntax={(disabled) => updateSettings({ disablePipeSyntax: disabled })}
                     onToggleBracketSyntax={(disabled) => updateSettings({ disableBracketSyntax: disabled })}
                     onToggleWildcardSyntax={(disabled) => updateSettings({ disableWildcardSyntax: disabled })}
+                    onToggleSlotMachineSyntax={(disabled) => updateSettings({ disableSlotMachineSyntax: disabled })}
                     onToggleAnchorTransform={(enabled) => updateSettings({ enableAnchorTransform: enabled })}
                 />
 

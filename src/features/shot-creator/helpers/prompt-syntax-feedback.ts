@@ -15,11 +15,13 @@ export interface DynamicPromptResult {
     hasBrackets: boolean
     hasPipes: boolean
     hasWildCards: boolean
+    hasSlotMachine: boolean // {curly brackets} for AI expansion
     expandedPrompts: string[]
     originalPrompt: string
     bracketContent?: string
     options?: string[]
     wildCardNames?: string[]
+    slotMachineSeeds?: string[] // Seeds found in {brackets}
     previewCount: number
     totalCount: number
     warnings?: string[]
@@ -39,6 +41,7 @@ export interface DynamicPromptConfig {
     disablePipeSyntax?: boolean    // Treat | as literal text
     disableBracketSyntax?: boolean // Treat [...] as literal text
     disableWildcardSyntax?: boolean // Treat _word_ as literal text
+    disableSlotMachineSyntax?: boolean // Treat {text} as literal text
 }
 
 const DEFAULT_CONFIG: DynamicPromptConfig = {
@@ -49,7 +52,8 @@ const DEFAULT_CONFIG: DynamicPromptConfig = {
     creditsPerImage: 20,   // Credits per image for cost calculation
     disablePipeSyntax: false,
     disableBracketSyntax: false,
-    disableWildcardSyntax: false
+    disableWildcardSyntax: false,
+    disableSlotMachineSyntax: false
 }
 
 /**
@@ -74,6 +78,7 @@ function parsePipePrompt(
             hasBrackets: false,
             hasPipes: true,
             hasWildCards: false,
+            hasSlotMachine: false, // Will be overwritten by caller
             expandedPrompts: [],
             originalPrompt: prompt,
             options: [],
@@ -88,6 +93,7 @@ function parsePipePrompt(
             hasBrackets: false,
             hasPipes: true,
             hasWildCards: false,
+            hasSlotMachine: false, // Will be overwritten by caller
             expandedPrompts: [],
             originalPrompt: prompt,
             options,
@@ -102,6 +108,7 @@ function parsePipePrompt(
         hasBrackets: false,
         hasPipes: true,
         hasWildCards: false,
+        hasSlotMachine: false, // Will be overwritten by caller
         expandedPrompts: options,
         originalPrompt: prompt,
         options,
@@ -136,6 +143,11 @@ export function parseDynamicPrompt(
     const hasWildCardSyntax = !finalConfig.disableWildcardSyntax && extractWildCardNames(prompt).length > 0
     const hasPipeSyntax = !finalConfig.disablePipeSyntax && prompt.includes('|')
     const hasBracketSyntax = !finalConfig.disableBracketSyntax && /\[([^\[\]]+)\]/.test(prompt)
+    // Slot machine: {curly brackets} for AI expansion
+    const slotMachineRegex = /\{([^{}]+)\}/g
+    const slotMachineMatches = !finalConfig.disableSlotMachineSyntax ? [...prompt.matchAll(slotMachineRegex)] : []
+    const hasSlotMachineSyntax = slotMachineMatches.length > 0
+    const slotMachineSeeds = slotMachineMatches.map(m => m[1])
 
     // STEP 1: Handle wildcards first (substitute with random selections)
     let workingPrompt = prompt
@@ -168,9 +180,11 @@ export function parseDynamicPrompt(
                 hasBrackets: hasBracketSyntax,
                 hasPipes: hasPipeSyntax,
                 hasWildCards: true,
+                hasSlotMachine: hasSlotMachineSyntax,
                 expandedPrompts: [],
                 originalPrompt: prompt,
                 wildCardNames,
+                slotMachineSeeds: hasSlotMachineSyntax ? slotMachineSeeds : undefined,
                 previewCount: 0,
                 totalCount: 0,
                 warnings: [`Missing wild cards: ${missingWildCards.map(name => `_${name}_`).join(', ')}`]
@@ -196,12 +210,17 @@ export function parseDynamicPrompt(
 
     // BRACKETS + PIPES combination (cross-product with cap)
     if (hasRemainingBrackets && hasRemainingPipes) {
-        return parseBracketsAndPipes(workingPrompt, finalConfig, {
+        const result = parseBracketsAndPipes(workingPrompt, finalConfig, {
             originalPrompt: prompt,
             hasWildCards,
             wildCardNames,
             wildCardWarnings
         })
+        return {
+            ...result,
+            hasSlotMachine: hasSlotMachineSyntax,
+            slotMachineSeeds: hasSlotMachineSyntax ? slotMachineSeeds : undefined
+        }
     }
 
     // STEP 3: Handle pipes only
@@ -214,13 +233,19 @@ export function parseDynamicPrompt(
                 ...pipeResult,
                 originalPrompt: prompt,
                 hasWildCards: true,
+                hasSlotMachine: hasSlotMachineSyntax,
                 wildCardNames,
+                slotMachineSeeds: hasSlotMachineSyntax ? slotMachineSeeds : undefined,
                 warnings: [...wildCardWarnings, ...(pipeResult.warnings || [])],
                 creditCost: pipeResult.totalCount * finalConfig.creditsPerImage,
                 imageBreakdown: `${wildCardNames.length} wildcard(s) × ${pipeResult.totalCount} pipe variations`
             }
         }
-        return pipeResult
+        return {
+            ...pipeResult,
+            hasSlotMachine: hasSlotMachineSyntax,
+            slotMachineSeeds: hasSlotMachineSyntax ? slotMachineSeeds : undefined
+        }
     }
 
     // STEP 4: Handle brackets only
@@ -243,11 +268,13 @@ export function parseDynamicPrompt(
                 hasBrackets: true,
                 hasPipes: false,
                 hasWildCards,
+                hasSlotMachine: hasSlotMachineSyntax,
                 expandedPrompts: [],
                 originalPrompt: prompt,
                 bracketContent,
                 options: [],
                 wildCardNames: hasWildCards ? wildCardNames : undefined,
+                slotMachineSeeds: hasSlotMachineSyntax ? slotMachineSeeds : undefined,
                 previewCount: 0,
                 totalCount: 0,
                 warnings: wildCardWarnings
@@ -260,11 +287,13 @@ export function parseDynamicPrompt(
                 hasBrackets: true,
                 hasPipes: false,
                 hasWildCards,
+                hasSlotMachine: hasSlotMachineSyntax,
                 expandedPrompts: [],
                 originalPrompt: prompt,
                 bracketContent,
                 options,
                 wildCardNames: hasWildCards ? wildCardNames : undefined,
+                slotMachineSeeds: hasSlotMachineSyntax ? slotMachineSeeds : undefined,
                 previewCount: 0,
                 totalCount: options.length,
                 warnings: [...wildCardWarnings, `Too many bracket options: ${options.length}. Maximum is ${finalConfig.maxOptions}.`]
@@ -290,11 +319,13 @@ export function parseDynamicPrompt(
             hasBrackets: true,
             hasPipes: false,
             hasWildCards,
+            hasSlotMachine: hasSlotMachineSyntax,
             expandedPrompts,
             originalPrompt: prompt,
             bracketContent,
             options,
             wildCardNames: hasWildCards ? wildCardNames : undefined,
+            slotMachineSeeds: hasSlotMachineSyntax ? slotMachineSeeds : undefined,
             previewCount: Math.min(totalCount, finalConfig.maxPreview),
             totalCount,
             warnings: wildCardWarnings.length > 0 ? wildCardWarnings : undefined,
@@ -311,9 +342,11 @@ export function parseDynamicPrompt(
         hasBrackets: false,
         hasPipes: false,
         hasWildCards,
+        hasSlotMachine: hasSlotMachineSyntax,
         expandedPrompts: [workingPrompt],
         originalPrompt: prompt,
         wildCardNames: hasWildCards ? wildCardNames : undefined,
+        slotMachineSeeds: hasSlotMachineSyntax ? slotMachineSeeds : undefined,
         previewCount: 1,
         totalCount: 1,
         warnings: wildCardWarnings.length > 0 ? wildCardWarnings : undefined,
@@ -388,6 +421,7 @@ function parseBracketsAndPipes(
             hasBrackets: true,
             hasPipes: true,
             hasWildCards: context.hasWildCards,
+            hasSlotMachine: false, // Will be overwritten by caller
             expandedPrompts: [],
             originalPrompt: context.originalPrompt,
             wildCardNames: context.hasWildCards ? context.wildCardNames : undefined,
@@ -415,6 +449,7 @@ function parseBracketsAndPipes(
         hasBrackets: true,
         hasPipes: true,
         hasWildCards: context.hasWildCards,
+        hasSlotMachine: false, // Will be overwritten by caller
         expandedPrompts: allPrompts,
         originalPrompt: context.originalPrompt,
         wildCardNames: context.hasWildCards ? context.wildCardNames : undefined,
@@ -646,4 +681,44 @@ export function getAnchorTransformFeedback(
     const transformCount = refCount - 1
 
     return `📍 Anchor: ${anchorImage} → Will transform ${transformCount} image${transformCount > 1 ? 's' : ''}`
+}
+
+/**
+ * Slot Machine Syntax Detection
+ * Detects {curly brackets} for AI-powered variation expansion
+ */
+
+/**
+ * Detect if prompt contains slot machine syntax {curly brackets}
+ */
+export function detectSlotMachineSyntax(prompt: string): boolean {
+    return /\{[^{}]+\}/.test(prompt)
+}
+
+/**
+ * Extract all slot machine seeds from prompt
+ */
+export function extractSlotMachineSeeds(prompt: string): string[] {
+    const regex = /\{([^{}]+)\}/g
+    const matches = [...prompt.matchAll(regex)]
+    return matches.map(m => m[1])
+}
+
+/**
+ * Count slot machine brackets in prompt
+ */
+export function countSlotMachineBrackets(prompt: string): number {
+    const matches = prompt.match(/\{[^{}]+\}/g)
+    return matches ? matches.length : 0
+}
+
+/**
+ * Generate feedback message for slot machine syntax
+ */
+export function getSlotMachineFeedback(prompt: string): string | null {
+    const seeds = extractSlotMachineSeeds(prompt)
+    if (seeds.length === 0) return null
+
+    const seedList = seeds.map(s => `{${s}}`).join(', ')
+    return `🎰 Slot Machine: Will expand ${seeds.length} slot${seeds.length > 1 ? 's' : ''} → ${seedList}`
 }

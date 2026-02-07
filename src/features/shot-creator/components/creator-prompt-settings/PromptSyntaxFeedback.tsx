@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { AlertCircle, CheckCircle, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { parseDynamicPrompt, validateBracketSyntax } from "../../helpers/prompt-syntax-feedback";
+import { parseDynamicPrompt, validateBracketSyntax, detectSlotMachineSyntax, extractSlotMachineSeeds } from "../../helpers/prompt-syntax-feedback";
 import { useWildCardStore } from "../../store/wildcard.store";
 
 interface PromptSyntaxFeedbackProps {
@@ -13,11 +13,13 @@ interface PromptSyntaxFeedbackProps {
     disablePipeSyntax?: boolean;
     disableBracketSyntax?: boolean;
     disableWildcardSyntax?: boolean;
+    disableSlotMachineSyntax?: boolean;
     enableAnchorTransform?: boolean;
     referenceImageCount?: number;
     onTogglePipeSyntax?: (disabled: boolean) => void;
     onToggleBracketSyntax?: (disabled: boolean) => void;
     onToggleWildcardSyntax?: (disabled: boolean) => void;
+    onToggleSlotMachineSyntax?: (disabled: boolean) => void;
     onToggleAnchorTransform?: (enabled: boolean) => void;
 }
 
@@ -26,11 +28,13 @@ export function PromptSyntaxFeedback({
     disablePipeSyntax,
     disableBracketSyntax,
     disableWildcardSyntax,
+    disableSlotMachineSyntax,
     enableAnchorTransform,
     referenceImageCount = 0,
     onTogglePipeSyntax,
     onToggleBracketSyntax,
     onToggleWildcardSyntax,
+    onToggleSlotMachineSyntax,
     onToggleAnchorTransform
 }: PromptSyntaxFeedbackProps) {
     const { wildcards, loadWildCards } = useWildCardStore();
@@ -38,7 +42,7 @@ export function PromptSyntaxFeedback({
         type: 'info' | 'warning' | 'error' | 'success';
         message: string;
         details?: string;
-        syntaxType?: 'pipe' | 'bracket' | 'wildcard';
+        syntaxType?: 'pipe' | 'bracket' | 'wildcard' | 'slotmachine';
     } | null>(null);
 
     // Load wildcards on mount
@@ -119,6 +123,29 @@ export function PromptSyntaxFeedback({
             return;
         }
 
+        // Check for slot machine syntax {curly brackets}
+        const hasSlotMachine = detectSlotMachineSyntax(prompt);
+        if (hasSlotMachine) {
+            if (disableSlotMachineSyntax) {
+                setFeedback({
+                    type: 'info',
+                    message: 'Slot Machine syntax disabled',
+                    details: '{brackets} will be sent as literal text',
+                    syntaxType: 'slotmachine'
+                });
+            } else {
+                const seeds = extractSlotMachineSeeds(prompt);
+                const seedList = seeds.map(s => `{${s}}`).join(', ');
+                setFeedback({
+                    type: 'success',
+                    message: `Slot Machine: ${seeds.length} slot${seeds.length > 1 ? 's' : ''} to expand`,
+                    details: `Click "Organize Prompt" to generate variations for ${seedList}`,
+                    syntaxType: 'slotmachine'
+                });
+            }
+            return;
+        }
+
         // Check for brackets
         const openBrackets = (prompt.match(/\[/g) || []).length;
         const closeBrackets = (prompt.match(/\]/g) || []).length;
@@ -178,10 +205,10 @@ export function PromptSyntaxFeedback({
 
         // Regular prompt
         setFeedback(null);
-    }, [prompt, wildcards, disablePipeSyntax, disableBracketSyntax, disableWildcardSyntax]);
+    }, [prompt, wildcards, disablePipeSyntax, disableBracketSyntax, disableWildcardSyntax, disableSlotMachineSyntax]);
 
     // Check if any syntax is disabled (for displaying disabled state)
-    const hasAnyDisabled = disablePipeSyntax || disableBracketSyntax || disableWildcardSyntax;
+    const hasAnyDisabled = disablePipeSyntax || disableBracketSyntax || disableWildcardSyntax || disableSlotMachineSyntax;
 
     // Show toggle bar when there's a prompt OR when Anchor Transform could be enabled (2+ images)
     const showToggleBar = (prompt && prompt.trim().length > 0) || referenceImageCount >= 2;
@@ -226,6 +253,8 @@ export function PromptSyntaxFeedback({
                 return onToggleBracketSyntax ? () => onToggleBracketSyntax(!disableBracketSyntax) : null;
             case 'wildcard':
                 return onToggleWildcardSyntax ? () => onToggleWildcardSyntax(!disableWildcardSyntax) : null;
+            case 'slotmachine':
+                return onToggleSlotMachineSyntax ? () => onToggleSlotMachineSyntax(!disableSlotMachineSyntax) : null;
         }
     };
 
@@ -235,6 +264,7 @@ export function PromptSyntaxFeedback({
             case 'pipe': return disablePipeSyntax;
             case 'bracket': return disableBracketSyntax;
             case 'wildcard': return disableWildcardSyntax;
+            case 'slotmachine': return disableSlotMachineSyntax;
         }
     };
 
@@ -323,6 +353,24 @@ export function PromptSyntaxFeedback({
                     >
                         <span className="font-mono font-bold">_</span>
                         <X className={`h-2.5 w-2.5 ${disableWildcardSyntax ? 'block' : 'hidden'}`} />
+                    </button>
+                    {/* Slot Machine toggle */}
+                    <button
+                        type="button"
+                        onClick={() => onToggleSlotMachineSyntax?.(!disableSlotMachineSyntax)}
+                        className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all cursor-pointer ${disableSlotMachineSyntax
+                                ? 'border-border bg-card/30 opacity-50 hover:opacity-75'
+                                : 'border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
+                            }`}
+                        title={disableSlotMachineSyntax
+                            ? 'Slot Machine syntax disabled - Click to enable. Use {text} to generate AI variations'
+                            : 'Slot Machine syntax enabled - Click to disable. Currently: {text} expands to [variation1, variation2, ...]'
+                        }
+                        aria-label={disableSlotMachineSyntax ? 'Enable slot machine syntax for AI variations' : 'Disable slot machine syntax'}
+                        aria-pressed={!disableSlotMachineSyntax}
+                    >
+                        <span className="font-mono font-bold">{ }</span>
+                        <X className={`h-2.5 w-2.5 ${disableSlotMachineSyntax ? 'block' : 'hidden'}`} />
                     </button>
                     {/* Anchor Transform toggle */}
                     <button

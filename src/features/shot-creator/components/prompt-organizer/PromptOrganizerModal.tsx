@@ -27,6 +27,7 @@ import {
     CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { promptParserService } from '../../services/prompt-parser.service'
+import { hasSlotMachineSyntax, expandSlotMachine, type SlotMachineSlot } from '../../services/slot-machine.service'
 import type { StructuredPrompt, DetectedReference } from '../../types/prompt-organizer.types'
 
 interface PromptOrganizerModalProps {
@@ -142,9 +143,48 @@ export function PromptOrganizerModal({
     const [references, setReferences] = useState<DetectedReference[]>([])
     const [previewPrompt, setPreviewPrompt] = useState('')
 
+    // Slot machine mode state
+    const [isSlotMachineMode, setIsSlotMachineMode] = useState(false)
+    const [slotMachineResult, setSlotMachineResult] = useState<{
+        expandedPrompt: string
+        slots: SlotMachineSlot[]
+        originalPrompt: string
+    } | null>(null)
+    const [slotMachineError, setSlotMachineError] = useState<string | null>(null)
+    const [variationCount, setVariationCount] = useState(3)
+
     // Define parsePrompt before using it in useEffect
     const parsePrompt = useCallback(async () => {
         setIsParsing(true)
+        setSlotMachineError(null)
+
+        // Check if prompt has slot machine syntax
+        if (hasSlotMachineSyntax(prompt)) {
+            setIsSlotMachineMode(true)
+            try {
+                const result = await expandSlotMachine(prompt, variationCount)
+                if (result.success) {
+                    setSlotMachineResult({
+                        expandedPrompt: result.expandedPrompt,
+                        slots: result.slots,
+                        originalPrompt: result.originalPrompt
+                    })
+                    setPreviewPrompt(result.expandedPrompt)
+                } else {
+                    setSlotMachineError(result.error || 'Failed to expand slots')
+                }
+            } catch (error) {
+                console.error('Slot machine error:', error)
+                setSlotMachineError(error instanceof Error ? error.message : 'Failed to expand slots')
+            } finally {
+                setIsParsing(false)
+            }
+            return
+        }
+
+        // Regular structured parsing mode
+        setIsSlotMachineMode(false)
+        setSlotMachineResult(null)
         try {
             const result = await promptParserService.parse(prompt)
             setStructured(result.structured)
@@ -154,7 +194,7 @@ export function PromptOrganizerModal({
         } finally {
             setIsParsing(false)
         }
-    }, [prompt])
+    }, [prompt, variationCount])
 
     // Parse prompt when modal opens
     useEffect(() => {
@@ -191,12 +231,19 @@ export function PromptOrganizerModal({
     }
 
     const handleApply = () => {
-        onApply(previewPrompt)
+        if (isSlotMachineMode && slotMachineResult) {
+            onApply(slotMachineResult.expandedPrompt)
+        } else {
+            onApply(previewPrompt)
+        }
         onOpenChange(false)
     }
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(previewPrompt)
+        const textToCopy = isSlotMachineMode && slotMachineResult
+            ? slotMachineResult.expandedPrompt
+            : previewPrompt
+        navigator.clipboard.writeText(textToCopy)
     }
 
     return (
@@ -212,7 +259,110 @@ export function PromptOrganizerModal({
                 {isParsing ? (
                     <div className="flex flex-col items-center justify-center py-12">
                         <LoadingSpinner size="lg" className="mb-4" />
-                        <p className="text-muted-foreground">Analyzing prompt...</p>
+                        <p className="text-muted-foreground">
+                            {isSlotMachineMode ? 'Generating variations...' : 'Analyzing prompt...'}
+                        </p>
+                    </div>
+                ) : isSlotMachineMode ? (
+                    // SLOT MACHINE MODE UI
+                    <div className="space-y-4">
+                        {/* Mode indicator */}
+                        <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                            <span className="text-amber-400 text-lg">🎰</span>
+                            <div>
+                                <p className="font-medium text-amber-400">Slot Machine Mode</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Detected {'{curly brackets}'} - expanding to [variations]
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Variation count selector */}
+                        <div className="flex items-center gap-3">
+                            <Label className="text-sm">Variations per slot:</Label>
+                            <div className="flex gap-1">
+                                {[2, 3, 4, 5].map((count) => (
+                                    <Badge
+                                        key={count}
+                                        variant={variationCount === count ? 'default' : 'outline'}
+                                        className="cursor-pointer"
+                                        onClick={() => setVariationCount(count)}
+                                    >
+                                        {count}
+                                    </Badge>
+                                ))}
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={parsePrompt}
+                                disabled={isParsing}
+                            >
+                                <RefreshCw className={`w-4 h-4 mr-1 ${isParsing ? 'animate-spin' : ''}`} />
+                                Regenerate
+                            </Button>
+                        </div>
+
+                        {slotMachineError ? (
+                            <div className="p-4 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400">
+                                <p className="font-medium">Expansion failed</p>
+                                <p className="text-sm mt-1">{slotMachineError}</p>
+                                <Button variant="outline" size="sm" onClick={parsePrompt} className="mt-3">
+                                    Try Again
+                                </Button>
+                            </div>
+                        ) : slotMachineResult ? (
+                            <>
+                                {/* Before/After comparison */}
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium text-muted-foreground">Original</Label>
+                                        <div className="p-3 rounded-lg border bg-muted/20 text-sm min-h-[80px]">
+                                            {slotMachineResult.originalPrompt}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium text-green-400">Expanded</Label>
+                                        <div className="p-3 rounded-lg border border-green-500/30 bg-green-500/10 text-sm min-h-[80px]">
+                                            {slotMachineResult.expandedPrompt}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Slots breakdown */}
+                                {slotMachineResult.slots.length > 0 && (
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium">Expanded Slots</Label>
+                                        <div className="grid gap-2">
+                                            {slotMachineResult.slots.map((slot, i) => (
+                                                <div key={i} className="flex items-center gap-2 p-2 rounded border bg-muted/10">
+                                                    <Badge variant="outline" className="font-mono">{`{${slot.seed}}`}</Badge>
+                                                    <span className="text-muted-foreground">→</span>
+                                                    <span className="font-mono text-sm text-green-400">
+                                                        [{slot.variations.join(', ')}]
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Actions */}
+                                <div className="flex gap-3 justify-end pt-2">
+                                    <Button variant="outline" onClick={handleCopy}>
+                                        <Copy className="w-4 h-4 mr-2" />
+                                        Copy
+                                    </Button>
+                                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                                        Cancel
+                                    </Button>
+                                    <Button onClick={handleApply}>
+                                        <Check className="w-4 h-4 mr-2" />
+                                        Apply Expansion
+                                    </Button>
+                                </div>
+                            </>
+                        ) : null}
                     </div>
                 ) : structured ? (
                     <div className="space-y-4">
