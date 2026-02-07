@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 
-const GEMINI_MODEL = 'google/gemini-2.0-flash-exp:free'
+const GEMINI_MODEL = 'google/gemini-2.0-flash-001'
 
 function buildSystemPrompt(variationCount: number): string {
     return `You are a Semantic Variation Engine for image generation prompts.
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
 
         // Post-process: ensure no commas inside variations (AI sometimes ignores this)
         // Find all [bracketed content] and replace internal commas with " and "
-        expandedPrompt = expandedPrompt.replace(/\[([^\]]+)\]/g, (match: string, content: string) => {
+        expandedPrompt = expandedPrompt.replace(/\[([^\]]+)\]/g, (_match: string, content: string) => {
             // Split by comma, then check each variation for embedded commas
             const variations = content.split(',').map((v: string) => v.trim())
             // Rejoin - commas between variations are fine, but ensure no commas within
