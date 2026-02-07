@@ -41,6 +41,7 @@ import { executeRecipe } from "@/features/shared/services/recipe-execution.servi
 import type { Recipe } from "../../types/recipe.types"
 import { toast } from "sonner"
 import { RiverflowOptionsPanel, type RiverflowState } from "../RiverflowOptionsPanel"
+import { SlotMachinePanel } from "../slot-machine"
 
 /**
  * Check if a recipe has any tool stages that require special execution
@@ -1264,6 +1265,13 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                         <QuickAccessBar onSelectRecipe={_handleSelectRecipe} />
                     </div>
                 </div>
+
+                {/* Slot Machine Panel - appears when {} detected */}
+                <SlotMachinePanel
+                    prompt={shotCreatorPrompt}
+                    onApply={setShotCreatorPrompt}
+                    disabled={isGenerating}
+                />
 
                 {/* Recipe section */}
                 {activeRecipeId && (
