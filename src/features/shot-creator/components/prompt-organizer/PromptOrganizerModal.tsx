@@ -248,7 +248,7 @@ export function PromptOrganizerModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Wand2 className="w-5 h-5 text-primary" />
@@ -317,13 +317,13 @@ export function PromptOrganizerModal({
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label className="text-sm font-medium text-muted-foreground">Original</Label>
-                                        <div className="p-3 rounded-lg border bg-muted/20 text-sm min-h-[80px]">
+                                        <div className="p-3 rounded-lg border bg-muted/20 text-sm min-h-[80px] break-words overflow-wrap-anywhere">
                                             {slotMachineResult.originalPrompt}
                                         </div>
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-sm font-medium text-green-400">Expanded</Label>
-                                        <div className="p-3 rounded-lg border border-green-500/30 bg-green-500/10 text-sm min-h-[80px]">
+                                        <div className="p-3 rounded-lg border border-green-500/30 bg-green-500/10 text-sm min-h-[80px] break-words overflow-wrap-anywhere">
                                             {slotMachineResult.expandedPrompt}
                                         </div>
                                     </div>
@@ -335,10 +335,10 @@ export function PromptOrganizerModal({
                                         <Label className="text-sm font-medium">Expanded Slots</Label>
                                         <div className="grid gap-2">
                                             {slotMachineResult.slots.map((slot, i) => (
-                                                <div key={i} className="flex items-center gap-2 p-2 rounded border bg-muted/10">
-                                                    <Badge variant="outline" className="font-mono">{`{${slot.seed}}`}</Badge>
-                                                    <span className="text-muted-foreground">→</span>
-                                                    <span className="font-mono text-sm text-green-400">
+                                                <div key={i} className="flex flex-wrap items-start gap-2 p-2 rounded border bg-muted/10">
+                                                    <Badge variant="outline" className="font-mono shrink-0">{`{${slot.seed}}`}</Badge>
+                                                    <span className="text-muted-foreground shrink-0">→</span>
+                                                    <span className="font-mono text-sm text-green-400 break-words min-w-0">
                                                         [{slot.variations.join(', ')}]
                                                     </span>
                                                 </div>
