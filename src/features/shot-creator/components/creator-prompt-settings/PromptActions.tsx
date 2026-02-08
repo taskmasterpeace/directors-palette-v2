@@ -714,7 +714,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
 
             // Determine anchor and inputs
             let anchorUrl: string | null = null
-            let anchorName: string = ''
+            let _anchorName: string = '' // Used for potential future logging
             let inputRefs: typeof shotCreatorReferenceImages = []
 
             if (shotCreatorSettings.selectedStyle) {
@@ -731,7 +731,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                     ? styleImageUrl
                     : `${window.location.origin}${styleImageUrl}`
 
-                anchorName = selectedStyle.name || 'Style Guide'
+                _anchorName = selectedStyle.name || 'Style Guide'
 
                 // ALL reference images are inputs
                 inputRefs = shotCreatorReferenceImages
@@ -749,7 +749,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
 
                 const [anchorRef, ...restRefs] = shotCreatorReferenceImages
                 anchorUrl = anchorRef.url || anchorRef.preview || null
-                anchorName = anchorRef.file?.name || 'Image 1'
+                _anchorName = anchorRef.file?.name || 'Image 1'
                 inputRefs = restRefs
 
                 if (!anchorUrl) {

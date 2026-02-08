@@ -55,13 +55,16 @@ async function processReferenceImages(
 
     // Handle base64 data URIs (from file uploads)
     if (url.startsWith('data:image/')) {
-      console.log(`[Image Generation API] Processing base64 data URI (${url.slice(0, 50)}...)`);
+      lognog.devDebug('Processing base64 data URI', {
+        preview: url.slice(0, 50) + '...',
+        data_length: url.length
+      });
 
       try {
         // Parse the data URI: data:image/png;base64,<data>
         const matches = url.match(/^data:image\/(\w+);base64,(.+)$/);
         if (!matches) {
-          console.error('[Image Generation API] Invalid base64 data URI format');
+          lognog.devWarn('Invalid base64 data URI format', { url_start: url.slice(0, 100) });
           continue;
         }
 
@@ -76,7 +79,7 @@ async function processReferenceImages(
         const uploadedFile = await replicateClient.files.create(file);
         const uploadedUrl = uploadedFile.urls.get;
 
-        console.log(`[Image Generation API] Base64 uploaded to Replicate: ${uploadedUrl}`);
+        lognog.devDebug('Base64 uploaded to Replicate', { url: uploadedUrl });
 
         // Preserve weight if present
         if (weight !== undefined) {
@@ -85,7 +88,9 @@ async function processReferenceImages(
           processed.push(uploadedUrl);
         }
       } catch (error) {
-        console.error('[Image Generation API] Error processing base64 data URI:', error);
+        lognog.devError('Error processing base64 data URI', {
+          error: error instanceof Error ? error.message : String(error)
+        });
       }
       continue;
     }
@@ -96,7 +101,7 @@ async function processReferenceImages(
       continue;
     }
 
-    console.log(`[Image Generation API] Processing inaccessible URL: ${url}`);
+    lognog.devDebug('Processing inaccessible URL', { url });
 
     try {
       let imageBuffer: Buffer;
@@ -105,10 +110,10 @@ async function processReferenceImages(
       if (url.startsWith('/')) {
         // Read from public folder
         const publicPath = path.join(process.cwd(), 'public', url);
-        console.log(`[Image Generation API] Reading local file: ${publicPath}`);
+        lognog.devDebug('Reading local file', { path: publicPath });
 
         if (!fs.existsSync(publicPath)) {
-          console.error(`[Image Generation API] Local file not found: ${publicPath}`);
+          lognog.devWarn('Local file not found', { path: publicPath });
           continue; // Skip this reference image
         }
 
@@ -117,11 +122,11 @@ async function processReferenceImages(
         // It's a URL that's not publicly accessible (e.g., localhost or invalid domain)
         // Try to fetch it if we're on the same server
         const fullUrl = url.startsWith('http') ? url : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${url}`;
-        console.log(`[Image Generation API] Fetching URL: ${fullUrl}`);
+        lognog.devDebug('Fetching URL', { url: fullUrl });
 
         const response = await fetch(fullUrl);
         if (!response.ok) {
-          console.error(`[Image Generation API] Failed to fetch URL: ${fullUrl} - ${response.status}`);
+          lognog.devWarn('Failed to fetch URL', { url: fullUrl, status: response.status });
           continue;
         }
 
@@ -139,7 +144,7 @@ async function processReferenceImages(
       const uploadedFile = await replicateClient.files.create(file);
       const uploadedUrl = uploadedFile.urls.get;
 
-      console.log(`[Image Generation API] Uploaded to Replicate: ${uploadedUrl}`);
+      lognog.devDebug('Uploaded to Replicate', { url: uploadedUrl });
 
       // Preserve weight if present
       if (weight !== undefined) {
@@ -148,7 +153,10 @@ async function processReferenceImages(
         processed.push(uploadedUrl);
       }
     } catch (error) {
-      console.error(`[Image Generation API] Error processing reference image ${url}:`, error);
+      lognog.devError('Error processing reference image', {
+        url,
+        error: error instanceof Error ? error.message : String(error)
+      });
       // Skip this reference image on error
     }
   }
@@ -187,10 +195,11 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Debug logging for reference images
-    console.log('[Image Generation API] Received request:');
-    console.log('  - model:', model);
-    console.log('  - prompt length:', prompt?.length || 0);
-    console.log('  - referenceImages:', JSON.stringify(referenceImages));
+    lognog.devDebug('Image generation request received', {
+      model,
+      prompt_length: prompt?.length || 0,
+      reference_images_count: referenceImages?.length || 0
+    });
 
     // Validate required fields
     if (!model) {
@@ -225,7 +234,11 @@ export async function POST(request: NextRequest) {
     if (model === 'riverflow-2-pro' && fontUrls && fontUrls.length > 0) {
       const fontCost = fontUrls.length * 0.05; // $0.05 per font
       modelCost += fontCost;
-      console.log(`[Image Generation API] Riverflow font cost: ${fontUrls.length} fonts × $0.05 = $${fontCost.toFixed(2)}`);
+      lognog.devDebug('Riverflow font cost added', {
+        font_count: fontUrls.length,
+        font_cost: fontCost.toFixed(2),
+        total_cost: modelCost.toFixed(2)
+      });
     }
 
     const modelCostCents = Math.round(modelCost * 100); // Convert to cents/points
@@ -395,7 +408,7 @@ export async function POST(request: NextRequest) {
           .single()
 
         if (galleryError || !gallery) {
-          console.error('Gallery creation error:', galleryError)
+          lognog.devError('Gallery creation error', { error: galleryError?.message });
           continue
         }
 
@@ -481,14 +494,18 @@ export async function POST(request: NextRequest) {
     let processedReferenceImages = referenceImages;
     if (referenceImages && referenceImages.length > 0) {
       processedReferenceImages = await processReferenceImages(referenceImages, replicate);
-      console.log('[Image Generation API] Processed reference images:', processedReferenceImages);
+      lognog.devDebug('Processed reference images', {
+        count: processedReferenceImages.length
+      });
     }
 
     // Process detail ref images for Riverflow (super_resolution_refs)
     let processedDetailRefImages = detailRefImages;
     if (model === 'riverflow-2-pro' && detailRefImages && detailRefImages.length > 0) {
       processedDetailRefImages = await processReferenceImages(detailRefImages, replicate);
-      console.log('[Image Generation API] Processed detail ref images:', processedDetailRefImages);
+      lognog.devDebug('Processed detail ref images', {
+        count: processedDetailRefImages.length
+      });
     }
 
     // Build Replicate input
@@ -506,19 +523,18 @@ export async function POST(request: NextRequest) {
 
     // Get model identifier
     const replicateModelId = ImageGenerationService.getReplicateModelId(model as ImageModel);
-    console.log('Using model:', replicateModelId);
-    console.log('Input data:', JSON.stringify(replicateInput, null, 2));
+    lognog.devDebug('Using Replicate model', {
+      model_id: replicateModelId,
+      has_webhook: !!process.env.WEBHOOK_URL
+    });
 
     // Create Replicate prediction with webhook (if configured)
     const webhookUrl = process.env.WEBHOOK_URL
       ? `${process.env.WEBHOOK_URL}/api/webhooks/replicate`
       : null;
-    console.log('Webhook URL:', webhookUrl || '(none - will poll for results)');
 
     let prediction;
     try {
-      console.log('Creating prediction with model:', replicateModelId);
-
       // Build prediction options - webhook is optional for local development
       const predictionOptions: {
         model: string;
@@ -535,8 +551,6 @@ export async function POST(request: NextRequest) {
         predictionOptions.webhook = webhookUrl;
         predictionOptions.webhook_events_filter = ['completed'] as const;
       }
-
-      console.log('Input payload:', JSON.stringify(predictionOptions, null, 2));
 
       const replicateStart = Date.now();
       prediction = await replicate.predictions.create(predictionOptions);
@@ -555,8 +569,6 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         user_email: user.email,
       });
-
-      console.log('Prediction created successfully:', prediction.id);
     } catch (replicateError: unknown) {
       const error = replicateError as {
         message?: string;
@@ -566,12 +578,6 @@ export async function POST(request: NextRequest) {
           data?: unknown;
         };
       };
-      console.error('Replicate API error details:', {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-      });
 
       // Log Replicate integration failure
       lognog.warn(`replicate FAIL ${Date.now() - apiStart}ms ${replicateModelId}`, {
@@ -665,7 +671,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (galleryError || !gallery) {
-      console.error('Gallery creation error:', galleryError);
+      lognog.devError('Gallery creation error', { error: galleryError?.message });
       return NextResponse.json(
         { error: 'Failed to create gallery entry' },
         { status: 500 }
@@ -696,22 +702,20 @@ export async function POST(request: NextRequest) {
 
     // If no webhook, poll for results (for local development)
     if (!webhookUrl) {
-      console.log('No webhook - polling for results...');
+      lognog.devDebug('No webhook - polling for results');
       try {
         // Wait for prediction to complete (up to 5 minutes)
         const completedPrediction = await replicate.wait(prediction, {
           interval: 1000, // Check every second
         });
 
-        console.log('Prediction completed:', completedPrediction.status);
+        lognog.devDebug('Prediction completed', { status: completedPrediction.status });
 
         if (completedPrediction.status === 'succeeded' && completedPrediction.output) {
           // Get the image URL (output can be string or array)
           const replicateUrl = Array.isArray(completedPrediction.output)
             ? completedPrediction.output[0]
             : completedPrediction.output;
-
-          console.log('Replicate URL:', replicateUrl);
 
           // Download from Replicate and upload to Supabase Storage (same as webhook handler)
           try {
@@ -724,8 +728,6 @@ export async function POST(request: NextRequest) {
               ext,
               mimeType
             );
-
-            console.log('Uploaded to Supabase Storage:', publicUrl);
 
             // Update gallery entry with completed status and permanent Supabase URL
             const { error: updateError } = await supabase
@@ -740,9 +742,7 @@ export async function POST(request: NextRequest) {
               .eq('id', gallery.id);
 
             if (updateError) {
-              console.error('Failed to update gallery:', updateError);
-            } else {
-              console.log('Gallery updated successfully');
+              lognog.devError('Failed to update gallery', { error: updateError.message });
             }
 
             // ✅ CREDITS: Deduct credits only AFTER successful generation (admins bypass)
@@ -755,9 +755,7 @@ export async function POST(request: NextRequest) {
                 user_email: user.email,
               })
               if (!deductResult.success) {
-                console.error('Failed to deduct credits:', deductResult.error)
-              } else {
-                console.log(`Deducted ${modelCostCents} credits for user ${user.id}. New balance: ${deductResult.newBalance}`)
+                lognog.devError('Failed to deduct credits', { error: deductResult.error });
               }
             }
 
@@ -796,12 +794,6 @@ export async function POST(request: NextRequest) {
           } catch (uploadError) {
             // Log detailed error for debugging in production
             const errorMessage = uploadError instanceof Error ? uploadError.message : 'Unknown error';
-            console.error('[generation/image] Supabase storage FAILED:', {
-              error: errorMessage,
-              hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-              hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-              predictionId: prediction.id,
-            });
 
             // Log storage failure
             lognog.error('Storage upload failed', {
@@ -845,7 +837,9 @@ export async function POST(request: NextRequest) {
           });
         }
       } catch (pollError) {
-        console.error('Polling error:', pollError);
+        lognog.devError('Polling error', {
+          error: pollError instanceof Error ? pollError.message : String(pollError)
+        });
         // Return pending status if polling fails
       }
     }
@@ -857,8 +851,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Image generation error:', error);
-
     // Log error
     lognog.error(error instanceof Error ? error.message : 'Image generation failed', {
       type: 'error',
