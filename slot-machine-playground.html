@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Machine Syntax - Director's Palette</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #e5e5e5;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #fbbf24;
+        }
+
+        .subtitle {
+            color: #a3a3a3;
+            font-size: 0.875rem;
+            margin-bottom: 24px;
+        }
+
+        .panel {
+            background: #171717;
+            border: 1px solid #262626;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .panel-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #a3a3a3;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            color: #a3a3a3;
+            margin-bottom: 6px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            background: #0a0a0a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 12px;
+            color: #e5e5e5;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+            font-size: 0.875rem;
+            resize: vertical;
+            margin-bottom: 16px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #fbbf24;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .counter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #262626;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .counter button {
+            width: 32px;
+            height: 32px;
+            background: #404040;
+            border: none;
+            border-radius: 6px;
+            color: #e5e5e5;
+            font-size: 1.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .counter button:hover {
+            background: #525252;
+        }
+
+        .counter button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .counter-value {
+            font-family: 'SF Mono', monospace;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #fbbf24;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .spin-btn {
+            flex: 1;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            color: #000;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .spin-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+        }
+
+        .spin-btn:active {
+            transform: translateY(0);
+        }
+
+        .spin-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .detected-seeds {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .seed-tag {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            color: #fbbf24;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-family: 'SF Mono', monospace;
+            font-size: 0.8125rem;
+        }
+
+        .no-seeds {
+            color: #525252;
+            font-style: italic;
+            font-size: 0.875rem;
+        }
+
+        .preview-section {
+            margin-top: 20px;
+        }
+
+        .preview-box {
+            background: #0a0a0a;
+            border: 1px solid #262626;
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 100px;
+        }
+
+        .preview-box.expanded {
+            border-color: rgba(34, 197, 94, 0.3);
+            background: rgba(34, 197, 94, 0.05);
+        }
+
+        .preview-text {
+            font-family: 'SF Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .preview-text .bracket {
+            color: #22c55e;
+            font-weight: 600;
+        }
+
+        .preview-text .curly {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .slot-breakdown {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #262626;
+        }
+
+        .slot-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 0.8125rem;
+        }
+
+        .slot-seed {
+            font-family: 'SF Mono', monospace;
+            color: #fbbf24;
+            flex-shrink: 0;
+        }
+
+        .slot-arrow {
+            color: #525252;
+        }
+
+        .slot-variations {
+            font-family: 'SF Mono', monospace;
+            color: #22c55e;
+        }
+
+        .syntax-guide {
+            margin-top: 20px;
+            padding: 16px;
+            background: #1a1a1a;
+            border-radius: 8px;
+        }
+
+        .syntax-guide h3 {
+            font-size: 0.875rem;
+            color: #fbbf24;
+            margin-bottom: 12px;
+        }
+
+        .syntax-example {
+            margin-bottom: 12px;
+        }
+
+        .syntax-example code {
+            display: block;
+            font-family: 'SF Mono', monospace;
+            font-size: 0.8125rem;
+            padding: 8px 12px;
+            background: #0a0a0a;
+            border-radius: 6px;
+            margin-top: 4px;
+        }
+
+        .syntax-example .label {
+            font-size: 0.75rem;
+            color: #737373;
+        }
+
+        .prompt-output {
+            grid-column: 1 / -1;
+        }
+
+        .output-box {
+            background: #0a0a0a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 16px;
+            position: relative;
+        }
+
+        .output-text {
+            font-family: 'SF Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: #a3a3a3;
+            white-space: pre-wrap;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #262626;
+            border: 1px solid #404040;
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #e5e5e5;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #404040;
+        }
+
+        .copy-btn.copied {
+            background: #166534;
+            border-color: #22c55e;
+            color: #22c55e;
+        }
+
+        .presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .preset-btn {
+            background: #262626;
+            border: 1px solid #404040;
+            border-radius: 6px;
+            padding: 6px 12px;
+            color: #a3a3a3;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            background: #404040;
+            color: #e5e5e5;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            margin-bottom: 8px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Slot Machine Syntax Playground</h1>
+            <p class="subtitle">Director's Palette - Explore how {curly brackets} expand to [variations]</p>
+        </div>
+
+        <!-- Input Panel -->
+        <div class="panel">
+            <div class="panel-title">Input</div>
+
+            <label>Presets</label>
+            <div class="presets">
+                <button class="preset-btn" onclick="loadPreset('simple')">Simple</button>
+                <button class="preset-btn" onclick="loadPreset('action')">Action Shot</button>
+                <button class="preset-btn" onclick="loadPreset('mood')">Mood Variations</button>
+                <button class="preset-btn" onclick="loadPreset('location')">Location</button>
+                <button class="preset-btn" onclick="loadPreset('complex')">Multi-Slot</button>
+            </div>
+
+            <label for="prompt">Prompt with {curly brackets}</label>
+            <textarea id="prompt" placeholder="Enter your prompt with {seed text} to expand...">A woman {holding} a flower in {the garden}</textarea>
+
+            <label>Detected Slots</label>
+            <div id="detected-seeds" class="detected-seeds">
+                <span class="no-seeds">Type {curly brackets} to create slots</span>
+            </div>
+
+            <div class="control-row">
+                <label style="margin-bottom: 0;">Variations:</label>
+                <div class="counter">
+                    <button onclick="changeCount(-1)" id="decrement">−</button>
+                    <span class="counter-value" id="count-display">3</span>
+                    <button onclick="changeCount(1)" id="increment">+</button>
+                </div>
+                <button class="spin-btn" onclick="spin()" id="spin-btn">
+                    <span>🎰</span> Spin
+                </button>
+            </div>
+
+            <div class="syntax-guide">
+                <h3>Syntax Rules</h3>
+                <div class="syntax-example">
+                    <span class="label">Input:</span>
+                    <code>A woman <span style="color:#fbbf24">{holding}</span> a flower</code>
+                </div>
+                <div class="syntax-example">
+                    <span class="label">Output:</span>
+                    <code>A woman <span style="color:#22c55e">[smelling, crushing, admiring]</span> a flower</code>
+                </div>
+                <div class="syntax-example">
+                    <span class="label">At generation time, one variation is picked randomly</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Panel -->
+        <div class="panel">
+            <div class="panel-title">Preview</div>
+
+            <label>Before (Original)</label>
+            <div class="preview-box">
+                <div class="preview-text" id="preview-before">A woman {holding} a flower in {the garden}</div>
+            </div>
+
+            <div class="preview-section">
+                <label>After (Expanded)</label>
+                <div class="preview-box expanded" id="preview-after-box">
+                    <div class="preview-text" id="preview-after">
+                        <span style="color:#525252">Click "Spin" to generate variations...</span>
+                    </div>
+                </div>
+
+                <div class="slot-breakdown" id="slot-breakdown" style="display: none;">
+                    <!-- Filled dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Prompt Output -->
+        <div class="panel prompt-output">
+            <div class="panel-title">Generated Prompt</div>
+            <div class="output-box">
+                <div class="output-text" id="output-text">Enter a prompt with {curly brackets} and click Spin to see the expanded result.</div>
+                <button class="copy-btn" onclick="copyOutput()" id="copy-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    Copy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        const state = {
+            prompt: 'A woman {holding} a flower in {the garden}',
+            variationCount: 3,
+            expandedPrompt: '',
+            slots: []
+        };
+
+        // Presets
+        const PRESETS = {
+            simple: 'A woman {holding} a flower',
+            action: 'A man {running} through {the city streets}',
+            mood: 'A {contemplative} portrait in {golden hour light}',
+            location: 'An establishing shot of {a busy marketplace} at {dawn}',
+            complex: 'A {young} woman {walking} through {a foggy forest} wearing {a red coat}'
+        };
+
+        // Simulated AI variations (in real app, this calls the API)
+        const VARIATION_BANK = {
+            'holding': ['smelling', 'crushing', 'admiring', 'dropping', 'examining'],
+            'the garden': ['a meadow', 'the greenhouse', 'the backyard', 'a wildflower field', 'the botanical garden'],
+            'running': ['sprinting', 'jogging', 'dashing', 'rushing', 'racing'],
+            'the city streets': ['downtown alleys', 'neon-lit avenues', 'rain-soaked boulevards', 'crowded sidewalks', 'empty backstreets'],
+            'contemplative': ['pensive', 'melancholic', 'serene', 'wistful', 'introspective'],
+            'golden hour light': ['soft morning glow', 'dramatic backlighting', 'warm sunset rays', 'diffused overcast', 'dappled sunlight'],
+            'a busy marketplace': ['a floating market', 'a medieval bazaar', 'a night market', 'a fish market at dawn', 'an antique fair'],
+            'dawn': ['dusk', 'midnight', 'high noon', 'twilight', 'the blue hour'],
+            'young': ['elderly', 'middle-aged', 'teenage', 'weathered', 'youthful'],
+            'walking': ['wandering', 'stumbling', 'gliding', 'trudging', 'skipping'],
+            'a foggy forest': ['a sunlit grove', 'a dark woodland', 'a snowy pine forest', 'a mystical jungle', 'an autumn forest'],
+            'a red coat': ['a flowing white dress', 'a tattered cloak', 'a leather jacket', 'a vintage cardigan', 'a hooded cape']
+        };
+
+        // Extract seeds from prompt
+        function extractSeeds(prompt) {
+            const regex = /\{([^{}]+)\}/g;
+            const seeds = [];
+            let match;
+            while ((match = regex.exec(prompt)) !== null) {
+                seeds.push(match[1]);
+            }
+            return seeds;
+        }
+
+        // Generate variations for a seed
+        function generateVariations(seed, count) {
+            const bank = VARIATION_BANK[seed.toLowerCase()] || null;
+            if (bank) {
+                // Use predefined variations
+                const shuffled = [...bank].sort(() => Math.random() - 0.5);
+                return shuffled.slice(0, count);
+            }
+            // Generate generic variations
+            const suffixes = ['gently', 'intensely', 'slowly', 'quickly', 'carefully'];
+            const variations = [];
+            for (let i = 0; i < count; i++) {
+                variations.push(`${seed} ${suffixes[i % suffixes.length]}`);
+            }
+            return variations;
+        }
+
+        // Highlight syntax in text
+        function highlightSyntax(text) {
+            return text
+                .replace(/\{([^{}]+)\}/g, '<span class="curly">{$1}</span>')
+                .replace(/\[([^\]]+)\]/g, '<span class="bracket">[$1]</span>');
+        }
+
+        // Update UI
+        function updateUI() {
+            const prompt = state.prompt;
+            const seeds = extractSeeds(prompt);
+
+            // Update detected seeds
+            const seedsContainer = document.getElementById('detected-seeds');
+            if (seeds.length > 0) {
+                seedsContainer.innerHTML = seeds.map(s => `<span class="seed-tag">{${s}}</span>`).join('');
+            } else {
+                seedsContainer.innerHTML = '<span class="no-seeds">Type {curly brackets} to create slots</span>';
+            }
+
+            // Update preview before
+            document.getElementById('preview-before').innerHTML = highlightSyntax(prompt);
+
+            // Update counter
+            document.getElementById('count-display').textContent = state.variationCount;
+            document.getElementById('decrement').disabled = state.variationCount <= 2;
+            document.getElementById('increment').disabled = state.variationCount >= 5;
+
+            // Update spin button
+            document.getElementById('spin-btn').disabled = seeds.length === 0;
+
+            // Update output text
+            updateOutput();
+        }
+
+        // Update output prompt
+        function updateOutput() {
+            const outputEl = document.getElementById('output-text');
+
+            if (!state.expandedPrompt) {
+                outputEl.textContent = 'Enter a prompt with {curly brackets} and click Spin to see the expanded result.';
+                return;
+            }
+
+            outputEl.textContent = state.expandedPrompt;
+        }
+
+        // Spin / Expand
+        function spin() {
+            const btn = document.getElementById('spin-btn');
+            const seeds = extractSeeds(state.prompt);
+
+            if (seeds.length === 0) return;
+
+            // Show loading
+            btn.innerHTML = '<span class="loading"></span> Expanding...';
+            btn.disabled = true;
+
+            // Simulate API delay
+            setTimeout(() => {
+                // Generate variations for each seed
+                state.slots = seeds.map(seed => ({
+                    seed,
+                    variations: generateVariations(seed, state.variationCount)
+                }));
+
+                // Build expanded prompt
+                let expanded = state.prompt;
+                state.slots.forEach(slot => {
+                    expanded = expanded.replace(
+                        `{${slot.seed}}`,
+                        `[${slot.variations.join(', ')}]`
+                    );
+                });
+                state.expandedPrompt = expanded;
+
+                // Update preview after
+                document.getElementById('preview-after').innerHTML = highlightSyntax(expanded);
+
+                // Update slot breakdown
+                const breakdownEl = document.getElementById('slot-breakdown');
+                breakdownEl.style.display = 'block';
+                breakdownEl.innerHTML = state.slots.map(slot => `
+                    <div class="slot-item">
+                        <span class="slot-seed">{${slot.seed}}</span>
+                        <span class="slot-arrow">→</span>
+                        <span class="slot-variations">[${slot.variations.join(', ')}]</span>
+                    </div>
+                `).join('');
+
+                // Reset button
+                btn.innerHTML = '<span>🎰</span> Spin Again';
+                btn.disabled = false;
+
+                updateOutput();
+            }, 800);
+        }
+
+        // Change variation count
+        function changeCount(delta) {
+            const newCount = state.variationCount + delta;
+            if (newCount >= 2 && newCount <= 5) {
+                state.variationCount = newCount;
+                updateUI();
+            }
+        }
+
+        // Load preset
+        function loadPreset(name) {
+            state.prompt = PRESETS[name];
+            state.expandedPrompt = '';
+            state.slots = [];
+            document.getElementById('prompt').value = state.prompt;
+            document.getElementById('preview-after').innerHTML = '<span style="color:#525252">Click "Spin" to generate variations...</span>';
+            document.getElementById('slot-breakdown').style.display = 'none';
+            updateUI();
+        }
+
+        // Copy output
+        function copyOutput() {
+            const text = state.expandedPrompt || state.prompt;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('copy-btn');
+                btn.classList.add('copied');
+                btn.innerHTML = `
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Copied!
+                `;
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = `
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        Copy
+                    `;
+                }, 2000);
+            });
+        }
+
+        // Listen for prompt changes
+        document.getElementById('prompt').addEventListener('input', (e) => {
+            state.prompt = e.target.value;
+            state.expandedPrompt = '';
+            state.slots = [];
+            document.getElementById('preview-after').innerHTML = '<span style="color:#525252">Click "Spin" to generate variations...</span>';
+            document.getElementById('slot-breakdown').style.display = 'none';
+            updateUI();
+        });
+
+        // Initialize
+        updateUI();
+    </script>
+</body>
+</html>
