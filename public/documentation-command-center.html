@@ -1046,32 +1046,38 @@
                 <span class="doc-size">${currentDoc.size}</span>
             `;
 
-            // Show loading state
-            modalContent.innerHTML = '<span style="color: var(--accent-amber);">Loading document...</span>';
             modalOverlay.classList.add('active');
 
-            // Fetch actual file content from API
-            try {
-                const response = await fetch(`/api/docs/read?path=${encodeURIComponent(currentDoc.path)}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    // Format markdown content with basic styling
-                    let formattedContent = data.content
-                        .replace(/^# (.+)$/gm, '═══════════════════════════════════════\n$1\n═══════════════════════════════════════')
-                        .replace(/^## (.+)$/gm, '\n▓▓ $1')
-                        .replace(/^### (.+)$/gm, '\n░░ $1')
-                        .replace(/^- /gm, '  • ')
-                        .replace(/^\d+\. /gm, '  → ');
-                    modalContent.textContent = formattedContent;
-                    // Update the cached content for copy
-                    currentDoc.fullContent = data.content;
-                } else {
-                    const error = await response.json();
-                    modalContent.innerHTML = `<span style="color: #ef4444;">Error loading file: ${error.error || 'Unknown error'}</span>\n\nPath: ${currentDoc.path}\n\nSummary: ${currentDoc.summary}`;
-                }
-            } catch (error) {
-                modalContent.innerHTML = `<span style="color: #ef4444;">Failed to load file. Make sure dev server is running at localhost:3002</span>\n\nPath: ${currentDoc.path}\n\nSummary: ${currentDoc.summary}`;
-            }
+            // Standalone mode - show document info and how to access
+            const standaloneContent = `
+═══════════════════════════════════════
+${currentDoc.title}
+═══════════════════════════════════════
+
+▓▓ File Path
+${currentDoc.path}
+
+▓▓ Summary
+${currentDoc.summary}
+
+▓▓ Category: ${currentDoc.category}
+▓▓ Status: ${currentDoc.status}
+▓▓ Last Modified: ${currentDoc.modified}
+
+───────────────────────────────────────
+STANDALONE MODE
+───────────────────────────────────────
+This is a standalone HTML file. To view the full document:
+
+  • Click "Claude Code" button to copy a command that reads the file
+  • Open the file directly in your code editor
+  • Use "Copy Path" to get the file location
+
+Tip: The Claude Code button generates:
+  "Read the file at [path] and explain its purpose"
+───────────────────────────────────────
+`;
+            modalContent.textContent = standaloneContent;
         }
 
         function closeModal() {
@@ -1087,36 +1093,22 @@
             showToast('Path copied to clipboard!');
         }
 
-        async function copyContent(id) {
+        function copyContent(id) {
             const doc = documents.find(d => d.id === id);
             if (!doc) return;
 
-            // If we have cached full content, use it
-            if (doc.fullContent) {
-                navigator.clipboard.writeText(doc.fullContent);
-                showToast('Full content copied to clipboard!');
-                return;
-            }
+            // Standalone mode - copy summary with metadata
+            const content = `# ${doc.title}
 
-            // Otherwise fetch it
-            try {
-                const response = await fetch(`/api/docs/read?path=${encodeURIComponent(doc.path)}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    doc.fullContent = data.content;
-                    navigator.clipboard.writeText(data.content);
-                    showToast('Full content copied to clipboard!');
-                } else {
-                    // Fallback to summary
-                    const content = `# ${doc.title}\n\nPath: ${doc.path}\n\n${doc.summary}`;
-                    navigator.clipboard.writeText(content);
-                    showToast('Summary copied (full content unavailable)');
-                }
-            } catch {
-                const content = `# ${doc.title}\n\nPath: ${doc.path}\n\n${doc.summary}`;
-                navigator.clipboard.writeText(content);
-                showToast('Summary copied (server unavailable)');
-            }
+Path: ${doc.path}
+Category: ${doc.category}
+Status: ${doc.status}
+Modified: ${doc.modified}
+
+## Summary
+${doc.summary}`;
+            navigator.clipboard.writeText(content);
+            showToast('Document summary copied!');
         }
 
         function claudeCode(id) {
