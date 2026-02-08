@@ -151,8 +151,8 @@ const ShotCreator = () => {
             })
 
             // Refresh gallery
-            setTimeout(async () => {
-                await useUnifiedGalleryStore.getState().refreshGallery()
+            setTimeout(() => {
+                useUnifiedGalleryStore.getState().refreshGallery().catch(console.error)
             }, 500)
         } catch (error) {
             console.error('Background removal error:', error)
@@ -207,8 +207,8 @@ const ShotCreator = () => {
                 description: "Reference image added to your gallery."
             })
 
-            setTimeout(async () => {
-                await useUnifiedGalleryStore.getState().refreshGallery()
+            setTimeout(() => {
+                useUnifiedGalleryStore.getState().refreshGallery().catch(console.error)
             }, 500)
         } catch (error) {
             console.error('Save to gallery error:', error)

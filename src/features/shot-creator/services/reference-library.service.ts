@@ -3,7 +3,8 @@
  * Handles Supabase operations for reference library management
  */
 
-import { getClient } from "@/lib/db/client";
+import { getClient } from "@/lib/db/client"
+import { toError } from "../helpers"
 
 export interface ReferenceData {
     id?: string;
@@ -54,7 +55,7 @@ export async function createReference(
         return { data, error: null };
     } catch (error) {
         console.error('Error creating reference:', error);
-        return { data: null, error: error as Error };
+        return { data: null, error: toError(error) };
     }
 }
 
@@ -113,7 +114,7 @@ export async function getReferences(
         return { data: data as ReferenceWithGallery[], error: null };
     } catch (error) {
         console.error('Error fetching references:', error);
-        return { data: null, error: error as Error };
+        return { data: null, error: toError(error) };
     }
 }
 
@@ -248,7 +249,7 @@ export async function updateReferenceCategory(
         return { data, error: null };
     } catch (error) {
         console.error('Error updating reference category:', error);
-        return { data: null, error: error as Error };
+        return { data: null, error: toError(error) };
     }
 }
 
@@ -274,7 +275,7 @@ export async function updateReferenceTags(
         return { data, error: null };
     } catch (error) {
         console.error('Error updating reference tags:', error);
-        return { data: null, error: error as Error };
+        return { data: null, error: toError(error) };
     }
 }
 
@@ -297,7 +298,7 @@ export async function deleteReference(
         return { error: null };
     } catch (error) {
         console.error('Error deleting reference:', error);
-        return { error: error as Error };
+        return { error: toError(error) };
     }
 }
 
@@ -325,6 +326,6 @@ export async function isInReferenceLibrary(
         };
     } catch (error) {
         console.error('Error checking reference existence:', error);
-        return { exists: false, error: error as Error };
+        return { exists: false, error: toError(error) };
     }
 }

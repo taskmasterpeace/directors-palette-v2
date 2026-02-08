@@ -3,8 +3,9 @@
  * Handles Supabase operations for wildcard management
  */
 
-import { getClient } from "@/lib/db/client";
-import { WildCard } from "../helpers/wildcard/parser";
+import { getClient } from "@/lib/db/client"
+import { WildCard } from "../helpers/wildcard/parser"
+import { toError } from "../helpers"
 
 export interface CreateWildCardInput {
     name: string;
@@ -98,7 +99,7 @@ export async function createWildCard(
         return { data: data as WildCard, error: null };
     } catch (error) {
         console.error('Error creating wildcard:', error);
-        return { data: null, error: error as Error };
+        return { data: null, error: toError(error) };
     }
 }
 
@@ -134,7 +135,7 @@ export async function getWildCards(
         return { data: data as WildCard[], error: null };
     } catch (error) {
         console.error('Error fetching wildcards:', error);
-        return { data: null, error: error as Error };
+        return { data: null, error: toError(error) };
     }
 }
 
@@ -158,7 +159,7 @@ export async function getWildCardById(
         return { data: data as WildCard, error: null };
     } catch (error) {
         console.error('Error fetching wildcard:', error);
-        return { data: null, error: error as Error };
+        return { data: null, error: toError(error) };
     }
 }
 
@@ -188,7 +189,7 @@ export async function getWildCardByName(
         return { data: data as WildCard | null, error: null };
     } catch (error) {
         console.error('Error fetching wildcard by name:', error);
-        return { data: null, error: error as Error };
+        return { data: null, error: toError(error) };
     }
 }
 
@@ -230,7 +231,7 @@ export async function updateWildCard(
         return { data: data as WildCard, error: null };
     } catch (error) {
         console.error('Error updating wildcard:', error);
-        return { data: null, error: error as Error };
+        return { data: null, error: toError(error) };
     }
 }
 
@@ -253,7 +254,7 @@ export async function deleteWildCard(
         return { error: null };
     } catch (error) {
         console.error('Error deleting wildcard:', error);
-        return { error: error as Error };
+        return { error: toError(error) };
     }
 }
 
@@ -303,6 +304,6 @@ export async function getWildCardStats(): Promise<{
         };
     } catch (error) {
         console.error('Error getting wildcard stats:', error);
-        return { total: 0, byCategory: {}, error: error as Error };
+        return { total: 0, byCategory: {}, error: toError(error) };
     }
 }

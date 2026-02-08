@@ -455,7 +455,6 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
                 break
         }
 
-        console.log('✅ Built model settings:', JSON.stringify(baseSettings, null, 2))
         return baseSettings
     }, [shotCreatorSettings, riverflowState])
 
@@ -470,8 +469,6 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
         if (isStyleTransferMode && shotCreatorReferenceImages.length > 0) {
             // ALL reference images collectively define the style
             // Whether 1 image or multiple, they all inform the 3x3 Style Sheet generation
-            console.log('🎨 Style Sheet: Generating 3x3 style guide with', shotCreatorReferenceImages.length, 'reference(s)')
-
             // Parse style name from prompt (e.g., "Noir Grit:" or "Oxford Style:")
             const promptText = shotCreatorPrompt.trim()
             const styleNameMatch = promptText.match(/^([^:]+):/i)
@@ -573,8 +570,6 @@ REMINDER: Title "${styleName}" must be COMPLETE and FULLY READABLE at the top - 
 
             if (hasReferenceImages) {
                 // ===== IMAGE-BASED TURNAROUND =====
-                console.log('👤 Character Sheet: Using reference image mode')
-
                 const turnaroundPrompt = `Create a professional character reference sheet based strictly on the uploaded reference image.
 
 Use a clean, neutral plain background and present the sheet as a technical model turnaround while matching the exact visual style of the reference (same realism level, rendering approach, texture, color treatment, and overall aesthetic).
@@ -622,9 +617,6 @@ Output a crisp, print-ready reference sheet look with sharp details.`
 
             } else {
                 // ===== DESCRIPTION-BASED TURNAROUND =====
-                console.log('👤 Character Sheet: Using description mode')
-                console.log('👤 Character description:', shotCreatorPrompt)
-
                 // Parse character name from prompt
                 // Supports: "Marcus: description", "Marcus, description", "description named Marcus", "description called Marcus"
                 let characterName = ''
@@ -651,10 +643,6 @@ Output a crisp, print-ready reference sheet look with sharp details.`
                 const nameTag = characterName
                     ? `@${characterName.toLowerCase().replace(/\s+/g, '_')}`
                     : ''
-
-                console.log('👤 Parsed name:', characterName || '(none)')
-                console.log('👤 Name tag:', nameTag || '(none)')
-                console.log('👤 Description:', characterDescription)
 
                 const characterHeader = characterName
                     ? `CHARACTER: ${nameTag} (${characterName})\n\n`
@@ -800,12 +788,6 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                 if (!confirmed) return
             }
 
-            console.log('🎯 Anchor Transform Mode')
-            console.log('  Anchor:', anchorName)
-            console.log('  Anchor URL:', anchorUrl)
-            console.log('  Inputs:', inputUrls.length)
-            console.log('  Clean Prompt:', cleanPrompt)
-
             const model = shotCreatorSettings.model || 'nano-banana'
             const modelSettings = buildModelSettings()
             const results = []
@@ -820,8 +802,6 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
 
                 try {
                     toast.info(`Anchor Transform: ${i + 1} of ${inputUrls.length} - ${inputName}`)
-
-                    console.log(`  Transforming ${i + 1}/${inputUrls.length}:`, inputName)
 
                     // Generate with anchor + current input
                     // CRITICAL: If style is the anchor, don't send it in referenceImages
@@ -868,17 +848,12 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                 toast.error(`Anchor Transform complete: ${successCount} succeeded, ${failCount} failed`)
             }
 
-            console.log('🎯 Anchor Transform Results:', results)
             return
         }
         // ===== END ANCHOR TRANSFORM MODE =====
 
         const activeRecipe = getActiveRecipe()
         const validation = getActiveValidation()
-
-        console.log('[PromptActions] Checking for active recipe...')
-        console.log('[PromptActions] activeRecipe:', activeRecipe ? activeRecipe.name : 'NONE')
-        console.log('[PromptActions] quickMode:', shotCreatorSettings.quickMode)
 
         // Recipe mode: process recipe fields and generate
         if (activeRecipe) {
@@ -909,20 +884,10 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                 .filter((url): url is string => Boolean(url))
             const allRefs = [...new Set([...userRefs, ...result.referenceImages])]
 
-            // Debug: Log recipe stages to verify type field is present
-            console.log('[PromptActions] Active recipe stages:', activeRecipe.stages.map(s => ({
-                id: s.id,
-                type: s.type,
-                toolId: s.toolId,
-                order: s.order
-            })))
-
             // Check if recipe has tool stages - use full recipe execution service
             const hasTool = hasToolStages(activeRecipe)
-            console.log('[PromptActions] hasToolStages result:', hasTool)
 
             if (hasTool) {
-                console.log('[PromptActions] Recipe has tool stages, using executeRecipe service')
 
                 // Build stage reference images array
                 // First stage uses user refs + recipe's first stage refs
@@ -950,22 +915,18 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                         model,
                         aspectRatio,
                         onProgress: (stage, total, status) => {
-                            console.log(`[PromptActions] Stage ${stage + 1}/${total}: ${status}`)
                             toast.info(`Stage ${stage + 1}/${total}: ${status}`)
                         }
                     })
 
                     if (executionResult.success) {
                         toast.success('Recipe completed successfully!')
-                        console.log('[PromptActions] Recipe execution complete:', executionResult.imageUrls)
                     } else {
                         toast.error(`Recipe failed: ${executionResult.error}`)
-                        console.error('[PromptActions] Recipe execution failed:', executionResult.error)
                     }
                 } catch (error) {
                     const errorMsg = error instanceof Error ? error.message : 'Unknown error'
                     toast.error(`Recipe execution error: ${errorMsg}`)
-                    console.error('[PromptActions] Recipe execution error:', error)
                 }
 
                 // Keep recipe selected for re-generation
@@ -975,11 +936,6 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
             // No tool stages - use fast pipe-concatenation approach
             // Build full prompt (pipe-separated for multi-stage execution)
             const fullPrompt = result.prompts.join(' | ')
-
-            console.log('[PromptActions] 🎬 RECIPE MODE - Using recipe prompt:')
-            console.log('[PromptActions] Recipe:', activeRecipe.name)
-            console.log('[PromptActions] Prompt (first 500 chars):', fullPrompt.substring(0, 500))
-            console.log('[PromptActions] Reference images:', allRefs.length)
 
             // Set stage-specific reference images for pipe chaining
             if (result.stageReferenceImages && result.stageReferenceImages.length > 0) {
@@ -1008,9 +964,6 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
         }
 
         // Regular mode: use prompt and refs as-is
-        console.log('[PromptActions] 📝 REGULAR MODE - Using prompt from textarea')
-        console.log('[PromptActions] No active recipe, using shotCreatorPrompt:', shotCreatorPrompt.substring(0, 200))
-
         const model = shotCreatorSettings.model || 'nano-banana'
         const referenceUrls = shotCreatorReferenceImages
             .map(ref => ref.url || ref.preview)
