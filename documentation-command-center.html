@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation Command Center | Directors Palette</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-card: rgba(24, 24, 27, 0.6);
+            --bg-card-hover: rgba(39, 39, 42, 0.7);
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-glow: rgba(251, 146, 60, 0.3);
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent-amber: #f59e0b;
+            --accent-orange: #fb923c;
+            --accent-warm: #fbbf24;
+            --status-verified: #22c55e;
+            --status-audit: #f59e0b;
+            --status-draft: #6366f1;
+            --category-technical: #3b82f6;
+            --category-marketing: #ec4899;
+            --category-ux: #8b5cf6;
+            --category-api: #06b6d4;
+            --category-security: #ef4444;
+            --category-config: #64748b;
+            --category-planning: #10b981;
+            --shadow-glow: 0 0 60px rgba(251, 146, 60, 0.1);
+            --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Background */
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .ambient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.4;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--accent-amber) 0%, transparent 70%);
+            top: -200px;
+            right: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--accent-orange) 0%, transparent 70%);
+            bottom: -100px;
+            left: -50px;
+            animation-delay: -7s;
+        }
+
+        .orb-3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, #fb7185 0%, transparent 70%);
+            top: 50%;
+            left: 30%;
+            opacity: 0.2;
+            animation-delay: -14s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        /* Grid Pattern Overlay */
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+        }
+
+        /* Header */
+        .header {
+            padding: 2rem 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-subtle);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 10, 11, 0.8);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-amber), var(--accent-orange));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 20px rgba(251, 146, 60, 0.3);
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-amber);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        /* Search & Filters */
+        .controls {
+            padding: 1.5rem 3rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.875rem 1.25rem 0.875rem 3rem;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent-amber);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .filter-pills {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            padding: 0.5rem 1rem;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-subtle);
+            border-radius: 100px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .filter-pill:hover {
+            border-color: var(--accent-amber);
+            color: var(--text-primary);
+        }
+
+        .filter-pill.active {
+            background: linear-gradient(135deg, var(--accent-amber), var(--accent-orange));
+            border-color: transparent;
+            color: #000;
+        }
+
+        .filter-pill .count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            opacity: 0.7;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 3rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 1.25rem;
+        }
+
+        /* Document Card */
+        .doc-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .doc-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent 50%, rgba(251, 146, 60, 0.03) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .doc-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-glow);
+            box-shadow: var(--shadow-glow), var(--shadow-card);
+        }
+
+        .doc-card:hover::before {
+            opacity: 1;
+        }
+
+        .doc-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .doc-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.625rem;
+            border-radius: 100px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-verified {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--status-verified);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .status-audit {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--status-audit);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .status-draft {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--status-draft);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .doc-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .doc-path {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            word-break: break-all;
+        }
+
+        .doc-summary {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .doc-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .category-tag {
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .cat-technical { background: rgba(59, 130, 246, 0.15); color: var(--category-technical); }
+        .cat-marketing { background: rgba(236, 72, 153, 0.15); color: var(--category-marketing); }
+        .cat-ux { background: rgba(139, 92, 246, 0.15); color: var(--category-ux); }
+        .cat-api { background: rgba(6, 182, 212, 0.15); color: var(--category-api); }
+        .cat-security { background: rgba(239, 68, 68, 0.15); color: var(--category-security); }
+        .cat-config { background: rgba(100, 116, 139, 0.15); color: var(--category-config); }
+        .cat-planning { background: rgba(16, 185, 129, 0.15); color: var(--category-planning); }
+
+        .doc-timestamp {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .doc-size {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        /* Action Buttons */
+        .doc-actions {
+            display: flex;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 0.625rem 0.75rem;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+            border-color: var(--accent-amber);
+        }
+
+        .action-btn.claude-btn {
+            background: linear-gradient(135deg, rgba(251, 146, 60, 0.1), rgba(249, 115, 22, 0.1));
+            border-color: rgba(251, 146, 60, 0.3);
+            color: var(--accent-orange);
+        }
+
+        .action-btn.claude-btn:hover {
+            background: linear-gradient(135deg, var(--accent-amber), var(--accent-orange));
+            color: #000;
+            border-color: transparent;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow: hidden;
+            transform: scale(0.95) translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        .modal-meta {
+            padding: 1rem 2rem;
+            background: var(--bg-glass);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .modal-content {
+            padding: 2rem;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        .modal-content pre {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .modal-actions {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent-amber);
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(135deg, var(--accent-amber), var(--accent-orange));
+            border: none;
+            color: #000;
+        }
+
+        .modal-btn.primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--status-verified);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 2000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-icon {
+            color: var(--status-verified);
+        }
+
+        /* Empty State */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: var(--text-muted);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-subtle);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                padding: 1.5rem;
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .stats-bar {
+                gap: 1.5rem;
+            }
+
+            .controls {
+                padding: 1rem 1.5rem;
+            }
+
+            .main-content {
+                padding: 1rem 1.5rem;
+                grid-template-columns: 1fr;
+            }
+
+            .modal {
+                margin: 1rem;
+                max-height: 90vh;
+            }
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            max-width: 300px;
+            z-index: 500;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(5px);
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-card);
+        }
+
+        .tooltip.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+    </div>
+    <div class="grid-overlay"></div>
+
+    <header class="header">
+        <div class="logo-section">
+            <div class="logo-icon">📚</div>
+            <div class="logo-text">
+                <span>Directors Palette</span>
+                <h1>Documentation Command Center</h1>
+            </div>
+        </div>
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="totalDocs">68</div>
+                <div class="stat-label">Documents</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalSize">520KB</div>
+                <div class="stat-label">Total Size</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="verifiedCount">42</div>
+                <div class="stat-label">Verified</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="controls">
+        <div class="search-box">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Search documentation...">
+        </div>
+        <div class="filter-pills" id="filterPills">
+            <button class="filter-pill active" data-filter="all">All <span class="count">68</span></button>
+            <button class="filter-pill" data-filter="technical">Technical <span class="count">28</span></button>
+            <button class="filter-pill" data-filter="api">API <span class="count">12</span></button>
+            <button class="filter-pill" data-filter="planning">Planning <span class="count">9</span></button>
+            <button class="filter-pill" data-filter="security">Security <span class="count">4</span></button>
+            <button class="filter-pill" data-filter="ux">UX <span class="count">5</span></button>
+            <button class="filter-pill" data-filter="config">Config <span class="count">6</span></button>
+            <button class="filter-pill" data-filter="marketing">Marketing <span class="count">4</span></button>
+        </div>
+    </div>
+
+    <main class="main-content" id="docsGrid"></main>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Document Title</h2>
+                <button class="modal-close" id="modalClose">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-meta" id="modalMeta"></div>
+            <div class="modal-content">
+                <pre id="modalContent">Loading...</pre>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn" id="copyPathBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h6"></path>
+                        <path d="M21 3l-9 9M15 3h6v6"></path>
+                    </svg>
+                    Copy Path
+                </button>
+                <button class="modal-btn" id="copyContentBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+                    </svg>
+                    Copy Content
+                </button>
+                <button class="modal-btn primary" id="claudeCodeBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                    Claude Code
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <svg class="toast-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span id="toastMessage">Copied to clipboard!</span>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // Documentation Data - Comprehensive inventory
+        const documents = [
+            // ROOT LEVEL - Critical
+            { id: 1, title: "CLAUDE.md", path: "D:\\git\\directors-palette-v2\\CLAUDE.md", category: "technical", status: "verified", size: "25.1 KB", modified: "2026-01-20", summary: "Claude Code guidelines for project development, mandatory git protocols, build verification, dev server startup, and critical architecture reminders." },
+            { id: 2, title: "LESSONS_LEARNED.md", path: "D:\\git\\directors-palette-v2\\LESSONS_LEARNED.md", category: "technical", status: "verified", size: "7.1 KB", modified: "2026-01-18", summary: "Post-incident analysis from Dec 16, 2024 incident where 194 files nearly lost; recovery procedures and best practices." },
+            { id: 3, title: "README.md", path: "D:\\git\\directors-palette-v2\\README.md", category: "marketing", status: "verified", size: "6.8 KB", modified: "2026-01-15", summary: "Project overview covering Shot Creator, Storyboard, Storybook, and Music Lab features." },
+            { id: 4, title: "ARCHITECTURE.md", path: "D:\\git\\directors-palette-v2\\ARCHITECTURE.md", category: "technical", status: "verified", size: "18.7 KB", modified: "2026-01-10", summary: "The Story - creative narrative of vision, image generation suite, model personalities, and creative arsenal." },
+            { id: 5, title: "RECIPES.md", path: "D:\\git\\directors-palette-v2\\RECIPES.md", category: "technical", status: "verified", size: "13.2 KB", modified: "2026-01-12", summary: "Recipe system documentation with field syntax, types, pipe chaining, reference images, validation logic, and generation flow." },
+
+            // API Documentation
+            { id: 6, title: "API_KEY_QUICK_START.md", path: "D:\\git\\directors-palette-v2\\API_KEY_QUICK_START.md", category: "api", status: "verified", size: "11.7 KB", modified: "2026-01-16", summary: "Quick start guide for developers integrating with Director's Palette API." },
+            { id: 7, title: "API_KEY_TEST_REPORT.md", path: "D:\\git\\directors-palette-v2\\API_KEY_TEST_REPORT.md", category: "api", status: "verified", size: "18.0 KB", modified: "2026-01-16", summary: "API key functionality test report with comprehensive results." },
+            { id: 8, title: "API_KEY_VERIFICATION_SUMMARY.md", path: "D:\\git\\directors-palette-v2\\API_KEY_VERIFICATION_SUMMARY.md", category: "api", status: "verified", size: "10.0 KB", modified: "2026-01-16", summary: "API key verification summary - fully functional and production ready status." },
+
+            // Features
+            { id: 9, title: "FEATURE_STATUS.md", path: "D:\\git\\directors-palette-v2\\FEATURE_STATUS.md", category: "technical", status: "audit", size: "6.0 KB", modified: "2026-01-08", summary: "Status of various features in the application." },
+            { id: 10, title: "FEATURE_ENHANCED_REFERENCES.md", path: "D:\\git\\directors-palette-v2\\FEATURE_ENHANCED_REFERENCES.md", category: "technical", status: "verified", size: "9.8 KB", modified: "2026-01-05", summary: "Documentation of enhanced reference features." },
+            { id: 11, title: "NEW_FEATURES_GUIDE.md", path: "D:\\git\\directors-palette-v2\\NEW_FEATURES_GUIDE.md", category: "marketing", status: "verified", size: "11.0 KB", modified: "2026-01-10", summary: "Guide to new features in the system for end users." },
+            { id: 12, title: "KNOWN_ISSUES.md", path: "D:\\git\\directors-palette-v2\\KNOWN_ISSUES.md", category: "technical", status: "audit", size: "3.2 KB", modified: "2024-12-20", summary: "Known issues and bugs in Directors Palette v2." },
+
+            // Planning
+            { id: 13, title: "REPLICATE_INTEGRATION_PLAN.md", path: "D:\\git\\directors-palette-v2\\REPLICATE_INTEGRATION_PLAN.md", category: "planning", status: "verified", size: "6.0 KB", modified: "2026-01-18", summary: "Plan for Replicate API integration." },
+            { id: 14, title: "GALLERY_SERVICE_CONSOLIDATION.md", path: "D:\\git\\directors-palette-v2\\GALLERY_SERVICE_CONSOLIDATION.md", category: "planning", status: "verified", size: "6.5 KB", modified: "2026-01-18", summary: "Consolidation strategy for gallery service." },
+            { id: 15, title: "STORY_PROJECT_IMPLEMENTATION_PLAN.md", path: "D:\\git\\directors-palette-v2\\STORY_PROJECT_IMPLEMENTATION_PLAN.md", category: "planning", status: "draft", size: "1.5 KB", modified: "2026-01-21", summary: "Implementation plan for story project feature." },
+            { id: 16, title: "ROADMAP_PLANNING.md", path: "D:\\git\\directors-palette-v2\\ROADMAP_PLANNING.md", category: "planning", status: "draft", size: "1.6 KB", modified: "2026-01-21", summary: "Product roadmap and planning document." },
+
+            // Testing
+            { id: 17, title: "TESTING_FEEDBACK_FIXES.md", path: "D:\\git\\directors-palette-v2\\TESTING_FEEDBACK_FIXES.md", category: "technical", status: "verified", size: "7.1 KB", modified: "2026-01-20", summary: "Testing feedback and fixes documentation." },
+            { id: 18, title: "AUDIT_QUICK_PRESETS.md", path: "D:\\git\\directors-palette-v2\\AUDIT_QUICK_PRESETS.md", category: "technical", status: "verified", size: "5.8 KB", modified: "2026-02-07", summary: "Quick presets for audit functionality." },
+
+            // Operational
+            { id: 19, title: "HANDOFF.md", path: "D:\\git\\directors-palette-v2\\HANDOFF.md", category: "technical", status: "verified", size: "3.0 KB", modified: "2024-12-20", summary: "Developer handoff documentation for admin system and credits." },
+            { id: 20, title: "PROJECT_INTAKE.md", path: "D:\\git\\directors-palette-v2\\PROJECT_INTAKE.md", category: "planning", status: "draft", size: "10.3 KB", modified: "2026-02-07", summary: "Project intake form and requirements." },
+            { id: 21, title: "BRANCHES.md", path: "D:\\git\\directors-palette-v2\\BRANCHES.md", category: "config", status: "verified", size: "2.1 KB", modified: "2026-01-05", summary: "Git branch strategy and production branch guidelines." },
+
+            // Docs Folder - Architecture
+            { id: 22, title: "ADHUB_ARCHITECTURE.md", path: "D:\\git\\directors-palette-v2\\docs\\ADHUB_ARCHITECTURE.md", category: "technical", status: "verified", size: "24 KB", modified: "2026-01-15", summary: "Adhub AI-powered ad generation system architecture with template, style, and brand context composition." },
+            { id: 23, title: "DIRECTOR_SYSTEM_OVERVIEW.md", path: "D:\\git\\directors-palette-v2\\docs\\DIRECTOR_SYSTEM_OVERVIEW.md", category: "technical", status: "verified", size: "27 KB", modified: "2026-01-15", summary: "Director Fingerprint system explaining artistic philosophy profiles and how AI applies them to image prompts." },
+            { id: 24, title: "COMMUNITY_FEATURE.md", path: "D:\\git\\directors-palette-v2\\docs\\COMMUNITY_FEATURE.md", category: "planning", status: "audit", size: "23 KB", modified: "2026-01-10", summary: "Community feature planning for sharing Wildcards, Recipes, Prompts, and Directors with user ratings." },
+
+            // Docs Folder - API
+            { id: 25, title: "API_DOCUMENTATION.md", path: "D:\\git\\directors-palette-v2\\docs\\API_DOCUMENTATION.md", category: "api", status: "verified", size: "18 KB", modified: "2026-01-16", summary: "External API documentation with base URL, authentication (Bearer tokens), admin API key access." },
+            { id: 26, title: "ai-image-models-guide.md", path: "D:\\git\\directors-palette-v2\\docs\\ai-image-models-guide.md", category: "api", status: "verified", size: "20 KB", modified: "2026-01-12", summary: "Comprehensive guide to AI image generation models." },
+            { id: 27, title: "IMAGE_MODELS.md", path: "D:\\git\\directors-palette-v2\\docs\\IMAGE_MODELS.md", category: "api", status: "verified", size: "9.7 KB", modified: "2026-01-12", summary: "Image model capabilities and specifications." },
+            { id: 28, title: "VIDEO_MODELS.md", path: "D:\\git\\directors-palette-v2\\docs\\VIDEO_MODELS.md", category: "api", status: "verified", size: "16 KB", modified: "2026-01-12", summary: "Video generation model documentation and features." },
+            { id: 29, title: "MODEL_CAPABILITIES.md", path: "D:\\git\\directors-palette-v2\\docs\\MODEL_CAPABILITIES.md", category: "api", status: "verified", size: "7.5 KB", modified: "2026-01-12", summary: "Detailed capabilities of available models." },
+
+            // Docs Folder - User
+            { id: 30, title: "USER_MANUAL.md", path: "D:\\git\\directors-palette-v2\\docs\\USER_MANUAL.md", category: "marketing", status: "audit", size: "3.8 KB", modified: "2026-01-05", summary: "User manual for core workflows in generating, styling, and refining storyboards." },
+            { id: 31, title: "LANDING_PAGE_IMAGES.md", path: "D:\\git\\directors-palette-v2\\docs\\LANDING_PAGE_IMAGES.md", category: "marketing", status: "verified", size: "3.9 KB", modified: "2026-01-08", summary: "Landing page image assets and specifications." },
+
+            // Docs Folder - Features
+            { id: 32, title: "STORYBOOK_RECIPE_IMPROVEMENTS.md", path: "D:\\git\\directors-palette-v2\\docs\\STORYBOOK_RECIPE_IMPROVEMENTS.md", category: "technical", status: "verified", size: "4.5 KB", modified: "2026-01-18", summary: "Improvements and enhancements to Storybook recipe system." },
+            { id: 33, title: "ADDING_STYLE_PRESETS.md", path: "D:\\git\\directors-palette-v2\\docs\\ADDING_STYLE_PRESETS.md", category: "ux", status: "verified", size: "6.0 KB", modified: "2026-01-10", summary: "Guide for adding custom style presets." },
+            { id: 34, title: "STYLE-EXPANSION-FEATURE.md", path: "D:\\git\\directors-palette-v2\\docs\\STYLE-EXPANSION-FEATURE.md", category: "ux", status: "verified", size: "3.6 KB", modified: "2026-01-08", summary: "Style expansion feature documentation." },
+
+            // Security
+            { id: 35, title: "SECURITY_AUDIT_REPORT.md", path: "D:\\git\\directors-palette-v2\\docs\\SECURITY_AUDIT_REPORT.md", category: "security", status: "verified", size: "17 KB", modified: "2024-12-16", summary: "CONFIDENTIAL - Security audit from Deloitte Cyber Security Practice." },
+            { id: 36, title: "COST_AUDIT_2025-12-17.md", path: "D:\\git\\directors-palette-v2\\docs\\COST_AUDIT_2025-12-17.md", category: "security", status: "verified", size: "9.6 KB", modified: "2025-12-17", summary: "Cost audit report with financial analysis." },
+            { id: 37, title: "PRICING_AUDIT_REPORT.md", path: "D:\\git\\directors-palette-v2\\docs\\PRICING_AUDIT_REPORT.md", category: "security", status: "verified", size: "7.4 KB", modified: "2025-12-15", summary: "Pricing strategy audit and recommendations." },
+
+            // Operations
+            { id: 38, title: "STORAGE_LIMITS.md", path: "D:\\git\\directors-palette-v2\\docs\\STORAGE_LIMITS.md", category: "technical", status: "verified", size: "8.2 KB", modified: "2026-01-10", summary: "Storage capacity and limits documentation." },
+            { id: 39, title: "CREDITS_STRIPE_TESTING_PLAN.md", path: "D:\\git\\directors-palette-v2\\docs\\CREDITS_STRIPE_TESTING_PLAN.md", category: "api", status: "verified", size: "9.0 KB", modified: "2026-01-08", summary: "Testing plan for credits and Stripe integration." },
+
+            // .claude Folder
+            { id: 40, title: "BROWSER_TESTING_GUIDE.md", path: "D:\\git\\directors-palette-v2\\.claude\\BROWSER_TESTING_GUIDE.md", category: "technical", status: "verified", size: "3.8 KB", modified: "2026-01-20", summary: "Browser testing procedures and guidelines." },
+            { id: 41, title: "SKILLS_GUIDE.md", path: "D:\\git\\directors-palette-v2\\.claude\\SKILLS_GUIDE.md", category: "technical", status: "verified", size: "5.6 KB", modified: "2026-01-18", summary: "Guide to available skills and automation features." },
+            { id: 42, title: "CLAUDE_CODE_2.1_UPGRADES.md", path: "D:\\git\\directors-palette-v2\\.claude\\CLAUDE_CODE_2.1_UPGRADES.md", category: "technical", status: "verified", size: "8.3 KB", modified: "2026-01-22", summary: "Claude Code 2.1 new features and upgrades." },
+            { id: 43, title: "COMMANDS_QUICK_REFERENCE.md", path: "D:\\git\\directors-palette-v2\\.claude\\COMMANDS_QUICK_REFERENCE.md", category: "config", status: "verified", size: "4.3 KB", modified: "2026-01-18", summary: "Quick reference for CLI commands available." },
+            { id: 44, title: "NODE_WORKFLOW_ANALYSIS.md", path: "D:\\git\\directors-palette-v2\\.claude\\NODE_WORKFLOW_ANALYSIS.md", category: "technical", status: "verified", size: "7.3 KB", modified: "2026-01-20", summary: "Analysis of node workflow system architecture." },
+            { id: 45, title: "NODE_WORKFLOW_IMPLEMENTATION_PLAN.md", path: "D:\\git\\directors-palette-v2\\.claude\\NODE_WORKFLOW_IMPLEMENTATION_PLAN.md", category: "planning", status: "verified", size: "21 KB", modified: "2026-01-22", summary: "Detailed implementation plan for node workflow feature." },
+            { id: 46, title: "RECIPES_VS_NODES_CONNECTION.md", path: "D:\\git\\directors-palette-v2\\.claude\\RECIPES_VS_NODES_CONNECTION.md", category: "technical", status: "verified", size: "14.6 KB", modified: "2026-01-18", summary: "Analysis connecting recipe system to node workflow." },
+            { id: 47, title: "SIDEBAR_NAVIGATION_REDESIGN.md", path: "D:\\git\\directors-palette-v2\\.claude\\SIDEBAR_NAVIGATION_REDESIGN.md", category: "ux", status: "verified", size: "13.4 KB", modified: "2026-01-15", summary: "Sidebar navigation redesign specifications." },
+            { id: 48, title: "SIDEBAR_NAVIGATION_TEST_REPORT.md", path: "D:\\git\\directors-palette-v2\\.claude\\SIDEBAR_NAVIGATION_TEST_REPORT.md", category: "ux", status: "verified", size: "7.6 KB", modified: "2026-01-16", summary: "Test results for sidebar navigation changes." },
+            { id: 49, title: "CANVAS_EDITOR_AUDIT.md", path: "D:\\git\\directors-palette-v2\\.claude\\CANVAS_EDITOR_AUDIT.md", category: "technical", status: "audit", size: "4.0 KB", modified: "2026-01-12", summary: "Canvas editor audit findings." },
+            { id: 50, title: "git-workflow.md", path: "D:\\git\\directors-palette-v2\\.claude\\rules\\git-workflow.md", category: "config", status: "verified", size: "1.3 KB", modified: "2026-01-18", summary: "Git workflow rules and commit protocol (post-Dec 16 incident)." },
+
+            // Feature READMEs
+            { id: 51, title: "Shot Animator README", path: "D:\\git\\directors-palette-v2\\src\\features\\shot-animator\\hooks\\README.md", category: "api", status: "verified", size: "4+ KB", modified: "2026-01-14", summary: "Hook documentation for useGallery and useVideoGeneration with usage examples and return types." },
+            { id: 52, title: "Node Workflow README", path: "D:\\git\\directors-palette-v2\\src\\features\\node-workflow\\README.md", category: "ux", status: "verified", size: "8 KB", modified: "2026-01-14", summary: "Node Workflow visual editor guide for creating image generation pipelines." },
+
+            // More from root
+            { id: 53, title: "SHOT_ANIMATOR_GALLERY.md", path: "D:\\git\\directors-palette-v2\\SHOT_ANIMATOR_GALLERY.md", category: "technical", status: "verified", size: "4.0 KB", modified: "2026-01-18", summary: "Shot animator gallery documentation." },
+            { id: 54, title: "WEBHOOK_IMPLEMENTATION_SUMMARY.md", path: "D:\\git\\directors-palette-v2\\WEBHOOK_IMPLEMENTATION_SUMMARY.md", category: "technical", status: "verified", size: "8.6 KB", modified: "2026-01-18", summary: "Webhook implementation details and summary." },
+            { id: 55, title: "STORY_CREATOR_ARCHITECTURE_RESEARCH.md", path: "D:\\git\\directors-palette-v2\\STORY_CREATOR_ARCHITECTURE_RESEARCH.md", category: "technical", status: "verified", size: "21.6 KB", modified: "2026-01-20", summary: "In-depth research on story creator architecture design." },
+            { id: 56, title: "BULK_DOWNLOAD_USAGE.md", path: "D:\\git\\directors-palette-v2\\BULK_DOWNLOAD_USAGE.md", category: "technical", status: "verified", size: "8.2 KB", modified: "2026-01-28", summary: "Bulk download feature usage documentation." },
+
+            // Docs extras
+            { id: 57, title: "director-image-generation.md", path: "D:\\git\\directors-palette-v2\\docs\\director-image-generation.md", category: "technical", status: "verified", size: "2.7 KB", modified: "2026-01-10", summary: "Director-specific image generation guide." },
+            { id: 58, title: "VIDEO_GENERATION_INFOGRAPHIC_PROMPT.md", path: "D:\\git\\directors-palette-v2\\docs\\VIDEO_GENERATION_INFOGRAPHIC_PROMPT.md", category: "technical", status: "draft", size: "2.2 KB", modified: "2026-01-08", summary: "Video generation infographic and prompt templates." },
+            { id: 59, title: "VIDEO_TOPICS.md", path: "D:\\git\\directors-palette-v2\\docs\\VIDEO_TOPICS.md", category: "marketing", status: "verified", size: "6.4 KB", modified: "2026-01-10", summary: "Video topic categories and specifications." },
+            { id: 60, title: "wardrobe-pedit-examples.md", path: "D:\\git\\directors-palette-v2\\docs\\wardrobe-pedit-examples.md", category: "technical", status: "verified", size: "4.8 KB", modified: "2026-01-08", summary: "Wardrobe and edit examples documentation." },
+            { id: 61, title: "CHARACTER_SHEET_PIPELINE_TESTS.md", path: "D:\\git\\directors-palette-v2\\docs\\CHARACTER_SHEET_PIPELINE_TESTS.md", category: "technical", status: "verified", size: "5.3 KB", modified: "2026-01-12", summary: "Testing documentation for character sheet pipeline." },
+
+            // Config files
+            { id: 62, title: "settings.json", path: "D:\\git\\directors-palette-v2\\.claude\\settings.json", category: "config", status: "verified", size: "2 KB", modified: "2026-02-01", summary: "Claude Code project settings (hooks, configuration)." },
+            { id: 63, title: "dev-server.md", path: "D:\\git\\directors-palette-v2\\.claude\\skills\\dev-server.md", category: "config", status: "verified", size: "1.1 KB", modified: "2026-01-18", summary: "Dev server automation skill documentation." },
+
+            // Testing
+            { id: 64, title: "TEST_CLAUDE_CODE_2.1_FEATURES.md", path: "D:\\git\\directors-palette-v2\\.claude\\TEST_CLAUDE_CODE_2.1_FEATURES.md", category: "technical", status: "verified", size: "7.8 KB", modified: "2026-01-22", summary: "Test cases for Claude Code 2.1 features." },
+            { id: 65, title: "NODE_WORKFLOW_TECHNICAL_QUESTIONS.md", path: "D:\\git\\directors-palette-v2\\.claude\\NODE_WORKFLOW_TECHNICAL_QUESTIONS.md", category: "technical", status: "verified", size: "18.7 KB", modified: "2026-01-20", summary: "Technical questions and answers about node workflow." },
+
+            // Extras
+            { id: 66, title: "STORY_PROJECT_EXAMPLES_WALKTHROUGH.md", path: "D:\\git\\directors-palette-v2\\STORY_PROJECT_EXAMPLES_WALKTHROUGH.md", category: "technical", status: "draft", size: "444 B", modified: "2026-01-21", summary: "Walkthrough of story project examples." },
+            { id: 67, title: "ralph-loop.local.md", path: "D:\\git\\directors-palette-v2\\.claude\\ralph-loop.local.md", category: "config", status: "verified", size: "296 B", modified: "2026-02-01", summary: "Ralph Loop automation control file." },
+            { id: 68, title: "settings.local.json", path: "D:\\git\\directors-palette-v2\\.claude\\settings.local.json", category: "config", status: "verified", size: "512 B", modified: "2026-02-01", summary: "Local configuration overrides." },
+        ];
+
+        // DOM Elements
+        const docsGrid = document.getElementById('docsGrid');
+        const searchInput = document.getElementById('searchInput');
+        const filterPills = document.getElementById('filterPills');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMeta = document.getElementById('modalMeta');
+        const modalContent = document.getElementById('modalContent');
+        const modalClose = document.getElementById('modalClose');
+        const copyPathBtn = document.getElementById('copyPathBtn');
+        const copyContentBtn = document.getElementById('copyContentBtn');
+        const claudeCodeBtn = document.getElementById('claudeCodeBtn');
+        const toast = document.getElementById('toast');
+        const tooltip = document.getElementById('tooltip');
+
+        let currentDoc = null;
+        let activeFilter = 'all';
+        let searchQuery = '';
+
+        // Render document cards
+        function renderDocs() {
+            const filtered = documents.filter(doc => {
+                const matchesFilter = activeFilter === 'all' || doc.category === activeFilter;
+                const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                     doc.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                     doc.path.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesFilter && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                docsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <h3>No documents found</h3>
+                        <p>Try adjusting your search or filter criteria</p>
+                    </div>
+                `;
+                return;
+            }
+
+            docsGrid.innerHTML = filtered.map(doc => `
+                <div class="doc-card" data-id="${doc.id}" onclick="openModal(${doc.id})">
+                    <div class="doc-header">
+                        <div class="doc-icon">${getCategoryIcon(doc.category)}</div>
+                        <span class="status-badge status-${doc.status}">${doc.status}</span>
+                    </div>
+                    <h3 class="doc-title">${doc.title}</h3>
+                    <p class="doc-path">${doc.path}</p>
+                    <p class="doc-summary">${doc.summary}</p>
+                    <div class="doc-meta">
+                        <span class="category-tag cat-${doc.category}">${doc.category}</span>
+                        <span class="doc-timestamp">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            ${doc.modified}
+                        </span>
+                        <span class="doc-size">${doc.size}</span>
+                    </div>
+                    <div class="doc-actions">
+                        <button class="action-btn" onclick="event.stopPropagation(); copyPath(${doc.id})">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h6"></path>
+                            </svg>
+                            Path
+                        </button>
+                        <button class="action-btn" onclick="event.stopPropagation(); copyContent(${doc.id})">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+                            </svg>
+                            Copy
+                        </button>
+                        <button class="action-btn claude-btn" onclick="event.stopPropagation(); claudeCode(${doc.id})">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                            Claude
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getCategoryIcon(category) {
+            const icons = {
+                technical: '⚙️',
+                marketing: '📣',
+                ux: '🎨',
+                api: '🔌',
+                security: '🔒',
+                config: '⚡',
+                planning: '📋'
+            };
+            return icons[category] || '📄';
+        }
+
+        // Modal functions
+        function openModal(id) {
+            currentDoc = documents.find(d => d.id === id);
+            if (!currentDoc) return;
+
+            modalTitle.textContent = currentDoc.title;
+            modalMeta.innerHTML = `
+                <span class="status-badge status-${currentDoc.status}">${currentDoc.status}</span>
+                <span class="category-tag cat-${currentDoc.category}">${currentDoc.category}</span>
+                <span class="doc-timestamp">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    ${currentDoc.modified}
+                </span>
+                <span class="doc-size">${currentDoc.size}</span>
+            `;
+            modalContent.textContent = `Path: ${currentDoc.path}\n\n${currentDoc.summary}\n\n[Full content would be loaded here in production]`;
+            modalOverlay.classList.add('active');
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+            currentDoc = null;
+        }
+
+        // Action functions
+        function copyPath(id) {
+            const doc = documents.find(d => d.id === id);
+            if (!doc) return;
+            navigator.clipboard.writeText(doc.path);
+            showToast('Path copied to clipboard!');
+        }
+
+        function copyContent(id) {
+            const doc = documents.find(d => d.id === id);
+            if (!doc) return;
+            const content = `# ${doc.title}\n\nPath: ${doc.path}\nCategory: ${doc.category}\nStatus: ${doc.status}\nModified: ${doc.modified}\n\n${doc.summary}`;
+            navigator.clipboard.writeText(content);
+            showToast('Content copied to clipboard!');
+        }
+
+        function claudeCode(id) {
+            const doc = documents.find(d => d.id === id);
+            if (!doc) return;
+            const prompt = `Read the file at "${doc.path}" and explain its purpose and key contents.`;
+            navigator.clipboard.writeText(prompt);
+            showToast('Claude Code prompt copied!');
+        }
+
+        function showToast(message) {
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // Filter handling
+        filterPills.addEventListener('click', (e) => {
+            const pill = e.target.closest('.filter-pill');
+            if (!pill) return;
+
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            activeFilter = pill.dataset.filter;
+            renderDocs();
+        });
+
+        // Search handling
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderDocs();
+        });
+
+        // Modal close handlers
+        modalClose.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeModal();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Modal button handlers
+        copyPathBtn.addEventListener('click', () => {
+            if (currentDoc) copyPath(currentDoc.id);
+        });
+        copyContentBtn.addEventListener('click', () => {
+            if (currentDoc) copyContent(currentDoc.id);
+        });
+        claudeCodeBtn.addEventListener('click', () => {
+            if (currentDoc) claudeCode(currentDoc.id);
+        });
+
+        // Tooltip handling
+        document.addEventListener('mousemove', (e) => {
+            const card = e.target.closest('.doc-card');
+            if (card && !e.target.closest('.doc-actions')) {
+                const id = parseInt(card.dataset.id);
+                const doc = documents.find(d => d.id === id);
+                if (doc) {
+                    tooltip.textContent = doc.summary;
+                    tooltip.style.left = e.pageX + 15 + 'px';
+                    tooltip.style.top = e.pageY + 15 + 'px';
+                    tooltip.classList.add('visible');
+                }
+            } else {
+                tooltip.classList.remove('visible');
+            }
+        });
+
+        // Initial render
+        renderDocs();
+
+        // Update stats
+        document.getElementById('totalDocs').textContent = documents.length;
+        document.getElementById('verifiedCount').textContent = documents.filter(d => d.status === 'verified').length;
+    </script>
+</body>
+</html>
