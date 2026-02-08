@@ -76,7 +76,9 @@ async function recordWebhookEvent(
                 error_message: errorMessage,
             }, { onConflict: 'event_id' })
     } catch (err) {
-        console.warn('Failed to record webhook event:', err)
+        lognog.devWarn('Failed to record webhook event', {
+            error: err instanceof Error ? err.message : String(err)
+        });
     }
 }
 
@@ -105,7 +107,10 @@ async function queueForRetry(
         const retryCount = existing?.retry_count || 0
 
         if (retryCount >= 5) {
-            console.error(`Webhook ${eventId} exceeded max retries, marking as permanently failed`)
+            lognog.devError('Webhook exceeded max retries, marking as permanently failed', {
+                event_id: eventId,
+                retry_count: retryCount
+            });
             await recordWebhookEvent(eventId, eventType, 'failed', payload, errorMessage)
             return
         }
@@ -125,9 +130,15 @@ async function queueForRetry(
                 status: 'pending'
             }, { onConflict: 'event_id' })
 
-        console.log(`Queued webhook ${eventId} for retry #${retryCount + 1} at ${nextRetryAt.toISOString()}`)
+        lognog.devDebug('Queued webhook for retry', {
+            event_id: eventId,
+            retry_number: retryCount + 1,
+            next_retry_at: nextRetryAt.toISOString()
+        });
     } catch (err) {
-        console.error('Failed to queue webhook for retry:', err)
+        lognog.devError('Failed to queue webhook for retry', {
+            error: err instanceof Error ? err.message : String(err)
+        });
     }
 }
 
@@ -142,13 +153,17 @@ export async function POST(request: NextRequest) {
     const stripe = getStripe()
     const webhookSecret = getWebhookSecret()
 
-    // DEBUG: Log what we're reading
-    console.log('[Stripe Webhook] Request received')
-    console.log('[Stripe Webhook] Stripe configured:', !!stripe)
-    console.log('[Stripe Webhook] Secret configured:', webhookSecret ? `yes (${webhookSecret.substring(0, 15)}...)` : 'NO - MISSING!')
+    // Log configuration status
+    lognog.devDebug('Stripe webhook request received', {
+        stripe_configured: !!stripe,
+        secret_configured: !!webhookSecret
+    });
 
     if (!stripe || !webhookSecret) {
-        console.error('[Stripe Webhook] Missing configuration - stripe:', !!stripe, 'secret:', !!webhookSecret)
+        lognog.devError('Stripe webhook missing configuration', {
+            stripe_configured: !!stripe,
+            secret_configured: !!webhookSecret
+        });
         return NextResponse.json(
             { error: 'Webhook not configured' },
             { status: 503 }
@@ -160,10 +175,10 @@ export async function POST(request: NextRequest) {
         const body = await request.text()
         const signature = request.headers.get('stripe-signature')
 
-        console.log('[Stripe Webhook] Body length:', body.length)
-        console.log('[Stripe Webhook] Body first 100 chars:', body.substring(0, 100))
-        console.log('[Stripe Webhook] Signature:', signature?.substring(0, 80))
-        console.log('[Stripe Webhook] Using secret:', webhookSecret.substring(0, 20) + '...')
+        lognog.devDebug('Stripe webhook body received', {
+            body_length: body.length,
+            has_signature: !!signature
+        });
 
         if (!signature) {
             return NextResponse.json(
@@ -176,10 +191,14 @@ export async function POST(request: NextRequest) {
         let event: Stripe.Event
         try {
             event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
-            console.log('[Stripe Webhook] ✅ Signature verified! Event:', event.id, 'Type:', event.type)
+            lognog.devDebug('Stripe webhook signature verified', {
+                event_id: event.id,
+                event_type: event.type
+            });
         } catch (err) {
-            console.error('Webhook signature verification failed:', err)
-            console.error('[Stripe Webhook] Full error:', JSON.stringify(err, null, 2))
+            lognog.devError('Webhook signature verification failed', {
+                error: err instanceof Error ? err.message : String(err)
+            });
             return NextResponse.json(
                 { error: 'Invalid signature' },
                 { status: 400 }
@@ -187,41 +206,43 @@ export async function POST(request: NextRequest) {
         }
 
         // IDEMPOTENCY CHECK: Skip if already processed
-        console.log('[Stripe Webhook] Checking idempotency for event:', event.id)
         if (await isEventProcessed(event.id)) {
-            console.log(`Webhook ${event.id} already processed, skipping`)
+            lognog.devDebug('Webhook already processed, skipping', { event_id: event.id });
             return NextResponse.json({ received: true, skipped: true })
         }
-        console.log('[Stripe Webhook] Event not yet processed, continuing...')
 
         // Handle the event
         try {
-            console.log('[Stripe Webhook] Handling event type:', event.type)
+            lognog.devDebug('Handling Stripe event', { event_type: event.type });
             switch (event.type) {
                 case 'checkout.session.completed': {
-                    console.log('[Stripe Webhook] Processing checkout.session.completed...')
                     const session = event.data.object as Stripe.Checkout.Session
-                    console.log('[Stripe Webhook] Session ID:', session.id)
-                    console.log('[Stripe Webhook] Metadata:', JSON.stringify(session.metadata))
+                    lognog.devDebug('Processing checkout.session.completed', {
+                        session_id: session.id,
+                        user_id: session.metadata?.user_id,
+                        credits: session.metadata?.credits
+                    });
                     await handleCheckoutCompleted(session, event.id)
-                    console.log('[Stripe Webhook] ✅ handleCheckoutCompleted finished successfully')
                     break
                 }
 
                 case 'checkout.session.expired': {
                     const session = event.data.object as Stripe.Checkout.Session
-                    console.log('Checkout expired:', session.id, 'User:', session.metadata?.user_email)
+                    lognog.devDebug('Checkout expired', {
+                        session_id: session.id,
+                        user_email: session.metadata?.user_email
+                    });
                     break
                 }
 
                 case 'payment_intent.payment_failed': {
                     const paymentIntent = event.data.object as Stripe.PaymentIntent
-                    console.log('Payment failed:', paymentIntent.id)
+                    lognog.devWarn('Payment failed', { payment_intent_id: paymentIntent.id });
                     break
                 }
 
                 default:
-                    console.log('Unhandled event type:', event.type)
+                    lognog.devDebug('Unhandled Stripe event type', { event_type: event.type });
             }
 
             // Record successful processing
@@ -241,7 +262,10 @@ export async function POST(request: NextRequest) {
                 ? processingError.message
                 : 'Unknown processing error'
 
-            console.error(`Webhook processing failed for ${event.id}:`, errorMessage)
+            lognog.devError('Webhook processing failed', {
+                event_id: event.id,
+                error: errorMessage
+            });
 
             // Queue for retry instead of just failing
             await queueForRetry(event.id, event.type, event.data.object, errorMessage)
@@ -255,7 +279,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ received: true })
 
     } catch (error) {
-        console.error('Webhook error:', error)
+        lognog.devError('Webhook error', {
+            error: error instanceof Error ? error.message : String(error)
+        });
         return NextResponse.json(
             { error: 'Webhook handler failed' },
             { status: 500 }
@@ -267,28 +293,29 @@ export async function POST(request: NextRequest) {
  * Handle successful checkout completion
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session, eventId: string) {
-    console.log('[handleCheckoutCompleted] Starting...')
     const userId = session.metadata?.user_id
     const credits = parseInt(session.metadata?.credits || '0')
     const packageId = session.metadata?.package_id
     const packageName = session.metadata?.package_name
 
-    console.log('[handleCheckoutCompleted] Parsed metadata:', { userId, credits, packageId, packageName })
+    lognog.devDebug('handleCheckoutCompleted started', {
+        user_id: userId,
+        credits,
+        package_id: packageId,
+        package_name: packageName
+    });
 
     if (!userId) {
-        console.error('[handleCheckoutCompleted] Missing user_id in checkout session metadata:', session.id)
+        lognog.devError('Missing user_id in checkout session metadata', { session_id: session.id });
         throw new Error('Missing user_id in checkout metadata')
     }
 
     if (credits <= 0) {
-        console.error('[handleCheckoutCompleted] Invalid credits amount in checkout session:', session.id)
+        lognog.devError('Invalid credits amount in checkout session', { session_id: session.id, credits });
         throw new Error('Invalid credits amount')
     }
 
-    console.log(`[handleCheckoutCompleted] Processing purchase: ${credits} credits for user ${userId} (${session.metadata?.user_email})`)
-
     // Add credits to user account using admin method (bypasses RLS)
-    console.log('[handleCheckoutCompleted] Calling creditsService.addCreditsAdmin...')
     try {
         const result = await creditsService.addCreditsAdmin(userId, credits, {
             type: 'purchase',
@@ -305,12 +332,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, eventId
             }
         })
 
-        console.log('[handleCheckoutCompleted] creditsService.addCreditsAdmin result:', JSON.stringify(result))
-
         if (result.success) {
-            console.log(`[handleCheckoutCompleted] ✅ Successfully added ${credits} credits to user ${userId}. New balance: ${result.newBalance}`)
+            lognog.devInfo('Successfully added credits', {
+                user_id: userId,
+                credits,
+                new_balance: result.newBalance
+            });
 
-            // Log successful payment
+            // Log successful payment to LogNog (production logging)
             lognog.info('payment_completed', {
                 type: 'business',
                 event: 'payment_completed',
@@ -321,11 +350,16 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, eventId
                 stripe_session_id: session.id,
             })
         } else {
-            console.error(`[handleCheckoutCompleted] ❌ Failed to add credits for user ${userId}:`, result.error)
+            lognog.devError('Failed to add credits', {
+                user_id: userId,
+                error: result.error
+            });
             throw new Error(result.error || 'Failed to add credits')
         }
     } catch (error) {
-        console.error('[handleCheckoutCompleted] ❌ Exception in addCredits:', error)
+        lognog.devError('Exception in addCredits', {
+            error: error instanceof Error ? error.message : String(error)
+        });
         throw error
     }
 }
