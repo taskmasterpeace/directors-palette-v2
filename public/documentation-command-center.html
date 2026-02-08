@@ -1028,7 +1028,7 @@
         }
 
         // Modal functions
-        function openModal(id) {
+        async function openModal(id) {
             currentDoc = documents.find(d => d.id === id);
             if (!currentDoc) return;
 
@@ -1045,8 +1045,33 @@
                 </span>
                 <span class="doc-size">${currentDoc.size}</span>
             `;
-            modalContent.textContent = `Path: ${currentDoc.path}\n\n${currentDoc.summary}\n\n[Full content would be loaded here in production]`;
+
+            // Show loading state
+            modalContent.innerHTML = '<span style="color: var(--accent-amber);">Loading document...</span>';
             modalOverlay.classList.add('active');
+
+            // Fetch actual file content from API
+            try {
+                const response = await fetch(`/api/docs/read?path=${encodeURIComponent(currentDoc.path)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    // Format markdown content with basic styling
+                    let formattedContent = data.content
+                        .replace(/^# (.+)$/gm, '═══════════════════════════════════════\n$1\n═══════════════════════════════════════')
+                        .replace(/^## (.+)$/gm, '\n▓▓ $1')
+                        .replace(/^### (.+)$/gm, '\n░░ $1')
+                        .replace(/^- /gm, '  • ')
+                        .replace(/^\d+\. /gm, '  → ');
+                    modalContent.textContent = formattedContent;
+                    // Update the cached content for copy
+                    currentDoc.fullContent = data.content;
+                } else {
+                    const error = await response.json();
+                    modalContent.innerHTML = `<span style="color: #ef4444;">Error loading file: ${error.error || 'Unknown error'}</span>\n\nPath: ${currentDoc.path}\n\nSummary: ${currentDoc.summary}`;
+                }
+            } catch (error) {
+                modalContent.innerHTML = `<span style="color: #ef4444;">Failed to load file. Make sure dev server is running at localhost:3002</span>\n\nPath: ${currentDoc.path}\n\nSummary: ${currentDoc.summary}`;
+            }
         }
 
         function closeModal() {
@@ -1062,12 +1087,36 @@
             showToast('Path copied to clipboard!');
         }
 
-        function copyContent(id) {
+        async function copyContent(id) {
             const doc = documents.find(d => d.id === id);
             if (!doc) return;
-            const content = `# ${doc.title}\n\nPath: ${doc.path}\nCategory: ${doc.category}\nStatus: ${doc.status}\nModified: ${doc.modified}\n\n${doc.summary}`;
-            navigator.clipboard.writeText(content);
-            showToast('Content copied to clipboard!');
+
+            // If we have cached full content, use it
+            if (doc.fullContent) {
+                navigator.clipboard.writeText(doc.fullContent);
+                showToast('Full content copied to clipboard!');
+                return;
+            }
+
+            // Otherwise fetch it
+            try {
+                const response = await fetch(`/api/docs/read?path=${encodeURIComponent(doc.path)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    doc.fullContent = data.content;
+                    navigator.clipboard.writeText(data.content);
+                    showToast('Full content copied to clipboard!');
+                } else {
+                    // Fallback to summary
+                    const content = `# ${doc.title}\n\nPath: ${doc.path}\n\n${doc.summary}`;
+                    navigator.clipboard.writeText(content);
+                    showToast('Summary copied (full content unavailable)');
+                }
+            } catch {
+                const content = `# ${doc.title}\n\nPath: ${doc.path}\n\n${doc.summary}`;
+                navigator.clipboard.writeText(content);
+                showToast('Summary copied (server unavailable)');
+            }
         }
 
         function claudeCode(id) {
