@@ -7,11 +7,11 @@
  * Appears when {} is detected in prompt, similar to recipe panel.
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { RefreshCw, Check, ChevronUp, ChevronDown, X } from 'lucide-react'
-import { hasSlotMachineSyntax, expandSlotMachine, type SlotMachineSlot } from '../../services/slot-machine.service'
+import { Sparkles, Check, Plus, Minus, X, RotateCcw } from 'lucide-react'
+import { hasSlotMachineSyntax, expandSlotMachine, detectSlotMachineSyntax, type SlotMachineSlot } from '../../services/slot-machine.service'
 
 interface SlotMachinePanelProps {
     prompt: string
@@ -28,10 +28,15 @@ export function SlotMachinePanel({ prompt, onApply, disabled }: SlotMachinePanel
         originalPrompt: string
     } | null>(null)
     const [error, setError] = useState<string | null>(null)
-    const [isCollapsed, setIsCollapsed] = useState(false)
 
     // Check if prompt has slot machine syntax
     const hasSlots = hasSlotMachineSyntax(prompt)
+
+    // Get detected seeds for display
+    const detectedSeeds = useMemo(() => {
+        if (!hasSlots) return []
+        return detectSlotMachineSyntax(prompt)
+    }, [prompt, hasSlots])
 
     // All hooks must be called before any conditional returns
     const handleExpand = useCallback(async () => {
@@ -59,7 +64,7 @@ export function SlotMachinePanel({ prompt, onApply, disabled }: SlotMachinePanel
     const handleApply = useCallback(() => {
         if (result) {
             onApply(result.expandedPrompt)
-            setResult(null) // Clear after applying
+            setResult(null)
         }
     }, [result, onApply])
 
@@ -75,67 +80,75 @@ export function SlotMachinePanel({ prompt, onApply, disabled }: SlotMachinePanel
     if (!hasSlots) return null
 
     return (
-        <div className="space-y-2 bg-amber-500/10 border border-amber-500/30 p-3 rounded-lg">
-            {/* Header row */}
-            <div className="flex items-center justify-between">
+        <div className="bg-amber-950/30 border border-amber-500/20 rounded-lg overflow-hidden">
+            {/* Compact header */}
+            <div className="flex items-center justify-between px-3 py-2 bg-amber-500/10">
                 <div className="flex items-center gap-2">
-                    <span className="text-lg">🎰</span>
-                    <span className="font-medium text-amber-400 text-sm">Slot Machine</span>
-                    <span className="text-xs text-muted-foreground">
-                        {'{}'} detected
-                    </span>
+                    <span className="text-amber-400 text-sm">🎰</span>
+                    <span className="font-medium text-amber-300 text-sm">Slot Machine</span>
+                    {detectedSeeds.length > 0 && (
+                        <span className="text-xs text-amber-400/60">
+                            {detectedSeeds.length} slot{detectedSeeds.length > 1 ? 's' : ''}
+                        </span>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {/* Variation counter */}
-                    <div className="flex items-center gap-1 bg-background/50 rounded border border-border px-2 py-0.5">
+                    {/* Variation counter - always visible */}
+                    <div className="flex items-center bg-black/20 rounded">
                         <button
                             onClick={decrementCount}
                             disabled={variationCount <= 2 || isExpanding}
-                            className="text-muted-foreground hover:text-foreground disabled:opacity-30 p-0.5"
+                            className="px-1.5 py-1 text-amber-400/60 hover:text-amber-400 disabled:opacity-30 transition-colors"
+                            title="Fewer variations"
                         >
-                            <ChevronDown className="w-3 h-3" />
+                            <Minus className="w-3 h-3" />
                         </button>
-                        <span className="text-sm font-mono w-4 text-center">{variationCount}</span>
+                        <span className="text-sm font-mono text-amber-300 w-5 text-center">{variationCount}</span>
                         <button
                             onClick={incrementCount}
                             disabled={variationCount >= 5 || isExpanding}
-                            className="text-muted-foreground hover:text-foreground disabled:opacity-30 p-0.5"
+                            className="px-1.5 py-1 text-amber-400/60 hover:text-amber-400 disabled:opacity-30 transition-colors"
+                            title="More variations"
                         >
-                            <ChevronUp className="w-3 h-3" />
+                            <Plus className="w-3 h-3" />
                         </button>
                     </div>
 
-                    {/* Expand button */}
-                    {!result && (
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={handleExpand}
-                            disabled={isExpanding || disabled}
-                            className="h-7 text-xs border-amber-500/30 hover:bg-amber-500/20"
-                        >
-                            {isExpanding ? (
-                                <>
-                                    <LoadingSpinner className="w-3 h-3 mr-1" />
-                                    Expanding...
-                                </>
-                            ) : (
-                                <>
-                                    <RefreshCw className="w-3 h-3 mr-1" />
-                                    Expand
-                                </>
-                            )}
-                        </Button>
-                    )}
+                    {/* Expand/Regenerate button */}
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleExpand}
+                        disabled={isExpanding || disabled}
+                        className="h-7 text-xs text-amber-300 hover:text-amber-100 hover:bg-amber-500/20"
+                    >
+                        {isExpanding ? (
+                            <>
+                                <LoadingSpinner className="w-3 h-3 mr-1" />
+                                <span className="hidden sm:inline">Expanding...</span>
+                            </>
+                        ) : result ? (
+                            <>
+                                <RotateCcw className="w-3 h-3 mr-1" />
+                                <span className="hidden sm:inline">Regenerate</span>
+                            </>
+                        ) : (
+                            <>
+                                <Sparkles className="w-3 h-3 mr-1" />
+                                <span>Expand</span>
+                            </>
+                        )}
+                    </Button>
 
-                    {/* Collapse toggle (when result exists) */}
+                    {/* Clear button (when result exists) */}
                     {result && (
                         <button
-                            onClick={() => setIsCollapsed(!isCollapsed)}
-                            className="text-muted-foreground hover:text-foreground p-1"
+                            onClick={handleClear}
+                            className="text-amber-400/40 hover:text-amber-400 p-1 transition-colors"
+                            title="Clear result"
                         >
-                            {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                            <X className="w-4 h-4" />
                         </button>
                     )}
                 </div>
@@ -143,65 +156,55 @@ export function SlotMachinePanel({ prompt, onApply, disabled }: SlotMachinePanel
 
             {/* Error state */}
             {error && (
-                <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded p-2">
+                <div className="px-3 py-2 text-sm text-red-400 bg-red-500/10 border-t border-red-500/20">
                     {error}
-                    <Button variant="link" size="sm" onClick={handleExpand} className="ml-2 h-auto p-0 text-red-400">
-                        Try again
-                    </Button>
                 </div>
             )}
 
             {/* Result */}
-            {result && !isCollapsed && (
-                <div className="space-y-2">
+            {result && (
+                <div className="px-3 py-2 space-y-2 border-t border-amber-500/20">
                     {/* Expanded preview */}
-                    <div className="bg-green-500/10 border border-green-500/30 rounded p-2">
-                        <p className="text-xs text-green-400 mb-1">Expanded:</p>
-                        <p className="text-sm break-words">{result.expandedPrompt}</p>
+                    <div className="bg-green-500/10 border border-green-500/20 rounded p-2">
+                        <p className="text-sm break-words text-green-100">{result.expandedPrompt}</p>
                     </div>
 
-                    {/* Slots breakdown (compact) */}
+                    {/* Slots breakdown - show actual variations */}
                     {result.slots.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
+                        <div className="space-y-1">
                             {result.slots.map((slot, i) => (
-                                <div key={i} className="text-xs bg-muted/30 rounded px-2 py-1">
-                                    <span className="font-mono text-amber-400">{`{${slot.seed}}`}</span>
-                                    <span className="text-muted-foreground mx-1">→</span>
-                                    <span className="font-mono text-green-400">[{slot.variations.length}]</span>
+                                <div key={i} className="flex items-start gap-2 text-xs">
+                                    <span className="font-mono text-amber-400 shrink-0">{`{${slot.seed}}`}</span>
+                                    <span className="text-muted-foreground shrink-0">→</span>
+                                    <span className="font-mono text-green-400 break-words">
+                                        [{slot.variations.join(', ')}]
+                                    </span>
                                 </div>
                             ))}
                         </div>
                     )}
 
-                    {/* Actions */}
-                    <div className="flex gap-2">
-                        <Button
-                            size="sm"
-                            onClick={handleApply}
-                            className="h-7 text-xs bg-green-600 hover:bg-green-700"
-                        >
-                            <Check className="w-3 h-3 mr-1" />
-                            Apply
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={handleExpand}
-                            disabled={isExpanding}
-                            className="h-7 text-xs"
-                        >
-                            <RefreshCw className={`w-3 h-3 mr-1 ${isExpanding ? 'animate-spin' : ''}`} />
-                            Regenerate
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={handleClear}
-                            className="h-7 text-xs"
-                        >
-                            <X className="w-3 h-3 mr-1" />
-                            Clear
-                        </Button>
+                    {/* Apply button */}
+                    <Button
+                        size="sm"
+                        onClick={handleApply}
+                        className="w-full h-8 text-xs bg-green-600 hover:bg-green-700 text-white"
+                    >
+                        <Check className="w-3 h-3 mr-1" />
+                        Apply to Prompt
+                    </Button>
+                </div>
+            )}
+
+            {/* Show detected seeds when no result yet */}
+            {!result && !error && detectedSeeds.length > 0 && (
+                <div className="px-3 py-2 border-t border-amber-500/10">
+                    <div className="flex flex-wrap gap-1">
+                        {detectedSeeds.map((seed, i) => (
+                            <span key={i} className="text-xs font-mono bg-amber-500/10 text-amber-300 px-1.5 py-0.5 rounded">
+                                {`{${seed}}`}
+                            </span>
+                        ))}
                     </div>
                 </div>
             )}
