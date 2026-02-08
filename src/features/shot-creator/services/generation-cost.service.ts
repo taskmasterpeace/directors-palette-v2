@@ -9,6 +9,7 @@
 import { getModelConfig, getModelCost, type ModelId } from '@/config';
 import { parseDynamicPrompt } from '../helpers/prompt-syntax-feedback';
 import type { RiverflowState } from '../components/RiverflowOptionsPanel';
+import type { WildCard } from '../helpers/wildcard/parser';
 
 export interface GenerationCostInput {
   model: string;
@@ -19,7 +20,7 @@ export interface GenerationCostInput {
   disablePipeSyntax: boolean;
   disableBracketSyntax: boolean;
   disableWildcardSyntax: boolean;
-  wildcards: Record<string, string[]>;
+  wildcards: WildCard[];
   riverflowState?: RiverflowState | null;
 }
 
