@@ -15,6 +15,10 @@ import type {
   AdhubGenerationResult,
   AdhubModel,
   RiverflowSettings,
+  AdhubVideoAdConfig,
+  AdhubVideoAudioSource,
+  AdhubLipSyncModel,
+  AdhubLipSyncResolution,
 } from '../types/adhub.types'
 
 export type AspectRatio = '1:1' | '4:5' | '9:16' | '16:9' | '4:3'
@@ -99,12 +103,27 @@ interface AdhubState extends AdhubWizardState {
   setGenerationResult: (result: AdhubGenerationResult | undefined) => void
   setError: (error: string | undefined) => void
 
+  // Actions - Video Ad (Lip-Sync)
+  videoAdConfig: AdhubVideoAdConfig
+  setVideoAdEnabled: (enabled: boolean) => void
+  setSpokespersonImage: (url: string | null, file?: File | null) => void
+  setVideoAudioSource: (source: AdhubVideoAudioSource) => void
+  setUploadedAudio: (url: string | null, duration: number | null, file?: File | null) => void
+  setTtsScript: (script: string) => void
+  setTtsVoiceId: (voiceId: string) => void
+  setGeneratedTtsAudio: (url: string | null, duration: number | null) => void
+  setLipSyncModel: (model: AdhubLipSyncModel) => void
+  setLipSyncResolution: (resolution: AdhubLipSyncResolution) => void
+  setLipSyncGenerating: (generating: boolean) => void
+  setLipSyncResult: (predictionId: string | null, galleryId: string | null, videoUrl: string | null, error?: string | null) => void
+  resetVideoAdConfig: () => void
+
   // Actions - Reset
   reset: () => void
   resetToStep: (step: AdhubStep) => void
 }
 
-const STEP_ORDER: AdhubStep[] = ['brand', 'template', 'style', 'fill', 'result']
+const STEP_ORDER: AdhubStep[] = ['brand', 'template', 'style', 'fill', 'talk', 'result']
 
 const getNextStep = (current: AdhubStep): AdhubStep | null => {
   const index = STEP_ORDER.indexOf(current)
@@ -129,6 +148,28 @@ const DEFAULT_RIVERFLOW_SETTINGS: RiverflowSettings = {
   maxIterations: 3,
 }
 
+const DEFAULT_VIDEO_AD_CONFIG: AdhubVideoAdConfig = {
+  enabled: false,
+  spokespersonImageUrl: null,
+  spokespersonImageFile: undefined,
+  audioSource: 'tts',
+  uploadedAudioUrl: null,
+  uploadedAudioFile: undefined,
+  ttsScript: '',
+  ttsVoiceId: 'rachel',
+  generatedTtsAudioUrl: null,
+  audioDurationSeconds: null,
+  modelSettings: {
+    model: 'kling-avatar-v2-standard',
+    resolution: '720p',
+  },
+  isGenerating: false,
+  lipSyncPredictionId: null,
+  lipSyncGalleryId: null,
+  lipSyncVideoUrl: null,
+  lipSyncError: null,
+}
+
 const initialState: Omit<AdhubState,
   'setStep' | 'nextStep' | 'previousStep' |
   'setBrands' | 'selectBrand' | 'setBrandImages' |
@@ -142,6 +183,10 @@ const initialState: Omit<AdhubState,
   'addRiverflowFont' | 'removeRiverflowFont' | 'updateRiverflowFontText' |
   'setRiverflowSettings' | 'clearRiverflowInputs' |
   'setIsGenerating' | 'setGenerationResult' | 'setError' |
+  'setVideoAdEnabled' | 'setSpokespersonImage' | 'setVideoAudioSource' |
+  'setUploadedAudio' | 'setTtsScript' | 'setTtsVoiceId' |
+  'setGeneratedTtsAudio' | 'setLipSyncModel' | 'setLipSyncResolution' |
+  'setLipSyncGenerating' | 'setLipSyncResult' | 'resetVideoAdConfig' |
   'reset' | 'resetToStep'
 > = {
   currentStep: 'brand',
@@ -167,6 +212,9 @@ const initialState: Omit<AdhubState,
   riverflowFontUrls: [],
   riverflowFontTexts: [],
   riverflowSettings: DEFAULT_RIVERFLOW_SETTINGS,
+
+  // Video Ad (Lip-Sync) state
+  videoAdConfig: DEFAULT_VIDEO_AD_CONFIG,
 }
 
 export const useAdhubStore = create<AdhubState>()(
@@ -312,6 +360,79 @@ export const useAdhubStore = create<AdhubState>()(
 
       setError: (error) => set({ error }),
 
+      // Video Ad (Lip-Sync) actions
+      setVideoAdEnabled: (enabled) => set((state) => ({
+        videoAdConfig: { ...state.videoAdConfig, enabled },
+      })),
+
+      setSpokespersonImage: (url, file = undefined) => set((state) => ({
+        videoAdConfig: {
+          ...state.videoAdConfig,
+          spokespersonImageUrl: url,
+          spokespersonImageFile: file,
+        },
+      })),
+
+      setVideoAudioSource: (source) => set((state) => ({
+        videoAdConfig: { ...state.videoAdConfig, audioSource: source },
+      })),
+
+      setUploadedAudio: (url, duration, file = undefined) => set((state) => ({
+        videoAdConfig: {
+          ...state.videoAdConfig,
+          uploadedAudioUrl: url,
+          uploadedAudioFile: file,
+          audioDurationSeconds: duration,
+        },
+      })),
+
+      setTtsScript: (script) => set((state) => ({
+        videoAdConfig: { ...state.videoAdConfig, ttsScript: script },
+      })),
+
+      setTtsVoiceId: (voiceId) => set((state) => ({
+        videoAdConfig: { ...state.videoAdConfig, ttsVoiceId: voiceId },
+      })),
+
+      setGeneratedTtsAudio: (url, duration) => set((state) => ({
+        videoAdConfig: {
+          ...state.videoAdConfig,
+          generatedTtsAudioUrl: url,
+          audioDurationSeconds: duration,
+        },
+      })),
+
+      setLipSyncModel: (model) => set((state) => ({
+        videoAdConfig: {
+          ...state.videoAdConfig,
+          modelSettings: { ...state.videoAdConfig.modelSettings, model },
+        },
+      })),
+
+      setLipSyncResolution: (resolution) => set((state) => ({
+        videoAdConfig: {
+          ...state.videoAdConfig,
+          modelSettings: { ...state.videoAdConfig.modelSettings, resolution },
+        },
+      })),
+
+      setLipSyncGenerating: (generating) => set((state) => ({
+        videoAdConfig: { ...state.videoAdConfig, isGenerating: generating },
+      })),
+
+      setLipSyncResult: (predictionId, galleryId, videoUrl, error = null) => set((state) => ({
+        videoAdConfig: {
+          ...state.videoAdConfig,
+          lipSyncPredictionId: predictionId,
+          lipSyncGalleryId: galleryId,
+          lipSyncVideoUrl: videoUrl,
+          lipSyncError: error,
+          isGenerating: false,
+        },
+      })),
+
+      resetVideoAdConfig: () => set({ videoAdConfig: DEFAULT_VIDEO_AD_CONFIG }),
+
       // Reset
       reset: () => set(initialState),
 
@@ -351,6 +472,12 @@ export const useAdhubStore = create<AdhubState>()(
         selectedReferenceImages: state.selectedReferenceImages,
         aspectRatio: state.aspectRatio,
         selectedModel: state.selectedModel,
+        // Persist video ad config without file objects
+        videoAdConfig: {
+          ...state.videoAdConfig,
+          spokespersonImageFile: undefined,
+          uploadedAudioFile: undefined,
+        },
         // Don't persist Riverflow inputs (large URLs)
       }),
     }

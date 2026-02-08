@@ -7,6 +7,7 @@ import { BrandSelectStep } from './steps/BrandSelectStep'
 import { TemplateSelectStep } from './steps/TemplateSelectStep'
 import { StyleSelectStep } from './steps/StyleSelectStep'
 import { FillTemplateStep } from './steps/FillTemplateStep'
+import { MakeItTalkStep } from './steps/MakeItTalkStep'
 import { ResultStep } from './steps/ResultStep'
 import { AdhubStepper } from './AdhubStepper'
 import { ArchitectureHelpModal } from './InfoTip'
@@ -17,6 +18,7 @@ const STEP_COMPONENTS: Record<AdhubStep, React.FC> = {
   template: TemplateSelectStep,
   style: StyleSelectStep,
   fill: FillTemplateStep,
+  talk: MakeItTalkStep,
   result: ResultStep,
 }
 

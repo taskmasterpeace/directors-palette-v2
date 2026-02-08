@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Check, Building2, LayoutTemplate, Palette, FileEdit, Image } from 'lucide-react'
+import { Check, Building2, LayoutTemplate, Palette, FileEdit, Video, Image } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { useAdhubStore } from '../store/adhub.store'
 import type { AdhubStep } from '../types/adhub.types'
@@ -18,6 +18,7 @@ const STEPS: StepInfo[] = [
   { id: 'template', label: 'Template', icon: LayoutTemplate },
   { id: 'style', label: 'Style', icon: Palette },
   { id: 'fill', label: 'Fill Fields', icon: FileEdit },
+  { id: 'talk', label: 'Make It Talk', icon: Video },
   { id: 'result', label: 'Result', icon: Image },
 ]
 
@@ -44,6 +45,8 @@ export function AdhubStepper() {
         return !!selectedBrand && !!selectedTemplate
       case 'fill':
         return !!selectedBrand && !!selectedTemplate && !!selectedStyle
+      case 'talk':
+        return !!selectedBrand && !!selectedTemplate && !!selectedStyle
       case 'result':
         return !!generationResult
       default:
@@ -60,6 +63,8 @@ export function AdhubStepper() {
       case 'style':
         return !!selectedStyle
       case 'fill':
+        return currentIndex > STEP_ORDER.indexOf('fill')
+      case 'talk':
         return !!generationResult
       case 'result':
         return !!generationResult

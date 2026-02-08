@@ -165,7 +165,7 @@ export interface AdhubGenerationResult {
 // UI STATE TYPES
 // =============================================================================
 
-export type AdhubStep = 'brand' | 'template' | 'style' | 'fill' | 'result'
+export type AdhubStep = 'brand' | 'template' | 'style' | 'fill' | 'talk' | 'result'
 
 export interface AdhubWizardState {
   currentStep: AdhubStep
@@ -177,6 +177,41 @@ export interface AdhubWizardState {
   isGenerating: boolean
   generationResult?: AdhubGenerationResult
   error?: string
+  // Lip-sync video ad configuration
+  videoAdConfig?: AdhubVideoAdConfig
+}
+
+// =============================================================================
+// VIDEO AD (LIP-SYNC) TYPES
+// =============================================================================
+
+export type AdhubVideoAudioSource = 'upload' | 'tts'
+
+export type AdhubLipSyncModel = 'kling-avatar-v2-standard' | 'kling-avatar-v2-pro'
+
+export type AdhubLipSyncResolution = '720p' | '1080p'
+
+export interface AdhubVideoAdConfig {
+  enabled: boolean
+  spokespersonImageUrl: string | null
+  spokespersonImageFile?: File | null
+  audioSource: AdhubVideoAudioSource
+  uploadedAudioUrl: string | null
+  uploadedAudioFile?: File | null
+  ttsScript: string
+  ttsVoiceId: string
+  generatedTtsAudioUrl: string | null
+  audioDurationSeconds: number | null
+  modelSettings: {
+    model: AdhubLipSyncModel
+    resolution: AdhubLipSyncResolution
+  }
+  // Generation state
+  isGenerating: boolean
+  lipSyncPredictionId: string | null
+  lipSyncGalleryId: string | null
+  lipSyncVideoUrl: string | null
+  lipSyncError: string | null
 }
 
 // =============================================================================

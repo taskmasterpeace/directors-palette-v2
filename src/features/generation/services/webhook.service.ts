@@ -5,6 +5,8 @@ import { creditsService } from '@/features/credits';
 import { isAdminEmail } from '@/features/admin/types/admin.types';
 import { VideoGenerationService } from '@/features/shot-animator/services/video-generation.service';
 import type { AnimationModel } from '@/features/shot-animator/types';
+import { LipSyncGenerationService } from '@/features/lip-sync/services/lip-sync-generation.service';
+import type { LipSyncModel, LipSyncResolution } from '@/features/lip-sync/types/lip-sync.types';
 import type { Database } from '../../../../supabase/database.types';
 import { getModelCost, type ModelId } from '@/config';
 
@@ -215,15 +217,28 @@ export class WebhookService {
       // Calculate actual cost based on type-specific factors
       let overrideAmount: number | undefined;
       if (generationType === 'video') {
-        // Video: calculate based on duration and resolution
-        const duration = (currentMetadata.duration as number) || 5;
-        const resolution = (currentMetadata.resolution as '480p' | '720p' | '1080p') || '720p';
-        overrideAmount = VideoGenerationService.calculateCost(
-          model as AnimationModel,
-          duration,
-          resolution
-        );
-        console.log(`Video cost calculated: ${model} @ ${resolution} for ${duration}s = ${overrideAmount} pts`);
+        // Check if this is a lip-sync generation
+        if (currentMetadata.lip_sync === true) {
+          // Lip-sync: calculate based on audio duration and resolution
+          const audioDuration = (currentMetadata.audio_duration as number) || 10;
+          const resolution = (currentMetadata.resolution as LipSyncResolution) || '720p';
+          overrideAmount = LipSyncGenerationService.calculateCost(
+            model as LipSyncModel,
+            audioDuration,
+            resolution
+          );
+          console.log(`Lip-sync cost calculated: ${model} @ ${resolution} for ${audioDuration}s = ${overrideAmount} pts`);
+        } else {
+          // Regular video: calculate based on duration and resolution
+          const duration = (currentMetadata.duration as number) || 5;
+          const resolution = (currentMetadata.resolution as '480p' | '720p' | '1080p') || '720p';
+          overrideAmount = VideoGenerationService.calculateCost(
+            model as AnimationModel,
+            duration,
+            resolution
+          );
+          console.log(`Video cost calculated: ${model} @ ${resolution} for ${duration}s = ${overrideAmount} pts`);
+        }
       } else {
         // Image: use resolution-based pricing (e.g., nano-banana-pro tiered pricing)
         const modelSettings = currentMetadata.modelSettings as Record<string, unknown> | undefined;
