@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
+import { toast } from 'sonner'
 import { useStorybookStore } from '../store/storybook.store'
 import { useRecipes } from '@/features/shot-creator/hooks/useRecipes'
 import type { BookFormat } from '../types/storybook.types'
@@ -10,6 +11,11 @@ import {
   type StorybookAssetType,
 } from '../services/storybook-folder.service'
 import { useAuth } from '@/features/auth/hooks/useAuth'
+import { getModelCost } from '@/config'
+
+// Cost constants for storybook generations (nano-banana-pro)
+const STORYBOOK_MODEL = 'nano-banana-pro'
+const STORYBOOK_COST_PER_IMAGE = getModelCost(STORYBOOK_MODEL) // $0.25 = 25 pts
 
 // Default system recipe names for storybook (used as fallbacks)
 const DEFAULT_RECIPE_NAMES = {
@@ -186,6 +192,10 @@ export function useStorybookGeneration() {
     styleDescription?: string,
     referenceImageUrl?: string
   ): Promise<GenerationResult> => {
+    // Show cost notification (1 image = 25 pts)
+    const cost = Math.ceil(STORYBOOK_COST_PER_IMAGE * 100)
+    toast.info(`Generating style guide (${cost} pts)`, { duration: 2000 })
+
     setState({ isGenerating: true, progress: 'Generating style guide...', error: null })
     setGenerating(true)
 
@@ -271,6 +281,10 @@ export function useStorybookGeneration() {
     if (!hasPhoto && !hasDescription) {
       return { success: false, error: 'Character needs either a photo or description to generate a character sheet' }
     }
+
+    // Show cost notification (1 image = 25 pts)
+    const cost = Math.ceil(STORYBOOK_COST_PER_IMAGE * 100)
+    toast.info(`Generating character sheet (${cost} pts)`, { duration: 2000 })
 
     setState({ isGenerating: true, progress: `Generating character sheet for ${character.name}...`, error: null })
     setGenerating(true)
@@ -392,6 +406,10 @@ export function useStorybookGeneration() {
       return { success: false, error: 'Author name is required for cover generation' }
     }
 
+    // Show cost notification (1 image = 25 pts)
+    const cost = Math.ceil(STORYBOOK_COST_PER_IMAGE * 100)
+    toast.info(`Generating book cover (${cost} pts)`, { duration: 2000 })
+
     setState({ isGenerating: true, progress: 'Generating book cover...', error: null })
     setGenerating(true)
 
@@ -507,6 +525,10 @@ export function useStorybookGeneration() {
     if (!page) {
       return { success: false, error: 'Page not found' }
     }
+
+    // Show cost notification (1 image = 25 pts)
+    const cost = Math.ceil(STORYBOOK_COST_PER_IMAGE * 100)
+    toast.info(`Generating page illustration (${cost} pts)`, { duration: 2000 })
 
     setState({ isGenerating: true, progress: 'Generating page illustration...', error: null })
     setGenerating(true)
@@ -651,6 +673,10 @@ export function useStorybookGeneration() {
     const leftPageIndex = project?.pages.findIndex(p => p.id === leftPageId) ?? -1
     const rightPageIndex = project?.pages.findIndex(p => p.id === rightPageId) ?? -1
 
+    // Show cost notification (1 dual-page image = 25 pts)
+    const cost = Math.ceil(STORYBOOK_COST_PER_IMAGE * 100)
+    toast.info(`Generating dual page spread (${cost} pts)`, { duration: 2000 })
+
     setState({ isGenerating: true, progress: `Generating pages ${leftPageIndex + 1}-${rightPageIndex + 1} as spread...`, error: null })
     setGenerating(true)
 
@@ -784,6 +810,10 @@ export function useStorybookGeneration() {
   const generateCoverVariations = useCallback(async (): Promise<GenerationResult[]> => {
     if (!project) return []
 
+    // Show cost notification (3 images × 25 pts = 75 pts)
+    const totalCost = Math.ceil(3 * STORYBOOK_COST_PER_IMAGE * 100)
+    toast.info(`Generating 3 cover variations (${totalCost} pts)`, { duration: 3000 })
+
     setState({
       isGenerating: true,
       progress: 'Generating 3 cover variations...',
@@ -832,6 +862,10 @@ export function useStorybookGeneration() {
    */
   const generateTitlePageVariations = useCallback(async (): Promise<GenerationResult[]> => {
     if (!project) return []
+
+    // Show cost notification (4 images × 25 pts = 100 pts)
+    const totalCost = Math.ceil(4 * STORYBOOK_COST_PER_IMAGE * 100)
+    toast.info(`Generating 4 title page variations (${totalCost} pts)`, { duration: 3000 })
 
     setState({
       isGenerating: true,
@@ -1005,6 +1039,10 @@ This is an INTERIOR page, not a cover. It should tease the story and build antic
     if (!project) {
       return { success: false, error: 'No project found' }
     }
+
+    // Show cost notification (1 spread image = 25 pts)
+    const cost = Math.ceil(STORYBOOK_COST_PER_IMAGE * 100)
+    toast.info(`Generating spread ${spread.spreadNumber} (${cost} pts)`, { duration: 2000 })
 
     setState({
       isGenerating: true,
@@ -1181,6 +1219,10 @@ This is an INTERIOR page, not a cover. It should tease the story and build antic
    */
   const generateBackCoverVariations = useCallback(async (): Promise<GenerationResult[]> => {
     if (!project) return []
+
+    // Show cost notification (4 images × 25 pts = 100 pts)
+    const totalCost = Math.ceil(4 * STORYBOOK_COST_PER_IMAGE * 100)
+    toast.info(`Generating 4 back cover variations (${totalCost} pts)`, { duration: 3000 })
 
     setState({
       isGenerating: true,
