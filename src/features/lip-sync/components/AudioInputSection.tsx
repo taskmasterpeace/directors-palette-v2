@@ -338,6 +338,12 @@ interface AudioPreviewProps {
   showClear?: boolean
 }
 
+// Pre-generated waveform pattern for consistent display
+const WAVEFORM_PATTERN = [
+  35, 45, 55, 70, 85, 75, 60, 80, 90, 85, 70, 55, 45, 60, 75, 85, 95, 80, 65, 50,
+  40, 55, 70, 80, 90, 85, 70, 55, 65, 80, 90, 75, 60, 45, 55, 70, 85, 75, 60, 50,
+]
+
 function AudioPreview({
   duration,
   isPlaying,
@@ -346,11 +352,11 @@ function AudioPreview({
   showClear = false,
 }: AudioPreviewProps) {
   return (
-    <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-lg">
+    <div className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-lg border border-slate-600/30">
       <Button
         variant="ghost"
         size="icon"
-        className="h-10 w-10 rounded-full bg-amber-500/20 hover:bg-amber-500/30"
+        className="h-10 w-10 rounded-full bg-amber-500/20 hover:bg-amber-500/30 flex-shrink-0"
         onClick={onTogglePlay}
       >
         {isPlaying ? (
@@ -361,19 +367,22 @@ function AudioPreview({
       </Button>
 
       <div className="flex-1 min-w-0">
-        <div className="h-8 bg-slate-600/50 rounded flex items-center px-2">
-          {/* Simple waveform visualization placeholder */}
-          <div className="flex items-center gap-0.5 h-full w-full">
-            {Array.from({ length: 40 }).map((_, i) => (
+        <div className="h-10 bg-slate-600/30 rounded-md flex items-center px-2 overflow-hidden">
+          <div className="flex items-center gap-[2px] h-full w-full">
+            {WAVEFORM_PATTERN.map((height, i) => (
               <div
                 key={i}
                 className={cn(
-                  'flex-1 bg-amber-500/60 rounded-sm transition-all',
+                  'flex-1 rounded-full transition-all duration-200',
                   isPlaying && 'animate-pulse'
                 )}
                 style={{
-                  height: `${Math.random() * 60 + 20}%`,
-                  animationDelay: `${i * 50}ms`,
+                  height: `${height}%`,
+                  background: isPlaying
+                    ? 'linear-gradient(to top, rgb(245, 158, 11), rgb(249, 115, 22))'
+                    : 'linear-gradient(to top, rgba(245, 158, 11, 0.5), rgba(245, 158, 11, 0.3))',
+                  animationDelay: isPlaying ? `${i * 25}ms` : undefined,
+                  animationDuration: isPlaying ? '0.5s' : undefined,
                 }}
               />
             ))}
@@ -381,7 +390,7 @@ function AudioPreview({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3 flex-shrink-0">
         {duration !== null && (
           <span className="text-sm font-medium text-amber-400 tabular-nums">
             {formatDuration(duration)}
@@ -391,7 +400,7 @@ function AudioPreview({
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-destructive"
+            className="text-muted-foreground hover:text-destructive h-8 px-2"
             onClick={onClear}
           >
             Remove
