@@ -3,13 +3,13 @@
 import React, { useCallback, useMemo, useState } from 'react'
 import {
   Video,
-  ArrowRight,
   ArrowLeft,
   Coins,
   Sparkles,
   User,
   Mic,
   Settings2,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { Button } from '@/components/ui/button'
@@ -38,8 +38,24 @@ import type { AdhubLipSyncModel, AdhubLipSyncResolution } from '../../types/adhu
 
 export function MakeItTalkStep() {
   const [isGeneratingTts, setIsGeneratingTts] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
 
   const {
+    // Selection state
+    selectedBrand,
+    selectedTemplate,
+    selectedStyle,
+    fieldValues,
+    selectedReferenceImages,
+    aspectRatio,
+    selectedModel,
+    // Riverflow state
+    riverflowSourceImages,
+    riverflowDetailRefs,
+    riverflowFontUrls,
+    riverflowFontTexts,
+    riverflowSettings,
+    // Video config
     videoAdConfig,
     setVideoAdEnabled,
     setSpokespersonImage,
@@ -50,7 +66,10 @@ export function MakeItTalkStep() {
     setGeneratedTtsAudio,
     setLipSyncModel,
     setLipSyncResolution,
-    nextStep,
+    setLipSyncResult,
+    // Generation state
+    setGenerationResult,
+    setError,
     previousStep,
   } = useAdhubStore()
 
@@ -141,6 +160,162 @@ export function MakeItTalkStep() {
   const handleAudioChange = useCallback((url: string | null, duration: number | null, file?: File) => {
     setUploadedAudio(url, duration, file)
   }, [setUploadedAudio])
+
+  // Upload a local file and get a public URL
+  const uploadFile = useCallback(async (file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch('/api/upload-file', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to upload file')
+    }
+
+    const result = await response.json()
+    return result.url
+  }, [])
+
+  // Handle generation of both image ad and optional video
+  const handleGenerate = useCallback(async () => {
+    if (!selectedBrand || !selectedTemplate || !selectedStyle) {
+      setError('Missing required selections')
+      return
+    }
+
+    setIsGenerating(true)
+    setError(undefined)
+
+    try {
+      // Step 1: Generate the image ad
+      const requestBody: Record<string, unknown> = {
+        brandId: selectedBrand.id,
+        styleId: selectedStyle.id,
+        templateId: selectedTemplate.id,
+        fieldValues,
+        selectedReferenceImages,
+        aspectRatio,
+        model: selectedModel,
+      }
+
+      // Add Riverflow-specific inputs if using Riverflow
+      if (selectedModel === 'riverflow-2-pro') {
+        requestBody.riverflowSourceImages = riverflowSourceImages
+        requestBody.riverflowDetailRefs = riverflowDetailRefs
+        requestBody.riverflowFontUrls = riverflowFontUrls
+        requestBody.riverflowFontTexts = riverflowFontTexts
+        requestBody.riverflowSettings = riverflowSettings
+      }
+
+      toast.info('Generating your image ad...')
+      const imageResponse = await fetch('/api/adhub/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      })
+
+      if (!imageResponse.ok) {
+        const errorData = await imageResponse.json()
+        const errorMessage = errorData.details
+          ? `${errorData.error}: ${errorData.details}`
+          : errorData.error || 'Failed to generate ad'
+        throw new Error(errorMessage)
+      }
+
+      const imageResult = await imageResponse.json()
+
+      // Step 2: If video is enabled, generate lip-sync video
+      if (videoAdConfig.enabled) {
+        toast.info(`Generating lip-sync video (${formatCost(estimatedCost)})...`)
+
+        // Upload files if they're local blobs
+        let avatarUrl = videoAdConfig.spokespersonImageUrl
+        let audioUrl = effectiveAudioUrl
+
+        // Upload spokesperson image if it's a local file
+        if (videoAdConfig.spokespersonImageFile) {
+          avatarUrl = await uploadFile(videoAdConfig.spokespersonImageFile)
+        }
+
+        // Upload audio file if it's a local file
+        if (videoAdConfig.audioSource === 'upload' && videoAdConfig.uploadedAudioFile) {
+          audioUrl = await uploadFile(videoAdConfig.uploadedAudioFile)
+        }
+
+        if (!avatarUrl || !audioUrl || !videoAdConfig.audioDurationSeconds) {
+          throw new Error('Missing avatar image or audio for video generation')
+        }
+
+        // Call lip-sync API
+        const lipSyncResponse = await fetch('/api/generation/lip-sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            avatarImageUrl: avatarUrl,
+            audioUrl: audioUrl,
+            audioDurationSeconds: videoAdConfig.audioDurationSeconds,
+            modelSettings: {
+              model: videoAdConfig.modelSettings.model,
+              resolution: videoAdConfig.modelSettings.resolution,
+            },
+            metadata: {
+              source: 'adhub',
+              projectId: imageResult.adId,
+            },
+          }),
+        })
+
+        if (!lipSyncResponse.ok) {
+          const errorData = await lipSyncResponse.json()
+          console.error('Lip-sync error:', errorData)
+          // Don't fail completely - still show image result
+          toast.error(`Video generation failed: ${errorData.error || 'Unknown error'}`)
+          setLipSyncResult(null, null, null, errorData.error || 'Video generation failed')
+        } else {
+          const lipSyncResult = await lipSyncResponse.json()
+          setLipSyncResult(
+            lipSyncResult.predictionId,
+            lipSyncResult.galleryId,
+            null // Video URL will be populated by polling in ResultStep
+          )
+          toast.success('Video generation started! Check the result page.')
+        }
+      }
+
+      // Move to result step
+      setGenerationResult(imageResult)
+    } catch (error) {
+      console.error('Generation failed:', error)
+      setError(error instanceof Error ? error.message : 'Failed to generate ad')
+      toast.error(error instanceof Error ? error.message : 'Failed to generate ad')
+    } finally {
+      setIsGenerating(false)
+    }
+  }, [
+    selectedBrand,
+    selectedTemplate,
+    selectedStyle,
+    fieldValues,
+    selectedReferenceImages,
+    aspectRatio,
+    selectedModel,
+    riverflowSourceImages,
+    riverflowDetailRefs,
+    riverflowFontUrls,
+    riverflowFontTexts,
+    riverflowSettings,
+    videoAdConfig,
+    effectiveAudioUrl,
+    estimatedCost,
+    uploadFile,
+    setError,
+    setGenerationResult,
+    setLipSyncResult,
+  ])
 
   return (
     <div className="p-6 space-y-6">
@@ -331,19 +506,26 @@ export function MakeItTalkStep() {
           )}
 
           <Button
-            onClick={nextStep}
-            disabled={!canProceed}
+            onClick={handleGenerate}
+            disabled={!canProceed || isGenerating}
             className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-900 font-semibold px-6"
           >
-            {videoAdConfig.enabled ? (
+            {isGenerating ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Generating...
+              </>
+            ) : videoAdConfig.enabled ? (
+              <>
+                <Sparkles className="w-4 h-4" />
+                Generate Ad + Video
+              </>
+            ) : (
               <>
                 <Sparkles className="w-4 h-4" />
                 Generate Ad
               </>
-            ) : (
-              'Skip to Generate'
             )}
-            <ArrowRight className="w-4 h-4" />
           </Button>
         </div>
       </div>

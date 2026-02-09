@@ -25,16 +25,9 @@ export function FillTemplateStep() {
     aspectRatio,
     setAspectRatio,
     selectedModel,
-    riverflowSourceImages,
-    riverflowDetailRefs,
-    riverflowFontUrls,
-    riverflowFontTexts,
-    riverflowSettings,
-    setIsGenerating,
-    setGenerationResult,
     setError,
     previousStep,
-    isGenerating,
+    nextStep,
   } = useAdhubStore()
 
   const [brandImages, setBrandImages] = useState<AdhubBrandImage[]>([])
@@ -60,7 +53,7 @@ export function FillTemplateStep() {
     fetchBrandImages()
   }, [selectedBrand])
 
-  const handleGenerate = async () => {
+  const handleContinue = () => {
     if (!selectedBrand || !selectedTemplate || !selectedStyle) {
       setError('Missing required selections')
       return
@@ -76,52 +69,8 @@ export function FillTemplateStep() {
       return
     }
 
-    setIsGenerating(true)
     setError(undefined)
-
-    try {
-      // Build request body with model-specific inputs
-      const requestBody: Record<string, unknown> = {
-        brandId: selectedBrand.id,
-        styleId: selectedStyle.id,
-        templateId: selectedTemplate.id,
-        fieldValues,
-        selectedReferenceImages,
-        aspectRatio,
-        model: selectedModel,
-      }
-
-      // Add Riverflow-specific inputs if using Riverflow
-      if (selectedModel === 'riverflow-2-pro') {
-        requestBody.riverflowSourceImages = riverflowSourceImages
-        requestBody.riverflowDetailRefs = riverflowDetailRefs
-        requestBody.riverflowFontUrls = riverflowFontUrls
-        requestBody.riverflowFontTexts = riverflowFontTexts
-        requestBody.riverflowSettings = riverflowSettings
-      }
-
-      const response = await fetch('/api/adhub/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        const errorMessage = errorData.details
-          ? `${errorData.error}: ${errorData.details}`
-          : errorData.error || 'Failed to generate ad'
-        throw new Error(errorMessage)
-      }
-
-      const result = await response.json()
-      setGenerationResult(result)
-    } catch (error) {
-      console.error('Generation failed:', error)
-      setError(error instanceof Error ? error.message : 'Failed to generate ad')
-    } finally {
-      setIsGenerating(false)
-    }
+    nextStep() // Go to MakeItTalkStep
   }
 
   if (!selectedTemplate) {
@@ -367,22 +316,9 @@ export function FillTemplateStep() {
           <ChevronLeft className="w-4 h-4" />
           Back
         </Button>
-        <Button
-          onClick={handleGenerate}
-          disabled={isGenerating}
-          className="gap-2"
-        >
-          {isGenerating ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
-              Generating...
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4" />
-              Generate Ad
-            </>
-          )}
+        <Button onClick={handleContinue} className="gap-2">
+          Next
+          <Sparkles className="w-4 h-4" />
         </Button>
       </div>
     </div>
