@@ -6,10 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 import { Wand2, X, Loader2, CheckCircle, AlertCircle, Image as ImageIcon } from 'lucide-react'
 import { DropZone } from '@/components/ui/drop-zone'
-import { PromptEditor, type PromptVariable, applyVariablesToPrompt } from '../shared/PromptEditor'
-import { styleGeneratorService, DEFAULT_STYLE_GUIDE_PROMPT } from '../../services/style-generator.service'
 import { useStoryboardStore } from '../../store'
 
 type GenerationStatus = 'idle' | 'generating' | 'completed' | 'failed'
@@ -18,11 +17,11 @@ export function StyleGuideGenerator() {
     const { setCurrentStyleGuide, addStyleGuide } = useStoryboardStore()
 
     const [styleName, setStyleName] = useState('')
+    const [styleDescription, setStyleDescription] = useState('')
     const [referenceImage, setReferenceImage] = useState<string | null>(null)
     const [referenceFile, setReferenceFile] = useState<File | null>(null)
-    const [prompt, setPrompt] = useState(DEFAULT_STYLE_GUIDE_PROMPT)
     const [generationStatus, setGenerationStatus] = useState<GenerationStatus>('idle')
-    const [generatedGalleryId, setGeneratedGalleryId] = useState<string | null>(null)
+    const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
 
     // Accepted image file types for reference image
@@ -47,15 +46,6 @@ export function StyleGuideGenerator() {
         setReferenceFile(null)
     }
 
-    const variables: PromptVariable[] = [
-        {
-            name: 'STYLE_NAME',
-            value: styleName || '[Style Name]',
-            description: 'Name of the visual style',
-            editable: false
-        }
-    ]
-
     const handleGenerate = async () => {
         if (!styleName.trim()) {
             setError('Please enter a style name')
@@ -64,22 +54,33 @@ export function StyleGuideGenerator() {
 
         setGenerationStatus('generating')
         setError(null)
-        setGeneratedGalleryId(null)
+        setGeneratedImageUrl(null)
 
         try {
-            const result = await styleGeneratorService.generateStyleGuide({
-                styleName: styleName.trim(),
-                prompt,
-                referenceImageUrl: referenceImage || undefined,
-                aspectRatio: '21:9'
+            const response = await fetch(`/api/recipes/Storyboard Style Guide/execute`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fieldValues: {
+                        stage0_field0_style_name: styleName.trim(),
+                        stage0_field1_style_description: styleDescription.trim(),
+                    },
+                    referenceImages: referenceImage ? [referenceImage] : [],
+                    modelSettings: {
+                        aspectRatio: '16:9',
+                        outputFormat: 'png',
+                    },
+                }),
             })
 
-            if (result.success) {
+            const data = await response.json()
+
+            if (data.success && data.imageUrl) {
                 setGenerationStatus('completed')
-                setGeneratedGalleryId(result.galleryId || null)
+                setGeneratedImageUrl(data.imageUrl)
             } else {
                 setGenerationStatus('failed')
-                setError(result.error || 'Generation failed')
+                setError(data.error || 'Generation failed')
             }
         } catch (err) {
             setGenerationStatus('failed')
@@ -88,19 +89,18 @@ export function StyleGuideGenerator() {
     }
 
     const handleSaveAsStyleGuide = () => {
-        if (!styleName.trim()) return
+        if (!styleName.trim() || !generatedImageUrl) return
 
         const guide = {
             id: `generated-${Date.now()}`,
             user_id: '',
             name: styleName.trim(),
-            description: `Generated style guide for ${styleName}`,
-            style_prompt: applyVariablesToPrompt(prompt, variables),
-            reference_image_url: referenceImage || undefined,
+            description: styleDescription.trim() || `Generated style guide for ${styleName}`,
+            style_prompt: `Cinematic style guide: ${styleName.trim()}${styleDescription ? `. ${styleDescription.trim()}` : ''}`,
+            reference_image_url: generatedImageUrl,
             metadata: {
                 generated: true,
-                original_prompt: prompt,
-                gallery_id: generatedGalleryId
+                recipe: 'Storyboard Style Guide',
             },
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -118,7 +118,7 @@ export function StyleGuideGenerator() {
                     Style Guide Generator
                 </CardTitle>
                 <CardDescription>
-                    Generate a visual style guide image using AI. Upload a reference image and enter a style name.
+                    Generate a cinematic 6-tile style guide using AI. Enter a style name and optionally upload a reference image.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -130,6 +130,18 @@ export function StyleGuideGenerator() {
                         placeholder="e.g., Claymation, Film Noir, Watercolor"
                         value={styleName}
                         onChange={(e) => setStyleName(e.target.value)}
+                    />
+                </div>
+
+                {/* Style Description (optional) */}
+                <div className="space-y-2">
+                    <Label htmlFor="styleDescription">Style Description (optional)</Label>
+                    <Textarea
+                        id="styleDescription"
+                        placeholder="e.g., Gritty urban realism with desaturated colors, harsh shadows, and handheld camera feel..."
+                        value={styleDescription}
+                        onChange={(e) => setStyleDescription(e.target.value)}
+                        rows={3}
                     />
                 </div>
 
@@ -169,20 +181,10 @@ export function StyleGuideGenerator() {
                     )}
                 </div>
 
-                {/* Prompt Editor */}
-                <PromptEditor
-                    title="Generation Prompt"
-                    prompt={prompt}
-                    variables={variables}
-                    onPromptChange={setPrompt}
-                    collapsible={true}
-                    defaultOpen={false}
-                />
-
                 {/* Aspect Ratio Info */}
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Badge variant="outline">21:9</Badge>
-                    <span>Cinematic ultra-wide aspect ratio</span>
+                    <Badge variant="outline">16:9</Badge>
+                    <span>Cinematic 6-tile grid (2x3)</span>
                 </div>
 
                 {/* Error Display */}
@@ -193,25 +195,16 @@ export function StyleGuideGenerator() {
                     </div>
                 )}
 
-                {/* Generation Status */}
-                {generatedGalleryId && (
+                {/* Generated Image Preview */}
+                {generatedImageUrl && (
                     <div className="space-y-2">
-                        <Label>Generation Started</Label>
-                        <div className="p-4 rounded-lg bg-muted/30 border space-y-3">
-                            <div className="flex items-center gap-2 text-sm">
-                                <CheckCircle className="w-4 h-4 text-green-500" />
-                                <span>Style guide is being generated. It will appear in the Gallery when complete.</span>
-                            </div>
-                            <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
-                                <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                                <div className="flex-1">
-                                    <div className="text-xs font-medium">{styleName} Style Guide</div>
-                                    <div className="text-xs text-muted-foreground font-mono truncate">
-                                        {generatedGalleryId}
-                                    </div>
-                                </div>
-                                <Badge variant="secondary" className="text-xs">Processing</Badge>
-                            </div>
+                        <Label>Generated Style Guide</Label>
+                        <div className="rounded-lg border overflow-hidden">
+                            <img
+                                src={generatedImageUrl}
+                                alt={`${styleName} style guide`}
+                                className="w-full"
+                            />
                         </div>
                         <Button
                             onClick={handleSaveAsStyleGuide}
