@@ -2,11 +2,8 @@
 
 import { useState, useRef } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
-import {
-  useStorybookGeneration,
-  getAspectRatioForBookFormat,
-  aspectRatioToCss,
-} from "../../../hooks/useStorybookGeneration"
+import { useCoverGeneration } from "../../../hooks/useCoverGeneration"
+import { getAspectRatioForBookFormat, aspectRatioToCss } from "../../../hooks/useStorybookUtils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -50,7 +47,7 @@ export function PreviewStep() {
     updateProject({ paperType })
   }
 
-  const { generateBookCover, generateCoverVariations } = useStorybookGeneration()
+  const { generateBookCover, generateCoverVariations } = useCoverGeneration()
 
   const [currentPreviewPage, setCurrentPreviewPage] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)

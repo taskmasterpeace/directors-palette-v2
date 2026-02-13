@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
-import { useStorybookGeneration } from "../../../hooks/useStorybookGeneration"
+import { useCharacterSheetGeneration } from "../../../hooks/useCharacterSheetGeneration"
 import { useRecipeExecution } from "@/features/shared/hooks/useRecipeExecution"
 import { useRecipes } from "@/features/shot-creator/hooks/useRecipes"
 import { SYSTEM_TEMPLATES } from "../../../services/template.service"
@@ -17,24 +17,10 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
 import { compressImage } from "@/utils/image-compression"
-import { StoryCharacter } from "../../../types/storybook.types"
+import { StoryCharacter, BookCharacter } from "../../../types/storybook.types"
 import { ErrorDialog } from "../ErrorDialog"
 import { validateCharacterDescription } from "../../../utils/validation"
 import { safeJsonParse } from "../../../utils/safe-fetch"
-
-// Unified character type for display (combines main and supporting characters)
-interface UnifiedCharacter {
-  id: string
-  name: string
-  tag: string
-  sourcePhotoUrl?: string
-  sourcePhotoUrls?: string[] // Multiple reference photos (1-3)
-  outfitDescription?: string // What they wear in the book
-  characterSheetUrl?: string
-  isSupporting: boolean
-  role?: string
-  description?: string
-}
 
 export function CharacterStep() {
   const {
@@ -47,35 +33,8 @@ export function CharacterStep() {
     updateProject,
   } = useStorybookStore()
 
-  // Create unified list of all characters (main + supporting)
-  const allCharacters = useMemo((): UnifiedCharacter[] => {
-    const mainChars: UnifiedCharacter[] = (project?.characters || []).map(c => ({
-      id: c.id,
-      name: c.name,
-      tag: c.tag,
-      sourcePhotoUrl: c.sourcePhotoUrl,
-      sourcePhotoUrls: c.sourcePhotoUrls || (c.sourcePhotoUrl ? [c.sourcePhotoUrl] : []), // Backwards compat
-      outfitDescription: c.outfitDescription,
-      characterSheetUrl: c.characterSheetUrl,
-      isSupporting: false,
-      description: c.description, // Include main character descriptions
-    }))
-
-    const supportChars: UnifiedCharacter[] = (project?.storyCharacters || []).map(sc => ({
-      id: sc.id,
-      name: sc.name,
-      tag: `@${sc.name.replace(/\s+/g, '')}`,
-      sourcePhotoUrl: sc.photoUrl,
-      sourcePhotoUrls: sc.photoUrl ? [sc.photoUrl] : [],
-      outfitDescription: sc.outfitDescription,
-      characterSheetUrl: sc.characterSheetUrl,
-      isSupporting: true,
-      role: sc.role,
-      description: sc.description,
-    }))
-
-    return [...mainChars, ...supportChars]
-  }, [project?.characters, project?.storyCharacters])
+  // Unified list of all characters from bookCharacters
+  const allCharacters: BookCharacter[] = useMemo(() => project?.bookCharacters || [], [project?.bookCharacters])
 
   // Helper to update supporting character
   const updateSupportingCharacter = useCallback((charId: string, updates: Partial<StoryCharacter>) => {
@@ -114,7 +73,7 @@ export function CharacterStep() {
   }, [project?.characters, project?.storyCharacters, addCharacter, addStoryCharacter])
 
   // Legacy generation state (for display purposes only)
-  const { isGenerating: legacyIsGenerating, progress: legacyProgress, error: legacyError } = useStorybookGeneration()
+  const { isGenerating: legacyIsGenerating, progress: legacyProgress, error: legacyError } = useCharacterSheetGeneration()
 
   // Recipe-based generation (new)
   const { executeSystemRecipe, isExecuting: recipeIsExecuting, progress: recipeProgress, error: recipeError } = useRecipeExecution()
@@ -162,7 +121,7 @@ export function CharacterStep() {
         body: JSON.stringify({
           characterHint: character.description,
           characterName: character.name,
-          role: character.isSupporting ? character.role : 'protagonist',
+          role: character.role === 'supporting' ? (character.characterRole || 'supporting') : 'protagonist',
           storyContext: project?.storyText?.slice(0, 500),
         })
       })
@@ -170,7 +129,7 @@ export function CharacterStep() {
       if (response.ok) {
         const { expandedDescription } = await safeJsonParse<{ expandedDescription: string }>(response)
         // Update the character description with the enhanced version
-        if (character.isSupporting) {
+        if (character.role === 'supporting') {
           updateSupportingCharacter(characterId, { description: expandedDescription })
         } else {
           updateCharacter(characterId, { description: expandedDescription })
@@ -413,17 +372,17 @@ export function CharacterStep() {
             body: JSON.stringify({
               characterName: unifiedChar.name,
               storyText,
-              role: unifiedChar.role,
+              role: unifiedChar.characterRole || unifiedChar.role,
             })
           })
           if (response.ok) {
             const data = await safeJsonParse<{ description?: string }>(response)
-            characterDescription = data.description || `A ${unifiedChar.role || 'character'} named ${unifiedChar.name}`
+            characterDescription = data.description || `A ${unifiedChar.characterRole || unifiedChar.role || 'character'} named ${unifiedChar.name}`
             console.log('[CharacterStep] Extracted description:', characterDescription)
           }
         } catch (err) {
           console.error('Error extracting character description:', err)
-          characterDescription = `A ${unifiedChar.role || 'character'} named ${unifiedChar.name}`
+          characterDescription = `A ${unifiedChar.characterRole || unifiedChar.role || 'character'} named ${unifiedChar.name}`
         }
       }
 
@@ -440,7 +399,7 @@ export function CharacterStep() {
 
       // Add description fields for description-based recipe
       if (!hasPhotos) {
-        fieldValues.CHARACTER_ROLE = unifiedChar.role || 'character'
+        fieldValues.CHARACTER_ROLE = unifiedChar.characterRole || unifiedChar.role || 'character'
         // Combine appearance description with outfit if both exist
         const baseDescription = characterDescription
         const outfitPart = unifiedChar.outfitDescription?.trim()
@@ -487,7 +446,7 @@ export function CharacterStep() {
 
       if (result.success && result.finalImageUrl) {
         // Update the appropriate store based on character type
-        if (unifiedChar.isSupporting) {
+        if (unifiedChar.role === 'supporting') {
           updateSupportingCharacter(characterId, { characterSheetUrl: result.finalImageUrl })
         } else {
           updateCharacter(characterId, { characterSheetUrl: result.finalImageUrl })
@@ -575,25 +534,25 @@ export function CharacterStep() {
               key={character.id}
               className={cn(
                 "bg-zinc-900/50 border-zinc-800",
-                character.isSupporting && "border-l-4 border-l-purple-500/50"
+                character.role === 'supporting' && "border-l-4 border-l-purple-500/50"
               )}
             >
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    {character.isSupporting ? (
+                    {character.role === 'supporting' ? (
                       <UserCircle className="w-4 h-4 text-purple-400" />
                     ) : (
                       <User className="w-4 h-4 text-amber-400" />
                     )}
                     <span className="text-amber-400">{character.tag}</span>
-                    {character.isSupporting && (
+                    {character.role === 'supporting' && (
                       <Badge variant="outline" className="text-xs text-purple-400 border-purple-500/50">
-                        {character.role || 'Supporting'}
+                        {character.characterRole || 'Supporting'}
                       </Badge>
                     )}
                   </span>
-                  {!character.isSupporting && (
+                  {character.role !== 'supporting' && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -607,7 +566,7 @@ export function CharacterStep() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Name Input - only for main characters */}
-                {!character.isSupporting && (
+                {character.role !== 'supporting' && (
                   <div className="space-y-2">
                     <Label htmlFor={`name-${character.id}`}>Display Name</Label>
                     <Input
@@ -620,7 +579,7 @@ export function CharacterStep() {
                 )}
 
                 {/* Supporting character info */}
-                {character.isSupporting && character.description && (
+                {character.role === 'supporting' && character.description && (
                   <div className="text-sm text-zinc-400 italic">
                     &ldquo;{character.description}&rdquo;
                   </div>
@@ -643,7 +602,7 @@ export function CharacterStep() {
                   <Label>
                     Reference Photos
                     <span className="text-xs text-zinc-500 ml-2">
-                      {character.isSupporting
+                      {character.role === 'supporting'
                         ? "(optional - upload 1-3 photos or use description)"
                         : "(upload 1-3 photos for better likeness)"}
                     </span>
@@ -714,7 +673,7 @@ export function CharacterStep() {
                     placeholder="e.g., blue superhero cape, red mask, yellow boots"
                     value={character.outfitDescription || ''}
                     onChange={(e) => {
-                      if (character.isSupporting) {
+                      if (character.role === 'supporting') {
                         updateSupportingCharacter(character.id, { outfitDescription: e.target.value })
                       } else {
                         updateCharacter(character.id, { outfitDescription: e.target.value })
@@ -745,7 +704,7 @@ export function CharacterStep() {
                             return newErrors
                           })
                         }
-                        if (character.isSupporting) {
+                        if (character.role === 'supporting') {
                           // Update supporting character description
                           const sc = project?.storyCharacters?.find(c => c.id === charId)
                           if (sc) {
@@ -788,7 +747,7 @@ export function CharacterStep() {
                     <p className="text-xs text-red-500">{descriptionErrors[character.id]}</p>
                   ) : (
                     <p className="text-xs text-zinc-500">
-                      {!character.sourcePhotoUrl && !character.description ? (
+                      {!(character.sourcePhotoUrls?.length) && !character.description ? (
                         <span className="text-amber-500/80">
                           ✓ Good: &quot;7yo girl, Asian, pigtails, pink tutu&quot; — ✗ Avoid: &quot;a nice friendly child&quot;
                         </span>

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
-import { useStorybookGeneration } from "../../../hooks/useStorybookGeneration"
+import { useStyleGuideGeneration } from "../../../hooks/useStyleGuideGeneration"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -63,7 +63,7 @@ const PRESET_STYLES = [
 
 export function StyleSelectionStep() {
   const { project, setStyle } = useStorybookStore()
-  const { generateStyleGuide, isGenerating, progress, error } = useStorybookGeneration()
+  const { generateStyleGuide, isGenerating, progress, error } = useStyleGuideGeneration()
 
   const [selectedStyleId, setSelectedStyleId] = useState(project?.style?.presetId || '')
   const [showCustomPanel, setShowCustomPanel] = useState(false)

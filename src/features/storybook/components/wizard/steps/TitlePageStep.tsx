@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
-import { useStorybookGeneration } from "../../../hooks/useStorybookGeneration"
+import { useCoverGeneration } from "../../../hooks/useCoverGeneration"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -39,7 +39,7 @@ export function TitlePageStep() {
     setTitlePageGenerationError,
   } = useStorybookStore()
 
-  const { generateTitlePageVariations } = useStorybookGeneration()
+  const { generateTitlePageVariations } = useCoverGeneration()
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 

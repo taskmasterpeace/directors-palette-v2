@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useEffect, useMemo } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
-import { useStorybookGeneration } from "../../../hooks/useStorybookGeneration"
+import { usePageGeneration } from "../../../hooks/usePageGeneration"
+import { useCoverGeneration } from "../../../hooks/useCoverGeneration"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -41,7 +42,8 @@ export function PageGenerationStep() {
     updateProject,
   } = useStorybookStore()
 
-  const { generatePage, generateDualPage, generateBookCover, isGenerating, progress, error } = useStorybookGeneration()
+  const { generatePage, generateDualPage, isGenerating, progress, error } = usePageGeneration()
+  const { generateBookCover } = useCoverGeneration()
 
   const [generatingPageId, setGeneratingPageId] = useState<string | null>(null)
   const [regeneratingAll, setRegeneratingAll] = useState(false)

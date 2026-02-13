@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
-import { useStorybookGeneration } from "../../../hooks/useStorybookGeneration"
+import { usePageGeneration } from "../../../hooks/usePageGeneration"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -46,7 +46,7 @@ export function LayoutEditorStep() {
     initializeSpreadsFromBeats,
   } = useStorybookStore()
 
-  const { generateSpreadImage, isGenerating, error } = useStorybookGeneration()
+  const { generateSpreadImage, isGenerating, error } = usePageGeneration()
 
   const [currentSpreadIndex, setCurrentSpreadIndex] = useState(0)
   const [showPreview, setShowPreview] = useState(false)
