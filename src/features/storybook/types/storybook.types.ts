@@ -482,6 +482,7 @@ export interface StoryCharacter {
   age?: number
   photoUrl?: string
   description?: string  // If no photo: "A fluffy golden retriever"
+  outfitDescription?: string  // What they wear in the book (separate from appearance)
   characterSheetUrl?: string  // Generated character sheet (for consistency in page generation)
 }
 

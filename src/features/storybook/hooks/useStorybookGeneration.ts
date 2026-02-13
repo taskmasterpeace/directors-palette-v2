@@ -12,6 +12,7 @@ import {
 } from '../services/storybook-folder.service'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { getModelCost } from '@/config'
+import { safeJsonParse } from '../utils/safe-fetch'
 
 // Cost constants for storybook generations (nano-banana-pro)
 const STORYBOOK_MODEL = 'nano-banana-pro'
@@ -235,7 +236,7 @@ export function useStorybookGeneration() {
         }),
       })
 
-      const data = await response.json()
+      const data = await safeJsonParse(response)
 
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Failed to generate style guide')
@@ -365,7 +366,7 @@ export function useStorybookGeneration() {
         }),
       })
 
-      const data = await response.json()
+      const data = await safeJsonParse(response)
 
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Failed to generate character sheet')
@@ -496,7 +497,7 @@ export function useStorybookGeneration() {
         }),
       })
 
-      const data = await response.json()
+      const data = await safeJsonParse(response)
 
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Failed to generate book cover')
@@ -545,7 +546,8 @@ export function useStorybookGeneration() {
       }) || []
       const supportingCharacterDescriptions = project?.storyCharacters?.map(c => {
         const tag = `@${c.name.replace(/\s+/g, '')}`
-        return c.description ? `${tag}: ${c.description}` : tag
+        const parts = [c.description, c.outfitDescription ? `wearing ${c.outfitDescription}` : ''].filter(Boolean).join(', ')
+        return parts ? `${tag}: ${parts}` : tag
       }) || []
       const allCharacterDescriptions = [...mainCharacterDescriptions, ...supportingCharacterDescriptions]
       const characterTags = allCharacterDescriptions.length > 0 ? allCharacterDescriptions.join(', ') : 'No named characters'
@@ -624,7 +626,7 @@ export function useStorybookGeneration() {
         }),
       })
 
-      const data = await response.json()
+      const data = await safeJsonParse(response)
 
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Failed to generate page')
@@ -688,7 +690,8 @@ export function useStorybookGeneration() {
       }) || []
       const supportingCharacterDescriptions = project?.storyCharacters?.map(c => {
         const tag = `@${c.name.replace(/\s+/g, '')}`
-        return c.description ? `${tag}: ${c.description}` : tag
+        const parts = [c.description, c.outfitDescription ? `wearing ${c.outfitDescription}` : ''].filter(Boolean).join(', ')
+        return parts ? `${tag}: ${parts}` : tag
       }) || []
       const allCharacterDescriptions = [...mainCharacterDescriptions, ...supportingCharacterDescriptions]
       const characterTags = allCharacterDescriptions.length > 0 ? allCharacterDescriptions.join(', ') : 'No named characters'
@@ -746,7 +749,7 @@ export function useStorybookGeneration() {
         }),
       })
 
-      const data = await response.json()
+      const data = await safeJsonParse(response)
 
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Failed to generate dual page')
@@ -763,14 +766,14 @@ export function useStorybookGeneration() {
         }),
       })
 
-      const splitData = await splitResponse.json()
+      const splitData = await safeJsonParse(splitResponse)
 
       if (!splitResponse.ok || !splitData.success) {
         throw new Error(splitData.error || 'Failed to split dual page image')
       }
 
       // Extract the two page images from the split result
-      const [leftPageImageUrl, rightPageImageUrl] = splitData.imageUrls
+      const [leftPageImageUrl, rightPageImageUrl] = splitData.imageUrls || []
 
       // Update both pages with their respective images
       updatePage(leftPageId, {
@@ -992,7 +995,7 @@ This is an INTERIOR page, not a cover. It should tease the story and build antic
             }),
           })
 
-          const data = await response.json()
+          const data = await safeJsonParse(response)
 
           if (!response.ok || !data.imageUrl) {
             return { success: false, error: data.error || 'Failed to generate title page' }
@@ -1059,7 +1062,8 @@ This is an INTERIOR page, not a cover. It should tease the story and build antic
       }) || []
       const supportingCharacterDescriptions = project?.storyCharacters?.map(c => {
         const tag = `@${c.name.replace(/\s+/g, '')}`
-        return c.description ? `${tag}: ${c.description}` : tag
+        const parts = [c.description, c.outfitDescription ? `wearing ${c.outfitDescription}` : ''].filter(Boolean).join(', ')
+        return parts ? `${tag}: ${parts}` : tag
       }) || []
       const allCharacterDescriptions = [...mainCharacterDescriptions, ...supportingCharacterDescriptions]
       const characterTags = allCharacterDescriptions.length > 0 ? allCharacterDescriptions.join(', ') : 'No named characters'
@@ -1118,7 +1122,7 @@ This is an INTERIOR page, not a cover. It should tease the story and build antic
         }),
       })
 
-      const data = await response.json()
+      const data = await safeJsonParse(response)
 
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Failed to generate spread image')
@@ -1135,13 +1139,13 @@ This is an INTERIOR page, not a cover. It should tease the story and build antic
         }),
       })
 
-      const splitData = await splitResponse.json()
+      const splitData = await safeJsonParse(splitResponse)
 
       if (!splitResponse.ok || !splitData.success) {
         throw new Error(splitData.error || 'Failed to split spread image')
       }
 
-      const [leftImageUrl, rightImageUrl] = splitData.imageUrls
+      const [leftImageUrl, rightImageUrl] = splitData.imageUrls || []
 
       setState({ isGenerating: false, progress: '', error: null })
       setGenerating(false)
@@ -1193,7 +1197,7 @@ This is an INTERIOR page, not a cover. It should tease the story and build antic
         }),
       })
 
-      const data = await response.json()
+      const data = await safeJsonParse(response)
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to generate synopsis')
@@ -1350,7 +1354,7 @@ The design should prioritize readability with beautiful decorative framing.`
             }),
           })
 
-          const data = await response.json()
+          const data = await safeJsonParse(response)
 
           if (!response.ok || !data.imageUrl) {
             return { success: false, error: data.error || 'Failed to generate back cover' }

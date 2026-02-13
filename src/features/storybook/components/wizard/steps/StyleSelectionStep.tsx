@@ -15,6 +15,7 @@ import { cn } from "@/utils/utils"
 import Image from "next/image"
 import { compressImage } from "@/utils/image-compression"
 import { ErrorDialog } from "../ErrorDialog"
+import { safeJsonParse } from "../../../utils/safe-fetch"
 
 interface ExpandedStyle {
   originalStyle: string
@@ -135,7 +136,7 @@ export function StyleSelectionStep() {
         return
       }
 
-      const data: ExpandedStyle = await response.json()
+      const data: ExpandedStyle = await safeJsonParse<ExpandedStyle>(response)
       setExpandedStyle(data)
 
       // Auto-fill the description if user hasn't typed anything
@@ -179,7 +180,7 @@ export function StyleSelectionStep() {
       formData.append('file', compressedFile)
       const response = await fetch('/api/upload-file', { method: 'POST', body: formData })
       if (!response.ok) throw new Error('Upload failed')
-      const data = await response.json()
+      const data = await safeJsonParse<{ url: string }>(response)
       setReferenceImageUrl(data.url)
     } catch (err) {
       console.error('Upload error:', err)
@@ -243,7 +244,7 @@ export function StyleSelectionStep() {
       formData.append('file', compressedFile)
       const response = await fetch('/api/upload-file', { method: 'POST', body: formData })
       if (!response.ok) throw new Error('Upload failed')
-      const data = await response.json()
+      const data = await safeJsonParse<{ url: string }>(response)
       setUploadedStyleImage(data.url)
     } catch (err) {
       console.error('Style image upload error:', err)

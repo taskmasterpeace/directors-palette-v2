@@ -20,6 +20,7 @@ import { compressImage } from "@/utils/image-compression"
 import { StoryCharacter } from "../../../types/storybook.types"
 import { ErrorDialog } from "../ErrorDialog"
 import { validateCharacterDescription } from "../../../utils/validation"
+import { safeJsonParse } from "../../../utils/safe-fetch"
 
 // Unified character type for display (combines main and supporting characters)
 interface UnifiedCharacter {
@@ -66,6 +67,7 @@ export function CharacterStep() {
       tag: `@${sc.name.replace(/\s+/g, '')}`,
       sourcePhotoUrl: sc.photoUrl,
       sourcePhotoUrls: sc.photoUrl ? [sc.photoUrl] : [],
+      outfitDescription: sc.outfitDescription,
       characterSheetUrl: sc.characterSheetUrl,
       isSupporting: true,
       role: sc.role,
@@ -83,6 +85,33 @@ export function CharacterStep() {
     )
     updateProject({ storyCharacters: updatedChars })
   }, [project?.storyCharacters, updateProject])
+
+  // Shared function to add detected characters with duplicate checking
+  const addDetectedCharacters = useCallback((characters: Array<{ name: string; tag: string; role: string; description?: string }>) => {
+    characters.forEach((c) => {
+      if (c.role === 'supporting') {
+        // Check for duplicate supporting characters
+        const alreadyExists = project?.storyCharacters?.some(
+          existing => existing.name.toLowerCase() === c.name.toLowerCase()
+        )
+        if (!alreadyExists) {
+          addStoryCharacter({
+            name: c.name,
+            role: 'other',
+            description: c.description || '',
+          })
+        }
+      } else {
+        // Check for duplicate main characters
+        const alreadyExists = project?.characters.some(
+          existing => existing.name.toLowerCase() === c.name.toLowerCase()
+        )
+        if (!alreadyExists) {
+          addCharacter(c.name, c.tag)
+        }
+      }
+    })
+  }, [project?.characters, project?.storyCharacters, addCharacter, addStoryCharacter])
 
   // Legacy generation state (for display purposes only)
   const { isGenerating: legacyIsGenerating, progress: legacyProgress, error: legacyError } = useStorybookGeneration()
@@ -139,7 +168,7 @@ export function CharacterStep() {
       })
 
       if (response.ok) {
-        const { expandedDescription } = await response.json()
+        const { expandedDescription } = await safeJsonParse<{ expandedDescription: string }>(response)
         // Update the character description with the enhanced version
         if (character.isSupporting) {
           updateSupportingCharacter(characterId, { description: expandedDescription })
@@ -178,21 +207,9 @@ export function CharacterStep() {
             body: JSON.stringify({ storyText: textToAnalyze })
           })
           if (response.ok) {
-            const data = await response.json()
-            if (data.characters?.length > 0) {
-              data.characters.forEach((c: { name: string; tag: string; role: string; description?: string }) => {
-                if (c.role === 'supporting') {
-                  // Add supporting characters to storyCharacters array
-                  addStoryCharacter({
-                    name: c.name,
-                    role: 'other', // CharacterRole type for store
-                    description: c.description || '',
-                  })
-                } else {
-                  // Add main characters to characters array
-                  addCharacter(c.name, c.tag)
-                }
-              })
+            const data = await safeJsonParse<{ characters?: Array<{ name: string; tag: string; role: string; description?: string }> }>(response)
+            if (data.characters?.length) {
+              addDetectedCharacters(data.characters)
             }
           }
         } catch (err) {
@@ -205,7 +222,7 @@ export function CharacterStep() {
       }
     }
     detectWithLLM()
-  }, [project?.storyText, project?.generatedStory, project?.characters.length, addCharacter, addStoryCharacter, detectCharacters, isDetecting])
+  }, [project?.storyText, project?.generatedStory, project?.characters.length, addDetectedCharacters, detectCharacters, isDetecting])
 
   const handleAddCharacter = () => {
     const mainCharCount = project?.characters?.length || 0
@@ -232,11 +249,11 @@ export function CharacterStep() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
+        const errorData = await safeJsonParse<{ error?: string }>(response).catch(() => ({} as { error?: string }))
         throw new Error(errorData.error || 'Upload failed')
       }
 
-      const data = await response.json()
+      const data = await safeJsonParse<{ url: string }>(response)
       const photoUrl = data.url
 
       // Get current photos array
@@ -356,7 +373,7 @@ export function CharacterStep() {
         setErrorDialog({
           open: true,
           title: 'Style Guide Required',
-          message: 'Please select an art style first (Step 7) before generating character sheets.',
+          message: 'Please select an art style first before generating character sheets.',
         })
         setGeneratingCharacterId(null)
         return
@@ -400,7 +417,7 @@ export function CharacterStep() {
             })
           })
           if (response.ok) {
-            const data = await response.json()
+            const data = await safeJsonParse<{ description?: string }>(response)
             characterDescription = data.description || `A ${unifiedChar.role || 'character'} named ${unifiedChar.name}`
             console.log('[CharacterStep] Extracted description:', characterDescription)
           }
@@ -504,21 +521,9 @@ export function CharacterStep() {
                 body: JSON.stringify({ storyText: project?.storyText || '' })
               })
               if (response.ok) {
-                const data = await response.json()
-                if (data.characters?.length > 0) {
-                  data.characters.forEach((c: { name: string; tag: string; role: string; description?: string }) => {
-                    if (c.role === 'supporting') {
-                      // Add supporting characters to storyCharacters array
-                      addStoryCharacter({
-                        name: c.name,
-                        role: 'other', // CharacterRole type for store
-                        description: c.description || '',
-                      })
-                    } else {
-                      // Add main characters to characters array
-                      addCharacter(c.name, c.tag)
-                    }
-                  })
+                const data = await safeJsonParse<{ characters?: Array<{ name: string; tag: string; role: string; description?: string }> }>(response)
+                if (data.characters?.length) {
+                  addDetectedCharacters(data.characters)
                 }
               }
             } catch (err) {
@@ -710,7 +715,7 @@ export function CharacterStep() {
                     value={character.outfitDescription || ''}
                     onChange={(e) => {
                       if (character.isSupporting) {
-                        updateSupportingCharacter(character.id, { description: e.target.value })
+                        updateSupportingCharacter(character.id, { outfitDescription: e.target.value })
                       } else {
                         updateCharacter(character.id, { outfitDescription: e.target.value })
                       }
