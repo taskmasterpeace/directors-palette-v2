@@ -2,13 +2,15 @@
 
 import { useEffect, useRef } from 'react'
 import { useStorybookStore } from '../store/storybook.store'
+import { usePersistenceStore } from '../store/persistence.store'
 
 /**
  * Auto-save hook - saves project every 30 seconds
  * Prevents data loss during long editing sessions
  */
 export function useAutoSave() {
-  const { project, saveProject, isSaving } = useStorybookStore()
+  const { project } = useStorybookStore()
+  const { saveProject, isSaving } = usePersistenceStore()
   const lastSavedRef = useRef<string>('')
   const saveIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
 

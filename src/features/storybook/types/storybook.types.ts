@@ -489,6 +489,21 @@ export interface StoryCharacter {
 // API input type for story characters (without id)
 export type StoryCharacterInput = Omit<StoryCharacter, 'id'>
 
+/** Unified character type for all characters in a storybook */
+export interface BookCharacter {
+  id: string
+  name: string
+  tag: string                    // @name format for prompts
+  role: 'protagonist' | 'supporting'
+  characterRole?: CharacterRole  // sibling, friend, pet, etc. (supporting only)
+  sourcePhotoUrls?: string[]     // Reference photos (1-3)
+  outfitDescription?: string     // What they wear in the book
+  description?: string           // Visual description (when no photo)
+  characterSheetUrl?: string     // Generated character sheet image
+  relationship?: string          // e.g., "Emma's little brother"
+  age?: number
+}
+
 // Role configurations for UI
 export const CHARACTER_ROLES: Array<{
   id: CharacterRole
@@ -607,6 +622,8 @@ export interface StorybookProject {
   author?: string // Author name for book cover
   storyText: string // Full story text
   pages: StorybookPage[] // LEGACY: flat page array (kept for backward compatibility)
+  bookCharacters: BookCharacter[]
+  /** @deprecated Use bookCharacters instead */
   characters: StorybookCharacter[]
   style?: StorybookStyle
   coverImageUrl?: string
@@ -638,6 +655,7 @@ export interface StorybookProject {
   mainCharacterAge?: number
   mainCharacterPhotoUrl?: string // DEPRECATED: No longer used in UI, kept for backward compatibility
   // Additional story characters (siblings, friends, pets, etc.)
+  /** @deprecated Use bookCharacters instead */
   storyCharacters?: StoryCharacter[]
   // Educational category and topic
   educationCategory?: string // e.g., 'math', 'narrative', 'reading'

@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
+import { useGenerationStateStore } from "../../../store/generation.store"
 import { useCoverGeneration } from "../../../hooks/useCoverGeneration"
 import { getAspectRatioForBookFormat, aspectRatioToCss } from "../../../hooks/useStorybookUtils"
 import { Button } from "@/components/ui/button"
@@ -33,6 +34,9 @@ export function PreviewStep() {
     project,
     updatePage,
     updateProject,
+  } = useStorybookStore()
+
+  const {
     pendingCoverVariations,
     isGeneratingCoverVariations,
     coverGenerationError,
@@ -40,7 +44,7 @@ export function PreviewStep() {
     setGeneratingCoverVariations,
     selectCoverVariation,
     setCoverGenerationError,
-  } = useStorybookStore()
+  } = useGenerationStateStore()
 
   // Handle paper type change
   const handlePaperTypeChange = (paperType: KDPPaperType) => {

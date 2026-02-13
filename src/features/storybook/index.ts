@@ -8,6 +8,9 @@ export { Storybook } from './components/Storybook'
 
 // Store
 export { useStorybookStore } from './store/storybook.store'
+export { useGenerationStateStore } from './store/generation.store'
+export { usePersistenceStore } from './store/persistence.store'
+export type { SavedProjectSummary } from './store/persistence.store'
 
 // Types
 export type {

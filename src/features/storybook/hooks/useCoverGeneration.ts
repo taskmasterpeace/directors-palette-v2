@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import { useStorybookStore } from '../store/storybook.store'
+import { useGenerationStateStore } from '../store/generation.store'
 import { safeJsonParse } from '../utils/safe-fetch'
 import {
   STORYBOOK_COST_PER_IMAGE,
@@ -18,11 +19,9 @@ import {
  * Hook for cover generation (book cover, title page, back cover, synopsis)
  */
 export function useCoverGeneration() {
-  const {
-    project,
-    setGenerating,
-    setError,
-  } = useStorybookStore()
+  const { project } = useStorybookStore()
+
+  const { setGenerating, setError } = useGenerationStateStore()
 
   const { getRecipeName } = useRecipeLookup()
   const { getStorybookFolderId, getStorybookMetadata } = useStorybookFolderId()

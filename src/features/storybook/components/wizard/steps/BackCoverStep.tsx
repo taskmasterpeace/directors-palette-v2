@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
+import { useGenerationStateStore } from "../../../store/generation.store"
 import { useCoverGeneration } from "../../../hooks/useCoverGeneration"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -35,8 +36,9 @@ import Image from "next/image"
  * The selected back cover becomes part of the cover wrap PDF.
  */
 export function BackCoverStep() {
+  const { project } = useStorybookStore()
+
   const {
-    project,
     pendingBackCoverVariations,
     isGeneratingBackCoverSynopsis,
     isGeneratingBackCoverVariations,
@@ -47,7 +49,7 @@ export function BackCoverStep() {
     selectBackCoverVariation,
     setBackCoverSynopsis,
     setBackCoverGenerationError,
-  } = useStorybookStore()
+  } = useGenerationStateStore()
 
   const { generateSynopsis, generateBackCoverVariations } = useCoverGeneration()
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useStorybookStore } from "../../../store/storybook.store"
+import { useGenerationStateStore } from "../../../store/generation.store"
 import { useCoverGeneration } from "../../../hooks/useCoverGeneration"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -28,8 +29,9 @@ import Image from "next/image"
  * The selected title page becomes the interior title page of the book.
  */
 export function TitlePageStep() {
+  const { project } = useStorybookStore()
+
   const {
-    project,
     pendingTitlePageVariations,
     isGeneratingTitlePageVariations,
     titlePageGenerationError,
@@ -37,7 +39,7 @@ export function TitlePageStep() {
     setGeneratingTitlePageVariations,
     selectTitlePageVariation,
     setTitlePageGenerationError,
-  } = useStorybookStore()
+  } = useGenerationStateStore()
 
   const { generateTitlePageVariations } = useCoverGeneration()
 

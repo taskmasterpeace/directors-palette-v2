@@ -1,7 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useStorybookStore, type SavedProjectSummary } from "../../store/storybook.store"
+import { useStorybookStore } from "../../store/storybook.store"
+import { useGenerationStateStore } from "../../store/generation.store"
+import { usePersistenceStore, type SavedProjectSummary } from "../../store/persistence.store"
 import { getWizardSteps, getStepIndex, type WizardStep } from "../../types/storybook.types"
 import { useAutoSave } from "../../hooks/useAutoSave"
 import { WizardTopNav } from "./WizardTopNav"
@@ -49,22 +51,26 @@ export function WizardContainer() {
   const {
     currentStep,
     project,
-    isGenerating,
     nextStep,
     previousStep,
     setStep,
     furthestStepIndex,
-    // Project persistence
+    clearProject,
+    updateProject,
+  } = useStorybookStore()
+
+  const { isGenerating } = useGenerationStateStore()
+
+  const {
     savedProjectId,
     isSaving,
     savedProjects,
     saveProject,
     loadProject,
-    clearProject,
     fetchSavedProjects,
     deleteSavedProject,
-    updateProject,
-  } = useStorybookStore()
+    clearSavedProjectId,
+  } = usePersistenceStore()
 
   const { toast } = useToast()
   const [showSaved, setShowSaved] = useState(false)
@@ -331,9 +337,11 @@ export function WizardContainer() {
             if (project && !savedProjectId) {
               if (confirm("Discard unsaved changes and start fresh?")) {
                 clearProject()
+                clearSavedProjectId()
               }
             } else {
               clearProject()
+              clearSavedProjectId()
             }
           }}
           className="gap-2"

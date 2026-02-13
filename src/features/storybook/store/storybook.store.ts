@@ -1,6 +1,9 @@
 /**
- * Storybook Store
- * Zustand store for managing storybook wizard state
+ * Storybook Store (Main)
+ * Zustand store for managing storybook wizard state and project data.
+ *
+ * Generation UI state -> generation.store.ts
+ * Persistence (save/load) -> persistence.store.ts
  */
 
 import { create } from 'zustand'
@@ -29,6 +32,7 @@ import type {
   PageLayout,
   StoryMode,
   StoryCharacter,
+  BookCharacter,
   KDPPageCount,
   StoryBeat,
   BookSpread,
@@ -38,22 +42,11 @@ import type {
 import { getNextStep, getPreviousStep, getStepIndex } from '../types/storybook.types'
 import type { StoryIdea, GeneratedStory, ExtractedElements } from '../types/education.types'
 
-// Saved project summary type (from API)
-export interface SavedProjectSummary {
-  id: string
-  title: string
-  status: string
-  createdAt: string
-  updatedAt: string
-}
-
 interface StorybookState {
   // Wizard state
   currentStep: WizardStep
   storyMode: StoryMode
   furthestStepIndex: number
-  isGenerating: boolean
-  error: string | null
 
   // Project data
   project: StorybookProject | null
@@ -63,27 +56,6 @@ interface StorybookState {
 
   // Story ideas (for generate mode)
   storyIdeas: StoryIdea[]
-
-  // Cover variation state (UI-only, not persisted)
-  pendingCoverVariations: string[]
-  isGeneratingCoverVariations: boolean
-  coverGenerationError?: string
-
-  // Title page variation state (UI-only, not persisted)
-  pendingTitlePageVariations: string[]
-  isGeneratingTitlePageVariations: boolean
-  titlePageGenerationError?: string
-
-  // Back cover state (UI-only, not persisted)
-  pendingBackCoverVariations: string[]
-  isGeneratingBackCoverSynopsis: boolean
-  isGeneratingBackCoverVariations: boolean
-  backCoverGenerationError?: string
-
-  // Project persistence state
-  savedProjectId: string | null
-  isSaving: boolean
-  savedProjects: SavedProjectSummary[]
 
   // Actions
   setStep: (step: WizardStep) => void
@@ -100,7 +72,10 @@ interface StorybookState {
   setTargetAge: (age: number) => void
   setDefaultLayout: (layout: PageLayout) => void
 
-  // Education actions (NEW)
+  // Direct project replacement (used by persistence store for loadProject)
+  _setProjectData: (project: StorybookProject) => void
+
+  // Education actions
   setMainCharacter: (name: string, age: number, description?: string) => void
   setEducationCategory: (category: string) => void
   setEducationTopic: (topic: string) => void
@@ -162,36 +137,7 @@ interface StorybookState {
   // Recipe configuration actions
   setRecipeConfig: (config: Partial<import('../types/storybook.types').StorybookRecipeConfig>) => void
 
-  // Generation state
-  setGenerating: (isGenerating: boolean) => void
-  setError: (error: string | null) => void
-
-  // Cover variation actions
-  setPendingCoverVariations: (urls: string[]) => void
-  setGeneratingCoverVariations: (isGenerating: boolean) => void
-  selectCoverVariation: (url: string) => void
-  setCoverGenerationError: (error?: string) => void
-
-  // Title page variation actions
-  setPendingTitlePageVariations: (urls: string[]) => void
-  setGeneratingTitlePageVariations: (isGenerating: boolean) => void
-  selectTitlePageVariation: (url: string) => void
-  setTitlePageGenerationError: (error?: string) => void
-
-  // Back cover actions
-  setBackCoverSynopsis: (text: string) => void
-  setBackCoverImageUrl: (url: string) => void
-  setPendingBackCoverVariations: (urls: string[]) => void
-  selectBackCoverVariation: (url: string) => void
-  setGeneratingBackCoverSynopsis: (isGenerating: boolean) => void
-  setGeneratingBackCoverVariations: (isGenerating: boolean) => void
-  setBackCoverGenerationError: (error?: string) => void
-
-  // Project persistence actions
-  saveProject: () => Promise<void>
-  loadProject: (projectId: string) => Promise<void>
-  fetchSavedProjects: () => Promise<void>
-  deleteSavedProject: (projectId: string) => Promise<void>
+  // Clear project action (resets wizard + project state)
   clearProject: () => void
 }
 
@@ -207,6 +153,7 @@ function createInitialProject(
     title,
     storyText,
     pages: [],
+    bookCharacters: [],
     characters: [],
     style: undefined,
     coverImageUrl: undefined,
@@ -237,11 +184,20 @@ function createGenerateProject(
     description: characterDescription,
   }
 
+  const mainBookCharacter: BookCharacter = {
+    id: mainCharacter.id, // same id as the legacy character
+    name: characterName,
+    tag: `@${characterName.replace(/\s+/g, '')}`,
+    role: 'protagonist',
+    description: characterDescription,
+  }
+
   return {
     id: generateId(),
     title: `${characterName}'s Story`,
     storyText: '',
     pages: [],
+    bookCharacters: [mainBookCharacter],
     characters: [mainCharacter],
     style: undefined,
     coverImageUrl: undefined,
@@ -396,32 +352,9 @@ export const useStorybookStore = create<StorybookState>()(
   currentStep: 'character-setup',
   storyMode: 'generate',
   furthestStepIndex: 0,
-  isGenerating: false,
-  error: null,
   project: null,
   currentPageIndex: 0,
   storyIdeas: [],
-
-  // Cover variation state
-  pendingCoverVariations: [],
-  isGeneratingCoverVariations: false,
-  coverGenerationError: undefined,
-
-  // Title page variation state
-  pendingTitlePageVariations: [],
-  isGeneratingTitlePageVariations: false,
-  titlePageGenerationError: undefined,
-
-  // Back cover state
-  pendingBackCoverVariations: [],
-  isGeneratingBackCoverSynopsis: false,
-  isGeneratingBackCoverVariations: false,
-  backCoverGenerationError: undefined,
-
-  // Project persistence state
-  savedProjectId: null,
-  isSaving: false,
-  savedProjects: [],
 
   // Step navigation
   setStep: (step) => set({ currentStep: step }),
@@ -480,8 +413,12 @@ export const useStorybookStore = create<StorybookState>()(
       project: null,
       currentStep: 'story',
       currentPageIndex: 0,
-      error: null,
     })
+  },
+
+  // Direct project replacement (used by persistence store for loadProject)
+  _setProjectData: (project) => {
+    set({ project })
   },
 
   setBookFormat: (format) => {
@@ -608,10 +545,17 @@ export const useStorybookStore = create<StorybookState>()(
         name,
         tag,
       }
+      const bookChar: BookCharacter = {
+        id: newCharacter.id,
+        name,
+        tag,
+        role: 'protagonist',
+      }
       set({
         project: {
           ...project,
           characters: [...project.characters, newCharacter],
+          bookCharacters: [...(project.bookCharacters || []), bookChar],
           updatedAt: new Date(),
         },
       })
@@ -627,6 +571,9 @@ export const useStorybookStore = create<StorybookState>()(
           characters: project.characters.map(c =>
             c.id === id ? { ...c, ...updates } : c
           ),
+          bookCharacters: (project.bookCharacters || []).map(c =>
+            c.id === id ? { ...c, ...updates } : c
+          ),
           updatedAt: new Date(),
         },
       })
@@ -640,6 +587,7 @@ export const useStorybookStore = create<StorybookState>()(
         project: {
           ...project,
           characters: project.characters.filter(c => c.id !== id),
+          bookCharacters: (project.bookCharacters || []).filter(c => c.id !== id),
           updatedAt: new Date(),
         },
       })
@@ -662,10 +610,17 @@ export const useStorybookStore = create<StorybookState>()(
         }))
 
       if (newCharacters.length > 0) {
+        const newBookCharacters: BookCharacter[] = newCharacters.map(c => ({
+          id: c.id,
+          name: c.name,
+          tag: c.tag,
+          role: 'protagonist' as const,
+        }))
         set({
           project: {
             ...project,
             characters: [...project.characters, ...newCharacters],
+            bookCharacters: [...(project.bookCharacters || []), ...newBookCharacters],
             updatedAt: new Date(),
           },
         })
@@ -723,113 +678,13 @@ export const useStorybookStore = create<StorybookState>()(
     }
   },
 
-  // Generation state
-  setGenerating: (isGenerating) => set({ isGenerating }),
-  setError: (error) => set({ error }),
-
-  // Cover variation actions
-  setPendingCoverVariations: (urls) => set({ pendingCoverVariations: urls }),
-
-  setGeneratingCoverVariations: (isGenerating) => set({ isGeneratingCoverVariations: isGenerating }),
-
-  selectCoverVariation: (url) => {
-    const { project } = get()
-    if (!project) return
-
-    // Apply selected cover to project
-    set({
-      project: {
-        ...project,
-        coverImageUrl: url,
-        updatedAt: new Date(),
-      },
-      // Clear variations after selection
-      pendingCoverVariations: [],
-    })
-  },
-
-  setCoverGenerationError: (error) => set({ coverGenerationError: error }),
-
-  // Title page variation actions
-  setPendingTitlePageVariations: (urls) => set({ pendingTitlePageVariations: urls }),
-
-  setGeneratingTitlePageVariations: (isGenerating) => set({ isGeneratingTitlePageVariations: isGenerating }),
-
-  selectTitlePageVariation: (url) => {
-    const { project } = get()
-    if (!project) return
-
-    // Apply selected title page to project
-    set({
-      project: {
-        ...project,
-        titlePageImageUrl: url,
-        updatedAt: new Date(),
-      },
-      // Clear variations after selection
-      pendingTitlePageVariations: [],
-    })
-  },
-
-  setTitlePageGenerationError: (error) => set({ titlePageGenerationError: error }),
-
-  // Back cover actions
-  setBackCoverSynopsis: (text) => {
-    const { project } = get()
-    if (project) {
-      set({
-        project: {
-          ...project,
-          backCoverSynopsis: text,
-          updatedAt: new Date(),
-        },
-      })
-    }
-  },
-
-  setBackCoverImageUrl: (url) => {
-    const { project } = get()
-    if (project) {
-      set({
-        project: {
-          ...project,
-          backCoverImageUrl: url,
-          updatedAt: new Date(),
-        },
-      })
-    }
-  },
-
-  setPendingBackCoverVariations: (urls) => set({ pendingBackCoverVariations: urls }),
-
-  setGeneratingBackCoverSynopsis: (isGenerating) => set({ isGeneratingBackCoverSynopsis: isGenerating }),
-
-  setGeneratingBackCoverVariations: (isGenerating) => set({ isGeneratingBackCoverVariations: isGenerating }),
-
-  selectBackCoverVariation: (url) => {
-    const { project } = get()
-    if (!project) return
-
-    // Apply selected back cover to project
-    set({
-      project: {
-        ...project,
-        backCoverImageUrl: url,
-        updatedAt: new Date(),
-      },
-      // Clear variations after selection
-      pendingBackCoverVariations: [],
-    })
-  },
-
-  setBackCoverGenerationError: (error) => set({ backCoverGenerationError: error }),
-
-  // Education actions (NEW)
+  // Education actions
   setMainCharacter: (name, age, description) => {
     const { project } = get()
     if (project) {
       // Update or create main character with description
       const existingMainChar = project.characters[0]
+      const charId = existingMainChar?.id || generateId()
       const updatedMainChar: StorybookCharacter = existingMainChar
         ? {
             ...existingMainChar,
@@ -838,11 +693,32 @@ export const useStorybookStore = create<StorybookState>()(
             description,
           }
         : {
-            id: generateId(),
+            id: charId,
             name,
             tag: `@${name.replace(/\s+/g, '')}`,
             description,
           }
+
+      // Build updated bookCharacters: update existing protagonist or add new one
+      const existingBookChars = project.bookCharacters || []
+      const existingBookMainChar = existingBookChars.find(c => c.id === charId)
+      let updatedBookCharacters: BookCharacter[]
+      if (existingBookMainChar) {
+        updatedBookCharacters = existingBookChars.map(c =>
+          c.id === charId
+            ? { ...c, name, tag: `@${name.replace(/\s+/g, '')}`, description }
+            : c
+        )
+      } else {
+        const newBookChar: BookCharacter = {
+          id: charId,
+          name,
+          tag: `@${name.replace(/\s+/g, '')}`,
+          role: 'protagonist',
+          description,
+        }
+        updatedBookCharacters = [newBookChar, ...existingBookChars]
+      }
 
       set({
         project: {
@@ -850,7 +726,7 @@ export const useStorybookStore = create<StorybookState>()(
           mainCharacterName: name,
           mainCharacterAge: age,
           characters: [updatedMainChar, ...project.characters.slice(1)],
-          // mainCharacterPhotoUrl removed - deprecated field
+          bookCharacters: updatedBookCharacters,
           title: `${name}'s Story`,
           targetAge: age,
           updatedAt: new Date(),
@@ -859,7 +735,6 @@ export const useStorybookStore = create<StorybookState>()(
     } else {
       // Create new project for generate mode
       const newProject = createGenerateProject(name, age, description)
-      // No photoUrl assignment needed
       set({ project: newProject })
     }
   },
@@ -982,7 +857,6 @@ export const useStorybookStore = create<StorybookState>()(
         pageNumber: index + 1,
         text: page.text,
         textPosition: 'bottom' as TextPosition,
-        // Store scene description for image generation
       }))
 
       set({
@@ -1021,6 +895,23 @@ export const useStorybookStore = create<StorybookState>()(
           description: char.description || '',
         }))
 
+      // Build unified bookCharacters from both
+      const mainBookChars: BookCharacter[] = mainCharacters.map(c => ({
+        id: c.id,
+        name: c.name,
+        tag: c.tag,
+        role: 'protagonist' as const,
+        description: c.description,
+      }))
+      const supportBookChars: BookCharacter[] = supportingCharacters.map(c => ({
+        id: c.id,
+        name: c.name,
+        tag: `@${c.name.replace(/\s+/g, '')}`,
+        role: 'supporting' as const,
+        characterRole: c.role,
+        description: c.description,
+      }))
+
       set({
         project: {
           ...project,
@@ -1028,6 +919,7 @@ export const useStorybookStore = create<StorybookState>()(
           extractedLocations: elements.locations,
           characters: mainCharacters,
           storyCharacters: [...(project.storyCharacters || []), ...supportingCharacters],
+          bookCharacters: [...mainBookChars, ...supportBookChars],
           updatedAt: new Date(),
         },
       })
@@ -1054,10 +946,22 @@ export const useStorybookStore = create<StorybookState>()(
     if (existingCharacters.length >= 3) {
       return
     }
+    const bookChar: BookCharacter = {
+      id: newCharacter.id,
+      name: character.name,
+      tag: `@${character.name.replace(/\s+/g, '')}`,
+      role: 'supporting',
+      characterRole: character.role,
+      sourcePhotoUrls: character.photoUrl ? [character.photoUrl] : [],
+      description: character.description,
+      relationship: character.relationship,
+      age: character.age,
+    }
     set({
       project: {
         ...project,
         storyCharacters: [...existingCharacters, newCharacter],
+        bookCharacters: [...(project.bookCharacters || []), bookChar],
         updatedAt: new Date(),
       },
     })
@@ -1066,11 +970,20 @@ export const useStorybookStore = create<StorybookState>()(
   updateStoryCharacter: (id, updates) => {
     const { project } = get()
     if (project && project.storyCharacters) {
+      // Extract BookCharacter-compatible fields from StoryCharacter updates
+      const { role: characterRole, ...bookUpdates } = updates
+      const bookCharacterUpdates: Partial<BookCharacter> = {
+        ...bookUpdates,
+        ...(characterRole ? { characterRole } : {}),
+      }
       set({
         project: {
           ...project,
           storyCharacters: project.storyCharacters.map(c =>
             c.id === id ? { ...c, ...updates } : c
+          ),
+          bookCharacters: (project.bookCharacters || []).map(c =>
+            c.id === id ? { ...c, ...bookCharacterUpdates } : c
           ),
           updatedAt: new Date(),
         },
@@ -1085,6 +998,7 @@ export const useStorybookStore = create<StorybookState>()(
         project: {
           ...project,
           storyCharacters: project.storyCharacters.filter(c => c.id !== id),
+          bookCharacters: (project.bookCharacters || []).filter(c => c.id !== id),
           updatedAt: new Date(),
         },
       })
@@ -1248,137 +1162,15 @@ export const useStorybookStore = create<StorybookState>()(
     }
   },
 
-  // Project persistence actions
-  saveProject: async () => {
-    const { project, savedProjectId } = get()
-    if (!project) {
-      set({ error: 'No project to save' })
-      return
-    }
-
-    set({ isSaving: true, error: null })
-
-    try {
-      const response = await fetch('/api/storybook/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: savedProjectId, // If exists, will update instead of create
-          title: project.title || 'Untitled Storybook',
-          status: project.status,
-          projectData: project,
-        }),
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to save project')
-      }
-
-      const data = await response.json()
-
-      // Clear localStorage draft after successful save
-      localStorage.removeItem('directors-palette-storybook-draft')
-
-      set({
-        savedProjectId: data.project.id,
-        isSaving: false,
-      })
-
-      // Refresh saved projects list
-      get().fetchSavedProjects()
-    } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Failed to save project',
-        isSaving: false,
-      })
-    }
-  },
-
-  loadProject: async (projectId) => {
-    set({ isGenerating: true, error: null })
-
-    try {
-      const response = await fetch(`/api/storybook/projects/${projectId}`)
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to load project')
-      }
-
-      const data = await response.json()
-      const projectData = data.project.projectData as StorybookProject
-
-      // Clear localStorage draft when explicitly loading a saved project
-      localStorage.removeItem('directors-palette-storybook-draft')
-
-      set({
-        project: projectData,
-        savedProjectId: projectId,
-        currentStep: projectData.status === 'completed' ? 'preview' : 'story',
-        storyMode: projectData.mainCharacterName ? 'generate' : 'paste',
-        isGenerating: false,
-      })
-    } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Failed to load project',
-        isGenerating: false,
-      })
-    }
-  },
-
-  fetchSavedProjects: async () => {
-    try {
-      const response = await fetch('/api/storybook/projects')
-
-      if (!response.ok) {
-        console.error('Failed to fetch saved projects')
-        return
-      }
-
-      const data = await response.json()
-      set({ savedProjects: data.projects || [] })
-    } catch (error) {
-      console.error('Error fetching saved projects:', error)
-    }
-  },
-
-  deleteSavedProject: async (projectId) => {
-    try {
-      const response = await fetch(`/api/storybook/projects/${projectId}`, {
-        method: 'DELETE',
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to delete project')
-      }
-
-      // Clear current project if it's the one being deleted
-      const { savedProjectId } = get()
-      if (savedProjectId === projectId) {
-        get().clearProject()
-      }
-
-      // Refresh saved projects list
-      get().fetchSavedProjects()
-    } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Failed to delete project',
-      })
-    }
-  },
-
+  // Clear project (resets wizard + project state)
   clearProject: () => {
     set({
       project: null,
-      savedProjectId: null,
       currentStep: 'character-setup',
       storyMode: 'generate',
       furthestStepIndex: 0,
       currentPageIndex: 0,
       storyIdeas: [],
-      error: null,
     })
   },
     }),
@@ -1398,6 +1190,35 @@ export const useStorybookStore = create<StorybookState>()(
         if (state?.project) {
           state.project.createdAt = new Date(state.project.createdAt)
           state.project.updatedAt = new Date(state.project.updatedAt)
+
+          // Migrate to bookCharacters if not present
+          if (!state.project.bookCharacters) {
+            state.project.bookCharacters = [
+              ...state.project.characters.map(c => ({
+                id: c.id,
+                name: c.name,
+                tag: c.tag,
+                role: 'protagonist' as const,
+                description: c.description,
+                sourcePhotoUrls: c.sourcePhotoUrls || (c.sourcePhotoUrl ? [c.sourcePhotoUrl] : []),
+                characterSheetUrl: c.characterSheetUrl,
+                outfitDescription: c.outfitDescription,
+              })),
+              ...(state.project.storyCharacters || []).map(sc => ({
+                id: sc.id,
+                name: sc.name,
+                tag: `@${sc.name.replace(/\s+/g, '')}`,
+                role: 'supporting' as const,
+                characterRole: sc.role,
+                sourcePhotoUrls: sc.photoUrl ? [sc.photoUrl] : [],
+                description: sc.description,
+                characterSheetUrl: sc.characterSheetUrl,
+                relationship: sc.relationship,
+                age: sc.age,
+                outfitDescription: sc.outfitDescription,
+              })),
+            ]
+          }
         }
       },
     }

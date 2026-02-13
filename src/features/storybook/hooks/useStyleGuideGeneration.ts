@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import { useStorybookStore } from '../store/storybook.store'
+import { useGenerationStateStore } from '../store/generation.store'
 import { safeJsonParse } from '../utils/safe-fetch'
 import {
   STORYBOOK_COST_PER_IMAGE,
@@ -20,9 +21,9 @@ export function useStyleGuideGeneration() {
   const {
     project,
     setStyle,
-    setGenerating,
-    setError,
   } = useStorybookStore()
+
+  const { setGenerating, setError } = useGenerationStateStore()
 
   const { getRecipeName } = useRecipeLookup()
   const { getStorybookFolderId, getStorybookMetadata } = useStorybookFolderId()
