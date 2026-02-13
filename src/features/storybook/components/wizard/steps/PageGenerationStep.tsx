@@ -42,7 +42,7 @@ export function PageGenerationStep() {
     updateProject,
   } = useStorybookStore()
 
-  const { generatePage, generateDualPage, isGenerating, progress, error } = usePageGeneration()
+  const { generatePage, generatePagesParallel, isGenerating, progress, error } = usePageGeneration()
   const { generateBookCover } = useCoverGeneration()
 
   const [generatingPageId, setGeneratingPageId] = useState<string | null>(null)
@@ -121,25 +121,14 @@ export function PageGenerationStep() {
     setRegeneratingAll(true)
 
     try {
-      for (let i = 0; i < pages.length; i++) {
-        const page = pages[i]
-        setRegeneratingProgress(`Regenerating page ${i + 1} of ${pages.length}...`)
-        setGeneratingPageId(page.id)
-        setCurrentPageIndex(i) // Show progress by navigating to current page
+      const allPageIds = pages.map(p => p.id)
+      const result = await generatePagesParallel(allPageIds, {
+        concurrency: 3,
+        useSpreadMode,
+        onProgress: setRegeneratingProgress,
+      })
 
-        const result = await generatePage(page.id)
-        if (!result.success) {
-          console.error(`Generation failed for page ${i + 1}:`, result.error)
-          // Continue with next page even if one fails
-        }
-
-        // Small delay between pages to avoid overwhelming the API
-        if (i < pages.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500))
-        }
-      }
-
-      setRegeneratingProgress('All pages regenerated successfully!')
+      setRegeneratingProgress(`Regenerated ${result.succeeded} pages (${result.failed} failed)`)
       setTimeout(() => setRegeneratingProgress(''), 3000)
     } catch (err) {
       console.error('Error regenerating all pages:', err)
@@ -149,7 +138,7 @@ export function PageGenerationStep() {
       setRegeneratingAll(false)
       setGeneratingPageId(null)
     }
-  }, [pages, generatePage, setCurrentPageIndex])
+  }, [pages, generatePagesParallel, useSpreadMode])
 
   const handleGenerateAllPages = useCallback(async () => {
     if (!pages || pages.length === 0) return
@@ -165,83 +154,18 @@ export function PageGenerationStep() {
     setRegeneratingAll(true)
 
     try {
-      if (useSpreadMode) {
-        // SPREAD MODE: Generate pairs of consecutive pages as spreads (50% cost savings)
-        // Pair pages by their position in the full page list, not just ungenerated ones
-        const pageIndices = pagesToGenerate.map(p => pages.findIndex(pg => pg.id === p.id))
+      const pageIds = pagesToGenerate.map(p => p.id)
+      const result = await generatePagesParallel(pageIds, {
+        concurrency: 3,
+        useSpreadMode,
+        onProgress: setRegeneratingProgress,
+      })
 
-        // Group consecutive pairs
-        let i = 0
-        let generatedCount = 0
-        while (i < pagesToGenerate.length) {
-          const currentPageIndex = pageIndices[i]
-          const currentPage = pagesToGenerate[i]
-
-          // Check if next page in pagesToGenerate is consecutive in the full list
-          const nextPageInList = i + 1 < pagesToGenerate.length ? pagesToGenerate[i + 1] : null
-          const nextPageIndex = nextPageInList ? pages.findIndex(pg => pg.id === nextPageInList.id) : -1
-          const isConsecutive = nextPageIndex === currentPageIndex + 1
-
-          if (isConsecutive && nextPageInList) {
-            // Generate as spread (2 pages at once)
-            setRegeneratingProgress(`Generating pages ${currentPageIndex + 1}-${nextPageIndex + 1} as spread... (${generatedCount + 1}/${Math.ceil(pagesToGenerate.length / 2)} spreads)`)
-            setGeneratingPageId(currentPage.id)
-            setCurrentPageIndex(currentPageIndex)
-
-            const result = await generateDualPage(currentPage.id, nextPageInList.id)
-            if (!result.success) {
-              console.error(`Spread generation failed for pages ${currentPageIndex + 1}-${nextPageIndex + 1}:`, result.error)
-            }
-
-            i += 2 // Skip both pages
-            generatedCount++
-          } else {
-            // Generate as single page (odd page out or non-consecutive)
-            setRegeneratingProgress(`Generating page ${currentPageIndex + 1} (single)... (${generatedCount + 1} images)`)
-            setGeneratingPageId(currentPage.id)
-            setCurrentPageIndex(currentPageIndex)
-
-            const result = await generatePage(currentPage.id)
-            if (!result.success) {
-              console.error(`Generation failed for page ${currentPageIndex + 1}:`, result.error)
-            }
-
-            i += 1
-            generatedCount++
-          }
-
-          // Small delay between generations
-          if (i < pagesToGenerate.length) {
-            await new Promise(resolve => setTimeout(resolve, 500))
-          }
-        }
-
-        const spreadCount = Math.floor(pagesToGenerate.length / 2)
-        const singleCount = pagesToGenerate.length % 2
-        setRegeneratingProgress(`Generated ${pagesToGenerate.length} pages (${spreadCount} spreads${singleCount ? ' + 1 single' : ''}) - 50% savings!`)
-        setTimeout(() => setRegeneratingProgress(''), 4000)
-      } else {
-        // SINGLE MODE: Generate each page individually
-        for (let i = 0; i < pagesToGenerate.length; i++) {
-          const page = pagesToGenerate[i]
-          const pageIndex = pages.findIndex(p => p.id === page.id)
-          setRegeneratingProgress(`Generating page ${pageIndex + 1} of ${pages.length}... (${i + 1}/${pagesToGenerate.length} remaining)`)
-          setGeneratingPageId(page.id)
-          setCurrentPageIndex(pageIndex)
-
-          const result = await generatePage(page.id)
-          if (!result.success) {
-            console.error(`Generation failed for page ${pageIndex + 1}:`, result.error)
-          }
-
-          if (i < pagesToGenerate.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 500))
-          }
-        }
-
-        setRegeneratingProgress(`Successfully generated ${pagesToGenerate.length} pages!`)
-        setTimeout(() => setRegeneratingProgress(''), 3000)
-      }
+      const msg = useSpreadMode
+        ? `Generated ${result.succeeded} pages in parallel (${result.failed} failed) - spread mode`
+        : `Generated ${result.succeeded} pages in parallel (${result.failed} failed)`
+      setRegeneratingProgress(msg)
+      setTimeout(() => setRegeneratingProgress(''), 3000)
     } catch (err) {
       console.error('Error generating all pages:', err)
       setRegeneratingProgress('Error during generation')
@@ -250,7 +174,7 @@ export function PageGenerationStep() {
       setRegeneratingAll(false)
       setGeneratingPageId(null)
     }
-  }, [pages, generatePage, generateDualPage, setCurrentPageIndex, useSpreadMode])
+  }, [pages, generatePagesParallel, useSpreadMode])
 
   // Check if this page is currently generating
   const isCurrentPageGenerating = generatingPageId === currentPage?.id && isGenerating

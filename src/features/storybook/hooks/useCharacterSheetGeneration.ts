@@ -43,7 +43,7 @@ export function useCharacterSheetGeneration() {
       return { success: false, error: 'Character not found' }
     }
 
-    const hasPhoto = !!(('sourcePhotoUrls' in character && character.sourcePhotoUrls?.length) || ('sourcePhotoUrl' in character && character.sourcePhotoUrl))
+    const hasPhoto = !!(character.sourcePhotoUrls?.length)
     const hasDescription = !!character.description?.trim()
 
     if (!hasPhoto && !hasDescription) {
@@ -70,12 +70,8 @@ export function useCharacterSheetGeneration() {
           fieldValues['stage0_field1_outfit_description'] = character.outfitDescription.trim()
         }
 
-        const photoUrls = ('sourcePhotoUrls' in character ? character.sourcePhotoUrls : [])?.filter(Boolean) || []
-        if (photoUrls.length > 0) {
-          photoUrls.forEach(url => referenceImages.push(url))
-        } else if ('sourcePhotoUrl' in character && character.sourcePhotoUrl) {
-          referenceImages.push(character.sourcePhotoUrl as string)
-        }
+        const photoUrls = (character.sourcePhotoUrls || []).filter(Boolean)
+        photoUrls.forEach(url => referenceImages.push(url))
 
         if (project?.style?.styleGuideUrl) {
           referenceImages.push(project.style.styleGuideUrl)

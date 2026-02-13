@@ -131,7 +131,6 @@ interface StorybookState {
   // Page actions
   setCurrentPageIndex: (index: number) => void
   updatePage: (pageId: string, updates: Partial<StorybookPage>) => void
-  selectVariation: (pageId: string, variationIndex: number, imageUrl: string) => void
   setPageTextPosition: (pageId: string, position: TextPosition) => void
 
   // Recipe configuration actions
@@ -639,23 +638,6 @@ export const useStorybookStore = create<StorybookState>()(
           ...project,
           pages: project.pages.map(p =>
             p.id === pageId ? { ...p, ...updates } : p
-          ),
-          updatedAt: new Date(),
-        },
-      })
-    }
-  },
-
-  selectVariation: (pageId, variationIndex, imageUrl) => {
-    const { project } = get()
-    if (project) {
-      set({
-        project: {
-          ...project,
-          pages: project.pages.map(p =>
-            p.id === pageId
-              ? { ...p, selectedVariationIndex: variationIndex, imageUrl }
-              : p
           ),
           updatedAt: new Date(),
         },

@@ -561,11 +561,6 @@ export interface StorybookPage {
   textBoxPosition?: TextBoxPosition // Draggable text box coordinates (x, y, width, height)
   sceneJSON?: SceneJSON // Parsed scene (generated automatically)
   imageUrl?: string // Generated page image (single final image)
-  // DEPRECATED: Grid-based variation system (removed in favor of recipe-based single image generation)
-  // These fields are kept for backward compatibility with existing projects
-  gridImageUrl?: string // DEPRECATED: The 3x3 grid image before frame extraction
-  variationUrls?: string[] // DEPRECATED: All 9 variations (extracted from grid)
-  selectedVariationIndex?: number // DEPRECATED: Which variation was selected (0-8)
   textPosition: TextPosition
   audioUrl?: string // Generated narration audio URL
   layout?: PageLayout // How text and image are arranged
@@ -653,7 +648,6 @@ export interface StorybookProject {
   // Main character (for generate mode)
   mainCharacterName?: string
   mainCharacterAge?: number
-  mainCharacterPhotoUrl?: string // DEPRECATED: No longer used in UI, kept for backward compatibility
   // Additional story characters (siblings, friends, pets, etc.)
   /** @deprecated Use bookCharacters instead */
   storyCharacters?: StoryCharacter[]

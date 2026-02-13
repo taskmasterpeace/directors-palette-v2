@@ -232,7 +232,6 @@ export function CharacterStep() {
       // Update the character with the new photos array
       updateCharacter(characterId, {
         sourcePhotoUrls: updatedPhotos,
-        sourcePhotoUrl: updatedPhotos[0], // Keep legacy field in sync
       })
     } catch (err) {
       console.error('Upload error:', err)

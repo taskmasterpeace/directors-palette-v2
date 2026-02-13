@@ -143,11 +143,7 @@ export function usePageGeneration() {
         throw new Error(data.error || 'Failed to generate page')
       }
 
-      updatePage(pageId, {
-        imageUrl: data.imageUrl,
-        gridImageUrl: undefined,
-        variationUrls: [],
-      })
+      updatePage(pageId, { imageUrl: data.imageUrl })
 
       setState({ isGenerating: false, progress: '', error: null })
       setGenerating(false)
@@ -247,17 +243,8 @@ export function usePageGeneration() {
 
       const [leftPageImageUrl, rightPageImageUrl] = splitData.imageUrls || []
 
-      updatePage(leftPageId, {
-        imageUrl: leftPageImageUrl,
-        gridImageUrl: undefined,
-        variationUrls: [],
-      })
-
-      updatePage(rightPageId, {
-        imageUrl: rightPageImageUrl,
-        gridImageUrl: undefined,
-        variationUrls: [],
-      })
+      updatePage(leftPageId, { imageUrl: leftPageImageUrl })
+      updatePage(rightPageId, { imageUrl: rightPageImageUrl })
 
       setState({ isGenerating: false, progress: '', error: null })
       setGenerating(false)
@@ -377,10 +364,108 @@ export function usePageGeneration() {
     }
   }, [project, setGenerating, setError, getStorybookFolderId, getStorybookMetadata, buildCharacterTags, buildReferenceImages])
 
+  /**
+   * Generate multiple pages in parallel with controlled concurrency.
+   * Supports both single-page and spread (dual-page) modes.
+   */
+  const generatePagesParallel = useCallback(async (
+    pageIds: string[],
+    options?: {
+      concurrency?: number
+      useSpreadMode?: boolean
+      onProgress?: (message: string) => void
+    }
+  ): Promise<{ succeeded: number; failed: number }> => {
+    const concurrency = options?.concurrency ?? 3
+    const useSpreadMode = options?.useSpreadMode ?? false
+    const onProgress = options?.onProgress
+
+    if (!project || pageIds.length === 0) {
+      return { succeeded: 0, failed: 0 }
+    }
+
+    // Build work units: either single pages or spread pairs
+    type WorkUnit = { type: 'single'; pageId: string } | { type: 'spread'; leftId: string; rightId: string }
+    const workUnits: WorkUnit[] = []
+
+    if (useSpreadMode) {
+      const allPages = project.pages
+      let i = 0
+      while (i < pageIds.length) {
+        const currentIdx = allPages.findIndex(p => p.id === pageIds[i])
+        const nextId = pageIds[i + 1]
+        const nextIdx = nextId ? allPages.findIndex(p => p.id === nextId) : -1
+
+        if (nextId && nextIdx === currentIdx + 1) {
+          workUnits.push({ type: 'spread', leftId: pageIds[i], rightId: nextId })
+          i += 2
+        } else {
+          workUnits.push({ type: 'single', pageId: pageIds[i] })
+          i += 1
+        }
+      }
+    } else {
+      pageIds.forEach(id => workUnits.push({ type: 'single', pageId: id }))
+    }
+
+    let succeeded = 0
+    let failed = 0
+    let completed = 0
+
+    // Parallel execution with controlled concurrency
+    const queue = [...workUnits]
+
+    const processUnit = async (unit: WorkUnit): Promise<void> => {
+      completed++
+      const label = unit.type === 'spread'
+        ? `spread ${completed}/${workUnits.length}`
+        : `page ${completed}/${workUnits.length}`
+      onProgress?.(`Generating ${label}...`)
+
+      if (unit.type === 'spread') {
+        const result = await generateDualPage(unit.leftId, unit.rightId)
+        if (result.success) succeeded += 2
+        else failed += 2
+      } else {
+        const result = await generatePage(unit.pageId)
+        if (result.success) succeeded++
+        else failed++
+      }
+    }
+
+    await new Promise<void>((resolve) => {
+      let running = 0
+      let idx = 0
+
+      const next = () => {
+        while (running < concurrency && idx < queue.length) {
+          const unit = queue[idx++]
+          running++
+          processUnit(unit).finally(() => {
+            running--
+            if (running === 0 && idx >= queue.length) {
+              resolve()
+            } else {
+              next()
+            }
+          })
+        }
+        if (running === 0 && idx >= queue.length) {
+          resolve()
+        }
+      }
+
+      next()
+    })
+
+    return { succeeded, failed }
+  }, [project, generatePage, generateDualPage])
+
   return {
     generatePage,
     generateDualPage,
     generateSpreadImage,
+    generatePagesParallel,
     isGenerating: state.isGenerating,
     progress: state.progress,
     error: state.error,
