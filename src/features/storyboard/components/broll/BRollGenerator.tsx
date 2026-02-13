@@ -8,10 +8,12 @@ import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Film, Sparkles, Trash2, Play, CheckCircle, AlertCircle } from 'lucide-react'
+import { Film, Sparkles, Trash2, Play, CheckCircle, AlertCircle, Coins } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
+import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
+import { TOKENS_PER_IMAGE } from '../../constants/generation.constants'
 import { toast } from 'sonner'
 
 export function BRollGenerator() {
@@ -49,12 +51,11 @@ export function BRollGenerator() {
                 })
             })
 
-            if (!response.ok) {
-                const data = await response.json()
-                throw new Error(data.error || 'B-Roll generation failed')
-            }
+            const result = await safeJsonParse<{ prompts: string[]; error?: string }>(response)
 
-            const result = await response.json()
+            if (!response.ok) {
+                throw new Error(result.error || 'B-Roll generation failed')
+            }
 
             // Create B-Roll shot objects
             const newBRollShots = result.prompts.map((prompt: string, i: number) => ({
@@ -62,7 +63,7 @@ export function BRollGenerator() {
                 storyboard_id: '',
                 context_text: storyText.slice(0, 200),
                 prompt,
-                status: 'pending',
+                status: 'pending' as const,
                 metadata: {},
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
@@ -112,8 +113,7 @@ export function BRollGenerator() {
         }
 
         // Credit check
-        const costPerShot = 20  // cents for nano-banana-pro
-        const totalCost = shotsToGenerate.length * costPerShot
+        const totalCost = shotsToGenerate.length * TOKENS_PER_IMAGE
 
         try {
             await fetchBalance()
@@ -160,16 +160,21 @@ export function BRollGenerator() {
                     body: JSON.stringify({
                         model: 'nano-banana-pro',
                         prompt: finalPrompt,
-                        modelSettings: { aspectRatio, resolution }
+                        modelSettings: { aspectRatio, resolution },
+                        extraMetadata: {
+                            source: 'storyboard',
+                            assetType: 'b-roll',
+                        },
                     })
                 })
 
+                const responseData = await safeJsonParse<{ predictionId: string; galleryId: string; error?: string }>(response)
+
                 if (!response.ok) {
-                    const errorData = await response.json()
-                    throw new Error(errorData.error || 'Generation failed')
+                    throw new Error(responseData.error || 'Generation failed')
                 }
 
-                const { predictionId, galleryId } = await response.json()
+                const { predictionId, galleryId } = responseData
 
                 // Poll for completion
                 const result = await pollPrediction(predictionId)
@@ -283,6 +288,16 @@ export function BRollGenerator() {
                         <CardTitle className="text-sm flex items-center justify-between">
                             <span>Generated B-Roll Shots ({brollShots.length})</span>
                             <div className="flex items-center gap-2">
+                                {/* Inline balance display */}
+                                {balance > 0 && (
+                                    <Badge variant="outline" className={`text-xs ${
+                                        balance < brollShots.filter(s => s.status === 'pending' || s.status === 'ready').length * TOKENS_PER_IMAGE
+                                            ? 'text-red-500 border-red-500/30' : ''
+                                    }`}>
+                                        <Coins className="w-3 h-3 mr-1" />
+                                        {balance} tokens
+                                    </Badge>
+                                )}
                                 {isGeneratingImages && (
                                     <Badge variant="secondary" className="text-xs">
                                         {imageProgress.current}/{imageProgress.total}

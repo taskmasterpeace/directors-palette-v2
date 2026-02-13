@@ -24,10 +24,10 @@ import { useImageGeneration } from "../../hooks/useImageGeneration"
 import { PromptSyntaxFeedback } from "./PromptSyntaxFeedback"
 import { parseDynamicPrompt, detectAnchorTransform, stripAnchorSyntax } from "../../helpers/prompt-syntax-feedback"
 import { useWildCardStore } from "../../store/wildcard.store"
-import { QuickAccessBar, RecipeFormFields } from "../recipe"
+import { RecipeFormFields } from "../recipe"
 import { OrganizeButton } from "../prompt-organizer"
 import { PromptExpanderButton } from "../prompt-expander/PromptExpanderButton"
-import { MobilePromptsRecipesBar } from "./MobilePromptsRecipesBar"
+import { DesktopPromptsRecipesBar } from "./DesktopPromptsRecipesBar"
 import { usePromptAutocomplete } from "../../hooks/usePromptAutocomplete"
 import { useCallback } from "react"
 import { extractAtTags, urlToFile } from "../../helpers"
@@ -47,7 +47,7 @@ import { SlotMachinePanel } from "../slot-machine"
  * Check if a recipe has any tool stages that require special execution
  */
 function hasToolStages(recipe: Recipe): boolean {
-    return recipe.stages.some(stage => stage.type === 'tool')
+    return recipe.stages.some(stage => stage.type === 'tool' || stage.type === 'analysis')
 }
 
 const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextAreaElement | null> }) => {
@@ -903,7 +903,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                 }
 
                 const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-pro') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-2512' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5' | 'riverflow-2-pro'
-                const aspectRatio = activeRecipe.suggestedAspectRatio || shotCreatorSettings.aspectRatio || '16:9'
+                const aspectRatio = shotCreatorSettings.aspectRatio || activeRecipe.suggestedAspectRatio || '16:9'
 
                 try {
                     toast.info('Starting recipe with tool stages...')
@@ -1204,19 +1204,23 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                     </div>
                 </div>
 
-                {/* Organize and QuickAccessBar */}
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                        <OrganizeButton
-                            prompt={shotCreatorPrompt}
-                            onApply={setShotCreatorPrompt}
-                        />
-                        <PromptExpanderButton
-                            prompt={shotCreatorPrompt}
-                            onPromptChange={setShotCreatorPrompt}
-                        />
-                        <QuickAccessBar onSelectRecipe={_handleSelectRecipe} />
-                    </div>
+                {/* Desktop Prompts/Recipes Bar (tabbed interface) */}
+                <DesktopPromptsRecipesBar
+                    onSelectPrompt={(prompt) => setShotCreatorPrompt(shotCreatorPrompt + (shotCreatorPrompt ? ' ' : '') + prompt)}
+                    onSelectRecipe={_handleSelectRecipe}
+                    currentPrompt={shotCreatorPrompt}
+                />
+
+                {/* Organize and Expand buttons */}
+                <div className="flex items-center gap-2">
+                    <OrganizeButton
+                        prompt={shotCreatorPrompt}
+                        onApply={setShotCreatorPrompt}
+                    />
+                    <PromptExpanderButton
+                        prompt={shotCreatorPrompt}
+                        onPromptChange={setShotCreatorPrompt}
+                    />
                 </div>
 
                 {/* Slot Machine Panel - appears when {} detected */}
@@ -1244,12 +1248,6 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                         <RecipeFormFields />
                     </div>
                 )}
-
-                {/* Mobile prompts recipes bar */}
-                <MobilePromptsRecipesBar
-                    onSelectPrompt={(prompt) => setShotCreatorPrompt(shotCreatorPrompt + (shotCreatorPrompt ? ' ' : '') + prompt)}
-                    onSelectRecipe={(recipeId) => setActiveRecipe(recipeId)}
-                />
 
                 {/* Riverflow Options Panel - shown when Riverflow model is selected */}
                 {shotCreatorSettings.model === 'riverflow-2-pro' && (

@@ -18,7 +18,9 @@ import { Sparkles, FileText, AlertCircle, Trash2 } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { LLMModelSelector } from '../settings/LLMModelSelector'
+import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
 import { toast } from 'sonner'
+import type { ExtractionResult } from '../../types/storyboard.types'
 
 export function StoryInput() {
     const {
@@ -59,12 +61,11 @@ export function StoryInput() {
                 })
             })
 
-            if (!response.ok) {
-                const data = await response.json()
-                throw new Error(data.error || 'Extraction failed')
-            }
+            const result = await safeJsonParse<ExtractionResult & { error?: string }>(response)
 
-            const result = await response.json()
+            if (!response.ok) {
+                throw new Error(result.error || 'Extraction failed')
+            }
             setExtractionResult(result)
 
             // Handle 0 results case - don't auto-navigate to empty tab
@@ -146,46 +147,48 @@ Marcus walked into the courtroom, his footsteps echoing against the marble floor
                         </div>
                     )}
 
-                    {/* Extract Button */}
-                    <Button
-                        onClick={handleExtract}
-                        disabled={!storyText.trim() || isExtracting}
-                        className="w-full"
-                        size="lg"
-                        title={
-                            isExtracting
-                                ? 'Extraction in progress...'
-                                : !storyText.trim()
-                                ? 'Enter story text first to extract characters and locations'
-                                : 'Click to extract characters and locations from your story'
-                        }
-                        aria-busy={isExtracting}
-                    >
-                        {isExtracting ? (
-                            <>
-                                <LoadingSpinner size="sm" color="current" className="mr-2" />
-                                Extracting Characters & Locations...
-                            </>
-                        ) : (
-                            <>
-                                <Sparkles className="w-4 h-4 mr-2" />
-                                Extract Characters & Locations
-                            </>
-                        )}
-                    </Button>
-
-                    {/* Clear & Start Fresh Button */}
-                    {(storyText || extractionResult) && (
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-2">
                         <Button
-                            variant="outline"
-                            onClick={() => setShowClearConfirmation(true)}
-                            className="w-full"
-                            disabled={isExtracting}
+                            onClick={handleExtract}
+                            disabled={!storyText.trim() || isExtracting}
+                            className="flex-1"
+                            size="lg"
+                            title={
+                                isExtracting
+                                    ? 'Extraction in progress...'
+                                    : !storyText.trim()
+                                    ? 'Enter story text first to extract characters and locations'
+                                    : 'Click to extract characters and locations from your story'
+                            }
+                            aria-busy={isExtracting}
                         >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Clear & Start Fresh
+                            {isExtracting ? (
+                                <>
+                                    <LoadingSpinner size="sm" color="current" className="mr-2" />
+                                    Extracting Characters & Locations...
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="w-4 h-4 mr-2" />
+                                    Extract Characters & Locations
+                                </>
+                            )}
                         </Button>
-                    )}
+
+                        {(storyText || extractionResult) && (
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowClearConfirmation(true)}
+                                className="sm:w-auto"
+                                size="lg"
+                                disabled={isExtracting}
+                            >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Clear & Start Fresh
+                            </Button>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
 

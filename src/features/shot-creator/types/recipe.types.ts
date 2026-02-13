@@ -3682,4 +3682,27 @@ No style drift between tiles. Black grid lines between all cells. 16:9 aspect ra
     isSystem: true,
     isSystemOnly: true,
   },
+
+  // iPhone Product Shot - Ultra-macro product photography
+  {
+    name: 'iPhone Product Shot',
+    description: 'Ultra-macro photorealistic product photograph of an iPhone screen being held in someone\'s hand',
+    recipeNote: 'Describe the person holding the phone and the location/setting. Creates a cinematic product shot with dramatic depth of field.',
+    stages: [{
+      id: 'stage_iphone_product_0',
+      order: 0,
+      template: `An ultra-macro, photorealistic product photograph of the illuminated screen of a iPhone being held in <<PERSON:text!>>'s hand. The camera is extremely close to the physical screen, capturing the phone's edge, the curve of the user's fingers, and a richly atmospheric background that extends into <<LOCATION:text!>>.
+
+The shallow depth of field turns the setting into a soft bokeh tapestry—warm ambient glows, streaks of neon, silhouettes of passersby, and hints of architectural detail dissolve into painterly blur. Cinematic color grading—teal shadows, amber highlights, and subtle film grain—anchors the scene in a premium, editorial aesthetic.
+
+What sets this shot apart: the iPhone screen content is sharp and luminous, acting as a beacon of clarity amid the dreamy surroundings. The interplay of crisp digital interface against velvety out-of-focus reality evokes the feeling of a product hero shot in a high-end commercial, where cutting-edge technology meets human moment.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '9:16',
+    suggestedModel: 'nano-banana-pro',
+    isQuickAccess: true,
+    quickAccessLabel: 'iPhone Shot',
+    categoryId: 'products',
+  },
 ]

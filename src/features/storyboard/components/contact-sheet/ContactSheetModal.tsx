@@ -8,9 +8,12 @@ import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Grid3X3, CheckCircle, AlertCircle, Maximize2 } from 'lucide-react'
+import { Grid3X3, CheckCircle, AlertCircle, Maximize2, Coins } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
+import { useCreditsStore } from '@/features/credits/store/credits.store'
+import { TOKENS_PER_IMAGE } from '../../constants/generation.constants'
+import { toast } from 'sonner'
 import { DEFAULT_CONTACT_SHEET_CONFIG, ANGLE_PROMPTS } from '../../types/storyboard.types'
 import { useEffectiveStyleGuide } from '../../hooks/useEffectiveStyleGuide'
 import type { CinematicAngle, GeneratedShotPrompt } from '../../types/storyboard.types'
@@ -36,7 +39,13 @@ export function ContactSheetModal({
     shot
 }: ContactSheetModalProps) {
     const { setContactSheetVariants } = useStoryboardStore()
+    const { balance, fetchBalance } = useCreditsStore()
     const effectiveStyleGuide = useEffectiveStyleGuide()
+
+    // Fetch balance on mount
+    useEffect(() => {
+        fetchBalance().catch(() => { /* ignore */ })
+    }, [fetchBalance])
 
     const [isGenerating, setIsGenerating] = useState(false)
     const [progress, setProgress] = useState<ContactSheetProgress>({ total: 2, current: 0, status: 'idle' })
@@ -87,6 +96,23 @@ export function ContactSheetModal({
     const handleGenerateContactSheet = async () => {
         if (!shot) return
 
+        // Credit check - use fresh balance after fetch
+        const estimatedCost = TOKENS_PER_IMAGE
+        try {
+            await fetchBalance()
+        } catch { /* continue */ }
+        const currentBalance = useCreditsStore.getState().balance
+
+        if (currentBalance < estimatedCost) {
+            toast.error(`Insufficient credits. Need ~${estimatedCost} tokens but you have ${currentBalance}.`)
+            return
+        }
+
+        const confirmed = confirm(
+            `Generate Contact Sheet?\n\nCost: ~${estimatedCost} tokens\nYour balance: ${currentBalance} tokens`
+        )
+        if (!confirmed) return
+
         setIsGenerating(true)
 
         try {
@@ -134,7 +160,13 @@ export function ContactSheetModal({
                     </DialogTitle>
                     <DialogDescription>
                         Generate a single 3x3 grid with 9 camera angles, then auto-slice into cells
-                        <Badge variant="outline" className="ml-2 text-[10px]">Cost: ~20 tokens</Badge>
+                        <Badge variant="outline" className="ml-2 text-xs">Cost: ~{TOKENS_PER_IMAGE} tokens</Badge>
+                        {balance > 0 && (
+                            <Badge variant="outline" className={`ml-1 text-xs ${balance < TOKENS_PER_IMAGE ? 'text-red-500 border-red-500/30' : ''}`}>
+                                <Coins className="w-3 h-3 mr-1" />
+                                Balance: {balance}
+                            </Badge>
+                        )}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -276,7 +308,7 @@ export function ContactSheetModal({
                                             <div className="text-center">
                                                 <CheckCircle className="w-6 h-6 mx-auto text-green-500 mb-1" />
                                                 {variant.predictionId && (
-                                                    <p className="text-[10px] text-muted-foreground truncate max-w-full px-1">
+                                                    <p className="text-xs text-muted-foreground truncate max-w-full px-1">
                                                         {variant.predictionId.slice(0, 8)}...
                                                     </p>
                                                 )}
@@ -284,7 +316,7 @@ export function ContactSheetModal({
                                         ) : variant.status === 'failed' ? (
                                             <div className="text-center">
                                                 <AlertCircle className="w-6 h-6 mx-auto text-destructive mb-1" />
-                                                <p className="text-[10px] text-destructive">Failed</p>
+                                                <p className="text-xs text-destructive">Failed</p>
                                             </div>
                                         ) : (
                                             <Grid3X3 className="w-6 h-6 mx-auto text-muted-foreground/30" />
@@ -293,7 +325,7 @@ export function ContactSheetModal({
                                 )}
                                 <Badge
                                     variant="secondary"
-                                    className="absolute bottom-1 left-1 text-[10px] px-1"
+                                    className="absolute bottom-1 left-1 text-xs px-1"
                                 >
                                     {ANGLE_LABELS[variant.angle]}
                                 </Badge>

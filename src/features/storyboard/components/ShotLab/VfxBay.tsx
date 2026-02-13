@@ -108,7 +108,7 @@ export function VfxBay({ shot, onUpdate: _onUpdate }: VfxBayProps) {
             >
                 <div className="flex items-center gap-2 border-r pr-3 border-white/10 mr-1">
                     <Wand2 className="w-4 h-4 text-purple-400" />
-                    <span className="text-[10px] font-bold text-purple-100/70 uppercase tracking-widest hidden sm:block">VFX Bay</span>
+                    <span className="text-xs font-bold text-purple-100/70 uppercase tracking-widest hidden sm:block">VFX Bay</span>
                 </div>
 
                 <div className="flex items-center gap-1 border-r pr-4 border-border/50">
@@ -131,7 +131,7 @@ export function VfxBay({ shot, onUpdate: _onUpdate }: VfxBayProps) {
                 </div>
 
                 <div className="flex items-center gap-2 min-w-[100px]">
-                    <span className="text-[10px] text-muted-foreground uppercase font-bold">Size</span>
+                    <span className="text-xs text-muted-foreground uppercase font-bold">Size</span>
                     <Slider
                         value={[brushSize]}
                         onValueChange={([v]) => setBrushSize(v)}

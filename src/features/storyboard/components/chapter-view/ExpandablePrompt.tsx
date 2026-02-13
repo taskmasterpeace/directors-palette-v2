@@ -52,14 +52,14 @@ export function ExpandablePrompt({
             >
                 <div className="flex items-start gap-2">
                     <div
-                        className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                        className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
                         style={{ backgroundColor: color || '#6b7280' }}
                     >
                         {sequence}
                     </div>
                     <div className="flex-1 min-w-0">
                         {shotType && (
-                            <Badge variant="outline" className="text-[10px] capitalize py-0 mb-1">
+                            <Badge variant="outline" className="text-xs capitalize py-0 mb-1">
                                 {shotType}
                             </Badge>
                         )}

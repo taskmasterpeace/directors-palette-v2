@@ -35,18 +35,14 @@ export function GranularitySelect() {
     const handleChange = (value: string) => {
         const newLevel = Number(value) as BreakdownLevel
 
-        // If prompts exist, warn user before clearing
         if (generatedPrompts.length > 0) {
-            const confirmed = confirm(
-                `Changing granularity will clear ${generatedPrompts.length} generated prompt(s) and any generated images.\n\nThis is because the shot breakdown will change, making existing prompts misaligned.\n\nContinue?`
+            const clearData = confirm(
+                `Changing granularity will clear ${generatedPrompts.length} prompt(s) and any generated images.\n\nClick OK to clear and continue, or Cancel to keep current settings.`
             )
-            if (!confirmed) {
-                return
-            }
-            // Clear prompts and images
+            if (!clearData) return
             clearGeneratedPrompts()
             clearGeneratedImages()
-            toast.info('Prompts and images cleared due to granularity change')
+            toast.info('Prompts and images cleared')
         }
 
         setBreakdownLevel(newLevel)

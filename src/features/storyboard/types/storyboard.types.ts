@@ -576,6 +576,7 @@ export interface TextHighlight {
 export interface ExtractionResult {
     characters: Array<{
         name: string
+        aliases?: string[]
         mentions: number
         description?: string
     }>

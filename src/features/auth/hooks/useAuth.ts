@@ -8,7 +8,7 @@ export function useAuth() {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     session: null,
-    isLoading: true,
+    isLoading: false,
     error: null,
   });
   const subscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
@@ -16,14 +16,25 @@ export function useAuth() {
   useEffect(() => {
     // Check for existing session on mount
     const initAuth = async () => {
-      const { session, error } = await AuthService.getSession();
+      try {
+        // Race getSession against a timeout to prevent permanent loading state
+        const result = await Promise.race([
+          AuthService.getSession(),
+          new Promise<{ session: null; error: { message: string } }>((resolve) =>
+            setTimeout(() => resolve({ session: null, error: { message: 'Session check timed out' } }), 5000)
+          ),
+        ]);
 
-      setAuthState({
-        user: session?.user ?? null,
-        session,
-        isLoading: false,
-        error: error?.message ?? null,
-      });
+        setAuthState({
+          user: result.session?.user ?? null,
+          session: result.session,
+          isLoading: false,
+          error: result.error?.message ?? null,
+        });
+      } catch {
+        // Ensure loading state is always cleared
+        setAuthState(prev => ({ ...prev, isLoading: false, error: 'Failed to check session' }));
+      }
     };
 
     initAuth();

@@ -140,6 +140,7 @@ export interface VideoGenerationRequest {
   modelSettings: ModelSettings
   referenceImages?: string[]
   lastFrameImage?: string
+  extraMetadata?: Record<string, unknown>
   // Note: user_id removed - now extracted from session cookie server-side
 }
 

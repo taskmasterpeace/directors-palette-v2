@@ -85,7 +85,7 @@ export function ChapterTabs({ children }: ChapterTabsProps) {
                         >
                             <Layers className="w-3.5 h-3.5" />
                             <span className="font-medium">All Shots</span>
-                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 ml-1 bg-background/50">
+                            <Badge variant="outline" className="text-xs py-0 px-1.5 ml-1 bg-background/50">
                                 {totalShots}
                             </Badge>
                         </TabsTrigger>
@@ -101,7 +101,7 @@ export function ChapterTabs({ children }: ChapterTabsProps) {
                                     {chapter.title || `Chapter ${i + 1}`}
                                 </span>
                                 {chapter.segmentIndices.length > 0 && (
-                                    <Badge variant="secondary" className="text-[10px] py-0 px-1.5 ml-1">
+                                    <Badge variant="secondary" className="text-xs py-0 px-1.5 ml-1">
                                         {chapter.segmentIndices.length}
                                     </Badge>
                                 )}

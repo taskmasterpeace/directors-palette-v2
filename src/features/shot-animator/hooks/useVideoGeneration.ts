@@ -126,6 +126,9 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
         modelSettings,
         referenceImages: finalReferenceImages,
         lastFrameImage: finalLastFrameImage,
+        extraMetadata: {
+          source: 'shot-animator',
+        },
         // user_id removed - now extracted server-side from session cookie
       }
 

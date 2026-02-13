@@ -15,7 +15,7 @@ import { cn } from "@/utils/utils"
 import Image from "next/image"
 import { compressImage } from "@/utils/image-compression"
 import { ErrorDialog } from "../ErrorDialog"
-import { safeJsonParse } from "../../../utils/safe-fetch"
+import { safeJsonParse } from "@/features/shared/utils/safe-fetch"
 
 interface ExpandedStyle {
   originalStyle: string

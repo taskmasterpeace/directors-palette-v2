@@ -91,8 +91,16 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe 
                             )}
 
                             <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
                                     <span className="font-medium">{character.name}</span>
+                                    {(() => {
+                                        const aliases = (character.metadata as Record<string, unknown>)?.aliases
+                                        return Array.isArray(aliases) && aliases.every(a => typeof a === 'string') ? (
+                                            <span className="text-xs text-muted-foreground">
+                                                aka {(aliases as string[]).join(', ')}
+                                            </span>
+                                        ) : null
+                                    })()}
                                     <Badge variant="secondary" className="text-xs">
                                         {character.mentions} mentions
                                     </Badge>
@@ -315,7 +323,9 @@ export function CharacterList() {
             has_reference: false,
             reference_image_url: undefined,
             description: c.description,
-            metadata: {},
+            metadata: {
+                ...(c.aliases && c.aliases.length > 0 ? { aliases: c.aliases } : {}),
+            },
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         }))

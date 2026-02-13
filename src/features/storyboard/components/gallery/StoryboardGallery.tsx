@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
-import { Images, Film, Grid3X3, CheckCircle, AlertCircle, Eye, Download, Info, Clock, RefreshCw, Layers } from 'lucide-react'
+import { Images, Film, Grid3X3, CheckCircle, AlertCircle, Eye, Download, Info, Clock, RefreshCw, Layers, FlaskConical, Archive } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
@@ -15,7 +15,10 @@ import { BRollGenerator } from '../broll/BRollGenerator'
 import { ContactSheetModal } from '../contact-sheet/ContactSheetModal'
 import { storyboardGenerationService } from '../../services/storyboard-generation.service'
 import { toast } from 'sonner'
+import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
+import { TOKENS_PER_IMAGE } from '../../constants/generation.constants'
 import type { GeneratedShotPrompt } from '../../types/storyboard.types'
+import JSZip from 'jszip'
 
 interface StoryboardGalleryProps {
     chapterIndex?: number
@@ -34,7 +37,8 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
         currentStyleGuide,
         characters,
         locations,
-        generationSettings
+        generationSettings,
+        openShotLab
     } = useStoryboardStore()
 
     const { balance, fetchBalance } = useCreditsStore()
@@ -64,6 +68,55 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
     const [contactSheetOpen, setContactSheetOpen] = useState(false)
     const [generatingBRollId, setGeneratingBRollId] = useState<number | null>(null)
     const [previewImage, setPreviewImage] = useState<string | null>(null)
+    const [isDownloadingAll, setIsDownloadingAll] = useState(false)
+
+    const handleDownloadAll = async () => {
+        const completedImages = Object.entries(generatedImages)
+            .filter(([, img]) => img.status === 'completed' && img.imageUrl)
+            .map(([seq, img]) => ({ sequence: Number(seq), url: img.imageUrl! }))
+
+        if (completedImages.length === 0) {
+            toast.info('No completed images to download')
+            return
+        }
+
+        setIsDownloadingAll(true)
+        try {
+            const zip = new JSZip()
+            let skipped = 0
+            for (const { sequence, url } of completedImages) {
+                try {
+                    const response = await fetch(url)
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+                    const blob = await response.blob()
+                    const ext = blob.type.includes('png') ? 'png' : 'jpg'
+                    zip.file(`shot-${sequence}.${ext}`, blob)
+                } catch {
+                    skipped++
+                }
+            }
+            if (skipped > 0) {
+                toast.warning(`${skipped} image(s) failed to download and were skipped`)
+            }
+            const added = completedImages.length - skipped
+            if (added === 0) {
+                toast.error('No images could be downloaded')
+                return
+            }
+            const content = await zip.generateAsync({ type: 'blob' })
+            const link = document.createElement('a')
+            link.href = URL.createObjectURL(content)
+            link.download = 'storyboard-shots.zip'
+            link.click()
+            URL.revokeObjectURL(link.href)
+            toast.success(`Downloaded ${added} shots as ZIP`)
+        } catch (error) {
+            console.error('ZIP download error:', error)
+            toast.error('Failed to create ZIP download')
+        } finally {
+            setIsDownloadingAll(false)
+        }
+    }
 
     const handleOpenContactSheet = (sequence: number) => {
         const shot = generatedPrompts.find(p => p.sequence === sequence)
@@ -103,11 +156,17 @@ The color temperature, lighting direction, and overall mood must match across al
                     modelSettings: {
                         aspectRatio: '16:9',
                         resolution: '2K'
-                    }
+                    },
+                    extraMetadata: {
+                        source: 'storyboard',
+                        assetType: 'b-roll-grid',
+                        isGrid: true,
+                        gridType: 'broll',
+                    },
                 })
             })
 
-            const result = await response.json()
+            const result = await safeJsonParse(response)
 
             if (!response.ok) {
                 throw new Error(result.error || 'Failed to generate B-roll grid')
@@ -128,15 +187,14 @@ The color temperature, lighting direction, and overall mood must match across al
         if (!shot) return
 
         // Credit check
-        const costPerShot = 20
         try {
             await fetchBalance()
         } catch {
             // Continue anyway
         }
 
-        if (balance < costPerShot) {
-            toast.error(`Insufficient credits. Need ${costPerShot} tokens.`)
+        if (balance < TOKENS_PER_IMAGE) {
+            toast.error(`Insufficient credits. Need ${TOKENS_PER_IMAGE} tokens.`)
             return
         }
 
@@ -196,7 +254,7 @@ The color temperature, lighting direction, and overall mood must match across al
         }
 
         // Credit check
-        const totalCost = failedShots.length * 20
+        const totalCost = failedShots.length * TOKENS_PER_IMAGE
         try {
             await fetchBalance()
         } catch {
@@ -290,7 +348,7 @@ The color temperature, lighting direction, and overall mood must match across al
                         <Images className="w-4 h-4" />
                         Shots ({filteredSegments.length})
                         {generatedCount > 0 && (
-                            <Badge variant="secondary" className="ml-1 text-[10px]">
+                            <Badge variant="secondary" className="ml-1 text-xs">
                                 {generatedCount} ready
                             </Badge>
                         )}
@@ -353,13 +411,34 @@ The color temperature, lighting direction, and overall mood must match across al
                                     )}
                                 </div>
                             </CardTitle>
-                            <CardDescription>
-                                Click on any shot to extract a 3x3 contact sheet. Hover for actions.
+                            <CardDescription className="flex items-center justify-between">
+                                <span>Click on any shot to extract a 3x3 contact sheet. Hover for actions.</span>
+                                {generatedCount > 0 && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleDownloadAll}
+                                        disabled={isDownloadingAll}
+                                        className="ml-2 flex-shrink-0"
+                                    >
+                                        {isDownloadingAll ? (
+                                            <>
+                                                <LoadingSpinner size="xs" color="current" className="mr-1" />
+                                                Zipping...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Archive className="w-4 h-4 mr-1" />
+                                                Download All
+                                            </>
+                                        )}
+                                    </Button>
+                                )}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <ScrollArea className="h-[500px]">
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                     {filteredSegments.map((segment) => {
                                         const shotId = `shot-${segment.sequence}`
                                         const hasVariants = contactSheetVariants.some(
@@ -378,11 +457,31 @@ The color temperature, lighting direction, and overall mood must match across al
                                                 >
                                                     {/* Show generated image or placeholder */}
                                                     {generatedImage?.imageUrl ? (
-                                                        <img
-                                                            src={generatedImage.imageUrl}
-                                                            alt={`Shot ${segment.sequence}`}
-                                                            className="w-full h-full object-cover"
-                                                        />
+                                                        <>
+                                                            <img
+                                                                src={generatedImage.imageUrl}
+                                                                alt={`Shot ${segment.sequence}`}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                            {/* Prompt overlay on completed images */}
+                                                            {(() => {
+                                                                const shotPrompt = generatedPrompts.find(p => p.sequence === segment.sequence)
+                                                                return shotPrompt ? (
+                                                                    <TooltipProvider>
+                                                                        <Tooltip>
+                                                                            <TooltipTrigger asChild>
+                                                                                <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-2 py-1 text-[11px] text-white/90 line-clamp-1 pointer-events-auto">
+                                                                                    {shotPrompt.prompt}
+                                                                                </div>
+                                                                            </TooltipTrigger>
+                                                                            <TooltipContent side="top" className="max-w-[320px] text-xs">
+                                                                                {shotPrompt.prompt}
+                                                                            </TooltipContent>
+                                                                        </Tooltip>
+                                                                    </TooltipProvider>
+                                                                ) : null
+                                                            })()}
+                                                        </>
                                                     ) : (
                                                         <div className="text-center p-2">
                                                             {generatedImage?.status === 'generating' ? (
@@ -408,7 +507,7 @@ The color temperature, lighting direction, and overall mood must match across al
 
                                                     {/* Shot number badge always visible */}
                                                     <Badge
-                                                        className="absolute top-1 left-1 text-[10px]"
+                                                        className="absolute top-1 left-1 text-xs"
                                                         style={{ backgroundColor: segment.color }}
                                                     >
                                                         {segment.sequence}
@@ -418,17 +517,17 @@ The color temperature, lighting direction, and overall mood must match across al
                                                     {generatedImage && (
                                                         <div className="absolute top-1 right-1">
                                                             {generatedImage.status === 'completed' && generatedImage.imageUrl && (
-                                                                <Badge variant="secondary" className="text-[10px] bg-green-500/80">
+                                                                <Badge variant="secondary" className="text-xs bg-green-500/80">
                                                                     <CheckCircle className="w-3 h-3" />
                                                                 </Badge>
                                                             )}
                                                             {generatedImage.status === 'generating' && (
-                                                                <Badge variant="secondary" className="text-[10px]">
+                                                                <Badge variant="secondary" className="text-xs">
                                                                     <LoadingSpinner size="xs" color="current" />
                                                                 </Badge>
                                                             )}
                                                             {generatedImage.status === 'failed' && (
-                                                                <Badge variant="destructive" className="text-[10px]">
+                                                                <Badge variant="destructive" className="text-xs">
                                                                     <AlertCircle className="w-3 h-3" />
                                                                 </Badge>
                                                             )}
@@ -438,7 +537,7 @@ The color temperature, lighting direction, and overall mood must match across al
                                                     {hasVariants && (
                                                         <Badge
                                                             variant="secondary"
-                                                            className="absolute bottom-1 right-1 text-[10px]"
+                                                            className="absolute bottom-1 right-1 text-xs"
                                                         >
                                                             <Grid3X3 className="w-3 h-3 mr-1" />
                                                             3x3
@@ -475,6 +574,16 @@ The color temperature, lighting direction, and overall mood must match across al
                                                         <p className="text-xs text-red-300 text-center px-2">
                                                             {generatedImage.error}
                                                         </p>
+                                                    )}
+                                                    {generatedImage?.imageUrl && (
+                                                        <Button
+                                                            size="sm"
+                                                            className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                                                            onClick={() => openShotLab(segment.sequence)}
+                                                        >
+                                                            <FlaskConical className="w-4 h-4 mr-1" />
+                                                            Shot Lab
+                                                        </Button>
                                                     )}
                                                     {generatedImage?.imageUrl && (
                                                         <Button

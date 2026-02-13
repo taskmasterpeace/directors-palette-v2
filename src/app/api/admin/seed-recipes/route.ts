@@ -3,7 +3,7 @@
  * POST /api/admin/seed-recipes
  *
  * Seeds the system recipes from SAMPLE_RECIPES to the database.
- * This should only be run once to initialize the system recipes.
+ * Incremental: only inserts recipes that don't already exist (by name).
  */
 
 import { NextResponse } from 'next/server'
@@ -20,25 +20,30 @@ export async function POST() {
   try {
     const supabase = await getAdminClient()
 
-    // Check if system recipes already exist
+    // Get names of existing system recipes
     const { data: existing } = await supabase
       .from('user_recipes')
-      .select('id')
+      .select('name')
       .eq('is_system', true)
-      .limit(1)
 
-    if (existing && existing.length > 0) {
+    const existingNames = new Set((existing || []).map((r: { name: string }) => r.name))
+
+    // Filter to only recipes that don't already exist
+    const newRecipes = SAMPLE_RECIPES.filter(sample => !existingNames.has(sample.name))
+
+    if (newRecipes.length === 0) {
       return NextResponse.json({
-        success: false,
-        message: 'System recipes already exist',
-        count: 0
+        success: true,
+        message: `All ${SAMPLE_RECIPES.length} system recipes already exist`,
+        count: 0,
+        existing: existingNames.size,
       })
     }
 
-    console.log('Seeding system recipes...')
+    console.log(`Seeding ${newRecipes.length} new system recipes (${existingNames.size} already exist)...`)
     let insertedCount = 0
 
-    for (const sample of SAMPLE_RECIPES) {
+    for (const sample of newRecipes) {
       const dbRecipe = {
         user_id: null, // System recipes have no owner
         name: sample.name,
@@ -50,8 +55,11 @@ export async function POST() {
           template: stage.template,
           fields: [],
           referenceImages: stage.referenceImages || [],
+          ...(stage.type && { type: stage.type }),
+          ...(stage.analysisId && { analysisId: stage.analysisId }),
         })),
         suggested_aspect_ratio: sample.suggestedAspectRatio || null,
+        suggested_model: sample.suggestedModel || null,
         suggested_resolution: null,
         quick_access_label: sample.quickAccessLabel || null,
         is_quick_access: sample.isQuickAccess || false,
@@ -74,8 +82,9 @@ export async function POST() {
 
     return NextResponse.json({
       success: true,
-      message: `Successfully seeded ${insertedCount} system recipes`,
-      count: insertedCount
+      message: `Seeded ${insertedCount} new system recipes (${existingNames.size} already existed)`,
+      count: insertedCount,
+      existing: existingNames.size,
     })
   } catch (error) {
     console.error('Error seeding recipes:', error)

@@ -15,6 +15,7 @@ import {
     BRollVariant,
     BRollSheetProgress
 } from '../../services/broll-sheet.service'
+import { TOKENS_PER_IMAGE } from '../../constants/generation.constants'
 
 interface BRollSheetModalProps {
     open: boolean
@@ -94,7 +95,7 @@ export function BRollSheetModal({
                     </DialogTitle>
                     <DialogDescription>
                         Generate 9 complementary B-roll shots that maintain visual continuity
-                        <Badge variant="outline" className="ml-2 text-[10px]">Cost: ~20 tokens</Badge>
+                        <Badge variant="outline" className="ml-2 text-xs">Cost: ~{TOKENS_PER_IMAGE} tokens</Badge>
                     </DialogDescription>
                 </DialogHeader>
 
@@ -112,7 +113,7 @@ export function BRollSheetModal({
                                 All 9 B-roll shots will match the color, lighting, and setting of this image.
                             </p>
                             <div className="flex items-center gap-2 mt-2">
-                                <Badge variant="secondary" className="text-[10px]">
+                                <Badge variant="secondary" className="text-xs">
                                     <Layers className="w-3 h-3 mr-1" />
                                     Visual Continuity
                                 </Badge>
@@ -218,12 +219,12 @@ export function BRollSheetModal({
                                         ) : variant.status === 'failed' ? (
                                             <div className="text-center">
                                                 <AlertCircle className="w-6 h-6 mx-auto text-destructive mb-1" />
-                                                <p className="text-[10px] text-destructive">Failed</p>
+                                                <p className="text-xs text-destructive">Failed</p>
                                             </div>
                                         ) : (
                                             <>
                                                 <Film className="w-6 h-6 mx-auto text-muted-foreground/30 mb-1" />
-                                                <p className="text-[10px] text-muted-foreground text-center px-1 line-clamp-2">
+                                                <p className="text-xs text-muted-foreground text-center px-1 line-clamp-2">
                                                     {variant.description.slice(0, 40)}...
                                                 </p>
                                             </>
@@ -233,14 +234,14 @@ export function BRollSheetModal({
                                 {/* Shot type label */}
                                 <Badge
                                     variant="secondary"
-                                    className="absolute bottom-1 left-1 text-[10px] px-1"
+                                    className="absolute bottom-1 left-1 text-xs px-1"
                                 >
                                     {BROLL_NAMES[variant.shotType]}
                                 </Badge>
                                 {/* B-roll indicator */}
                                 <Badge
                                     variant="secondary"
-                                    className="absolute top-1 right-1 text-[10px] px-1"
+                                    className="absolute top-1 right-1 text-xs px-1"
                                 >
                                     B
                                 </Badge>

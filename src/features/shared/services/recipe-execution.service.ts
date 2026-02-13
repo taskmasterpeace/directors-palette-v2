@@ -6,6 +6,7 @@
  */
 
 import { getClient, TypedSupabaseClient } from '@/lib/db/client'
+import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import {
   Recipe,
@@ -276,11 +277,11 @@ async function executeToolStage(
   })
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
+    const errorData = await safeJsonParse<{ error?: string }>(response).catch(() => ({} as { error?: string }))
     throw new Error(`Tool ${tool.name} failed: ${errorData.error || response.statusText}`)
   }
 
-  const data = await response.json()
+  const data = await safeJsonParse(response)
 
   // Handle multi-output tools (like grid-split that returns imageUrls array)
   if (data.imageUrls && Array.isArray(data.imageUrls)) {
@@ -407,11 +408,11 @@ async function executeAnalysisStage(
   })
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
+    const errorData = await safeJsonParse<{ error?: string }>(response).catch(() => ({} as { error?: string }))
     throw new Error(`Analysis ${analysis.name} failed: ${errorData.error || response.statusText}`)
   }
 
-  const data = await response.json()
+  const data = await safeJsonParse<Record<string, string>>(response)
   console.log(`[Recipe Execution] Analysis completed:`, data)
 
   // Map response to output variables based on analysis type

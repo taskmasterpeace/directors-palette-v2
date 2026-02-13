@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,10 +14,28 @@ interface AddPromptDialogProps {
   onOpenChange: (open: boolean) => void
   categories: PromptCategory[]
   onAdd: (prompt: { title: string; prompt: string; categoryId: string; tags: string; isQuickAccess: boolean }) => void
+  initialPrompt?: string
 }
 
-export function AddPromptDialog({ open, onOpenChange, categories, onAdd }: AddPromptDialogProps) {
+export function AddPromptDialog({ open, onOpenChange, categories, onAdd, initialPrompt = '' }: AddPromptDialogProps) {
   const [formData, setFormData] = useState({ title: '', prompt: '', categoryId: 'custom', tags: '', isQuickAccess: false })
+
+  // Pre-fill prompt when dialog opens with initialPrompt
+  useEffect(() => {
+    if (open && initialPrompt) {
+      // Generate a title from the first few words of the prompt
+      const words = initialPrompt.trim().split(/\s+/).slice(0, 4).join(' ')
+      const autoTitle = words.length > 20 ? words.slice(0, 20) + '...' : words
+      setFormData(prev => ({
+        ...prev,
+        prompt: initialPrompt,
+        title: autoTitle
+      }))
+    } else if (!open) {
+      // Reset form when dialog closes
+      setFormData({ title: '', prompt: '', categoryId: 'custom', tags: '', isQuickAccess: false })
+    }
+  }, [open, initialPrompt])
 
   const handleSubmit = () => {
     if (!formData.title || !formData.prompt) return

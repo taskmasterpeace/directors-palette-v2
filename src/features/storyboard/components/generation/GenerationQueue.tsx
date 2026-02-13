@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -10,30 +10,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
-import { Play, CheckCircle, AlertCircle, SplitSquareVertical, Wand2, CheckSquare, Square, Sparkles, X } from 'lucide-react'
+import { Play, Pause, CheckCircle, AlertCircle, SplitSquareVertical, Wand2, CheckSquare, Square, Sparkles, X, Coins } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
-import { storyboardGenerationService } from '../../services/storyboard-generation.service'
 import { useEffectiveStyleGuide } from '../../hooks/useEffectiveStyleGuide'
 import { Input } from '@/components/ui/input'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { ChevronDown, Settings2 } from 'lucide-react'
 import { type WildCard } from '@/features/shot-creator/helpers/wildcard/parser'
 import {
-    processPromptsWithWildcards,
     ensurePresetWildcards,
     getAvailableWildcards
 } from '../../services/wildcard-integration.service'
 import { HighlightedPrompt } from '../shared'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
-import { toast } from 'sonner'
-
-interface GenerationResult {
-    shotNumber: number
-    predictionId: string
-    imageUrl?: string
-    error?: string
-}
+import { TOKENS_PER_IMAGE } from '../../constants/generation.constants'
+import { useGenerationOrchestration } from '../../hooks/useGenerationOrchestration'
 
 interface GenerationQueueProps {
     chapterIndex?: number
@@ -52,9 +44,6 @@ const SHOT_TYPE_COLORS: Record<string, string> = {
 export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
     const {
         breakdownResult,
-        selectedPresetStyle,
-        characters,
-        locations,
         storyText,
         generatedPrompts,
         promptsGenerated,
@@ -62,8 +51,6 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
         generationSettings,
         globalPromptPrefix,
         globalPromptSuffix,
-        setGeneratedImage,
-        clearGeneratedImages,
         setInternalTab,
         setGenerationSettings,
         setGlobalPromptPrefix,
@@ -95,14 +82,8 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
     // Credits for pre-generation check
     const { balance, fetchBalance } = useCreditsStore()
 
-    const [isGenerating, setIsGenerating] = useState(false)
-    const [progress, setProgress] = useState({ current: 0, total: 0 })
-    const [results, setResults] = useState<GenerationResult[]>([])
     const [selectedShots, setSelectedShots] = useState<Set<number>>(new Set())
     const [showPrefixSuffix, setShowPrefixSuffix] = useState(false)
-
-    // Abort controller for cancellation
-    const abortControllerRef = useRef<AbortController | null>(null)
 
     // Use persisted settings from store
     const { aspectRatio, resolution } = generationSettings
@@ -112,6 +93,24 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
     const [wildcards, setWildcards] = useState<WildCard[]>([])
     const [wildcardsLoading, setWildcardsLoading] = useState(false)
     const [wildcardsInitialized, setWildcardsInitialized] = useState(false)
+
+    // Generation orchestration hook
+    const {
+        startGeneration,
+        cancelGeneration,
+        pauseGeneration,
+        resumeGeneration,
+        isGenerating,
+        isPaused,
+        progress,
+        results,
+        lastCompletedImageUrl
+    } = useGenerationOrchestration({
+        chapterIndex,
+        selectedShots,
+        wildcardsEnabled,
+        wildcards
+    })
 
     // Reset selection when chapter changes
     useEffect(() => {
@@ -158,6 +157,11 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
         initWildcards()
     }, [wildcardsInitialized])
 
+    // Fetch balance on mount for early cost warning
+    useEffect(() => {
+        fetchBalance().catch(() => {})
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
     // Page unload warning during generation
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -171,18 +175,6 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
         window.addEventListener('beforeunload', handleBeforeUnload)
         return () => window.removeEventListener('beforeunload', handleBeforeUnload)
     }, [isGenerating])
-
-    // Cancel generation handler - clean up all generation state
-    const handleCancelGeneration = () => {
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort()
-            abortControllerRef.current = null
-            setIsGenerating(false)
-            // Reset progress to avoid orphaned state
-            setProgress({ current: 0, total: 0 })
-            toast.info('Generation cancelled')
-        }
-    }
 
     const toggleShot = (sequence: number) => {
         setSelectedShots(prev => {
@@ -208,144 +200,10 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
         setSelectedShots(new Set(filteredPrompts.slice(0, count).map(p => p.sequence)))
     }
 
-    // Calculate estimated cost in tokens (20 tokens per image for Nano Banana Pro)
+    // Calculate estimated cost in tokens
     const estimatedCost = useMemo(() => {
-        const perImageTokens = 20 // Tokens per image (Nano Banana Pro)
-        return selectedShots.size * perImageTokens
+        return selectedShots.size * TOKENS_PER_IMAGE
     }, [selectedShots.size])
-
-    useEffect(() => {
-        storyboardGenerationService.setProgressCallback((p) => {
-            setProgress({ current: p.current, total: p.total })
-        })
-    }, [])
-
-    const handleStartGeneration = async () => {
-        // Require generated prompts and selection before generation
-        if (!promptsGenerated || !generatedPrompts.length || selectedShots.size === 0) return
-
-        // Credit check before generation
-        const costPerShot = 20  // cents for nano-banana-pro
-        const totalCost = selectedShots.size * costPerShot
-
-        try {
-            await fetchBalance()
-        } catch {
-            // Continue anyway, API will catch it
-        }
-
-        if (balance < totalCost) {
-            toast.error(
-                `Insufficient credits. You need ${totalCost} tokens but only have ${balance}. Purchase more credits to continue.`,
-                { duration: 5000 }
-            )
-            return
-        }
-
-        // Confirm generation cost
-        const confirmed = confirm(
-            `Generate ${selectedShots.size} images for approximately ${totalCost} tokens?\n\nYour balance: ${balance} tokens\nRemaining after: ${balance - totalCost} tokens`
-        )
-        if (!confirmed) return
-
-        // Filter to only selected shots
-        let shotsToGenerate = generatedPrompts.filter(p => selectedShots.has(p.sequence))
-
-        // Apply wildcards if enabled
-        if (wildcardsEnabled && wildcards.length > 0) {
-            shotsToGenerate = processPromptsWithWildcards(shotsToGenerate, wildcards)
-        }
-
-        // Apply global prefix/suffix
-        if (globalPromptPrefix || globalPromptSuffix) {
-            shotsToGenerate = shotsToGenerate.map(shot => ({
-                ...shot,
-                prompt: `${globalPromptPrefix}${shot.prompt}${globalPromptSuffix}`.trim()
-            }))
-        }
-
-        // Set up abort controller for cancellation
-        abortControllerRef.current = new AbortController()
-
-        setIsGenerating(true)
-        setResults([])
-        clearGeneratedImages()
-
-        try {
-            const generationResults = await storyboardGenerationService.generateShotsFromPrompts(
-                shotsToGenerate,
-                {
-                    model: 'nano-banana-pro',
-                    aspectRatio,
-                    resolution
-                },
-                effectiveStyleGuide || undefined,
-                characters,
-                locations,
-                abortControllerRef.current?.signal
-            )
-
-            setResults(generationResults)
-
-            // Store results in the global store with enhanced metadata
-            const activeChapter = chapters[chapterIndex]
-            const generationTimestamp = new Date().toISOString()
-
-            for (const result of generationResults) {
-                const shotPrompt = shotsToGenerate.find(p => p.sequence === result.shotNumber)
-
-                setGeneratedImage(result.shotNumber, {
-                    predictionId: result.predictionId,
-                    status: result.error ? 'failed' : 'completed',
-                    error: result.error,
-                    imageUrl: result.imageUrl, // Include imageUrl from polling response
-
-                    // Chapter context
-                    chapterIndex: chapterIndex,
-                    chapterTitle: activeChapter?.title || `Chapter ${(activeChapter?.sequence || 0) + 1}`,
-
-                    // Prompt context
-                    originalPrompt: shotPrompt?.metadata?.originalPromptWithWildcards || shotPrompt?.prompt,
-                    finalPrompt: shotPrompt?.prompt,
-                    appliedWildcards: shotPrompt?.metadata?.appliedWildcards,
-
-                    // Style guide
-                    styleGuideUsed: effectiveStyleGuide ? {
-                        id: effectiveStyleGuide.id,
-                        name: effectiveStyleGuide.name,
-                        isPreset: selectedPresetStyle !== null,
-                        presetId: selectedPresetStyle || undefined
-                    } : undefined,
-
-                    // Generation config
-                    generationConfig: {
-                        aspectRatio,
-                        resolution,
-                        model: 'nano-banana-pro'
-                    },
-
-                    // Timestamp
-                    generationTimestamp
-                })
-            }
-
-            // Auto-navigate to gallery on completion
-            if (generationResults.length > 0 && !generationResults.some(r => r.error)) {
-                setTimeout(() => setInternalTab('gallery'), 500)
-            }
-        } catch (error) {
-            // Check if it was cancelled
-            if (error instanceof Error && error.name === 'AbortError') {
-                toast.info('Generation was cancelled')
-            } else {
-                console.error('Generation failed:', error)
-                toast.error('Generation failed. Please try again.')
-            }
-        } finally {
-            setIsGenerating(false)
-            abortControllerRef.current = null
-        }
-    }
 
     const successCount = results.filter(r => !r.error).length
     const failedCount = results.filter(r => r.error).length
@@ -406,9 +264,9 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
         <div className="space-y-3">
             {/* Compact Settings Bar */}
             <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 border">
-                <span className="text-xs text-muted-foreground">Settings:</span>
+                <span className="text-sm text-muted-foreground">Settings:</span>
                 <Select value={aspectRatio} onValueChange={(v) => setGenerationSettings({ aspectRatio: v })}>
-                    <SelectTrigger className="h-7 w-[100px] text-xs">
+                    <SelectTrigger className="h-8 w-[100px] text-sm">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -420,7 +278,7 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                     </SelectContent>
                 </Select>
                 <Select value={resolution} onValueChange={(v) => setGenerationSettings({ resolution: v as '1K' | '2K' | '4K' })}>
-                    <SelectTrigger className="h-7 w-[70px] text-xs">
+                    <SelectTrigger className="h-8 w-[70px] text-sm">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -474,7 +332,7 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                             <Settings2 className="w-3.5 h-3.5" />
                             <span>Prompt Prefix/Suffix</span>
                             {(globalPromptPrefix || globalPromptSuffix) && (
-                                <Badge variant="secondary" className="text-[10px] py-0 px-1">
+                                <Badge variant="secondary" className="text-xs py-0 px-1.5">
                                     Active
                                 </Badge>
                             )}
@@ -502,33 +360,67 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                         />
                     </div>
                     {(globalPromptPrefix || globalPromptSuffix) && (
-                        <p className="text-[10px] text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                             These will be applied to all {selectedShots.size} selected shots during generation.
                         </p>
                     )}
                 </CollapsibleContent>
             </Collapsible>
 
+            {/* Cost Banner */}
+            <div className={`flex items-center gap-3 p-2.5 rounded-lg border ${
+                balance > 0 && balance < estimatedCost
+                    ? 'bg-red-500/10 border-red-500/30'
+                    : 'bg-muted/30'
+            }`}>
+                <Coins className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <div className="flex items-center gap-3 flex-wrap text-sm">
+                    <span>
+                        <span className="text-muted-foreground">Selected:</span>{' '}
+                        <span className="font-medium">{selectedShots.size} shots</span>{' '}
+                        <span className="text-muted-foreground">=</span>{' '}
+                        <span className="font-medium">~{estimatedCost} tokens</span>
+                    </span>
+                    <span className="text-muted-foreground">|</span>
+                    <span>
+                        <span className="text-muted-foreground">Balance:</span>{' '}
+                        <span className="font-medium">{balance} tokens</span>
+                    </span>
+                    <span className="text-muted-foreground">|</span>
+                    <span>
+                        <span className="text-muted-foreground">Remaining:</span>{' '}
+                        <span className={`font-medium ${balance - estimatedCost < 0 ? 'text-red-500' : ''}`}>
+                            {balance - estimatedCost} tokens
+                        </span>
+                    </span>
+                </div>
+                {balance > 0 && balance < estimatedCost && (
+                    <Badge variant="destructive" className="text-xs ml-auto">
+                        Insufficient credits
+                    </Badge>
+                )}
+            </div>
+
             {/* Selection Controls */}
             <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-muted-foreground">Select:</span>
-                <Button variant="outline" size="sm" className="h-6 text-xs px-2" onClick={selectAll}>
-                    <CheckSquare className="w-3 h-3 mr-1" /> All
+                <span className="text-sm text-muted-foreground">Select:</span>
+                <Button variant="outline" size="sm" className="h-7 text-sm px-2" onClick={selectAll}>
+                    <CheckSquare className="w-3.5 h-3.5 mr-1" /> All
                 </Button>
-                <Button variant="outline" size="sm" className="h-6 text-xs px-2" onClick={selectNone}>
-                    <Square className="w-3 h-3 mr-1" /> None
+                <Button variant="outline" size="sm" className="h-7 text-sm px-2" onClick={selectNone}>
+                    <Square className="w-3.5 h-3.5 mr-1" /> None
                 </Button>
-                <Button variant="outline" size="sm" className="h-6 text-xs px-2" onClick={() => selectRange(5)}>
+                <Button variant="outline" size="sm" className="h-7 text-sm px-2" onClick={() => selectRange(5)}>
                     First 5
                 </Button>
-                <Button variant="outline" size="sm" className="h-6 text-xs px-2" onClick={() => selectRange(10)}>
+                <Button variant="outline" size="sm" className="h-7 text-sm px-2" onClick={() => selectRange(10)}>
                     First 10
                 </Button>
-                <Button variant="outline" size="sm" className="h-6 text-xs px-2" onClick={() => selectRange(20)}>
+                <Button variant="outline" size="sm" className="h-7 text-sm px-2" onClick={() => selectRange(20)}>
                     First 20
                 </Button>
                 <div className="flex-1" />
-                <Badge variant={selectedShots.size > 20 ? "destructive" : "outline"} className="text-xs">
+                <Badge variant={selectedShots.size > 20 ? "destructive" : "outline"} className="text-sm font-medium">
                     {selectedShots.size} selected ~ {estimatedCost} tokens
                 </Badge>
             </div>
@@ -536,14 +428,31 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
             {/* Shot List with Checkboxes */}
             <Card>
                 <CardContent className="p-3 space-y-3">
-                    {/* Progress */}
+                    {/* Progress with Live Preview */}
                     {isGenerating && (
                         <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
-                                <span>Generating shot {progress.current} of {progress.total}...</span>
+                                <span>
+                                    {isPaused ? 'Paused' : 'Generating'} shot {progress.current} of {progress.total}
+                                    {isPaused && ' (will resume from next shot)'}
+                                </span>
                                 <span>{Math.round(progressPercent)}%</span>
                             </div>
                             <Progress value={progressPercent} />
+                            {/* Live preview strip */}
+                            {lastCompletedImageUrl && (
+                                <div className="flex items-center gap-3 p-2 bg-muted/30 rounded-md">
+                                    <img
+                                        src={lastCompletedImageUrl}
+                                        alt="Last completed shot"
+                                        className="w-16 h-10 object-cover rounded border"
+                                    />
+                                    <span className="text-xs text-muted-foreground">
+                                        Shot {progress.current > 0 ? progress.current : 1} completed
+                                        {progress.current < progress.total && ` \u2022 Generating shot ${progress.current + 1}...`}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -588,15 +497,15 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                                                 className="flex-shrink-0"
                                             />
                                             <div
-                                                className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white ${SHOT_TYPE_COLORS[shot.shotType] || 'bg-gray-500'}`}
+                                                className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white ${SHOT_TYPE_COLORS[shot.shotType] || 'bg-gray-500'}`}
                                             >
                                                 {shot.sequence}
                                             </div>
-                                            <Badge variant="outline" className="text-[10px] capitalize py-0">
+                                            <Badge variant="outline" className="text-xs capitalize py-0">
                                                 {shot.shotType}
                                             </Badge>
                                             {shot.characterRefs.length > 0 && (
-                                                <Badge variant="secondary" className="text-[10px] py-0">
+                                                <Badge variant="secondary" className="text-xs py-0">
                                                     {shot.characterRefs.map(c => c.name).join(', ')}
                                                 </Badge>
                                             )}
@@ -613,7 +522,7 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                                                 ) : null}
                                             </div>
                                         </div>
-                                        <div className="text-xs text-muted-foreground line-clamp-1 mt-1 ml-7">
+                                        <div className="text-xs text-muted-foreground line-clamp-2 mt-1 ml-9">
                                             <HighlightedPrompt text={shot.prompt} />
                                         </div>
                                     </div>
@@ -625,8 +534,8 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                     {/* Actions */}
                     <div className="flex gap-2">
                         <Button
-                            onClick={handleStartGeneration}
-                            disabled={isGenerating || selectedShots.size === 0}
+                            onClick={startGeneration}
+                            disabled={isGenerating || selectedShots.size === 0 || (balance > 0 && balance < estimatedCost)}
                             className="flex-1"
                             size="default"
                         >
@@ -647,11 +556,33 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                                 </>
                             )}
                         </Button>
+                        {isGenerating && !isPaused && (
+                            <Button
+                                variant="outline"
+                                size="default"
+                                onClick={pauseGeneration}
+                                className="flex-shrink-0"
+                            >
+                                <Pause className="w-4 h-4 mr-2" />
+                                Pause
+                            </Button>
+                        )}
+                        {isGenerating && isPaused && (
+                            <Button
+                                variant="outline"
+                                size="default"
+                                onClick={resumeGeneration}
+                                className="flex-shrink-0"
+                            >
+                                <Play className="w-4 h-4 mr-2" />
+                                Resume
+                            </Button>
+                        )}
                         {isGenerating && (
                             <Button
                                 variant="destructive"
                                 size="default"
-                                onClick={handleCancelGeneration}
+                                onClick={cancelGeneration}
                                 className="flex-shrink-0"
                             >
                                 <X className="w-4 h-4 mr-2" />

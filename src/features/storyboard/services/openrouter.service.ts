@@ -61,11 +61,16 @@ const EXTRACTION_TOOL: OpenRouterTool = {
                         properties: {
                             name: {
                                 type: 'string',
-                                description: 'Character name as it appears in the story'
+                                description: 'Character name — use the most recognizable name. If the character has aliases, pick the primary name here.'
+                            },
+                            aliases: {
+                                type: 'array',
+                                items: { type: 'string' },
+                                description: 'Alternate names for this character (nicknames, stage names, birth names, a.k.a.). Empty array if no aliases.'
                             },
                             mentions: {
                                 type: 'number',
-                                description: 'Approximate number of times this character is mentioned'
+                                description: 'Total mentions across ALL names/aliases for this character'
                             },
                             description: {
                                 type: 'string',
@@ -113,7 +118,9 @@ For characters:
 - Include named characters (proper nouns)
 - Include titled characters (e.g., "The Judge", "The Doctor")
 - Include significant unnamed characters if they appear multiple times
-- Count approximate mentions (how many times they appear)
+- CRITICAL - MERGE ALIASES: If the story says a person is "also known as", "better known as", "a.k.a.", "nicknamed", "real name is", "born as", "stage name", or otherwise indicates two names refer to the SAME person, output ONE character entry using the most recognizable name, and list all alternate names in the "aliases" field. Count total mentions across ALL of their names.
+  Example: "Marcus Fantroy, better known as Geechi Gotti" → ONE character named "Geechi Gotti" with aliases: ["Marcus Keith Fantroy", "Marcus Fantroy"]
+- Count approximate mentions across all names (how many times they appear)
 - IMPORTANT: Extract a VISUAL DESCRIPTION suitable for image generation that includes:
   * Race/ethnicity/skin tone (if mentioned or implied)
   * Clothing and outfit details

@@ -192,7 +192,8 @@ export class StoryboardGenerationService {
         styleGuide?: StyleGuide,
         _characters: StoryboardCharacter[] = [],
         _locations: StoryboardLocation[] = [],
-        abortSignal?: AbortSignal
+        abortSignal?: AbortSignal,
+        getPauseState?: () => boolean
     ): Promise<Array<{ shotNumber: number; predictionId: string; imageUrl?: string; error?: string }>> {
         const results: Array<{ shotNumber: number; predictionId: string; imageUrl?: string; error?: string }> = []
 
@@ -208,6 +209,13 @@ export class StoryboardGenerationService {
                 const abortError = new Error('Generation cancelled')
                 abortError.name = 'AbortError'
                 throw abortError
+            }
+
+            // Wait while paused
+            if (getPauseState) {
+                while (getPauseState() && !abortSignal?.aborted) {
+                    await new Promise(resolve => setTimeout(resolve, 500))
+                }
             }
 
             const shot = prompts[i]

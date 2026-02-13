@@ -33,6 +33,7 @@ export interface GenerationProgress {
     total: number
     currentShotSequence?: number
     aborted?: boolean
+    lastCompletedImageUrl?: string | null
 }
 
 export interface StoryboardStore {
@@ -109,6 +110,9 @@ export interface StoryboardStore {
     searchQuery: string
     selectedModel: string // OpenRouter model selection
     isPreviewCollapsed: boolean // Collapse Color-Coded Preview after generation
+
+    // ---- Director Selection State ----
+    selectedDirectorId: string | null
 
     // ---- Shot Lab UI State ----
     isShotLabOpen: boolean
@@ -234,6 +238,9 @@ export interface StoryboardStore {
     setPreviewCollapsed: (collapsed: boolean) => void
     togglePreviewCollapsed: () => void
 
+    // ---- Director Selection Actions ----
+    setSelectedDirector: (directorId: string | null) => void
+
     // ---- Generation Settings Actions ----
     setGenerationSettings: (settings: Partial<GenerationSettings>) => void
     setGlobalPromptPrefix: (prefix: string) => void
@@ -320,6 +327,9 @@ const initialState = {
     selectedModel: 'openai/gpt-4o-mini',
     isPreviewCollapsed: false,
 
+    // Director selection
+    selectedDirectorId: null,
+
     // Generation settings
     generationSettings: {
         aspectRatio: '16:9',
@@ -357,6 +367,7 @@ const PERSISTED_FIELDS = [
     'shouldShowChapters',
     'chapterDetectionReason',
     'selectedModel',
+    'selectedDirectorId',
     'internalTab',
     // New persisted fields
     'generationSettings',
@@ -672,6 +683,9 @@ export const useStoryboardStore = create<StoryboardStore>()(
             activeLabShotSequence: null,
             openShotLab: (sequence: number) => set({ isShotLabOpen: true, activeLabShotSequence: sequence }),
             closeShotLab: () => set({ isShotLabOpen: false, activeLabShotSequence: null }),
+
+            // ---- Director Selection Actions ----
+            setSelectedDirector: (directorId) => set({ selectedDirectorId: directorId }),
 
             // ---- Generation Settings Actions ----
             setGenerationSettings: (settings) => set((state) => ({

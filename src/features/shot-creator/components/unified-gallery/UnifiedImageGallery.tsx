@@ -240,6 +240,7 @@ RULES:
                     },
                     // Mark as grid for Extract Cells feature
                     extraMetadata: {
+                        source: 'shot-creator',
                         isGrid: true,
                         gridType: 'angles'
                     }
@@ -316,6 +317,7 @@ The color temperature, lighting direction, and overall mood must match across al
                     },
                     // Mark as grid for Extract Cells feature
                     extraMetadata: {
+                        source: 'shot-creator',
                         isGrid: true,
                         gridType: 'broll'
                     }

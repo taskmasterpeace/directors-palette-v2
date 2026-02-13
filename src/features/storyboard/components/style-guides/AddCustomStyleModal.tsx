@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Upload, ImageIcon, AlertCircle } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useCustomStylesStore } from '@/features/shot-creator/store/custom-styles.store'
+import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB client-side limit
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -91,12 +92,13 @@ export function AddCustomStyleModal({ open, onOpenChange, onStyleAdded }: AddCus
                 body: formData,
             })
 
+            const data = await safeJsonParse<{ url: string; error?: string; details?: string }>(response)
+
             if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.details || errorData.error || 'Upload failed')
+                throw new Error(data.details || data.error || 'Upload failed')
             }
 
-            const { url } = await response.json()
+            const { url } = data
 
             // Save style with Supabase URL (not data URL)
             const styleId = addCustomStyle({

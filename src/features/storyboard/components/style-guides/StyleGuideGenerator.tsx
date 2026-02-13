@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Wand2, X, Loader2, CheckCircle, AlertCircle, Image as ImageIcon } from 'lucide-react'
 import { DropZone } from '@/components/ui/drop-zone'
 import { useStoryboardStore } from '../../store'
+import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
 
 type GenerationStatus = 'idle' | 'generating' | 'completed' | 'failed'
 
@@ -70,10 +71,20 @@ export function StyleGuideGenerator() {
                         aspectRatio: '16:9',
                         outputFormat: 'png',
                     },
+                    extraMetadata: {
+                        source: 'storyboard',
+                        assetType: 'style-guide',
+                    },
                 }),
             })
 
-            const data = await response.json()
+            const data = await safeJsonParse(response)
+
+            if (!response.ok) {
+                setGenerationStatus('failed')
+                setError(data.error || 'Generation failed')
+                return
+            }
 
             if (data.success && data.imageUrl) {
                 setGenerationStatus('completed')

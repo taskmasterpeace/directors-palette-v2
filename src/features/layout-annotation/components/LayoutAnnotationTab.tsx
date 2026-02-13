@@ -212,7 +212,10 @@ The final image should look natural as if the edits were always part of the orig
                         modelSettings: {
                             aspectRatio: canvasState.aspectRatio,
                             outputFormat: "png"
-                        }
+                        },
+                        extraMetadata: {
+                            source: 'layout-annotation',
+                        },
                     })
                 })
             } else {

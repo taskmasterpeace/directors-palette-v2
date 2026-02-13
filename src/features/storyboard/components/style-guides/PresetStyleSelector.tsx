@@ -131,12 +131,12 @@ export function PresetStyleSelector({ selectedPresetId, onSelect }: PresetStyleS
                                     <span className="text-xs font-medium truncate">{style.name}</span>
                                     <div className="flex items-center gap-1">
                                         {isCustom && (
-                                            <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                                            <Badge variant="secondary" className="text-xs px-1 py-0">
                                                 Custom
                                             </Badge>
                                         )}
                                         {isSelected && (
-                                            <Badge variant="default" className="text-[10px] px-1 py-0">
+                                            <Badge variant="default" className="text-xs px-1 py-0">
                                                 Active
                                             </Badge>
                                         )}

@@ -51,7 +51,9 @@ async function globalSetup(config: FullConfig) {
     console.log('🔐 Setting up test authentication...')
 
     const browser = await chromium.launch()
-    const context = await browser.newContext()
+    const context = await browser.newContext({
+        viewport: { width: 1280, height: 720 }
+    })
     const page = await context.newPage()
 
     try {
@@ -66,8 +68,8 @@ async function globalSetup(config: FullConfig) {
         await page.fill('#email', email)
         await page.fill('#password', password)
 
-        // Submit login
-        await page.click('button[type="submit"]')
+        // Submit login (force: true to bypass mobile bg image that can overlap button)
+        await page.click('button[type="submit"]', { force: true })
 
         // Wait for successful login - redirect away from signin
         await page.waitForURL((url) => !url.pathname.includes('/auth/signin'), {

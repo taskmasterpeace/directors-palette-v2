@@ -7,11 +7,13 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Progress } from '@/components/ui/progress'
-import { Users, Wand2, CheckCircle, AlertCircle, Image as ImageIcon, UserCircle, Layers } from 'lucide-react'
+import { Users, CheckCircle, AlertCircle, Image as ImageIcon, UserCircle, Layers, Palette } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { PromptEditor, type PromptVariable } from '../shared/PromptEditor'
 import { characterSheetService, DEFAULT_SIDE1_PROMPT, DEFAULT_SIDE2_PROMPT } from '../../services/character-sheet.service'
 import { useStoryboardStore } from '../../store'
+import { useEffectiveStyleGuide } from '../../hooks/useEffectiveStyleGuide'
+import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
 import { toast } from 'sonner'
 
 type GenerationStatus = 'idle' | 'generating' | 'completed' | 'failed'
@@ -50,10 +52,10 @@ Output a crisp, print-ready reference sheet look with sharp details.`
 }
 
 export function CharacterSheetGenerator() {
-    const { characters, styleGuides, currentStyleGuide, updateCharacter } = useStoryboardStore()
+    const { characters, updateCharacter, setInternalTab } = useStoryboardStore()
+    const effectiveStyleGuide = useEffectiveStyleGuide()
 
     const [selectedCharacterId, setSelectedCharacterId] = useState<string>('')
-    const [selectedStyleId, setSelectedStyleId] = useState<string>(currentStyleGuide?.id || '')
     const [side1Prompt, setSide1Prompt] = useState(DEFAULT_SIDE1_PROMPT)
     const [side2Prompt, setSide2Prompt] = useState(DEFAULT_SIDE2_PROMPT)
     const [generationStatus, setGenerationStatus] = useState<GenerationStatus>('idle')
@@ -65,7 +67,6 @@ export function CharacterSheetGenerator() {
     const [isBatchGenerating, setIsBatchGenerating] = useState(false)
     const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 })
     const [batchResults, setBatchResults] = useState<{ name: string; success: boolean; error?: string }[]>([])
-    const [selectedBatchStyle, setSelectedBatchStyle] = useState('photographic')
 
     // Get characters that have reference images
     const charactersWithRef = useMemo(() => {
@@ -76,12 +77,8 @@ export function CharacterSheetGenerator() {
         return characters.find(c => c.id === selectedCharacterId)
     }, [characters, selectedCharacterId])
 
-    const selectedStyle = useMemo(() => {
-        return styleGuides.find(s => s.id === selectedStyleId) || currentStyleGuide
-    }, [styleGuides, selectedStyleId, currentStyleGuide])
-
     const characterName = selectedCharacter?.name || '[Character Name]'
-    const styleName = selectedStyle?.name || '[Style Name]'
+    const styleName = effectiveStyleGuide?.name || '[No style selected]'
 
     const side1Variables: PromptVariable[] = [
         {
@@ -93,7 +90,7 @@ export function CharacterSheetGenerator() {
         {
             name: 'STYLE_NAME',
             value: styleName,
-            description: 'Name of the visual style',
+            description: effectiveStyleGuide ? 'From Style tab' : 'No style set — go to Style tab',
             editable: false
         }
     ]
@@ -106,8 +103,8 @@ export function CharacterSheetGenerator() {
             return
         }
 
-        if (!selectedStyle) {
-            setError('Please select or create a style guide first')
+        if (!effectiveStyleGuide) {
+            setError('Please select or create a style guide in the Style tab first')
             return
         }
 
@@ -119,11 +116,11 @@ export function CharacterSheetGenerator() {
         try {
             const result = await characterSheetService.generateCharacterSheet({
                 characterName: selectedCharacter?.name || '',
-                styleName: selectedStyle.name,
+                styleName: effectiveStyleGuide.name,
                 side1Prompt,
                 side2Prompt,
                 characterReferenceUrl: selectedCharacter?.reference_image_url,
-                styleReferenceUrl: selectedStyle.reference_image_url,
+                styleReferenceUrl: effectiveStyleGuide.reference_image_url,
                 aspectRatio: '16:9'
             })
 
@@ -171,6 +168,7 @@ export function CharacterSheetGenerator() {
         setBatchProgress({ current: 0, total: characters.length })
         setBatchResults([])
 
+        const batchStyleName = effectiveStyleGuide?.name || 'cinematic'
         const results: { name: string; success: boolean; error?: string }[] = []
 
         for (let i = 0; i < characters.length; i++) {
@@ -178,9 +176,15 @@ export function CharacterSheetGenerator() {
             setBatchProgress({ current: i + 1, total: characters.length })
 
             try {
-                // Build the turnaround prompt using character description
+                // Build the turnaround prompt using character description + effective style
                 const description = char.description || `${char.name}, a person with no additional details`
-                const prompt = buildTurnaroundPrompt(description, selectedBatchStyle)
+                const prompt = buildTurnaroundPrompt(description, batchStyleName)
+
+                // Build reference images array from style guide
+                const referenceImages: string[] = []
+                if (effectiveStyleGuide?.reference_image_url) {
+                    referenceImages.push(effectiveStyleGuide.reference_image_url)
+                }
 
                 // Call the API to generate
                 const response = await fetch('/api/generate/image', {
@@ -193,6 +197,7 @@ export function CharacterSheetGenerator() {
                             aspectRatio: '16:9',
                             resolution: '2K'
                         },
+                        ...(referenceImages.length > 0 && { referenceImages }),
                         metadata: {
                             source: 'storyboard',
                             characterName: char.name,
@@ -202,7 +207,7 @@ export function CharacterSheetGenerator() {
                 })
 
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}))
+                    const errorData = await safeJsonParse<{ error?: string }>(response).catch(() => ({} as { error?: string }))
                     throw new Error(errorData.error || `HTTP ${response.status}`)
                 }
 
@@ -227,7 +232,7 @@ export function CharacterSheetGenerator() {
         })
     }
 
-    const canGenerate = selectedCharacterId && (selectedStyle || currentStyleGuide)
+    const canGenerate = selectedCharacterId && effectiveStyleGuide
 
     return (
         <Card className="border-primary/20">
@@ -241,6 +246,26 @@ export function CharacterSheetGenerator() {
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+                {/* Active Style Badge */}
+                {effectiveStyleGuide ? (
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
+                        <Palette className="w-4 h-4 text-primary" />
+                        <span className="text-xs text-muted-foreground">Using style:</span>
+                        <Badge variant="secondary" className="text-xs">{effectiveStyleGuide.name}</Badge>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                        <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                        <div className="flex-1">
+                            <p className="text-sm text-amber-600 dark:text-amber-400">No style selected. Set a style in the Style tab first.</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Batch generation will use a generic &quot;cinematic&quot; fallback.</p>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => setInternalTab('style')}>
+                            Go to Style
+                        </Button>
+                    </div>
+                )}
+
                 {/* Batch Generate All Turnarounds */}
                 <div className="p-4 rounded-lg border border-primary/30 bg-primary/5 space-y-3">
                     <div className="flex items-center gap-2">
@@ -248,30 +273,9 @@ export function CharacterSheetGenerator() {
                         <Label className="text-sm font-medium">Quick: Generate All Turnarounds</Label>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                        Automatically generate a turnaround sheet for each extracted character using their descriptions.
-                        No reference images needed.
+                        Automatically generate a turnaround sheet for each extracted character using their descriptions
+                        and the active style from the Style tab.
                     </p>
-
-                    {/* Style selector for batch */}
-                    <div className="flex items-center gap-2">
-                        <Label className="text-xs">Style:</Label>
-                        <Select value={selectedBatchStyle} onValueChange={setSelectedBatchStyle}>
-                            <SelectTrigger className="w-40 h-8">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="photographic">Photographic</SelectItem>
-                                <SelectItem value="cinematic">Cinematic</SelectItem>
-                                <SelectItem value="3D render">3D Render</SelectItem>
-                                <SelectItem value="anime">Anime</SelectItem>
-                                <SelectItem value="cartoon">Cartoon</SelectItem>
-                                <SelectItem value="concept art">Concept Art</SelectItem>
-                                <SelectItem value="illustrated">Illustrated</SelectItem>
-                                <SelectItem value="Pixar-style">Pixar-style</SelectItem>
-                                <SelectItem value="Disney-style">Disney-style</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
 
                     {/* Progress indicator */}
                     {isBatchGenerating && (
@@ -363,40 +367,6 @@ export function CharacterSheetGenerator() {
                     )}
                 </div>
 
-                {/* Style Guide Selector */}
-                <div className="space-y-2">
-                    <Label>Style Guide</Label>
-                    {styleGuides.length === 0 && !currentStyleGuide ? (
-                        <div className="p-3 rounded-lg bg-muted/30 text-center text-sm text-muted-foreground">
-                            No style guides available. Create one in the Style tab first.
-                        </div>
-                    ) : (
-                        <Select value={selectedStyleId} onValueChange={setSelectedStyleId}>
-                            <SelectTrigger>
-                                <SelectValue placeholder={currentStyleGuide ? currentStyleGuide.name : "Select a style..."} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {currentStyleGuide && (
-                                    <SelectItem value={currentStyleGuide.id}>
-                                        <div className="flex items-center gap-2">
-                                            <Wand2 className="w-4 h-4" />
-                                            <span>{currentStyleGuide.name}</span>
-                                            <Badge variant="outline" className="text-xs">Active</Badge>
-                                        </div>
-                                    </SelectItem>
-                                )}
-                                {styleGuides
-                                    .filter(s => s.id !== currentStyleGuide?.id)
-                                    .map(style => (
-                                        <SelectItem key={style.id} value={style.id}>
-                                            {style.name}
-                                        </SelectItem>
-                                    ))}
-                            </SelectContent>
-                        </Select>
-                    )}
-                </div>
-
                 {/* Prompt Editors */}
                 <div className="space-y-3">
                     <PromptEditor
@@ -480,6 +450,17 @@ export function CharacterSheetGenerator() {
                 )}
 
                 {/* Generate Button */}
+                {!effectiveStyleGuide && selectedCharacterId && (
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                        <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                            Select a style in the Style tab to enable generation.
+                        </p>
+                        <Button variant="outline" size="sm" className="ml-auto" onClick={() => setInternalTab('style')}>
+                            Style tab
+                        </Button>
+                    </div>
+                )}
                 <Button
                     onClick={handleGenerate}
                     disabled={!canGenerate || generationStatus === 'generating'}

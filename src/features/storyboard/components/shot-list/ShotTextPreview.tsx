@@ -123,7 +123,7 @@ export function ShotTextPreview({ chapterIndex = 0 }: ShotTextPreviewProps) {
                                 <FileText className="w-4 h-4" />
                                 Color-Coded Preview
                                 {filteredSegments.length > 0 && (
-                                    <Badge variant="secondary" className="text-[10px]">
+                                    <Badge variant="secondary" className="text-xs">
                                         {filteredSegments.length} segments
                                     </Badge>
                                 )}

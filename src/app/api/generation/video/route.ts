@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
       modelSettings,
       referenceImages,
       lastFrameImage,
+      extraMetadata,
       // ✅ REMOVED: user_id from request body (now from authenticated session)
     } = await request.json();
 
@@ -144,6 +145,11 @@ export async function POST(request: NextRequest) {
       lastFrameImage,
     });
 
+    // Merge extraMetadata into metadata if provided
+    const finalMetadata = extraMetadata
+      ? { ...metadata, ...extraMetadata }
+      : metadata;
+
     // ✅ SECURITY: Create gallery entry with authenticated user's ID
     // This respects RLS policies since we're using the user's session
     const { data: gallery, error: galleryError } = await supabase
@@ -153,7 +159,7 @@ export async function POST(request: NextRequest) {
         prediction_id: prediction.id,
         generation_type: 'video',
         status: 'pending',
-        metadata: metadata as Database['public']['Tables']['gallery']['Insert']['metadata'],
+        metadata: finalMetadata as Database['public']['Tables']['gallery']['Insert']['metadata'],
       })
       .select()
       .single();

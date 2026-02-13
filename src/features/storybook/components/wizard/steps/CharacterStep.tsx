@@ -20,7 +20,7 @@ import { compressImage } from "@/utils/image-compression"
 import { StoryCharacter, BookCharacter } from "../../../types/storybook.types"
 import { ErrorDialog } from "../ErrorDialog"
 import { validateCharacterDescription } from "../../../utils/validation"
-import { safeJsonParse } from "../../../utils/safe-fetch"
+import { safeJsonParse } from "@/features/shared/utils/safe-fetch"
 
 export function CharacterStep() {
   const {
