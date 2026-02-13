@@ -35,7 +35,7 @@ import type {
   SpreadImageMode,
   SpreadTextPosition,
 } from '../types/storybook.types'
-import { getNextStep, getPreviousStep } from '../types/storybook.types'
+import { getNextStep, getPreviousStep, getStepIndex } from '../types/storybook.types'
 import type { StoryIdea, GeneratedStory, ExtractedElements } from '../types/education.types'
 
 // Saved project summary type (from API)
@@ -51,6 +51,7 @@ interface StorybookState {
   // Wizard state
   currentStep: WizardStep
   storyMode: StoryMode
+  furthestStepIndex: number
   isGenerating: boolean
   error: string | null
 
@@ -394,6 +395,7 @@ export const useStorybookStore = create<StorybookState>()(
   // Initial state
   currentStep: 'character-setup',
   storyMode: 'generate',
+  furthestStepIndex: 0,
   isGenerating: false,
   error: null,
   project: null,
@@ -425,10 +427,14 @@ export const useStorybookStore = create<StorybookState>()(
   setStep: (step) => set({ currentStep: step }),
 
   nextStep: () => {
-    const { currentStep, storyMode } = get()
+    const { currentStep, storyMode, furthestStepIndex } = get()
     const next = getNextStep(currentStep, storyMode)
     if (next) {
-      set({ currentStep: next })
+      const newStepIndex = getStepIndex(next, storyMode)
+      set({
+        currentStep: next,
+        furthestStepIndex: Math.max(furthestStepIndex, newStepIndex),
+      })
     }
   },
 
@@ -1369,6 +1375,7 @@ export const useStorybookStore = create<StorybookState>()(
       savedProjectId: null,
       currentStep: 'character-setup',
       storyMode: 'generate',
+      furthestStepIndex: 0,
       currentPageIndex: 0,
       storyIdeas: [],
       error: null,
@@ -1381,6 +1388,7 @@ export const useStorybookStore = create<StorybookState>()(
       partialize: (state) => ({
         currentStep: state.currentStep,
         storyMode: state.storyMode,
+        furthestStepIndex: state.furthestStepIndex,
         project: state.project,
         currentPageIndex: state.currentPageIndex,
         storyIdeas: state.storyIdeas,

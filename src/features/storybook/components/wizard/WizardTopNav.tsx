@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Check } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import type { StepInfo } from "../../types/storybook.types"
+import type { StepInfo, WizardStep } from "../../types/storybook.types"
 import { cn } from "@/utils/utils"
 
 // Get icon for each wizard step
@@ -51,7 +51,6 @@ function getStepIcon(stepId: string) {
 interface WizardTopNavProps {
   currentStepInfo: StepInfo
   stepIndex: number
-  totalSteps: number
   projectTitle?: string
   canProceed: boolean
   onBack: () => void
@@ -62,12 +61,14 @@ interface WizardTopNavProps {
   isGenerating: boolean
   isSaving?: boolean
   hideNavigation?: boolean
+  wizardSteps: StepInfo[]
+  furthestStepIndex: number
+  onStepClick: (stepId: WizardStep) => void
 }
 
 export function WizardTopNav({
   currentStepInfo,
   stepIndex,
-  totalSteps,
   projectTitle,
   canProceed,
   onBack,
@@ -78,6 +79,9 @@ export function WizardTopNav({
   isGenerating,
   isSaving = false,
   hideNavigation = false,
+  wizardSteps,
+  furthestStepIndex,
+  onStepClick,
 }: WizardTopNavProps) {
   const StepIcon = getStepIcon(currentStepInfo.id)
 
@@ -125,10 +129,32 @@ export function WizardTopNav({
           </div>
         </div>
 
-        {/* Step Counter */}
-        <span className="text-xs text-zinc-500 bg-zinc-800/50 px-2 py-0.5 rounded">
-          Step {stepIndex + 1} of {totalSteps}
-        </span>
+        {/* Step Pills */}
+        <div className="flex items-center gap-1">
+          {wizardSteps.map((step, i) => {
+            const isCurrentStep = i === stepIndex
+            const isVisited = i <= furthestStepIndex
+            const isClickable = isVisited && !isGenerating
+            return (
+              <button
+                key={step.id}
+                onClick={() => isClickable && onStepClick(step.id as WizardStep)}
+                disabled={!isClickable}
+                title={step.label}
+                className={cn(
+                  "w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center transition-all",
+                  isCurrentStep
+                    ? "bg-amber-500 text-black"
+                    : isVisited
+                      ? "bg-zinc-700 text-zinc-300 hover:bg-zinc-600 cursor-pointer"
+                      : "bg-zinc-800/50 text-zinc-600 cursor-not-allowed"
+                )}
+              >
+                {i + 1}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* Right: Next/Finish Button */}

@@ -66,16 +66,12 @@ export function StyleSelectionStep() {
   const { generateStyleGuide, isGenerating, progress, error } = useStorybookGeneration()
 
   const [selectedStyleId, setSelectedStyleId] = useState(project?.style?.presetId || '')
-  const [showCustomForm, setShowCustomForm] = useState(false)
+  const [showCustomPanel, setShowCustomPanel] = useState(false)
   const [customStyleName, setCustomStyleName] = useState('')
   const [customStyleDescription, setCustomStyleDescription] = useState('')
   const [referenceImageUrl, setReferenceImageUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  // Simple "Upload & Make Style Sheet" state
-  const [uploadedStyleImage, setUploadedStyleImage] = useState<string | null>(null)
-  const styleSheetFileRef = useRef<HTMLInputElement>(null)
 
   // LLM Style Expansion state
   const [expandedStyle, setExpandedStyle] = useState<ExpandedStyle | null>(null)
@@ -202,7 +198,7 @@ export function StyleSelectionStep() {
 
   const handleSelectStyle = useCallback((style: typeof PRESET_STYLES[0]) => {
     setSelectedStyleId(style.id)
-    setShowCustomForm(false)
+    setShowCustomPanel(false)
     setStyle({
       id: style.id,
       name: style.name,
@@ -229,69 +225,15 @@ export function StyleSelectionStep() {
 
     if (result.success) {
       setSelectedStyleId('custom')
-      setShowCustomForm(false)
+      setShowCustomPanel(false)
       setReferenceImageUrl(null) // Reset after successful generation
       setExpandedStyle(null) // Reset expanded style
     }
   }, [customStyleName, customStyleDescription, referenceImageUrl, generateStyleGuide, useExpandedDescription, expandedStyle])
 
-  // Simple style sheet upload handler
-  const handleStyleSheetUpload = useCallback(async (file: File) => {
-    setIsUploading(true)
-    try {
-      const compressedFile = await compressImage(file)
-      const formData = new FormData()
-      formData.append('file', compressedFile)
-      const response = await fetch('/api/upload-file', { method: 'POST', body: formData })
-      if (!response.ok) throw new Error('Upload failed')
-      const data = await safeJsonParse<{ url: string }>(response)
-      setUploadedStyleImage(data.url)
-    } catch (err) {
-      console.error('Style image upload error:', err)
-      setErrorDialog({
-        open: true,
-        title: 'Upload Failed',
-        message: err instanceof Error ? err.message : 'Failed to upload image',
-      })
-    } finally {
-      setIsUploading(false)
-    }
-  }, [])
-
-  const handleStyleSheetFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) handleStyleSheetUpload(file)
-    e.target.value = ''
-  }, [handleStyleSheetUpload])
-
-  // Generate style sheet from uploaded image
-  const handleMakeStyleSheet = useCallback(async () => {
-    if (!uploadedStyleImage) return
-
-    const result = await generateStyleGuide(
-      'Custom Style',
-      undefined,
-      uploadedStyleImage
-    )
-
-    if (result.success) {
-      setSelectedStyleId('custom')
-      setUploadedStyleImage(null)
-    }
-  }, [uploadedStyleImage, generateStyleGuide])
-
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Hidden file input for style sheet upload */}
-      <input
-        ref={styleSheetFileRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleStyleSheetFileChange}
-      />
-
-      {/* Style Grid - Presets + Upload Your Own */}
+      {/* Style Grid - Presets + Custom Style */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {PRESET_STYLES.map((style) => (
           <Card
@@ -326,70 +268,23 @@ export function StyleSelectionStep() {
           </Card>
         ))}
 
-        {/* Upload Your Own Card */}
+        {/* Custom Style Card */}
         <Card
           className={cn(
             "cursor-pointer transition-all hover:scale-105",
-            "bg-zinc-900/50 border-zinc-800 overflow-hidden border-dashed",
-            uploadedStyleImage && "ring-2 ring-amber-500 border-amber-500 border-solid",
+            "bg-zinc-900/50 border-zinc-800 overflow-hidden",
+            showCustomPanel && "ring-2 ring-amber-500 border-amber-500",
             isGenerating && "pointer-events-none opacity-50"
           )}
-          onClick={() => !uploadedStyleImage && styleSheetFileRef.current?.click()}
+          onClick={() => setShowCustomPanel(!showCustomPanel)}
         >
           <div className="relative aspect-video flex flex-col items-center justify-center bg-zinc-800/30">
-            {isUploading ? (
-              <LoadingSpinner color="muted" />
-            ) : uploadedStyleImage ? (
-              <>
-                <Image
-                  src={uploadedStyleImage}
-                  alt="Your uploaded style"
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2">
-                  <Button
-                    size="sm"
-                    className="gap-2 bg-amber-500 hover:bg-amber-600 text-black"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleMakeStyleSheet()
-                    }}
-                    disabled={isGenerating}
-                  >
-                    {isGenerating ? (
-                      <>
-                        <LoadingSpinner size="sm" color="current" />
-                        {progress || 'Generating...'}
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4" />
-                        Make Style Sheet
-                      </>
-                    )}
-                  </Button>
-                  <button
-                    className="text-xs text-zinc-400 hover:text-white"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setUploadedStyleImage(null)
-                    }}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <Upload className="w-8 h-8 text-zinc-500 mb-2" />
-                <span className="text-xs text-zinc-500">Upload Image</span>
-              </>
-            )}
+            <Plus className="w-8 h-8 text-zinc-500 mb-2" />
+            <span className="text-xs text-zinc-500">Custom Style</span>
           </div>
           <CardContent className="p-3">
-            <h3 className="font-semibold text-white">Your Own Style</h3>
-            <p className="text-xs text-zinc-400 mt-1">Upload any image to create a style guide</p>
+            <h3 className="font-semibold text-white">Create Your Own</h3>
+            <p className="text-xs text-zinc-400 mt-1">Upload image or describe a style</p>
           </CardContent>
         </Card>
       </div>
@@ -398,55 +293,78 @@ export function StyleSelectionStep() {
         <p className="text-sm text-red-400 text-center">{error}</p>
       )}
 
-      {/* Custom Style Section (Advanced) */}
-      {!showCustomForm ? (
-        <div className="flex justify-center pt-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-2 text-zinc-500 hover:text-zinc-300"
-            onClick={() => setShowCustomForm(true)}
-            disabled={isGenerating}
-          >
-            <Plus className="w-4 h-4" />
-            Advanced: Create with description
-          </Button>
-        </div>
-      ) : (
+      {/* Custom Style Panel (unified) */}
+      {showCustomPanel && (
         <Card className="bg-zinc-900/50 border-zinc-800">
           <CardContent className="p-6 space-y-4">
+            {/* Header with close */}
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-amber-400" />
                 Create Custom Style
               </h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowCustomForm(false)}
-                disabled={isGenerating}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setShowCustomPanel(false)} disabled={isGenerating}>
                 <X className="w-4 h-4" />
               </Button>
             </div>
 
-            {/* AI Style Assistant Toggle */}
-            <div className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-lg border border-zinc-700/50">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-500/10 rounded-lg">
-                  <Wand2 className="w-4 h-4 text-amber-400" />
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-white">AI Style Assistant</span>
-                  <p className="text-xs text-zinc-500">Auto-expands style names as you type</p>
-                </div>
-              </div>
-              <Switch
-                checked={autoExpandEnabled}
-                onCheckedChange={setAutoExpandEnabled}
+            {/* Reference Image Upload (Optional) */}
+            <div className="space-y-2">
+              <Label>Reference Image (Optional)</Label>
+              <p className="text-xs text-zinc-500">Upload an image to match its visual style</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
               />
+              {referenceImageUrl ? (
+                <div className="flex items-center gap-3">
+                  <div
+                    className="relative w-32 h-32 rounded-lg overflow-hidden border border-zinc-700 cursor-pointer hover:border-amber-500/50 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Image
+                      src={referenceImageUrl}
+                      alt="Reference image"
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <span className="text-xs text-white">Change</span>
+                    </div>
+                  </div>
+                  <button
+                    className="text-xs text-zinc-400 hover:text-white"
+                    onClick={() => setReferenceImageUrl(null)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div
+                  className={cn(
+                    "w-32 h-32 rounded-lg border-2 border-dashed border-zinc-700",
+                    "flex flex-col items-center justify-center gap-1",
+                    "hover:border-amber-500/50 transition-colors cursor-pointer",
+                    isUploading && "opacity-50 pointer-events-none"
+                  )}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {isUploading ? (
+                    <LoadingSpinner color="muted" />
+                  ) : (
+                    <>
+                      <Upload className="w-6 h-6 text-zinc-500" />
+                      <span className="text-xs text-zinc-500">Upload</span>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
+            {/* Style Name Input */}
             <div className="space-y-2">
               <Label htmlFor="styleName">Style Name</Label>
               <div className="flex gap-2">
@@ -476,6 +394,23 @@ export function StyleSelectionStep() {
               {isExpanding && (
                 <p className="text-xs text-amber-400 animate-pulse">Expanding style with AI...</p>
               )}
+            </div>
+
+            {/* AI Style Assistant Toggle */}
+            <div className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-lg border border-zinc-700/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-500/10 rounded-lg">
+                  <Wand2 className="w-4 h-4 text-amber-400" />
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-white">AI Style Assistant</span>
+                  <p className="text-xs text-zinc-500">Auto-expands style names as you type</p>
+                </div>
+              </div>
+              <Switch
+                checked={autoExpandEnabled}
+                onCheckedChange={setAutoExpandEnabled}
+              />
             </div>
 
             {/* Expanded Style Preview */}
@@ -531,6 +466,7 @@ export function StyleSelectionStep() {
               <p className="text-xs text-amber-400">{expandError}</p>
             )}
 
+            {/* Custom Description (Optional) */}
             <div className="space-y-2">
               <Label htmlFor="styleDescription">
                 Custom Description {expandedStyle ? '(Optional - override AI)' : '(Optional)'}
@@ -554,58 +490,11 @@ export function StyleSelectionStep() {
               />
             </div>
 
-            {/* Reference Image Upload */}
-            <div className="space-y-2">
-              <Label>Reference Image (Optional)</Label>
-              <p className="text-xs text-zinc-500">Upload an image to match its visual style</p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              {referenceImageUrl ? (
-                <div
-                  className="relative w-32 h-32 rounded-lg overflow-hidden border border-zinc-700 cursor-pointer hover:border-amber-500/50 transition-colors"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Image
-                    src={referenceImageUrl}
-                    alt="Reference image"
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
-                    <span className="text-xs text-white">Change</span>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className={cn(
-                    "w-32 h-32 rounded-lg border-2 border-dashed border-zinc-700",
-                    "flex flex-col items-center justify-center gap-1",
-                    "hover:border-amber-500/50 transition-colors cursor-pointer",
-                    isUploading && "opacity-50 pointer-events-none"
-                  )}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {isUploading ? (
-                    <LoadingSpinner color="muted" />
-                  ) : (
-                    <>
-                      <Upload className="w-6 h-6 text-zinc-500" />
-                      <span className="text-xs text-zinc-500">Upload</span>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-
             {error && (
               <p className="text-sm text-red-400">{error}</p>
             )}
 
+            {/* Generate Button */}
             <Button
               className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-black"
               onClick={handleGenerateCustomStyle}

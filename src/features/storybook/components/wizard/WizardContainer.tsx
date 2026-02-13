@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useStorybookStore, type SavedProjectSummary } from "../../store/storybook.store"
-import { getWizardSteps, getStepIndex } from "../../types/storybook.types"
+import { getWizardSteps, getStepIndex, type WizardStep } from "../../types/storybook.types"
 import { useAutoSave } from "../../hooks/useAutoSave"
 import { WizardTopNav } from "./WizardTopNav"
 import { StepCard } from "./StepCard"
@@ -52,6 +52,8 @@ export function WizardContainer() {
     isGenerating,
     nextStep,
     previousStep,
+    setStep,
+    furthestStepIndex,
     // Project persistence
     savedProjectId,
     isSaving,
@@ -140,6 +142,38 @@ export function WizardContainer() {
       default:
         return false
     }
+  }
+
+  // Check if skipping a step should show a warning
+  const getSkipWarning = (step: WizardStep): string | null => {
+    switch (step) {
+      case 'characters':
+        if (!project?.characters?.length && !project?.storyCharacters?.length) {
+          return 'No characters defined — pages will generate without character references'
+        }
+        return null
+      case 'pages': {
+        const ungenerated = project?.pages?.filter(p => !p.imageUrl).length || 0
+        if (ungenerated > 0) {
+          return `${ungenerated} pages still need illustrations`
+        }
+        return null
+      }
+      default:
+        return null
+    }
+  }
+
+  // Wrapper for nextStep that shows skip warnings
+  const handleNext = () => {
+    const warning = getSkipWarning(currentStep as WizardStep)
+    if (warning) {
+      toast({
+        title: 'Heads up',
+        description: warning,
+      })
+    }
+    nextStep()
   }
 
   // Handle finish button - save project as completed
@@ -314,17 +348,19 @@ export function WizardContainer() {
       <WizardTopNav
         currentStepInfo={currentStepInfo}
         stepIndex={currentStepIndex}
-        totalSteps={wizardSteps.length}
         projectTitle={project?.title}
         canProceed={canProceed()}
         onBack={previousStep}
-        onNext={nextStep}
+        onNext={handleNext}
         onFinish={handleFinish}
         isFirstStep={isFirstStep}
         isLastStep={isLastStep}
         isGenerating={isGenerating}
         isSaving={isSaving}
         hideNavigation={stepHandlesOwnNavigation}
+        wizardSteps={wizardSteps}
+        furthestStepIndex={furthestStepIndex ?? currentStepIndex}
+        onStepClick={(stepId: WizardStep) => setStep(stepId)}
       />
 
       {/* Step Content - Now has more vertical space */}

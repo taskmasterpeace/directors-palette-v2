@@ -288,8 +288,17 @@ export function PageGenerationStep() {
         </div>
       </div>
 
+      {/* Page Generation Summary */}
+      {pages.length > 0 && (
+        <div className="text-center text-sm text-zinc-400">
+          <span className="text-green-400">{pages.filter(p => p.imageUrl).length} generated</span>
+          {' \u00B7 '}
+          <span className="text-amber-400">{pages.filter(p => !p.imageUrl).length} remaining</span>
+        </div>
+      )}
+
       <div className="flex justify-center gap-3 flex-wrap">
-        {/* Generate All Pages - for first-time batch generation */}
+        {/* Generate Missing Pages - for first-time batch generation */}
         {hasUngeneratedPages && (
           <Button
             onClick={handleGenerateAllPages}
@@ -304,7 +313,7 @@ export function PageGenerationStep() {
             ) : (
               <>
                 <Sparkles className="w-4 h-4" />
-                Generate All Pages ({pages.filter(p => !p.imageUrl).length} remaining)
+                Generate Missing Pages ({pages.filter(p => !p.imageUrl).length} of {pages.length})
               </>
             )}
           </Button>
@@ -314,7 +323,8 @@ export function PageGenerationStep() {
         <Button
           onClick={handleRegenerateAllPages}
           disabled={regeneratingAll || pages.length === 0}
-          className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-black font-semibold px-6 touch-manipulation"
+          className="gap-2 border border-zinc-600 text-zinc-300 hover:bg-zinc-800 font-semibold px-6 touch-manipulation"
+          variant="outline"
         >
           {regeneratingAll ? (
             <>
