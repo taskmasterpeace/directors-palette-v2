@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from 'react'
 import { Bold, Type } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/utils'
+import { sanitizeHtml } from '@/lib/sanitize'
 
 interface RichTextEditorProps {
   value: string
@@ -24,7 +25,7 @@ export function RichTextEditor({
   // Initialize content
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value || ''
+      editorRef.current.innerHTML = sanitizeHtml(value || '')
     }
   }, [value])
 

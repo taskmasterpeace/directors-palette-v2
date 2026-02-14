@@ -16,6 +16,7 @@ import Image from 'next/image'
 // import 'react-medium-image-zoom/dist/styles.css'
 import { cn } from '@/utils/utils'
 import { PageLayout, TextPosition, TextBoxPosition } from '../types/storybook.types'
+import { sanitizeHtml } from '@/lib/sanitize'
 
 export interface PageLayoutRendererProps {
   layout?: PageLayout
@@ -96,7 +97,7 @@ export function PageLayoutRenderer({
                   style={{
                     textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.8)'
                   }}
-                  dangerouslySetInnerHTML={{ __html: richText }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(richText) }}
                 />
               ) : (
                 <p className="text-white text-base leading-relaxed font-bold"
@@ -146,7 +147,7 @@ export function PageLayoutRenderer({
               {richText ? (
                 <div
                   className="text-gray-900 text-lg leading-relaxed font-medium text-center rich-text-content"
-                  dangerouslySetInnerHTML={{ __html: richText }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(richText) }}
                 />
               ) : (
                 <p className="text-gray-900 text-lg leading-relaxed font-medium text-center">
@@ -171,7 +172,7 @@ export function PageLayoutRenderer({
               {richText ? (
                 <div
                   className="text-gray-900 text-base leading-relaxed max-w-md rich-text-content"
-                  dangerouslySetInnerHTML={{ __html: richText }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(richText) }}
                 />
               ) : (
                 <p className="text-gray-900 text-base leading-relaxed max-w-md">

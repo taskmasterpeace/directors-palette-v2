@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Replicate from 'replicate';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { getAPIClient } from '@/lib/db/client';
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -25,6 +26,31 @@ export async function POST(
       return NextResponse.json(
         { error: 'Prediction ID is required' },
         { status: 400 }
+      );
+    }
+
+    // SECURITY: Verify the authenticated user owns this prediction
+    try {
+      const supabase = await getAPIClient();
+      const { data } = await supabase
+        .from('generation_events')
+        .select('id')
+        .eq('prediction_id', predictionId)
+        .eq('user_id', auth.user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (!data) {
+        return NextResponse.json(
+          { error: 'Prediction not found' },
+          { status: 404 }
+        );
+      }
+    } catch {
+      // Fail closed - if we can't verify ownership, deny access
+      return NextResponse.json(
+        { error: 'Failed to verify prediction ownership' },
+        { status: 403 }
       );
     }
 

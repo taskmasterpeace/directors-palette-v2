@@ -74,8 +74,10 @@ export async function POST(request: NextRequest) {
       const value = fieldValues?.[field.fieldName]
       if (value) {
         // Replace {{fieldName}} style placeholders
+        // Escape field name to prevent ReDoS / regex injection
+        const escapedName = field.fieldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
         goalPrompt = goalPrompt.replace(
-          new RegExp(`\\{\\{${field.fieldName}\\}\\}`, 'g'),
+          new RegExp(`\\{\\{${escapedName}\\}\\}`, 'g'),
           value
         )
       }

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Move } from 'lucide-react'
 import type { TextBoxPosition } from '../types/storybook.types'
+import { sanitizeHtml } from '@/lib/sanitize'
 
 interface DraggableTextEditorProps {
   imageUrl?: string
@@ -144,7 +145,7 @@ export function DraggableTextEditor({
               style={{
                 textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.8)'
               }}
-              dangerouslySetInnerHTML={{ __html: richText }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(richText) }}
             />
           ) : (
             <p

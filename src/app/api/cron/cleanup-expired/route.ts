@@ -10,16 +10,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { StorageLimitsService } from '@/features/storage/services/storage-limits.service'
 
 // Verify the request is from Vercel Cron or has valid secret
+// SECURITY: Only accept secret via Authorization header, not query params
+// Query params are logged in server access logs and can leak secrets
 function isAuthorized(request: NextRequest): boolean {
-  // Vercel Cron sends this header
   const authHeader = request.headers.get('authorization')
   if (authHeader === `Bearer ${process.env.CRON_SECRET}`) {
-    return true
-  }
-
-  // Also check query param for manual triggers
-  const secret = request.nextUrl.searchParams.get('secret')
-  if (secret === process.env.CRON_SECRET) {
     return true
   }
 

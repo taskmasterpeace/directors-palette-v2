@@ -141,19 +141,28 @@ export class CouponService {
 
     /**
      * Redeem a coupon for a user
+     * Admins can redeem the same coupon code multiple times.
      */
     async redeemCoupon(
         userId: string,
-        code: string
+        code: string,
+        userEmail?: string
     ): Promise<{ success: boolean; pointsAdded?: number; error?: string }> {
         const supabase = await getAPIClient()
 
+        // Check if user is admin - admins can reuse coupons
+        let isAdmin = false
+        if (userEmail) {
+            isAdmin = await adminService.checkAdminEmailAsync(userEmail)
+        }
+
         try {
-            // Call the database RPC function we created
+            // Call the database RPC function
             // @ts-expect-error - Tables not yet in types
             const { data, error } = await supabase.rpc('redeem_coupon', {
                 p_code: code.toUpperCase(),
-                p_user_id: userId
+                p_user_id: userId,
+                p_is_admin: isAdmin
             })
 
             if (error) throw error

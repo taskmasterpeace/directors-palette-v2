@@ -14,26 +14,42 @@ export async function GET() {
     try {
         const pricing = await creditsService.getAllModelPricing()
 
-        // Group by generation type with extended pricing info
-        type ExtendedModel = (typeof pricing)[number] & {
+        // Group by generation type - only expose public pricing info
+        // SECURITY: cost_cents is internal data (our cost) - never expose to clients
+        type PublicModel = {
+            model_id: string
+            model_name: string
+            generation_type: string
+            price_cents: number
             formatted_price: string
-            margin_cents: number
-            margin_percent: number
+            is_active: boolean
         }
         const grouped = pricing.reduce((acc, model) => {
             const type = model.generation_type
             if (!acc[type]) acc[type] = []
             acc[type].push({
-                ...model,
+                model_id: model.model_id,
+                model_name: model.model_name,
+                generation_type: model.generation_type,
+                price_cents: model.price_cents,
                 formatted_price: `$${(model.price_cents / 100).toFixed(2)}`,
-                margin_cents: model.price_cents - model.cost_cents,
-                margin_percent: Math.round(((model.price_cents - model.cost_cents) / model.cost_cents) * 100)
+                is_active: model.is_active,
             })
             return acc
-        }, {} as Record<string, ExtendedModel[]>)
+        }, {} as Record<string, PublicModel[]>)
+
+        // Strip cost data from the raw pricing array
+        const publicPricing = pricing.map(model => ({
+            model_id: model.model_id,
+            model_name: model.model_name,
+            generation_type: model.generation_type,
+            price_cents: model.price_cents,
+            formatted_price: `$${(model.price_cents / 100).toFixed(2)}`,
+            is_active: model.is_active,
+        }))
 
         return NextResponse.json({
-            pricing,
+            pricing: publicPricing,
             by_type: grouped
         })
     } catch (error) {

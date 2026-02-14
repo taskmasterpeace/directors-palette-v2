@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Replicate from 'replicate';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { StorageService } from '@/features/generation/services/storage.service';
+import { getAPIClient } from '@/lib/db/client';
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -9,6 +10,27 @@ const replicate = new Replicate({
 
 // Track predictions we've already persisted to avoid duplicate uploads
 const persistedPredictions = new Map<string, string>();
+
+/**
+ * Verify that the authenticated user owns the given prediction.
+ * Checks the generation_events table for a matching prediction_id + user_id.
+ */
+async function verifyPredictionOwnership(predictionId: string, userId: string): Promise<boolean> {
+  try {
+    const supabase = await getAPIClient();
+    const { data } = await supabase
+      .from('generation_events')
+      .select('id')
+      .eq('prediction_id', predictionId)
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle();
+    return !!data;
+  } catch {
+    // If check fails, deny access (fail closed)
+    return false;
+  }
+}
 
 /**
  * GET /api/generation/status/[predictionId]
@@ -30,6 +52,15 @@ export async function GET(
       return NextResponse.json(
         { error: 'Prediction ID is required' },
         { status: 400 }
+      );
+    }
+
+    // SECURITY: Verify the authenticated user owns this prediction
+    const isOwner = await verifyPredictionOwnership(predictionId, auth.user.id);
+    if (!isOwner) {
+      return NextResponse.json(
+        { error: 'Prediction not found' },
+        { status: 404 }
       );
     }
 
@@ -102,11 +133,6 @@ export async function GET(
           createdAt: prediction.created_at,
           completedAt: prediction.completed_at,
           warning: 'Image stored temporarily - may expire within 1 hour',
-          debug: {
-            storageError: errorMessage,
-            hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-            hasSupabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-          }
         });
       }
     }
