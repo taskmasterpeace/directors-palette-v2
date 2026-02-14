@@ -4,7 +4,17 @@ import { ASPECT_RATIO_SIZES } from '@/config';
 // Constants
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MIN_DIMENSION = 512; // Don't shrink below 512px on short side
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+
+const EXTENSION_MIME_MAP: Record<string, string> = {
+  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+  webp: 'image/webp', heic: 'image/heic', heif: 'image/heif',
+};
+
+function inferMimeType(filename: string): string {
+  const ext = filename.split('.').pop()?.toLowerCase() || '';
+  return EXTENSION_MIME_MAP[ext] || '';
+}
 
 /**
  * Validates image file size and type
@@ -19,11 +29,12 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
     };
   }
 
-  // Check file type
-  if (!ALLOWED_TYPES.includes(file.type)) {
+  // Check file type - allow empty type (common on mobile) and infer from extension
+  const fileType = file.type || inferMimeType(file.name);
+  if (fileType && !ALLOWED_TYPES.includes(fileType)) {
     return {
       valid: false,
-      error: `Invalid file type: ${file.type}. Allowed types: JPEG, PNG, WebP.`,
+      error: `Invalid file type: ${fileType}. Allowed types: JPEG, PNG, WebP, HEIC.`,
     };
   }
 

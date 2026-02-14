@@ -216,7 +216,6 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
                                 ) : (
                                     <div
                                         className="absolute inset-0 flex items-center justify-center cursor-pointer z-10 hover:bg-primary/10"
-                                        onClick={() => fileInputRef.current?.click()}
                                     >
                                         <Plus className="h-4 w-4 text-muted-foreground" />
                                     </div>

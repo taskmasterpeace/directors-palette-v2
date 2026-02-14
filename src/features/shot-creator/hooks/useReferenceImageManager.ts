@@ -66,7 +66,7 @@ export function useReferenceImageManager(maxImages: number = 3) {
     }, [shotCreatorReferenceImages, toast])
 
     // Upload with validation and resize
-    const handleShotCreatorImageUpload = async (file: File) => {
+    const handleShotCreatorImageUpload = async (file: File): Promise<void> => {
         try {
             // Step 1: Validate file
             const validation = validateImageFile(file)
@@ -85,27 +85,35 @@ export function useReferenceImageManager(maxImages: number = 3) {
             // Step 2: Resize image (use detected aspect ratio)
             const resizedFile = await resizeImage(file, dimensions.aspectRatio)
 
-            // Step 3: Create preview for immediate UI feedback
-            const reader = new FileReader()
-            reader.onload = async (e) => {
-                if (!e.target?.result) return
-                const previewUrl = e.target.result as string
-
-                const newImage: ShotCreatorReferenceImage = {
-                    id: `ref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    file: resizedFile,
-                    preview: previewUrl,
-                    tags: [],
-                    detectedAspectRatio: dimensions.aspectRatio
+            // Step 3: Create preview and add to state
+            // Use a Promise to await the FileReader so callers can serialize properly
+            const previewUrl = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader()
+                reader.onload = (e) => {
+                    if (e.target?.result) {
+                        resolve(e.target.result as string)
+                    } else {
+                        reject(new Error('FileReader returned no result'))
+                    }
                 }
+                reader.onerror = () => reject(new Error('FileReader failed'))
+                reader.readAsDataURL(resizedFile)
+            })
 
-                setShotCreatorReferenceImages([...shotCreatorReferenceImages, newImage])
-                toast({
-                    title: "Reference Image Added",
-                    description: `Added ${file.name} (${dimensions.aspectRatio})`
-                })
+            const newImage: ShotCreatorReferenceImage = {
+                id: `ref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                file: resizedFile,
+                preview: previewUrl,
+                tags: [],
+                detectedAspectRatio: dimensions.aspectRatio
             }
-            reader.readAsDataURL(resizedFile)
+
+            // Use callback form to avoid stale closure - always reads latest state
+            setShotCreatorReferenceImages(prev => [...prev, newImage])
+            toast({
+                title: "Reference Image Added",
+                description: `Added ${file.name} (${dimensions.aspectRatio})`
+            })
         } catch (err) {
             console.error("Upload error:", err)
             toast({
@@ -149,7 +157,7 @@ export function useReferenceImageManager(maxImages: number = 3) {
                         detectedAspectRatio: "16:9",
                         file: undefined
                     }
-                    setShotCreatorReferenceImages([...shotCreatorReferenceImages, newImage])
+                    setShotCreatorReferenceImages(prev => [...prev, newImage])
                     toast({ title: "Image Pasted", description: "Image URL pasted from clipboard" })
                     return
                 }
@@ -222,7 +230,7 @@ export function useReferenceImageManager(maxImages: number = 3) {
 
     // Remove
     const removeShotCreatorImage = (id: string) => {
-        setShotCreatorReferenceImages(shotCreatorReferenceImages.filter((img) => img.id !== id))
+        setShotCreatorReferenceImages(prev => prev.filter((img) => img.id !== id))
         toast({ title: "Reference Removed", description: "Reference image removed" })
     }
 
@@ -231,7 +239,9 @@ export function useReferenceImageManager(maxImages: number = 3) {
         if (!files || files.length === 0) return
 
         const fileArray = Array.from(files)
-        const remainingSlots = maxImages - shotCreatorReferenceImages.length
+        // Read current count from store directly to avoid stale closure
+        const currentCount = useShotCreatorStore.getState().shotCreatorReferenceImages.length
+        const remainingSlots = maxImages - currentCount
         const filesToUpload = fileArray.slice(0, remainingSlots)
 
         if (filesToUpload.length < fileArray.length) {
@@ -241,7 +251,8 @@ export function useReferenceImageManager(maxImages: number = 3) {
             })
         }
 
-        // Upload all files
+        // Upload files sequentially - each awaits FileReader completion
+        // and uses callback form of setState, so all images accumulate correctly
         for (const file of filesToUpload) {
             await handleShotCreatorImageUpload(file)
         }
