@@ -322,7 +322,7 @@ curl -s -X POST "https://api.supabase.com/v1/projects/tarohelkwuurakbxjyxm/datab
 **Check table contents:**
 ```bash
 curl -s -X POST "https://api.supabase.com/v1/projects/tarohelkwuurakbxjyxm/database/query" \
-  -H "Authorization: Bearer sbp_6159d255454cc34b08921f4cec040b4d6faffa21" \
+  -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query": "SELECT * FROM table_name LIMIT 10;"}'
 ```
@@ -330,7 +330,7 @@ curl -s -X POST "https://api.supabase.com/v1/projects/tarohelkwuurakbxjyxm/datab
 **Check table schema:**
 ```bash
 curl -s -X POST "https://api.supabase.com/v1/projects/tarohelkwuurakbxjyxm/database/query" \
-  -H "Authorization: Bearer sbp_6159d255454cc34b08921f4cec040b4d6faffa21" \
+  -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query": "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '\''your_table'\'';"}'
 ```
@@ -338,7 +338,7 @@ curl -s -X POST "https://api.supabase.com/v1/projects/tarohelkwuurakbxjyxm/datab
 **Run migrations/ALTER statements:**
 ```bash
 curl -s -X POST "https://api.supabase.com/v1/projects/tarohelkwuurakbxjyxm/database/query" \
-  -H "Authorization: Bearer sbp_6159d255454cc34b08921f4cec040b4d6faffa21" \
+  -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"query": "ALTER TABLE table_name ADD COLUMN IF NOT EXISTS column_name TYPE;"}'
 ```
