@@ -19,7 +19,7 @@ import type {
 import type { StoryChapter, ChapterDetectionResult } from "../services/chapter-detection.service";
 import type { ModelId } from "@/config";
 
-export type StoryboardTab = 'input' | 'entities' | 'style' | 'shots' | 'generation' | 'gallery'
+export type StoryboardTab = 'input' | 'style' | 'directors' | 'entities' | 'shots' | 'generation' | 'gallery'
 
 // Generation settings that persist
 export interface GenerationSettings {

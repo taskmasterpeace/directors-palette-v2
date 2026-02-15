@@ -23,6 +23,7 @@ import {
     Grid3X3,
     Film
 } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 import { HighlightedPrompt } from '../shared'
 import type { ShotBreakdownSegment, GeneratedShotPrompt, StoryboardCharacter, ShotMetadata } from '../../types/storyboard.types'
 import { useStoryboardStore } from '../../store'
@@ -161,29 +162,47 @@ export function EditableShot({
                             <div className="text-sm leading-relaxed line-clamp-2">
                                 <HighlightedPrompt text={generatedPrompt ? generatedPrompt.prompt : segment.text} />
                             </div>
-                            {/* Quick reference badges */}
+                            {/* Quick reference badges with larger character thumbnails */}
                             {(mentionedCharacters.length > 0 || mentionedLocations.length > 0) && (
-                                <div className="flex flex-wrap gap-1.5 mt-2">
-                                    {mentionedCharacters.map(c => {
-                                        const thumbnail = getCharThumbnail(c)
-                                        return (
-                                            <Badge key={c} variant="outline" className={`text-sm py-0.5 px-2 ${getRoleBadgeClass(c)}`}>
-                                                {thumbnail ? (
-                                                    <img src={thumbnail} alt={c} className="w-4 h-4 rounded-full object-cover mr-1.5 inline-block" />
-                                                ) : (
-                                                    <Users className="w-3.5 h-3.5 mr-1.5" />
-                                                )}
-                                                {c}
+                                <TooltipProvider>
+                                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                                        {mentionedCharacters.map(c => {
+                                            const thumbnail = getCharThumbnail(c)
+                                            return (
+                                                <Tooltip key={c}>
+                                                    <TooltipTrigger asChild>
+                                                        <div className={`flex items-center gap-1.5 rounded-full border py-0.5 pl-0.5 pr-2.5 text-xs font-medium cursor-default ${getRoleBadgeClass(c)}`}>
+                                                            {thumbnail ? (
+                                                                <img src={thumbnail} alt={c} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                                                            ) : (
+                                                                <span className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                                                    <Users className="w-3 h-3" />
+                                                                </span>
+                                                            )}
+                                                            {c}
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent side="bottom" className="p-0 overflow-hidden">
+                                                        {thumbnail ? (
+                                                            <div className="flex flex-col items-center">
+                                                                <img src={thumbnail} alt={c} className="w-32 h-32 object-cover" />
+                                                                <span className="text-xs font-medium py-1 px-2">{c}</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-xs px-2 py-1">{c} (no reference image)</span>
+                                                        )}
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )
+                                        })}
+                                        {mentionedLocations.map(l => (
+                                            <Badge key={l} variant="secondary" className="text-xs py-0.5 px-2">
+                                                <MapPin className="w-3 h-3 mr-1" />
+                                                {l}
                                             </Badge>
-                                        )
-                                    })}
-                                    {mentionedLocations.map(l => (
-                                        <Badge key={l} variant="secondary" className="text-sm py-0.5 px-2">
-                                            <MapPin className="w-3.5 h-3.5 mr-1.5" />
-                                            {l}
-                                        </Badge>
-                                    ))}
-                                </div>
+                                        ))}
+                                    </div>
+                                </TooltipProvider>
                             )}
                         </div>
                         <div className="flex-shrink-0">

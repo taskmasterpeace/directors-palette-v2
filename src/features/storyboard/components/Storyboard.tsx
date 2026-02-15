@@ -1,10 +1,7 @@
 'use client'
 
-import { useState, useMemo } from "react"
-import { FileText, Users, Palette, SplitSquareVertical, Play, Images, Clapperboard, Check, LayoutGrid, List } from "lucide-react"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Button } from "@/components/ui/button"
+import { useMemo } from "react"
+import { FileText, Users, Palette, SplitSquareVertical, Play, Images, Check, LayoutGrid, List, Video } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
 import { useStoryboardStore } from "../store"
 import { StoryInput } from "./story-input/StoryInput"
@@ -21,16 +18,13 @@ import { GenerationQueue } from "./generation/GenerationQueue"
 import { StoryboardGallery } from "./gallery/StoryboardGallery"
 import { ChapterTabs } from "./chapter-view"
 import { SaveIndicator } from "./shared"
-import { DIRECTORS } from "@/features/music-lab/data/directors.data"
-import { StoryDirectorService } from "../services/story-director.service"
 import { StoryboardHelp } from "./StoryboardHelp"
 import { ShotLab } from "./ShotLab/ShotLab"
-import { DirectorProposalDialog } from "./DirectorProposalDialog"
 import { ContactSheetModal } from "./contact-sheet/ContactSheetModal"
 import { BRollSheetModal } from "./broll-sheet/BRollSheetModal"
 import { CanvasView } from "./canvas/CanvasView"
+import { DirectorTab } from "./directors/DirectorTab"
 
-import { DirectorPitch } from "../types"
 
 export function Storyboard() {
     const {
@@ -38,7 +32,6 @@ export function Storyboard() {
         setInternalTab,
         isPreviewCollapsed,
         generatedPrompts,
-        setGeneratedPrompts,
         promptsGenerated,
         isShotLabOpen,
         activeLabShotSequence,
@@ -50,6 +43,7 @@ export function Storyboard() {
         locations,
         currentStyleGuide,
         selectedPresetStyle,
+        selectedDirectorId,
         generatedImages,
         // Contact Sheet Modal
         contactSheetModalOpen,
@@ -76,6 +70,13 @@ export function Storyboard() {
             completed: !!(currentStyleGuide || selectedPresetStyle),
             enabled: true,
             tooltip: currentStyleGuide?.name || (selectedPresetStyle ? 'Preset style selected' : 'Choose a visual style')
+        },
+        directors: {
+            completed: !!selectedDirectorId,
+            enabled: true,
+            tooltip: selectedDirectorId
+                ? `Director selected`
+                : 'Choose a director (optional)'
         },
         entities: {
             completed: characters.length > 0 || locations.length > 0,
@@ -105,7 +106,7 @@ export function Storyboard() {
                 ? `${Object.values(generatedImages).filter(img => img.status === 'completed').length} completed images`
                 : 'View generated images'
         }
-    }), [storyText, currentStyleGuide, selectedPresetStyle, characters, locations, promptsGenerated, generatedPrompts, generatedImages])
+    }), [storyText, currentStyleGuide, selectedPresetStyle, selectedDirectorId, characters, locations, promptsGenerated, generatedPrompts, generatedImages])
 
     // Derived active shot for Shot Lab
     const activeShot = activeLabShotSequence !== null ? generatedPrompts.find(s => s.sequence === activeLabShotSequence) : null
@@ -115,41 +116,11 @@ export function Storyboard() {
         ? generatedPrompts.find(s => s.sequence === Number(contactSheetShotId))
         : null
 
-    const [directorOpen, setDirectorOpen] = useState(false)
-    const [localDirectorId, setLocalDirectorId] = useState<string | null>(null)
-
-    // Pitch Dialog State
-    const [pitchOpen, setPitchOpen] = useState(false)
-    const [currentPitch, setCurrentPitch] = useState<DirectorPitch | null>(null)
-
-    const handleGeneratePitch = () => {
-        if (!localDirectorId || !generatedPrompts.length) return
-
-        const director = DIRECTORS.find(d => d.id === localDirectorId)
-        if (!director) return
-
-        const pitch = StoryDirectorService.generateDirectorPitch(generatedPrompts, director)
-        setCurrentPitch(pitch)
-        setPitchOpen(true)
-        setDirectorOpen(false)
-    }
-
-    const handleGreenlightPitch = () => {
-        if (!localDirectorId) return
-        const director = DIRECTORS.find(d => d.id === localDirectorId)
-        if (!director) return
-
-        const enhanced = StoryDirectorService.enhanceGeneratedPrompts(generatedPrompts, director)
-        setGeneratedPrompts(enhanced)
-        setPitchOpen(false)
-        setLocalDirectorId(null)
-        setCurrentPitch(null)
-    }
-
     // Sidebar tab config
     const sidebarTabs = [
         { id: 'input' as const, icon: FileText, label: 'Story', state: tabStates.input },
         { id: 'style' as const, icon: Palette, label: 'Style', state: tabStates.style },
+        { id: 'directors' as const, icon: Video, label: 'Director', state: tabStates.directors },
         { id: 'entities' as const, icon: Users, label: 'Chars', state: tabStates.entities },
         { id: 'shots' as const, icon: SplitSquareVertical, label: 'Shots', state: tabStates.shots },
         { id: 'generation' as const, icon: Play, label: 'Gen', state: tabStates.generation },
@@ -251,6 +222,9 @@ export function Storyboard() {
                         </div>
                     )}
 
+                    {/* Directors Tab */}
+                    {internalTab === 'directors' && <DirectorTab />}
+
                     {/* Characters Tab */}
                     {internalTab === 'entities' && (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -267,65 +241,10 @@ export function Storyboard() {
                     {/* Shots Tab */}
                     {internalTab === 'shots' && (
                         <div className="space-y-2">
-                            <DirectorSelector />
-
                             <div className="flex items-center justify-between py-1 px-2 bg-muted/30 rounded-md">
+                                <DirectorSelector />
                                 <GranularitySelect />
-
-                                {promptsGenerated && (
-                                    <Dialog open={directorOpen} onOpenChange={setDirectorOpen}>
-                                        <DialogTrigger asChild>
-                                            <Button variant="outline" size="sm" className="gap-2 border-amber-500/20 text-amber-600 hover:text-amber-700 hover:bg-amber-50">
-                                                <Clapperboard className="w-3.5 h-3.5" />
-                                                Re-Commission
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="max-w-2xl">
-                                            <DialogHeader>
-                                                <DialogTitle>Re-Commission a Director</DialogTitle>
-                                                <DialogDescription>
-                                                    Change the director&apos;s visual style on your existing prompts.
-                                                </DialogDescription>
-                                            </DialogHeader>
-                                            <ScrollArea className="h-[400px] pr-4">
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    {DIRECTORS.map(director => (
-                                                        <div
-                                                            key={director.id}
-                                                            className={`p-3 border rounded-lg cursor-pointer transition-all ${localDirectorId === director.id ? "ring-2 ring-primary border-primary bg-primary/5" : "hover:border-primary/50"}`}
-                                                            onClick={() => setLocalDirectorId(director.id)}
-                                                        >
-                                                            <div className="font-semibold text-sm flex items-center gap-2">
-                                                                {director.name}
-                                                                {localDirectorId === director.id && <Check className="w-3 h-3 text-primary" />}
-                                                            </div>
-                                                            <div className="text-xs text-muted-foreground line-clamp-2 mt-1">{director.description}</div>
-                                                            <div className="flex flex-wrap gap-1 mt-2">
-                                                                {director.coreIntent.primaryFocus.slice(0, 2).map(tag => (
-                                                                    <span key={tag} className="px-1.5 py-0.5 bg-muted rounded text-xs">{tag}</span>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </ScrollArea>
-                                            <DialogFooter>
-                                                <Button onClick={handleGeneratePitch} disabled={!localDirectorId}>
-                                                    Generate Pitch
-                                                </Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                    </Dialog>
-                                )}
                             </div>
-
-                            <DirectorProposalDialog
-                                open={pitchOpen}
-                                onOpenChange={setPitchOpen}
-                                pitch={currentPitch}
-                                director={DIRECTORS.find(d => d.id === localDirectorId) || null}
-                                onConfirm={handleGreenlightPitch}
-                            />
 
                             <ChapterTabs>
                                 {(chapterIndex) => (

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Progress } from '@/components/ui/progress'
-import { SplitSquareVertical, Wand2, AlertCircle, CheckCircle } from 'lucide-react'
+import { SplitSquareVertical, Wand2, AlertCircle, CheckCircle, MapPin } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { DIRECTORS } from '@/features/music-lab/data/directors.data'
@@ -66,6 +66,7 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         }
     }
 
+    const [locationFilter, setLocationFilter] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [generationProgress, setGenerationProgress] = useState<{
         total: number
@@ -97,6 +98,15 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
             activeChapter.segmentIndices.includes(s.sequence)
         )
     }, [breakdownResult?.segments, chapters, chapterIndex])
+
+    // Apply location filter on top of chapter filter
+    const locationFilteredSegments = useMemo(() => {
+        if (!locationFilter) return filteredSegments
+        return filteredSegments.filter(segment => {
+            const text = segment.text.toLowerCase()
+            return text.includes(locationFilter.toLowerCase())
+        })
+    }, [filteredSegments, locationFilter])
 
     const handlePromptChange = (sequence: number, newPrompt: string) => {
         if (!breakdownResult) return
@@ -447,22 +457,42 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                                 </Badge>
                             )}
                             <Badge variant="outline">
-                                {chapters && chapters.length > 1 && chapterIndex >= 0
-                                    ? `${filteredSegments.length} of ${breakdownResult.total_count} shots`
-                                    : `${breakdownResult.total_count} shots`}
+                                {locationFilter
+                                    ? `${locationFilteredSegments.length} of ${filteredSegments.length} shots`
+                                    : chapters && chapters.length > 1 && chapterIndex >= 0
+                                        ? `${filteredSegments.length} of ${breakdownResult.total_count} shots`
+                                        : `${breakdownResult.total_count} shots`}
                             </Badge>
                         </div>
                     </CardTitle>
-                    <CardDescription className="text-xs">
-                        {promptsGenerated
-                            ? 'Each shot shows the original story text and AI-generated prompt. Click to expand and edit.'
-                            : 'Click any shot to expand and edit. Generate prompts to transform into cinematic descriptions.'}
+                    <CardDescription className="text-xs flex items-center justify-between">
+                        <span>
+                            {promptsGenerated
+                                ? 'Click to expand and edit. AI-generated prompts included.'
+                                : 'Click any shot to expand and edit.'}
+                        </span>
+                        {/* Location filter */}
+                        {locationNames.length > 0 && (
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                                <MapPin className="w-3 h-3 text-muted-foreground" />
+                                <select
+                                    value={locationFilter || ''}
+                                    onChange={(e) => setLocationFilter(e.target.value || null)}
+                                    className="text-xs bg-transparent border rounded px-1.5 py-0.5 text-foreground cursor-pointer"
+                                >
+                                    <option value="">All locations</option>
+                                    {locationNames.map(name => (
+                                        <option key={name} value={name}>{name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <ScrollArea className={isPreviewCollapsed ? "h-[calc(100vh-300px)] pr-4" : "h-[500px] pr-4"}>
                         <div className="space-y-2">
-                            {filteredSegments.map((segment) => (
+                            {locationFilteredSegments.map((segment) => (
                                 <EditableShot
                                     key={segment.sequence}
                                     segment={segment}
