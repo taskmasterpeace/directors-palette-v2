@@ -1116,11 +1116,11 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                         {showAutocomplete && hasSuggestions && (
                             <div
                                 ref={autocompleteRef}
-                                className="absolute z-50 w-full max-h-[300px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg overflow-y-auto"
+                                className="fixed z-50 max-h-[300px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg overflow-y-auto"
                                 style={{
                                     top: `${dropdownPosition.top}px`,
                                     left: `${dropdownPosition.left}px`,
-                                    maxWidth: textareaRef.current ? `${textareaRef.current.offsetWidth}px` : 'auto'
+                                    width: textareaRef.current ? `${textareaRef.current.offsetWidth}px` : 'auto'
                                 }}
                             >
                                 {Object.entries(autocompleteSuggestions).map(([category, suggestions]) => {
