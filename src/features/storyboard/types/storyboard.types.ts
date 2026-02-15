@@ -263,6 +263,7 @@ export interface StoryboardCharacter {
     id: string
     storyboard_id: string
     name: string
+    role?: CharacterRole
     mentions: number
     has_reference: boolean
     reference_gallery_id?: string
@@ -573,10 +574,13 @@ export interface TextHighlight {
 /**
  * Extraction result from OpenRouter
  */
+export type CharacterRole = 'main' | 'supporting' | 'background'
+
 export interface ExtractionResult {
     characters: Array<{
         name: string
         aliases?: string[]
+        role: CharacterRole
         mentions: number
         description?: string
     }>

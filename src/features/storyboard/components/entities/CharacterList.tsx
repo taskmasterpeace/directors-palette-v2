@@ -13,7 +13,7 @@ import { Users, ImagePlus, Upload, Link, X, ChevronDown, ChevronUp, CheckCircle,
 import { useStoryboardStore } from '../../store'
 import { useLayoutStore } from '@/store/layout.store'
 import { useRecipeStore } from '@/features/shot-creator/store/recipe.store'
-import type { StoryboardCharacter } from '../../types/storyboard.types'
+import type { StoryboardCharacter, CharacterRole } from '../../types/storyboard.types'
 
 interface CharacterCardProps {
     character: StoryboardCharacter
@@ -101,6 +101,20 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe 
                                             </span>
                                         ) : null
                                     })()}
+                                    {character.role && (
+                                        <Badge
+                                            variant={character.role === 'main' ? 'default' : 'outline'}
+                                            className={`text-[10px] px-1.5 py-0 ${
+                                                character.role === 'main'
+                                                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                                                    : character.role === 'supporting'
+                                                        ? 'border-blue-500/30 text-blue-400'
+                                                        : 'border-zinc-500/30 text-zinc-400'
+                                            }`}
+                                        >
+                                            {character.role}
+                                        </Badge>
+                                    )}
                                     <Badge variant="secondary" className="text-xs">
                                         {character.mentions} mentions
                                     </Badge>
@@ -319,6 +333,7 @@ export function CharacterList() {
             id: `temp-${i}`,
             storyboard_id: '',
             name: c.name,
+            role: c.role || 'supporting' as CharacterRole,
             mentions: c.mentions,
             has_reference: false,
             reference_image_url: undefined,
@@ -358,6 +373,24 @@ export function CharacterList() {
 
     const charactersWithRef = displayCharacters.filter(c => c.has_reference && c.reference_image_url).length
 
+    // Group characters by role, maintaining original index for updates
+    const indexedCharacters = displayCharacters.map((c, index) => ({ ...c, _index: index }))
+    const mainChars = indexedCharacters.filter(c => c.role === 'main')
+    const supportingChars = indexedCharacters.filter(c => c.role === 'supporting')
+    const backgroundChars = indexedCharacters.filter(c => c.role === 'background')
+    // Characters without a role go into supporting
+    const unclassified = indexedCharacters.filter(c => !c.role)
+    const effectiveSupporting = [...supportingChars, ...unclassified]
+
+    const roleGroups = [
+        { label: 'Main Characters', chars: mainChars, color: 'text-amber-400' },
+        { label: 'Supporting Characters', chars: effectiveSupporting, color: 'text-blue-400' },
+        { label: 'Background', chars: backgroundChars, color: 'text-zinc-400' },
+    ].filter(g => g.chars.length > 0)
+
+    // Check if any characters have roles (otherwise render flat list)
+    const hasRoles = displayCharacters.some(c => c.role)
+
     return (
         <Card>
             <CardHeader>
@@ -373,17 +406,40 @@ export function CharacterList() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="space-y-3">
-                    {displayCharacters.map((character, index) => (
-                        <CharacterCard
-                            key={character.id || index}
-                            character={character}
-                            index={index}
-                            onUpdate={handleUpdateCharacter}
-                            onOpenCharacterSheetRecipe={handleOpenCharacterSheetRecipe}
-                        />
-                    ))}
-                </div>
+                {hasRoles ? (
+                    <div className="space-y-5">
+                        {roleGroups.map(group => (
+                            <div key={group.label} className="space-y-2">
+                                <h4 className={`text-xs font-semibold uppercase tracking-wider ${group.color}`}>
+                                    {group.label} ({group.chars.length})
+                                </h4>
+                                <div className="space-y-3">
+                                    {group.chars.map((character) => (
+                                        <CharacterCard
+                                            key={character.id || character._index}
+                                            character={character}
+                                            index={character._index}
+                                            onUpdate={handleUpdateCharacter}
+                                            onOpenCharacterSheetRecipe={handleOpenCharacterSheetRecipe}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {displayCharacters.map((character, index) => (
+                            <CharacterCard
+                                key={character.id || index}
+                                character={character}
+                                index={index}
+                                onUpdate={handleUpdateCharacter}
+                                onOpenCharacterSheetRecipe={handleOpenCharacterSheetRecipe}
+                            />
+                        ))}
+                    </div>
+                )}
             </CardContent>
         </Card>
     )

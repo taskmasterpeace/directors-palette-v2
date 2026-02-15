@@ -61,12 +61,17 @@ const EXTRACTION_TOOL: OpenRouterTool = {
                         properties: {
                             name: {
                                 type: 'string',
-                                description: 'Character name — use the most recognizable name. If the character has aliases, pick the primary name here.'
+                                description: 'Character name — use the most recognizable name. If the character has aliases, pick the primary name here. For unnamed characters, use their role (e.g., "Highway Patrol Trooper", "The Prosecutor").'
                             },
                             aliases: {
                                 type: 'array',
                                 items: { type: 'string' },
                                 description: 'Alternate names for this character (nicknames, stage names, birth names, a.k.a.). Empty array if no aliases.'
+                            },
+                            role: {
+                                type: 'string',
+                                enum: ['main', 'supporting', 'background'],
+                                description: 'Character role: "main" = drives the narrative/central POV, "supporting" = named characters who take actions or are quoted, "background" = unnamed characters referenced by role (cops, jurors, bystanders) who may still appear in shots'
                             },
                             mentions: {
                                 type: 'number',
@@ -77,7 +82,7 @@ const EXTRACTION_TOOL: OpenRouterTool = {
                                 description: 'VISUAL description for image generation: race/ethnicity, clothing, accessories, physical features, age. Format as comma-separated attributes (e.g., "Black man, 30s, bald, gold chain, white tee, jeans")'
                             }
                         },
-                        required: ['name', 'mentions']
+                        required: ['name', 'role', 'mentions']
                     }
                 },
                 locations: {
@@ -117,8 +122,12 @@ const EXTRACTION_SYSTEM_PROMPT = `You are a story analyst extracting characters 
 For characters:
 - Include ALL named characters (proper nouns) — even if they only appear once
 - Include titled characters (e.g., "The Judge", "The Doctor")
-- Include significant unnamed characters if they appear multiple times
+- Include unnamed characters referenced by role if they appear in scenes (e.g., "police officers", "the prosecutor", "jurors") — these are important for visual storytelling
 - Do NOT skip characters just because they seem minor, are law enforcement, are witnesses, or have few lines — if they have a name, extract them
+- CLASSIFY each character's role:
+  * "main" — the central character(s) who drive the narrative, whose POV the story follows
+  * "supporting" — named characters who take actions, speak, are quoted, or play a specific part (even with just 1 mention). Co-defendants, detectives, judges, lawyers with names are supporting.
+  * "background" — unnamed characters referenced by role/title who may still appear visually in shots (officers, jurors, bystanders, unnamed crew members)
 - CRITICAL - MERGE ALIASES: If the story says a person is "also known as", "better known as", "a.k.a.", "nicknamed", "real name is", "born as", "stage name", or otherwise indicates two names refer to the SAME person, output ONE character entry using the most recognizable name, and list all alternate names in the "aliases" field. Count total mentions across ALL of their names.
   Example: "Marcus Fantroy, better known as Geechi Gotti" → ONE character named "Geechi Gotti" with aliases: ["Marcus Keith Fantroy", "Marcus Fantroy"]
 - Count approximate mentions across all names (how many times they appear)
