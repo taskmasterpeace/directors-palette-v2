@@ -115,9 +115,10 @@ const EXTRACTION_TOOL: OpenRouterTool = {
 const EXTRACTION_SYSTEM_PROMPT = `You are a story analyst extracting characters and locations for AI image generation.
 
 For characters:
-- Include named characters (proper nouns)
+- Include ALL named characters (proper nouns) — even if they only appear once
 - Include titled characters (e.g., "The Judge", "The Doctor")
 - Include significant unnamed characters if they appear multiple times
+- Do NOT skip characters just because they seem minor, are law enforcement, are witnesses, or have few lines — if they have a name, extract them
 - CRITICAL - MERGE ALIASES: If the story says a person is "also known as", "better known as", "a.k.a.", "nicknamed", "real name is", "born as", "stage name", or otherwise indicates two names refer to the SAME person, output ONE character entry using the most recognizable name, and list all alternate names in the "aliases" field. Count total mentions across ALL of their names.
   Example: "Marcus Fantroy, better known as Geechi Gotti" → ONE character named "Geechi Gotti" with aliases: ["Marcus Keith Fantroy", "Marcus Fantroy"]
 - Count approximate mentions across all names (how many times they appear)
