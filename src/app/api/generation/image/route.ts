@@ -192,6 +192,8 @@ export async function POST(request: NextRequest) {
       detailRefImages,  // For logo cleanup (super_resolution_refs)
       fontUrls,         // Custom font file URLs
       fontTexts,        // Text to render with fonts
+      // Storyboard: force polling even when webhooks are configured
+      waitForResult = false,
     } = body;
 
     // Debug logging for reference images
@@ -700,8 +702,8 @@ export async function POST(request: NextRequest) {
     // Note: Credits are now deducted AFTER successful completion (in webhook handler or polling)
     // This ensures users aren't charged for failed generations
 
-    // If no webhook, poll for results (for local development)
-    if (!webhookUrl) {
+    // Poll for results if no webhook configured OR if caller explicitly requests it (e.g., storyboard batch generation)
+    if (!webhookUrl || waitForResult) {
       lognog.devDebug('No webhook - polling for results');
       try {
         // Wait for prediction to complete (up to 5 minutes)

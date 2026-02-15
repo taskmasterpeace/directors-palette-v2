@@ -129,6 +129,14 @@ export class StoryboardGenerationService {
                 // Get character reference images for this shot
                 const referenceImages = this.getCharacterReferences(segment.text, characters)
 
+                // Add style guide reference image
+                if (styleGuide?.reference_image_url) {
+                    const url = styleGuide.reference_image_url
+                    if (url.startsWith('/') || url.startsWith('http')) {
+                        referenceImages.push(url)
+                    }
+                }
+
                 // Validate input
                 const validationResult = ImageGenerationService.validateInput({
                     prompt,
@@ -158,7 +166,8 @@ export class StoryboardGenerationService {
                         aspectRatio: config.aspectRatio,
                         resolution: config.resolution
                     },
-                    referenceImages: referenceImages.length > 0 ? referenceImages : undefined
+                    referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
+                    waitForResult: true
                 })
 
                 results.push({
@@ -251,8 +260,13 @@ export class StoryboardGenerationService {
                 // Get reference images from the shot's characterRefs
                 const referenceImages: string[] = []
 
-                // Helper to validate image URL format
+                // Helper to validate image URL format (accepts http/https URLs and local paths)
                 const isValidImageUrl = (url: string): boolean => {
+                    // Accept local paths (e.g., /storyboard-assets/styles/claymation.png)
+                    // The API route handles uploading these to Replicate
+                    if (url.startsWith('/')) return true
+                    // Accept data URIs (base64 images)
+                    if (url.startsWith('data:image/')) return true
                     try {
                         const parsed = new URL(url)
                         return parsed.protocol === 'https:' || parsed.protocol === 'http:'
@@ -266,7 +280,9 @@ export class StoryboardGenerationService {
                     if (charRef.reference_image_url && isValidImageUrl(charRef.reference_image_url)) {
                         referenceImages.push(charRef.reference_image_url)
                     } else if (charRef.reference_image_url) {
-                        console.warn(`[StoryboardGeneration] Invalid character reference URL: ${charRef.reference_image_url}`)
+                        console.warn(`[StoryboardGeneration] Invalid character reference URL for ${charRef.name}: ${charRef.reference_image_url}`)
+                    } else if (charRef.has_reference && !charRef.reference_image_url) {
+                        console.warn(`[StoryboardGeneration] Character "${charRef.name}" has has_reference=true but no reference_image_url`)
                     }
                 }
 
@@ -276,6 +292,18 @@ export class StoryboardGenerationService {
                         referenceImages.push(shot.locationRef.reference_image_url)
                     } else {
                         console.warn(`[StoryboardGeneration] Invalid location reference URL: ${shot.locationRef.reference_image_url}`)
+                    }
+                }
+
+                // Add style guide reference image (preset styles have local paths like /storyboard-assets/styles/claymation.png)
+                if (styleGuide?.reference_image_url && isValidImageUrl(styleGuide.reference_image_url)) {
+                    referenceImages.push(styleGuide.reference_image_url)
+                }
+                // Also check preset style imagePath (built-in styles store their ref image here)
+                if (presetStyle?.imagePath && isValidImageUrl(presetStyle.imagePath)) {
+                    // Avoid duplicating if styleGuide already added the same URL
+                    if (!referenceImages.includes(presetStyle.imagePath)) {
+                        referenceImages.push(presetStyle.imagePath)
                     }
                 }
 
@@ -301,6 +329,7 @@ export class StoryboardGenerationService {
                 }
 
                 // Start generation with the AI-enhanced prompt
+                // waitForResult forces server-side polling so we always get imageUrl back
                 const response = await imageGenerationService.generateImage({
                     model: config.model,
                     prompt: finalPrompt,
@@ -308,7 +337,8 @@ export class StoryboardGenerationService {
                         aspectRatio: config.aspectRatio,
                         resolution: config.resolution
                     },
-                    referenceImages: referenceImages.length > 0 ? referenceImages : undefined
+                    referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
+                    waitForResult: true
                 })
 
                 results.push({

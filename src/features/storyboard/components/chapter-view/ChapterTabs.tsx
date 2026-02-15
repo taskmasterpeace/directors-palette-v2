@@ -116,7 +116,9 @@ export function ChapterTabs({ children }: ChapterTabsProps) {
                             >
                                 <FileText className="w-3.5 h-3.5" />
                                 <span className="max-w-[150px] truncate">
-                                    {chapter.title || `Chapter ${i + 1}`}
+                                    {chapter.title
+                                        ? `Ch. ${i + 1}: ${chapter.title}`
+                                        : `Ch. ${i + 1}`}
                                 </span>
                                 {chapter.segmentIndices.length > 0 && (
                                     <Badge variant="secondary" className="text-xs py-0 px-1.5 ml-1">

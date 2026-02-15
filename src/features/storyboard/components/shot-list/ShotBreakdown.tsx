@@ -38,7 +38,6 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         shotNotes,
         isPreviewCollapsed,
         generatedImages,
-        openShotLab,
         openContactSheetModal,
         openBRollModal,
         setBreakdownResult,
@@ -50,9 +49,6 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         setShotNote
     } = useStoryboardStore()
 
-    const handleRefine = (sequence: number) => {
-        openShotLab(sequence)
-    }
 
     const handleGetAngles = (sequence: number) => {
         // Open contact sheet modal with the shot
@@ -474,13 +470,13 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                                     characters={characterNames}
                                     locations={locationNames}
                                     shotNote={shotNotes[segment.sequence]}
+                                    hasGeneratedImage={!!generatedImages[segment.sequence]?.imageUrl}
                                     onPromptChange={handlePromptChange}
                                     onGeneratedPromptChange={handleGeneratedPromptChange}
                                     onNoteChange={setShotNote}
                                     onMetadataChange={handleMetadataChange}
                                     onGetAngles={handleGetAngles}
                                     onGetBRoll={handleGetBRoll}
-                                    onRefine={handleRefine}
                                 />
                             ))}
                         </div>

@@ -201,6 +201,8 @@ export interface ImageGenerationRequest {
   detailRefImages?: string[]    // For logo cleanup (super_resolution_refs)
   fontUrls?: string[]           // Custom font file URLs
   fontTexts?: string[]          // Text to render with each font
+  // Force server-side polling even when webhooks are configured (for storyboard batch generation)
+  waitForResult?: boolean
 }
 
 export interface ImageGenerationResponse {

@@ -69,6 +69,7 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
     const [generatingBRollId, setGeneratingBRollId] = useState<number | null>(null)
     const [previewImage, setPreviewImage] = useState<string | null>(null)
     const [isDownloadingAll, setIsDownloadingAll] = useState(false)
+    const [showCompletedOnly, setShowCompletedOnly] = useState(true)
 
     const handleDownloadAll = async () => {
         const completedImages = Object.entries(generatedImages)
@@ -414,7 +415,15 @@ The color temperature, lighting direction, and overall mood must match across al
                                 </div>
                             </CardTitle>
                             <CardDescription className="flex items-center justify-between">
-                                <span>Click on any shot to extract a 3x3 contact sheet. Hover for actions.</span>
+                                <div className="flex items-center gap-2">
+                                    <span>Hover for actions.</span>
+                                    <button
+                                        onClick={() => setShowCompletedOnly(!showCompletedOnly)}
+                                        className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${showCompletedOnly ? 'bg-green-500/10 border-green-500/30 text-green-600' : 'bg-muted border-border text-muted-foreground'}`}
+                                    >
+                                        {showCompletedOnly ? 'Completed only' : 'Show all'}
+                                    </button>
+                                </div>
                                 {generatedCount > 0 && (
                                     <Button
                                         variant="outline"
@@ -441,7 +450,11 @@ The color temperature, lighting direction, and overall mood must match across al
                         <CardContent>
                             <ScrollArea className="h-[500px]">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                    {filteredSegments.map((segment) => {
+                                    {filteredSegments.filter(segment => {
+                                        if (!showCompletedOnly) return true
+                                        const img = generatedImages[segment.sequence]
+                                        return img?.status === 'completed' && img?.imageUrl
+                                    }).map((segment) => {
                                         const shotId = `shot-${segment.sequence}`
                                         const hasVariants = contactSheetVariants.some(
                                             v => v.storyboard_shot_id === shotId

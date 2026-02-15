@@ -20,7 +20,6 @@ import {
     Copy,
     MessageSquare,
     Star,
-    FlaskConical,
     Grid3X3,
     Film
 } from 'lucide-react'
@@ -34,11 +33,11 @@ export interface EditableShotProps {
     characters: string[]
     locations: string[]
     shotNote?: string
+    hasGeneratedImage?: boolean
     onPromptChange?: (sequence: number, newPrompt: string) => void
     onGeneratedPromptChange?: (sequence: number, newPrompt: string) => void
     onNoteChange?: (sequence: number, note: string) => void
     onMetadataChange?: (sequence: number, metadata: Partial<ShotMetadata>) => void
-    onRefine?: (sequence: number) => void
     onGetAngles?: (sequence: number) => void
     onGetBRoll?: (sequence: number) => void
 }
@@ -60,13 +59,13 @@ export function EditableShot({
     characters,
     locations,
     shotNote,
+    hasGeneratedImage,
     onPromptChange,
     onGeneratedPromptChange,
     onNoteChange,
     onMetadataChange,
-    onRefine,
     onGetAngles,
-    onGetBRoll
+    onGetBRoll,
 }: EditableShotProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [editedPrompt, setEditedPrompt] = useState(generatedPrompt?.prompt || segment.text)
@@ -153,8 +152,8 @@ export function EditableShot({
                                     )}
                                     {isGreenlit && (
                                         <Badge variant="default" className="text-xs py-0 bg-green-500 hover:bg-green-600 border-none shadow-none">
-                                            <CheckCircle className="w-3 h-3 mr-1" />
-                                            Greenlit
+                                            <Check className="w-3 h-3 mr-1" />
+                                            Approved
                                         </Badge>
                                     )}
                                 </div>
@@ -277,52 +276,45 @@ export function EditableShot({
                                         </div>
                                     </div>
                                     <div className="flex gap-2 w-full sm:w-auto flex-wrap">
-                                        <Button
-                                            size="sm"
-                                            className="flex-1 sm:flex-none bg-purple-600 hover:bg-purple-700 text-white"
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                onRefine?.(segment.sequence)
-                                            }}
-                                        >
-                                            <FlaskConical className="w-4 h-4 mr-2" />
-                                            Shot Lab
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="flex-1 sm:flex-none border-blue-500/20 text-blue-500 hover:bg-blue-500/10"
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                onGetAngles?.(segment.sequence)
-                                            }}
-                                        >
-                                            <Grid3X3 className="w-4 h-4 mr-2" />
-                                            Angles
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="flex-1 sm:flex-none border-amber-500/20 text-amber-500 hover:bg-amber-500/10"
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                onGetBRoll?.(segment.sequence)
-                                            }}
-                                        >
-                                            <Film className="w-4 h-4 mr-2" />
-                                            B-Roll
-                                        </Button>
+                                        {hasGeneratedImage && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="flex-1 sm:flex-none border-blue-500/20 text-blue-500 hover:bg-blue-500/10"
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    onGetAngles?.(segment.sequence)
+                                                }}
+                                            >
+                                                <Grid3X3 className="w-4 h-4 mr-2" />
+                                                Angles
+                                            </Button>
+                                        )}
+                                        {hasGeneratedImage && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="flex-1 sm:flex-none border-amber-500/20 text-amber-500 hover:bg-amber-500/10"
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    onGetBRoll?.(segment.sequence)
+                                                }}
+                                            >
+                                                <Film className="w-4 h-4 mr-2" />
+                                                B-Roll
+                                            </Button>
+                                        )}
                                         <Button
                                             size="sm"
                                             variant={isGreenlit ? "default" : "outline"}
-                                            className={`flex-1 sm:flex-none ${isGreenlit ? "bg-green-500 hover:bg-green-600" : ""}`}
+                                            className={`flex-1 sm:flex-none ${isGreenlit ? "bg-green-500 hover:bg-green-600" : "border-green-500/20 text-green-600 hover:bg-green-500/10"}`}
                                             onClick={(e) => {
                                                 e.stopPropagation()
                                                 onMetadataChange?.(segment.sequence, { ...generatedPrompt.metadata, isGreenlit: !isGreenlit })
                                             }}
                                         >
-                                            <CheckCircle className="w-4 h-4 mr-2" />
-                                            {isGreenlit ? "Greenlit" : "Greenlight"}
+                                            <Check className="w-4 h-4 mr-2" />
+                                            {isGreenlit ? "Approved" : "Approve Shot"}
                                         </Button>
                                     </div>
                                 </div>
