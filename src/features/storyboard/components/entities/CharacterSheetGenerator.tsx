@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -13,6 +13,8 @@ import { PromptEditor, type PromptVariable } from '../shared/PromptEditor'
 import { characterSheetService, DEFAULT_SIDE1_PROMPT, DEFAULT_SIDE2_PROMPT } from '../../services/character-sheet.service'
 import { useStoryboardStore } from '../../store'
 import { useEffectiveStyleGuide } from '../../hooks/useEffectiveStyleGuide'
+import { useCreditsStore } from '@/features/credits/store/credits.store'
+import { TOKENS_PER_IMAGE } from '../../constants/generation.constants'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
 import { toast } from 'sonner'
 
@@ -54,12 +56,15 @@ Output a crisp, print-ready reference sheet look with sharp details.`
 export function CharacterSheetGenerator() {
     const { characters, updateCharacter, setInternalTab, preSelectedCharacterId, setPreSelectedCharacterId } = useStoryboardStore()
     const effectiveStyleGuide = useEffectiveStyleGuide()
+    const { fetchBalance } = useCreditsStore()
     const containerRef = useRef<HTMLDivElement>(null)
 
     const [selectedCharacterId, setSelectedCharacterId] = useState<string>('')
     const [side1Prompt, setSide1Prompt] = useState(DEFAULT_SIDE1_PROMPT)
     const [side2Prompt, setSide2Prompt] = useState(DEFAULT_SIDE2_PROMPT)
     const [generationStatus, setGenerationStatus] = useState<GenerationStatus>('idle')
+    const [side1PredictionId, setSide1PredictionId] = useState<string | null>(null)
+    const [side2PredictionId, setSide2PredictionId] = useState<string | null>(null)
     const [side1GalleryId, setSide1GalleryId] = useState<string | null>(null)
     const [side2GalleryId, setSide2GalleryId] = useState<string | null>(null)
     const [side1ImageUrl, setSide1ImageUrl] = useState<string | null>(null)
@@ -74,47 +79,83 @@ export function CharacterSheetGenerator() {
     // Handle preSelectedCharacterId from store (set by CharacterList)
     useEffect(() => {
         if (preSelectedCharacterId) {
-            setSelectedCharacterId(preSelectedCharacterId)
+            // Only pre-select if the character has a reference image (required by generator)
+            const char = characters.find(c => c.id === preSelectedCharacterId)
+            if (char?.has_reference && char?.reference_image_url) {
+                setSelectedCharacterId(preSelectedCharacterId)
+            }
             setPreSelectedCharacterId(null)
-            // Scroll the generator into view
             containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
-    }, [preSelectedCharacterId, setPreSelectedCharacterId])
+    }, [preSelectedCharacterId, setPreSelectedCharacterId, characters])
 
-    // Poll for image URLs when gallery IDs are available
-    const pollForImage = useCallback(async (galleryId: string): Promise<string | null> => {
-        const maxAttempts = 20
-        for (let i = 0; i < maxAttempts; i++) {
-            try {
-                const response = await fetch(`/api/gallery/${galleryId}`)
-                if (response.ok) {
-                    const data = await response.json()
-                    if (data.image_url) return data.image_url
+    // Poll prediction status for side 1
+    useEffect(() => {
+        if (!side1PredictionId || side1ImageUrl) return
+
+        const controller = new AbortController()
+        let cancelled = false
+
+        const poll = async () => {
+            for (let i = 0; i < 60; i++) {
+                if (cancelled) return
+                try {
+                    const res = await fetch(`/api/generation/status/${side1PredictionId}`, {
+                        signal: controller.signal
+                    })
+                    if (res.ok) {
+                        const data = await res.json()
+                        if (data.status === 'succeeded') {
+                            setSide1ImageUrl(data.persistedUrl || data.output)
+                            return
+                        }
+                        if (data.status === 'failed') return
+                    }
+                } catch (err) {
+                    if (err instanceof DOMException && err.name === 'AbortError') return
                 }
-            } catch {
-                // Ignore and retry
+                if (cancelled) return
+                await new Promise(r => setTimeout(r, 2000))
             }
-            await new Promise(r => setTimeout(r, 3000))
         }
-        return null
-    }, [])
 
-    // Start polling when gallery IDs appear
-    useEffect(() => {
-        if (side1GalleryId && !side1ImageUrl) {
-            pollForImage(side1GalleryId).then(url => {
-                if (url) setSide1ImageUrl(url)
-            })
-        }
-    }, [side1GalleryId, side1ImageUrl, pollForImage])
+        poll()
+        return () => { cancelled = true; controller.abort() }
+    }, [side1PredictionId, side1ImageUrl])
 
+    // Poll prediction status for side 2
     useEffect(() => {
-        if (side2GalleryId && !side2ImageUrl) {
-            pollForImage(side2GalleryId).then(url => {
-                if (url) setSide2ImageUrl(url)
-            })
+        if (!side2PredictionId || side2ImageUrl) return
+
+        const controller = new AbortController()
+        let cancelled = false
+
+        const poll = async () => {
+            for (let i = 0; i < 60; i++) {
+                if (cancelled) return
+                try {
+                    const res = await fetch(`/api/generation/status/${side2PredictionId}`, {
+                        signal: controller.signal
+                    })
+                    if (res.ok) {
+                        const data = await res.json()
+                        if (data.status === 'succeeded') {
+                            setSide2ImageUrl(data.persistedUrl || data.output)
+                            return
+                        }
+                        if (data.status === 'failed') return
+                    }
+                } catch (err) {
+                    if (err instanceof DOMException && err.name === 'AbortError') return
+                }
+                if (cancelled) return
+                await new Promise(r => setTimeout(r, 2000))
+            }
         }
-    }, [side2GalleryId, side2ImageUrl, pollForImage])
+
+        poll()
+        return () => { cancelled = true; controller.abort() }
+    }, [side2PredictionId, side2ImageUrl])
 
     // Get characters that have reference images
     const charactersWithRef = useMemo(() => {
@@ -158,6 +199,8 @@ export function CharacterSheetGenerator() {
 
         setGenerationStatus('generating')
         setError(null)
+        setSide1PredictionId(null)
+        setSide2PredictionId(null)
         setSide1GalleryId(null)
         setSide2GalleryId(null)
         setSide1ImageUrl(null)
@@ -176,6 +219,8 @@ export function CharacterSheetGenerator() {
 
             if (result.side1.success && result.side2.success) {
                 setGenerationStatus('completed')
+                setSide1PredictionId(result.side1.predictionId || null)
+                setSide2PredictionId(result.side2.predictionId || null)
                 setSide1GalleryId(result.side1.galleryId || null)
                 setSide2GalleryId(result.side2.galleryId || null)
             } else {
@@ -187,8 +232,14 @@ export function CharacterSheetGenerator() {
                 setError(errors.join('; '))
 
                 // Still record successful sides
-                if (result.side1.success) setSide1GalleryId(result.side1.galleryId || null)
-                if (result.side2.success) setSide2GalleryId(result.side2.galleryId || null)
+                if (result.side1.success) {
+                    setSide1PredictionId(result.side1.predictionId || null)
+                    setSide1GalleryId(result.side1.galleryId || null)
+                }
+                if (result.side2.success) {
+                    setSide2PredictionId(result.side2.predictionId || null)
+                    setSide2GalleryId(result.side2.galleryId || null)
+                }
             }
         } catch (err) {
             setGenerationStatus('failed')
@@ -211,6 +262,23 @@ export function CharacterSheetGenerator() {
     const handleBatchGenerate = async () => {
         if (characters.length === 0) {
             toast.error('No characters found', { description: 'Extract characters from your story first.' })
+            return
+        }
+
+        // Credit check before batch generation
+        const totalCost = characters.length * TOKENS_PER_IMAGE
+        try {
+            await fetchBalance()
+        } catch {
+            // Continue anyway, API will catch it
+        }
+        const currentBalance = useCreditsStore.getState().balance
+
+        if (currentBalance < totalCost) {
+            toast.error(
+                `Insufficient credits. You need ${totalCost} tokens for ${characters.length} characters but only have ${currentBalance}.`,
+                { duration: 5000 }
+            )
             return
         }
 

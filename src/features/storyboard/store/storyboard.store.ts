@@ -17,6 +17,7 @@ import type {
     GeneratedImageData,
 } from "../types/storyboard.types";
 import type { StoryChapter, ChapterDetectionResult } from "../services/chapter-detection.service";
+import type { ModelId } from "@/config";
 
 export type StoryboardTab = 'input' | 'entities' | 'style' | 'shots' | 'generation' | 'gallery'
 
@@ -24,7 +25,7 @@ export type StoryboardTab = 'input' | 'entities' | 'style' | 'shots' | 'generati
 export interface GenerationSettings {
     aspectRatio: string
     resolution: '1K' | '2K' | '4K'
-    imageModel: string
+    imageModel: ModelId
 }
 
 // Global generation progress state (moved from local component state)
@@ -342,7 +343,7 @@ const initialState = {
     generationSettings: {
         aspectRatio: '16:9',
         resolution: '2K' as const,
-        imageModel: 'nano-banana-pro'
+        imageModel: 'nano-banana-pro' as ModelId
     },
     globalPromptPrefix: '',
     globalPromptSuffix: '',

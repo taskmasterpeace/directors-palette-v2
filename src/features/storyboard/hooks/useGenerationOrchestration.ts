@@ -115,7 +115,7 @@ export function useGenerationOrchestration({
         clearGeneratedImages()
 
         try {
-            const selectedModel = (imageModel || 'nano-banana-pro') as ModelId
+            const selectedModel: ModelId = imageModel || 'nano-banana-pro'
             const generationResults = await storyboardGenerationService.generateShotsFromPrompts(
                 shotsToGenerate,
                 {

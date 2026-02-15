@@ -2,6 +2,8 @@
  * Type definitions for Storyboard feature
  */
 
+import type { ModelId } from '@/config'
+
 // Status types
 export type StoryboardStatus = 'draft' | 'extracting' | 'ready' | 'generating' | 'completed'
 export type ShotStatus = 'pending' | 'ready' | 'generating' | 'completed' | 'failed'
@@ -530,7 +532,7 @@ export interface StyleGuideRef {
 export interface GenerationConfig {
     aspectRatio: string
     resolution: '1K' | '2K' | '4K'
-    model: string  // Image generation model (e.g., 'nano-banana-pro')
+    model: ModelId
 }
 
 /**
