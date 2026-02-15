@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useStoryboardStore } from '../store'
 import { storyboardGenerationService } from '../services/storyboard-generation.service'
-import { useEffectiveStyleGuide } from './useEffectiveStyleGuide'
+import { useEffectiveStyle } from './useEffectiveStyleGuide'
 import { processPromptsWithWildcards } from '../services/wildcard-integration.service'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
 import { TOKENS_PER_IMAGE } from '../constants/generation.constants'
@@ -46,7 +46,7 @@ export function useGenerationOrchestration({
         setInternalTab
     } = useStoryboardStore()
 
-    const effectiveStyleGuide = useEffectiveStyleGuide()
+    const { styleGuide: effectiveStyleGuide, presetStyle: effectivePresetStyle } = useEffectiveStyle()
     const { fetchBalance } = useCreditsStore()
 
     const { aspectRatio, resolution, imageModel } = generationSettings
@@ -127,7 +127,8 @@ export function useGenerationOrchestration({
                 characters,
                 locations,
                 abortControllerRef.current?.signal,
-                () => isPausedRef.current
+                () => isPausedRef.current,
+                effectivePresetStyle || undefined
             )
 
             setResults(generationResults)

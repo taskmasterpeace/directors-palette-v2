@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type { DirectorFingerprint } from "@/features/music-lab/types/director.types"
 import type { DirectorPitch } from "../types/storyboard.types"
-import { Clapperboard, Camera, Heart, Palette } from "lucide-react"
+import { Clapperboard, Camera, Heart, Palette, Video } from "lucide-react"
 
 interface DirectorProposalDialogProps {
     open: boolean
@@ -97,6 +97,26 @@ export function DirectorProposalDialog({
                             <h4 className="text-sm font-semibold text-zinc-500 mb-2 uppercase tracking-wider">Thematic Focus</h4>
                             <p className="text-sm text-zinc-300 italic">{pitch.thematicFocus}</p>
                         </div>
+
+                        {/* Camera Foundation Preview */}
+                        {director.cameraRig && director.cameraRig.setups.length > 0 && (
+                            <div className="bg-zinc-900/30 p-4 rounded-lg border border-zinc-800/50">
+                                <h4 className="text-sm font-semibold text-zinc-500 mb-2 uppercase tracking-wider flex items-center gap-2">
+                                    <Video className="w-4 h-4" /> Camera Foundation
+                                </h4>
+                                <div className="space-y-2">
+                                    {director.cameraRig.setups.map(setup => (
+                                        <div key={setup.shotBracket} className="text-xs">
+                                            <span className="text-zinc-400 uppercase font-medium">{setup.shotBracket}:</span>{' '}
+                                            <span className="text-zinc-300">{setup.perspectiveTranslation}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-zinc-500 mt-2 italic">
+                                    Camera language is prepended to each shot prompt based on shot type.
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </ScrollArea>
 

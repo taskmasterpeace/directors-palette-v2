@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { FileText, Users, Palette, SplitSquareVertical, Play, Images, Clapperboard, Check } from "lucide-react"
+import { FileText, Users, Palette, SplitSquareVertical, Play, Images, Clapperboard, Check, LayoutGrid, List } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
@@ -29,6 +29,7 @@ import { ShotLab } from "./ShotLab/ShotLab"
 import { DirectorProposalDialog } from "./DirectorProposalDialog"
 import { ContactSheetModal } from "./contact-sheet/ContactSheetModal"
 import { BRollSheetModal } from "./broll-sheet/BRollSheetModal"
+import { CanvasView } from "./canvas/CanvasView"
 
 import { DirectorPitch } from "../types"
 
@@ -59,7 +60,10 @@ export function Storyboard() {
         brollModalOpen,
         brollShotSequence,
         brollReferenceUrl,
-        closeBRollModal
+        closeBRollModal,
+        // View Mode
+        viewMode,
+        setViewMode
     } = useStoryboardStore()
 
     // Calculate tab completion states
@@ -147,10 +151,29 @@ export function Storyboard() {
         <div className="flex flex-col h-full overflow-hidden p-3 sm:p-4">
             {/* Workflow Tabs with Step Numbers */}
             <Tabs value={internalTab} onValueChange={(v) => setInternalTab(v as typeof internalTab)} className="flex-1 flex flex-col overflow-hidden">
-                {/* Save Indicator & Help */}
+                {/* Save Indicator, View Mode Toggle & Help */}
                 <div className="flex items-center justify-between mb-1 flex-shrink-0">
                     <StoryboardHelp />
-                    <SaveIndicator />
+                    <div className="flex items-center gap-2">
+                        {/* View Mode Toggle */}
+                        <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
+                            <button
+                                onClick={() => setViewMode('tabs')}
+                                className={`p-1 rounded transition-colors ${viewMode === 'tabs' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                title="Tab View"
+                            >
+                                <List className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('canvas')}
+                                className={`p-1 rounded transition-colors ${viewMode === 'canvas' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                title="Canvas View"
+                            >
+                                <LayoutGrid className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                        <SaveIndicator />
+                    </div>
                 </div>
                 <TooltipProvider>
                     <TabsList className="grid grid-cols-6 w-full h-auto min-h-[44px] p-1">
@@ -372,11 +395,15 @@ export function Storyboard() {
 
                 {/* Gallery Tab */}
                 <TabsContent value="gallery" className="mt-3 flex-1 overflow-auto">
-                    <ChapterTabs>
-                        {(chapterIndex) => (
-                            <StoryboardGallery chapterIndex={chapterIndex} />
-                        )}
-                    </ChapterTabs>
+                    {viewMode === 'canvas' ? (
+                        <CanvasView />
+                    ) : (
+                        <ChapterTabs>
+                            {(chapterIndex) => (
+                                <StoryboardGallery chapterIndex={chapterIndex} />
+                            )}
+                        </ChapterTabs>
+                    )}
                 </TabsContent>
             </Tabs>
 

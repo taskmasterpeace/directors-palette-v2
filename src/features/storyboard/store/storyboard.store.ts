@@ -112,6 +112,7 @@ export interface StoryboardStore {
     searchQuery: string
     selectedModel: string // OpenRouter model selection
     isPreviewCollapsed: boolean // Collapse Color-Coded Preview after generation
+    viewMode: 'tabs' | 'canvas' // Storyboard view mode
 
     // ---- Director Selection State ----
     selectedDirectorId: string | null
@@ -243,6 +244,7 @@ export interface StoryboardStore {
     setSelectedModel: (model: string) => void
     setPreviewCollapsed: (collapsed: boolean) => void
     togglePreviewCollapsed: () => void
+    setViewMode: (mode: 'tabs' | 'canvas') => void
 
     // ---- Director Selection Actions ----
     setSelectedDirector: (directorId: string | null) => void
@@ -332,6 +334,7 @@ const initialState = {
     searchQuery: '',
     selectedModel: 'openai/gpt-4o-mini',
     isPreviewCollapsed: false,
+    viewMode: 'tabs' as const,
 
     // Character sheet pre-selection
     preSelectedCharacterId: null,
@@ -687,6 +690,7 @@ export const useStoryboardStore = create<StoryboardStore>()(
             setSelectedModel: (model) => set({ selectedModel: model }),
             setPreviewCollapsed: (collapsed) => set({ isPreviewCollapsed: collapsed }),
             togglePreviewCollapsed: () => set((state) => ({ isPreviewCollapsed: !state.isPreviewCollapsed })),
+            setViewMode: (mode) => set({ viewMode: mode }),
 
             // ---- Character Sheet Pre-Selection Actions ----
             setPreSelectedCharacterId: (id) => set({ preSelectedCharacterId: id }),

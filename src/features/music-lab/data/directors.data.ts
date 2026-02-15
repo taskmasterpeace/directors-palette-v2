@@ -147,6 +147,36 @@ export const DIRECTORS: DirectorFingerprint[] = [
             ]
         },
 
+        cameraRig: {
+            defaultMedium: 'live-action',
+            setups: [
+                {
+                    shotBracket: 'close',
+                    cameraBody: 'ARRI Alexa Mini',
+                    lens: '40mm Cooke S4 anamorphic',
+                    filmStock: 'Kodak Vision3 500T',
+                    depthOfField: 'shallow',
+                    perspectiveTranslation: 'intimate shallow-focus close framing, warm anamorphic bokeh, soft background separation'
+                },
+                {
+                    shotBracket: 'medium',
+                    cameraBody: 'ARRI Alexa 65',
+                    lens: '65mm Panavision Primo',
+                    filmStock: 'Kodak Vision3 500T',
+                    depthOfField: 'medium',
+                    perspectiveTranslation: 'medium framing with natural depth, balanced focus plane, cinematic presence'
+                },
+                {
+                    shotBracket: 'wide',
+                    cameraBody: 'ARRI Alexa 65',
+                    lens: '24mm Panavision Ultra Speed',
+                    filmStock: 'Kodak Vision3 500T',
+                    depthOfField: 'deep focus',
+                    perspectiveTranslation: 'expansive wide framing, deep focus showing environment, large-format clarity'
+                }
+            ]
+        },
+
         constraints: {
             immutableSections: [
                 'coreIntent',
@@ -322,6 +352,36 @@ export const DIRECTORS: DirectorFingerprint[] = [
             ]
         },
 
+        cameraRig: {
+            defaultMedium: 'live-action',
+            setups: [
+                {
+                    shotBracket: 'close',
+                    cameraBody: 'Panavision Millennium XL2',
+                    lens: '75mm Primo',
+                    filmStock: 'Kodak Vision3 200T',
+                    depthOfField: 'shallow',
+                    perspectiveTranslation: 'tight restrained close-up, shallow depth isolating subject, naturalistic clarity'
+                },
+                {
+                    shotBracket: 'medium',
+                    cameraBody: 'Panavision Millennium XL2',
+                    lens: '50mm Primo',
+                    filmStock: 'Kodak Vision3 200T',
+                    depthOfField: 'medium',
+                    perspectiveTranslation: 'straightforward medium framing, functional composition, economical clarity'
+                },
+                {
+                    shotBracket: 'wide',
+                    cameraBody: 'Panavision Millennium XL2',
+                    lens: '27mm Primo',
+                    filmStock: 'Kodak Vision3 200T',
+                    depthOfField: 'deep focus',
+                    perspectiveTranslation: 'simple wide establishing shot, landscape-dominant, deep focus naturalism'
+                }
+            ]
+        },
+
         constraints: {
             immutableSections: [
                 'coreIntent',
@@ -488,6 +548,33 @@ export const DIRECTORS: DirectorFingerprint[] = [
                 'reviewing footage frame by frame, critical examination',
                 'directing with precise hand gestures, demanding excellence',
                 'at a monitor analyzing composition, absolute focus'
+            ]
+        },
+
+        cameraRig: {
+            defaultMedium: 'live-action',
+            setups: [
+                {
+                    shotBracket: 'close',
+                    cameraBody: 'RED Monstro 8K',
+                    lens: '50mm Leica Summilux',
+                    depthOfField: 'shallow',
+                    perspectiveTranslation: 'precise clinical close-up, razor-thin focus plane, forensic detail, symmetrical framing'
+                },
+                {
+                    shotBracket: 'medium',
+                    cameraBody: 'RED Monstro 8K',
+                    lens: '35mm Leica Summilux',
+                    depthOfField: 'medium',
+                    perspectiveTranslation: 'controlled medium framing, symmetrical composition, architectural precision'
+                },
+                {
+                    shotBracket: 'wide',
+                    cameraBody: 'RED Monstro 8K',
+                    lens: '21mm Leica Summicron',
+                    depthOfField: 'deep focus',
+                    perspectiveTranslation: 'geometric wide framing, deep focus precision, environment as system, clinical surveillance perspective'
+                }
             ]
         },
 
@@ -669,6 +756,34 @@ export const DIRECTORS: DirectorFingerprint[] = [
             ]
         },
 
+        cameraRig: {
+            defaultMedium: 'live-action',
+            setups: [
+                {
+                    shotBracket: 'close',
+                    cameraBody: 'ARRI Alexa 65',
+                    lens: '40mm Zeiss Master',
+                    depthOfField: 'medium',
+                    perspectiveTranslation: 'centered close-up, perfectly symmetrical, pastel tones, tableau composition'
+                },
+                {
+                    shotBracket: 'medium',
+                    cameraBody: 'ARRI Alexa 65',
+                    lens: '27mm Zeiss Master',
+                    depthOfField: 'medium',
+                    perspectiveTranslation: 'centered medium shot, symmetrical framing, curated mise-en-scene, dollhouse precision'
+                },
+                {
+                    shotBracket: 'wide',
+                    cameraBody: 'ARRI 765 (65mm film)',
+                    lens: '24mm Hasselblad',
+                    filmStock: 'Kodak Vision3 50D',
+                    depthOfField: 'deep focus',
+                    perspectiveTranslation: 'perfectly symmetrical wide tableau, miniature-like deep focus, storybook set design'
+                }
+            ]
+        },
+
         constraints: {
             immutableSections: [
                 'coreIntent',
@@ -833,6 +948,33 @@ export const DIRECTORS: DirectorFingerprint[] = [
                 'directing with a megaphone in a spaceship set',
                 'checking monitors with intense colorful lighting reflection',
                 'standing in a shiny hallway with fisheye effect'
+            ]
+        },
+
+        cameraRig: {
+            defaultMedium: 'live-action',
+            setups: [
+                {
+                    shotBracket: 'close',
+                    cameraBody: 'RED Epic',
+                    lens: '14mm fisheye',
+                    depthOfField: 'deep focus',
+                    perspectiveTranslation: 'extreme fisheye close-up, barrel distortion, in-your-face hero framing, glossy reflective surfaces'
+                },
+                {
+                    shotBracket: 'medium',
+                    cameraBody: 'RED Epic',
+                    lens: '24mm wide angle',
+                    depthOfField: 'deep focus',
+                    perspectiveTranslation: 'wide-angle medium shot, low heroic angle, high-contrast dramatic lighting, glossy spectacle'
+                },
+                {
+                    shotBracket: 'wide',
+                    cameraBody: 'RED Epic',
+                    lens: '8mm ultra-wide fisheye',
+                    depthOfField: 'deep focus',
+                    perspectiveTranslation: 'ultra-wide fisheye establishing shot, maximum barrel distortion, futuristic set, neon-lit spectacle'
+                }
             ]
         },
 

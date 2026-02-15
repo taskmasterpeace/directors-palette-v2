@@ -5,7 +5,8 @@
 
 import { imageGenerationService, ImageGenerationService } from '@/features/shot-creator/services/image-generation.service'
 import type { ModelId } from '@/config'
-import type { ShotBreakdownSegment, StyleGuide, StoryboardCharacter, StoryboardLocation, GeneratedShotPrompt } from '../types/storyboard.types'
+import type { ShotBreakdownSegment, StyleGuide, StoryboardCharacter, StoryboardLocation, GeneratedShotPrompt, PresetStyle } from '../types/storyboard.types'
+import { EquipmentTranslationService } from './equipment-translation.service'
 
 interface GenerationConfig {
     model: ModelId
@@ -194,7 +195,8 @@ export class StoryboardGenerationService {
         _characters: StoryboardCharacter[] = [],
         _locations: StoryboardLocation[] = [],
         abortSignal?: AbortSignal,
-        getPauseState?: () => boolean
+        getPauseState?: () => boolean,
+        presetStyle?: PresetStyle
     ): Promise<Array<{ shotNumber: number; predictionId: string; imageUrl?: string; error?: string }>> {
         const results: Array<{ shotNumber: number; predictionId: string; imageUrl?: string; error?: string }> = []
 
@@ -227,12 +229,23 @@ export class StoryboardGenerationService {
             })
 
             try {
-                // Use the AI-generated prompt directly (already enhanced)
+                // Use the AI-generated prompt directly (already enhanced with camera foundation from director)
                 let finalPrompt = shot.prompt
 
                 // Append style guide if present (prompt may already include style, but this ensures consistency)
                 if (styleGuide?.style_prompt) {
                     finalPrompt = `${finalPrompt}, ${styleGuide.style_prompt}`
+                }
+
+                // Append technical attributes from preset style
+                if (presetStyle?.technicalAttributes) {
+                    const ta = presetStyle.technicalAttributes
+                    finalPrompt = `${finalPrompt}, ${ta.colorPalette}, ${ta.texture}`
+                }
+
+                // Strip motion terms for image models (preserves them in UI editor)
+                if (EquipmentTranslationService.isImageModel(config.model)) {
+                    finalPrompt = EquipmentTranslationService.stripMotionTerms(finalPrompt)
                 }
 
                 // Get reference images from the shot's characterRefs

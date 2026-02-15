@@ -1,8 +1,10 @@
 /**
  * Director Types for Music Lab
- * 
+ *
  * Director fingerprints and proposal structures.
  */
+
+import type { DirectorCameraRig } from '@/features/storyboard/types/storyboard.types'
 
 // =============================================================================
 // DIRECTOR FINGERPRINT
@@ -139,6 +141,9 @@ export interface DirectorFingerprint {
         base: string
         variations: string[]
     }
+
+    // Camera Rig (optional - for cinematography enhancement)
+    cameraRig?: DirectorCameraRig
 
     // Constraints
     constraints: {

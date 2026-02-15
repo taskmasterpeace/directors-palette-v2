@@ -4,6 +4,35 @@
 
 import type { ModelId } from '@/config'
 
+// =============================================================================
+// CINEMATOGRAPHY TYPES
+// =============================================================================
+
+export type MediumCategory = 'live-action' | '2d-animation' | '3d-animation' | 'stop-motion' | 'puppetry' | 'mixed-media'
+
+export interface CameraSetup {
+    shotBracket: 'close' | 'medium' | 'wide'
+    cameraBody: string            // "ARRI Alexa Mini"
+    lens: string                  // "40mm Cooke S4 anamorphic"
+    filmStock?: string            // "Kodak Vision3 500T" (live-action only)
+    depthOfField: string          // "shallow", "medium", "deep focus"
+    perspectiveTranslation: string // Image-model-safe version
+}
+
+export interface DirectorCameraRig {
+    setups: CameraSetup[]         // 2-3 setups indexed by shot bracket
+    defaultMedium: MediumCategory
+}
+
+export interface StyleTechnicalAttributes {
+    cameraRenderType: string      // "Super 16mm film camera"
+    lensPerspective: string       // "anamorphic Panavision"
+    stockMedium: string           // "Kodak Color Reversal"
+    colorPalette: string          // "high-contrast saturated"
+    texture: string               // "heavy film grain"
+    medium: MediumCategory
+}
+
 // Status types
 export type StoryboardStatus = 'draft' | 'extracting' | 'ready' | 'generating' | 'completed'
 export type ShotStatus = 'pending' | 'ready' | 'generating' | 'completed' | 'failed'
@@ -110,7 +139,7 @@ export const BROLL_NAMES: Record<BRollShotType, string> = {
 /**
  * Preset Style (built-in styles)
  */
-export type PresetStyleId = 'none' | 'claymation' | 'muppet' | 'comic' | 'action-figure'
+export type PresetStyleId = 'none' | 'claymation' | 'muppet' | 'comic' | 'action-figure' | 'black-dynamite' | 'blade-runner' | 'mr-robot' | 'toy-story' | 'gi-joe'
 
 export interface PresetStyle {
     id: PresetStyleId
@@ -118,6 +147,7 @@ export interface PresetStyle {
     description: string
     imagePath: string
     stylePrompt: string
+    technicalAttributes?: StyleTechnicalAttributes
 }
 
 export const PRESET_STYLES: PresetStyle[] = [
@@ -126,35 +156,151 @@ export const PRESET_STYLES: PresetStyle[] = [
         name: 'None (Realistic)',
         description: 'Real-life, no stylization',
         imagePath: '',
-        stylePrompt: ''
+        stylePrompt: '',
+        technicalAttributes: {
+            cameraRenderType: 'Digital cinema camera',
+            lensPerspective: 'Standard prime lens',
+            stockMedium: 'Digital RAW',
+            colorPalette: 'Natural balanced color',
+            texture: 'Clean digital',
+            medium: 'live-action'
+        }
     },
     {
         id: 'claymation',
         name: 'Claymation',
         description: 'Stop-motion clay animation style',
         imagePath: '/storyboard-assets/styles/claymation.png',
-        stylePrompt: 'in the Claymation style of the reference image'
+        stylePrompt: 'in the Claymation style of the reference image',
+        technicalAttributes: {
+            cameraRenderType: 'Stop-motion animation camera',
+            lensPerspective: 'Macro lens, shallow focus',
+            stockMedium: 'Clay sculpture on miniature set',
+            colorPalette: 'Warm earthy tones',
+            texture: 'Visible fingerprints, imperfect clay surfaces',
+            medium: 'stop-motion'
+        }
     },
     {
         id: 'muppet',
         name: 'Muppet',
         description: 'Jim Henson-style puppets',
         imagePath: '/storyboard-assets/styles/muppet.webp',
-        stylePrompt: 'in the Muppet style of the reference image'
+        stylePrompt: 'in the Muppet style of the reference image',
+        technicalAttributes: {
+            cameraRenderType: 'Studio TV camera',
+            lensPerspective: 'Wide angle, low camera position',
+            stockMedium: 'Felt and foam puppet on practical set',
+            colorPalette: 'Bright saturated primary colors',
+            texture: 'Soft felt fabric, visible puppet seams',
+            medium: 'puppetry'
+        }
     },
     {
         id: 'comic',
         name: 'Comic Book',
         description: 'Bold comic book style',
         imagePath: '/storyboard-assets/styles/comic.webp',
-        stylePrompt: 'in the Comic Book style of the reference image'
+        stylePrompt: 'in the Comic Book style of the reference image',
+        technicalAttributes: {
+            cameraRenderType: 'Flat illustration rendering',
+            lensPerspective: 'Dynamic foreshortened perspective',
+            stockMedium: 'Ink and digital color on paper',
+            colorPalette: 'Bold saturated primaries, halftone dots',
+            texture: 'Heavy ink outlines, Ben-Day dot shading',
+            medium: '2d-animation'
+        }
     },
     {
         id: 'action-figure',
         name: 'Action Figure',
         description: 'Realistic action figure photography',
         imagePath: '/storyboard-assets/styles/action-figure.webp',
-        stylePrompt: 'in the Action Figure style of the reference image'
+        stylePrompt: 'in the Action Figure style of the reference image',
+        technicalAttributes: {
+            cameraRenderType: 'Macro photography camera',
+            lensPerspective: 'Macro lens, forced perspective',
+            stockMedium: 'Plastic action figure on diorama',
+            colorPalette: 'Glossy plastic, studio lit',
+            texture: 'Smooth plastic joints, miniature scale',
+            medium: 'stop-motion'
+        }
+    },
+    // ---- NEW FILM PRESETS ----
+    {
+        id: 'black-dynamite',
+        name: 'Black Dynamite',
+        description: '70s blaxploitation homage with retro grain',
+        imagePath: '/storyboard-assets/styles/black-dynamite.webp',
+        stylePrompt: 'in the style of 1970s blaxploitation cinema, retro Super 16mm film look, heavy grain, amber and brown color grading, dramatic zoom shots',
+        technicalAttributes: {
+            cameraRenderType: 'Super 16mm film camera',
+            lensPerspective: 'Clumsy dramatic zooms, low-angle heroic',
+            stockMedium: 'Kodak Color Reversal, heavy grain',
+            colorPalette: 'High-contrast saturated, amber and brown',
+            texture: 'Heavy film grain, jitter, retro',
+            medium: 'live-action'
+        }
+    },
+    {
+        id: 'blade-runner',
+        name: 'Blade Runner',
+        description: 'Neon-noir dystopia with atmospheric haze',
+        imagePath: '/storyboard-assets/styles/blade-runner.webp',
+        stylePrompt: 'in the style of Blade Runner, neon-noir dystopian cinematography, anamorphic lens flares, rain-soaked reflections, teal and amber color grading, atmospheric haze',
+        technicalAttributes: {
+            cameraRenderType: 'Panavision Panaflex',
+            lensPerspective: 'Anamorphic, smoke and haze diffusion',
+            stockMedium: 'Eastman 5293, push-processed',
+            colorPalette: 'Neon-reflected, deep shadow, teal-amber',
+            texture: 'Atmospheric haze, wet surface reflection',
+            medium: 'live-action'
+        }
+    },
+    {
+        id: 'mr-robot',
+        name: 'Mr. Robot',
+        description: 'Cold digital precision with off-center framing',
+        imagePath: '/storyboard-assets/styles/mr-robot.webp',
+        stylePrompt: 'in the style of Mr. Robot, extreme off-center framing, cold desaturated tones, fluorescent green tint, clinical digital precision, wide angle distortion',
+        technicalAttributes: {
+            cameraRenderType: 'ARRI Alexa Mini',
+            lensPerspective: 'Wide angle, extreme off-center framing',
+            stockMedium: 'Digital ProRes 4444',
+            colorPalette: 'Cold desaturated, fluorescent green tint',
+            texture: 'Clean digital, clinical precision',
+            medium: 'live-action'
+        }
+    },
+    {
+        id: 'toy-story',
+        name: 'Toy Story',
+        description: 'Pixar 3D animation with plastic sheen',
+        imagePath: '/storyboard-assets/styles/toy-story.webp',
+        stylePrompt: 'in the style of Pixar 3D animation, smooth plastic surfaces, bright saturated colors, subsurface scattering, soft ambient occlusion, toy-like proportions',
+        technicalAttributes: {
+            cameraRenderType: 'Pixar virtual camera',
+            lensPerspective: 'Virtual lens, slight barrel distortion',
+            stockMedium: '3D render, subsurface scattering',
+            colorPalette: 'Bright saturated primary colors',
+            texture: 'Smooth plastic, soft ambient occlusion',
+            medium: '3d-animation'
+        }
+    },
+    {
+        id: 'gi-joe',
+        name: 'GI Joe',
+        description: '80s hand-drawn cel animation style',
+        imagePath: '/storyboard-assets/styles/gi-joe.webp',
+        stylePrompt: 'in the style of 1980s hand-drawn cel animation, bold flat colors, clean ink outlines, limited shading, action line framing, vintage cartoon aesthetic',
+        technicalAttributes: {
+            cameraRenderType: 'Hand-drawn cel animation',
+            lensPerspective: 'Flat perspective, action line framing',
+            stockMedium: 'Ink and paint on acetate cel',
+            colorPalette: 'Bold flat primaries, hard shadows',
+            texture: 'Clean outlines, limited shading',
+            medium: '2d-animation'
+        }
     }
 ]
 

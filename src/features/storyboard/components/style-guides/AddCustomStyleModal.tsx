@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Upload, ImageIcon, AlertCircle } from 'lucide-react'
+import { Upload, ImageIcon, AlertCircle, ChevronDown } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useCustomStylesStore } from '@/features/shot-creator/store/custom-styles.store'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
@@ -26,6 +26,13 @@ export function AddCustomStyleModal({ open, onOpenChange, onStyleAdded }: AddCus
     const [isDragging, setIsDragging] = useState(false)
     const [isUploading, setIsUploading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [techExpanded, setTechExpanded] = useState(false)
+    const [techCamera, setTechCamera] = useState('')
+    const [techLens, setTechLens] = useState('')
+    const [techStock, setTechStock] = useState('')
+    const [techColor, setTechColor] = useState('')
+    const [techTexture, setTechTexture] = useState('')
+    const [techMedium, setTechMedium] = useState('live-action')
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const { addCustomStyle } = useCustomStylesStore()
@@ -125,6 +132,13 @@ export function AddCustomStyleModal({ open, onOpenChange, onStyleAdded }: AddCus
         setImageData(null)
         setSelectedFile(null)
         setError(null)
+        setTechExpanded(false)
+        setTechCamera('')
+        setTechLens('')
+        setTechStock('')
+        setTechColor('')
+        setTechTexture('')
+        setTechMedium('live-action')
     }
 
     const handleClose = () => {
@@ -208,6 +222,84 @@ export function AddCustomStyleModal({ open, onOpenChange, onStyleAdded }: AddCus
                             <p className="text-xs text-muted-foreground">
                                 Will use prompt: &ldquo;in the {name} style of the reference image&rdquo;
                             </p>
+                        )}
+                    </div>
+
+                    {/* Technical Attributes (collapsible, optional) */}
+                    <div className="border rounded-lg">
+                        <button
+                            type="button"
+                            className="flex items-center justify-between w-full p-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                            onClick={() => setTechExpanded(!techExpanded)}
+                        >
+                            Technical Attributes (Optional)
+                            <ChevronDown className={`w-4 h-4 transition-transform ${techExpanded ? 'rotate-180' : ''}`} />
+                        </button>
+                        {techExpanded && (
+                            <div className="px-3 pb-3 space-y-3 border-t">
+                                <div className="grid grid-cols-2 gap-3 pt-3">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Camera/Render</Label>
+                                        <Input
+                                            placeholder="e.g., ARRI Alexa Mini"
+                                            value={techCamera}
+                                            onChange={(e) => setTechCamera(e.target.value)}
+                                            className="h-8 text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Lens/Perspective</Label>
+                                        <Input
+                                            placeholder="e.g., Anamorphic wide"
+                                            value={techLens}
+                                            onChange={(e) => setTechLens(e.target.value)}
+                                            className="h-8 text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Stock/Medium</Label>
+                                        <Input
+                                            placeholder="e.g., Kodak Vision3 500T"
+                                            value={techStock}
+                                            onChange={(e) => setTechStock(e.target.value)}
+                                            className="h-8 text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Color Palette</Label>
+                                        <Input
+                                            placeholder="e.g., Warm saturated"
+                                            value={techColor}
+                                            onChange={(e) => setTechColor(e.target.value)}
+                                            className="h-8 text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Texture</Label>
+                                        <Input
+                                            placeholder="e.g., Heavy film grain"
+                                            value={techTexture}
+                                            onChange={(e) => setTechTexture(e.target.value)}
+                                            className="h-8 text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs">Medium Category</Label>
+                                        <select
+                                            value={techMedium}
+                                            onChange={(e) => setTechMedium(e.target.value)}
+                                            className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
+                                        >
+                                            <option value="live-action">Live Action</option>
+                                            <option value="2d-animation">2D Animation</option>
+                                            <option value="3d-animation">3D Animation</option>
+                                            <option value="stop-motion">Stop Motion</option>
+                                            <option value="puppetry">Puppetry</option>
+                                            <option value="mixed-media">Mixed Media</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                         )}
                     </div>
                 </div>

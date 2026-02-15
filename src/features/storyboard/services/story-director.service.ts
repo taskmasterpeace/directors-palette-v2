@@ -1,5 +1,8 @@
 import { StoryboardShot, GeneratedShotPrompt, DirectorPitch } from '../types/storyboard.types'
+import type { ShotType } from '../types/storyboard.types'
 import { DirectorFingerprint } from '@/features/music-lab/types/director.types'
+import { EquipmentTranslationService } from './equipment-translation.service'
+import type { ModelId } from '@/config'
 
 /**
  * Story Director Service
@@ -14,9 +17,10 @@ export class StoryDirectorService {
      */
     static applyDirectorToShot(
         shot: StoryboardShot,
-        director: DirectorFingerprint
+        director: DirectorFingerprint,
+        modelId?: ModelId
     ): StoryboardShot {
-        const enhancedPrompt = this.enhancePrompt(shot.prompt, director)
+        const enhancedPrompt = this.enhancePrompt(shot.prompt, director, undefined, modelId)
 
         return {
             ...shot,
@@ -24,10 +28,7 @@ export class StoryDirectorService {
             prompt: enhancedPrompt,
             metadata: {
                 ...shot.metadata,
-                edited: true, // Mark as edited so it regenerates
-                // Store original prompt in case of revert?
-                // metadata in types has originalPromptWithWildcards, we can use that or add field.
-                // For now, prompt is overwritten.
+                edited: true,
             }
         }
     }
@@ -37,9 +38,10 @@ export class StoryDirectorService {
      */
     static applyDirectorToShots(
         shots: StoryboardShot[],
-        director: DirectorFingerprint
+        director: DirectorFingerprint,
+        modelId?: ModelId
     ): StoryboardShot[] {
-        return shots.map(shot => this.applyDirectorToShot(shot, director))
+        return shots.map(shot => this.applyDirectorToShot(shot, director, modelId))
     }
 
     /**
@@ -47,10 +49,11 @@ export class StoryDirectorService {
      */
     static enhanceGeneratedPrompts(
         prompts: GeneratedShotPrompt[],
-        director: DirectorFingerprint
+        director: DirectorFingerprint,
+        modelId?: ModelId
     ): GeneratedShotPrompt[] {
         return prompts.map(p => {
-            const newPrompt = this.enhancePrompt(p.prompt, director)
+            const newPrompt = this.enhancePrompt(p.prompt, director, p.shotType, modelId)
             return {
                 ...p,
                 prompt: newPrompt,
@@ -58,7 +61,7 @@ export class StoryDirectorService {
                 metadata: {
                     ...p.metadata,
                     directorId: director.id,
-                    rating: 0, // Reset rating on new commission
+                    rating: 0,
                     isGreenlit: false
                 }
             }
@@ -78,8 +81,30 @@ export class StoryDirectorService {
      * - visualDecisionBiases (NEW)
      * - rhythmAndPacing (NEW - for pacing hints)
      */
-    private static enhancePrompt(basePrompt: string, director: DirectorFingerprint): string {
+    private static enhancePrompt(
+        basePrompt: string,
+        director: DirectorFingerprint,
+        shotType?: ShotType,
+        modelId?: ModelId
+    ): string {
         const visualModifiers: string[] = []
+
+        // Camera foundation from director's camera rig
+        let cameraFoundation = ''
+        if (director.cameraRig && director.cameraRig.setups.length > 0) {
+            const setup = EquipmentTranslationService.findSetup(
+                director.cameraRig.setups,
+                shotType
+            )
+            if (setup) {
+                const effectiveModelId = modelId || 'nano-banana-pro' as ModelId
+                cameraFoundation = EquipmentTranslationService.buildCameraFoundation(
+                    setup,
+                    effectiveModelId,
+                    director.cameraRig.defaultMedium
+                )
+            }
+        }
 
         // 1. Camera/Framing (from cameraPhilosophy)
         const framing = director.cameraPhilosophy.framingInstinct
@@ -242,17 +267,22 @@ export class StoryDirectorService {
             }
         }
 
-        // Build final prompt
-        if (visualModifiers.length === 0) {
-            return basePrompt
+        // Build final prompt with camera foundation prepended
+        const parts: string[] = []
+
+        // Prepend camera foundation before base prompt
+        if (cameraFoundation) {
+            parts.push(cameraFoundation)
         }
+
+        parts.push(basePrompt)
 
         // Check if already enhanced (avoid double-enhancing)
-        if (visualModifiers.some(mod => basePrompt.toLowerCase().includes(mod.toLowerCase()))) {
-            return basePrompt
+        if (visualModifiers.length > 0 && !visualModifiers.some(mod => basePrompt.toLowerCase().includes(mod.toLowerCase()))) {
+            parts.push(visualModifiers.join(', '))
         }
 
-        return `${basePrompt}, ${visualModifiers.join(', ')}`
+        return parts.join(', ')
     }
 
     /**
@@ -268,7 +298,7 @@ export class StoryDirectorService {
             pacing: director.rhythmAndPacing?.baselinePacing === 'frantic' || director.rhythmAndPacing?.baselinePacing === 'snappy' ? "Fast-paced" : "Measured",
             exampleEnhancement: {
                 original: prompts[0]?.prompt || "Original prompt",
-                enhanced: this.enhancePrompt(prompts[0]?.prompt || "Original prompt", director)
+                enhanced: this.enhancePrompt(prompts[0]?.prompt || "Original prompt", director, prompts[0]?.shotType)
             }
         }
     }
