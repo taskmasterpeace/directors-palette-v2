@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
-import { Play, Pause, CheckCircle, AlertCircle, SplitSquareVertical, Wand2, CheckSquare, Square, Sparkles, X, Coins } from 'lucide-react'
+import { Play, Pause, CheckCircle, AlertCircle, SplitSquareVertical, Wand2, CheckSquare, Square, Sparkles, X, Coins, Images } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { useEffectiveStyleGuide } from '../../hooks/useEffectiveStyleGuide'
@@ -26,6 +26,7 @@ import { HighlightedPrompt } from '../shared'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
 import { TOKENS_PER_IMAGE } from '../../constants/generation.constants'
 import { useGenerationOrchestration } from '../../hooks/useGenerationOrchestration'
+import { getAvailableModels, type ModelId } from '@/config'
 
 interface GenerationQueueProps {
     chapterIndex?: number
@@ -86,7 +87,10 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
     const [showPrefixSuffix, setShowPrefixSuffix] = useState(false)
 
     // Use persisted settings from store
-    const { aspectRatio, resolution } = generationSettings
+    const { aspectRatio, resolution, imageModel } = generationSettings
+
+    // Get available image generation models
+    const imageModels = useMemo(() => getAvailableModels().filter(m => m.type === 'generation'), [])
 
     // Wildcard state
     const [wildcardsEnabled, setWildcardsEnabled] = useState(false)
@@ -288,6 +292,23 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                     </SelectContent>
                 </Select>
 
+                {/* Model Selector */}
+                <Select value={imageModel || 'nano-banana-pro'} onValueChange={(v) => setGenerationSettings({ imageModel: v as ModelId })}>
+                    <SelectTrigger className="h-8 w-[180px] text-sm">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {imageModels.map(model => (
+                            <SelectItem key={model.id} value={model.id}>
+                                <div className="flex items-center gap-1.5">
+                                    <span>{model.name}</span>
+                                    <span className="text-xs text-muted-foreground">({Math.round(model.costPerImage * 100)} pts)</span>
+                                </div>
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+
                 {/* Wildcard Toggle */}
                 <div className="flex items-center gap-1.5 border-l pl-3 ml-1">
                     <TooltipProvider>
@@ -468,6 +489,17 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                                     <AlertCircle className="w-4 h-4" />
                                     <span className="text-sm">{failedCount} failed</span>
                                 </div>
+                            )}
+                            {successCount > 0 && (
+                                <Button
+                                    variant="default"
+                                    size="sm"
+                                    className="ml-auto"
+                                    onClick={() => setInternalTab('gallery')}
+                                >
+                                    <Images className="w-4 h-4 mr-2" />
+                                    View {successCount} Shot{successCount !== 1 ? 's' : ''} in Gallery
+                                </Button>
                             )}
                         </div>
                     )}

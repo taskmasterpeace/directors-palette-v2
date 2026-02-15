@@ -24,6 +24,7 @@ export type StoryboardTab = 'input' | 'entities' | 'style' | 'shots' | 'generati
 export interface GenerationSettings {
     aspectRatio: string
     resolution: '1K' | '2K' | '4K'
+    imageModel: string
 }
 
 // Global generation progress state (moved from local component state)
@@ -113,6 +114,10 @@ export interface StoryboardStore {
 
     // ---- Director Selection State ----
     selectedDirectorId: string | null
+
+    // ---- Character Sheet Pre-Selection ----
+    preSelectedCharacterId: string | null
+    setPreSelectedCharacterId: (id: string | null) => void
 
     // ---- Shot Lab UI State ----
     isShotLabOpen: boolean
@@ -327,13 +332,17 @@ const initialState = {
     selectedModel: 'openai/gpt-4o-mini',
     isPreviewCollapsed: false,
 
+    // Character sheet pre-selection
+    preSelectedCharacterId: null,
+
     // Director selection
     selectedDirectorId: null,
 
     // Generation settings
     generationSettings: {
         aspectRatio: '16:9',
-        resolution: '2K' as const
+        resolution: '2K' as const,
+        imageModel: 'nano-banana-pro'
     },
     globalPromptPrefix: '',
     globalPromptSuffix: '',
@@ -677,6 +686,9 @@ export const useStoryboardStore = create<StoryboardStore>()(
             setSelectedModel: (model) => set({ selectedModel: model }),
             setPreviewCollapsed: (collapsed) => set({ isPreviewCollapsed: collapsed }),
             togglePreviewCollapsed: () => set((state) => ({ isPreviewCollapsed: !state.isPreviewCollapsed })),
+
+            // ---- Character Sheet Pre-Selection Actions ----
+            setPreSelectedCharacterId: (id) => set({ preSelectedCharacterId: id }),
 
             // ---- Shot Lab UI Actions ----
             isShotLabOpen: false,

@@ -143,7 +143,7 @@ export function ShotTextPreview({ chapterIndex = 0 }: ShotTextPreviewProps) {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                     <CardContent>
-                        <div className="max-h-[400px] overflow-y-auto p-3 rounded-lg bg-muted/30 border font-mono text-sm leading-relaxed whitespace-pre-wrap">
+                        <div className="max-h-[600px] overflow-y-auto p-3 rounded-lg bg-muted/30 border font-mono text-sm leading-relaxed whitespace-pre-wrap">
                             {highlightedContent}
                         </div>
 

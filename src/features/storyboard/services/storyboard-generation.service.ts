@@ -4,10 +4,11 @@
  */
 
 import { imageGenerationService, ImageGenerationService } from '@/features/shot-creator/services/image-generation.service'
+import type { ModelId } from '@/config'
 import type { ShotBreakdownSegment, StyleGuide, StoryboardCharacter, StoryboardLocation, GeneratedShotPrompt } from '../types/storyboard.types'
 
 interface GenerationConfig {
-    model: 'nano-banana-pro'
+    model: ModelId
     aspectRatio: string
     resolution: '1K' | '2K' | '4K'
 }

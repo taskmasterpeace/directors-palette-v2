@@ -9,6 +9,7 @@ import { useCreditsStore } from '@/features/credits/store/credits.store'
 import { TOKENS_PER_IMAGE } from '../constants/generation.constants'
 import { toast } from 'sonner'
 import type { WildCard } from '@/features/shot-creator/helpers/wildcard/parser'
+import type { ModelId } from '@/config'
 
 interface GenerationResult {
     shotNumber: number
@@ -48,7 +49,7 @@ export function useGenerationOrchestration({
     const effectiveStyleGuide = useEffectiveStyleGuide()
     const { fetchBalance } = useCreditsStore()
 
-    const { aspectRatio, resolution } = generationSettings
+    const { aspectRatio, resolution, imageModel } = generationSettings
 
     const [isGenerating, setIsGenerating] = useState(false)
     const [isPaused, setIsPaused] = useState(false)
@@ -114,10 +115,11 @@ export function useGenerationOrchestration({
         clearGeneratedImages()
 
         try {
+            const selectedModel = (imageModel || 'nano-banana-pro') as ModelId
             const generationResults = await storyboardGenerationService.generateShotsFromPrompts(
                 shotsToGenerate,
                 {
-                    model: 'nano-banana-pro',
+                    model: selectedModel,
                     aspectRatio,
                     resolution
                 },
@@ -161,7 +163,7 @@ export function useGenerationOrchestration({
                     generationConfig: {
                         aspectRatio,
                         resolution,
-                        model: 'nano-banana-pro'
+                        model: selectedModel
                     },
                     generationTimestamp
                 })

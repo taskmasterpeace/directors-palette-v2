@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import { HighlightedPrompt } from '../shared'
 import type { ShotBreakdownSegment, GeneratedShotPrompt, StoryboardCharacter, ShotMetadata } from '../../types/storyboard.types'
+import { useStoryboardStore } from '../../store'
 
 export interface EditableShotProps {
     segment: ShotBreakdownSegment
@@ -84,6 +85,9 @@ export function EditableShot({
         setTimeout(() => setCopied(false), 2000)
     }
 
+    // Get full character data from store for thumbnails and role colors
+    const storeCharacters = useStoryboardStore(s => s.characters)
+
     // Find mentioned characters and locations in original text
     const mentionedCharacters = characters.filter(c =>
         segment.text.toLowerCase().includes(c.toLowerCase())
@@ -91,6 +95,23 @@ export function EditableShot({
     const mentionedLocations = locations.filter(l =>
         segment.text.toLowerCase().includes(l.toLowerCase())
     )
+
+    // Get role-based badge color
+    const getRoleBadgeClass = (charName: string) => {
+        const char = storeCharacters.find(c => c.name.toLowerCase() === charName.toLowerCase())
+        switch (char?.role) {
+            case 'main': return 'border-amber-500/50 bg-amber-500/10 text-amber-600'
+            case 'supporting': return 'border-blue-500/50 bg-blue-500/10 text-blue-600'
+            case 'background': return 'border-zinc-500/50 bg-zinc-500/10 text-zinc-500'
+            default: return ''
+        }
+    }
+
+    // Get character reference thumbnail URL
+    const getCharThumbnail = (charName: string) => {
+        const char = storeCharacters.find(c => c.name.toLowerCase() === charName.toLowerCase())
+        return char?.reference_image_url || null
+    }
 
     const handleSave = () => {
         if (generatedPrompt) {
@@ -143,16 +164,23 @@ export function EditableShot({
                             </div>
                             {/* Quick reference badges */}
                             {(mentionedCharacters.length > 0 || mentionedLocations.length > 0) && (
-                                <div className="flex flex-wrap gap-1 mt-2">
-                                    {mentionedCharacters.map(c => (
-                                        <Badge key={c} variant="outline" className="text-xs py-0">
-                                            <Users className="w-3 h-3 mr-1" />
-                                            {c}
-                                        </Badge>
-                                    ))}
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                    {mentionedCharacters.map(c => {
+                                        const thumbnail = getCharThumbnail(c)
+                                        return (
+                                            <Badge key={c} variant="outline" className={`text-sm py-0.5 px-2 ${getRoleBadgeClass(c)}`}>
+                                                {thumbnail ? (
+                                                    <img src={thumbnail} alt={c} className="w-4 h-4 rounded-full object-cover mr-1.5 inline-block" />
+                                                ) : (
+                                                    <Users className="w-3.5 h-3.5 mr-1.5" />
+                                                )}
+                                                {c}
+                                            </Badge>
+                                        )
+                                    })}
                                     {mentionedLocations.map(l => (
-                                        <Badge key={l} variant="secondary" className="text-xs py-0">
-                                            <MapPin className="w-3 h-3 mr-1" />
+                                        <Badge key={l} variant="secondary" className="text-sm py-0.5 px-2">
+                                            <MapPin className="w-3.5 h-3.5 mr-1.5" />
                                             {l}
                                         </Badge>
                                     ))}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { BookOpen, FileText, Layers } from 'lucide-react'
@@ -46,19 +46,32 @@ export function ChapterTabs({ children }: ChapterTabsProps) {
         }
     }, [storyText, breakdownResult, setChapters])
 
+    // Calculate total shots across all chapters
+    const totalShots = breakdownResult?.total_count || chapters.reduce((sum, ch) => sum + ch.segmentIndices.length, 0)
+
+    // Get shots count for the active chapter
+    const activeShotCount = useMemo(() => {
+        if (activeChapterIndex < 0) return totalShots
+        const ch = chapters[activeChapterIndex]
+        return ch?.segmentIndices.length || 0
+    }, [activeChapterIndex, chapters, totalShots])
+
+    const activeChapterLabel = useMemo(() => {
+        if (activeChapterIndex < 0) return 'All Chapters'
+        const ch = chapters[activeChapterIndex]
+        return ch?.title || `Chapter ${activeChapterIndex + 1}`
+    }, [activeChapterIndex, chapters])
+
     // If no chapters or single chapter, just render content directly
     if (!shouldShowChapters || chapters.length <= 1) {
         return <>{children(0)}</>
     }
 
-    // Calculate total shots across all chapters
-    const totalShots = breakdownResult?.total_count || chapters.reduce((sum, ch) => sum + ch.segmentIndices.length, 0)
-
     return (
         <div className="space-y-2">
             {/* Chapter Navigation - More Prominent */}
             <div className="rounded-lg border bg-card p-2">
-                {/* Header */}
+                {/* Header with active chapter summary */}
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2 text-sm font-medium">
                         <BookOpen className="w-4 h-4 text-primary" />
@@ -67,9 +80,14 @@ export function ChapterTabs({ children }: ChapterTabsProps) {
                             {chapters.length}
                         </Badge>
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                        {chapterDetectionReason}
-                    </span>
+                    <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">
+                            Viewing: {activeChapterLabel} ({activeShotCount} of {totalShots} shots)
+                        </Badge>
+                        <span className="text-xs text-muted-foreground hidden sm:inline">
+                            {chapterDetectionReason}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Chapter Tabs */}

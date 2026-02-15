@@ -77,9 +77,9 @@ export function StoryInput() {
                 return
             }
 
-            // Show success and auto-navigate to entities tab
+            // Show success and auto-navigate to style tab (step 2 in workflow)
             toast.success(`Found ${result.characters.length} characters and ${result.locations.length} locations`)
-            setInternalTab('entities')
+            setInternalTab('style')
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Extraction failed')
         } finally {

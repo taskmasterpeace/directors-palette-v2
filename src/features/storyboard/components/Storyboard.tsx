@@ -264,10 +264,18 @@ export function Storyboard() {
                 </TabsContent>
 
                 {/* Characters Tab */}
-                <TabsContent value="entities" className="mt-3 flex-1 overflow-auto space-y-3">
-                    <CharacterList />
-                    <CharacterSheetGenerator />
-                    <LocationList />
+                <TabsContent value="entities" className="mt-3 flex-1 overflow-auto">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {/* Left column: Characters + Locations */}
+                        <div className="space-y-3">
+                            <CharacterList />
+                            <LocationList />
+                        </div>
+                        {/* Right column: Character Sheet Generator */}
+                        <div>
+                            <CharacterSheetGenerator />
+                        </div>
+                    </div>
                 </TabsContent>
 
                 {/* Shots Tab */}

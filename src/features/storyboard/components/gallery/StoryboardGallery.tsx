@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
-import { Images, Film, Grid3X3, CheckCircle, AlertCircle, Eye, Download, Info, Clock, RefreshCw, Layers, FlaskConical, Archive } from 'lucide-react'
+import { Images, Film, Grid3X3, CheckCircle, AlertCircle, Eye, Download, Info, Clock, RefreshCw, Layers, FlaskConical, Archive, Users } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
@@ -512,6 +512,38 @@ The color temperature, lighting direction, and overall mood must match across al
                                                     >
                                                         {segment.sequence}
                                                     </Badge>
+
+                                                    {/* Character badges */}
+                                                    {(() => {
+                                                        const shotPrompt = generatedPrompts.find(p => p.sequence === segment.sequence)
+                                                        if (!shotPrompt?.characterRefs?.length) return null
+                                                        const maxShow = 3
+                                                        const refs = shotPrompt.characterRefs
+                                                        const overflow = refs.length - maxShow
+                                                        return (
+                                                            <div className="absolute bottom-1 left-1 flex gap-0.5">
+                                                                {refs.slice(0, maxShow).map(c => (
+                                                                    <Badge
+                                                                        key={c.id}
+                                                                        variant="secondary"
+                                                                        className="text-[9px] py-0 px-1 bg-black/60 text-white/90 border-none"
+                                                                    >
+                                                                        {c.reference_image_url ? (
+                                                                            <img src={c.reference_image_url} alt={c.name} className="w-3 h-3 rounded-full object-cover mr-0.5 inline-block" />
+                                                                        ) : (
+                                                                            <Users className="w-2.5 h-2.5 mr-0.5" />
+                                                                        )}
+                                                                        {c.name}
+                                                                    </Badge>
+                                                                ))}
+                                                                {overflow > 0 && (
+                                                                    <Badge variant="secondary" className="text-[9px] py-0 px-1 bg-black/60 text-white/90 border-none">
+                                                                        +{overflow}
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                        )
+                                                    })()}
 
                                                     {/* Status indicator */}
                                                     {generatedImage && (

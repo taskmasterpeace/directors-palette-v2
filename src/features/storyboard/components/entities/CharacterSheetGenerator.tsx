@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -52,8 +52,9 @@ Output a crisp, print-ready reference sheet look with sharp details.`
 }
 
 export function CharacterSheetGenerator() {
-    const { characters, updateCharacter, setInternalTab } = useStoryboardStore()
+    const { characters, updateCharacter, setInternalTab, preSelectedCharacterId, setPreSelectedCharacterId } = useStoryboardStore()
     const effectiveStyleGuide = useEffectiveStyleGuide()
+    const containerRef = useRef<HTMLDivElement>(null)
 
     const [selectedCharacterId, setSelectedCharacterId] = useState<string>('')
     const [side1Prompt, setSide1Prompt] = useState(DEFAULT_SIDE1_PROMPT)
@@ -61,12 +62,59 @@ export function CharacterSheetGenerator() {
     const [generationStatus, setGenerationStatus] = useState<GenerationStatus>('idle')
     const [side1GalleryId, setSide1GalleryId] = useState<string | null>(null)
     const [side2GalleryId, setSide2GalleryId] = useState<string | null>(null)
+    const [side1ImageUrl, setSide1ImageUrl] = useState<string | null>(null)
+    const [side2ImageUrl, setSide2ImageUrl] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
 
     // Batch generation state
     const [isBatchGenerating, setIsBatchGenerating] = useState(false)
     const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 })
     const [batchResults, setBatchResults] = useState<{ name: string; success: boolean; error?: string }[]>([])
+
+    // Handle preSelectedCharacterId from store (set by CharacterList)
+    useEffect(() => {
+        if (preSelectedCharacterId) {
+            setSelectedCharacterId(preSelectedCharacterId)
+            setPreSelectedCharacterId(null)
+            // Scroll the generator into view
+            containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+    }, [preSelectedCharacterId, setPreSelectedCharacterId])
+
+    // Poll for image URLs when gallery IDs are available
+    const pollForImage = useCallback(async (galleryId: string): Promise<string | null> => {
+        const maxAttempts = 20
+        for (let i = 0; i < maxAttempts; i++) {
+            try {
+                const response = await fetch(`/api/gallery/${galleryId}`)
+                if (response.ok) {
+                    const data = await response.json()
+                    if (data.image_url) return data.image_url
+                }
+            } catch {
+                // Ignore and retry
+            }
+            await new Promise(r => setTimeout(r, 3000))
+        }
+        return null
+    }, [])
+
+    // Start polling when gallery IDs appear
+    useEffect(() => {
+        if (side1GalleryId && !side1ImageUrl) {
+            pollForImage(side1GalleryId).then(url => {
+                if (url) setSide1ImageUrl(url)
+            })
+        }
+    }, [side1GalleryId, side1ImageUrl, pollForImage])
+
+    useEffect(() => {
+        if (side2GalleryId && !side2ImageUrl) {
+            pollForImage(side2GalleryId).then(url => {
+                if (url) setSide2ImageUrl(url)
+            })
+        }
+    }, [side2GalleryId, side2ImageUrl, pollForImage])
 
     // Get characters that have reference images
     const charactersWithRef = useMemo(() => {
@@ -112,6 +160,8 @@ export function CharacterSheetGenerator() {
         setError(null)
         setSide1GalleryId(null)
         setSide2GalleryId(null)
+        setSide1ImageUrl(null)
+        setSide2ImageUrl(null)
 
         try {
             const result = await characterSheetService.generateCharacterSheet({
@@ -235,14 +285,14 @@ export function CharacterSheetGenerator() {
     const canGenerate = selectedCharacterId && effectiveStyleGuide
 
     return (
-        <Card className="border-primary/20">
+        <Card className="border-primary/20" ref={containerRef}>
             <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                     <Users className="w-5 h-5" />
                     Character Sheet Generator
                 </CardTitle>
                 <CardDescription>
-                    Generate a 2-sided character model sheet: full body turnaround + expression sheet
+                    Generates two sheets per character: a full-body turnaround reference + an expression/face sheet
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -402,41 +452,57 @@ export function CharacterSheetGenerator() {
                     </div>
                 )}
 
-                {/* Generation Status */}
+                {/* Generation Status with Inline Previews */}
                 {(side1GalleryId || side2GalleryId) && (
                     <div className="space-y-3">
-                        <Label>Generation Started</Label>
-                        <div className="p-4 rounded-lg bg-muted/30 border space-y-3">
-                            <div className="flex items-center gap-2 text-sm">
-                                <CheckCircle className="w-4 h-4 text-green-500" />
-                                <span>Character sheets are being generated. They will appear in the Gallery when complete.</span>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {side1GalleryId && (
-                                    <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
-                                        <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                                        <div className="flex-1">
-                                            <div className="text-xs font-medium">Side 1: Full Body</div>
-                                            <div className="text-xs text-muted-foreground font-mono truncate">
-                                                {side1GalleryId}
-                                            </div>
-                                        </div>
-                                        <Badge variant="secondary" className="text-xs">Processing</Badge>
+                        <Label>Generated Sheets</Label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {side1GalleryId && (
+                                <div className="rounded-lg border bg-muted/30 overflow-hidden">
+                                    <div className="p-2 flex items-center justify-between">
+                                        <span className="text-xs font-medium">Side 1: Full Body Turnaround</span>
+                                        {side1ImageUrl ? (
+                                            <Badge variant="secondary" className="text-xs bg-green-500/20 text-green-600">
+                                                <CheckCircle className="w-3 h-3 mr-1" /> Ready
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant="secondary" className="text-xs">
+                                                <LoadingSpinner size="xs" color="current" className="mr-1" /> Processing
+                                            </Badge>
+                                        )}
                                     </div>
-                                )}
-                                {side2GalleryId && (
-                                    <div className="flex items-center gap-2 p-2 rounded bg-muted/50">
-                                        <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                                        <div className="flex-1">
-                                            <div className="text-xs font-medium">Side 2: Expressions</div>
-                                            <div className="text-xs text-muted-foreground font-mono truncate">
-                                                {side2GalleryId}
-                                            </div>
+                                    {side1ImageUrl ? (
+                                        <img src={side1ImageUrl} alt="Full body turnaround" className="w-full aspect-video object-cover" />
+                                    ) : (
+                                        <div className="w-full aspect-video bg-muted/50 flex items-center justify-center">
+                                            <LoadingSpinner size="md" />
                                         </div>
-                                        <Badge variant="secondary" className="text-xs">Processing</Badge>
+                                    )}
+                                </div>
+                            )}
+                            {side2GalleryId && (
+                                <div className="rounded-lg border bg-muted/30 overflow-hidden">
+                                    <div className="p-2 flex items-center justify-between">
+                                        <span className="text-xs font-medium">Side 2: Expression Sheet</span>
+                                        {side2ImageUrl ? (
+                                            <Badge variant="secondary" className="text-xs bg-green-500/20 text-green-600">
+                                                <CheckCircle className="w-3 h-3 mr-1" /> Ready
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant="secondary" className="text-xs">
+                                                <LoadingSpinner size="xs" color="current" className="mr-1" /> Processing
+                                            </Badge>
+                                        )}
                                     </div>
-                                )}
-                            </div>
+                                    {side2ImageUrl ? (
+                                        <img src={side2ImageUrl} alt="Expression sheet" className="w-full aspect-video object-cover" />
+                                    ) : (
+                                        <div className="w-full aspect-video bg-muted/50 flex items-center justify-center">
+                                            <LoadingSpinner size="md" />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                         <Button
                             onClick={handleSaveToCharacter}
@@ -444,7 +510,7 @@ export function CharacterSheetGenerator() {
                             className="w-full"
                         >
                             <CheckCircle className="w-4 h-4 mr-2" />
-                            Save Gallery IDs to Character
+                            Save to Character
                         </Button>
                     </div>
                 )}
