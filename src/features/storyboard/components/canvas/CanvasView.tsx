@@ -8,19 +8,22 @@ import {
     PointerSensor,
     useSensor,
     useSensors,
+    DragOverlay,
 } from '@dnd-kit/core'
 import {
     SortableContext,
     rectSortingStrategy,
     sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable'
-import { Upload } from 'lucide-react'
+import { Upload, Film, ImageIcon, Sparkles } from 'lucide-react'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { useStoryboardStore } from '../../store'
-import { CanvasPanel } from './CanvasPanel'
+import { CanvasPanel, type CanvasVideoEntry } from './CanvasPanel'
 import { CanvasToolbar } from './CanvasToolbar'
 import { useCanvasDragDrop } from './useCanvasDragDrop'
 import { useCanvasImport } from './useCanvasImport'
 import { toast } from 'sonner'
+import { cn } from '@/utils/utils'
 
 export function CanvasView() {
     const {
@@ -33,8 +36,11 @@ export function CanvasView() {
 
     const [selectedSequences, setSelectedSequences] = useState<Set<number>>(new Set())
     const [isDragOver, setIsDragOver] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
+    const [gridDensity, setGridDensity] = useState<'compact' | 'normal'>('normal')
+    const [canvasVideos] = useState<Record<number, CanvasVideoEntry>>({})
 
-    const { handleDragStart, handleDragEnd, handleDragCancel } = useCanvasDragDrop()
+    const { activeId, handleDragStart, handleDragEnd, handleDragCancel } = useCanvasDragDrop()
     const { isImporting, handleFileDrop } = useCanvasImport()
 
     const sensors = useSensors(
@@ -43,7 +49,7 @@ export function CanvasView() {
     )
 
     // Filter prompts by active chapter
-    const filteredPrompts = useMemo(() => {
+    const chapterFiltered = useMemo(() => {
         if (!chapters || chapters.length === 0 || activeChapterIndex < 0) {
             return generatedPrompts
         }
@@ -54,10 +60,27 @@ export function CanvasView() {
         )
     }, [generatedPrompts, chapters, activeChapterIndex])
 
+    // Filter by search query
+    const filteredPrompts = useMemo(() => {
+        if (!searchQuery.trim()) return chapterFiltered
+        const q = searchQuery.toLowerCase()
+        return chapterFiltered.filter(p =>
+            p.prompt.toLowerCase().includes(q) ||
+            p.shotType.toLowerCase().includes(q) ||
+            p.characterRefs.some(c => c.name.toLowerCase().includes(q)) ||
+            `#${p.sequence}`.includes(q)
+        )
+    }, [chapterFiltered, searchQuery])
+
     const sortableIds = useMemo(
         () => filteredPrompts.map(p => p.sequence),
         [filteredPrompts]
     )
+
+    // Active drag item for overlay
+    const activeDragShot = activeId !== null
+        ? filteredPrompts.find(p => p.sequence === activeId)
+        : null
 
     const toggleSelect = useCallback((sequence: number) => {
         setSelectedSequences(prev => {
@@ -80,27 +103,54 @@ export function CanvasView() {
     }, [])
 
     const handleGenerateSelected = useCallback(() => {
-        toast.info(`Generate ${selectedSequences.size} shots - use the Generation tab to execute`)
+        if (selectedSequences.size === 0) return
+        toast.info(`${selectedSequences.size} shots queued. Switch to Generation tab to start.`)
     }, [selectedSequences])
 
-    const handleExport = useCallback(() => {
-        toast.info('Export functionality - use the Gallery tab for downloads')
-    }, [])
+    const handleAnimateSelected = useCallback(() => {
+        const eligibleCount = Array.from(selectedSequences).filter(
+            seq => generatedImages[seq]?.status === 'completed' && generatedImages[seq]?.imageUrl
+        ).length
+
+        if (eligibleCount === 0) {
+            toast.error('No completed images selected. Generate images first, then animate.')
+            return
+        }
+
+        toast.info(`${eligibleCount} shots ready for animation. Open Shot Animator to process.`)
+    }, [selectedSequences, generatedImages])
+
+    const handleAnimate = useCallback((sequence: number) => {
+        const img = generatedImages[sequence]
+        if (!img?.imageUrl || img.status !== 'completed') {
+            toast.error('Generate the image first, then animate it.')
+            return
+        }
+        toast.info(`Shot #${sequence} ready for animation. Open Shot Animator to process.`)
+    }, [generatedImages])
+
+    const handleExport = useCallback(async () => {
+        const completedImages = Object.entries(generatedImages)
+            .filter(([, img]) => img.status === 'completed' && img.imageUrl)
+        if (completedImages.length === 0) {
+            toast.info('No completed images to export')
+            return
+        }
+        toast.info(`${completedImages.length} images available. Use Gallery tab for full export.`)
+    }, [generatedImages])
 
     const handleRegenerate = useCallback((sequence: number) => {
-        toast.info(`Regenerate shot #${sequence} - use the Generation tab`)
+        toast.info(`Regenerate shot #${sequence} from Generation tab`)
     }, [])
 
     const onDrop = useCallback((e: React.DragEvent) => {
         setIsDragOver(false)
-        // Check if this is a file drop from OS (not internal dnd-kit drag)
         if (e.dataTransfer.files.length > 0) {
             handleFileDrop(e)
         }
     }, [handleFileDrop])
 
     const onDragOver = useCallback((e: React.DragEvent) => {
-        // Only show drop zone for file drops
         if (e.dataTransfer.types.includes('Files')) {
             e.preventDefault()
             setIsDragOver(true)
@@ -111,73 +161,140 @@ export function CanvasView() {
         setIsDragOver(false)
     }, [])
 
-    if (filteredPrompts.length === 0) {
+    const toggleDensity = useCallback(() => {
+        setGridDensity(prev => prev === 'compact' ? 'normal' : 'compact')
+    }, [])
+
+    const gridCols = gridDensity === 'compact'
+        ? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7'
+        : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+
+    // Empty state
+    if (generatedPrompts.length === 0) {
         return (
             <div
-                className="flex-1 flex flex-col items-center justify-center p-8 text-muted-foreground border-2 border-dashed rounded-lg"
+                className={cn(
+                    'flex-1 flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl transition-colors',
+                    isDragOver ? 'border-primary bg-primary/5' : 'border-border/50'
+                )}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
                 onDragLeave={onDragLeave}
             >
-                <Upload className="w-10 h-10 mb-3 opacity-50" />
-                <p className="text-sm font-medium">No shots yet</p>
-                <p className="text-xs mt-1">Generate shots from the Shots tab, or drop images here to import</p>
+                <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                    <Sparkles className="w-8 h-8 text-muted-foreground/50" />
+                </div>
+                <h3 className="text-sm font-medium text-foreground mb-1">Canvas View</h3>
+                <p className="text-xs text-muted-foreground text-center max-w-[280px] mb-4">
+                    Generate shots from the Shots tab to see them here as draggable panels. You can also drop images from your file system.
+                </p>
+                <div className="flex items-center gap-4 text-[10px] text-muted-foreground/60">
+                    <span className="flex items-center gap-1"><ImageIcon className="w-3 h-3" /> Drop images</span>
+                    <span className="flex items-center gap-1"><Film className="w-3 h-3" /> Animate shots</span>
+                    <span className="flex items-center gap-1"><Upload className="w-3 h-3" /> Reorder freely</span>
+                </div>
             </div>
         )
     }
 
     return (
-        <div className="flex flex-col gap-3 h-full">
-            <CanvasToolbar
-                selectedCount={selectedSequences.size}
-                totalCount={filteredPrompts.length}
-                onSelectAll={selectAll}
-                onDeselectAll={deselectAll}
-                onGenerateSelected={handleGenerateSelected}
-                onExport={handleExport}
-                isImporting={isImporting}
-            />
+        <TooltipProvider>
+            <div className="flex flex-col gap-3 h-full">
+                <CanvasToolbar
+                    selectedCount={selectedSequences.size}
+                    totalCount={filteredPrompts.length}
+                    onSelectAll={selectAll}
+                    onDeselectAll={deselectAll}
+                    onGenerateSelected={handleGenerateSelected}
+                    onAnimateSelected={handleAnimateSelected}
+                    onExport={handleExport}
+                    isImporting={isImporting}
+                    generatedImages={generatedImages}
+                    videos={canvasVideos}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    gridDensity={gridDensity}
+                    onToggleDensity={toggleDensity}
+                />
 
-            <div
-                className={`flex-1 overflow-auto relative rounded-lg ${isDragOver ? 'ring-2 ring-primary bg-primary/5' : ''}`}
-                onDrop={onDrop}
-                onDragOver={onDragOver}
-                onDragLeave={onDragLeave}
-            >
-                {/* File drop overlay */}
-                {isDragOver && (
-                    <div className="absolute inset-0 z-30 flex items-center justify-center bg-primary/10 border-2 border-dashed border-primary rounded-lg">
-                        <div className="text-center">
-                            <Upload className="w-8 h-8 mx-auto mb-2 text-primary" />
-                            <p className="text-sm font-medium text-primary">Drop image to import</p>
-                        </div>
-                    </div>
+                {/* Search results info */}
+                {searchQuery && (
+                    <p className="text-xs text-muted-foreground px-1">
+                        {filteredPrompts.length} of {chapterFiltered.length} shots matching &ldquo;{searchQuery}&rdquo;
+                    </p>
                 )}
 
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    onDragCancel={handleDragCancel}
+                <div
+                    className={cn(
+                        'flex-1 overflow-auto relative rounded-xl transition-colors',
+                        isDragOver && 'ring-2 ring-primary bg-primary/5'
+                    )}
+                    onDrop={onDrop}
+                    onDragOver={onDragOver}
+                    onDragLeave={onDragLeave}
                 >
-                    <SortableContext items={sortableIds} strategy={rectSortingStrategy}>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 p-1">
-                            {filteredPrompts.map(shot => (
-                                <CanvasPanel
-                                    key={shot.sequence}
-                                    shot={shot}
-                                    imageData={generatedImages[shot.sequence]}
-                                    isSelected={selectedSequences.has(shot.sequence)}
-                                    onToggleSelect={toggleSelect}
-                                    onRegenerate={handleRegenerate}
-                                    onOpenShotLab={openShotLab}
-                                />
-                            ))}
+                    {/* File drop overlay */}
+                    {isDragOver && (
+                        <div className="absolute inset-0 z-40 flex items-center justify-center bg-primary/10 border-2 border-dashed border-primary rounded-xl backdrop-blur-sm">
+                            <div className="text-center">
+                                <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-3">
+                                    <Upload className="w-7 h-7 text-primary" />
+                                </div>
+                                <p className="text-sm font-medium text-primary">Drop image to import</p>
+                                <p className="text-xs text-primary/60 mt-1">PNG, JPG, or WebP</p>
+                            </div>
                         </div>
-                    </SortableContext>
-                </DndContext>
+                    )}
+
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                        onDragCancel={handleDragCancel}
+                    >
+                        <SortableContext items={sortableIds} strategy={rectSortingStrategy}>
+                            <div className={cn('grid gap-3 p-1', gridCols)}>
+                                {filteredPrompts.map(shot => (
+                                    <CanvasPanel
+                                        key={shot.sequence}
+                                        shot={shot}
+                                        imageData={generatedImages[shot.sequence]}
+                                        isSelected={selectedSequences.has(shot.sequence)}
+                                        onToggleSelect={toggleSelect}
+                                        onRegenerate={handleRegenerate}
+                                        onOpenShotLab={openShotLab}
+                                        onAnimate={handleAnimate}
+                                        video={canvasVideos[shot.sequence]}
+                                    />
+                                ))}
+                            </div>
+                        </SortableContext>
+
+                        {/* Drag overlay for visual feedback */}
+                        <DragOverlay>
+                            {activeDragShot ? (
+                                <div className="rounded-xl border-2 border-primary bg-card/90 shadow-2xl opacity-90 w-[200px] overflow-hidden backdrop-blur-sm">
+                                    <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
+                                        {generatedImages[activeDragShot.sequence]?.imageUrl ? (
+                                            <img
+                                                src={generatedImages[activeDragShot.sequence].imageUrl}
+                                                alt={`Shot ${activeDragShot.sequence}`}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <ImageIcon className="w-6 h-6 text-muted-foreground/50" />
+                                        )}
+                                    </div>
+                                    <div className="p-1.5 text-center">
+                                        <span className="text-[10px] font-medium">Shot #{activeDragShot.sequence}</span>
+                                    </div>
+                                </div>
+                            ) : null}
+                        </DragOverlay>
+                    </DndContext>
+                </div>
             </div>
-        </div>
+        </TooltipProvider>
     )
 }
