@@ -809,6 +809,24 @@ export const useStoryboardStore = create<StoryboardStore>()(
                 }
                 return persisted
             },
+            // Reset internalTab if the data required for that tab is gone after hydration
+            onRehydrateStorage: () => {
+                return (state) => {
+                    if (!state) return
+                    const tab = state.internalTab
+                    const hasPrompts = state.promptsGenerated && state.generatedPrompts.length > 0
+                    const hasImages = Object.keys(state.generatedImages).length > 0
+
+                    // gallery/generation tabs need data that isn't persisted
+                    if (tab === 'gallery' && !hasImages) {
+                        state.internalTab = hasPrompts ? 'generation' : 'input'
+                    } else if (tab === 'generation' && !hasPrompts) {
+                        state.internalTab = 'input'
+                    } else if (tab === 'shots' && !state.storyText?.trim()) {
+                        state.internalTab = 'input'
+                    }
+                }
+            },
             // Custom storage with quota error handling
             storage: {
                 getItem: (name) => {

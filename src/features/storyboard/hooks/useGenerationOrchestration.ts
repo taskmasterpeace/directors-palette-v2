@@ -170,8 +170,9 @@ export function useGenerationOrchestration({
                 })
             }
 
-            // Auto-navigate to gallery on completion
-            if (generationResults.length > 0 && !generationResults.some(r => r.error)) {
+            // Auto-navigate to gallery on completion (if any succeeded)
+            const anySucceeded = generationResults.some(r => r.imageUrl && !r.error)
+            if (anySucceeded) {
                 setTimeout(() => setInternalTab('gallery'), 500)
             }
         } catch (error) {

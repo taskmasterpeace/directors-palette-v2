@@ -123,22 +123,43 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
 
     // Filter segments by chapter
     // chapterIndex of -1 means "All Chapters" view - show all segments
+    // Falls back to synthetic segments from generatedImages when breakdownResult is unavailable
     const filteredSegments = useMemo(() => {
-        if (!breakdownResult?.segments) return []
-        if (!chapters || chapters.length === 0) return breakdownResult.segments
+        // Build segments from breakdownResult if available
+        let segments = breakdownResult?.segments
+
+        // Fallback: build synthetic segments from generatedImages keys
+        if (!segments || segments.length === 0) {
+            const imageKeys = Object.keys(generatedImages).map(Number).sort((a, b) => a - b)
+            if (imageKeys.length === 0) return []
+
+            const SHOT_COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316']
+            segments = imageKeys.map(seq => {
+                const prompt = generatedPrompts.find(p => p.sequence === seq)
+                return {
+                    sequence: seq,
+                    text: prompt?.originalText || prompt?.prompt || `Shot ${seq}`,
+                    start_index: 0,
+                    end_index: 0,
+                    color: SHOT_COLORS[(seq - 1) % SHOT_COLORS.length]
+                }
+            })
+        }
+
+        if (!chapters || chapters.length === 0) return segments
 
         // "All Chapters" view - show all segments
-        if (chapterIndex < 0) return breakdownResult.segments
+        if (chapterIndex < 0) return segments
 
         const activeChapter = chapters[chapterIndex]
         if (!activeChapter || activeChapter.segmentIndices.length === 0) {
-            return breakdownResult.segments
+            return segments
         }
 
-        return breakdownResult.segments.filter(s =>
+        return segments.filter(s =>
             activeChapter.segmentIndices.includes(s.sequence)
         )
-    }, [breakdownResult?.segments, chapters, chapterIndex])
+    }, [breakdownResult?.segments, chapters, chapterIndex, generatedImages, generatedPrompts])
 
     const [selectedShot, setSelectedShot] = useState<GeneratedShotPrompt | null>(null)
     const [contactSheetOpen, setContactSheetOpen] = useState(false)
