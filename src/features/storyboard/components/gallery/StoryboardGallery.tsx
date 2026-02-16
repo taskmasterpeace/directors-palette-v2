@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
-import { Images, Film, Grid3X3, CheckCircle, AlertCircle, Eye, Download, Info, Clock, RefreshCw, Layers, FlaskConical, Archive, Users } from 'lucide-react'
+import { Images, Film, Grid3X3, CheckCircle, AlertCircle, Eye, Download, Info, Clock, RefreshCw, Layers, FlaskConical, Archive, Users, Wand2, Play } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
@@ -18,6 +18,8 @@ import { toast } from 'sonner'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
 import { TOKENS_PER_IMAGE } from '../../constants/generation.constants'
 import type { GeneratedShotPrompt } from '../../types/storyboard.types'
+import { ShotAnimationService } from '../../services/shot-animation.service'
+import { DIRECTORS } from '@/features/music-lab/data/directors.data'
 import JSZip from 'jszip'
 
 interface StoryboardGalleryProps {
@@ -38,12 +40,17 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
         characters,
         locations,
         generationSettings,
-        openShotLab
+        openShotLab,
+        selectedDirectorId,
+        setVideoStatus,
+        setAnimationPrompt,
     } = useStoryboardStore()
 
     const { balance, fetchBalance } = useCreditsStore()
     const [regeneratingShots, setRegeneratingShots] = useState<Set<number>>(new Set())
     const [isRegeneratingFailed, setIsRegeneratingFailed] = useState(false)
+    const [animatingShots, setAnimatingShots] = useState<Set<number>>(new Set())
+    const [videoPreview, setVideoPreview] = useState<{ url: string; sequence: number } | null>(null)
 
     // Filter segments by chapter
     // chapterIndex of -1 means "All Chapters" view - show all segments
@@ -179,6 +186,69 @@ The color temperature, lighting direction, and overall mood must match across al
             toast.error('Generation Failed', { description: error instanceof Error ? error.message : 'An error occurred' })
         } finally {
             setGeneratingBRollId(null)
+        }
+    }
+
+    // Animate a shot (build dual-layer prompt + dispatch video generation)
+    const handleAnimateShot = async (sequence: number) => {
+        const imageData = generatedImages[sequence]
+        const shotPrompt = generatedPrompts.find(p => p.sequence === sequence)
+        if (!imageData?.imageUrl || !shotPrompt) return
+
+        // If video already exists, show it
+        if (imageData.videoUrl && imageData.videoStatus === 'completed') {
+            setVideoPreview({ url: imageData.videoUrl, sequence })
+            return
+        }
+
+        if (animatingShots.has(sequence)) return
+
+        const director = selectedDirectorId
+            ? DIRECTORS.find(d => d.id === selectedDirectorId)
+            : undefined
+
+        // Build the dual-layer animation prompt
+        const animPrompt = ShotAnimationService.buildAnimationPrompt(
+            shotPrompt.originalText,
+            shotPrompt.prompt,
+            shotPrompt.shotType,
+            director
+        )
+
+        setAnimatingShots(prev => new Set(prev).add(sequence))
+        setAnimationPrompt(sequence, animPrompt)
+        setVideoStatus(sequence, 'generating')
+
+        try {
+            const result = await ShotAnimationService.animateShot({
+                sequence,
+                imageUrl: imageData.imageUrl,
+                animationPrompt: animPrompt,
+                model: 'seedance-lite',
+                duration: 5,
+            })
+
+            // Store prediction ID for polling (video webhook will update status)
+            setGeneratedImage(sequence, {
+                ...generatedImages[sequence],
+                videoPredictionId: result.predictionId,
+                videoStatus: 'generating',
+                animationPrompt: animPrompt,
+            })
+            toast.success(`Shot ${sequence} animation started`, {
+                description: 'Video will appear when rendering completes.'
+            })
+        } catch (error) {
+            setVideoStatus(sequence, 'failed', undefined, error instanceof Error ? error.message : 'Animation failed')
+            toast.error(`Animation failed for shot ${sequence}`, {
+                description: error instanceof Error ? error.message : 'Unknown error'
+            })
+        } finally {
+            setAnimatingShots(prev => {
+                const next = new Set(prev)
+                next.delete(sequence)
+                return next
+            })
         }
     }
 
@@ -581,6 +651,20 @@ The color temperature, lighting direction, and overall mood must match across al
                                                         </div>
                                                     )}
 
+                                                    {/* Video ready badge */}
+                                                    {generatedImage?.videoStatus === 'completed' && generatedImage?.videoUrl && (
+                                                        <Badge
+                                                            className="absolute top-1 right-8 text-xs bg-indigo-600/80 text-white border-0 cursor-pointer"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                setVideoPreview({ url: generatedImage.videoUrl!, sequence: segment.sequence })
+                                                            }}
+                                                        >
+                                                            <Film className="w-3 h-3 mr-1" />
+                                                            Video
+                                                        </Badge>
+                                                    )}
+
                                                     {hasVariants && (
                                                         <Badge
                                                             variant="secondary"
@@ -672,6 +756,35 @@ The color temperature, lighting direction, and overall mood must match across al
                                                     )}
                                                     {generatedImage?.imageUrl && (
                                                         <Button
+                                                            size="sm"
+                                                            className={`w-full ${
+                                                                generatedImage.videoStatus === 'completed'
+                                                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                                                    : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                                            }`}
+                                                            disabled={animatingShots.has(segment.sequence) || generatedImage.videoStatus === 'generating'}
+                                                            onClick={() => handleAnimateShot(segment.sequence)}
+                                                        >
+                                                            {animatingShots.has(segment.sequence) || generatedImage.videoStatus === 'generating' ? (
+                                                                <>
+                                                                    <LoadingSpinner size="xs" color="current" className="mr-1" />
+                                                                    Animating...
+                                                                </>
+                                                            ) : generatedImage.videoStatus === 'completed' && generatedImage.videoUrl ? (
+                                                                <>
+                                                                    <Play className="w-4 h-4 mr-1" />
+                                                                    Play Video
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <Wand2 className="w-4 h-4 mr-1" />
+                                                                    Animate
+                                                                </>
+                                                            )}
+                                                        </Button>
+                                                    )}
+                                                    {generatedImage?.imageUrl && (
+                                                        <Button
                                                             variant="outline"
                                                             size="sm"
                                                             className="w-full"
@@ -757,6 +870,34 @@ The color temperature, lighting direction, and overall mood must match across al
                         >
                             Close
                         </Button>
+                    </div>
+                </div>
+            )}
+
+            {/* Video Preview Modal */}
+            {videoPreview && (
+                <div
+                    className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+                    onClick={() => setVideoPreview(null)}
+                >
+                    <div className="relative max-w-4xl max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+                        <video
+                            src={videoPreview.url}
+                            controls
+                            autoPlay
+                            loop
+                            className="max-w-full max-h-[80vh] rounded-lg"
+                        />
+                        <div className="flex items-center justify-between mt-2">
+                            <span className="text-white/80 text-sm">Shot {videoPreview.sequence} - Animation</span>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => setVideoPreview(null)}
+                            >
+                                Close
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}

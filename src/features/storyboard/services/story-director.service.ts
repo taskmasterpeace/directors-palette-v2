@@ -1,5 +1,5 @@
 import { StoryboardShot, GeneratedShotPrompt, DirectorPitch } from '../types/storyboard.types'
-import type { ShotType } from '../types/storyboard.types'
+import type { ShotType, CameraSetup } from '../types/storyboard.types'
 import { DirectorFingerprint } from '@/features/music-lab/types/director.types'
 import { EquipmentTranslationService } from './equipment-translation.service'
 import type { ModelId } from '@/config'
@@ -301,6 +301,145 @@ export class StoryDirectorService {
                 enhanced: this.enhancePrompt(prompts[0]?.prompt || "Original prompt", director, prompts[0]?.shotType)
             }
         }
+    }
+
+    /**
+     * Select and reorder camera kit setups based on story content.
+     * Analyzes the story to determine which shot brackets are most relevant.
+     */
+    static selectCameraKit(
+        storyText: string,
+        director: DirectorFingerprint
+    ): { setups: CameraSetup[]; recommendation: string } {
+        if (!director.cameraRig || director.cameraRig.setups.length === 0) {
+            return { setups: [], recommendation: 'No camera kit configured' }
+        }
+
+        const textLower = storyText.toLowerCase()
+
+        // Analyze story content
+        const dialogueKeywords = ['said', 'asked', 'replied', 'told', 'whispered', 'shouted', 'talked', 'spoke', 'conversation', 'dialogue']
+        const actionKeywords = ['ran', 'chased', 'fought', 'drove', 'jumped', 'flew', 'raced', 'crashed', 'exploded', 'battle']
+        const introspectiveKeywords = ['thought', 'felt', 'remembered', 'dreamed', 'reflected', 'wondered', 'pondered', 'realized']
+
+        const dialogueCount = dialogueKeywords.filter(k => textLower.includes(k)).length
+        const actionCount = actionKeywords.filter(k => textLower.includes(k)).length
+        const introCount = introspectiveKeywords.filter(k => textLower.includes(k)).length
+
+        const setups = [...director.cameraRig.setups]
+        let recommendation: string
+
+        if (dialogueCount > actionCount && dialogueCount > introCount) {
+            // Dialogue-heavy → close + medium first
+            setups.sort((a, b) => {
+                const order: Record<string, number> = { close: 0, medium: 1, wide: 2 }
+                return (order[a.shotBracket] ?? 2) - (order[b.shotBracket] ?? 2)
+            })
+            recommendation = 'Dialogue-heavy story: close and medium setups prioritized'
+        } else if (actionCount > dialogueCount && actionCount > introCount) {
+            // Action-heavy → wide + tracking first
+            setups.sort((a, b) => {
+                const order: Record<string, number> = { wide: 0, medium: 1, close: 2 }
+                return (order[a.shotBracket] ?? 2) - (order[b.shotBracket] ?? 2)
+            })
+            recommendation = 'Action-heavy story: wide and tracking setups prioritized'
+        } else if (introCount > 0) {
+            // Introspective → use director's default distance bias
+            const bias = director.cameraPhilosophy.distanceBias
+            if (bias === 'intimate' || bias === 'mid-range') {
+                setups.sort((a, b) => {
+                    const order: Record<string, number> = { close: 0, medium: 1, wide: 2 }
+                    return (order[a.shotBracket] ?? 2) - (order[b.shotBracket] ?? 2)
+                })
+                recommendation = 'Introspective story: intimate setups prioritized'
+            } else {
+                recommendation = 'Introspective story: using director\'s default kit order'
+            }
+        } else {
+            recommendation = 'Balanced story: full kit available'
+        }
+
+        return { setups, recommendation }
+    }
+
+    /**
+     * Calculate how enthusiastic a director would be about the given story.
+     * Returns a score 0-100 and reasons for the score.
+     * Uses keyword matching against the director's fingerprint (no LLM needed).
+     */
+    static calculateEnthusiasm(
+        storyText: string,
+        director: DirectorFingerprint
+    ): { score: number; reasons: string[] } {
+        const textLower = storyText.toLowerCase()
+        let score = 0
+        const reasons: string[] = []
+
+        // 1. Primary focus keywords (+20 per match, max 40)
+        const focusMatches = director.coreIntent.primaryFocus.filter(
+            keyword => textLower.includes(keyword.toLowerCase())
+        )
+        const focusPoints = Math.min(focusMatches.length * 20, 40)
+        score += focusPoints
+        if (focusMatches.length > 0) {
+            reasons.push(`Story themes match: ${focusMatches.slice(0, 3).join(', ')}`)
+        }
+
+        // 2. Preferred emotional states (+15 per match, max 30)
+        const emotionMatches = director.emotionalLanguage.preferredEmotionalStates.filter(
+            emotion => textLower.includes(emotion.toLowerCase())
+        )
+        const emotionPoints = Math.min(emotionMatches.length * 15, 30)
+        score += emotionPoints
+        if (emotionMatches.length > 0) {
+            reasons.push(`Emotional tone aligns: ${emotionMatches.slice(0, 2).join(', ')}`)
+        }
+
+        // 3. Emotional temperature alignment (+10)
+        const temp = director.coreIntent.emotionalTemperature
+        const warmKeywords = ['love', 'warmth', 'embrace', 'heart', 'tender', 'hope', 'joy']
+        const coolKeywords = ['cold', 'distant', 'alone', 'silence', 'empty', 'bleak', 'gray']
+        const electricKeywords = ['energy', 'power', 'explosive', 'intense', 'fire', 'fury', 'wild']
+
+        const hasWarm = warmKeywords.some(k => textLower.includes(k))
+        const hasCool = coolKeywords.some(k => textLower.includes(k))
+        const hasElectric = electricKeywords.some(k => textLower.includes(k))
+
+        if ((temp === 'warm' && hasWarm) || (temp === 'cool' && hasCool) || (temp === 'electric' && hasElectric)) {
+            score += 10
+            reasons.push(`Temperature match: ${temp}`)
+        }
+
+        // 4. Story length vs shot duration bias (+10)
+        const wordCount = storyText.split(/\s+/).length
+        const shotBias = director.rhythmAndPacing?.shotDurationBias
+        if (shotBias === 'short' && wordCount < 200) {
+            score += 10
+            reasons.push('Compact story suits short-shot style')
+        } else if (shotBias === 'long' && wordCount > 500) {
+            score += 10
+            reasons.push('Rich narrative suits long-take style')
+        } else if (shotBias === 'mixed' && wordCount >= 200 && wordCount <= 500) {
+            score += 10
+            reasons.push('Story length suits varied pacing')
+        }
+
+        // 5. Action density vs motion frequency (+10)
+        const actionVerbs = ['runs', 'fights', 'chases', 'storms', 'dances', 'jumps', 'crashes', 'explodes', 'flies', 'races']
+        const stillVerbs = ['stands', 'waits', 'watches', 'sits', 'stares', 'contemplates', 'reflects']
+        const actionCount = actionVerbs.filter(v => textLower.includes(v)).length
+        const stillCount = stillVerbs.filter(v => textLower.includes(v)).length
+        const motionFreq = director.cameraMotionProfile?.motionFrequency
+
+        if ((motionFreq === 'frequent' || motionFreq === 'constant') && actionCount > stillCount) {
+            score += 10
+            reasons.push('Action-heavy story matches dynamic camera')
+        } else if ((motionFreq === 'rare' || motionFreq === 'occasional') && stillCount >= actionCount) {
+            score += 10
+            reasons.push('Contemplative story matches restrained camera')
+        }
+
+        return { score: Math.min(score, 100), reasons }
     }
 
     private static getDirectorStyleString(director: DirectorFingerprint): string {

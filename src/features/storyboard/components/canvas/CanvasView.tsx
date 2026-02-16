@@ -22,6 +22,8 @@ import { CanvasPanel, type CanvasVideoEntry } from './CanvasPanel'
 import { CanvasToolbar } from './CanvasToolbar'
 import { useCanvasDragDrop } from './useCanvasDragDrop'
 import { useCanvasImport } from './useCanvasImport'
+import { ShotAnimationService } from '../../services/shot-animation.service'
+import { DIRECTORS } from '@/features/music-lab/data/directors.data'
 import { toast } from 'sonner'
 import { cn } from '@/utils/utils'
 
@@ -32,13 +34,35 @@ export function CanvasView() {
         openShotLab,
         chapters,
         activeChapterIndex,
+        selectedDirectorId,
+        setVideoStatus,
+        setAnimationPrompt,
+        setGeneratedImage,
     } = useStoryboardStore()
 
     const [selectedSequences, setSelectedSequences] = useState<Set<number>>(new Set())
     const [isDragOver, setIsDragOver] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [gridDensity, setGridDensity] = useState<'compact' | 'normal'>('normal')
-    const [canvasVideos] = useState<Record<number, CanvasVideoEntry>>({})
+    // Derive canvas video entries from generatedImages video fields
+    const canvasVideos = useMemo(() => {
+        const videos: Record<number, CanvasVideoEntry> = {}
+        for (const [seqStr, img] of Object.entries(generatedImages)) {
+            if (img.videoStatus && img.videoStatus !== 'idle') {
+                const seq = Number(seqStr)
+                videos[seq] = {
+                    galleryId: img.videoPredictionId || '',
+                    videoUrl: img.videoUrl,
+                    status: img.videoStatus === 'generating' ? 'processing'
+                        : img.videoStatus === 'completed' ? 'completed'
+                        : img.videoStatus === 'failed' ? 'failed'
+                        : 'pending',
+                    error: img.videoError,
+                }
+            }
+        }
+        return videos
+    }, [generatedImages])
 
     const { activeId, handleDragStart, handleDragEnd, handleDragCancel } = useCanvasDragDrop()
     const { isImporting, handleFileDrop } = useCanvasImport()
@@ -120,14 +144,62 @@ export function CanvasView() {
         toast.info(`${eligibleCount} shots ready for animation. Open Shot Animator to process.`)
     }, [selectedSequences, generatedImages])
 
-    const handleAnimate = useCallback((sequence: number) => {
+    const handleAnimate = useCallback(async (sequence: number) => {
         const img = generatedImages[sequence]
         if (!img?.imageUrl || img.status !== 'completed') {
             toast.error('Generate the image first, then animate it.')
             return
         }
-        toast.info(`Shot #${sequence} ready for animation. Open Shot Animator to process.`)
-    }, [generatedImages])
+
+        // If video already completed, just notify
+        if (img.videoStatus === 'completed' && img.videoUrl) {
+            toast.info('Video already generated. Click to play in Gallery view.')
+            return
+        }
+
+        if (img.videoStatus === 'generating') {
+            toast.info('Animation is already in progress.')
+            return
+        }
+
+        const shotPrompt = generatedPrompts.find(p => p.sequence === sequence)
+        if (!shotPrompt) return
+
+        const director = selectedDirectorId
+            ? DIRECTORS.find(d => d.id === selectedDirectorId)
+            : undefined
+
+        const animPrompt = ShotAnimationService.buildAnimationPrompt(
+            shotPrompt.originalText,
+            shotPrompt.prompt,
+            shotPrompt.shotType,
+            director
+        )
+
+        setAnimationPrompt(sequence, animPrompt)
+        setVideoStatus(sequence, 'generating')
+
+        try {
+            const result = await ShotAnimationService.animateShot({
+                sequence,
+                imageUrl: img.imageUrl,
+                animationPrompt: animPrompt,
+                model: 'seedance-lite',
+                duration: 5,
+            })
+
+            setGeneratedImage(sequence, {
+                ...generatedImages[sequence],
+                videoPredictionId: result.predictionId,
+                videoStatus: 'generating',
+                animationPrompt: animPrompt,
+            })
+            toast.success(`Shot #${sequence} animation started`)
+        } catch (error) {
+            setVideoStatus(sequence, 'failed', undefined, error instanceof Error ? error.message : 'Animation failed')
+            toast.error(`Animation failed for shot #${sequence}`)
+        }
+    }, [generatedImages, generatedPrompts, selectedDirectorId, setAnimationPrompt, setVideoStatus, setGeneratedImage])
 
     const handleExport = useCallback(async () => {
         const completedImages = Object.entries(generatedImages)

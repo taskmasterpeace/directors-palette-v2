@@ -16,34 +16,37 @@ import { lognog } from '@/lib/lognog'
 
 const MODEL = 'openai/gpt-4o-mini'
 
-const SYSTEM_PROMPT = `You are a cinematic motion director. Given an image and its original generation prompt, create a brief animation direction.
+const SYSTEM_PROMPT = `You are a cinematic motion director. Given an image, its original generation prompt, and optional story/director context, create a brief animation direction.
 
-TASK: Describe natural, subtle motion that brings this still image to life.
+TASK: Describe natural motion that brings this still image to life, incorporating any provided story action and director camera style.
 
 MOTION CATEGORIES (pick 1-2 that fit best):
-- Camera: slow pan, gentle zoom, drift, push in, pull out
-- Subject: breathing, blinking, subtle movement, gesture
+- Camera: slow pan, gentle zoom, drift, push in, pull out, tracking shot, crane
+- Subject: breathing, blinking, subtle movement, gesture, walking, turning
 - Environment: wind, flowing water, drifting clouds, floating particles
 - Atmosphere: light shifts, shadows moving, flickering, haze
 
 RULES:
 1. Be BRIEF - 1-2 sentences max
 2. Match the mood of the original image/prompt
-3. Prefer subtle, natural motion over dramatic action
-4. Don't describe what's IN the image - focus ONLY on how it should MOVE
-5. Use present tense, active voice
+3. If story context is provided, incorporate the ACTIONS described (e.g., if character walks, include walking motion)
+4. If director camera direction is provided, use THAT specific camera movement style
+5. Don't describe what's IN the image - focus ONLY on how it should MOVE
+6. Use present tense, active voice
 
 EXAMPLES:
 - "Gentle camera push-in, subject's hair moves slightly in the breeze"
 - "Slow pan right, clouds drift lazily across the sky"
-- "Subject breathes softly, candlelight flickers in background"
-- "Camera slowly zooms out, dust particles float in the light beams"
+- "Character storms forward through doorway, measured push-in tracking the movement"
+- "Figure stands motionless on ridge, locked static frame, wind moves through grass"
 
 OUTPUT: Return ONLY the animation direction. No explanations, no quotes, just the motion description.`
 
 interface AnimationPromptRequest {
     imageUrl: string
     originalPrompt: string
+    storyContext?: string
+    directorMotion?: string
 }
 
 export async function POST(request: NextRequest) {
@@ -59,7 +62,7 @@ export async function POST(request: NextRequest) {
         userEmail = auth.user.email
 
         const body: AnimationPromptRequest = await request.json()
-        const { imageUrl, originalPrompt } = body
+        const { imageUrl, originalPrompt, storyContext, directorMotion } = body
 
         if (!imageUrl) {
             return NextResponse.json({ error: 'No image URL provided' }, { status: 400 })
@@ -69,11 +72,27 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'No original prompt provided' }, { status: 400 })
         }
 
-        // Build the user message with both image and text context
-        const userMessage = `Original prompt used to generate this image:
-"${originalPrompt}"
+        // Build the user message with image, text context, and optional story/director info
+        let userMessage = `Original prompt used to generate this image:
+"${originalPrompt}"`
 
-Analyze the image and create an animation direction that feels natural for this scene.`
+        if (storyContext) {
+            userMessage += `\n\nStory context (what's happening in this scene):
+"${storyContext}"`
+        }
+
+        if (directorMotion) {
+            userMessage += `\n\nDirector's camera direction for this shot:
+"${directorMotion}"`
+        }
+
+        userMessage += '\n\nAnalyze the image and create an animation direction that feels natural for this scene.'
+        if (storyContext) {
+            userMessage += ' Incorporate the story action described above.'
+        }
+        if (directorMotion) {
+            userMessage += ' Use the director\'s camera style as your primary camera movement guide.'
+        }
 
         // Call OpenRouter with GPT-4o-mini vision
         const openRouterStart = Date.now()

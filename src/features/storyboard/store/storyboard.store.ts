@@ -231,6 +231,10 @@ export interface StoryboardStore {
     updateGeneratedImageStatus: (shotNumber: number, status: 'pending' | 'generating' | 'completed' | 'failed', imageUrl?: string, error?: string) => void
     clearGeneratedImages: () => void
 
+    // ---- Video/Animation Actions ----
+    setVideoStatus: (sequence: number, status: 'idle' | 'generating' | 'completed' | 'failed', videoUrl?: string, error?: string) => void
+    setAnimationPrompt: (sequence: number, prompt: string) => void
+
     // ---- Chapter Actions ----
     setChapters: (result: ChapterDetectionResult) => void
     setActiveChapter: (index: number) => void
@@ -622,6 +626,28 @@ export const useStoryboardStore = create<StoryboardStore>()(
                 }
             })),
             clearGeneratedImages: () => set({ generatedImages: {} }),
+
+            // ---- Video/Animation Actions ----
+            setVideoStatus: (sequence, status, videoUrl, error) => set((state) => ({
+                generatedImages: {
+                    ...state.generatedImages,
+                    [sequence]: {
+                        ...state.generatedImages[sequence],
+                        videoStatus: status,
+                        ...(videoUrl !== undefined && { videoUrl }),
+                        ...(error !== undefined && { videoError: error })
+                    }
+                }
+            })),
+            setAnimationPrompt: (sequence, prompt) => set((state) => ({
+                generatedImages: {
+                    ...state.generatedImages,
+                    [sequence]: {
+                        ...state.generatedImages[sequence],
+                        animationPrompt: prompt
+                    }
+                }
+            })),
 
             // ---- Chapter Actions ----
             setChapters: (result) => set({

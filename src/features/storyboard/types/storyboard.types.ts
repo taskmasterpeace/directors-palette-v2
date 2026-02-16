@@ -707,6 +707,13 @@ export interface GeneratedImageData {
     // Timestamps
     generationTimestamp?: string
     generationDurationMs?: number
+
+    // Animation/video fields
+    videoUrl?: string
+    videoStatus?: 'idle' | 'generating' | 'completed' | 'failed'
+    videoPredictionId?: string
+    videoError?: string
+    animationPrompt?: string
 }
 
 /**
