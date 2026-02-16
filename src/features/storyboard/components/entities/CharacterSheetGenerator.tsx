@@ -305,7 +305,7 @@ export function CharacterSheetGenerator() {
                 }
 
                 // Call the API to generate
-                const response = await fetch('/api/generate/image', {
+                const response = await fetch('/api/generation/image', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

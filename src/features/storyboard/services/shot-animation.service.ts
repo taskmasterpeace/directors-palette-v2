@@ -197,6 +197,9 @@ export class ShotAnimationService {
                 modelSettings: {
                     duration,
                     aspectRatio: '16:9',
+                    resolution: '720p',
+                    fps: 24,
+                    cameraFixed: false,
                 },
                 extraMetadata: {
                     source: 'storyboard-animation',

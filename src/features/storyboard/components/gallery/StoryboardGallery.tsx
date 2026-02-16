@@ -1,16 +1,18 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
-import { Images, Film, Grid3X3, CheckCircle, AlertCircle, Eye, Download, Info, Clock, RefreshCw, Layers, FlaskConical, Archive, Users, Wand2, Play } from 'lucide-react'
+import { Images, Film, Grid3X3, CheckCircle, AlertCircle, Eye, Download, Clock, RefreshCw, Layers, FlaskConical, Archive, Users, Wand2, Play } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { getClient } from '@/lib/db/client'
 import { BRollGenerator } from '../broll/BRollGenerator'
 import { ContactSheetModal } from '../contact-sheet/ContactSheetModal'
 import { storyboardGenerationService } from '../../services/storyboard-generation.service'
@@ -46,11 +48,78 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
         setAnimationPrompt,
     } = useStoryboardStore()
 
+    const { user } = useAuth()
     const { balance, fetchBalance } = useCreditsStore()
     const [regeneratingShots, setRegeneratingShots] = useState<Set<number>>(new Set())
     const [isRegeneratingFailed, setIsRegeneratingFailed] = useState(false)
     const [animatingShots, setAnimatingShots] = useState<Set<number>>(new Set())
     const [videoPreview, setVideoPreview] = useState<{ url: string; sequence: number } | null>(null)
+
+    // Supabase realtime subscription for video status updates
+    useEffect(() => {
+        if (!user) return
+
+        // Collect gallery IDs for shots with generating video status
+        const generatingEntries: { sequence: number; predictionId: string }[] = []
+        for (const [seq, img] of Object.entries(generatedImages)) {
+            if (img.videoStatus === 'generating' && img.videoPredictionId) {
+                generatingEntries.push({ sequence: Number(seq), predictionId: img.videoPredictionId })
+            }
+        }
+
+        if (generatingEntries.length === 0) return
+
+        let subscription: { unsubscribe: () => void } | null = null
+
+        const setupSubscription = async () => {
+            const supabase = await getClient()
+            if (!supabase) return
+
+            subscription = supabase
+                .channel(`storyboard-videos-${Date.now()}`)
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'gallery',
+                    },
+                    (payload) => {
+                        const updatedRecord = payload.new as { id: string; public_url?: string; metadata?: Record<string, unknown> }
+
+                        // Find which sequence this gallery record belongs to
+                        for (const [seq, img] of Object.entries(generatedImages)) {
+                            if (img.videoPredictionId && img.videoStatus === 'generating') {
+                                // Match by checking metadata for prediction ID or by gallery record
+                                const metadata = updatedRecord.metadata as Record<string, unknown> | undefined
+                                const recordPredictionId = metadata?.prediction_id || metadata?.predictionId
+
+                                if (recordPredictionId === img.videoPredictionId) {
+                                    const sequence = Number(seq)
+                                    if (updatedRecord.public_url) {
+                                        setVideoStatus(sequence, 'completed', updatedRecord.public_url)
+                                        toast.success(`Shot ${sequence} video ready!`)
+                                    } else if (metadata?.error) {
+                                        setVideoStatus(sequence, 'failed', undefined, String(metadata.error))
+                                        toast.error(`Shot ${sequence} video failed`, { description: String(metadata.error) })
+                                    }
+                                    return
+                                }
+                            }
+                        }
+                    }
+                )
+                .subscribe()
+        }
+
+        setupSubscription()
+
+        return () => {
+            if (subscription) {
+                subscription.unsubscribe()
+            }
+        }
+    }, [user, generatedImages, setVideoStatus])
 
     // Filter segments by chapter
     // chapterIndex of -1 means "All Chapters" view - show all segments
@@ -228,7 +297,7 @@ The color temperature, lighting direction, and overall mood must match across al
                 duration: 5,
             })
 
-            // Store prediction ID for polling (video webhook will update status)
+            // Store prediction ID for polling (realtime subscription will update status)
             setGeneratedImage(sequence, {
                 ...generatedImages[sequence],
                 videoPredictionId: result.predictionId,
@@ -530,6 +599,9 @@ The color temperature, lighting direction, and overall mood must match across al
                                             v => v.storyboard_shot_id === shotId
                                         )
                                         const generatedImage = generatedImages[segment.sequence]
+                                        const isAnimating = animatingShots.has(segment.sequence) || generatedImage?.videoStatus === 'generating'
+                                        const isFailed = generatedImage?.status === 'failed'
+                                        const hasImage = !!generatedImage?.imageUrl
 
                                         return (
                                             <div
@@ -555,7 +627,7 @@ The color temperature, lighting direction, and overall mood must match across al
                                                                     <TooltipProvider>
                                                                         <Tooltip>
                                                                             <TooltipTrigger asChild>
-                                                                                <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-2 py-1 text-[11px] text-white/90 line-clamp-1 pointer-events-auto">
+                                                                                <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-2 py-1 text-[11px] text-white/90 line-clamp-1 pointer-events-auto group-hover:opacity-0 transition-opacity">
                                                                                     {shotPrompt.prompt}
                                                                                 </div>
                                                                             </TooltipTrigger>
@@ -606,7 +678,7 @@ The color temperature, lighting direction, and overall mood must match across al
                                                         const refs = shotPrompt.characterRefs
                                                         const overflow = refs.length - maxShow
                                                         return (
-                                                            <div className="absolute bottom-1 left-1 flex gap-0.5">
+                                                            <div className="absolute top-1 left-8 flex gap-0.5 group-hover:opacity-0 transition-opacity">
                                                                 {refs.slice(0, maxShow).map(c => (
                                                                     <Badge
                                                                         key={c.id}
@@ -665,174 +737,161 @@ The color temperature, lighting direction, and overall mood must match across al
                                                         </Badge>
                                                     )}
 
+                                                    {/* Animating spinner badge */}
+                                                    {isAnimating && (
+                                                        <Badge className="absolute top-1 right-8 text-xs bg-indigo-600/80 text-white border-0">
+                                                            <LoadingSpinner size="xs" color="current" className="mr-1" />
+                                                            Animating
+                                                        </Badge>
+                                                    )}
+
                                                     {hasVariants && (
                                                         <Badge
                                                             variant="secondary"
-                                                            className="absolute bottom-1 right-1 text-xs"
+                                                            className="absolute bottom-1 right-1 text-xs group-hover:opacity-0 transition-opacity"
                                                         >
                                                             <Grid3X3 className="w-3 h-3 mr-1" />
                                                             3x3
                                                         </Badge>
                                                     )}
-                                                </div>
 
-                                                {/* Hover Actions */}
-                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex flex-col items-center justify-center gap-2 p-2">
-                                                    {/* Retry button for failed shots */}
-                                                    {generatedImage?.status === 'failed' && (
-                                                        <Button
-                                                            variant="destructive"
-                                                            size="sm"
-                                                            className="w-full"
-                                                            onClick={() => handleRegenerateSingleShot(segment.sequence)}
-                                                            disabled={regeneratingShots.has(segment.sequence)}
-                                                        >
-                                                            {regeneratingShots.has(segment.sequence) ? (
-                                                                <>
-                                                                    <LoadingSpinner size="sm" color="current" className="mr-1" />
-                                                                    Retrying...
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <RefreshCw className="w-4 h-4 mr-1" />
-                                                                    Retry Shot
-                                                                </>
-                                                            )}
-                                                        </Button>
-                                                    )}
-                                                    {/* Error message display */}
-                                                    {generatedImage?.status === 'failed' && generatedImage?.error && (
-                                                        <p className="text-xs text-red-300 text-center px-2">
-                                                            {generatedImage.error}
-                                                        </p>
-                                                    )}
-                                                    {generatedImage?.imageUrl && (
-                                                        <Button
-                                                            size="sm"
-                                                            className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                                                            onClick={() => openShotLab(segment.sequence)}
-                                                        >
-                                                            <FlaskConical className="w-4 h-4 mr-1" />
-                                                            Shot Lab
-                                                        </Button>
-                                                    )}
-                                                    {generatedImage?.imageUrl && (
-                                                        <Button
-                                                            variant="secondary"
-                                                            size="sm"
-                                                            className="w-full"
-                                                            onClick={() => setPreviewImage(generatedImage.imageUrl || null)}
-                                                        >
-                                                            <Eye className="w-4 h-4 mr-1" />
-                                                            Preview
-                                                        </Button>
-                                                    )}
-                                                    {generatedImage?.imageUrl && (
-                                                        <div className="flex gap-1 w-full">
+                                                    {/* FAILED SHOT: Centered retry overlay */}
+                                                    {isFailed && (
+                                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex flex-col items-center justify-center gap-2">
                                                             <Button
-                                                                variant="secondary"
+                                                                variant="destructive"
                                                                 size="sm"
-                                                                className="flex-1"
-                                                                onClick={() => handleOpenContactSheet(segment.sequence)}
+                                                                onClick={() => handleRegenerateSingleShot(segment.sequence)}
+                                                                disabled={regeneratingShots.has(segment.sequence)}
                                                             >
-                                                                <Grid3X3 className="w-4 h-4 mr-1" />
-                                                                Angles
-                                                            </Button>
-                                                            <Button
-                                                                variant="secondary"
-                                                                size="sm"
-                                                                className="flex-1"
-                                                                disabled={generatingBRollId === segment.sequence}
-                                                                onClick={() => handleGenerateBRollGrid(generatedImage.imageUrl!, segment.sequence)}
-                                                            >
-                                                                {generatingBRollId === segment.sequence ? (
-                                                                    <LoadingSpinner size="sm" className="w-4 h-4 mr-1" />
+                                                                {regeneratingShots.has(segment.sequence) ? (
+                                                                    <>
+                                                                        <LoadingSpinner size="sm" color="current" className="mr-1" />
+                                                                        Retrying...
+                                                                    </>
                                                                 ) : (
-                                                                    <Layers className="w-4 h-4 mr-1" />
+                                                                    <>
+                                                                        <RefreshCw className="w-4 h-4 mr-1" />
+                                                                        Retry Shot
+                                                                    </>
                                                                 )}
-                                                                B-Roll
                                                             </Button>
+                                                            {generatedImage?.error && (
+                                                                <p className="text-xs text-red-300 text-center px-2 max-w-[90%]">
+                                                                    {generatedImage.error}
+                                                                </p>
+                                                            )}
                                                         </div>
                                                     )}
-                                                    {generatedImage?.imageUrl && (
-                                                        <Button
-                                                            size="sm"
-                                                            className={`w-full ${
-                                                                generatedImage.videoStatus === 'completed'
-                                                                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                                                                    : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                                                            }`}
-                                                            disabled={animatingShots.has(segment.sequence) || generatedImage.videoStatus === 'generating'}
-                                                            onClick={() => handleAnimateShot(segment.sequence)}
-                                                        >
-                                                            {animatingShots.has(segment.sequence) || generatedImage.videoStatus === 'generating' ? (
-                                                                <>
-                                                                    <LoadingSpinner size="xs" color="current" className="mr-1" />
-                                                                    Animating...
-                                                                </>
-                                                            ) : generatedImage.videoStatus === 'completed' && generatedImage.videoUrl ? (
-                                                                <>
-                                                                    <Play className="w-4 h-4 mr-1" />
-                                                                    Play Video
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <Wand2 className="w-4 h-4 mr-1" />
-                                                                    Animate
-                                                                </>
-                                                            )}
-                                                        </Button>
-                                                    )}
-                                                    {generatedImage?.imageUrl && (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="w-full"
-                                                            onClick={() => {
-                                                                const link = document.createElement('a')
-                                                                link.href = generatedImage.imageUrl!
-                                                                link.download = `shot-${segment.sequence}.png`
-                                                                link.click()
-                                                            }}
-                                                        >
-                                                            <Download className="w-4 h-4 mr-1" />
-                                                            Download
-                                                        </Button>
-                                                    )}
 
-                                                    {/* Metadata Info */}
-                                                    {generatedImage?.generationTimestamp && (
-                                                        <TooltipProvider>
-                                                            <Tooltip>
-                                                                <TooltipTrigger asChild>
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="sm"
-                                                                        className="w-full text-muted-foreground hover:text-white"
-                                                                    >
-                                                                        <Info className="w-4 h-4 mr-1" />
-                                                                        Metadata
-                                                                    </Button>
-                                                                </TooltipTrigger>
-                                                                <TooltipContent side="top" className="max-w-[280px] text-xs">
-                                                                    <div className="space-y-1">
-                                                                        {generatedImage.chapterTitle && (
-                                                                            <p><span className="text-muted-foreground">Chapter:</span> {generatedImage.chapterTitle}</p>
-                                                                        )}
-                                                                        {generatedImage.styleGuideUsed && (
-                                                                            <p><span className="text-muted-foreground">Style:</span> {generatedImage.styleGuideUsed.name}</p>
-                                                                        )}
-                                                                        {generatedImage.generationConfig && (
-                                                                            <p><span className="text-muted-foreground">Config:</span> {generatedImage.generationConfig.aspectRatio} / {generatedImage.generationConfig.resolution}</p>
-                                                                        )}
-                                                                        {generatedImage.appliedWildcards && Object.keys(generatedImage.appliedWildcards).length > 0 && (
-                                                                            <p><span className="text-muted-foreground">Wildcards:</span> {Object.keys(generatedImage.appliedWildcards).join(', ')}</p>
-                                                                        )}
-                                                                        <p><span className="text-muted-foreground">Generated:</span> {new Date(generatedImage.generationTimestamp).toLocaleString()}</p>
-                                                                    </div>
-                                                                </TooltipContent>
-                                                            </Tooltip>
-                                                        </TooltipProvider>
+                                                    {/* COMPLETED SHOT: Icon toolbar at bottom */}
+                                                    {hasImage && !isFailed && (
+                                                        <div className="absolute bottom-0 left-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <div className="flex items-center justify-center gap-1 bg-black/80 backdrop-blur-sm px-2 py-1.5 rounded-b-lg">
+                                                                <TooltipProvider delayDuration={200}>
+                                                                    {/* Shot Lab */}
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button
+                                                                                className="p-1.5 rounded-md hover:bg-white/20 text-white/90 hover:text-white transition-colors"
+                                                                                onClick={() => openShotLab(segment.sequence)}
+                                                                            >
+                                                                                <FlaskConical className="w-4 h-4" />
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent side="top" className="text-xs">Shot Lab</TooltipContent>
+                                                                    </Tooltip>
+
+                                                                    {/* Preview */}
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button
+                                                                                className="p-1.5 rounded-md hover:bg-white/20 text-white/90 hover:text-white transition-colors"
+                                                                                onClick={() => setPreviewImage(generatedImage.imageUrl || null)}
+                                                                            >
+                                                                                <Eye className="w-4 h-4" />
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent side="top" className="text-xs">Preview</TooltipContent>
+                                                                    </Tooltip>
+
+                                                                    {/* Angles / Contact Sheet */}
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button
+                                                                                className="p-1.5 rounded-md hover:bg-white/20 text-white/90 hover:text-white transition-colors"
+                                                                                onClick={() => handleOpenContactSheet(segment.sequence)}
+                                                                            >
+                                                                                <Grid3X3 className="w-4 h-4" />
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent side="top" className="text-xs">Angles</TooltipContent>
+                                                                    </Tooltip>
+
+                                                                    {/* B-Roll */}
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button
+                                                                                className="p-1.5 rounded-md hover:bg-white/20 text-white/90 hover:text-white transition-colors disabled:opacity-40"
+                                                                                disabled={generatingBRollId === segment.sequence}
+                                                                                onClick={() => handleGenerateBRollGrid(generatedImage.imageUrl!, segment.sequence)}
+                                                                            >
+                                                                                {generatingBRollId === segment.sequence ? (
+                                                                                    <LoadingSpinner size="xs" color="current" />
+                                                                                ) : (
+                                                                                    <Layers className="w-4 h-4" />
+                                                                                )}
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent side="top" className="text-xs">B-Roll</TooltipContent>
+                                                                    </Tooltip>
+
+                                                                    {/* Animate / Play */}
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button
+                                                                                className={`p-1.5 rounded-md transition-colors disabled:opacity-40 ${
+                                                                                    generatedImage.videoStatus === 'completed'
+                                                                                        ? 'text-emerald-400 hover:bg-emerald-500/30 hover:text-emerald-300'
+                                                                                        : 'text-indigo-400 hover:bg-indigo-500/30 hover:text-indigo-300'
+                                                                                }`}
+                                                                                disabled={isAnimating}
+                                                                                onClick={() => handleAnimateShot(segment.sequence)}
+                                                                            >
+                                                                                {isAnimating ? (
+                                                                                    <LoadingSpinner size="xs" color="current" />
+                                                                                ) : generatedImage.videoStatus === 'completed' && generatedImage.videoUrl ? (
+                                                                                    <Play className="w-4 h-4" />
+                                                                                ) : (
+                                                                                    <Wand2 className="w-4 h-4" />
+                                                                                )}
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent side="top" className="text-xs">
+                                                                            {isAnimating ? 'Animating...' : generatedImage.videoStatus === 'completed' ? 'Play Video' : 'Animate'}
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+
+                                                                    {/* Download */}
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <button
+                                                                                className="p-1.5 rounded-md hover:bg-white/20 text-white/90 hover:text-white transition-colors"
+                                                                                onClick={() => {
+                                                                                    const link = document.createElement('a')
+                                                                                    link.href = generatedImage.imageUrl!
+                                                                                    link.download = `shot-${segment.sequence}.png`
+                                                                                    link.click()
+                                                                                }}
+                                                                            >
+                                                                                <Download className="w-4 h-4" />
+                                                                            </button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent side="top" className="text-xs">Download</TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            </div>
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
