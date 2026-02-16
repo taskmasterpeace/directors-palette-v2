@@ -944,11 +944,8 @@ The color temperature, lighting direction, and overall mood must match across al
                             onDownloadImage={handleDownloadImage}
                             onDeleteImage={handleDeleteImage}
                             onSendTo={currentTab ? (url: string, target: string) => handleSendTo(url, target) : (() => { })}
-                            onSetReference={async () => {
-                                const newRef = await showReferenceNamePrompt()
-                                if (newRef) {
-                                    await updateImageReference(fullscreenImage.id, newRef)
-                                }
+                            onSetReference={async (id: string, ref: string) => {
+                                await updateImageReference(id, ref)
                             }}
                             onAddToLibrary={onSendToLibrary && fullscreenImage ? () => onSendToLibrary(fullscreenImage.url, fullscreenImage.id) : undefined}
                             onExtractFrames={isGridImage(fullscreenImage) ? () => handleExtractFrames(fullscreenImage.url) : undefined}
