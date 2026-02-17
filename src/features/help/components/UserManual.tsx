@@ -19,7 +19,14 @@ import {
     Video,
     Clock,
     Coins,
-    ImageIcon
+    ImageIcon,
+    LayoutGrid,
+    GalleryHorizontal,
+    RefreshCw,
+    Eye,
+    Download,
+    Layers,
+    Pencil
 } from "lucide-react"
 import Image from "next/image"
 
@@ -36,6 +43,7 @@ export function UserManual() {
                 <nav className="space-y-1">
                     <a href="#getting-started" className="block px-3 py-2 text-sm font-medium rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Getting Started</a>
                     <a href="#storyboard" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">The Storyboard</a>
+                    <a href="#storyboard-gallery" className="block px-3 py-2 pl-6 text-sm rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Storyboard Gallery</a>
                     <a href="#director-vision" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Director&apos;s Vision</a>
                     <a href="#shot-lab" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Shot Lab</a>
                     <a href="#recipes" className="block px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">Recipes</a>
@@ -127,6 +135,117 @@ export function UserManual() {
                                         <li className="flex gap-3">
                                             <span className="bg-blue-500/10 text-blue-500 p-1 rounded h-fit"><Film className="w-4 h-4" /></span>
                                             <span><strong>Greenlight:</strong> Toggle the switch to mark shots ready for production.</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </section>
+
+                    {/* Storyboard Gallery */}
+                    <section id="storyboard-gallery" className="space-y-6 scroll-mt-20">
+                        <h2 className="text-2xl font-bold flex items-center gap-2">
+                            <GalleryHorizontal className="w-6 h-6 text-indigo-500" /> Storyboard Gallery
+                        </h2>
+                        <p className="text-lg text-muted-foreground">
+                            Once your shots are generated, the Results tab becomes your gallery. View, edit, and manage your storyboard shots.
+                        </p>
+
+                        <Card>
+                            <CardContent className="p-6 space-y-6">
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                        <LayoutGrid className="w-5 h-5 text-blue-500" /> Grid &amp; Carousel Views
+                                    </h3>
+                                    <p className="text-muted-foreground mb-4">
+                                        Toggle between two viewing modes using the icons in the top-right of the gallery header.
+                                    </p>
+                                    <ul className="space-y-2">
+                                        <li className="flex gap-3">
+                                            <span className="bg-blue-500/10 text-blue-500 p-1 rounded h-fit"><LayoutGrid className="w-4 h-4" /></span>
+                                            <span><strong>Grid View:</strong> See all shots at once in a responsive grid. Hover over any shot to reveal the action toolbar.</span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="bg-indigo-500/10 text-indigo-500 p-1 rounded h-fit"><GalleryHorizontal className="w-4 h-4" /></span>
+                                            <span><strong>Carousel View:</strong> Focus on one shot at a time. Use the left/right arrows or dot indicators to navigate between shots. Includes a prompt editor below the image.</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <Separator />
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                        <Pencil className="w-5 h-5 text-green-500" /> Prompt Editor (Carousel View)
+                                    </h3>
+                                    <p className="text-muted-foreground mb-4">
+                                        In Carousel view, the prompt editor appears below the current shot. You can edit the prompt and regenerate with your changes.
+                                    </p>
+                                    <ul className="space-y-2">
+                                        <li className="flex gap-3">
+                                            <span className="bg-green-500/10 text-green-500 p-1 rounded h-fit"><Pencil className="w-4 h-4" /></span>
+                                            <span><strong>Edit:</strong> Click into the prompt text area to modify the shot description. The prompt updates as you navigate between shots.</span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="bg-amber-500/10 text-amber-500 p-1 rounded h-fit"><RefreshCw className="w-4 h-4" /></span>
+                                            <span><strong>Regenerate:</strong> Click &quot;Regenerate&quot; to re-roll the same prompt, or edit the text first and click &quot;Regenerate with Changes&quot; to generate from your modified prompt.</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <Separator />
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                        <Wand2 className="w-5 h-5 text-purple-500" /> Shot Actions
+                                    </h3>
+                                    <p className="text-muted-foreground mb-4">
+                                        Hover over any completed shot (Grid view) or view the toolbar below the image (Carousel view) to access these actions:
+                                    </p>
+                                    <ul className="space-y-2">
+                                        <li className="flex gap-3">
+                                            <span className="bg-purple-500/10 text-purple-500 p-1 rounded h-fit"><FlaskConical className="w-4 h-4" /></span>
+                                            <span><strong>Shot Lab:</strong> Open the shot in Shot Lab for advanced editing, inpainting, and re-prompting.</span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="bg-blue-500/10 text-blue-500 p-1 rounded h-fit"><Eye className="w-4 h-4" /></span>
+                                            <span><strong>Preview:</strong> Open a full-size lightbox preview of the image.</span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="bg-cyan-500/10 text-cyan-500 p-1 rounded h-fit"><Grid className="w-4 h-4" /></span>
+                                            <span><strong>Angles (Contact Sheet):</strong> Generate a 3x3 grid of alternative camera angles for the same scene.</span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="bg-teal-500/10 text-teal-500 p-1 rounded h-fit"><Layers className="w-4 h-4" /></span>
+                                            <span><strong>B-Roll:</strong> Generate a 3x3 grid of complementary B-roll shots that match the scene&apos;s look and feel.</span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="bg-indigo-500/10 text-indigo-500 p-1 rounded h-fit"><Wand2 className="w-4 h-4" /></span>
+                                            <span><strong>Animate:</strong> Turn a still shot into a 5-second video clip. Uses the AI director&apos;s style (if selected) to guide camera motion. Once ready, a &quot;Video&quot; badge appears on the shot.</span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="bg-green-500/10 text-green-500 p-1 rounded h-fit"><Download className="w-4 h-4" /></span>
+                                            <span><strong>Download:</strong> Save the individual shot image to your device.</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <Separator />
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                        <Info className="w-5 h-5 text-amber-500" /> Gallery Header Controls
+                                    </h3>
+                                    <ul className="space-y-2">
+                                        <li className="flex gap-3">
+                                            <span className="bg-green-500/10 text-green-500 p-1 rounded h-fit"><Sparkles className="w-4 h-4" /></span>
+                                            <span><strong>Status Counts:</strong> See how many shots are completed, pending, or failed at a glance.</span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="bg-red-500/10 text-red-500 p-1 rounded h-fit"><RefreshCw className="w-4 h-4" /></span>
+                                            <span><strong>Retry Failed:</strong> If any shots fail, click this button to regenerate all failed shots at once.</span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="bg-blue-500/10 text-blue-500 p-1 rounded h-fit"><Film className="w-4 h-4" /></span>
+                                            <span><strong>Completed Only / Show All:</strong> Filter the gallery to show only successfully generated shots, or show everything including pending and failed.</span>
+                                        </li>
+                                        <li className="flex gap-3">
+                                            <span className="bg-green-500/10 text-green-500 p-1 rounded h-fit"><Download className="w-4 h-4" /></span>
+                                            <span><strong>Download All:</strong> Download every completed shot as a single ZIP file.</span>
                                         </li>
                                     </ul>
                                 </div>
