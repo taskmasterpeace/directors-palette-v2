@@ -10,6 +10,7 @@ import type {
   VideoGenerationResponse,
   VideoGenerationError,
 } from '../types'
+import { ANIMATION_MODELS } from '../config/models.config'
 
 interface GenerationResult {
   shotId: string
@@ -19,8 +20,11 @@ interface GenerationResult {
   error?: string
 }
 
+export type GenerationPhase = 'idle' | 'uploading' | 'submitting' | 'done'
+
 interface UseVideoGenerationReturn {
   isGenerating: boolean
+  generationPhase: GenerationPhase
   generateVideos: (
     shots: ShotAnimationConfig[],
     model: AnimationModel,
@@ -36,6 +40,7 @@ interface UseVideoGenerationReturn {
 export function useVideoGeneration(): UseVideoGenerationReturn {
   const { toast } = useToast()
   const [isGenerating, setIsGenerating] = useState(false)
+  const [generationPhase, setGenerationPhase] = useState<GenerationPhase>('idle')
 
   /**
    * Upload a file to Replicate and return the URL
@@ -169,6 +174,7 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
     modelSettings: ModelSettings
   ): Promise<GenerationResult[]> => {
     setIsGenerating(true)
+    setGenerationPhase('uploading')
 
     try {
       // Filter shots that are selected for batch generation
@@ -196,10 +202,12 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
 
       toast({
         title: 'Starting Generation',
-        description: `Generating ${selectedShots.length} video(s) using ${model === 'seedance-lite' ? 'Seedance Lite' : 'Seedance Pro'}`,
+        description: `Generating ${selectedShots.length} video(s) using ${ANIMATION_MODELS[model]?.displayName ?? model}`,
       })
 
-      // Generate all videos in parallel
+      setGenerationPhase('submitting')
+
+      // Generate all videos in parallel (uploads + API calls)
       const results = await Promise.all(
         selectedShots.map((shot) => generateSingleVideo(shot, model, modelSettings))
       )
@@ -235,6 +243,7 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
       return []
     } finally {
       setIsGenerating(false)
+      setGenerationPhase('idle')
     }
   }
 
@@ -282,11 +291,13 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
       }
     } finally {
       setIsGenerating(false)
+      setGenerationPhase('idle')
     }
   }
 
   return {
     isGenerating,
+    generationPhase,
     generateVideos,
     retrySingleVideo,
   }

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { Upload, ImageIcon, Search, Play, VideoIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -12,7 +12,7 @@ import { ReferenceImagesModal } from './ReferenceImagesModal'
 import { LastFrameModal } from './LastFrameModal'
 import { ModelSettingsModal } from './ModelSettingsModal'
 import { GallerySelectModal } from './GallerySelectModal'
-// import { AnimatorUnifiedGallery } from './AnimatorUnifiedGallery'
+import { AnimatorUnifiedGallery } from './AnimatorUnifiedGallery'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useVideoGeneration } from '../hooks/useVideoGeneration'
 import { useGallery } from '../hooks/useGallery'
@@ -45,7 +45,7 @@ import VideoPreviewsModal from "./VideoPreviewsModal"
 export function ShotAnimatorView() {
   // Auth and hooks
   const { user } = useAuth()
-  const { isGenerating, generateVideos, retrySingleVideo } = useVideoGeneration()
+  const { isGenerating, generationPhase, generateVideos, retrySingleVideo } = useVideoGeneration()
   const { galleryImages, currentPage, totalPages, loadPage } = useGallery(true, 6)
   const { shotAnimator, updateShotAnimatorSettings } = useSettings()
 
@@ -100,23 +100,29 @@ export function ShotAnimatorView() {
     }
   }, [selectedCount, selectedModel, modelSettings, currentModelConfig.pricingType])
 
-  // Real-time subscription to update video URLs when generation completes
-  useEffect(() => {
-    if (!user) return
-
-    // Collect all processing video gallery IDs
-    const galleryIds: string[] = []
+  // Stable key of processing gallery IDs to avoid subscription churn
+  const processingGalleryIdsKey = useMemo(() => {
+    const ids: string[] = []
     shotConfigs.forEach(config => {
       config.generatedVideos?.forEach(video => {
         if (video.status === 'processing') {
-          galleryIds.push(video.galleryId)
+          ids.push(video.galleryId)
         }
       })
     })
+    return ids.sort().join(',')
+  }, [shotConfigs])
 
-    if (galleryIds.length === 0) return
+  // Keep a ref to shotConfigs so the subscription callback reads current state
+  const shotConfigsRef = useRef(shotConfigs)
+  shotConfigsRef.current = shotConfigs
 
-    const galleryIdsSet = new Set(galleryIds) // For O(1) lookup
+  // Real-time subscription to update video URLs when generation completes
+  useEffect(() => {
+    if (!user || !processingGalleryIdsKey) return
+
+    const galleryIds = processingGalleryIdsKey.split(',')
+    const galleryIdsSet = new Set(galleryIds)
     let subscription: { unsubscribe: () => void } | null = null
 
     const setupSubscription = async () => {
@@ -131,6 +137,7 @@ export function ShotAnimatorView() {
             event: 'UPDATE',
             schema: 'public',
             table: 'gallery',
+            filter: `id=in.(${galleryIds.join(',')})`,
           },
           (payload) => {
             const updatedRecord = payload.new as { id: string; public_url?: string; metadata?: Record<string, unknown> }
@@ -138,8 +145,9 @@ export function ShotAnimatorView() {
             // Only process if this ID is in our tracking list
             if (!galleryIdsSet.has(updatedRecord.id)) return
 
-            // Update the specific video in the generatedVideos array
-            const updatedConfigs = shotConfigs.map(config => {
+            // Use ref to read current shotConfigs to avoid stale closures
+            const currentConfigs = shotConfigsRef.current
+            const updatedConfigs = currentConfigs.map(config => {
               const updatedVideos = config.generatedVideos?.map(video => {
                 if (video.galleryId === updatedRecord.id) {
                   if (updatedRecord.public_url) {
@@ -177,7 +185,7 @@ export function ShotAnimatorView() {
         subscription.unsubscribe()
       }
     }
-  }, [shotConfigs, user, setShotConfigs])
+  }, [processingGalleryIdsKey, user, setShotConfigs])
 
   // Clear last frame images when switching to a model that doesn't support it
   useEffect(() => {
@@ -267,8 +275,33 @@ export function ShotAnimatorView() {
     const files = e.target.files
     if (!files || files.length === 0) return
 
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    const validFiles: File[] = []
+    const rejectedFiles: string[] = []
+
+    Array.from(files).forEach((file) => {
+      if (allowedTypes.includes(file.type)) {
+        validFiles.push(file)
+      } else {
+        rejectedFiles.push(file.name)
+      }
+    })
+
+    if (rejectedFiles.length > 0) {
+      toast({
+        title: 'Unsupported File Type',
+        description: `Only JPEG, PNG, and WebP images are supported. Rejected: ${rejectedFiles.join(', ')}`,
+        variant: 'destructive',
+      })
+    }
+
+    if (validFiles.length === 0) {
+      e.target.value = ""
+      return
+    }
+
     // Convert files to base64 for persistence
-    const filePromises = Array.from(files).map(async (file) => {
+    const filePromises = validFiles.map(async (file) => {
       return new Promise<ShotAnimationConfig>((resolve) => {
         const reader = new FileReader()
         reader.onload = (event) => {
@@ -302,6 +335,10 @@ export function ShotAnimatorView() {
 
   const handleSaveLastFrame = (configId: string, image?: string) => {
     updateShotConfig(configId, { lastFrameImage: image })
+  }
+
+  const handleSelectAll = () => {
+    setShotConfigs(shotConfigs.map((config) => ({ ...config, includeInBatch: true })))
   }
 
   const handleDeselectAll = () => {
@@ -349,14 +386,26 @@ export function ShotAnimatorView() {
     console.log('Generation results:', results)
   }
 
-  // const handleDeleteVideo = async (id: string) => {
-  //   await deleteVideo(id)
-  // }
+  const handleDeleteVideo = (galleryId: string) => {
+    const updatedConfigs = shotConfigs.map(config => {
+      const updatedVideos = config.generatedVideos?.filter(v => v.galleryId !== galleryId)
+      if (updatedVideos && updatedVideos.length !== config.generatedVideos?.length) {
+        return { ...config, generatedVideos: updatedVideos }
+      }
+      return config
+    })
+    setShotConfigs(updatedConfigs)
+  }
 
-  // const handleDownloadVideo = (videoUrl: string) => {
-  //   // TODO: Implement actual download
-  //   console.log("Downloading video:", videoUrl)
-  // }
+  const handleDownloadVideo = (videoUrl: string) => {
+    const a = document.createElement('a')
+    a.href = videoUrl
+    a.download = ''
+    a.target = '_blank'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
 
   const handleSaveModelSettings = async (newSettings: AnimatorSettings) => {
     await updateShotAnimatorSettings({ modelSettings: newSettings })
@@ -631,6 +680,14 @@ export function ShotAnimatorView() {
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={handleSelectAll}
+                className="h-7 text-xs text-muted-foreground hover:text-white"
+              >
+                Select All
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleDeselectAll}
                 className="h-7 text-xs text-muted-foreground hover:text-white"
               >
@@ -654,7 +711,7 @@ export function ShotAnimatorView() {
         <input
           id="file-upload-toolbar"
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           multiple
           onChange={handleFileUpload}
           className="hidden"
@@ -693,11 +750,13 @@ export function ShotAnimatorView() {
         </div>
 
         {/* Right: Unified Gallery */}
-        {/* <AnimatorUnifiedGallery
-          videos={generatedVideos}
-          onDelete={handleDeleteVideo}
-          onDownload={handleDownloadVideo}
-        /> */}
+        <div className="hidden lg:block">
+          <AnimatorUnifiedGallery
+            shotConfigs={shotConfigs}
+            onDelete={handleDeleteVideo}
+            onDownload={handleDownloadVideo}
+          />
+        </div>
       </div>
 
       {/* Bottom Generate Bar */}
@@ -712,7 +771,13 @@ export function ShotAnimatorView() {
             >
               <Play className="w-5 h-5 mr-2" />
               <span className="text-sm sm:text-base">
-                {isGenerating ? `Generating...` : `Generate ${selectedCount} Video${selectedCount > 1 ? 's' : ''} - ${estimatedCost} pts`}
+                {isGenerating
+                  ? generationPhase === 'uploading'
+                    ? 'Uploading images...'
+                    : generationPhase === 'submitting'
+                      ? 'Starting generation...'
+                      : 'Generating...'
+                  : `Generate ${selectedCount} Video${selectedCount > 1 ? 's' : ''} - ${estimatedCost} pts`}
               </span>
             </Button>
           </div>
