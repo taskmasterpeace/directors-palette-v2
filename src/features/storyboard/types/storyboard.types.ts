@@ -801,11 +801,11 @@ export interface OpenRouterModel {
 export const DEFAULT_OPENROUTER_MODELS: OpenRouterModel[] = [
     // OpenAI Models (all support tool calling)
     {
-        id: 'openai/gpt-4o-mini',
-        name: 'GPT-4o Mini',
-        contextWindow: 128000,
+        id: 'openai/gpt-4.1-mini',
+        name: 'GPT-4.1 Mini',
+        contextWindow: 1047576,
         description: 'Fast, cheap, great for most tasks',
-        costPer1M: { input: 0.15, output: 0.60 }
+        costPer1M: { input: 0.40, output: 1.60 }
     },
     {
         id: 'openai/gpt-4o',

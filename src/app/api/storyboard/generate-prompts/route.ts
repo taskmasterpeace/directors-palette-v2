@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const service = createOpenRouterService(apiKey, model || 'openai/gpt-4o-mini')
+        const service = createOpenRouterService(apiKey, model || 'openai/gpt-4.1-mini')
 
         // Filter to segments we need to process (starting from startFrom)
         const segmentsToProcess: Segment[] = segments.filter((s: Segment) => s.sequence >= startFrom)
@@ -65,12 +65,12 @@ export async function POST(request: NextRequest) {
                 allResults.push(...batchResults)
 
                 // Log OpenRouter integration success for this batch
-                lognog.debug(`openrouter OK ${Date.now() - batchStart}ms ${model || 'openai/gpt-4o-mini'}`, {
+                lognog.debug(`openrouter OK ${Date.now() - batchStart}ms ${model || 'openai/gpt-4.1-mini'}`, {
                     type: 'integration',
                     integration: 'openrouter',
                     latency_ms: Date.now() - batchStart,
                     success: true,
-                    model: model || 'openai/gpt-4o-mini',
+                    model: model || 'openai/gpt-4.1-mini',
                     prompt_length: batch.reduce((sum, s) => sum + (s.text?.length || 0), 0),
                 })
             } catch (batchError) {
@@ -78,13 +78,13 @@ export async function POST(request: NextRequest) {
                 errors.push(`Batch ${batchNumber} (shots ${batch[0].sequence}-${batch[batch.length - 1].sequence}) failed: ${batchError instanceof Error ? batchError.message : 'Unknown error'}`)
 
                 // Log OpenRouter integration failure
-                lognog.warn(`openrouter FAIL ${Date.now() - apiStart}ms ${model || 'openai/gpt-4o-mini'}`, {
+                lognog.warn(`openrouter FAIL ${Date.now() - apiStart}ms ${model || 'openai/gpt-4.1-mini'}`, {
                     type: 'integration',
                     integration: 'openrouter',
                     latency_ms: Date.now() - apiStart,
                     success: false,
                     error: batchError instanceof Error ? batchError.message : 'Unknown error',
-                    model: model || 'openai/gpt-4o-mini',
+                    model: model || 'openai/gpt-4.1-mini',
                 })
                 // Continue with next batch instead of failing completely
             }

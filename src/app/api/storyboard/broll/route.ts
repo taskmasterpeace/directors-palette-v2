@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const service = createOpenRouterService(apiKey, model || 'openai/gpt-4o-mini')
+        const service = createOpenRouterService(apiKey, model || 'openai/gpt-4.1-mini')
         const prompts = await service.generateBRollPrompts(storyText, shotCount)
 
         return NextResponse.json({ prompts })

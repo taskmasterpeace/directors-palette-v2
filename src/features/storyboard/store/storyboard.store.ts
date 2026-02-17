@@ -336,7 +336,7 @@ const initialState = {
     internalTab: 'input' as StoryboardTab,
     storyText: '',
     searchQuery: '',
-    selectedModel: 'openai/gpt-4o-mini',
+    selectedModel: 'openai/gpt-4.1-mini',
     isPreviewCollapsed: false,
     viewMode: 'tabs' as const,
 

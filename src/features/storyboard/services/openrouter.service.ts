@@ -154,7 +154,7 @@ export class OpenRouterService {
     private model: string
     private baseUrl = 'https://openrouter.ai/api/v1'
 
-    constructor(apiKey: string, model: string = 'openai/gpt-4o-mini') {
+    constructor(apiKey: string, model: string = 'openai/gpt-4.1-mini') {
         this.apiKey = apiKey
         this.model = model
     }
@@ -431,7 +431,7 @@ export function createOpenRouterService(
     model?: string
 ): OpenRouterService {
     const key = apiKey || process.env.OPENROUTER_API_KEY || ''
-    const selectedModel = model || 'openai/gpt-4o-mini'
+    const selectedModel = model || 'openai/gpt-4.1-mini'
 
     if (!key) {
         throw new Error('OpenRouter API key is required')
