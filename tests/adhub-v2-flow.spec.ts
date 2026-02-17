@@ -178,7 +178,7 @@ test.describe('Adhub v2 Flow', () => {
             await page.waitForTimeout(1000)
 
             // Should be on Create Ad step with preset options
-            await expect(page.getByRole('heading', { name: /Choose a Preset/i })).toBeVisible()
+            await expect(page.getByRole('heading', { name: /Create Your Ad/i })).toBeVisible()
           }
         }
       }
