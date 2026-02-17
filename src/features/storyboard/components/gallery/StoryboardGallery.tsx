@@ -1,14 +1,11 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
-import { Images, Film, Grid3X3, CheckCircle, AlertCircle, Eye, Download, Clock, RefreshCw, Layers, FlaskConical, Archive, Users, Wand2, Play } from 'lucide-react'
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { Images, Film } from 'lucide-react'
 import { useStoryboardStore } from '../../store'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
 import { useAuth } from '@/features/auth/hooks/useAuth'
@@ -23,6 +20,10 @@ import type { GeneratedShotPrompt } from '../../types/storyboard.types'
 import { ShotAnimationService } from '../../services/shot-animation.service'
 import { DIRECTORS } from '@/features/music-lab/data/directors.data'
 import JSZip from 'jszip'
+
+import { GalleryHeader, type GalleryViewMode } from './GalleryHeader'
+import { GalleryGridView } from './GalleryGridView'
+import { GalleryCarouselView } from './GalleryCarouselView'
 
 interface StoryboardGalleryProps {
     chapterIndex?: number
@@ -167,6 +168,7 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
     const [previewImage, setPreviewImage] = useState<string | null>(null)
     const [isDownloadingAll, setIsDownloadingAll] = useState(false)
     const [showCompletedOnly, setShowCompletedOnly] = useState(true)
+    const [viewMode, setViewMode] = useState<GalleryViewMode>('grid')
 
     const handleDownloadAll = async () => {
         const completedImages = Object.entries(generatedImages)
@@ -404,6 +406,69 @@ The color temperature, lighting direction, and overall mood must match across al
         }
     }
 
+    // Regenerate a single shot with a modified prompt
+    const handleRegenerateWithPrompt = async (sequence: number, prompt: string) => {
+        const shot = generatedPrompts.find(p => p.sequence === sequence)
+        if (!shot) return
+
+        // Credit check
+        try {
+            await fetchBalance()
+        } catch {
+            // Continue anyway
+        }
+
+        if (balance < TOKENS_PER_IMAGE) {
+            toast.error(`Insufficient credits. Need ${TOKENS_PER_IMAGE} tokens.`)
+            return
+        }
+
+        setRegeneratingShots(prev => new Set(prev).add(sequence))
+        setGeneratedImage(sequence, { ...generatedImages[sequence], status: 'generating', error: undefined })
+
+        try {
+            const modifiedShot = { ...shot, prompt }
+            const results = await storyboardGenerationService.generateShotsFromPrompts(
+                [modifiedShot],
+                {
+                    model: generationSettings.imageModel || 'nano-banana-pro',
+                    aspectRatio: generationSettings.aspectRatio,
+                    resolution: generationSettings.resolution
+                },
+                currentStyleGuide || undefined,
+                characters,
+                locations
+            )
+
+            const result = results[0]
+            if (result) {
+                setGeneratedImage(sequence, {
+                    predictionId: result.predictionId,
+                    imageUrl: result.imageUrl,
+                    status: result.error ? 'failed' : 'completed',
+                    error: result.error,
+                    generationTimestamp: new Date().toISOString()
+                })
+                if (!result.error) {
+                    toast.success(`Shot ${sequence} regenerated with updated prompt`)
+                }
+            }
+        } catch (error) {
+            setGeneratedImage(sequence, {
+                ...generatedImages[sequence],
+                status: 'failed',
+                error: error instanceof Error ? error.message : 'Regeneration failed'
+            })
+            toast.error(`Failed to regenerate shot ${sequence}`)
+        } finally {
+            setRegeneratingShots(prev => {
+                const next = new Set(prev)
+                next.delete(sequence)
+                return next
+            })
+        }
+    }
+
     // Regenerate all failed shots
     const handleRegenerateFailedShots = async () => {
         const failedShots = generatedPrompts.filter(
@@ -480,6 +545,15 @@ The color temperature, lighting direction, and overall mood must match across al
         }
     }
 
+    const handleDownloadSingleShot = (sequence: number) => {
+        const img = generatedImages[sequence]
+        if (!img?.imageUrl) return
+        const link = document.createElement('a')
+        link.href = img.imageUrl
+        link.download = `shot-${sequence}.png`
+        link.click()
+    }
+
     const generatedCount = Object.values(generatedImages).filter(img => img.status === 'completed').length
     const pendingCount = Object.values(generatedImages).filter(img => img.status === 'pending' || img.status === 'generating').length
     const failedCount = Object.values(generatedImages).filter(img => img.status === 'failed').length
@@ -525,401 +599,59 @@ The color temperature, lighting direction, and overall mood must match across al
                 {/* Main Shots Tab */}
                 <TabsContent value="shots" className="mt-4">
                     <Card>
-                        <CardHeader>
-                            <CardTitle className="text-lg flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <Images className="w-5 h-5" />
-                                    Generated Storyboard
-                                </div>
-                                {/* Status Summary */}
-                                <div className="flex items-center gap-3 text-sm">
-                                    {generatedCount > 0 && (
-                                        <span className="flex items-center gap-1 text-green-600">
-                                            <CheckCircle className="w-4 h-4" />
-                                            {generatedCount}
-                                        </span>
-                                    )}
-                                    {pendingCount > 0 && (
-                                        <span className="flex items-center gap-1 text-amber-600">
-                                            <Clock className="w-4 h-4" />
-                                            {pendingCount}
-                                        </span>
-                                    )}
-                                    {failedCount > 0 && (
-                                        <div className="flex items-center gap-2">
-                                            <span className="flex items-center gap-1 text-red-600">
-                                                <AlertCircle className="w-4 h-4" />
-                                                {failedCount}
-                                            </span>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={handleRegenerateFailedShots}
-                                                disabled={isRegeneratingFailed}
-                                                className="h-7 text-xs border-red-300 text-red-600 hover:bg-red-50"
-                                            >
-                                                {isRegeneratingFailed ? (
-                                                    <>
-                                                        <LoadingSpinner size="xs" color="current" className="mr-1" />
-                                                        Retrying...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <RefreshCw className="w-3 h-3 mr-1" />
-                                                        Retry Failed
-                                                    </>
-                                                )}
-                                            </Button>
-                                        </div>
-                                    )}
-                                </div>
-                            </CardTitle>
-                            <CardDescription className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <span>Hover for actions.</span>
-                                    <button
-                                        onClick={() => setShowCompletedOnly(!showCompletedOnly)}
-                                        className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${showCompletedOnly ? 'bg-green-500/10 border-green-500/30 text-green-600' : 'bg-muted border-border text-muted-foreground'}`}
-                                    >
-                                        {showCompletedOnly ? 'Completed only' : 'Show all'}
-                                    </button>
-                                </div>
-                                {generatedCount > 0 && (
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={handleDownloadAll}
-                                        disabled={isDownloadingAll}
-                                        className="ml-2 flex-shrink-0"
-                                    >
-                                        {isDownloadingAll ? (
-                                            <>
-                                                <LoadingSpinner size="xs" color="current" className="mr-1" />
-                                                Zipping...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Archive className="w-4 h-4 mr-1" />
-                                                Download All
-                                            </>
-                                        )}
-                                    </Button>
-                                )}
-                            </CardDescription>
-                        </CardHeader>
+                        <GalleryHeader
+                            generatedCount={generatedCount}
+                            pendingCount={pendingCount}
+                            failedCount={failedCount}
+                            showCompletedOnly={showCompletedOnly}
+                            isRegeneratingFailed={isRegeneratingFailed}
+                            isDownloadingAll={isDownloadingAll}
+                            viewMode={viewMode}
+                            onToggleCompletedOnly={() => setShowCompletedOnly(!showCompletedOnly)}
+                            onRegenerateFailed={handleRegenerateFailedShots}
+                            onDownloadAll={handleDownloadAll}
+                            onViewModeChange={setViewMode}
+                        />
                         <CardContent>
-                            <ScrollArea className="h-[500px]">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                    {filteredSegments.filter(segment => {
-                                        if (!showCompletedOnly) return true
-                                        const img = generatedImages[segment.sequence]
-                                        return img?.status === 'completed' && img?.imageUrl
-                                    }).map((segment) => {
-                                        const shotId = `shot-${segment.sequence}`
-                                        const hasVariants = contactSheetVariants.some(
-                                            v => v.storyboard_shot_id === shotId
-                                        )
-                                        const generatedImage = generatedImages[segment.sequence]
-                                        const isAnimating = animatingShots.has(segment.sequence) || generatedImage?.videoStatus === 'generating'
-                                        const isFailed = generatedImage?.status === 'failed'
-                                        const hasImage = !!generatedImage?.imageUrl
-
-                                        return (
-                                            <div
-                                                key={segment.sequence}
-                                                className="group relative"
-                                            >
-                                                <div
-                                                    className="aspect-video rounded-lg border bg-muted/20 flex items-center justify-center cursor-pointer hover:border-primary transition-colors relative overflow-hidden"
-                                                    style={{ borderColor: segment.color }}
-                                                >
-                                                    {/* Show generated image or placeholder */}
-                                                    {generatedImage?.imageUrl ? (
-                                                        <>
-                                                            <img
-                                                                src={generatedImage.imageUrl}
-                                                                alt={`Shot ${segment.sequence}`}
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                            {/* Prompt overlay on completed images */}
-                                                            {(() => {
-                                                                const shotPrompt = generatedPrompts.find(p => p.sequence === segment.sequence)
-                                                                return shotPrompt ? (
-                                                                    <TooltipProvider>
-                                                                        <Tooltip>
-                                                                            <TooltipTrigger asChild>
-                                                                                <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-2 py-1 text-[11px] text-white/90 line-clamp-1 pointer-events-auto group-hover:opacity-0 transition-opacity">
-                                                                                    {shotPrompt.prompt}
-                                                                                </div>
-                                                                            </TooltipTrigger>
-                                                                            <TooltipContent side="top" className="max-w-[320px] text-xs">
-                                                                                {shotPrompt.prompt}
-                                                                            </TooltipContent>
-                                                                        </Tooltip>
-                                                                    </TooltipProvider>
-                                                                ) : null
-                                                            })()}
-                                                        </>
-                                                    ) : (
-                                                        <div className="text-center p-2">
-                                                            {generatedImage?.status === 'generating' ? (
-                                                                <LoadingSpinner size="md" className="mx-auto" />
-                                                            ) : generatedImage?.status === 'failed' ? (
-                                                                <AlertCircle className="w-6 h-6 mx-auto text-destructive" />
-                                                            ) : generatedImage?.status === 'completed' ? (
-                                                                <CheckCircle className="w-6 h-6 mx-auto text-green-500" />
-                                                            ) : (
-                                                                <Images className="w-6 h-6 mx-auto text-muted-foreground/30" />
-                                                            )}
-                                                            <Badge
-                                                                className="mt-2"
-                                                                style={{ backgroundColor: segment.color }}
-                                                            >
-                                                                Shot {segment.sequence}
-                                                            </Badge>
-                                                            <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                                                                {segment.text.slice(0, 50)}...
-                                                            </p>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Shot number badge always visible */}
-                                                    <Badge
-                                                        className="absolute top-1 left-1 text-xs"
-                                                        style={{ backgroundColor: segment.color }}
-                                                    >
-                                                        {segment.sequence}
-                                                    </Badge>
-
-                                                    {/* Character badges */}
-                                                    {(() => {
-                                                        const shotPrompt = generatedPrompts.find(p => p.sequence === segment.sequence)
-                                                        if (!shotPrompt?.characterRefs?.length) return null
-                                                        const maxShow = 3
-                                                        const refs = shotPrompt.characterRefs
-                                                        const overflow = refs.length - maxShow
-                                                        return (
-                                                            <div className="absolute top-1 left-8 flex gap-0.5 group-hover:opacity-0 transition-opacity">
-                                                                {refs.slice(0, maxShow).map(c => (
-                                                                    <Badge
-                                                                        key={c.id}
-                                                                        variant="secondary"
-                                                                        className="text-[9px] py-0 px-1 bg-black/60 text-white/90 border-none"
-                                                                    >
-                                                                        {c.reference_image_url ? (
-                                                                            <img src={c.reference_image_url} alt={c.name} className="w-3 h-3 rounded-full object-cover mr-0.5 inline-block" />
-                                                                        ) : (
-                                                                            <Users className="w-2.5 h-2.5 mr-0.5" />
-                                                                        )}
-                                                                        {c.name}
-                                                                    </Badge>
-                                                                ))}
-                                                                {overflow > 0 && (
-                                                                    <Badge variant="secondary" className="text-[9px] py-0 px-1 bg-black/60 text-white/90 border-none">
-                                                                        +{overflow}
-                                                                    </Badge>
-                                                                )}
-                                                            </div>
-                                                        )
-                                                    })()}
-
-                                                    {/* Status indicator */}
-                                                    {generatedImage && (
-                                                        <div className="absolute top-1 right-1">
-                                                            {generatedImage.status === 'completed' && generatedImage.imageUrl && (
-                                                                <Badge variant="secondary" className="text-xs bg-green-500/80">
-                                                                    <CheckCircle className="w-3 h-3" />
-                                                                </Badge>
-                                                            )}
-                                                            {generatedImage.status === 'generating' && (
-                                                                <Badge variant="secondary" className="text-xs">
-                                                                    <LoadingSpinner size="xs" color="current" />
-                                                                </Badge>
-                                                            )}
-                                                            {generatedImage.status === 'failed' && (
-                                                                <Badge variant="destructive" className="text-xs">
-                                                                    <AlertCircle className="w-3 h-3" />
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-                                                    )}
-
-                                                    {/* Video ready badge */}
-                                                    {generatedImage?.videoStatus === 'completed' && generatedImage?.videoUrl && (
-                                                        <Badge
-                                                            className="absolute top-1 right-8 text-xs bg-indigo-600/80 text-white border-0 cursor-pointer"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                setVideoPreview({ url: generatedImage.videoUrl!, sequence: segment.sequence })
-                                                            }}
-                                                        >
-                                                            <Film className="w-3 h-3 mr-1" />
-                                                            Video
-                                                        </Badge>
-                                                    )}
-
-                                                    {/* Animating spinner badge */}
-                                                    {isAnimating && (
-                                                        <Badge className="absolute top-1 right-8 text-xs bg-indigo-600/80 text-white border-0">
-                                                            <LoadingSpinner size="xs" color="current" className="mr-1" />
-                                                            Animating
-                                                        </Badge>
-                                                    )}
-
-                                                    {hasVariants && (
-                                                        <Badge
-                                                            variant="secondary"
-                                                            className="absolute bottom-1 right-1 text-xs group-hover:opacity-0 transition-opacity"
-                                                        >
-                                                            <Grid3X3 className="w-3 h-3 mr-1" />
-                                                            3x3
-                                                        </Badge>
-                                                    )}
-
-                                                    {/* FAILED SHOT: Centered retry overlay */}
-                                                    {isFailed && (
-                                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex flex-col items-center justify-center gap-2">
-                                                            <Button
-                                                                variant="destructive"
-                                                                size="sm"
-                                                                onClick={() => handleRegenerateSingleShot(segment.sequence)}
-                                                                disabled={regeneratingShots.has(segment.sequence)}
-                                                            >
-                                                                {regeneratingShots.has(segment.sequence) ? (
-                                                                    <>
-                                                                        <LoadingSpinner size="sm" color="current" className="mr-1" />
-                                                                        Retrying...
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <RefreshCw className="w-4 h-4 mr-1" />
-                                                                        Retry Shot
-                                                                    </>
-                                                                )}
-                                                            </Button>
-                                                            {generatedImage?.error && (
-                                                                <p className="text-xs text-red-300 text-center px-2 max-w-[90%]">
-                                                                    {generatedImage.error}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    )}
-
-                                                    {/* COMPLETED SHOT: Icon toolbar at bottom */}
-                                                    {hasImage && !isFailed && (
-                                                        <div className="absolute bottom-0 left-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <div className="flex items-center justify-center gap-1 bg-black/80 backdrop-blur-sm px-2 py-1.5 rounded-b-lg">
-                                                                <TooltipProvider delayDuration={200}>
-                                                                    {/* Shot Lab */}
-                                                                    <Tooltip>
-                                                                        <TooltipTrigger asChild>
-                                                                            <button
-                                                                                className="p-1.5 rounded-md hover:bg-white/20 text-white/90 hover:text-white transition-colors"
-                                                                                onClick={() => openShotLab(segment.sequence)}
-                                                                            >
-                                                                                <FlaskConical className="w-4 h-4" />
-                                                                            </button>
-                                                                        </TooltipTrigger>
-                                                                        <TooltipContent side="top" className="text-xs">Shot Lab</TooltipContent>
-                                                                    </Tooltip>
-
-                                                                    {/* Preview */}
-                                                                    <Tooltip>
-                                                                        <TooltipTrigger asChild>
-                                                                            <button
-                                                                                className="p-1.5 rounded-md hover:bg-white/20 text-white/90 hover:text-white transition-colors"
-                                                                                onClick={() => setPreviewImage(generatedImage.imageUrl || null)}
-                                                                            >
-                                                                                <Eye className="w-4 h-4" />
-                                                                            </button>
-                                                                        </TooltipTrigger>
-                                                                        <TooltipContent side="top" className="text-xs">Preview</TooltipContent>
-                                                                    </Tooltip>
-
-                                                                    {/* Angles / Contact Sheet */}
-                                                                    <Tooltip>
-                                                                        <TooltipTrigger asChild>
-                                                                            <button
-                                                                                className="p-1.5 rounded-md hover:bg-white/20 text-white/90 hover:text-white transition-colors"
-                                                                                onClick={() => handleOpenContactSheet(segment.sequence)}
-                                                                            >
-                                                                                <Grid3X3 className="w-4 h-4" />
-                                                                            </button>
-                                                                        </TooltipTrigger>
-                                                                        <TooltipContent side="top" className="text-xs">Angles</TooltipContent>
-                                                                    </Tooltip>
-
-                                                                    {/* B-Roll */}
-                                                                    <Tooltip>
-                                                                        <TooltipTrigger asChild>
-                                                                            <button
-                                                                                className="p-1.5 rounded-md hover:bg-white/20 text-white/90 hover:text-white transition-colors disabled:opacity-40"
-                                                                                disabled={generatingBRollId === segment.sequence}
-                                                                                onClick={() => handleGenerateBRollGrid(generatedImage.imageUrl!, segment.sequence)}
-                                                                            >
-                                                                                {generatingBRollId === segment.sequence ? (
-                                                                                    <LoadingSpinner size="xs" color="current" />
-                                                                                ) : (
-                                                                                    <Layers className="w-4 h-4" />
-                                                                                )}
-                                                                            </button>
-                                                                        </TooltipTrigger>
-                                                                        <TooltipContent side="top" className="text-xs">B-Roll</TooltipContent>
-                                                                    </Tooltip>
-
-                                                                    {/* Animate / Play */}
-                                                                    <Tooltip>
-                                                                        <TooltipTrigger asChild>
-                                                                            <button
-                                                                                className={`p-1.5 rounded-md transition-colors disabled:opacity-40 ${
-                                                                                    generatedImage.videoStatus === 'completed'
-                                                                                        ? 'text-emerald-400 hover:bg-emerald-500/30 hover:text-emerald-300'
-                                                                                        : 'text-indigo-400 hover:bg-indigo-500/30 hover:text-indigo-300'
-                                                                                }`}
-                                                                                disabled={isAnimating}
-                                                                                onClick={() => handleAnimateShot(segment.sequence)}
-                                                                            >
-                                                                                {isAnimating ? (
-                                                                                    <LoadingSpinner size="xs" color="current" />
-                                                                                ) : generatedImage.videoStatus === 'completed' && generatedImage.videoUrl ? (
-                                                                                    <Play className="w-4 h-4" />
-                                                                                ) : (
-                                                                                    <Wand2 className="w-4 h-4" />
-                                                                                )}
-                                                                            </button>
-                                                                        </TooltipTrigger>
-                                                                        <TooltipContent side="top" className="text-xs">
-                                                                            {isAnimating ? 'Animating...' : generatedImage.videoStatus === 'completed' ? 'Play Video' : 'Animate'}
-                                                                        </TooltipContent>
-                                                                    </Tooltip>
-
-                                                                    {/* Download */}
-                                                                    <Tooltip>
-                                                                        <TooltipTrigger asChild>
-                                                                            <button
-                                                                                className="p-1.5 rounded-md hover:bg-white/20 text-white/90 hover:text-white transition-colors"
-                                                                                onClick={() => {
-                                                                                    const link = document.createElement('a')
-                                                                                    link.href = generatedImage.imageUrl!
-                                                                                    link.download = `shot-${segment.sequence}.png`
-                                                                                    link.click()
-                                                                                }}
-                                                                            >
-                                                                                <Download className="w-4 h-4" />
-                                                                            </button>
-                                                                        </TooltipTrigger>
-                                                                        <TooltipContent side="top" className="text-xs">Download</TooltipContent>
-                                                                    </Tooltip>
-                                                                </TooltipProvider>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            </ScrollArea>
+                            {viewMode === 'grid' ? (
+                                <GalleryGridView
+                                    segments={filteredSegments}
+                                    generatedImages={generatedImages}
+                                    generatedPrompts={generatedPrompts}
+                                    contactSheetVariants={contactSheetVariants}
+                                    showCompletedOnly={showCompletedOnly}
+                                    animatingShots={animatingShots}
+                                    regeneratingShots={regeneratingShots}
+                                    generatingBRollId={generatingBRollId}
+                                    onShotLab={(seq) => openShotLab(seq)}
+                                    onPreview={(imageUrl) => setPreviewImage(imageUrl)}
+                                    onContactSheet={handleOpenContactSheet}
+                                    onBRoll={handleGenerateBRollGrid}
+                                    onAnimate={handleAnimateShot}
+                                    onRegenerate={handleRegenerateSingleShot}
+                                    onDownload={handleDownloadSingleShot}
+                                    onVideoPreview={(url, seq) => setVideoPreview({ url, sequence: seq })}
+                                />
+                            ) : (
+                                <GalleryCarouselView
+                                    segments={filteredSegments}
+                                    generatedImages={generatedImages}
+                                    generatedPrompts={generatedPrompts}
+                                    showCompletedOnly={showCompletedOnly}
+                                    animatingShots={animatingShots}
+                                    regeneratingShots={regeneratingShots}
+                                    generatingBRollId={generatingBRollId}
+                                    onShotLab={(seq) => openShotLab(seq)}
+                                    onPreview={(imageUrl) => setPreviewImage(imageUrl)}
+                                    onContactSheet={handleOpenContactSheet}
+                                    onBRoll={handleGenerateBRollGrid}
+                                    onAnimate={handleAnimateShot}
+                                    onRegenerate={handleRegenerateSingleShot}
+                                    onRegenerateWithPrompt={handleRegenerateWithPrompt}
+                                    onDownload={handleDownloadSingleShot}
+                                    onVideoPreview={(url, seq) => setVideoPreview({ url, sequence: seq })}
+                                />
+                            )}
                         </CardContent>
                     </Card>
                 </TabsContent>
