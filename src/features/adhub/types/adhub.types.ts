@@ -24,6 +24,20 @@ export interface RiverflowSettings {
 }
 
 // =============================================================================
+// ASPECT RATIO (moved from store for shared access)
+// =============================================================================
+
+export type AspectRatio = '1:1' | '4:5' | '9:16' | '16:9' | '4:3'
+
+export const ASPECT_RATIO_OPTIONS: { value: AspectRatio; label: string; description: string }[] = [
+  { value: '1:1', label: 'Square', description: 'Instagram post' },
+  { value: '4:5', label: 'Portrait', description: 'Instagram feed' },
+  { value: '9:16', label: 'Story', description: 'Reels, TikTok' },
+  { value: '16:9', label: 'Landscape', description: 'YouTube, Twitter' },
+  { value: '4:3', label: 'Classic', description: 'Traditional' },
+]
+
+// =============================================================================
 // BRAND TYPES
 // =============================================================================
 
@@ -53,61 +67,42 @@ export interface AdhubBrandImageInput {
 }
 
 // =============================================================================
-// STYLE TYPES (Admin-only creation)
+// PRODUCT TYPES (v2)
 // =============================================================================
 
-export interface AdhubStyle {
-  id: string
-  name: string
-  displayName: string
-  iconUrl?: string
-  promptModifiers: string
-  isActive: boolean
-  createdBy?: string
-  createdAt: Date
-  updatedAt: Date
+export interface AdhubExtractedCopy {
+  headline: string
+  tagline: string
+  valueProp: string
+  features: string[]
+  audience: string
 }
 
-export type AdhubStyleInput = Omit<AdhubStyle, 'id' | 'createdAt' | 'updatedAt'>
-
-// =============================================================================
-// TEMPLATE TYPES
-// =============================================================================
-
-export type TemplateFieldType = 'image' | 'text'
-
-export interface AdhubTemplateField {
+export interface AdhubProduct {
   id: string
-  templateId: string
-  fieldType: TemplateFieldType
-  fieldName: string
-  fieldLabel: string
-  isRequired: boolean
-  placeholder?: string
-  fieldOrder: number
-}
-
-export interface AdhubTemplate {
-  id: string
+  brandId: string
   userId: string
   name: string
-  iconUrl?: string
-  goalPrompt: string
-  isPublic: boolean
+  rawText: string
+  extractedCopy: AdhubExtractedCopy
   createdAt: Date
   updatedAt: Date
-  fields?: AdhubTemplateField[]
 }
 
-export type AdhubTemplateInput = Omit<AdhubTemplate, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'fields'>
+export type AdhubProductInput = Omit<AdhubProduct, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
 
-export interface AdhubTemplateFieldInput {
-  fieldType: TemplateFieldType
-  fieldName: string
-  fieldLabel: string
-  isRequired?: boolean
-  placeholder?: string
-  fieldOrder?: number
+// =============================================================================
+// PRESET TYPES (v2 - hardcoded, not DB)
+// =============================================================================
+
+export interface AdhubPreset {
+  slug: string
+  name: string
+  description: string
+  icon: string
+  promptTemplate: string
+  styleModifiers: string
+  tags: string[]
 }
 
 // =============================================================================
@@ -120,24 +115,21 @@ export interface AdhubAd {
   id: string
   userId: string
   brandId?: string
-  styleId?: string
-  templateId?: string
-  fieldValues: Record<string, string>
+  productId?: string
+  presetSlug?: string
   generatedPrompt?: string
   galleryId?: string
   status: AdStatus
   createdAt: Date
   // Populated relations
   brand?: AdhubBrand
-  style?: AdhubStyle
-  template?: AdhubTemplate
+  product?: AdhubProduct
 }
 
 export interface AdhubAdInput {
   brandId: string
-  styleId: string
-  templateId: string
-  fieldValues: Record<string, string>
+  productId: string
+  presetSlug: string
 }
 
 // =============================================================================
@@ -146,9 +138,8 @@ export interface AdhubAdInput {
 
 export interface AdhubGenerationRequest {
   brandId: string
-  styleId: string
-  templateId: string
-  fieldValues: Record<string, string>
+  productId: string
+  presetSlug: string
   selectedReferenceImages?: string[]
   aspectRatio?: string
   model?: string
@@ -162,19 +153,19 @@ export interface AdhubGenerationResult {
 }
 
 // =============================================================================
-// UI STATE TYPES
+// UI STATE TYPES (v2)
 // =============================================================================
 
-export type AdhubStep = 'brand' | 'template' | 'style' | 'fill' | 'talk' | 'result'
+export type AdhubStep = 'brand' | 'product' | 'preset-generate' | 'result'
 
 export interface AdhubWizardState {
   currentStep: AdhubStep
   selectedBrand?: AdhubBrand
-  selectedTemplate?: AdhubTemplate
-  selectedStyle?: AdhubStyle
-  fieldValues: Record<string, string>
+  selectedProduct?: AdhubProduct
+  selectedPreset?: AdhubPreset
   selectedReferenceImages: string[]
   isGenerating: boolean
+  isExtracting: boolean
   generationResult?: AdhubGenerationResult
   error?: string
   // Lip-sync video ad configuration
@@ -236,47 +227,23 @@ export interface AdhubBrandImageRow {
   created_at: string
 }
 
-export interface AdhubStyleRow {
+export interface AdhubProductRow {
   id: string
-  name: string
-  display_name: string
-  icon_url: string | null
-  prompt_modifiers: string
-  is_active: boolean
-  created_by: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface AdhubTemplateRow {
-  id: string
+  brand_id: string
   user_id: string
   name: string
-  icon_url: string | null
-  goal_prompt: string
-  is_public: boolean
+  raw_text: string
+  extracted_copy: AdhubExtractedCopy
   created_at: string
   updated_at: string
-}
-
-export interface AdhubTemplateFieldRow {
-  id: string
-  template_id: string
-  field_type: string
-  field_name: string
-  field_label: string
-  is_required: boolean
-  placeholder: string | null
-  field_order: number
 }
 
 export interface AdhubAdRow {
   id: string
   user_id: string
   brand_id: string | null
-  style_id: string | null
-  template_id: string | null
-  field_values: Record<string, string>
+  product_id: string | null
+  preset_slug: string | null
   generated_prompt: string | null
   gallery_id: string | null
   status: string
@@ -309,43 +276,16 @@ export function brandImageFromRow(row: AdhubBrandImageRow): AdhubBrandImage {
   }
 }
 
-export function styleFromRow(row: AdhubStyleRow): AdhubStyle {
+export function productFromRow(row: AdhubProductRow): AdhubProduct {
   return {
     id: row.id,
-    name: row.name,
-    displayName: row.display_name,
-    iconUrl: row.icon_url ?? undefined,
-    promptModifiers: row.prompt_modifiers,
-    isActive: row.is_active,
-    createdBy: row.created_by ?? undefined,
-    createdAt: new Date(row.created_at),
-    updatedAt: new Date(row.updated_at),
-  }
-}
-
-export function templateFromRow(row: AdhubTemplateRow): AdhubTemplate {
-  return {
-    id: row.id,
+    brandId: row.brand_id,
     userId: row.user_id,
     name: row.name,
-    iconUrl: row.icon_url ?? undefined,
-    goalPrompt: row.goal_prompt,
-    isPublic: row.is_public,
+    rawText: row.raw_text,
+    extractedCopy: row.extracted_copy,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
-  }
-}
-
-export function templateFieldFromRow(row: AdhubTemplateFieldRow): AdhubTemplateField {
-  return {
-    id: row.id,
-    templateId: row.template_id,
-    fieldType: row.field_type as TemplateFieldType,
-    fieldName: row.field_name,
-    fieldLabel: row.field_label,
-    isRequired: row.is_required,
-    placeholder: row.placeholder ?? undefined,
-    fieldOrder: row.field_order,
   }
 }
 
@@ -354,9 +294,8 @@ export function adFromRow(row: AdhubAdRow): AdhubAd {
     id: row.id,
     userId: row.user_id,
     brandId: row.brand_id ?? undefined,
-    styleId: row.style_id ?? undefined,
-    templateId: row.template_id ?? undefined,
-    fieldValues: row.field_values,
+    productId: row.product_id ?? undefined,
+    presetSlug: row.preset_slug ?? undefined,
     generatedPrompt: row.generated_prompt ?? undefined,
     galleryId: row.gallery_id ?? undefined,
     status: row.status as AdStatus,

@@ -23,8 +23,8 @@ export function ResultStep() {
   const {
     generationResult,
     selectedBrand,
-    selectedTemplate,
-    selectedStyle,
+    selectedProduct,
+    selectedPreset,
     videoAdConfig,
     setLipSyncResult,
     reset,
@@ -59,15 +59,15 @@ export function ResultStep() {
         setVideoUrl(url)
         setVideoStatus('succeeded')
         setLipSyncResult(predictionId, videoAdConfig.lipSyncGalleryId, url)
-        return true // Stop polling
+        return true
       } else if (data.status === 'failed') {
         setVideoStatus('failed')
         setVideoError(data.error || 'Video generation failed')
         setLipSyncResult(predictionId, videoAdConfig.lipSyncGalleryId, null, data.error)
-        return true // Stop polling
+        return true
       } else if (data.status === 'processing' || data.status === 'starting') {
         setVideoStatus('processing')
-        return false // Continue polling
+        return false
       }
 
       return false
@@ -79,29 +79,23 @@ export function ResultStep() {
 
   // Poll for video completion
   useEffect(() => {
-    // Only poll if video is enabled and we have a prediction ID but no URL yet
-    if (!videoAdConfig.enabled || !videoAdConfig.lipSyncPredictionId) {
-      return
-    }
+    if (!videoAdConfig.enabled || !videoAdConfig.lipSyncPredictionId) return
 
-    // If we already have the video URL, use it
     if (videoAdConfig.lipSyncVideoUrl) {
       setVideoUrl(videoAdConfig.lipSyncVideoUrl)
       setVideoStatus('succeeded')
       return
     }
 
-    // If there was an error, show it
     if (videoAdConfig.lipSyncError) {
       setVideoError(videoAdConfig.lipSyncError)
       setVideoStatus('failed')
       return
     }
 
-    // Start polling
     setVideoStatus('processing')
     let pollCount = 0
-    const maxPolls = 120 // 10 minutes at 5s intervals (lip-sync can take a while)
+    const maxPolls = 120
 
     const interval = setInterval(async () => {
       pollCount++
@@ -115,7 +109,6 @@ export function ResultStep() {
       }
     }, 5000)
 
-    // Initial poll
     pollVideoStatus(videoAdConfig.lipSyncPredictionId)
 
     return () => clearInterval(interval)
@@ -128,27 +121,18 @@ export function ResultStep() {
       return
     }
 
-    // If we already have the image URL, use it
     if (generationResult.imageUrl) {
       setImageUrl(generationResult.imageUrl)
       setIsLoading(false)
       return
     }
 
-    // Poll the generation status
     let pollCount = 0
-    const maxPolls = 60 // 5 minutes at 5s intervals
+    const maxPolls = 60
 
     const pollStatus = async () => {
-      try {
-        // This would need a status endpoint - for now just show loading
-        // In production, you'd poll /api/generation/status/{predictionId}
-        pollCount++
-        if (pollCount >= maxPolls) {
-          setIsLoading(false)
-        }
-      } catch (error) {
-        console.error('Failed to poll status:', error)
+      pollCount++
+      if (pollCount >= maxPolls) {
         setIsLoading(false)
       }
     }
@@ -167,7 +151,6 @@ export function ResultStep() {
 
   const handleDownload = async () => {
     if (!imageUrl) return
-
     try {
       const response = await fetch(imageUrl)
       const blob = await response.blob()
@@ -186,7 +169,6 @@ export function ResultStep() {
 
   const handleVideoDownload = async () => {
     if (!videoUrl) return
-
     try {
       const response = await fetch(videoUrl)
       const blob = await response.blob()
@@ -208,7 +190,7 @@ export function ResultStep() {
   }
 
   const handleNewWithSameBrand = () => {
-    resetToStep('template')
+    resetToStep('product')
   }
 
   if (!generationResult) {
@@ -261,7 +243,6 @@ export function ResultStep() {
               )}
             </div>
 
-            {/* Image Actions */}
             <div className="flex gap-2">
               {imageUrl && (
                 <Button onClick={handleDownload} variant="outline" className="flex-1 gap-2">
@@ -280,7 +261,7 @@ export function ResultStep() {
             </div>
           </div>
 
-          {/* Video Preview - Only show if video ad was enabled */}
+          {/* Video Preview */}
           {videoAdConfig.enabled && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
@@ -301,11 +282,9 @@ export function ResultStep() {
                     <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
                       <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
                     </div>
-                    <p className="text-sm font-medium text-foreground mb-1">
-                      Generating your video...
-                    </p>
+                    <p className="text-sm font-medium text-foreground mb-1">Generating your video...</p>
                     <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                      Lip-sync videos typically take 2-5 minutes. You can navigate away and check back later.
+                      Lip-sync videos typically take 2-5 minutes.
                     </p>
                     <div className="mt-4 flex items-center justify-center gap-2 text-xs text-amber-400">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
@@ -326,9 +305,7 @@ export function ResultStep() {
                     <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
                       <AlertCircle className="w-8 h-8 text-red-400" />
                     </div>
-                    <p className="text-sm font-medium text-red-400 mb-1">
-                      Video generation failed
-                    </p>
+                    <p className="text-sm font-medium text-red-400 mb-1">Video generation failed</p>
                     <p className="text-xs text-muted-foreground max-w-xs mx-auto">
                       {videoError || 'An error occurred during video generation.'}
                     </p>
@@ -342,7 +319,6 @@ export function ResultStep() {
                 )}
               </div>
 
-              {/* Video Actions */}
               {videoStatus === 'succeeded' && videoUrl && (
                 <div className="flex gap-2">
                   <Button onClick={handleVideoDownload} variant="outline" className="flex-1 gap-2">
@@ -375,12 +351,12 @@ export function ResultStep() {
                 <p className="font-medium">{selectedBrand?.name}</p>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs">Template</p>
-                <p className="font-medium">{selectedTemplate?.name}</p>
+                <p className="text-muted-foreground text-xs">Product</p>
+                <p className="font-medium">{selectedProduct?.name}</p>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs">Style</p>
-                <p className="font-medium">{selectedStyle?.displayName}</p>
+                <p className="text-muted-foreground text-xs">Preset</p>
+                <p className="font-medium">{selectedPreset?.icon} {selectedPreset?.name}</p>
               </div>
               <div>
                 <p className="text-muted-foreground text-xs">Ad ID</p>
@@ -390,32 +366,30 @@ export function ResultStep() {
 
             {/* Video ad details */}
             {videoAdConfig.enabled && (
-              <>
-                <div className="border-t border-border/50 pt-3 mt-3">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="border-t border-border/50 pt-3 mt-3">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-muted-foreground text-xs">Video Model</p>
+                    <p className="font-medium text-amber-400">
+                      {videoAdConfig.modelSettings.model === 'kling-avatar-v2-pro' ? 'Avatar Pro' : 'Avatar Standard'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs">Resolution</p>
+                    <p className="font-medium">{videoAdConfig.modelSettings.resolution}</p>
+                  </div>
+                  {videoAdConfig.audioDurationSeconds && (
                     <div>
-                      <p className="text-muted-foreground text-xs">Video Model</p>
-                      <p className="font-medium text-amber-400">
-                        {videoAdConfig.modelSettings.model === 'kling-avatar-v2-pro' ? 'Avatar Pro' : 'Avatar Standard'}
-                      </p>
+                      <p className="text-muted-foreground text-xs">Duration</p>
+                      <p className="font-medium">{videoAdConfig.audioDurationSeconds.toFixed(1)}s</p>
                     </div>
-                    <div>
-                      <p className="text-muted-foreground text-xs">Resolution</p>
-                      <p className="font-medium">{videoAdConfig.modelSettings.resolution}</p>
-                    </div>
-                    {videoAdConfig.audioDurationSeconds && (
-                      <div>
-                        <p className="text-muted-foreground text-xs">Duration</p>
-                        <p className="font-medium">{videoAdConfig.audioDurationSeconds.toFixed(1)}s</p>
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-muted-foreground text-xs">Audio Source</p>
-                      <p className="font-medium">{videoAdConfig.audioSource === 'tts' ? 'Text-to-Speech' : 'Uploaded'}</p>
-                    </div>
+                  )}
+                  <div>
+                    <p className="text-muted-foreground text-xs">Audio Source</p>
+                    <p className="font-medium">{videoAdConfig.audioSource === 'tts' ? 'Text-to-Speech' : 'Uploaded'}</p>
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </div>
 

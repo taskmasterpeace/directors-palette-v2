@@ -4,10 +4,8 @@ import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAdhubStore } from '../store/adhub.store'
 import { BrandSelectStep } from './steps/BrandSelectStep'
-import { TemplateSelectStep } from './steps/TemplateSelectStep'
-import { StyleSelectStep } from './steps/StyleSelectStep'
-import { FillTemplateStep } from './steps/FillTemplateStep'
-import { MakeItTalkStep } from './steps/MakeItTalkStep'
+import { ProductSelectStep } from './steps/ProductSelectStep'
+import { PresetGenerateStep } from './steps/PresetGenerateStep'
 import { ResultStep } from './steps/ResultStep'
 import { AdhubStepper } from './AdhubStepper'
 import { ArchitectureHelpModal } from './InfoTip'
@@ -15,10 +13,8 @@ import type { AdhubStep } from '../types/adhub.types'
 
 const STEP_COMPONENTS: Record<AdhubStep, React.FC> = {
   brand: BrandSelectStep,
-  template: TemplateSelectStep,
-  style: StyleSelectStep,
-  fill: FillTemplateStep,
-  talk: MakeItTalkStep,
+  product: ProductSelectStep,
+  'preset-generate': PresetGenerateStep,
   result: ResultStep,
 }
 

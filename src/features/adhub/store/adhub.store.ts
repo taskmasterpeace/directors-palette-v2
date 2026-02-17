@@ -1,6 +1,6 @@
 /**
- * Adhub Store
- * Zustand store for managing adhub wizard state
+ * Adhub Store v2
+ * Zustand store for the streamlined 4-step ad wizard
  */
 
 import { create } from 'zustand'
@@ -10,10 +10,11 @@ import type {
   AdhubWizardState,
   AdhubBrand,
   AdhubBrandImage,
-  AdhubTemplate,
-  AdhubStyle,
+  AdhubProduct,
+  AdhubPreset,
   AdhubGenerationResult,
   AdhubModel,
+  AspectRatio,
   RiverflowSettings,
   AdhubVideoAdConfig,
   AdhubVideoAudioSource,
@@ -21,36 +22,23 @@ import type {
   AdhubLipSyncResolution,
 } from '../types/adhub.types'
 
-export type AspectRatio = '1:1' | '4:5' | '9:16' | '16:9' | '4:3'
-
-export const ASPECT_RATIO_OPTIONS: { value: AspectRatio; label: string; description: string }[] = [
-  { value: '1:1', label: 'Square', description: 'Instagram post' },
-  { value: '4:5', label: 'Portrait', description: 'Instagram feed' },
-  { value: '9:16', label: 'Story', description: 'Reels, TikTok' },
-  { value: '16:9', label: 'Landscape', description: 'YouTube, Twitter' },
-  { value: '4:3', label: 'Classic', description: 'Traditional' },
-]
-
 interface AdhubState extends AdhubWizardState {
   // Brand management
   brands: AdhubBrand[]
   selectedBrandImages: AdhubBrandImage[]
 
-  // Template management
-  templates: AdhubTemplate[]
-
-  // Style management
-  styles: AdhubStyle[]
+  // Product management (v2)
+  products: AdhubProduct[]
 
   // Generation settings
   aspectRatio: AspectRatio
   selectedModel: AdhubModel
 
   // Riverflow-specific state
-  riverflowSourceImages: string[]    // init_images (product photos)
-  riverflowDetailRefs: string[]      // super_resolution_refs (logo cleanup)
-  riverflowFontUrls: string[]        // uploaded font URLs
-  riverflowFontTexts: string[]       // text for each font (max 300 chars)
+  riverflowSourceImages: string[]
+  riverflowDetailRefs: string[]
+  riverflowFontUrls: string[]
+  riverflowFontTexts: string[]
   riverflowSettings: RiverflowSettings
 
   // Actions - Navigation
@@ -63,18 +51,12 @@ interface AdhubState extends AdhubWizardState {
   selectBrand: (brand: AdhubBrand | undefined) => void
   setBrandImages: (images: AdhubBrandImage[]) => void
 
-  // Actions - Template
-  setTemplates: (templates: AdhubTemplate[]) => void
-  selectTemplate: (template: AdhubTemplate | undefined) => void
+  // Actions - Product (v2)
+  setProducts: (products: AdhubProduct[]) => void
+  selectProduct: (product: AdhubProduct | undefined) => void
 
-  // Actions - Style
-  setStyles: (styles: AdhubStyle[]) => void
-  selectStyle: (style: AdhubStyle | undefined) => void
-
-  // Actions - Field Values
-  setFieldValue: (fieldName: string, value: string) => void
-  setFieldValues: (values: Record<string, string>) => void
-  clearFieldValues: () => void
+  // Actions - Preset (v2)
+  selectPreset: (preset: AdhubPreset | undefined) => void
 
   // Actions - Reference Images
   toggleReferenceImage: (imageUrl: string) => void
@@ -100,6 +82,7 @@ interface AdhubState extends AdhubWizardState {
 
   // Actions - Generation
   setIsGenerating: (generating: boolean) => void
+  setIsExtracting: (extracting: boolean) => void
   setGenerationResult: (result: AdhubGenerationResult | undefined) => void
   setError: (error: string | undefined) => void
 
@@ -123,7 +106,7 @@ interface AdhubState extends AdhubWizardState {
   resetToStep: (step: AdhubStep) => void
 }
 
-const STEP_ORDER: AdhubStep[] = ['brand', 'template', 'style', 'fill', 'talk', 'result']
+const STEP_ORDER: AdhubStep[] = ['brand', 'product', 'preset-generate', 'result']
 
 const getNextStep = (current: AdhubStep): AdhubStep | null => {
   const index = STEP_ORDER.indexOf(current)
@@ -173,16 +156,15 @@ const DEFAULT_VIDEO_AD_CONFIG: AdhubVideoAdConfig = {
 const initialState: Omit<AdhubState,
   'setStep' | 'nextStep' | 'previousStep' |
   'setBrands' | 'selectBrand' | 'setBrandImages' |
-  'setTemplates' | 'selectTemplate' |
-  'setStyles' | 'selectStyle' |
-  'setFieldValue' | 'setFieldValues' | 'clearFieldValues' |
+  'setProducts' | 'selectProduct' |
+  'selectPreset' |
   'toggleReferenceImage' | 'setSelectedReferenceImages' | 'clearSelectedReferenceImages' |
   'setAspectRatio' | 'setSelectedModel' |
   'setRiverflowSourceImages' | 'addRiverflowSourceImage' | 'removeRiverflowSourceImage' |
   'setRiverflowDetailRefs' | 'addRiverflowDetailRef' | 'removeRiverflowDetailRef' |
   'addRiverflowFont' | 'removeRiverflowFont' | 'updateRiverflowFontText' |
   'setRiverflowSettings' | 'clearRiverflowInputs' |
-  'setIsGenerating' | 'setGenerationResult' | 'setError' |
+  'setIsGenerating' | 'setIsExtracting' | 'setGenerationResult' | 'setError' |
   'setVideoAdEnabled' | 'setSpokespersonImage' | 'setVideoAudioSource' |
   'setUploadedAudio' | 'setTtsScript' | 'setTtsVoiceId' |
   'setGeneratedTtsAudio' | 'setLipSyncModel' | 'setLipSyncResolution' |
@@ -191,20 +173,19 @@ const initialState: Omit<AdhubState,
 > = {
   currentStep: 'brand',
   selectedBrand: undefined,
-  selectedTemplate: undefined,
-  selectedStyle: undefined,
-  fieldValues: {},
+  selectedProduct: undefined,
+  selectedPreset: undefined,
   selectedReferenceImages: [],
   aspectRatio: '1:1',
   selectedModel: 'nano-banana-pro',
   isGenerating: false,
+  isExtracting: false,
   generationResult: undefined,
   error: undefined,
 
   brands: [],
   selectedBrandImages: [],
-  templates: [],
-  styles: [],
+  products: [],
 
   // Riverflow state
   riverflowSourceImages: [],
@@ -248,34 +229,25 @@ export const useAdhubStore = create<AdhubState>()(
         selectedBrand: brand,
         selectedBrandImages: [],
         selectedReferenceImages: [],
+        // Clear downstream selections
+        selectedProduct: undefined,
+        selectedPreset: undefined,
+        products: [],
       }),
 
       setBrandImages: (images) => set({ selectedBrandImages: images }),
 
-      // Template
-      setTemplates: (templates) => set({ templates }),
+      // Product (v2)
+      setProducts: (products) => set({ products }),
 
-      selectTemplate: (template) => set({
-        selectedTemplate: template,
-        fieldValues: {},
+      selectProduct: (product) => set({
+        selectedProduct: product,
+        // Clear downstream
+        selectedPreset: undefined,
       }),
 
-      // Style
-      setStyles: (styles) => set({ styles }),
-
-      selectStyle: (style) => set({ selectedStyle: style }),
-
-      // Field Values
-      setFieldValue: (fieldName, value) => set((state) => ({
-        fieldValues: {
-          ...state.fieldValues,
-          [fieldName]: value,
-        },
-      })),
-
-      setFieldValues: (values) => set({ fieldValues: values }),
-
-      clearFieldValues: () => set({ fieldValues: {} }),
+      // Preset (v2)
+      selectPreset: (preset) => set({ selectedPreset: preset }),
 
       // Reference Images
       toggleReferenceImage: (imageUrl) => set((state) => {
@@ -352,6 +324,7 @@ export const useAdhubStore = create<AdhubState>()(
 
       // Generation
       setIsGenerating: (generating) => set({ isGenerating: generating }),
+      setIsExtracting: (extracting) => set({ isExtracting: extracting }),
 
       setGenerationResult: (result) => set({
         generationResult: result,
@@ -440,20 +413,20 @@ export const useAdhubStore = create<AdhubState>()(
         const stepIndex = STEP_ORDER.indexOf(step)
         set({
           currentStep: step,
-          // Clear selections after the target step
           ...(stepIndex <= 0 && {
             selectedBrand: undefined,
             selectedBrandImages: [],
             selectedReferenceImages: [],
+            selectedProduct: undefined,
+            selectedPreset: undefined,
+            products: [],
           }),
           ...(stepIndex <= 1 && {
-            selectedTemplate: undefined,
-            fieldValues: {},
+            selectedProduct: undefined,
+            selectedPreset: undefined,
           }),
           ...(stepIndex <= 2 && {
-            selectedStyle: undefined,
-          }),
-          ...(stepIndex <= 3 && {
+            selectedPreset: undefined,
             generationResult: undefined,
           }),
           error: undefined,
@@ -461,24 +434,20 @@ export const useAdhubStore = create<AdhubState>()(
       },
     }),
     {
-      name: 'adhub-store',
+      name: 'adhub-store-v2',
       partialize: (state) => ({
-        // Only persist essential state, not lists
         currentStep: state.currentStep,
         selectedBrand: state.selectedBrand,
-        selectedTemplate: state.selectedTemplate,
-        selectedStyle: state.selectedStyle,
-        fieldValues: state.fieldValues,
+        selectedProduct: state.selectedProduct,
+        selectedPreset: state.selectedPreset,
         selectedReferenceImages: state.selectedReferenceImages,
         aspectRatio: state.aspectRatio,
         selectedModel: state.selectedModel,
-        // Persist video ad config without file objects
         videoAdConfig: {
           ...state.videoAdConfig,
           spokespersonImageFile: undefined,
           uploadedAudioFile: undefined,
         },
-        // Don't persist Riverflow inputs (large URLs)
       }),
     }
   )

@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Check, Building2, LayoutTemplate, Palette, FileEdit, Video, Image } from 'lucide-react'
+import { Check, Building2, Package, Wand2, Image } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { useAdhubStore } from '../store/adhub.store'
 import type { AdhubStep } from '../types/adhub.types'
@@ -15,17 +15,15 @@ interface StepInfo {
 
 const STEPS: StepInfo[] = [
   { id: 'brand', label: 'Brand', icon: Building2 },
-  { id: 'template', label: 'Template', icon: LayoutTemplate },
-  { id: 'style', label: 'Style', icon: Palette },
-  { id: 'fill', label: 'Fill Fields', icon: FileEdit },
-  { id: 'talk', label: 'Make It Talk', icon: Video },
+  { id: 'product', label: 'Product', icon: Package },
+  { id: 'preset-generate', label: 'Create Ad', icon: Wand2 },
   { id: 'result', label: 'Result', icon: Image },
 ]
 
 const STEP_ORDER = STEPS.map(s => s.id)
 
 export function AdhubStepper() {
-  const { currentStep, setStep, selectedBrand, selectedTemplate, selectedStyle, generationResult } = useAdhubStore()
+  const { currentStep, setStep, selectedBrand, selectedProduct, generationResult } = useAdhubStore()
 
   const currentIndex = STEP_ORDER.indexOf(currentStep)
 
@@ -35,18 +33,13 @@ export function AdhubStepper() {
     // Can always go back
     if (targetIndex < currentIndex) return true
 
-    // Check if previous steps are completed
     switch (step) {
       case 'brand':
         return true
-      case 'template':
+      case 'product':
         return !!selectedBrand
-      case 'style':
-        return !!selectedBrand && !!selectedTemplate
-      case 'fill':
-        return !!selectedBrand && !!selectedTemplate && !!selectedStyle
-      case 'talk':
-        return !!selectedBrand && !!selectedTemplate && !!selectedStyle
+      case 'preset-generate':
+        return !!selectedBrand && !!selectedProduct
       case 'result':
         return !!generationResult
       default:
@@ -58,13 +51,9 @@ export function AdhubStepper() {
     switch (step) {
       case 'brand':
         return !!selectedBrand
-      case 'template':
-        return !!selectedTemplate
-      case 'style':
-        return !!selectedStyle
-      case 'fill':
-        return currentIndex > STEP_ORDER.indexOf('fill')
-      case 'talk':
+      case 'product':
+        return !!selectedProduct
+      case 'preset-generate':
         return !!generationResult
       case 'result':
         return !!generationResult

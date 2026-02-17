@@ -1,6 +1,6 @@
 /**
  * Adhub Feature
- * Generic static ad image generator
+ * AI-powered ad image generator with preset-based workflows
  */
 
 // Components
@@ -13,9 +13,9 @@ export { useAdhubStore } from './store/adhub.store'
 export type {
   AdhubBrand,
   AdhubBrandImage,
-  AdhubStyle,
-  AdhubTemplate,
-  AdhubTemplateField,
+  AdhubProduct,
+  AdhubExtractedCopy,
+  AdhubPreset,
   AdhubAd,
   AdhubStep,
   AdhubWizardState,

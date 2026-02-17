@@ -1,14 +1,14 @@
 /**
- * Adhub Generate API
- * Trigger ad image generation
+ * Adhub Generate API (v2)
+ * Trigger ad image generation using product + preset
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getClient } from '@/lib/db/client'
 import { AdhubBrandService } from '@/features/adhub/services/adhub-brand.service'
-import { AdhubStyleService } from '@/features/adhub/services/adhub-style.service'
-import { AdhubTemplateService } from '@/features/adhub/services/adhub-template.service'
+import { AdhubProductService } from '@/features/adhub/services/adhub-product.service'
+import { getPresetBySlug } from '@/features/adhub/data/presets.data'
 
 // POST - Generate ad image
 export async function POST(request: NextRequest) {
@@ -23,9 +23,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const {
       brandId,
-      styleId,
-      templateId,
-      fieldValues,
+      productId,
+      presetSlug,
       selectedReferenceImages,
       aspectRatio,
       model,
@@ -38,27 +37,28 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Validate required fields
-    if (!brandId || !styleId || !templateId) {
+    if (!brandId || !productId || !presetSlug) {
       return NextResponse.json({
-        error: 'Brand, style, and template are required'
+        error: 'Brand, product, and preset are required'
       }, { status: 400 })
     }
 
     // Fetch all required entities
-    const [brandResult, style, template] = await Promise.all([
+    const [brandResult, product] = await Promise.all([
       AdhubBrandService.getBrandWithImages(brandId),
-      AdhubStyleService.getStyle(styleId),
-      AdhubTemplateService.getTemplate(templateId),
+      AdhubProductService.getProductById(productId),
     ])
+
+    const preset = getPresetBySlug(presetSlug)
 
     if (!brandResult) {
       return NextResponse.json({ error: 'Brand not found' }, { status: 404 })
     }
-    if (!style) {
-      return NextResponse.json({ error: 'Style not found' }, { status: 404 })
+    if (!product) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
-    if (!template) {
-      return NextResponse.json({ error: 'Template not found' }, { status: 404 })
+    if (!preset) {
+      return NextResponse.json({ error: 'Preset not found' }, { status: 404 })
     }
 
     // Verify brand ownership
@@ -66,61 +66,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    // Build the goal prompt with filled field values
-    let goalPrompt = template.goalPrompt
-
-    // Replace field placeholders with values
-    for (const field of template.fields || []) {
-      const value = fieldValues?.[field.fieldName]
-      if (value) {
-        // Replace {{fieldName}} style placeholders
-        // Escape field name to prevent ReDoS / regex injection
-        const escapedName = field.fieldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        goalPrompt = goalPrompt.replace(
-          new RegExp(`\\{\\{${escapedName}\\}\\}`, 'g'),
-          value
-        )
-      }
-    }
+    // Fill preset template with extracted copy
+    const copy = product.extractedCopy
+    const filledTemplate = preset.promptTemplate
+      .replace(/\{headline\}/g, copy.headline || '')
+      .replace(/\{tagline\}/g, copy.tagline || '')
+      .replace(/\{valueProp\}/g, copy.valueProp || '')
+      .replace(/\{features\}/g, (copy.features || []).join(', '))
+      .replace(/\{audience\}/g, copy.audience || '')
 
     // Compose final prompt:
-    // [TEMPLATE GOAL with filled field values]
-    // [BRAND CONTEXT paragraph]
-    // [STYLE PROMPT MODIFIERS]
-    const promptParts: string[] = [goalPrompt]
+    // [filled preset template] + [brand context] + [preset style modifiers]
+    const promptParts: string[] = [filledTemplate]
 
     if (brandResult.brand.contextText) {
       promptParts.push(brandResult.brand.contextText)
     }
 
-    promptParts.push(style.promptModifiers)
+    promptParts.push(preset.styleModifiers)
 
     const prompt = promptParts.join('\n\n')
 
     // Collect reference images
     const referenceImages: string[] = []
 
-    // Add brand logo if available
     if (brandResult.brand.logoUrl) {
       referenceImages.push(brandResult.brand.logoUrl)
     }
 
-    // Add selected brand reference images
     if (selectedReferenceImages && selectedReferenceImages.length > 0) {
       referenceImages.push(...selectedReferenceImages)
     }
 
-    // Add image fields from template
-    for (const field of template.fields || []) {
-      if (field.fieldType === 'image') {
-        const imageUrl = fieldValues?.[field.fieldName]
-        if (imageUrl) {
-          referenceImages.push(imageUrl)
-        }
-      }
-    }
-
-    // Create ad record in pending state (use untyped client for adhub tables)
+    // Create ad record
     const apiClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -131,9 +109,8 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: user.id,
         brand_id: brandId,
-        style_id: styleId,
-        template_id: templateId,
-        field_values: fieldValues || {},
+        product_id: productId,
+        preset_slug: presetSlug,
         generated_prompt: prompt,
         status: 'generating',
       })
@@ -148,7 +125,7 @@ export async function POST(request: NextRequest) {
     const adId = adData.id
 
     try {
-      // Build model settings based on selected model
+      // Build model settings
       const selectedModel = model || 'nano-banana-pro'
       const isRiverflow = selectedModel === 'riverflow-2-pro'
 
@@ -157,7 +134,6 @@ export async function POST(request: NextRequest) {
         outputFormat: 'png',
       }
 
-      // Add Riverflow-specific settings
       if (isRiverflow && riverflowSettings) {
         modelSettings = {
           aspectRatio: aspectRatio || '1:1',
@@ -169,12 +145,10 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // For Riverflow, use riverflowSourceImages as the main reference images
       const refsToSend = isRiverflow && riverflowSourceImages?.length > 0
         ? riverflowSourceImages
         : referenceImages
 
-      // Build request body
       const genRequestBody: Record<string, unknown> = {
         prompt,
         model: selectedModel,
@@ -184,12 +158,11 @@ export async function POST(request: NextRequest) {
           source: 'adhub',
           adId,
           brandId,
-          styleId,
-          templateId,
+          productId,
+          presetSlug,
         },
       }
 
-      // Add Riverflow-specific inputs
       if (isRiverflow) {
         if (riverflowDetailRefs?.length > 0) {
           genRequestBody.detailRefImages = riverflowDetailRefs
@@ -215,7 +188,6 @@ export async function POST(request: NextRequest) {
         const error = await genResponse.json()
         console.error('Image generation API error:', error)
 
-        // Mark ad as failed
         await apiClient
           .from('adhub_ads')
           .update({ status: 'failed' })
@@ -230,7 +202,6 @@ export async function POST(request: NextRequest) {
 
       const result = await genResponse.json()
 
-      // Update ad with gallery ID
       await apiClient
         .from('adhub_ads')
         .update({
@@ -247,7 +218,6 @@ export async function POST(request: NextRequest) {
         prompt,
       })
     } catch (error) {
-      // Mark ad as failed
       await apiClient
         .from('adhub_ads')
         .update({ status: 'failed' })

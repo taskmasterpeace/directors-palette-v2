@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { HelpCircle, X, ChevronDown, ChevronUp, BookOpen } from 'lucide-react'
 import { cn } from '@/utils/utils'
-import Image from 'next/image'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
@@ -104,19 +103,19 @@ export function AdhubFlowGuide() {
         <div className="flex gap-2">
           <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-medium text-blue-400 shrink-0">2</div>
           <div>
-            <strong className="text-foreground">Template</strong> = What to say (with fill-in fields)
-            <p className="text-xs opacity-80">Image fields become reference images</p>
+            <strong className="text-foreground">Product</strong> = What you&apos;re advertising
+            <p className="text-xs opacity-80">Paste a description, AI extracts ad copy</p>
           </div>
         </div>
         <div className="flex gap-2">
           <div className="w-6 h-6 rounded-full bg-pink-500/20 flex items-center justify-center text-xs font-medium text-pink-400 shrink-0">3</div>
           <div>
-            <strong className="text-foreground">Style</strong> = How it looks (visual direction)
-            <p className="text-xs opacity-80">Adds creative guidelines to AI</p>
+            <strong className="text-foreground">Create Ad</strong> = Pick a preset + generate
+            <p className="text-xs opacity-80">Preset fills the prompt with your product copy</p>
           </div>
         </div>
         <div className="pt-2 border-t border-border/50 text-xs">
-          <strong className="text-foreground">Final Prompt</strong> = Template + Brand Context + Style
+          <strong className="text-foreground">Final Prompt</strong> = Preset Template + Product Copy + Brand Context
         </div>
       </div>
     </InfoTip>
@@ -145,51 +144,6 @@ export function BrandInfoTip() {
 }
 
 /**
- * Template-specific info
- */
-export function TemplateInfoTip() {
-  return (
-    <InfoTip title="What is a Template?">
-      <div className="space-y-2">
-        <p><strong>Template = Ad structure with fill-in fields</strong></p>
-        <ul className="list-disc list-inside space-y-1">
-          <li><strong>Goal Prompt:</strong> What the ad should achieve</li>
-          <li><strong>Text Fields:</strong> Values inserted into prompt</li>
-          <li><strong>Image Fields:</strong> Become reference images</li>
-        </ul>
-        <div className="pt-2 border-t border-border/30">
-          <p className="text-[10px] font-mono bg-muted/50 px-1 py-0.5 rounded">
-            {`{{product_name}}`} → &ldquo;Premium Headphones&rdquo;
-          </p>
-        </div>
-      </div>
-    </InfoTip>
-  )
-}
-
-/**
- * Style-specific info
- */
-export function StyleInfoTip() {
-  return (
-    <InfoTip title="What is a Style?">
-      <div className="space-y-2">
-        <p><strong>Style = Visual & creative direction</strong></p>
-        <ul className="list-disc list-inside space-y-1">
-          <li><strong>Composition:</strong> Layout, spacing, elements</li>
-          <li><strong>Typography:</strong> Font choices, hierarchy</li>
-          <li><strong>Color:</strong> Palette, contrast, mood</li>
-          <li><strong>Tone:</strong> Writing style, CTA approach</li>
-        </ul>
-        <p className="pt-2 border-t border-border/30 text-[10px]">
-          Style instructions guide AI on HOW it looks
-        </p>
-      </div>
-    </InfoTip>
-  )
-}
-
-/**
  * Reference images info
  */
 export function ReferenceImagesInfoTip() {
@@ -205,10 +159,6 @@ export function ReferenceImagesInfoTip() {
           <div className="flex items-start gap-1.5">
             <span className="text-green-400">✓</span>
             <span>Brand style images you select</span>
-          </div>
-          <div className="flex items-start gap-1.5">
-            <span className="text-green-400">✓</span>
-            <span>Template image field uploads</span>
           </div>
         </div>
         <p className="pt-2 border-t border-border/30 text-[10px]">
@@ -241,50 +191,33 @@ export function ArchitectureHelpModal() {
         </DialogHeader>
 
         <div className="space-y-6 mt-4">
-          {/* Architecture Diagram */}
-          <div className="rounded-lg overflow-hidden border border-border">
-            <Image
-              src="/docs/adhub-architecture-diagram.jpg"
-              alt="Adhub Architecture Diagram"
-              width={1200}
-              height={600}
-              className="w-full h-auto"
-            />
-          </div>
-
           {/* Explanation */}
           <div className="grid md:grid-cols-3 gap-4">
             {/* Inputs */}
             <div className="p-4 rounded-lg border border-purple-500/30 bg-purple-500/5">
-              <h4 className="font-semibold text-purple-400 mb-2">1. Inputs (Three Pillars)</h4>
+              <h4 className="font-semibold text-purple-400 mb-2">1. Brand + Product</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <strong className="text-foreground">Templates:</strong> What the ad does - goal prompt with {`{{placeholders}}`} and input fields
+                  <strong className="text-foreground">Brand:</strong> Your identity - logo, context text, reference images
                 </li>
                 <li>
-                  <strong className="text-foreground">Styles:</strong> How it looks - detailed visual instructions (typography, color, tone)
-                </li>
-                <li>
-                  <strong className="text-foreground">Brands:</strong> Who it&apos;s for - logo, context text, reference images
+                  <strong className="text-foreground">Product:</strong> What you&apos;re advertising - paste a description and AI extracts headline, tagline, features
                 </li>
               </ul>
             </div>
 
             {/* Composition */}
             <div className="p-4 rounded-lg border border-amber-500/30 bg-amber-500/5">
-              <h4 className="font-semibold text-amber-400 mb-2">2. Prompt Composition</h4>
+              <h4 className="font-semibold text-amber-400 mb-2">2. Preset + Prompt</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <strong className="text-foreground">Step 1:</strong> Replace {`{{placeholders}}`} with your field values
+                  <strong className="text-foreground">Preset:</strong> Pre-made ad style (Product Hero, Social Story, etc.)
                 </li>
                 <li>
-                  <strong className="text-foreground">Step 2:</strong> Add brand context (target audience, tone, values)
+                  <strong className="text-foreground">Auto-fill:</strong> Product copy fills the preset template
                 </li>
                 <li>
-                  <strong className="text-foreground">Step 3:</strong> Append style modifiers (visual direction)
-                </li>
-                <li>
-                  <strong className="text-foreground">Images:</strong> Collect logo + selected refs + image fields
+                  <strong className="text-foreground">Context:</strong> Brand context + style modifiers appended
                 </li>
               </ul>
             </div>
@@ -294,10 +227,10 @@ export function ArchitectureHelpModal() {
               <h4 className="font-semibold text-green-400 mb-2">3. Generation & Output</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <strong className="text-foreground">AI Model:</strong> Replicate nano-banana-pro processes the composed prompt
+                  <strong className="text-foreground">AI Model:</strong> nano-banana-pro or riverflow-2-pro
                 </li>
                 <li>
-                  <strong className="text-foreground">Inputs:</strong> Final prompt + reference images + aspect ratio
+                  <strong className="text-foreground">Inputs:</strong> Composed prompt + reference images + aspect ratio
                 </li>
                 <li>
                   <strong className="text-foreground">Output:</strong> Professional ad image saved to your gallery
@@ -310,16 +243,16 @@ export function ArchitectureHelpModal() {
           <div className="p-4 rounded-lg border border-border bg-muted/30">
             <h4 className="font-semibold mb-3">The Complete Flow</h4>
             <div className="flex items-center justify-center gap-2 text-sm flex-wrap">
-              <span className="px-3 py-1 rounded bg-purple-500/20 text-purple-400">Your Selections</span>
+              <span className="px-3 py-1 rounded bg-purple-500/20 text-purple-400">Brand + Product</span>
               <span className="text-muted-foreground">→</span>
-              <span className="px-3 py-1 rounded bg-amber-500/20 text-amber-400">Composition Engine</span>
+              <span className="px-3 py-1 rounded bg-amber-500/20 text-amber-400">Preset Template</span>
               <span className="text-muted-foreground">→</span>
               <span className="px-3 py-1 rounded bg-blue-500/20 text-blue-400">AI Model</span>
               <span className="text-muted-foreground">→</span>
               <span className="px-3 py-1 rounded bg-green-500/20 text-green-400">Final Ad</span>
             </div>
             <p className="text-xs text-muted-foreground text-center mt-3">
-              Brand + Template + Style = Composed Prompt → AI Generation → Professional Ad
+              Product Copy + Preset + Brand Context = Composed Prompt → AI Generation → Ad
             </p>
           </div>
 
@@ -328,19 +261,19 @@ export function ArchitectureHelpModal() {
             <div className="flex items-start gap-2 text-sm">
               <span className="text-green-400">✓</span>
               <span className="text-muted-foreground">
-                <strong className="text-foreground">Reusable:</strong> Same template works across multiple brands
+                <strong className="text-foreground">Smart:</strong> AI extracts ad copy from product descriptions
               </span>
             </div>
             <div className="flex items-start gap-2 text-sm">
               <span className="text-green-400">✓</span>
               <span className="text-muted-foreground">
-                <strong className="text-foreground">Consistent:</strong> Style presets ensure visual consistency
+                <strong className="text-foreground">Consistent:</strong> Presets ensure professional ad styles
               </span>
             </div>
             <div className="flex items-start gap-2 text-sm">
               <span className="text-green-400">✓</span>
               <span className="text-muted-foreground">
-                <strong className="text-foreground">Fast:</strong> No prompt engineering needed - just fill in fields
+                <strong className="text-foreground">Fast:</strong> No prompt engineering - paste, pick, generate
               </span>
             </div>
             <div className="flex items-start gap-2 text-sm">
