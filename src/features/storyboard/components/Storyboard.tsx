@@ -1,7 +1,8 @@
 'use client'
 
 import { useMemo } from "react"
-import { FileText, Users, Palette, SplitSquareVertical, Play, Images, Check, LayoutGrid, List, Video } from "lucide-react"
+import { FileText, Users, Palette, SplitSquareVertical, Play, Images, Check, LayoutGrid, List, Video, FilePlus2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
 import { useStoryboardStore } from "../store"
 import { StoryInput } from "./story-input/StoryInput"
@@ -56,7 +57,9 @@ export function Storyboard() {
         closeBRollModal,
         // View Mode
         viewMode,
-        setViewMode
+        setViewMode,
+        // Reset
+        resetStoryboard
     } = useStoryboardStore()
 
     // Calculate tab completion states
@@ -183,9 +186,20 @@ export function Storyboard() {
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Slim content header bar */}
                 <div className="flex items-center justify-between px-3 py-1.5 border-b flex-shrink-0">
-                    <span className="text-sm font-medium text-muted-foreground">
-                        {sidebarTabs.find(t => t.id === internalTab)?.label}
-                    </span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-muted-foreground">
+                            {sidebarTabs.find(t => t.id === internalTab)?.label}
+                        </span>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+                            onClick={resetStoryboard}
+                        >
+                            <FilePlus2 className="w-3 h-3" />
+                            New Project
+                        </Button>
+                    </div>
                     <div className="flex items-center gap-2">
                         {/* View Mode Toggle - only shown on gallery tab */}
                         {internalTab === 'gallery' && (

@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { Users, ImagePlus, Upload, Link, X, ChevronDown, ChevronUp, CheckCircle, Sparkles } from 'lucide-react'
+import { Users, ImagePlus, Upload, Link, X, ChevronDown, ChevronUp, CheckCircle, Sparkles, ChevronsUpDown, Images } from 'lucide-react'
 import { useStoryboardStore } from '../../store'
 import type { StoryboardCharacter, CharacterRole } from '../../types/storyboard.types'
+import { GalleryImagePicker } from './GalleryImagePicker'
 
 interface CharacterCardProps {
     character: StoryboardCharacter
@@ -22,9 +23,11 @@ interface CharacterCardProps {
 
 function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe }: CharacterCardProps) {
     const [isExpanded, setIsExpanded] = useState(false)
-    const [imageInputMode, setImageInputMode] = useState<'upload' | 'url'>('upload')
+    const [imageInputMode, setImageInputMode] = useState<'upload' | 'url' | 'gallery'>('upload')
     const [imageUrl, setImageUrl] = useState(character.reference_image_url || '')
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [isDescriptionOpen, setIsDescriptionOpen] = useState(!character.reference_image_url)
+    const [galleryPickerOpen, setGalleryPickerOpen] = useState(false)
 
     // Auto-expand when reference is enabled but no image yet
     useEffect(() => {
@@ -32,6 +35,11 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe 
             setIsExpanded(true)
         }
     }, [character.has_reference, character.reference_image_url])
+
+    // Collapse description when a reference image is added, expand when removed
+    useEffect(() => {
+        setIsDescriptionOpen(!character.reference_image_url)
+    }, [character.reference_image_url])
 
     const handleToggleReference = () => {
         onUpdate(index, { has_reference: !character.has_reference })
@@ -58,8 +66,13 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe 
     }
 
     const handleRemoveImage = () => {
-        onUpdate(index, { reference_image_url: undefined })
+        onUpdate(index, { reference_image_url: undefined, reference_gallery_id: undefined })
         setImageUrl('')
+    }
+
+    const handleGallerySelect = (url: string, galleryId?: string) => {
+        onUpdate(index, { reference_image_url: url, reference_gallery_id: galleryId })
+        setImageUrl(url)
     }
 
     const handleDescriptionChange = (description: string) => {
@@ -194,9 +207,17 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe 
                                                     <Link className="w-3 h-3 mr-1" />
                                                     URL
                                                 </Button>
+                                                <Button
+                                                    variant={imageInputMode === 'gallery' ? 'default' : 'outline'}
+                                                    size="sm"
+                                                    onClick={() => setImageInputMode('gallery')}
+                                                >
+                                                    <Images className="w-3 h-3 mr-1" />
+                                                    Gallery
+                                                </Button>
                                             </div>
 
-                                            {imageInputMode === 'upload' ? (
+                                            {imageInputMode === 'upload' && (
                                                 <div>
                                                     <input
                                                         ref={fileInputRef}
@@ -216,7 +237,8 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe 
                                                         </div>
                                                     </Button>
                                                 </div>
-                                            ) : (
+                                            )}
+                                            {imageInputMode === 'url' && (
                                                 <div className="flex gap-2">
                                                     <Input
                                                         placeholder="Enter image URL..."
@@ -227,24 +249,62 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe 
                                                     <Button onClick={handleUrlSubmit}>Add</Button>
                                                 </div>
                                             )}
+                                            {imageInputMode === 'gallery' && (
+                                                <>
+                                                    <Button
+                                                        variant="outline"
+                                                        className="w-full h-24 border-dashed"
+                                                        onClick={() => setGalleryPickerOpen(true)}
+                                                    >
+                                                        <div className="text-center">
+                                                            <Images className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
+                                                            <span className="text-sm">Browse gallery images</span>
+                                                        </div>
+                                                    </Button>
+                                                    <GalleryImagePicker
+                                                        open={galleryPickerOpen}
+                                                        onOpenChange={setGalleryPickerOpen}
+                                                        onSelect={handleGallerySelect}
+                                                    />
+                                                </>
+                                            )}
                                         </div>
                                     )}
                                 </div>
                             )}
 
                             {/* Description */}
-                            <div className="space-y-2">
-                                <Label className="text-sm font-medium">Description</Label>
-                                <Textarea
-                                    placeholder="Physical description for AI generation..."
-                                    value={character.description || ''}
-                                    onChange={(e) => handleDescriptionChange(e.target.value)}
-                                    className="min-h-[60px] text-sm"
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                    This description will be included in prompts when this character appears.
-                                </p>
-                            </div>
+                            <Collapsible open={isDescriptionOpen} onOpenChange={setIsDescriptionOpen}>
+                                <CollapsibleTrigger asChild>
+                                    <button className="flex items-center gap-2 w-full text-left group">
+                                        <Label className="text-sm font-medium cursor-pointer">
+                                            {character.reference_image_url ? 'Description (optional)' : 'Description'}
+                                        </Label>
+                                        <ChevronsUpDown className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" />
+                                        {!isDescriptionOpen && character.description && (
+                                            <span className="text-xs text-muted-foreground truncate flex-1">{character.description}</span>
+                                        )}
+                                    </button>
+                                </CollapsibleTrigger>
+                                {character.reference_image_url && !isDescriptionOpen && (
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        Optional — add physical details the AI can&apos;t see in the image (e.g., height, voice, personality).
+                                    </p>
+                                )}
+                                <CollapsibleContent>
+                                    <div className="space-y-2 pt-2">
+                                        <Textarea
+                                            placeholder="Physical description for AI generation..."
+                                            value={character.description || ''}
+                                            onChange={(e) => handleDescriptionChange(e.target.value)}
+                                            className="min-h-[60px] text-sm"
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                            This description will be included in prompts when this character appears.
+                                        </p>
+                                    </div>
+                                </CollapsibleContent>
+                            </Collapsible>
 
                             {/* Character Sheet Generator Button */}
                             {(character.reference_image_url || character.description) && (
