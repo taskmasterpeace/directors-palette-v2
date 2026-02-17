@@ -329,6 +329,50 @@ export function CharacterSheetGenerator() {
                     throw new Error(errorData.error || `HTTP ${response.status}`)
                 }
 
+                // Parse response to get predictionId for polling
+                const responseData = await response.json() as { predictionId?: string; galleryId?: string }
+                const { predictionId, galleryId } = responseData
+
+                // Poll for the final image URL and update the character
+                if (predictionId) {
+                    const pollForImage = async () => {
+                        for (let attempt = 0; attempt < 60; attempt++) {
+                            try {
+                                const statusRes = await fetch(`/api/generation/status/${predictionId}`)
+                                if (statusRes.ok) {
+                                    const statusData = await statusRes.json()
+                                    if (statusData.status === 'succeeded') {
+                                        const imageUrl = statusData.persistedUrl || statusData.output
+                                        if (imageUrl) {
+                                            updateCharacter(char.id, {
+                                                reference_image_url: imageUrl,
+                                                has_reference: true,
+                                                ...(galleryId ? { reference_gallery_id: galleryId } : {}),
+                                                metadata: {
+                                                    ...((char.metadata || {}) as Record<string, unknown>),
+                                                    turnaround_gallery_id: galleryId,
+                                                    turnaround_prediction_id: predictionId,
+                                                }
+                                            })
+                                            toast.success(`Turnaround ready for ${char.name}`)
+                                        }
+                                        return
+                                    }
+                                    if (statusData.status === 'failed') {
+                                        toast.error(`Turnaround failed for ${char.name}`)
+                                        return
+                                    }
+                                }
+                            } catch {
+                                // continue polling
+                            }
+                            await new Promise(r => setTimeout(r, 2000))
+                        }
+                    }
+                    // Fire and forget — poll in background so batch can continue
+                    pollForImage()
+                }
+
                 results.push({ name: char.name, success: true })
                 toast.success(`Generated turnaround for ${char.name}`)
             } catch (err) {
