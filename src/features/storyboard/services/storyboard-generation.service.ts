@@ -205,7 +205,8 @@ export class StoryboardGenerationService {
         _locations: StoryboardLocation[] = [],
         abortSignal?: AbortSignal,
         getPauseState?: () => boolean,
-        presetStyle?: PresetStyle
+        presetStyle?: PresetStyle,
+        onShotComplete?: (result: { shotNumber: number; predictionId: string; imageUrl?: string; error?: string }) => void
     ): Promise<Array<{ shotNumber: number; predictionId: string; imageUrl?: string; error?: string }>> {
         const results: Array<{ shotNumber: number; predictionId: string; imageUrl?: string; error?: string }> = []
 
@@ -341,17 +342,21 @@ export class StoryboardGenerationService {
                     waitForResult: true
                 })
 
-                results.push({
+                const result = {
                     shotNumber: shot.sequence,
                     predictionId: response.predictionId,
                     imageUrl: response.imageUrl // Include imageUrl from polling response
-                })
+                }
+                results.push(result)
+                onShotComplete?.(result)
             } catch (error) {
-                results.push({
+                const result = {
                     shotNumber: shot.sequence,
                     predictionId: '',
                     error: error instanceof Error ? error.message : 'Generation failed'
-                })
+                }
+                results.push(result)
+                onShotComplete?.(result)
             }
 
             // Small delay between requests to avoid rate limiting

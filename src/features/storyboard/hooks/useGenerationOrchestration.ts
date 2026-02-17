@@ -42,7 +42,6 @@ export function useGenerationOrchestration({
         globalPromptPrefix,
         globalPromptSuffix,
         setGeneratedImage,
-        clearGeneratedImages,
         setInternalTab
     } = useStoryboardStore()
 
@@ -112,32 +111,19 @@ export function useGenerationOrchestration({
         isPausedRef.current = false
         setResults([])
         setLastCompletedImageUrl(null)
-        clearGeneratedImages()
+
+        // Only clear images for the shots we're about to regenerate, not all images
+        for (const seq of selectedShots) {
+            setGeneratedImage(seq, { predictionId: '', status: 'pending', imageUrl: undefined })
+        }
 
         try {
             const selectedModel: ModelId = imageModel || 'nano-banana-pro'
-            const generationResults = await storyboardGenerationService.generateShotsFromPrompts(
-                shotsToGenerate,
-                {
-                    model: selectedModel,
-                    aspectRatio,
-                    resolution
-                },
-                effectiveStyleGuide || undefined,
-                characters,
-                locations,
-                abortControllerRef.current?.signal,
-                () => isPausedRef.current,
-                effectivePresetStyle || undefined
-            )
-
-            setResults(generationResults)
-
-            // Store results in the global store with enhanced metadata
             const activeChapter = chapters[chapterIndex]
             const generationTimestamp = new Date().toISOString()
 
-            for (const result of generationResults) {
+            // Store each result incrementally as it completes via callback
+            const handleShotComplete = (result: { shotNumber: number; predictionId: string; imageUrl?: string; error?: string }) => {
                 const shotPrompt = shotsToGenerate.find(p => p.sequence === result.shotNumber)
 
                 // Track last completed image for live preview
@@ -145,10 +131,13 @@ export function useGenerationOrchestration({
                     setLastCompletedImageUrl(result.imageUrl)
                 }
 
+                // Determine status: only 'completed' if we actually have an imageUrl
+                const status = result.error ? 'failed' : (result.imageUrl ? 'completed' : 'failed')
+
                 setGeneratedImage(result.shotNumber, {
                     predictionId: result.predictionId,
-                    status: result.error ? 'failed' : 'completed',
-                    error: result.error,
+                    status,
+                    error: result.error || (!result.imageUrl && !result.error ? 'Image generated but URL not returned' : undefined),
                     imageUrl: result.imageUrl,
                     chapterIndex: chapterIndex,
                     chapterTitle: activeChapter?.title || `Chapter ${(activeChapter?.sequence || 0) + 1}`,
@@ -169,6 +158,24 @@ export function useGenerationOrchestration({
                     generationTimestamp
                 })
             }
+
+            const generationResults = await storyboardGenerationService.generateShotsFromPrompts(
+                shotsToGenerate,
+                {
+                    model: selectedModel,
+                    aspectRatio,
+                    resolution
+                },
+                effectiveStyleGuide || undefined,
+                characters,
+                locations,
+                abortControllerRef.current?.signal,
+                () => isPausedRef.current,
+                effectivePresetStyle || undefined,
+                handleShotComplete
+            )
+
+            setResults(generationResults)
 
             // Auto-navigate to gallery on completion (if any succeeded)
             const anySucceeded = generationResults.some(r => r.imageUrl && !r.error)
