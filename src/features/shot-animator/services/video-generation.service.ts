@@ -19,6 +19,7 @@ export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
     supportedResolutions: ['480p', '720p'],
     supportedAspectRatios: ['16:9', '9:16'],
     pricingType: 'per-video',
+    promptStyle: 'specific',
     restrictions: ['No last frame', 'Max 4 seconds', 'No 1080p'],
   },
   'wan-2.2-i2v-fast': {
@@ -32,6 +33,7 @@ export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
     supportedResolutions: ['480p', '720p'],
     supportedAspectRatios: ['16:9', '9:16'],
     pricingType: 'per-video',
+    promptStyle: 'specific',
     restrictions: ['Max 5 seconds', 'No 1080p'],
   },
   'seedance-pro-fast': {
@@ -45,6 +47,7 @@ export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
     supportedResolutions: ['480p', '720p', '1080p'],
     supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
+    promptStyle: 'reasoning',
     restrictions: ['No last frame', 'No reference images'],
   },
   'seedance-lite': {
@@ -58,6 +61,7 @@ export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
     supportedResolutions: ['480p', '720p', '1080p'],
     supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
+    promptStyle: 'reasoning',
     restrictions: ['Ref images not with 1080p or last frame'],
   },
   'kling-2.5-turbo-pro': {
@@ -71,6 +75,7 @@ export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
     supportedResolutions: ['720p'],
     supportedAspectRatios: ['16:9', '9:16', '1:1'],
     pricingType: 'per-second',
+    promptStyle: 'specific',
     restrictions: ['720p only', 'No last frame'],
   },
   'seedance-pro': {
@@ -84,6 +89,7 @@ export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
     supportedResolutions: ['480p', '720p', '1080p'],
     supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
+    promptStyle: 'reasoning',
   },
 }
 

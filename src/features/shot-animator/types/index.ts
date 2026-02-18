@@ -79,6 +79,7 @@ export interface ModelConfig {
   supportedResolutions: ('480p' | '720p' | '1080p')[]
   supportedAspectRatios: ('16:9' | '4:3' | '1:1' | '3:4' | '9:16' | '21:9' | '9:21')[]
   pricingType: 'per-video' | 'per-second'
+  promptStyle: 'specific' | 'reasoning'
   restrictions?: string[]
 }
 

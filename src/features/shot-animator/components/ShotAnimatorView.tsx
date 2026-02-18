@@ -791,6 +791,7 @@ export function ShotAnimatorView() {
                     config={config}
                     maxReferenceImages={currentModelConfig.maxReferenceImages}
                     supportsLastFrame={currentModelConfig.supportsLastFrame}
+                    selectedModel={selectedModel}
                     onUpdate={(updates) => handleUpdateShotConfig(config.id, updates)}
                     onDelete={() => handleDeleteShot(config.id)}
                     onManageReferences={() => setRefEditState({ isOpen: true, configId: config.id })}
@@ -815,7 +816,7 @@ export function ShotAnimatorView() {
 
       {/* Bottom Generate Bar */}
       {selectedCount > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border p-3 sm:p-4 safe-bottom z-50">
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-3 sm:p-4 safe-bottom z-50">
           <div className="max-w-7xl mx-auto flex items-center justify-center">
             <Button
               onClick={handleGenerateAll}

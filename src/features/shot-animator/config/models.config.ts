@@ -16,6 +16,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     supportedResolutions: ['480p', '720p'],
     supportedAspectRatios: ['16:9', '9:16'],
     pricingType: 'per-video',
+    promptStyle: 'specific',
     restrictions: [
       'Fixed duration (~4 seconds)',
       'No last frame support',
@@ -33,6 +34,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     supportedResolutions: ['480p', '720p'],
     supportedAspectRatios: ['16:9', '9:16'],
     pricingType: 'per-video',
+    promptStyle: 'specific',
     restrictions: [
       'Fixed duration (5 seconds)',
       'Max 720p resolution'
@@ -49,6 +51,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     supportedResolutions: ['480p', '720p', '1080p'],
     supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
+    promptStyle: 'reasoning',
     restrictions: [
       'No last frame support',
       'No reference images'
@@ -65,6 +68,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     supportedResolutions: ['480p', '720p', '1080p'],
     supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
+    promptStyle: 'reasoning',
     restrictions: [
       'Reference images cannot be used with 1080p resolution'
     ]
@@ -80,6 +84,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     supportedResolutions: ['720p'],
     supportedAspectRatios: ['16:9', '9:16', '1:1'],
     pricingType: 'per-second',
+    promptStyle: 'specific',
     restrictions: [
       '720p only',
       'No last frame support',
@@ -97,6 +102,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     supportedResolutions: ['480p', '720p', '1080p'],
     supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
+    promptStyle: 'reasoning',
     restrictions: []
   }
 }

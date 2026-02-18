@@ -2,19 +2,34 @@
  * Animation Prompt Service
  *
  * Client-side service for generating animation prompts from images.
- * Uses GPT-4o-mini vision to analyze the image + original prompt
- * and generate natural motion descriptions.
+ * Uses Gemini Flash vision to analyze the image and generate
+ * natural motion descriptions.
+ *
+ * Supports two modes:
+ * - generate: Create prompt from image analysis (empty prompt box)
+ * - enhance: Refine existing user text (has text in prompt box)
  */
+
+export interface AnimationPromptOptions {
+    originalPrompt?: string
+    existingPrompt?: string
+    mode: 'generate' | 'enhance'
+    promptStyle?: 'specific' | 'reasoning'
+}
 
 export interface AnimationPromptRequest {
     imageUrl: string
-    originalPrompt: string
+    originalPrompt?: string
+    existingPrompt?: string
+    mode: 'generate' | 'enhance'
+    promptStyle?: 'specific' | 'reasoning'
 }
 
 export interface AnimationPromptResponse {
     animationPrompt: string
     originalPrompt: string
     imageUrl: string
+    mode: 'generate' | 'enhance'
 }
 
 export interface AnimationPromptError {
@@ -22,22 +37,15 @@ export interface AnimationPromptError {
 }
 
 /**
- * Generate an animation prompt from an image and its original generation prompt
+ * Generate or enhance an animation prompt from an image
  *
  * @param imageUrl - URL of the image to analyze
- * @param originalPrompt - The prompt that was used to generate the image
+ * @param options - Mode, prompt style, and optional prompts
  * @returns Animation direction prompt suitable for video generation
- *
- * @example
- * const result = await generateAnimationPrompt(
- *   'https://replicate.delivery/xxx/image.png',
- *   'A warrior standing on a cliff at sunset'
- * )
- * // result.animationPrompt: "Gentle camera push-in, cape billows in the wind, clouds drift slowly"
  */
 export async function generateAnimationPrompt(
     imageUrl: string,
-    originalPrompt: string
+    options: AnimationPromptOptions
 ): Promise<AnimationPromptResponse> {
     const response = await fetch('/api/animation-prompt/generate', {
         method: 'POST',
@@ -46,7 +54,10 @@ export async function generateAnimationPrompt(
         },
         body: JSON.stringify({
             imageUrl,
-            originalPrompt,
+            originalPrompt: options.originalPrompt,
+            existingPrompt: options.existingPrompt,
+            mode: options.mode,
+            promptStyle: options.promptStyle,
         }),
     })
 
@@ -66,14 +77,19 @@ export async function generateAnimationPrompt(
 /**
  * Generate animation prompts for multiple images in parallel
  *
- * @param items - Array of { imageUrl, originalPrompt } objects
+ * @param items - Array of { imageUrl, ...options } objects
  * @returns Array of results with either animationPrompt or error for each
  */
 export async function generateAnimationPromptsBatch(
     items: AnimationPromptRequest[]
 ): Promise<Array<{ success: true; data: AnimationPromptResponse } | { success: false; error: string }>> {
     const results = await Promise.allSettled(
-        items.map(item => generateAnimationPrompt(item.imageUrl, item.originalPrompt))
+        items.map(item => generateAnimationPrompt(item.imageUrl, {
+            originalPrompt: item.originalPrompt,
+            existingPrompt: item.existingPrompt,
+            mode: item.mode,
+            promptStyle: item.promptStyle,
+        }))
     )
 
     return results.map(result => {
