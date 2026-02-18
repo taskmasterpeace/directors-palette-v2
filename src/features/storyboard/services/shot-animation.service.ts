@@ -58,24 +58,36 @@ const PACING_MODIFIERS: Record<string, string> = {
 }
 
 /**
- * Common action verbs to extract from story text
+ * Dynamic action verbs (character does something visible on screen).
+ * Ordered by visual impact — search prefers the first match,
+ * so high-motion verbs come first.
  */
-const ACTION_VERBS = [
-    'walks', 'runs', 'stands', 'sits', 'turns', 'looks', 'opens', 'closes',
-    'reaches', 'grabs', 'holds', 'drops', 'throws', 'catches', 'falls',
-    'rises', 'enters', 'exits', 'leaves', 'arrives', 'storms', 'dances',
-    'fights', 'screams', 'whispers', 'cries', 'laughs', 'smiles', 'frowns',
-    'stares', 'gazes', 'watches', 'waits', 'moves', 'steps', 'climbs',
-    'jumps', 'flies', 'drives', 'rides', 'swims', 'crawls', 'kneels',
-    'embraces', 'kisses', 'pushes', 'pulls', 'lifts', 'carries',
-    'points', 'waves', 'nods', 'shakes', 'trembles', 'shivers',
+const DYNAMIC_ACTION_VERBS = [
+    'storms', 'runs', 'fights', 'dances', 'jumps', 'falls', 'climbs',
+    'flies', 'swims', 'crawls', 'drives', 'rides', 'throws', 'catches',
+    'walks', 'enters', 'exits', 'leaves', 'arrives', 'turns', 'steps',
+    'moves', 'pushes', 'pulls', 'lifts', 'carries', 'grabs', 'reaches',
+    'opens', 'closes', 'drops', 'embraces', 'kisses', 'kneels',
+    'screams', 'whispers', 'cries', 'laughs', 'points', 'waves',
+    'nods', 'shakes', 'trembles', 'shivers', 'rises',
+]
+
+/**
+ * Static/ambient verbs — used as fallback when no dynamic verb found.
+ * These describe posture or gaze rather than visible movement.
+ */
+const STATIC_VERBS = [
+    'stands', 'sits', 'looks', 'stares', 'gazes', 'watches', 'waits',
+    'holds', 'smiles', 'frowns',
 ]
 
 export class ShotAnimationService {
     /**
      * Build animation prompt from story context + director motion style.
      *
-     * Output format: "[Story action]. [Director camera move], [pacing modifier]."
+     * Output format: "[Camera move] as [subject action]"
+     * Camera-first ordering — video models interpret prompts front-to-back,
+     * so the camera instruction needs to lead.
      */
     static buildAnimationPrompt(
         originalText: string,
@@ -92,7 +104,9 @@ export class ShotAnimationService {
             )
             : DEFAULT_CAMERA_BY_SHOT_TYPE[shotType] || DEFAULT_CAMERA_BY_SHOT_TYPE.unknown
 
-        return `${storyAction}. ${cameraMove}.`
+        // Camera-first: "Slow push-in as she walks through the door"
+        const cameraSentence = cameraMove.charAt(0).toUpperCase() + cameraMove.slice(1)
+        return `${cameraSentence} as ${storyAction.toLowerCase()}`
     }
 
     /**
@@ -131,31 +145,46 @@ export class ShotAnimationService {
     }
 
     /**
+     * Find the first verb from a list that appears as a whole word in the text.
+     * Uses word-boundary matching to avoid false positives like
+     * "stands" matching "understands" or "holds" matching "household".
+     */
+    private static findVerbInText(text: string, verbs: string[]): string | null {
+        const textLower = text.toLowerCase()
+        for (const verb of verbs) {
+            const pattern = new RegExp(`\\b${verb}\\b`, 'i')
+            if (pattern.test(textLower)) {
+                return verb
+            }
+        }
+        return null
+    }
+
+    /**
      * Extract action/motion from story text.
-     * Pulls out verbs and movement descriptions, combines with subject from prompt.
+     * Prefers dynamic action verbs (walks, runs, storms) over static ones (stands, sits).
+     * Uses word-boundary matching to avoid false positives.
      */
     static extractStoryAction(originalText: string, shotPrompt: string): string {
-        const textLower = originalText.toLowerCase()
-
-        // Find action verbs in original text
-        const foundVerbs = ACTION_VERBS.filter(v => textLower.includes(v))
-
         // Extract a subject hint from the shot prompt (first noun phrase, roughly)
         const subjectMatch = shotPrompt.match(/^([^,]+)/)
         const subject = subjectMatch
             ? subjectMatch[1].slice(0, 60).trim()
-            : 'Subject'
+            : 'subject'
 
-        if (foundVerbs.length > 0) {
-            // Build action from found verbs
-            const primaryVerb = foundVerbs[0]
+        // Prefer dynamic verbs, fall back to static
+        const primaryVerb =
+            this.findVerbInText(originalText, DYNAMIC_ACTION_VERBS) ||
+            this.findVerbInText(originalText, STATIC_VERBS)
+
+        if (primaryVerb) {
             // Find the sentence containing the verb for more context
             const sentences = originalText.split(/[.!?]+/).filter(s => s.trim())
-            const actionSentence = sentences.find(s => s.toLowerCase().includes(primaryVerb))
+            const verbPattern = new RegExp(`\\b${primaryVerb}\\b`, 'i')
+            const actionSentence = sentences.find(s => verbPattern.test(s))
 
             if (actionSentence) {
                 const cleaned = actionSentence.trim()
-                // Keep it concise - max ~80 chars
                 return cleaned.length > 80 ? cleaned.slice(0, 77) + '...' : cleaned
             }
             return `${subject} ${primaryVerb}`
