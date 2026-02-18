@@ -316,7 +316,7 @@ export function CharacterSheetGenerator() {
                             resolution: '2K'
                         },
                         ...(referenceImages.length > 0 && { referenceImages }),
-                        metadata: {
+                        extraMetadata: {
                             source: 'storyboard',
                             characterName: char.name,
                             type: 'character-turnaround'

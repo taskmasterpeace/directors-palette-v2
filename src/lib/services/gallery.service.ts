@@ -113,6 +113,7 @@ export class GalleryService {
       includeProcessing?: boolean;
       searchQuery?: string;
       sourceFilter?: string;
+      metadataTypeFilter?: string;
     }
   ): Promise<{ items: GalleryRow[]; total: number; totalPages: number }> {
     try {
@@ -159,7 +160,8 @@ export class GalleryService {
         orderBy: 'created_at',
         ascending: false,
         searchQuery: options?.searchQuery,
-        sourceFilter: options?.sourceFilter
+        sourceFilter: options?.sourceFilter,
+        metadataTypeFilter: options?.metadataTypeFilter,
       })
 
       if (result.error) {

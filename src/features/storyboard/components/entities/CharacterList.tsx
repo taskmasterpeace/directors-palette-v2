@@ -265,6 +265,7 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe 
                                                         open={galleryPickerOpen}
                                                         onOpenChange={setGalleryPickerOpen}
                                                         onSelect={handleGallerySelect}
+                                                        defaultMetadataTypeFilter="character-turnaround"
                                                     />
                                                 </>
                                             )}

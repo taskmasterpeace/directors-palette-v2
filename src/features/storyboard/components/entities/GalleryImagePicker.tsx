@@ -19,6 +19,7 @@ interface GalleryImagePickerProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     onSelect: (url: string, galleryId?: string) => void
+    defaultMetadataTypeFilter?: string
 }
 
 type SourceFilter = GeneratedImage['source'] | null
@@ -31,11 +32,12 @@ const SOURCE_OPTIONS: { label: string; value: SourceFilter }[] = [
     { label: 'Adhub', value: 'adhub' },
 ]
 
-export function GalleryImagePicker({ open, onOpenChange, onSelect }: GalleryImagePickerProps) {
+export function GalleryImagePicker({ open, onOpenChange, onSelect, defaultMetadataTypeFilter }: GalleryImagePickerProps) {
     const [images, setImages] = useState<GeneratedImage[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [sourceFilter, setSourceFilter] = useState<SourceFilter>(null)
+    const [metadataTypeFilter, setMetadataTypeFilter] = useState<string | null>(defaultMetadataTypeFilter ?? null)
     const [hasMore, setHasMore] = useState(true)
     const [page, setPage] = useState(1)
     const scrollRef = useRef<HTMLDivElement>(null)
@@ -53,6 +55,7 @@ export function GalleryImagePicker({ open, onOpenChange, onSelect }: GalleryImag
                 {
                     searchQuery: searchQuery || undefined,
                     sourceFilter: sourceFilter || undefined,
+                    metadataTypeFilter: metadataTypeFilter || undefined,
                 }
             )
             const completed = result.images.filter(img => img.status === 'completed' && img.url)
@@ -81,7 +84,7 @@ export function GalleryImagePicker({ open, onOpenChange, onSelect }: GalleryImag
         } finally {
             setIsLoading(false)
         }
-    }, [searchQuery, sourceFilter, storeImages])
+    }, [searchQuery, sourceFilter, metadataTypeFilter, storeImages])
 
     // Load images when dialog opens or filters change
     useEffect(() => {
@@ -89,7 +92,7 @@ export function GalleryImagePicker({ open, onOpenChange, onSelect }: GalleryImag
             setPage(1)
             loadImages(1, true)
         }
-    }, [open, searchQuery, sourceFilter, loadImages])
+    }, [open, searchQuery, sourceFilter, metadataTypeFilter, loadImages])
 
     const handleLoadMore = () => {
         const nextPage = page + 1
@@ -134,7 +137,7 @@ export function GalleryImagePicker({ open, onOpenChange, onSelect }: GalleryImag
                             className="pl-8 h-8 text-sm"
                         />
                     </div>
-                    <div className="flex gap-1 flex-wrap">
+                    <div className="flex gap-1 flex-wrap items-center">
                         {SOURCE_OPTIONS.map(opt => (
                             <Badge
                                 key={opt.label}
@@ -145,6 +148,16 @@ export function GalleryImagePicker({ open, onOpenChange, onSelect }: GalleryImag
                                 {opt.label}
                             </Badge>
                         ))}
+                        <div className="w-px h-4 bg-border mx-1" />
+                        <Badge
+                            variant={metadataTypeFilter === 'character-turnaround' ? 'default' : 'outline'}
+                            className="cursor-pointer text-xs"
+                            onClick={() => setMetadataTypeFilter(
+                                metadataTypeFilter === 'character-turnaround' ? null : 'character-turnaround'
+                            )}
+                        >
+                            Character Sheets
+                        </Badge>
                     </div>
                 </div>
 

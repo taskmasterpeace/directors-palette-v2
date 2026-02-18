@@ -88,7 +88,12 @@ export class CharacterSheetService {
                     aspectRatio,
                     resolution: '2K'
                 },
-                referenceImages: referenceImages.length > 0 ? referenceImages : undefined
+                referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
+                extraMetadata: {
+                    source: 'storyboard',
+                    type: 'character-turnaround',
+                    characterName,
+                },
             })
 
             return {

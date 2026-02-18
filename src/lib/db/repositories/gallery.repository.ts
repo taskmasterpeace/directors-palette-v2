@@ -87,10 +87,11 @@ export class GalleryRepository {
       ascending?: boolean;
       searchQuery?: string;
       sourceFilter?: string;
+      metadataTypeFilter?: string;
     }
   ): Promise<RepositoryListResult<GalleryRow> & { total: number; totalPages: number }> {
     try {
-      const { page, pageSize, orderBy = 'created_at', ascending = false, searchQuery, sourceFilter } = options;
+      const { page, pageSize, orderBy = 'created_at', ascending = false, searchQuery, sourceFilter, metadataTypeFilter } = options;
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
@@ -122,6 +123,11 @@ export class GalleryRepository {
         countQuery = countQuery.eq('metadata->>source', sourceFilter);
       }
 
+      // Apply metadata type filter if provided (filter by metadata->>'type')
+      if (metadataTypeFilter) {
+        countQuery = countQuery.eq('metadata->>type', metadataTypeFilter);
+      }
+
       // Build data query
       let dataQuery = this.client.from('gallery').select('*');
       Object.entries(filters).forEach(([key, value]) => {
@@ -145,6 +151,11 @@ export class GalleryRepository {
       // Apply source filter if provided
       if (sourceFilter) {
         dataQuery = dataQuery.eq('metadata->>source', sourceFilter);
+      }
+
+      // Apply metadata type filter if provided
+      if (metadataTypeFilter) {
+        dataQuery = dataQuery.eq('metadata->>type', metadataTypeFilter);
       }
 
       // Apply ordering and pagination
