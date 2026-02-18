@@ -15,6 +15,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import useEmblaCarousel from 'embla-carousel-react'
+import { toast } from 'sonner'
 import { ShotGeneratedVideo } from '../types'
 import { FullscreenVideoModal } from './FullscreenVideoModal'
 
@@ -135,7 +136,7 @@ const CompactVideoCardComponent = ({
 
   const handleDownload = async (videoUrl: string, videoId: string) => {
     try {
-      // Fetch the image as a blob
+      // Fetch the video as a blob
       const response = await fetch(videoUrl)
       const blob = await response.blob()
 
@@ -154,7 +155,7 @@ const CompactVideoCardComponent = ({
       URL.revokeObjectURL(blobUrl)
     } catch (error) {
       console.error('Failed to download video:', error)
-      alert('Could not download video. Please try again.')
+      toast.error('Could not download video. Please try again.')
     }
   }
 

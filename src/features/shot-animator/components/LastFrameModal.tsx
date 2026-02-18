@@ -39,9 +39,12 @@ export function LastFrameModal({
     const file = e.target.files?.[0]
     if (!file) return
 
-    // TODO: Implement actual file upload
-    const imageUrl = URL.createObjectURL(file)
-    setImage(imageUrl)
+    // Convert to base64 data URL so it survives localStorage persistence
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      setImage(event.target?.result as string)
+    }
+    reader.readAsDataURL(file)
     e.target.value = ''
   }
 

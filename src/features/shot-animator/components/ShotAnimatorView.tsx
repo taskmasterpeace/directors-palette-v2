@@ -7,6 +7,16 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { CompactShotCard } from './CompactShotCard'
 import { ReferenceImagesModal } from './ReferenceImagesModal'
 import { LastFrameModal } from './LastFrameModal'
@@ -15,6 +25,7 @@ import { GallerySelectModal } from './GallerySelectModal'
 import { AnimatorUnifiedGallery } from './AnimatorUnifiedGallery'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useVideoGeneration } from '../hooks/useVideoGeneration'
+import { useVideoPolling } from '../hooks/useVideoPolling'
 import { useGallery } from '../hooks/useGallery'
 import { useSettings } from '@/features/settings/hooks/useSettings'
 import { useShotAnimatorStore } from '../store'
@@ -52,8 +63,26 @@ export function ShotAnimatorView() {
   // Shot Animator Store
   const { shotConfigs, setShotConfigs, addShotConfigs, updateShotConfig, removeShotConfig } = useShotAnimatorStore()
 
-  // State
-  const [selectedModel, setSelectedModel] = useState<AnimationModel>("seedance-lite")
+  // State — restore last-used model from settings, default to seedance-lite
+  const savedModel = shotAnimator.selectedModel as AnimationModel | undefined
+  const [selectedModel, setSelectedModel] = useState<AnimationModel>(
+    savedModel && ANIMATION_MODELS[savedModel] ? savedModel : 'seedance-lite'
+  )
+
+  // Sync local state when settings load from database (async)
+  useEffect(() => {
+    const persisted = shotAnimator.selectedModel as AnimationModel | undefined
+    if (persisted && ANIMATION_MODELS[persisted] && persisted !== selectedModel) {
+      setSelectedModel(persisted)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Only re-sync when the persisted value changes
+  }, [shotAnimator.selectedModel])
+
+  // Persist model choice when it changes
+  const handleModelChange = (model: AnimationModel) => {
+    setSelectedModel(model)
+    updateShotAnimatorSettings({ selectedModel: model })
+  }
 
   // Get model settings from settings store (fallback to defaults)
   const modelSettings = shotAnimator.modelSettings || DEFAULT_MODEL_SETTINGS
@@ -61,6 +90,7 @@ export function ShotAnimatorView() {
   // Modals
   const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false)
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
+  const [showCostConfirm, setShowCostConfirm] = useState(false)
   const [refEditState, setRefEditState] = useState<{ isOpen: boolean; configId?: string }>({ isOpen: false })
   const [lastFrameEditState, setLastFrameEditState] = useState<{ isOpen: boolean; configId?: string }>({ isOpen: false })
 
@@ -186,6 +216,15 @@ export function ShotAnimatorView() {
       }
     }
   }, [processingGalleryIdsKey, user, setShotConfigs])
+
+  // Polling fallback -- if the real-time subscription misses an update,
+  // periodically check processing videos via direct DB query.
+  // See useVideoPolling for implementation details.
+  useVideoPolling({
+    shotConfigs,
+    setShotConfigs,
+    enabled: !!user,
+  })
 
   // Clear last frame images when switching to a model that doesn't support it
   useEffect(() => {
@@ -349,12 +388,7 @@ export function ShotAnimatorView() {
     removeShotConfig(id)
   }
 
-  const handleGenerateAll = async () => {
-    if (!user?.id) {
-      console.error('User not authenticated')
-      return
-    }
-
+  const executeGeneration = async () => {
     const results = await generateVideos(
       shotConfigs,
       selectedModel,
@@ -384,6 +418,26 @@ export function ShotAnimatorView() {
 
     // Log results for debugging
     console.log('Generation results:', results)
+  }
+
+  const handleGenerateAll = async () => {
+    if (!user?.id) {
+      console.error('User not authenticated')
+      return
+    }
+
+    // Cost confirmation for expensive batches (>100 pts)
+    if (estimatedCost > 100) {
+      setShowCostConfirm(true)
+      return
+    }
+
+    await executeGeneration()
+  }
+
+  const handleConfirmGeneration = async () => {
+    setShowCostConfirm(false)
+    await executeGeneration()
   }
 
   const handleDeleteVideo = (galleryId: string) => {
@@ -504,7 +558,7 @@ export function ShotAnimatorView() {
           {/* Model selector - compact */}
           <Select
             value={selectedModel}
-            onValueChange={(value) => setSelectedModel(value as AnimationModel)}
+            onValueChange={(value) => handleModelChange(value as AnimationModel)}
           >
             <SelectTrigger className="h-10 w-28 flex-shrink-0 bg-card border-border text-white text-xs">
               <SelectValue placeholder="Model" />
@@ -577,7 +631,7 @@ export function ShotAnimatorView() {
               <Label className="text-muted-foreground text-sm whitespace-nowrap">Model:</Label>
               <Select
                 value={selectedModel}
-                onValueChange={(value) => setSelectedModel(value as AnimationModel)}
+                onValueChange={(value) => handleModelChange(value as AnimationModel)}
               >
                 <SelectTrigger className="w-[320px] h-10 bg-card border-border text-white">
                   <SelectValue placeholder="Select a model" />
@@ -818,6 +872,50 @@ export function ShotAnimatorView() {
           imageName={currentLastFrameConfig.imageName}
         />
       )}
+
+      {/* Batch Cost Confirmation Dialog */}
+      <AlertDialog open={showCostConfirm} onOpenChange={setShowCostConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Batch Generation</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>You are about to generate a large batch of videos:</p>
+                <div className="rounded-md bg-muted p-3 space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Model</span>
+                    <span className="font-medium text-foreground">{currentModelConfig.displayName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Videos</span>
+                    <span className="font-medium text-foreground">{selectedCount}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Cost per video</span>
+                    <span className="font-medium text-foreground">
+                      ~{selectedCount > 0 ? Math.round(estimatedCost / selectedCount) : 0} pts
+                    </span>
+                  </div>
+                  <div className="border-t border-border my-1" />
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground font-medium">Total estimated cost</span>
+                    <span className="font-bold text-foreground">{estimatedCost} pts</span>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  All {selectedCount} videos will begin generating immediately upon confirmation.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmGeneration}>
+              Generate {selectedCount} Videos
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

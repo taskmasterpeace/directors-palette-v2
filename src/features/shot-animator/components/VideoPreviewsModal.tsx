@@ -18,6 +18,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Pagination } from "@/features/shot-creator/components/unified-gallery/Pagination"
 import { VideoGalleryService } from "../services/gallery.service"
 import type { GeneratedVideo } from "../types"
+import { toast } from 'sonner'
 
 type ViewMode = 'grid' | 'list'
 
@@ -105,7 +106,7 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
             URL.revokeObjectURL(blobUrl)
         } catch (error) {
             console.error('Failed to download video:', error)
-            alert('Could not download video. Please try again.')
+            toast.error('Could not download video. Please try again.')
         }
     }
 

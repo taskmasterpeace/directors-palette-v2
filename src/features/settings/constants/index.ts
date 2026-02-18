@@ -5,6 +5,7 @@ import { DEFAULT_MODEL_SETTINGS } from "@/features/shot-animator/config/models.c
 export const defaultSettings: SettingsConfig = {
     shotAnimator: {
         id: '',
+        selectedModel: 'seedance-lite',
         modelSettings: DEFAULT_MODEL_SETTINGS,
     },
     shotCreator: {

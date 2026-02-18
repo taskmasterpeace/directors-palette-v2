@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast as sonnerToast } from 'sonner'
 import { useToast } from '@/hooks/use-toast'
 import type {
   AnimationModel,
@@ -120,7 +121,9 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
       const finalLastFrameImage = uploadedLastFrameImage
 
       if (model === 'seedance-lite' && uploadedReferenceImages && uploadedLastFrameImage) {
-        console.warn(`Shot ${shot.id}: Using last frame image, ignoring reference images for Seedance Lite`)
+        sonnerToast.warning('Reference Images Skipped', {
+          description: `${shot.imageName}: Seedance Lite can't use both reference images and last frame. Using last frame only.`,
+        })
         finalReferenceImages = undefined
       }
 

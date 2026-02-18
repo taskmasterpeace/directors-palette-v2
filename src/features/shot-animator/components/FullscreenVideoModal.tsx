@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from 'react'
 import { X, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 interface FullscreenVideoModalProps {
   videoUrl: string
@@ -37,7 +38,7 @@ export function FullscreenVideoModal({
 
   const handleDownload = async (videoUrl: string, videoId: string) => {
     try {
-      // Fetch the image as a blob
+      // Fetch the video as a blob
       const response = await fetch(videoUrl)
       const blob = await response.blob()
 
@@ -55,8 +56,8 @@ export function FullscreenVideoModal({
       // Clean up the blob URL
       URL.revokeObjectURL(blobUrl)
     } catch (error) {
-      console.error('Failed to download image:', error)
-      alert('Could not download image. Please try again.')
+      console.error('Failed to download video:', error)
+      toast.error('Could not download video. Please try again.')
     }
   }
 

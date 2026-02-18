@@ -3,11 +3,14 @@
  * Loads videos from the database and subscribes to changes
  */
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { getClient } from '@/lib/db/client'
+import { GalleryService } from '@/lib/services/gallery.service'
 import { VideoGalleryService } from '../services/gallery.service'
 import type { GeneratedVideo } from '../types'
 import { GalleryRow } from '@/lib/db/types'
+
+const GALLERY_POLL_INTERVAL_MS = 30_000 // 30 seconds
 
 interface UseGalleryReturn {
   videos: GeneratedVideo[]
@@ -181,6 +184,70 @@ export function useGallery(enablePagination = false, itemsPerPage = 12): UseGall
       }
     }
   }, [loadVideos])
+
+  // ---- Polling fallback for the gallery ----
+  // If the Supabase real-time subscription fails (auth issues, network),
+  // we still want the gallery to pick up newly completed videos.
+  // This effect checks whether there are pending/processing items in the
+  // database. If there are, it re-fetches the gallery every 30s until
+  // nothing is pending any longer.
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+
+    const checkAndPoll = async () => {
+      try {
+        const pendingCount = await GalleryService.getPendingCount('video')
+
+        if (!mounted) return
+
+        if (pendingCount > 0 && !pollingRef.current) {
+          // Start polling -- there are processing items the subscription may miss
+          console.log(`[useGallery] ${pendingCount} pending video(s) detected, starting poll fallback`)
+
+          pollingRef.current = setInterval(async () => {
+            if (!mounted) return
+
+            try {
+              const stillPending = await GalleryService.getPendingCount('video')
+              // Always reload so we pick up any newly completed items
+              await loadVideos()
+
+              if (stillPending === 0) {
+                // Nothing left to wait for -- stop polling
+                console.log('[useGallery] no more pending videos, stopping poll fallback')
+                if (pollingRef.current) {
+                  clearInterval(pollingRef.current)
+                  pollingRef.current = null
+                }
+              }
+            } catch {
+              // Non-fatal; will retry next tick
+            }
+          }, GALLERY_POLL_INTERVAL_MS)
+        } else if (pendingCount === 0 && pollingRef.current) {
+          // Nothing pending any more -- clean up
+          clearInterval(pollingRef.current)
+          pollingRef.current = null
+        }
+      } catch {
+        // Ignore errors during the pending-count check
+      }
+    }
+
+    // Check once on mount and whenever videos change (a generation was
+    // submitted, which adds a pending row).
+    checkAndPoll()
+
+    return () => {
+      mounted = false
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current)
+        pollingRef.current = null
+      }
+    }
+  }, [videos, loadVideos])
 
   useEffect(() => {
     loadImages()

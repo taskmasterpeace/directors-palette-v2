@@ -37,15 +37,24 @@ export function ReferenceImagesModal({
     setImages(initialImages)
   }, [initialImages, isOpen])
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files || files.length === 0) return
 
     const remainingSlots = maxImages - images.length
     const filesToAdd = Array.from(files).slice(0, remainingSlots)
 
-    // TODO: Implement actual file upload
-    const newUrls = filesToAdd.map((file) => URL.createObjectURL(file))
+    // Convert files to base64 data URLs so they survive localStorage persistence
+    const base64Promises = filesToAdd.map(
+      (file) =>
+        new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onload = (event) => resolve(event.target?.result as string)
+          reader.readAsDataURL(file)
+        })
+    )
+
+    const newUrls = await Promise.all(base64Promises)
     setImages((prev) => [...prev, ...newUrls])
     e.target.value = ''
   }

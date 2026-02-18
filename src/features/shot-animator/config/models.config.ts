@@ -77,11 +77,11 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     supportsLastFrame: false,
     defaultResolution: '720p',
     maxDuration: 10,
-    supportedResolutions: ['480p', '720p'],
+    supportedResolutions: ['720p'],
     supportedAspectRatios: ['16:9', '9:16', '1:1'],
     pricingType: 'per-second',
     restrictions: [
-      'Max 720p resolution',
+      '720p only',
       'No last frame support',
       'Higher cost - use for quality-critical videos'
     ]

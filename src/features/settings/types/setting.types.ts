@@ -12,6 +12,7 @@ interface ModelSettingsEntry {
 // Settings configuration types
 export interface ShotAnimatorSettings {
     id?: string
+    selectedModel?: string
     modelSettings?: {
         'wan-2.2-5b-fast': ModelSettingsEntry
         'wan-2.2-i2v-fast': ModelSettingsEntry
