@@ -48,3 +48,11 @@ next-env.d.ts
 # supabase
 supabase/.temp
 .worktrees/
+
+# playwright MCP artifacts
+.playwright-mcp/
+playwright-out.txt
+
+# misc artifacts
+nul
+vercel-deploy.log
