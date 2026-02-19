@@ -161,6 +161,7 @@ export function AddCustomStyleModal({ open, onOpenChange, onStyleAdded }: AddCus
                     <div className="space-y-2">
                         <Label>Style Reference Image</Label>
                         <div
+                            data-drop-zone="true"
                             className={`
                                 relative border-2 border-dashed rounded-lg p-6
                                 transition-colors cursor-pointer

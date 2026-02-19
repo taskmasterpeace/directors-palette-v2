@@ -142,6 +142,7 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
 
             {/* Drop zone wrapper for drag & drop images */}
             <div
+                data-drop-zone="true"
                 className={`relative rounded-lg transition-all ${
                     isDragOver
                         ? 'ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/5'

@@ -245,6 +245,7 @@ export function CanvasView() {
     if (generatedPrompts.length === 0) {
         return (
             <div
+                data-drop-zone="true"
                 className={cn(
                     'flex-1 flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl transition-colors',
                     isDragOver ? 'border-primary bg-primary/5' : 'border-border/50'
@@ -297,6 +298,7 @@ export function CanvasView() {
                 )}
 
                 <div
+                    data-drop-zone="true"
                     className={cn(
                         'flex-1 overflow-auto relative rounded-xl transition-colors',
                         isDragOver && 'ring-2 ring-primary bg-primary/5'

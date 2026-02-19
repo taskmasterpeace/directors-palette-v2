@@ -118,6 +118,7 @@ export function AvatarImageUploader({
   return (
     <div className={cn('space-y-2', className)}>
       <div
+        data-drop-zone="true"
         className={cn(
           'relative rounded-lg border-2 border-dashed transition-colors',
           isDragOver ? 'border-amber-500 bg-amber-500/10' : 'border-slate-700 bg-slate-800/50',

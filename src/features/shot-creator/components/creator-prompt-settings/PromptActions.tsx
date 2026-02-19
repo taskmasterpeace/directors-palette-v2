@@ -1,7 +1,7 @@
 import React, { Fragment, useState, useRef } from "react"
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { Textarea } from '@/components/ui/textarea'
+import { HighlightedPromptEditor } from '../prompt-editor/HighlightedPromptEditor'
 import {
     Tooltip,
     TooltipContent,
@@ -14,7 +14,8 @@ import {
     X,
     Minimize2,
     Maximize2,
-    Square
+    Square,
+    Expand
 } from 'lucide-react'
 import { useShotCreatorStore } from "@/features/shot-creator/store/shot-creator.store"
 import { useCustomStylesStore } from "../../store/custom-styles.store"
@@ -128,7 +129,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     const autocompleteRef = useRef<HTMLDivElement>(null)
 
     // Textarea size state
-    type TextareaSize = 'small' | 'medium' | 'large'
+    type TextareaSize = 'small' | 'medium' | 'large' | 'xlarge'
     const [textareaSize, setTextareaSize] = useState<TextareaSize>('medium')
 
     // Track last used recipe for generation metadata
@@ -175,6 +176,7 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
             case 'small': return 'min-h-[44px]'
             case 'medium': return 'min-h-[100px]'
             case 'large': return 'min-h-[240px]'
+            case 'xlarge': return 'min-h-[480px]'
         }
     }
 
@@ -1099,17 +1101,17 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                         Prompt
                     </label>
                     <div className="relative">
-                        <Textarea
+                        <HighlightedPromptEditor
                             id="prompt"
-                            ref={textareaRef}
+                            textareaRef={textareaRef}
                             value={shotCreatorPrompt}
-                            onChange={(e) => handlePromptChange(e.target.value)}
+                            onChange={(value) => handlePromptChange(value)}
                             onKeyUp={handleTextareaKeyUp}
                             onKeyDown={handleAutocompleteKeyDown}
                             onMouseUp={calculateDropdownPosition}
                             onTouchEnd={calculateDropdownPosition}
                             placeholder="Enter your prompt here... Use @tag for references"
-                            className={cn("resize-none", getTextareaHeight(textareaSize))}
+                            className={cn("resize-y", getTextareaHeight(textareaSize))}
                         />
 
                         {/* Autocomplete dropdown */}
@@ -1199,6 +1201,15 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                                 className={textareaSize === 'large' ? 'bg-slate-100 dark:bg-slate-700' : ''}
                             >
                                 <Maximize2 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setTextareaSize('xlarge')}
+                                className={textareaSize === 'xlarge' ? 'bg-slate-100 dark:bg-slate-700' : ''}
+                                title="Extra large editor"
+                            >
+                                <Expand className="w-4 h-4" />
                             </Button>
                         </div>
                     </div>
