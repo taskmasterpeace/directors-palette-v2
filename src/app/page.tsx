@@ -18,6 +18,7 @@ import { CommunityPage } from "@/features/community"
 import { SectionHeader } from "@/components/SectionHeader"
 import { NodeWorkflow } from "@/features/node-workflow"
 import { AdhubWorkspace } from "@/features/adhub"
+import { AdLabWorkspace } from "@/features/ad-lab"
 
 export default function Home() {
   const { activeTab, setActiveTab } = useLayoutStore();
@@ -119,6 +120,17 @@ export default function Home() {
                   <SectionHeader section="music-lab" />
                   <div className="flex-1 p-4 overflow-y-auto">
                     <MusicLabPage />
+                  </div>
+                </PageTransition>
+              </TabsContent>
+            )}
+
+            {activeTab === 'ad-lab' && (
+              <TabsContent key="ad-lab" value="ad-lab" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
+                <PageTransition>
+                  <SectionHeader section="ad-lab" />
+                  <div className="flex-1 overflow-hidden">
+                    <AdLabWorkspace />
                   </div>
                 </PageTransition>
               </TabsContent>

@@ -23,7 +23,8 @@ import {
     Check,
     Circle,
     ArrowRight,
-    Megaphone
+    Megaphone,
+    Clapperboard
 } from 'lucide-react'
 import { useLayoutStore, TabValue } from '@/store/layout.store'
 import { useSidebarWizardSteps, useNavigateToWizardStep } from '@/features/storybook/hooks/useSidebarWizardSteps'
@@ -127,6 +128,13 @@ const NAV_SECTIONS: NavSection[] = [
                 icon: Music,
                 banner: '/banners/music-lab.webp',
                 tooltipExpanded: 'Music video treatments'
+            },
+            {
+                id: 'ad-lab',
+                label: 'Ad Lab',
+                icon: Clapperboard,
+                banner: '/banners/adhub.webp',
+                tooltipExpanded: 'Video ad prompt matrix generator'
             },
             {
                 id: 'adhub',
