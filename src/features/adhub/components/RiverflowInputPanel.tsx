@@ -137,7 +137,7 @@ export function RiverflowInputPanel() {
         />
 
         {riverflowSourceImages.length > 0 && (
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             {riverflowSourceImages.map((url, index) => (
               <div key={index} className="relative group">
                 <img
@@ -147,7 +147,7 @@ export function RiverflowInputPanel() {
                 />
                 <button
                   onClick={() => removeRiverflowSourceImage(url)}
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute -top-1 -right-1 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -181,7 +181,7 @@ export function RiverflowInputPanel() {
         />
 
         {riverflowDetailRefs.length > 0 && (
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
             {riverflowDetailRefs.map((url, index) => (
               <div key={index} className="relative group">
                 <img
@@ -191,7 +191,7 @@ export function RiverflowInputPanel() {
                 />
                 <button
                   onClick={() => removeRiverflowDetailRef(url)}
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute -top-1 -right-1 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <X className="w-3 h-3" />
                 </button>

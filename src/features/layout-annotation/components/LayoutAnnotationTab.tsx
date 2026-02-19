@@ -22,6 +22,7 @@ import { FrameExtractor } from "./frame-extractor"
 import { CanvasToolbar } from "./canvas-settings/CanvasToolbar"
 import { CanvasSettings } from "./canvas-settings/CanvasSettings"
 import type { FrameExtractionResult } from "../types/frame-extractor.types"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 // Accepted image types for canvas import
 const IMAGE_ACCEPT = {
@@ -110,7 +111,16 @@ The final image should look natural as if the edits were always part of the orig
     }, [systemPrompt])
 
     // Custom hooks for business logic
+    const isMobile = useIsMobile()
     const { sidebarCollapsed, setSidebarCollapsed, rightSidebarCollapsed, setRightSidebarCollapsed, imageImportMode, setImageImportMode } = useLayoutAnnotationStore()
+
+    // Auto-collapse sidebars on mobile
+    useEffect(() => {
+        if (isMobile) {
+            setSidebarCollapsed(true)
+            setRightSidebarCollapsed(true)
+        }
+    }, [isMobile, setSidebarCollapsed, setRightSidebarCollapsed])
     const { canvasState, updateCanvasState, updateDrawingProperties, updateCanvasSettings } = useCanvasSettings()
     const { handleUndo, handleClearCanvas } = useCanvasOperations({ canvasRef })
     const { handleImportClick, handleFileUpload, handleReceiveImage } = useImageImport({ fileInputRef })
@@ -464,7 +474,7 @@ The final image should look natural as if the edits were always part of the orig
             {/* Left Sidebar */}
             <div
                 className={`transition-all duration-300 border-r border-border flex flex-col bg-background ${
-                    sidebarCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'w-[280px] opacity-100'
+                    sidebarCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'w-[240px] md:w-[280px] opacity-100'
                 }`}
             >
                 <div className="p-3 space-y-3 flex-1 overflow-y-auto">
@@ -654,7 +664,7 @@ The final image should look natural as if the edits were always part of the orig
             {/* Right Sidebar */}
             <div
                 className={`transition-all duration-300 border-l border-border flex flex-col bg-background overflow-hidden ${
-                    rightSidebarCollapsed ? 'w-0 opacity-0' : 'w-[280px] opacity-100'
+                    rightSidebarCollapsed ? 'w-0 opacity-0' : 'w-[240px] md:w-[280px] opacity-100'
                 }`}
             >
                 {frameExtractorOpen && frameExtractorImage && (
@@ -684,7 +694,7 @@ The final image should look natural as if the edits were always part of the orig
                 </Button>
             </div>
 
-            <div className="absolute right-0 top-4 z-50">
+            <div className="absolute right-0 top-16 md:top-4 z-50">
                 <Button
                     size="sm"
                     type="button"

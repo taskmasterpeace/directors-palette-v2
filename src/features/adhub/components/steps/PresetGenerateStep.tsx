@@ -342,13 +342,13 @@ export function PresetGenerateStep() {
                 <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
                   Aspect Ratio
                 </h3>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                   {ASPECT_RATIO_OPTIONS.map((option) => (
                     <button
                       key={option.value}
                       onClick={() => setAspectRatio(option.value)}
                       className={cn(
-                        'flex flex-col items-center p-2 rounded-lg border-2 transition-all text-center',
+                        'flex flex-col items-center p-2 rounded-lg border-2 transition-all text-center min-h-[44px]',
                         aspectRatio === option.value
                           ? 'border-primary bg-primary/5'
                           : 'border-transparent bg-muted/50 hover:border-primary/30'

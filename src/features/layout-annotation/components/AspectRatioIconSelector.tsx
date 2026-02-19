@@ -31,7 +31,7 @@ export function AspectRatioIconSelector({ value, onChange, className = '' }: Asp
                     variant="outline"
                     size="sm"
                     className={`sm:hidden fixed right-4 z-40 bg-primary hover:bg-primary border-primary/30 rounded-full p-3 w-12 h-12 shadow-lg touch-manipulation transition-all ${className}`}
-                    style={{ top: 'calc(env(safe-area-inset-top) + 180px)' }}
+                    style={{ top: 'calc(env(safe-area-inset-top) + 72px)' }}
                     aria-label={`Change aspect ratio, current: ${value}`}
                 >
                     <RectangleHorizontal className="w-5 h-5 text-white" />

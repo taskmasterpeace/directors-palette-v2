@@ -114,7 +114,7 @@ export function CommunityFilters({
           value={filters.category || 'all'}
           onValueChange={(value) => onCategoryChange(value === 'all' ? undefined : value)}
         >
-          <SelectTrigger className="w-[180px] h-9">
+          <SelectTrigger className="w-full sm:w-[180px] h-9">
             <SlidersHorizontal className="w-4 h-4 mr-2" />
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
@@ -137,7 +137,7 @@ export function CommunityFilters({
           value={filters.sortBy || 'popular'}
           onValueChange={(value) => onSortChange(value as CommunityFiltersType['sortBy'])}
         >
-          <SelectTrigger className="w-[160px] h-9">
+          <SelectTrigger className="w-full sm:w-[160px] h-9">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>

@@ -145,7 +145,7 @@ export function Storyboard() {
                                     <button
                                         onClick={() => !isDisabled && setInternalTab(tab.id)}
                                         disabled={isDisabled}
-                                        className={`relative flex flex-col items-center gap-0.5 w-11 py-1.5 rounded-lg transition-all text-center
+                                        className={`relative flex flex-col items-center gap-0.5 w-11 py-2.5 rounded-lg transition-all text-center
                                             ${isActive
                                                 ? 'bg-background shadow-sm border border-border text-foreground'
                                                 : isDisabled

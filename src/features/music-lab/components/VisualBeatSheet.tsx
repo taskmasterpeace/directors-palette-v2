@@ -27,7 +27,7 @@ export function VisualBeatSheet({ proposal }: VisualBeatSheetProps) {
     }
 
     return (
-        <div className="w-[400px]">
+        <div className="w-full max-w-[400px]">
             <div className="mb-2 flex items-center justify-between">
                 <h4 className="font-semibold text-sm">Director&apos;s Beat Sheet</h4>
                 <Badge variant="outline" className="text-[10px]">Visual Plan</Badge>

@@ -18,7 +18,7 @@ export function PromptMatrixGrid({ prompts }: PromptMatrixGridProps) {
   return (
     <div className="space-y-4">
       {/* Column Headers */}
-      <div className="grid grid-cols-[80px_1fr_1fr_1fr] gap-3">
+      <div className="grid grid-cols-[60px_1fr] sm:grid-cols-[80px_1fr_1fr_1fr] gap-2 sm:gap-3">
         <div /> {/* empty corner */}
         {DURATIONS.map((dur) => (
           <div key={dur} className="text-center text-sm font-semibold text-muted-foreground uppercase tracking-wider">
@@ -29,7 +29,7 @@ export function PromptMatrixGrid({ prompts }: PromptMatrixGridProps) {
 
       {/* Rows */}
       {RATIOS.map((ratio) => (
-        <div key={ratio} className="grid grid-cols-[80px_1fr_1fr_1fr] gap-3">
+        <div key={ratio} className="grid grid-cols-[60px_1fr] sm:grid-cols-[80px_1fr_1fr_1fr] gap-2 sm:gap-3">
           {/* Row Header */}
           <div className="flex items-center justify-center">
             <span className="text-sm font-semibold text-muted-foreground writing-mode-vertical-lr rotate-0">

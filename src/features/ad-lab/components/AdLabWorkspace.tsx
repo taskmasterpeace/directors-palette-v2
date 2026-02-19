@@ -27,7 +27,7 @@ export function AdLabWorkspace() {
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Stepper */}
-      <div className="flex-shrink-0 border-b border-border/50 px-6 py-4 bg-card/50">
+      <div className="flex-shrink-0 border-b border-border/50 px-3 sm:px-6 py-3 sm:py-4 bg-card/50">
         <div className="flex items-center justify-between">
           <AdLabStepper />
         </div>

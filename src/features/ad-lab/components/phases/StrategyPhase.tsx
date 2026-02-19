@@ -65,9 +65,9 @@ export function StrategyPhase() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold">Paste your creative brief</h2>
           <p className="text-sm text-muted-foreground mt-1">
@@ -75,7 +75,7 @@ export function StrategyPhase() {
           </p>
         </div>
         <Select value={selectedModel} onValueChange={setSelectedModel}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-full sm:w-[200px]">
             <SelectValue placeholder="Model" />
           </SelectTrigger>
           <SelectContent>

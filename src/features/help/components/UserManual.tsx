@@ -29,12 +29,59 @@ import {
     Pencil
 } from "lucide-react"
 import Image from "next/image"
+import { useState } from "react"
+import { ChevronDown } from "lucide-react"
+
+const TOC_LINKS = [
+    { href: '#getting-started', label: 'Getting Started', indent: false },
+    { href: '#storyboard', label: 'The Storyboard', indent: false },
+    { href: '#storyboard-gallery', label: 'Storyboard Gallery', indent: true },
+    { href: '#director-vision', label: "Director's Vision", indent: false },
+    { href: '#shot-lab', label: 'Shot Lab', indent: false },
+    { href: '#recipes', label: 'Recipes', indent: false },
+    { href: '#syntax', label: 'Prompt Syntax', indent: false },
+    { href: '#anchor-transform', label: 'Anchor Transform', indent: false },
+    { href: '#gallery', label: 'Gallery', indent: false },
+    { href: '#video-generation', label: 'Video Generation', indent: false },
+    { href: '#models', label: 'Image Generation', indent: false },
+    { href: '#api-access', label: 'API Access', indent: false },
+]
 
 export function UserManual() {
+    const [mobileTocOpen, setMobileTocOpen] = useState(false)
+
     return (
-        <div className="flex h-full bg-background text-foreground relative overflow-hidden">
+        <div className="flex flex-col lg:flex-row h-full bg-background text-foreground relative overflow-hidden">
+            {/* Mobile TOC Dropdown */}
+            <div className="lg:hidden border-b border-border/50 flex-shrink-0">
+                <button
+                    onClick={() => setMobileTocOpen(!mobileTocOpen)}
+                    className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium hover:bg-accent/50 transition-colors"
+                >
+                    <span className="flex items-center gap-2">
+                        <BookOpen className="w-4 h-4 text-primary" />
+                        Jump to Section
+                    </span>
+                    <ChevronDown className={`w-4 h-4 transition-transform ${mobileTocOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileTocOpen && (
+                    <nav className="px-2 pb-3 space-y-0.5 max-h-64 overflow-y-auto">
+                        {TOC_LINKS.map((link) => (
+                            <a
+                                key={link.href}
+                                href={link.href}
+                                onClick={() => setMobileTocOpen(false)}
+                                className={`block px-3 py-2 text-sm rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors ${link.indent ? 'pl-6' : 'font-medium'}`}
+                            >
+                                {link.label}
+                            </a>
+                        ))}
+                    </nav>
+                )}
+            </div>
+
             {/* Table of Contents Sidebar */}
-            <div className="w-64 border-r border-border/50 hidden lg:block p-6 space-y-6 overflow-y-auto">
+            <div className="w-64 border-r border-border/50 hidden lg:block p-6 space-y-6 overflow-y-auto flex-shrink-0">
                 <div className="flex items-center gap-2 mb-6">
                     <BookOpen className="w-6 h-6 text-primary" />
                     <span className="font-bold text-lg">Manual</span>

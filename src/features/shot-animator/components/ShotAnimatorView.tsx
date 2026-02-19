@@ -52,6 +52,8 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { toast } from '@/hooks/use-toast'
 import VideoPreviewsModal from "./VideoPreviewsModal"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 export function ShotAnimatorView() {
   // Auth and hooks
@@ -62,6 +64,8 @@ export function ShotAnimatorView() {
 
   // Shot Animator Store
   const { shotConfigs, setShotConfigs, addShotConfigs, updateShotConfig, removeShotConfig } = useShotAnimatorStore()
+  const isMobile = useIsMobile()
+  const [mobileGalleryOpen, setMobileGalleryOpen] = useState(false)
 
   // State — restore last-used model from settings, default to seedance-lite
   const savedModel = shotAnimator.selectedModel as AnimationModel | undefined
@@ -804,7 +808,7 @@ export function ShotAnimatorView() {
           </ScrollArea>
         </div>
 
-        {/* Right: Unified Gallery */}
+        {/* Right: Unified Gallery - Desktop */}
         <div className="hidden lg:block">
           <AnimatorUnifiedGallery
             shotConfigs={shotConfigs}
@@ -812,6 +816,35 @@ export function ShotAnimatorView() {
             onDownload={handleDownloadVideo}
           />
         </div>
+
+        {/* Mobile Gallery Button */}
+        {isMobile && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="fixed bottom-20 right-3 z-40 rounded-full h-10 px-3 bg-card/90 backdrop-blur-sm shadow-lg border-border"
+            onClick={() => setMobileGalleryOpen(true)}
+          >
+            <VideoIcon className="w-4 h-4 mr-1.5" />
+            Gallery
+          </Button>
+        )}
+
+        {/* Mobile Gallery Sheet */}
+        <Sheet open={mobileGalleryOpen} onOpenChange={setMobileGalleryOpen}>
+          <SheetContent side="bottom" className="h-[70vh] p-0">
+            <SheetHeader className="px-4 py-3 border-b">
+              <SheetTitle>Generated Videos</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto h-full">
+              <AnimatorUnifiedGallery
+                shotConfigs={shotConfigs}
+                onDelete={handleDeleteVideo}
+                onDownload={handleDownloadVideo}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
       {/* Bottom Generate Bar */}

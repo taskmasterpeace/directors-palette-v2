@@ -25,7 +25,7 @@ export function AdLabStepper() {
   const { currentPhase, completedPhases, setPhase, canNavigateTo } = useAdLabStore()
 
   return (
-    <div className="flex items-center justify-center gap-2">
+    <div className="flex items-center justify-start sm:justify-center gap-1 sm:gap-2 overflow-x-auto scrollbar-none">
       {STEPS.map((step, index) => {
         const isActive = currentPhase === step.id
         const isCompleted = completedPhases.includes(step.id)
@@ -38,7 +38,7 @@ export function AdLabStepper() {
               onClick={() => canClick && setPhase(step.id)}
               disabled={!canClick}
               className={cn(
-                'flex items-center gap-2 px-4 py-2 rounded-lg transition-all',
+                'flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg transition-all flex-shrink-0',
                 isActive && 'bg-primary/10 text-primary',
                 !isActive && isCompleted && 'text-green-500 hover:bg-green-500/10',
                 !isActive && !isCompleted && canClick && 'text-muted-foreground hover:bg-accent/50',
@@ -61,7 +61,7 @@ export function AdLabStepper() {
             </button>
 
             {index < STEPS.length - 1 && (
-              <div className="flex-shrink-0 w-8 h-px relative">
+              <div className="flex-shrink-0 w-4 sm:w-8 h-px relative">
                 <div className="absolute inset-0 bg-border" />
                 {isCompleted && (
                   <motion.div

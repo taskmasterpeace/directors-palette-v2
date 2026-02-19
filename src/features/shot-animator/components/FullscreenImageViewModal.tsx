@@ -74,7 +74,7 @@ export function FullscreenImageViewModal({
         <Button
           variant="ghost"
           size="sm"
-          className="fixed top-4 right-4 text-white hover:bg-white/20 z-50 bg-black/50 backdrop-blur-sm rounded-full w-10 h-10 p-0"
+          className="fixed top-4 right-16 md:right-4 text-white hover:bg-white/20 z-50 bg-black/50 backdrop-blur-sm rounded-full w-10 h-10 p-0"
           onClick={() => { setIsEditing(false); onOpenChange(false) }}
         >
           <X className="w-6 h-6" />
