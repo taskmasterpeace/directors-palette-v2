@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
-import { ShotAnimationConfig, AnimationModel } from '../types'
+import { ShotAnimationConfig, ShotGeneratedVideo, AnimationModel } from '../types'
 import { Textarea } from "@/components/ui/textarea"
 import { CompactVideoCard } from './CompactVideoCard'
 import { FullscreenImageViewModal } from './FullscreenImageViewModal'
@@ -331,6 +331,19 @@ const CompactShotCardComponent = ({
   )
 }
 
+// Compare generatedVideos arrays by value (length, status, videoUrl)
+function videosEqual(a: ShotGeneratedVideo[], b: ShotGeneratedVideo[]): boolean {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (
+      a[i].galleryId !== b[i].galleryId ||
+      a[i].status !== b[i].status ||
+      a[i].videoUrl !== b[i].videoUrl
+    ) return false
+  }
+  return true
+}
+
 // Memoize component - only re-render if config changes
 export const CompactShotCard = memo(CompactShotCardComponent, (prevProps, nextProps) => {
   return (
@@ -340,7 +353,7 @@ export const CompactShotCard = memo(CompactShotCardComponent, (prevProps, nextPr
     prevProps.config.includeInBatch === nextProps.config.includeInBatch &&
     prevProps.config.imageUrl === nextProps.config.imageUrl &&
     prevProps.config.referenceImages.length === nextProps.config.referenceImages.length &&
-    prevProps.config.generatedVideos.length === nextProps.config.generatedVideos.length &&
+    videosEqual(prevProps.config.generatedVideos, nextProps.config.generatedVideos) &&
     prevProps.config.lastFrameImage === nextProps.config.lastFrameImage &&
     prevProps.maxReferenceImages === nextProps.maxReferenceImages &&
     prevProps.supportsLastFrame === nextProps.supportsLastFrame &&
