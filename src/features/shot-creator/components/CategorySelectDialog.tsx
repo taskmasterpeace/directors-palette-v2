@@ -28,6 +28,7 @@ interface CategorySelectionDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     onSave: (category: string, tags: string[]) => void
+    initialCategory?: Category
     initialTags?: string[]
     imageUrl?: string
 }
@@ -38,21 +39,26 @@ export default function CategorySelectionDialog({
     open,
     onOpenChange,
     onSave,
+    initialCategory,
     initialTags = [],
     imageUrl
 }: CategorySelectionDialogProps) {
-    const [category, setCategory] = useState<Category>('unorganized')
+    const [category, setCategory] = useState<Category>(initialCategory || 'unorganized')
     const [tags, setTags] = useState<string[]>(initialTags)
     const [tagInput, setTagInput] = useState('')
 
     useEffect(() => {
-        if (!open) {
+        if (open) {
+            setCategory(initialCategory || 'unorganized')
+            setTags(initialTags)
+            setTagInput('')
+        } else {
             document.body.style.pointerEvents = ''
         }
         return () => {
             document.body.style.pointerEvents = ''
         }
-    }, [open])
+    }, [open, initialCategory, initialTags])
 
     const handleAddTag = () => {
         if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -68,10 +74,6 @@ export default function CategorySelectionDialog({
     const handleSave = () => {
         onSave(category, tags)
         onOpenChange(false)
-        // Reset for next use
-        setCategory('unorganized')
-        setTags([])
-        setTagInput('')
     }
 
     return (

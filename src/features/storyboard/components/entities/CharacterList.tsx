@@ -9,25 +9,34 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { Users, ImagePlus, Upload, Link, X, ChevronDown, ChevronUp, CheckCircle, Sparkles, ChevronsUpDown, Images, UserPlus } from 'lucide-react'
+import { Users, ImagePlus, Upload, Link, X, ChevronDown, ChevronUp, CheckCircle, Sparkles, ChevronsUpDown, Images, UserPlus, Library, Loader2, Unlink } from 'lucide-react'
 import { useStoryboardStore } from '../../store'
 import type { StoryboardCharacter, CharacterRole } from '../../types/storyboard.types'
 import { GalleryImagePicker } from './GalleryImagePicker'
+import CategorySelectionDialog from '@/features/shot-creator/components/CategorySelectDialog'
+import { GalleryService } from '@/lib/services/gallery.service'
 
 interface CharacterCardProps {
     character: StoryboardCharacter
     index: number
     onUpdate: (index: number, updates: Partial<StoryboardCharacter>) => void
     onOpenCharacterSheetRecipe: (characterId: string) => void
+    onSaveToLibrary: (characterId: string, tag: string, galleryId: string) => void
+    onRemoveFromLibrary: (characterId: string, galleryId: string) => void
 }
 
-function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe }: CharacterCardProps) {
+function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe, onSaveToLibrary, onRemoveFromLibrary }: CharacterCardProps) {
     const [isExpanded, setIsExpanded] = useState(false)
     const [imageInputMode, setImageInputMode] = useState<'upload' | 'url' | 'gallery'>('upload')
     const [imageUrl, setImageUrl] = useState(character.reference_image_url || '')
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [isDescriptionOpen, setIsDescriptionOpen] = useState(!character.reference_image_url)
     const [galleryPickerOpen, setGalleryPickerOpen] = useState(false)
+    const [categoryDialogOpen, setCategoryDialogOpen] = useState(false)
+    const [isSavingToLibrary, setIsSavingToLibrary] = useState(false)
+    const [pendingGalleryId, setPendingGalleryId] = useState<string | null>(null)
+
+    const referenceTag = (character.metadata as Record<string, unknown>)?.reference_tag as string | undefined
 
     // Auto-expand when reference is enabled but no image yet
     useEffect(() => {
@@ -77,6 +86,83 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe 
 
     const handleDescriptionChange = (description: string) => {
         onUpdate(index, { description })
+    }
+
+    const sanitizeTag = (name: string) =>
+        name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+
+    const handleSaveToLibrary = async () => {
+        if (!character.reference_image_url) return
+        setIsSavingToLibrary(true)
+
+        try {
+            let galleryId = character.reference_gallery_id
+
+            // If base64 image (no gallery ID), upload first
+            if (!galleryId && character.reference_image_url.startsWith('data:')) {
+                const res = await fetch('/api/gallery/save-frame', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        imageData: character.reference_image_url,
+                        metadata: { row: 0, col: 0, aspectRatio: '1:1', width: 512, height: 512 }
+                    })
+                })
+                const data = await res.json()
+                if (!data.success || !data.galleryId) {
+                    throw new Error(data.error || 'Failed to upload image')
+                }
+                galleryId = data.galleryId
+                // Update character with the new gallery ID and public URL
+                onUpdate(index, { reference_gallery_id: galleryId, reference_image_url: data.publicUrl })
+            }
+
+            if (!galleryId) {
+                throw new Error('No gallery ID available')
+            }
+
+            setPendingGalleryId(galleryId)
+            setCategoryDialogOpen(true)
+        } catch (err) {
+            console.error('Failed to prepare image for library:', err)
+        } finally {
+            setIsSavingToLibrary(false)
+        }
+    }
+
+    const handleCategoryConfirm = async (category: string, tags: string[]) => {
+        if (!pendingGalleryId) return
+
+        const tag = `@${tags[0] || sanitizeTag(character.name)}`
+        try {
+            const result = await GalleryService.updateReference(pendingGalleryId, tag, {
+                category: category as 'people' | 'places' | 'props' | 'layouts',
+                addToLibrary: true
+            })
+            if (result.success) {
+                onSaveToLibrary(character.id, tag, pendingGalleryId)
+            } else {
+                console.error('Failed to save reference:', result.error)
+            }
+        } catch (err) {
+            console.error('Failed to update reference:', err)
+        } finally {
+            setPendingGalleryId(null)
+        }
+    }
+
+    const handleRemoveFromLibrary = async () => {
+        const galleryId = character.reference_gallery_id
+        if (!galleryId) return
+
+        try {
+            const result = await GalleryService.updateReference(galleryId, null)
+            if (result.success) {
+                onRemoveFromLibrary(character.id, galleryId)
+            }
+        } catch (err) {
+            console.error('Failed to remove from library:', err)
+        }
     }
 
     return (
@@ -129,6 +215,20 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe 
                                     <Badge variant="secondary" className="text-xs">
                                         {character.mentions} mentions
                                     </Badge>
+                                    {referenceTag && (
+                                        <Badge
+                                            variant="secondary"
+                                            className="text-[10px] px-1.5 py-0 bg-violet-500/20 text-violet-400 border-violet-500/30 flex items-center gap-1"
+                                        >
+                                            {referenceTag}
+                                            <span
+                                                className="w-3 h-3 cursor-pointer hover:text-destructive inline-flex items-center justify-center"
+                                                onClick={(e) => { e.stopPropagation(); handleRemoveFromLibrary() }}
+                                            >
+                                                <X className="w-2.5 h-2.5" />
+                                            </span>
+                                        </Badge>
+                                    )}
                                     {character.has_reference && character.reference_image_url && (
                                         <CheckCircle className="w-4 h-4 text-green-500" />
                                     )}
@@ -309,7 +409,7 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe 
 
                             {/* Character Sheet Generator Button */}
                             {(character.reference_image_url || character.description) && (
-                                <div className="pt-2 border-t">
+                                <div className="pt-2 border-t space-y-2">
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -319,8 +419,49 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe 
                                         <Sparkles className="w-4 h-4" />
                                         Generate Character Sheet
                                     </Button>
+
+                                    {/* Save to Library Button - visible when image exists but no tag yet */}
+                                    {character.reference_image_url && !referenceTag && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-full gap-2"
+                                            onClick={handleSaveToLibrary}
+                                            disabled={isSavingToLibrary}
+                                        >
+                                            {isSavingToLibrary ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <Library className="w-4 h-4" />
+                                            )}
+                                            Save to Reference Library
+                                        </Button>
+                                    )}
+
+                                    {/* Remove from Library Button - visible when tagged */}
+                                    {referenceTag && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-full gap-2 text-muted-foreground"
+                                            onClick={handleRemoveFromLibrary}
+                                        >
+                                            <Unlink className="w-4 h-4" />
+                                            Remove from Library ({referenceTag})
+                                        </Button>
+                                    )}
                                 </div>
                             )}
+
+                            {/* Category Selection Dialog for Save to Library */}
+                            <CategorySelectionDialog
+                                open={categoryDialogOpen}
+                                onOpenChange={setCategoryDialogOpen}
+                                onSave={handleCategoryConfirm}
+                                initialCategory="people"
+                                initialTags={[sanitizeTag(character.name)]}
+                                imageUrl={character.reference_image_url}
+                            />
                         </div>
                     </div>
                 </CollapsibleContent>
@@ -370,7 +511,7 @@ function AddCharacterForm({ onAdd, onCancel }: { onAdd: (name: string, role: Cha
 }
 
 export function CharacterList() {
-    const { extractionResult, characters, setCharacters, addCharacter, setPreSelectedCharacterId } = useStoryboardStore()
+    const { extractionResult, characters, setCharacters, addCharacter, setPreSelectedCharacterId, saveCharacterToLibrary, removeCharacterFromLibrary } = useStoryboardStore()
     const [showAddForm, setShowAddForm] = useState(false)
 
     // Handler to pre-select a character in the CharacterSheetGenerator
@@ -425,6 +566,15 @@ export function CharacterList() {
             i === index ? { ...c, ...updates } : c
         )
         setCharacters(updated)
+    }
+
+    const handleSaveToLibrary = (characterId: string, tag: string, galleryId: string) => {
+        saveCharacterToLibrary(characterId, tag, galleryId)
+    }
+
+    const handleRemoveFromLibrary = (characterId: string, _galleryId: string) => {
+        removeCharacterFromLibrary(characterId)
+        // GalleryService.updateReference already called by the card before this callback
     }
 
     const addCharacterSection = (
@@ -503,6 +653,8 @@ export function CharacterList() {
                                             index={character._index}
                                             onUpdate={handleUpdateCharacter}
                                             onOpenCharacterSheetRecipe={handleOpenCharacterSheetRecipe}
+                                            onSaveToLibrary={handleSaveToLibrary}
+                                            onRemoveFromLibrary={handleRemoveFromLibrary}
                                         />
                                     ))}
                                 </div>
@@ -518,6 +670,8 @@ export function CharacterList() {
                                 index={index}
                                 onUpdate={handleUpdateCharacter}
                                 onOpenCharacterSheetRecipe={handleOpenCharacterSheetRecipe}
+                                onSaveToLibrary={handleSaveToLibrary}
+                                onRemoveFromLibrary={handleRemoveFromLibrary}
                             />
                         ))}
                     </div>

@@ -269,6 +269,10 @@ export interface StoryboardStore {
     completeGeneration: () => void
     abortGeneration: () => void
 
+    // ---- Character Library Actions ----
+    saveCharacterToLibrary: (id: string, tag: string, galleryId: string) => void
+    removeCharacterFromLibrary: (id: string) => void
+
     // ---- Reset ----
     resetStoryboard: () => void
 
@@ -767,6 +771,25 @@ export const useStoryboardStore = create<StoryboardStore>()(
                 generationProgress: state.generationProgress
                     ? { ...state.generationProgress, isGenerating: false, aborted: true }
                     : null
+            })),
+
+            // ---- Character Library Actions ----
+            saveCharacterToLibrary: (id, tag, galleryId) => set((state) => ({
+                characters: state.characters.map((c) =>
+                    c.id === id ? {
+                        ...c,
+                        reference_gallery_id: galleryId,
+                        metadata: { ...c.metadata, reference_tag: tag }
+                    } : c
+                )
+            })),
+            removeCharacterFromLibrary: (id) => set((state) => ({
+                characters: state.characters.map((c) =>
+                    c.id === id ? {
+                        ...c,
+                        metadata: { ...c.metadata, reference_tag: undefined }
+                    } : c
+                )
             })),
 
             // ---- Reset ----
