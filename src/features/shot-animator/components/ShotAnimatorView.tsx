@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect, useRef } from 'react'
-import { Upload, ImageIcon, Search, Play, VideoIcon } from 'lucide-react'
+import { Upload, ImageIcon, Search, Play, VideoIcon, PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -127,6 +127,9 @@ export function ShotAnimatorView() {
   // Drag-and-drop state
   const [isDragOver, setIsDragOver] = useState(false)
   const [isDragReject, setIsDragReject] = useState(false)
+
+  // Gallery panel state
+  const [galleryCollapsed, setGalleryCollapsed] = useState(false)
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('')
@@ -487,7 +490,8 @@ export function ShotAnimatorView() {
           const newVideo = {
             galleryId: result.galleryId!,
             status: 'processing' as const,
-            createdAt: new Date()
+            createdAt: new Date(),
+            model: selectedModel,
           }
           return {
             ...config,
@@ -857,7 +861,7 @@ export function ShotAnimatorView() {
       </div>
 
       {/* Main Content - Two Column Layout */}
-      <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-[1fr_400px]">
+      <div className={`flex-1 overflow-hidden grid grid-cols-1 ${galleryCollapsed ? '' : 'lg:grid-cols-[1fr_400px]'}`}>
         {/* Left: Shots Grid */}
         <div
           ref={dropZoneRef}
@@ -908,13 +912,30 @@ export function ShotAnimatorView() {
         </div>
 
         {/* Right: Unified Gallery - Desktop */}
-        <div className="hidden lg:block">
-          <AnimatorUnifiedGallery
-            shotConfigs={shotConfigs}
-            onDelete={handleDeleteVideo}
-            onDownload={handleDownloadVideo}
-          />
-        </div>
+        {!galleryCollapsed && (
+          <div className="hidden lg:block">
+            <AnimatorUnifiedGallery
+              shotConfigs={shotConfigs}
+              onDelete={handleDeleteVideo}
+              onDownload={handleDownloadVideo}
+            />
+          </div>
+        )}
+
+        {/* Gallery Toggle Button - Desktop */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hidden lg:flex fixed right-2 top-1/2 -translate-y-1/2 z-30 h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm border border-border shadow-md hover:bg-secondary"
+          onClick={() => setGalleryCollapsed(!galleryCollapsed)}
+          title={galleryCollapsed ? 'Show video gallery' : 'Hide video gallery'}
+        >
+          {galleryCollapsed ? (
+            <PanelRightOpen className="w-4 h-4" />
+          ) : (
+            <PanelRightClose className="w-4 h-4" />
+          )}
+        </Button>
 
         {/* Mobile Gallery Button */}
         {isMobile && (

@@ -14,7 +14,7 @@ import { CompactVideoCard } from './CompactVideoCard'
 import { FullscreenImageViewModal } from './FullscreenImageViewModal'
 import { VideoGalleryService } from '../services/gallery.service'
 import { generateAnimationPrompt } from '../services/animation-prompt.service'
-import { ANIMATION_MODELS } from '../config/models.config'
+import { ANIMATION_MODELS, getVideoModelIcon } from '../config/models.config'
 import { toast } from '@/hooks/use-toast'
 import type { ReferenceEditorExport } from '@/features/shot-creator/components/reference-editor'
 
@@ -173,7 +173,13 @@ const CompactShotCardComponent = ({
           </div>
           {/* Video Status Badge - Top Right */}
           {config.generatedVideos && config.generatedVideos.length > 0 && (
-            <div className="absolute top-2 right-2 z-10">
+            <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
+              {/* Model icon */}
+              {config.generatedVideos[config.generatedVideos.length - 1]?.model && (
+                <span className="text-sm drop-shadow-lg pointer-events-none">
+                  {getVideoModelIcon(config.generatedVideos[config.generatedVideos.length - 1].model)}
+                </span>
+              )}
               {config.generatedVideos.some(v => v.status === 'processing') && (
                 <Badge className="bg-primary text-white text-xs flex items-center gap-1">
                   <LoadingSpinner size="xs" color="current" />
@@ -181,7 +187,7 @@ const CompactShotCardComponent = ({
                 </Badge>
               )}
               {config.generatedVideos.every(v => v.status === 'completed') && (
-                <Badge className="bg-emerald-600 text-white text-xs">
+                <Badge className="bg-secondary text-white text-xs">
                   {config.generatedVideos.length} Video{config.generatedVideos.length > 1 ? 's' : ''}
                 </Badge>
               )}
@@ -338,7 +344,8 @@ function videosEqual(a: ShotGeneratedVideo[], b: ShotGeneratedVideo[]): boolean 
     if (
       a[i].galleryId !== b[i].galleryId ||
       a[i].status !== b[i].status ||
-      a[i].videoUrl !== b[i].videoUrl
+      a[i].videoUrl !== b[i].videoUrl ||
+      a[i].model !== b[i].model
     ) return false
   }
   return true

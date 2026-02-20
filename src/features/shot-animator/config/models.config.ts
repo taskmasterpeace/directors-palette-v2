@@ -205,3 +205,20 @@ export const MODEL_TIER_LABELS: Record<AnimationModel, string> = {
   'kling-2.5-turbo-pro': 'Premium',
   'seedance-pro': 'Legacy',
 }
+
+/**
+ * Model icons (emoji) for visual identification on video cards
+ */
+export const VIDEO_MODEL_ICONS: Record<AnimationModel, string> = {
+  'wan-2.2-5b-fast': '🌀',
+  'wan-2.2-i2v-fast': '🌊',
+  'seedance-pro-fast': '⚡',
+  'seedance-lite': '🌱',
+  'kling-2.5-turbo-pro': '👑',
+  'seedance-pro': '🎬',
+}
+
+export function getVideoModelIcon(model?: string): string {
+  if (!model) return '🎬'
+  return VIDEO_MODEL_ICONS[model as AnimationModel] || '🎬'
+}

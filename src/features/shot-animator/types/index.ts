@@ -18,6 +18,7 @@ export interface ShotGeneratedVideo {
   status: 'pending' | 'processing' | 'completed' | 'failed'
   createdAt: Date
   error?: string
+  model?: AnimationModel
 }
 
 // Shot configuration for animation
