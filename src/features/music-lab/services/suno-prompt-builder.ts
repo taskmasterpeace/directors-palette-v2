@@ -1,0 +1,96 @@
+/**
+ * Suno Prompt Builder
+ * Template-based (no LLM) prompt assembly from ArtistDNA
+ */
+
+import type { ArtistDNA } from '../types/artist-dna.types'
+
+/**
+ * Build vocal prompt from DNA
+ * Describes vocal delivery style for Suno
+ */
+export function buildVocalPrompt(dna: ArtistDNA): string {
+  const parts: string[] = []
+
+  // Vocal textures
+  if (dna.sound.vocalTextures.length > 0) {
+    parts.push(dna.sound.vocalTextures.join(', '))
+  }
+
+  // Melody bias interpretation
+  if (dna.flow.melodyBias <= 20) {
+    parts.push('spoken word delivery')
+  } else if (dna.flow.melodyBias <= 40) {
+    parts.push('rap-focused with occasional melody')
+  } else if (dna.flow.melodyBias <= 60) {
+    parts.push('balanced rap and singing')
+  } else if (dna.flow.melodyBias <= 80) {
+    parts.push('melodic with spoken sections')
+  } else {
+    parts.push('fully sung vocals')
+  }
+
+  // Flow patterns
+  if (dna.flow.flowPatterns.length > 0) {
+    parts.push(dna.flow.flowPatterns.slice(0, 3).join(', ') + ' flow')
+  }
+
+  // Persona attitude coloring
+  if (dna.persona.attitude) {
+    parts.push(dna.persona.attitude + ' tone')
+  }
+
+  // Ad-libs
+  if (dna.lexicon.adLibs.length > 0) {
+    parts.push('ad-libs: ' + dna.lexicon.adLibs.slice(0, 3).join(', '))
+  }
+
+  return parts.filter(Boolean).join(', ')
+}
+
+/**
+ * Build music/style prompt from DNA
+ * Short comma-separated style tags for Suno (3-8 words ideal)
+ */
+export function buildMusicStylePrompt(dna: ArtistDNA): string {
+  const tags: string[] = []
+
+  // Genres (primary)
+  if (dna.sound.genres.length > 0) {
+    tags.push(...dna.sound.genres.slice(0, 2))
+  }
+
+  // Subgenres
+  if (dna.sound.subgenres.length > 0) {
+    tags.push(...dna.sound.subgenres.slice(0, 2))
+  }
+
+  // Production styles
+  if (dna.sound.productionStyles.length > 0) {
+    tags.push(...dna.sound.productionStyles.slice(0, 2))
+  }
+
+  // Tempo
+  if (dna.sound.tempoPreference) {
+    tags.push(dna.sound.tempoPreference)
+  }
+
+  // Era influence
+  if (dna.sound.eraInfluences.length > 0) {
+    tags.push(dna.sound.eraInfluences[0] + ' influenced')
+  }
+
+  // Instruments
+  if (dna.sound.instruments.length > 0) {
+    tags.push(...dna.sound.instruments.slice(0, 2))
+  }
+
+  return tags.filter(Boolean).join(', ')
+}
+
+/**
+ * Combine vocal + style into a single prompt
+ */
+export function buildCombinedPrompt(vocalPrompt: string, stylePrompt: string): string {
+  return [vocalPrompt, stylePrompt].filter(Boolean).join(', ')
+}

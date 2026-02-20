@@ -44,6 +44,18 @@ export { directorProposalService } from './services/director-proposal.service'
 export { wardrobeService } from './services/wardrobe.service'
 export { referenceSheetService } from './services/reference-sheet.service'
 
+// Components - Artist DNA
+export { ArtistDnaPage } from './components/artist-dna/ArtistDnaPage'
+
+// Store
+export { useArtistDnaStore } from './store/artist-dna.store'
+
+// Services - Artist DNA
+export { artistDnaService } from './services/artist-dna.service'
+
+// Types - Artist DNA
+export * from './types/artist-dna.types'
+
 // Data
 export { DIRECTORS, getDirectorById, getAllDirectors } from './data/directors.data'
 

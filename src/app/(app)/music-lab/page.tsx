@@ -7,7 +7,8 @@
  */
 
 import { useState } from 'react'
-import { ChevronRight, Clapperboard } from 'lucide-react'
+import { ChevronRight, Clapperboard, Dna } from 'lucide-react'
+import Link from 'next/link'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Button } from '@/components/ui/button'
 import {
@@ -170,6 +171,13 @@ export default function MusicLabPage() {
                 <p className="text-muted-foreground max-w-lg mx-auto">
                     Scout your track, commission AI directors, and greenlight your favorite vision.
                 </p>
+                <Link
+                    href="/music-lab/artist-dna"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-colors mt-2"
+                >
+                    <Dna className="w-4 h-4" />
+                    <span className="font-medium text-sm">Artist DNA Lab</span>
+                </Link>
             </div>
 
             {/* Setup Phase */}
