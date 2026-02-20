@@ -368,6 +368,98 @@ IMPORTANT: When a Director's Note is provided, incorporate that specific guidanc
     }
 
     /**
+     * Refine existing shot prompts with location + character context
+     */
+    async refineShotPrompts(
+        prompts: Array<{ sequence: number; prompt: string; originalText: string }>,
+        locationDescriptions: Record<string, string>,
+        characterDescriptions: Record<string, string>
+    ): Promise<Array<{ sequence: number; prompt: string; shotType: string }>> {
+        const locationContext = Object.keys(locationDescriptions).length > 0
+            ? `\n\nLocation descriptions (add these environmental details when the location appears):\n${Object.entries(locationDescriptions)
+                  .map(([name, desc]) => `- ${name}: ${desc}`)
+                  .join('\n')}`
+            : ''
+
+        const characterContext = Object.keys(characterDescriptions).length > 0
+            ? `\n\nCharacter descriptions (use for spatial composition when multiple characters appear):\n${Object.entries(characterDescriptions)
+                  .map(([name, desc]) => `- ${name}: ${desc}`)
+                  .join('\n')}`
+            : ''
+
+        const messages: OpenRouterMessage[] = [
+            {
+                role: 'system',
+                content: `You are refining existing shot prompts for AI image generation. For each prompt:
+1. If a location is mentioned, ADD specific environment details (architecture, colors, textures, lighting conditions) from the location descriptions provided
+2. If multiple characters appear, DESCRIBE their spatial relationship (who is in foreground/background, relative positions, body language toward each other)
+3. Add background and foreground layer details to create depth
+4. Keep the original intent, shot type, and mood intact
+5. Do NOT add camera movement terms — these are still images
+6. Do NOT remove existing details, only enrich and expand${locationContext}${characterContext}`
+            },
+            {
+                role: 'user',
+                content: `Refine these shot prompts with richer location and character details:\n\n${prompts
+                    .map(p => `[Shot ${p.sequence}] Current prompt: "${p.prompt}"\nOriginal text: "${p.originalText}"`)
+                    .join('\n\n')}`
+            }
+        ]
+
+        const tool: OpenRouterTool = {
+            type: 'function',
+            function: {
+                name: 'refine_shot_prompts',
+                description: 'Return refined shot prompts with enriched location and character details',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        shots: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    sequence: {
+                                        type: 'number',
+                                        description: 'The shot sequence number'
+                                    },
+                                    prompt: {
+                                        type: 'string',
+                                        description: 'Refined visual description with enriched location and character context'
+                                    },
+                                    shotType: {
+                                        type: 'string',
+                                        enum: ['establishing', 'wide', 'medium', 'close-up', 'detail'],
+                                        description: 'The type of camera shot (preserve from original)'
+                                    }
+                                },
+                                required: ['sequence', 'prompt', 'shotType']
+                            }
+                        }
+                    },
+                    required: ['shots']
+                }
+            }
+        }
+
+        const response = await this.callWithTool(messages, tool)
+        const toolCall = response.choices[0]?.message?.tool_calls?.[0]
+
+        if (!toolCall) {
+            throw new Error('No tool call in response')
+        }
+
+        try {
+            const result = JSON.parse(toolCall.function.arguments) as {
+                shots: Array<{ sequence: number; prompt: string; shotType: string }>
+            }
+            return result.shots
+        } catch {
+            throw new Error('Failed to parse refined prompts')
+        }
+    }
+
+    /**
      * Make API call with tool calling
      */
     private async callWithTool(

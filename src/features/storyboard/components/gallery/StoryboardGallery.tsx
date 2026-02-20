@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -47,6 +47,16 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
         selectedDirectorId,
         setVideoStatus,
         setAnimationPrompt,
+        storyText,
+        shotNotes,
+        globalPromptPrefix,
+        globalPromptSuffix,
+        setStoryText,
+        setGeneratedPrompts,
+        setGenerationSettings,
+        setShotNote,
+        setGlobalPromptPrefix,
+        setGlobalPromptSuffix,
     } = useStoryboardStore()
 
     const { user } = useAuth()
@@ -169,6 +179,71 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
     const [isDownloadingAll, setIsDownloadingAll] = useState(false)
     const [showCompletedOnly, setShowCompletedOnly] = useState(true)
     const [viewMode, setViewMode] = useState<GalleryViewMode>('grid')
+    const importFileRef = useRef<HTMLInputElement>(null)
+
+    // ---- Export / Import JSON ----
+    const handleExportJSON = () => {
+        const exportData = {
+            version: '1.0',
+            exportedAt: new Date().toISOString(),
+            storyText,
+            generatedPrompts,
+            generationSettings,
+            selectedDirectorId,
+            shotNotes,
+            globalPromptPrefix,
+            globalPromptSuffix,
+        }
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `storyboard-export-${Date.now()}.json`
+        link.click()
+        URL.revokeObjectURL(url)
+        toast.success('Storyboard exported as JSON')
+    }
+
+    const handleImportJSON = () => {
+        importFileRef.current?.click()
+    }
+
+    const handleImportFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        const reader = new FileReader()
+        reader.onload = (ev) => {
+            try {
+                const data = JSON.parse(ev.target?.result as string)
+                if (!data.version) {
+                    toast.error('Invalid storyboard file', { description: 'Missing version field.' })
+                    return
+                }
+                if (data.storyText) setStoryText(data.storyText)
+                if (data.generatedPrompts) setGeneratedPrompts(data.generatedPrompts)
+                if (data.generationSettings) setGenerationSettings(data.generationSettings)
+                if (data.shotNotes) {
+                    for (const [seq, note] of Object.entries(data.shotNotes)) {
+                        setShotNote(Number(seq), note as string)
+                    }
+                }
+                if (data.globalPromptPrefix != null) setGlobalPromptPrefix(data.globalPromptPrefix)
+                if (data.globalPromptSuffix != null) setGlobalPromptSuffix(data.globalPromptSuffix)
+
+                toast.success('Storyboard imported', {
+                    description: `Loaded ${data.generatedPrompts?.length ?? 0} prompts.`
+                })
+            } catch {
+                toast.error('Failed to parse JSON file')
+            }
+        }
+        reader.readAsText(file)
+
+        // Reset file input so same file can be re-imported
+        e.target.value = ''
+    }
 
     const handleDownloadAll = async () => {
         const completedImages = Object.entries(generatedImages)
@@ -610,7 +685,16 @@ The color temperature, lighting direction, and overall mood must match across al
                             onToggleCompletedOnly={() => setShowCompletedOnly(!showCompletedOnly)}
                             onRegenerateFailed={handleRegenerateFailedShots}
                             onDownloadAll={handleDownloadAll}
+                            onExportJSON={handleExportJSON}
+                            onImportJSON={handleImportJSON}
                             onViewModeChange={setViewMode}
+                        />
+                        <input
+                            ref={importFileRef}
+                            type="file"
+                            accept=".json"
+                            className="hidden"
+                            onChange={handleImportFileChange}
                         />
                         <CardContent>
                             {viewMode === 'grid' ? (

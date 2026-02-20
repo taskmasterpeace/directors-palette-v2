@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Progress } from '@/components/ui/progress'
-import { SplitSquareVertical, Wand2, AlertCircle, CheckCircle, MapPin } from 'lucide-react'
+import { SplitSquareVertical, Wand2, AlertCircle, CheckCircle, MapPin, Sparkles } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { DIRECTORS } from '@/features/music-lab/data/directors.data'
@@ -16,8 +16,9 @@ import {
     type CharacterReplacement
 } from '../../services/name-replacement.service'
 import { EditableShot } from './EditableShot'
+import { toast } from 'sonner'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
-import type { GeneratedShotPrompt, ShotMetadata } from '../../types/storyboard.types'
+import type { GeneratedShotPrompt } from '../../types/storyboard.types'
 
 interface ShotBreakdownProps {
     chapterIndex?: number
@@ -43,7 +44,7 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         setBreakdownResult,
         addGeneratedPrompts,
         updateGeneratedPrompt,
-        updateGeneratedPromptMetadata,
+        setGeneratedPrompts,
         setIsGeneratingPrompts,
         clearGeneratedPrompts,
         setShotNote
@@ -63,6 +64,77 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         } else {
             // If no image, try to use character reference or alert user
             console.warn('No generated image for shot', sequence)
+        }
+    }
+
+    const [isRefining, setIsRefining] = useState(false)
+
+    const handleRefinePrompts = async () => {
+        // Only refine prompts that haven't been manually edited
+        const toRefine = generatedPrompts.filter(p => !p.edited)
+        if (toRefine.length === 0) {
+            toast.info('All prompts have been manually edited — nothing to refine.')
+            return
+        }
+
+        // Build location descriptions map
+        const locationDescriptions: Record<string, string> = {}
+        for (const loc of locations) {
+            if (loc.description) {
+                locationDescriptions[loc.tag || `@${loc.name.toLowerCase().replace(/\s+/g, '_')}`] = loc.description
+            }
+        }
+
+        // Build character descriptions map
+        const characterDescriptions: Record<string, string> = {}
+        for (const char of characters) {
+            if (char.description) {
+                characterDescriptions[`@${char.name.toLowerCase().replace(/\s+/g, '_')}`] = char.description
+            }
+        }
+
+        setIsRefining(true)
+
+        try {
+            const response = await fetch('/api/storyboard/refine-prompts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompts: toRefine.map(p => ({
+                        sequence: p.sequence,
+                        prompt: p.prompt,
+                        originalText: p.originalText,
+                    })),
+                    locationDescriptions,
+                    characterDescriptions,
+                    model: selectedModel,
+                }),
+            })
+
+            const data = await safeJsonParse<{ shots: Array<{ sequence: number; prompt: string; shotType: string }>; error?: string }>(response)
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Refinement failed')
+            }
+
+            // Merge refined prompts back, preserving manually edited ones
+            const refinedMap = new Map(data.shots.map(s => [s.sequence, s]))
+            const merged = generatedPrompts.map(p => {
+                if (p.edited) return p
+                const refined = refinedMap.get(p.sequence)
+                if (!refined) return p
+                return { ...p, prompt: refined.prompt, edited: true }
+            })
+
+            setGeneratedPrompts(merged)
+            toast.success(`Refined ${data.shots.length} prompts with location and character details`)
+        } catch (error) {
+            console.error('Refinement error:', error)
+            toast.error('Prompt refinement failed', {
+                description: error instanceof Error ? error.message : 'Unknown error'
+            })
+        } finally {
+            setIsRefining(false)
         }
     }
 
@@ -123,10 +195,6 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
 
     const handleGeneratedPromptChange = (sequence: number, newPrompt: string) => {
         updateGeneratedPrompt(sequence, newPrompt)
-    }
-
-    const handleMetadataChange = (sequence: number, metadata: Partial<ShotMetadata>) => {
-        updateGeneratedPromptMetadata(sequence, metadata)
     }
 
     const BATCH_SIZE = 15 // Must match API route
@@ -456,6 +524,27 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                                     AI Enhanced
                                 </Badge>
                             )}
+                            {promptsGenerated && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-6 text-xs"
+                                    onClick={handleRefinePrompts}
+                                    disabled={isRefining || isGeneratingPrompts}
+                                >
+                                    {isRefining ? (
+                                        <>
+                                            <LoadingSpinner size="xs" color="current" className="mr-1" />
+                                            Refining...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles className="w-3 h-3 mr-1" />
+                                            Refine Prompts
+                                        </>
+                                    )}
+                                </Button>
+                            )}
                             <Badge variant="outline">
                                 {locationFilter
                                     ? `${locationFilteredSegments.length} of ${filteredSegments.length} shots`
@@ -504,7 +593,6 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                                     onPromptChange={handlePromptChange}
                                     onGeneratedPromptChange={handleGeneratedPromptChange}
                                     onNoteChange={setShotNote}
-                                    onMetadataChange={handleMetadataChange}
                                     onGetAngles={handleGetAngles}
                                     onGetBRoll={handleGetBRoll}
                                 />

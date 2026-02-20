@@ -11,6 +11,7 @@ import {
     ChevronDown,
     ChevronUp,
     Edit2,
+    Pencil,
     Check,
     X,
     Users,
@@ -19,13 +20,12 @@ import {
     Image as ImageIcon,
     Copy,
     MessageSquare,
-    Star,
     Grid3X3,
     Film
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 import { HighlightedPrompt } from '../shared'
-import type { ShotBreakdownSegment, GeneratedShotPrompt, StoryboardCharacter, ShotMetadata } from '../../types/storyboard.types'
+import type { ShotBreakdownSegment, GeneratedShotPrompt, StoryboardCharacter } from '../../types/storyboard.types'
 import { useStoryboardStore } from '../../store'
 
 export interface EditableShotProps {
@@ -38,7 +38,6 @@ export interface EditableShotProps {
     onPromptChange?: (sequence: number, newPrompt: string) => void
     onGeneratedPromptChange?: (sequence: number, newPrompt: string) => void
     onNoteChange?: (sequence: number, note: string) => void
-    onMetadataChange?: (sequence: number, metadata: Partial<ShotMetadata>) => void
     onGetAngles?: (sequence: number) => void
     onGetBRoll?: (sequence: number) => void
 }
@@ -64,7 +63,6 @@ export function EditableShot({
     onPromptChange,
     onGeneratedPromptChange,
     onNoteChange,
-    onMetadataChange,
     onGetAngles,
     onGetBRoll,
 }: EditableShotProps) {
@@ -72,10 +70,6 @@ export function EditableShot({
     const [editedPrompt, setEditedPrompt] = useState(generatedPrompt?.prompt || segment.text)
     const [isExpanded, setIsExpanded] = useState(false)
     const [copied, setCopied] = useState(false)
-    const [hoveredRating, setHoveredRating] = useState(0)
-
-    const isGreenlit = generatedPrompt?.metadata?.isGreenlit
-    const rating = generatedPrompt?.metadata?.rating || 0
 
     const handleCopy = async (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -149,12 +143,6 @@ export function EditableShot({
                                     {generatedPrompt.edited && (
                                         <Badge variant="secondary" className="text-xs py-0">
                                             edited
-                                        </Badge>
-                                    )}
-                                    {isGreenlit && (
-                                        <Badge variant="default" className="text-xs py-0 bg-green-500 hover:bg-green-600 border-none shadow-none">
-                                            <Check className="w-3 h-3 mr-1" />
-                                            Approved
                                         </Badge>
                                     )}
                                 </div>
@@ -265,80 +253,6 @@ export function EditableShot({
                                 </div>
                             )}
 
-                            {/* Rating & Greenlight (Director Mode) */}
-                            {generatedPrompt && (
-                                <div className="p-3 bg-muted/20 border rounded-lg flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-3">
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex flex-col">
-                                            <Label className="text-xs text-muted-foreground mb-1">Director Rating</Label>
-                                            <div className="flex gap-0.5" onMouseLeave={() => setHoveredRating(0)}>
-                                                {[1, 2, 3, 4, 5].map((star) => (
-                                                    <button
-                                                        key={star}
-                                                        type="button"
-                                                        className="focus:outline-none transition-transform hover:scale-110 p-1 -m-1"
-                                                        onMouseEnter={() => setHoveredRating(star)}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            onMetadataChange?.(segment.sequence, { ...generatedPrompt.metadata, rating: star })
-                                                        }}
-                                                    >
-                                                        <Star
-                                                            className={`w-4 h-4 ${(hoveredRating || rating || 0) >= star
-                                                                ? "fill-primary text-primary"
-                                                                : "fill-muted text-muted-foreground/30"
-                                                                }`}
-                                                        />
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2 w-full sm:w-auto flex-wrap">
-                                        {hasGeneratedImage && (
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                className="flex-1 sm:flex-none border-blue-500/20 text-blue-500 hover:bg-blue-500/10"
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    onGetAngles?.(segment.sequence)
-                                                }}
-                                            >
-                                                <Grid3X3 className="w-4 h-4 mr-2" />
-                                                Angles
-                                            </Button>
-                                        )}
-                                        {hasGeneratedImage && (
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                className="flex-1 sm:flex-none border-amber-500/20 text-amber-500 hover:bg-amber-500/10"
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    onGetBRoll?.(segment.sequence)
-                                                }}
-                                            >
-                                                <Film className="w-4 h-4 mr-2" />
-                                                B-Roll
-                                            </Button>
-                                        )}
-                                        <Button
-                                            size="sm"
-                                            variant={isGreenlit ? "default" : "outline"}
-                                            className={`flex-1 sm:flex-none ${isGreenlit ? "bg-green-500 hover:bg-green-600" : "border-green-500/20 text-green-600 hover:bg-green-500/10"}`}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                onMetadataChange?.(segment.sequence, { ...generatedPrompt.metadata, isGreenlit: !isGreenlit })
-                                            }}
-                                        >
-                                            <Check className="w-4 h-4 mr-2" />
-                                            {isGreenlit ? "Approved" : "Approve Shot"}
-                                        </Button>
-                                    </div>
-                                </div>
-                            )}
-
                             {/* Generated/Edited Prompt */}
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
@@ -347,6 +261,19 @@ export function EditableShot({
                                     </Label>
                                     {!isEditing && (
                                         <div className="flex gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 px-2"
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    setEditedPrompt(generatedPrompt?.prompt || segment.text)
+                                                    setIsEditing(true)
+                                                }}
+                                            >
+                                                <Edit2 className="w-3 h-3 mr-1" />
+                                                Edit
+                                            </Button>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
@@ -365,19 +292,34 @@ export function EditableShot({
                                                     </>
                                                 )}
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-6 px-2"
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    setEditedPrompt(generatedPrompt?.prompt || segment.text)
-                                                    setIsEditing(true)
-                                                }}
-                                            >
-                                                <Edit2 className="w-3 h-3 mr-1" />
-                                                Edit
-                                            </Button>
+                                            {hasGeneratedImage && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-6 px-2 text-blue-500 hover:text-blue-600"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        onGetAngles?.(segment.sequence)
+                                                    }}
+                                                >
+                                                    <Grid3X3 className="w-3 h-3 mr-1" />
+                                                    Angles
+                                                </Button>
+                                            )}
+                                            {hasGeneratedImage && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-6 px-2 text-amber-500 hover:text-amber-600"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        onGetBRoll?.(segment.sequence)
+                                                    }}
+                                                >
+                                                    <Film className="w-3 h-3 mr-1" />
+                                                    B-Roll
+                                                </Button>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -415,8 +357,16 @@ export function EditableShot({
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="p-2 rounded bg-background border text-sm">
+                                    <div
+                                        className="group relative p-2 rounded bg-background border text-sm cursor-pointer hover:border-primary/30 transition-colors"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            setEditedPrompt(generatedPrompt?.prompt || segment.text)
+                                            setIsEditing(true)
+                                        }}
+                                    >
                                         <HighlightedPrompt text={generatedPrompt?.prompt || segment.text} />
+                                        <Pencil className="absolute top-2 right-2 w-3.5 h-3.5 text-muted-foreground/0 group-hover:text-muted-foreground/60 transition-colors" />
                                     </div>
                                 )}
                             </div>

@@ -2,7 +2,7 @@
 
 import { CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Images, CheckCircle, AlertCircle, Clock, RefreshCw, Archive, LayoutGrid, GalleryHorizontal } from 'lucide-react'
+import { Images, CheckCircle, AlertCircle, Clock, RefreshCw, Archive, LayoutGrid, GalleryHorizontal, Download, Upload } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 export type GalleryViewMode = 'grid' | 'carousel'
@@ -18,6 +18,8 @@ interface GalleryHeaderProps {
     onToggleCompletedOnly: () => void
     onRegenerateFailed: () => void
     onDownloadAll: () => void
+    onExportJSON: () => void
+    onImportJSON: () => void
     onViewModeChange: (mode: GalleryViewMode) => void
 }
 
@@ -32,6 +34,8 @@ export function GalleryHeader({
     onToggleCompletedOnly,
     onRegenerateFailed,
     onDownloadAll,
+    onExportJSON,
+    onImportJSON,
     onViewModeChange,
 }: GalleryHeaderProps) {
     return (
@@ -111,27 +115,46 @@ export function GalleryHeader({
                         {showCompletedOnly ? 'Completed only' : 'Show all'}
                     </button>
                 </div>
-                {generatedCount > 0 && (
+                <div className="flex items-center gap-1.5 flex-shrink-0">
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={onDownloadAll}
-                        disabled={isDownloadingAll}
-                        className="ml-2 flex-shrink-0"
+                        onClick={onExportJSON}
+                        className="h-7 text-xs"
                     >
-                        {isDownloadingAll ? (
-                            <>
-                                <LoadingSpinner size="xs" color="current" className="mr-1" />
-                                Zipping...
-                            </>
-                        ) : (
-                            <>
-                                <Archive className="w-4 h-4 mr-1" />
-                                Download All
-                            </>
-                        )}
+                        <Download className="w-3 h-3 mr-1" />
+                        Export
                     </Button>
-                )}
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onImportJSON}
+                        className="h-7 text-xs"
+                    >
+                        <Upload className="w-3 h-3 mr-1" />
+                        Import
+                    </Button>
+                    {generatedCount > 0 && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={onDownloadAll}
+                            disabled={isDownloadingAll}
+                        >
+                            {isDownloadingAll ? (
+                                <>
+                                    <LoadingSpinner size="xs" color="current" className="mr-1" />
+                                    Zipping...
+                                </>
+                            ) : (
+                                <>
+                                    <Archive className="w-4 h-4 mr-1" />
+                                    Download All
+                                </>
+                            )}
+                        </Button>
+                    )}
+                </div>
             </CardDescription>
         </CardHeader>
     )
