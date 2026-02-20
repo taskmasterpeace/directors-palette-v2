@@ -300,6 +300,7 @@ const CompactVideoCardComponent = ({
           onClose={() => setFullscreenVideo(null)}
         />
       )}
+
     </>
   )
 }

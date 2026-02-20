@@ -1,13 +1,13 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Download, Trash2, Film, Maximize2 } from 'lucide-react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { Download, Trash2, Film, Maximize2, X } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { ShotAnimationConfig } from '../types'
 import { getVideoModelIcon } from '../config/models.config'
+import { toast } from 'sonner'
 
 interface DerivedVideo {
   galleryId: string
@@ -29,6 +29,9 @@ export function AnimatorUnifiedGallery({
   onDownload
 }: AnimatorUnifiedGalleryProps) {
   const [fullscreenVideo, setFullscreenVideo] = useState<DerivedVideo | null>(null)
+  const [showControls, setShowControls] = useState(true)
+  const [isEntering, setIsEntering] = useState(false)
+  const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   // Derive completed videos from shotConfigs
   const completedVideos: DerivedVideo[] = []
@@ -48,6 +51,66 @@ export function AnimatorUnifiedGallery({
 
   // Sort newest first
   completedVideos.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+
+  // Fullscreen control auto-hide
+  const resetHideTimer = useCallback(() => {
+    setShowControls(true)
+    if (hideTimer.current) clearTimeout(hideTimer.current)
+    hideTimer.current = setTimeout(() => setShowControls(false), 3000)
+  }, [])
+
+  // Open fullscreen
+  const openFullscreen = (video: DerivedVideo) => {
+    setFullscreenVideo(video)
+    requestAnimationFrame(() => setIsEntering(true))
+    document.body.style.overflow = 'hidden'
+    resetHideTimer()
+  }
+
+  // Close fullscreen
+  const closeFullscreen = useCallback(() => {
+    setIsEntering(false)
+    if (hideTimer.current) clearTimeout(hideTimer.current)
+    setTimeout(() => {
+      setFullscreenVideo(null)
+      document.body.style.overflow = 'unset'
+    }, 200)
+  }, [])
+
+  // Keyboard + mouse listeners for fullscreen
+  useEffect(() => {
+    if (!fullscreenVideo) return
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeFullscreen()
+    }
+    const handleMouseMove = () => resetHideTimer()
+
+    document.addEventListener('keydown', handleEscape)
+    document.addEventListener('mousemove', handleMouseMove)
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.body.style.overflow = 'unset'
+      if (hideTimer.current) clearTimeout(hideTimer.current)
+    }
+  }, [fullscreenVideo, closeFullscreen, resetHideTimer])
+
+  const handleDownloadBlob = async (videoUrl: string) => {
+    try {
+      const response = await fetch(videoUrl)
+      const blob = await response.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = `video_${Date.now()}.mp4`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(blobUrl)
+    } catch {
+      toast.error('Could not download video.')
+    }
+  }
 
   return (
     <div className="h-full flex flex-col bg-background/30 border-l border-border">
@@ -110,7 +173,7 @@ export function AnimatorUnifiedGallery({
                       <Button
                         size="icon"
                         variant="ghost"
-                        onClick={() => setFullscreenVideo(video)}
+                        onClick={() => openFullscreen(video)}
                         className="h-7 w-7 text-accent hover:text-blue-300 hover:bg-blue-950/30"
                         title="Fullscreen"
                       >
@@ -143,64 +206,90 @@ export function AnimatorUnifiedGallery({
         </div>
       </ScrollArea>
 
-      {/* Fullscreen Video Modal */}
-      <Dialog open={!!fullscreenVideo} onOpenChange={() => setFullscreenVideo(null)}>
-        <DialogContent className="max-w-6xl w-[94vw] h-[90vh] bg-black/95 backdrop-blur-md border-white/5 p-0 rounded-xl overflow-hidden">
-          <DialogHeader className="sr-only">
-            <DialogTitle>{fullscreenVideo?.shotName || 'Video Player'}</DialogTitle>
-          </DialogHeader>
-          {fullscreenVideo && (
-            <div className="relative w-full h-full flex flex-col">
-              {/* Top bar */}
-              <div className="flex items-center justify-between px-5 py-3 bg-gradient-to-b from-black/50 to-transparent absolute top-0 inset-x-0 z-10">
-                <div className="flex items-center gap-2">
-                  {fullscreenVideo.model && (
-                    <span className="text-base">{getVideoModelIcon(fullscreenVideo.model)}</span>
-                  )}
-                  <span className="text-sm text-white/70 truncate max-w-[300px]">{fullscreenVideo.shotName}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  {onDownload && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDownload(fullscreenVideo.videoUrl)}
-                      className="h-8 w-8 rounded-full bg-white/10 text-white/70 hover:text-white hover:bg-white/20"
-                      title="Download"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                    </Button>
-                  )}
-                  {onDelete && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        onDelete(fullscreenVideo.galleryId)
-                        setFullscreenVideo(null)
-                      }}
-                      className="h-8 w-8 rounded-full bg-white/10 text-white/70 hover:text-red-400 hover:bg-red-500/10"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  )}
-                </div>
-              </div>
+      {/* Fullscreen Video Overlay */}
+      {fullscreenVideo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className={`absolute inset-0 bg-black/95 backdrop-blur-xl transition-opacity duration-300 ${isEntering ? 'opacity-100' : 'opacity-0'}`}
+            onClick={closeFullscreen}
+          />
 
-              {/* Video Player */}
-              <div className="flex-1 flex items-center justify-center p-8 pt-14">
-                <video
-                  src={fullscreenVideo.videoUrl}
-                  controls
-                  autoPlay
-                  className="max-w-full max-h-full rounded-lg shadow-[0_0_60px_rgba(0,0,0,0.5)]"
-                />
-              </div>
+          {/* Top bar */}
+          <div className={`absolute top-0 inset-x-0 z-20 flex items-center justify-between px-5 py-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent transition-all duration-500 ${showControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
+            {/* Left: video info */}
+            <div className="flex items-center gap-2.5 min-w-0">
+              {fullscreenVideo.model && (
+                <span className="text-lg shrink-0">{getVideoModelIcon(fullscreenVideo.model)}</span>
+              )}
+              <span className="text-sm text-white/60 truncate max-w-[300px] font-medium">
+                {fullscreenVideo.shotName}
+              </span>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+
+            {/* Right: action buttons */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  if (onDownload) {
+                    onDownload(fullscreenVideo.videoUrl)
+                  } else {
+                    handleDownloadBlob(fullscreenVideo.videoUrl)
+                  }
+                }}
+                className="h-9 w-9 rounded-full bg-white/[0.08] backdrop-blur-md border border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.15] hover:border-white/[0.15] transition-all duration-200"
+                title="Download"
+              >
+                <Download className="w-4 h-4" />
+              </Button>
+              {onDelete && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    onDelete(fullscreenVideo.galleryId)
+                    closeFullscreen()
+                  }}
+                  className="h-9 w-9 rounded-full bg-white/[0.08] backdrop-blur-md border border-white/[0.08] text-white/70 hover:text-red-400 hover:bg-red-500/[0.12] hover:border-red-500/20 transition-all duration-200"
+                  title="Delete"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeFullscreen}
+                className="h-9 w-9 rounded-full bg-white/[0.08] backdrop-blur-md border border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.15] hover:border-white/[0.15] transition-all duration-200"
+                title="Close (Esc)"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* ESC hint */}
+          <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 z-20 transition-all duration-500 ${showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+            <span className="text-[11px] text-white/30 font-medium tracking-wider uppercase">esc to close</span>
+          </div>
+
+          {/* Video */}
+          <div className={`relative z-10 w-full h-full flex items-center justify-center p-8 sm:p-14 transition-all duration-500 ease-out ${isEntering ? 'opacity-100 scale-100' : 'opacity-0 scale-[0.97]'}`}>
+            <div className="relative max-w-full max-h-full">
+              <div className="absolute -inset-4 bg-white/[0.03] rounded-2xl blur-2xl" />
+              <video
+                src={fullscreenVideo.videoUrl}
+                controls
+                autoPlay
+                className="relative max-w-full max-h-[calc(100vh-7rem)] rounded-lg ring-1 ring-white/[0.08] shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
