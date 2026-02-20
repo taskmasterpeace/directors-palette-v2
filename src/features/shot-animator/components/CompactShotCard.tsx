@@ -15,6 +15,7 @@ import { FullscreenImageViewModal } from './FullscreenImageViewModal'
 import { VideoGalleryService } from '../services/gallery.service'
 import { generateAnimationPrompt } from '../services/animation-prompt.service'
 import { ANIMATION_MODELS, getVideoModelIcon } from '../config/models.config'
+import { getModelIcon } from '@/features/shot-creator/constants/model-icons'
 import { toast } from '@/hooks/use-toast'
 import type { ReferenceEditorExport } from '@/features/shot-creator/components/reference-editor'
 
@@ -199,6 +200,13 @@ const CompactShotCardComponent = ({
             </div>
           )}
 
+          {/* Image Model Icon - Bottom Left (when no last frame) */}
+          {config.imageModel && !(supportsLastFrame && config.lastFrameImage) && (
+            <span className="absolute bottom-2 left-2 z-10 text-base drop-shadow-lg pointer-events-none">
+              {getModelIcon(config.imageModel)}
+            </span>
+          )}
+
           {/* Delete Button - Bottom Right - Larger touch target for mobile */}
           <div className="absolute bottom-2 right-2 z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
             <Button
@@ -359,6 +367,7 @@ export const CompactShotCard = memo(CompactShotCardComponent, (prevProps, nextPr
     prevProps.config.originalPrompt === nextProps.config.originalPrompt &&
     prevProps.config.includeInBatch === nextProps.config.includeInBatch &&
     prevProps.config.imageUrl === nextProps.config.imageUrl &&
+    prevProps.config.imageModel === nextProps.config.imageModel &&
     prevProps.config.referenceImages.length === nextProps.config.referenceImages.length &&
     videosEqual(prevProps.config.generatedVideos, nextProps.config.generatedVideos) &&
     prevProps.config.lastFrameImage === nextProps.config.lastFrameImage &&

@@ -322,22 +322,25 @@ export function ShotAnimatorView() {
       .map((item) => {
         const metadata = (item.metadata as Record<string, unknown>) || {}
         const originalPrompt = (metadata.prompt as string) || ''
+        const imageModel = (metadata.model as string) || undefined
         return {
           id: item.id,
           url: item.public_url!,
           name: originalPrompt || `Image ${item.id.slice(0, 8)}`,
           originalPrompt, // Store for animation prompt generation
+          imageModel, // Image generation model (e.g. 'nano-banana-pro')
           createdAt: new Date(item.created_at),
         }
       })
   }, [galleryImages])
 
   // Handlers
-  const handleGallerySelect = (images: { id: string; url: string; name: string; originalPrompt?: string; createdAt: Date }[]) => {
+  const handleGallerySelect = (images: { id: string; url: string; name: string; originalPrompt?: string; imageModel?: string; createdAt: Date }[]) => {
     const newConfigs: ShotAnimationConfig[] = images.map((img) => ({
       id: `shot-${Date.now()}-${Math.random()}`,
       imageUrl: img.url,
       imageName: img.name,
+      imageModel: img.imageModel,
       prompt: "",
       originalPrompt: img.originalPrompt, // Store for AI animation prompt generation
       referenceImages: [],

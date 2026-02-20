@@ -27,6 +27,7 @@ export interface ShotAnimationConfig {
   shotId?: string // Reference to shot from gallery
   imageUrl: string
   imageName: string
+  imageModel?: string // Image generation model that created this image (e.g. 'nano-banana-pro')
   prompt: string
   originalPrompt?: string // Original prompt used to generate the image (for AI animation prompt generation)
   referenceImages: string[]

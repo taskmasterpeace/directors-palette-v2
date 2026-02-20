@@ -5,14 +5,17 @@
 
 export const MODEL_ICONS: Record<string, string> = {
   'nano-banana': '🍌',
-  'seedream-4': '🌱',
-  'gen4-image': '⚡',
-  'gen4-image-turbo': '💨',
-  'qwen-image': '🎨',
-  'qwen-image-edit': '✏️',
+  'nano-banana-pro': '🔥',
+  'z-image-turbo': '💨',
+  'qwen-image-2512': '🎨',
+  'gpt-image-low': '🤖',
+  'gpt-image-medium': '🤖',
+  'gpt-image-high': '🤖',
+  'seedream-4.5': '🌱',
+  'riverflow-2-pro': '🔤',
 }
 
 export function getModelIcon(model?: string): string {
-  if (!model) return MODEL_ICONS['nano-banana']
-  return MODEL_ICONS[model] || MODEL_ICONS['nano-banana']
+  if (!model) return '🍌'
+  return MODEL_ICONS[model] || '🍌'
 }

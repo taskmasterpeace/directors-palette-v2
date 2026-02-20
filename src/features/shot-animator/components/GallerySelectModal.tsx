@@ -23,6 +23,7 @@ interface GalleryImage {
   url: string
   name: string
   originalPrompt?: string // Original prompt used to generate the image
+  imageModel?: string // Image generation model (e.g. 'nano-banana-pro')
   createdAt: Date
 }
 
