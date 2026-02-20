@@ -98,13 +98,24 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe,
         try {
             let galleryId = character.reference_gallery_id
 
-            // If base64 image (no gallery ID), upload first
-            if (!galleryId && character.reference_image_url.startsWith('data:')) {
+            // If no gallery ID, upload image first
+            if (!galleryId) {
+                let imageData = character.reference_image_url
+                // If external URL (not base64), fetch and convert to base64
+                if (!imageData.startsWith('data:')) {
+                    const imgRes = await fetch(imageData)
+                    const blob = await imgRes.blob()
+                    imageData = await new Promise<string>((resolve) => {
+                        const reader = new FileReader()
+                        reader.onloadend = () => resolve(reader.result as string)
+                        reader.readAsDataURL(blob)
+                    })
+                }
                 const res = await fetch('/api/gallery/save-frame', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        imageData: character.reference_image_url,
+                        imageData,
                         metadata: { row: 0, col: 0, aspectRatio: '1:1', width: 512, height: 512 }
                     })
                 })
