@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { Users, ImagePlus, Upload, Link, X, ChevronDown, ChevronUp, CheckCircle, Sparkles, ChevronsUpDown, Images } from 'lucide-react'
+import { Users, ImagePlus, Upload, Link, X, ChevronDown, ChevronUp, CheckCircle, Sparkles, ChevronsUpDown, Images, UserPlus } from 'lucide-react'
 import { useStoryboardStore } from '../../store'
 import type { StoryboardCharacter, CharacterRole } from '../../types/storyboard.types'
 import { GalleryImagePicker } from './GalleryImagePicker'
@@ -329,12 +329,69 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe 
     )
 }
 
+function AddCharacterForm({ onAdd, onCancel }: { onAdd: (name: string, role: CharacterRole) => void, onCancel: () => void }) {
+    const [name, setName] = useState('')
+    const [role, setRole] = useState<CharacterRole>('supporting')
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (name.trim()) {
+            onAdd(name.trim(), role)
+        }
+    }
+
+    return (
+        <form onSubmit={handleSubmit} className="rounded-lg border bg-card/50 p-3 space-y-3">
+            <Input
+                placeholder="Enter character name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoFocus
+            />
+            <div>
+                <Label htmlFor="role-select">Role</Label>
+                <select
+                    id="role-select"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as CharacterRole)}
+                    className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                    <option value="main">main</option>
+                    <option value="supporting">supporting</option>
+                    <option value="background">background</option>
+                </select>
+            </div>
+            <div className="flex gap-2">
+                <Button type="submit" size="sm" disabled={!name.trim()}>Add</Button>
+                <Button type="button" variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
+            </div>
+        </form>
+    )
+}
+
 export function CharacterList() {
-    const { extractionResult, characters, setCharacters, setPreSelectedCharacterId } = useStoryboardStore()
+    const { extractionResult, characters, setCharacters, addCharacter, setPreSelectedCharacterId } = useStoryboardStore()
+    const [showAddForm, setShowAddForm] = useState(false)
 
     // Handler to pre-select a character in the CharacterSheetGenerator
     const handleOpenCharacterSheetRecipe = (characterId: string) => {
         setPreSelectedCharacterId(characterId)
+    }
+
+    const handleAddCharacter = (name: string, role: CharacterRole) => {
+        const newCharacter: StoryboardCharacter = {
+            id: `manual-${Date.now()}`,
+            storyboard_id: '',
+            name,
+            role,
+            mentions: 0,
+            has_reference: false,
+            metadata: { manual: true },
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+        }
+        addCharacter(newCharacter)
+        setShowAddForm(false)
     }
 
     // Initialize characters from extraction result if not already set
@@ -370,6 +427,19 @@ export function CharacterList() {
         setCharacters(updated)
     }
 
+    const addCharacterSection = (
+        <div className="mt-4">
+            {showAddForm ? (
+                <AddCharacterForm onAdd={handleAddCharacter} onCancel={() => setShowAddForm(false)} />
+            ) : (
+                <Button variant="outline" size="sm" onClick={() => setShowAddForm(true)}>
+                    <UserPlus className="w-4 h-4 mr-1" />
+                    Add Character
+                </Button>
+            )}
+        </div>
+    )
+
     if (!extractionResult && characters.length === 0) {
         return (
             <Card className="border-dashed">
@@ -377,6 +447,7 @@ export function CharacterList() {
                     <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
                     <p>No characters extracted yet.</p>
                     <p className="text-sm">Go to the Story tab and extract characters first.</p>
+                    {addCharacterSection}
                 </CardContent>
             </Card>
         )
@@ -451,6 +522,7 @@ export function CharacterList() {
                         ))}
                     </div>
                 )}
+                {addCharacterSection}
             </CardContent>
         </Card>
     )
