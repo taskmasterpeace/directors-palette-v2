@@ -55,6 +55,32 @@ import VideoPreviewsModal from "./VideoPreviewsModal"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useIsMobile } from '@/hooks/use-mobile'
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
+/** Convert an array of image Files into ShotAnimationConfig objects (base64). */
+function filesToShotConfigs(files: File[]): Promise<ShotAnimationConfig[]> {
+  return Promise.all(
+    files.map(
+      (file) =>
+        new Promise<ShotAnimationConfig>((resolve) => {
+          const reader = new FileReader()
+          reader.onload = (event) => {
+            resolve({
+              id: `shot-${Date.now()}-${Math.random()}`,
+              imageUrl: event.target?.result as string,
+              imageName: file.name,
+              prompt: '',
+              referenceImages: [],
+              includeInBatch: true,
+              generatedVideos: [],
+            })
+          }
+          reader.readAsDataURL(file)
+        })
+    )
+  )
+}
+
 export function ShotAnimatorView() {
   // Auth and hooks
   const { user } = useAuth()
@@ -97,6 +123,10 @@ export function ShotAnimatorView() {
   const [showCostConfirm, setShowCostConfirm] = useState(false)
   const [refEditState, setRefEditState] = useState<{ isOpen: boolean; configId?: string }>({ isOpen: false })
   const [lastFrameEditState, setLastFrameEditState] = useState<{ isOpen: boolean; configId?: string }>({ isOpen: false })
+
+  // Drag-and-drop state
+  const [isDragOver, setIsDragOver] = useState(false)
+  const [isDragReject, setIsDragReject] = useState(false)
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('')
@@ -318,12 +348,11 @@ export function ShotAnimatorView() {
     const files = e.target.files
     if (!files || files.length === 0) return
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
     const validFiles: File[] = []
     const rejectedFiles: string[] = []
 
     Array.from(files).forEach((file) => {
-      if (allowedTypes.includes(file.type)) {
+      if (ALLOWED_IMAGE_TYPES.includes(file.type)) {
         validFiles.push(file)
       } else {
         rejectedFiles.push(file.name)
@@ -343,30 +372,81 @@ export function ShotAnimatorView() {
       return
     }
 
-    // Convert files to base64 for persistence
-    const filePromises = validFiles.map(async (file) => {
-      return new Promise<ShotAnimationConfig>((resolve) => {
-        const reader = new FileReader()
-        reader.onload = (event) => {
-          const base64Url = event.target?.result as string
-          resolve({
-            id: `shot-${Date.now()}-${Math.random()}`,
-            imageUrl: base64Url,
-            imageName: file.name,
-            prompt: "",
-            referenceImages: [],
-            includeInBatch: true,
-            generatedVideos: []
-          })
-        }
-        reader.readAsDataURL(file)
-      })
-    })
-
-    const newConfigs = await Promise.all(filePromises)
+    const newConfigs = await filesToShotConfigs(validFiles)
     addShotConfigs(newConfigs)
     e.target.value = ""
   }
+
+  // Drag-and-drop: document-level listeners so programmatically dispatched
+  // events (e.g. from test automation) are captured reliably.
+  const dropZoneRef = useRef<HTMLDivElement>(null)
+  const addShotConfigsRef = useRef(addShotConfigs)
+  addShotConfigsRef.current = addShotConfigs
+
+  useEffect(() => {
+    const isRelevantTarget = (target: EventTarget | null): boolean => {
+      const el = dropZoneRef.current
+      if (!el || !target) return false
+      const t = target as Node
+      return el.contains(t) || t.contains(el)
+    }
+
+    const hasNonImageFile = (dt: DataTransfer | null): boolean => {
+      if (!dt?.items) return false
+      return Array.from(dt.items).some(
+        (item) => item.kind === 'file' && !ALLOWED_IMAGE_TYPES.includes(item.type)
+      )
+    }
+
+    const onDragEnter = (e: DragEvent) => {
+      if (!isRelevantTarget(e.target)) return
+      e.preventDefault()
+      setIsDragOver(true)
+      setIsDragReject(hasNonImageFile(e.dataTransfer))
+    }
+
+    const onDragOver = (e: DragEvent) => {
+      if (!isRelevantTarget(e.target)) return
+      e.preventDefault()
+    }
+
+    const onDragLeave = (e: DragEvent) => {
+      if (!isRelevantTarget(e.target)) return
+      e.preventDefault()
+      setIsDragOver(false)
+      setIsDragReject(false)
+    }
+
+    const onDrop = async (e: DragEvent) => {
+      if (!isRelevantTarget(e.target)) return
+      e.preventDefault()
+      setIsDragOver(false)
+      setIsDragReject(false)
+
+      const files = e.dataTransfer?.files
+      if (!files || files.length === 0) return
+
+      const validFiles = Array.from(files).filter((f) =>
+        ALLOWED_IMAGE_TYPES.includes(f.type)
+      )
+      if (validFiles.length === 0) return
+
+      const newConfigs = await filesToShotConfigs(validFiles)
+      addShotConfigsRef.current(newConfigs)
+    }
+
+    document.addEventListener('dragenter', onDragEnter)
+    document.addEventListener('dragover', onDragOver)
+    document.addEventListener('dragleave', onDragLeave)
+    document.addEventListener('drop', onDrop)
+
+    return () => {
+      document.removeEventListener('dragenter', onDragEnter)
+      document.removeEventListener('dragover', onDragOver)
+      document.removeEventListener('dragleave', onDragLeave)
+      document.removeEventListener('drop', onDrop)
+    }
+  }, [])
 
   const handleUpdateShotConfig = (id: string, updates: ShotAnimationConfig) => {
     updateShotConfig(id, updates)
@@ -779,7 +859,26 @@ export function ShotAnimatorView() {
       {/* Main Content - Two Column Layout */}
       <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-[1fr_400px]">
         {/* Left: Shots Grid */}
-        <div className="overflow-hidden">
+        <div
+          ref={dropZoneRef}
+          className="overflow-hidden relative"
+        >
+          {isDragOver && (
+            <div
+              data-testid="shot-animator-drop-overlay"
+              className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 border-2 border-dashed border-primary rounded-lg"
+            >
+              {isDragReject ? (
+                <div data-testid="drop-reject" className="text-center text-destructive">
+                  Images only
+                </div>
+              ) : (
+                <div className="text-center text-primary">
+                  <p>Drop images here</p>
+                </div>
+              )}
+            </div>
+          )}
           <ScrollArea className="h-full">
             {filteredShots.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-96 text-muted-foreground">
