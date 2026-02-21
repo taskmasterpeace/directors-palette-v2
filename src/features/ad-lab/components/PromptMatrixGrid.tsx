@@ -4,6 +4,12 @@ import React from 'react'
 import { PromptCard } from './PromptCard'
 import type { AdPrompt, AdAspectRatio, AdDuration } from '../types/ad-lab.types'
 
+const DURATION_DISPLAY: Record<AdDuration, string> = {
+  '5s': '5s Bumper',
+  '15s': '15s Mid-Roll',
+  '30s': '30s Full Spot',
+}
+
 interface PromptMatrixGridProps {
   prompts: AdPrompt[]
 }
@@ -22,7 +28,7 @@ export function PromptMatrixGrid({ prompts }: PromptMatrixGridProps) {
         <div /> {/* empty corner */}
         {DURATIONS.map((dur) => (
           <div key={dur} className="text-center text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            {dur}
+            {DURATION_DISPLAY[dur]}
           </div>
         ))}
       </div>

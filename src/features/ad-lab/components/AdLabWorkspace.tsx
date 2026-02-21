@@ -6,23 +6,24 @@ import { useAdLabStore } from '../store/ad-lab.store'
 import { AdLabStepper } from './AdLabStepper'
 import { StrategyPhase } from './phases/StrategyPhase'
 import { ExecutionPhase } from './phases/ExecutionPhase'
-import { QualityPhase } from './phases/QualityPhase'
-import { RefinePhase } from './phases/RefinePhase'
 import { GeneratePhase } from './phases/GeneratePhase'
 import type { AdLabPhase } from '../types/ad-lab.types'
 
-const PHASE_COMPONENTS: Record<AdLabPhase, React.FC> = {
+const PHASE_COMPONENTS: Record<string, React.FC> = {
   strategy: StrategyPhase,
   execution: ExecutionPhase,
-  quality: QualityPhase,
-  refine: RefinePhase,
   generate: GeneratePhase,
 }
 
 export function AdLabWorkspace() {
   const { currentPhase, error, setError } = useAdLabStore()
 
-  const PhaseComponent = PHASE_COMPONENTS[currentPhase]
+  // Map hidden phases to generate (in case persisted state has 'quality' or 'refine')
+  const effectivePhase: AdLabPhase = (currentPhase === 'quality' || currentPhase === 'refine')
+    ? 'generate'
+    : currentPhase
+
+  const PhaseComponent = PHASE_COMPONENTS[effectivePhase] || StrategyPhase
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -52,7 +53,7 @@ export function AdLabWorkspace() {
       <div className="flex-1 overflow-auto">
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentPhase}
+            key={effectivePhase}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}

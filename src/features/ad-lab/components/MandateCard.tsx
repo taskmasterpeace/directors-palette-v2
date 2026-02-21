@@ -4,7 +4,13 @@ import React, { useState } from 'react'
 import { cn } from '@/utils/utils'
 import { AlertTriangle, Check, X, Pencil } from 'lucide-react'
 import { useAdLabStore } from '../store/ad-lab.store'
-import type { CreativeMandate } from '../types/ad-lab.types'
+import type { CreativeMandate, AdDuration } from '../types/ad-lab.types'
+
+const DURATION_DISPLAY: Record<AdDuration, string> = {
+  '5s': '5s Bumper',
+  '15s': '15s Mid-Roll',
+  '30s': '30s Full Spot',
+}
 
 interface EditableFieldProps {
   label: string
@@ -49,7 +55,7 @@ function EditableField({ label, value, onSave, multiline, highlight }: EditableF
             <textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              className="w-full p-2 rounded border border-border bg-background text-sm resize-y min-h-[60px] focus:outline-none focus:ring-1 focus:ring-primary/50"
+              className="w-full p-3 rounded border border-border bg-background text-sm leading-relaxed resize-y min-h-[160px] focus:outline-none focus:ring-1 focus:ring-primary/50"
               autoFocus
             />
           ) : (
@@ -143,7 +149,7 @@ export function MandateCard() {
           {(['5s', '15s', '30s'] as const).map((dur) => (
             <EditableField
               key={dur}
-              label={dur}
+              label={DURATION_DISPLAY[dur]}
               value={mandate.durationStrategy[dur]}
               onSave={(v) => updateField('durationStrategy', { ...mandate.durationStrategy, [dur]: v })}
               multiline

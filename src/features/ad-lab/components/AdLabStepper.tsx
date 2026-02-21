@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Check, FileText, Grid3X3, BarChart3, RefreshCw, Video } from 'lucide-react'
+import { Check, FileText, Grid3X3, Video } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { useAdLabStore } from '../store/ad-lab.store'
 import type { AdLabPhase } from '../types/ad-lab.types'
@@ -16,18 +16,21 @@ interface StepInfo {
 const STEPS: StepInfo[] = [
   { id: 'strategy', label: 'Strategy', icon: FileText },
   { id: 'execution', label: 'Execution', icon: Grid3X3 },
-  { id: 'quality', label: 'Quality', icon: BarChart3 },
-  { id: 'refine', label: 'Refine', icon: RefreshCw },
   { id: 'generate', label: 'Generate', icon: Video },
 ]
 
 export function AdLabStepper() {
   const { currentPhase, completedPhases, setPhase, canNavigateTo } = useAdLabStore()
 
+  // Map hidden phases to generate for display purposes
+  const displayPhase: AdLabPhase = (currentPhase === 'quality' || currentPhase === 'refine')
+    ? 'generate'
+    : currentPhase
+
   return (
     <div className="flex items-center justify-start sm:justify-center gap-1 sm:gap-2 overflow-x-auto scrollbar-none">
       {STEPS.map((step, index) => {
-        const isActive = currentPhase === step.id
+        const isActive = displayPhase === step.id
         const isCompleted = completedPhases.includes(step.id)
         const canClick = canNavigateTo(step.id)
         const Icon = step.icon

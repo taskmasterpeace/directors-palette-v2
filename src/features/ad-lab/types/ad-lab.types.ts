@@ -9,7 +9,12 @@
 
 export type AdLabPhase = 'strategy' | 'execution' | 'quality' | 'refine' | 'generate'
 
-export type BriefInputMode = 'text' | 'json'
+export interface BriefAsset {
+  id: string
+  file: File
+  preview: string
+  label: string
+}
 
 // =============================================================================
 // PHASE 1: STRATEGY

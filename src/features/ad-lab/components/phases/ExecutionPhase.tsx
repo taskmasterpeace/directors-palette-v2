@@ -57,7 +57,7 @@ export function ExecutionPhase() {
   }
 
   const handleNext = () => {
-    setPhase('quality')
+    setPhase('generate')
   }
 
   return (
@@ -125,7 +125,7 @@ export function ExecutionPhase() {
           <PromptMatrixGrid prompts={prompts} />
           <div className="flex justify-end">
             <Button onClick={handleNext} size="lg">
-              Next: Grade Prompts
+              Next: Generate
             </Button>
           </div>
         </>

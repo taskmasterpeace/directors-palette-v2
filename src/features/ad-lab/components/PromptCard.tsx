@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react'
 import { cn } from '@/utils/utils'
-import { ChevronDown, ChevronUp } from 'lucide-react'
-import type { AdPrompt } from '../types/ad-lab.types'
+import { ChevronDown, ChevronUp, Copy, Check } from 'lucide-react'
+import type { AdPrompt, AdDuration } from '../types/ad-lab.types'
 
 interface PromptCardProps {
   prompt: AdPrompt
@@ -25,36 +25,115 @@ const DURATION_COLORS = {
   '30s': 'bg-pink-500/10 text-pink-400 border-pink-500/20',
 }
 
+const DURATION_DISPLAY: Record<AdDuration, string> = {
+  '5s': '5s Bumper',
+  '15s': '15s Mid-Roll',
+  '30s': '30s Full Spot',
+}
+
+function formatPromptForCopy(prompt: AdPrompt): string {
+  const parts: string[] = []
+
+  parts.push(`[${prompt.aspectRatio}] [${DURATION_DISPLAY[prompt.duration]}] [Variant ${prompt.variant}]`)
+  parts.push('')
+  parts.push('OPENING FRAME:')
+  parts.push(prompt.openingFrame)
+  parts.push('')
+  parts.push('FULL PROMPT:')
+  parts.push(prompt.fullPrompt)
+
+  if (prompt.beatTimings.length > 0) {
+    parts.push('')
+    parts.push('BEAT TIMINGS:')
+    prompt.beatTimings.forEach((beat, i) => {
+      parts.push(`  ${i + 1}. ${beat}`)
+    })
+  }
+
+  parts.push('')
+  parts.push('CAMERA WORK:')
+  parts.push(prompt.cameraWork)
+
+  if (prompt.textOverlays.length > 0) {
+    parts.push('')
+    parts.push('TEXT OVERLAYS:')
+    prompt.textOverlays.forEach((overlay) => {
+      parts.push(`  [${overlay.timestamp}] ${overlay.text}`)
+    })
+  }
+
+  parts.push('')
+  parts.push('CTA PLACEMENT:')
+  parts.push(prompt.ctaPlacement)
+
+  return parts.join('\n')
+}
+
 export function PromptCard({ prompt }: PromptCardProps) {
   const [expanded, setExpanded] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      await navigator.clipboard.writeText(formatPromptForCopy(prompt))
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea')
+      textarea.value = formatPromptForCopy(prompt)
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   return (
     <div className="border border-border/50 rounded-lg bg-card/50 hover:bg-card/80 transition-colors">
       {/* Collapsed View */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full text-left p-3 flex items-start gap-3"
-      >
-        <div className="flex-1 min-w-0">
-          <p className="text-sm text-foreground line-clamp-2">{prompt.openingFrame}</p>
-          <div className="flex gap-1.5 mt-2">
-            <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full border', RATIO_COLORS[prompt.aspectRatio])}>
-              {prompt.aspectRatio}
-            </span>
-            <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full border', DURATION_COLORS[prompt.duration])}>
-              {prompt.duration}
-            </span>
-            <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full border', VARIANT_COLORS[prompt.variant])}>
-              {prompt.variant}
-            </span>
+      <div className="flex items-start">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex-1 text-left p-3 flex items-start gap-3"
+        >
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-foreground line-clamp-2">{prompt.openingFrame}</p>
+            <div className="flex gap-1.5 mt-2">
+              <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full border', RATIO_COLORS[prompt.aspectRatio])}>
+                {prompt.aspectRatio}
+              </span>
+              <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full border', DURATION_COLORS[prompt.duration])}>
+                {DURATION_DISPLAY[prompt.duration]}
+              </span>
+              <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full border', VARIANT_COLORS[prompt.variant])}>
+                {prompt.variant}
+              </span>
+            </div>
           </div>
-        </div>
-        {expanded ? (
-          <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
-        ) : (
-          <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
-        )}
-      </button>
+          {expanded ? (
+            <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
+          )}
+        </button>
+
+        {/* Copy Button */}
+        <button
+          onClick={handleCopy}
+          className="p-3 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+          title="Copy prompt"
+        >
+          {copied ? (
+            <Check className="w-3.5 h-3.5 text-green-400" />
+          ) : (
+            <Copy className="w-3.5 h-3.5" />
+          )}
+        </button>
+      </div>
 
       {/* Expanded View */}
       {expanded && (

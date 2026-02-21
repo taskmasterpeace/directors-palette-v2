@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useCallback, useRef } from 'react'
+import React, { useState, useCallback, useRef } from 'react'
 import {
   Video,
   Image as ImageIcon,
@@ -12,18 +12,24 @@ import {
   Play,
   X,
   Check,
+  Copy,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { Button } from '@/components/ui/button'
 import { useAdLabStore } from '../../store/ad-lab.store'
-import { TotalScoreBadge, StatusBadge } from '../ScoreBar'
-import type { AdPrompt, GenerationJob, GenerationJobStatus } from '../../types/ad-lab.types'
+import type { AdPrompt, AdDuration, GenerationJob, GenerationJobStatus } from '../../types/ad-lab.types'
 
 const IMAGE_MODEL = 'nano-banana-pro'
 const VIDEO_MODEL = 'wan-2.2-i2v-fast'
 const IMAGE_COST_PTS = 25  // nano-banana-pro = $0.25 = 25 pts
 const VIDEO_COST_PTS = 16  // wan-2.2-i2v-fast = 16 pts/video
 const POLL_INTERVAL = 3000
+
+const DURATION_DISPLAY: Record<AdDuration, string> = {
+  '5s': '5s Bumper',
+  '15s': '15s Mid-Roll',
+  '30s': '30s Full Spot',
+}
 
 const STATUS_LABELS: Record<GenerationJobStatus, string> = {
   queued: 'Queued',
@@ -43,6 +49,22 @@ const STATUS_ICONS: Record<GenerationJobStatus, React.ReactNode> = {
   failed: <XCircle className="w-4 h-4 text-red-400" />,
 }
 
+const RATIO_COLORS = {
+  '16:9': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  '9:16': 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+}
+
+const DURATION_COLORS = {
+  '5s': 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+  '15s': 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+  '30s': 'bg-pink-500/10 text-pink-400 border-pink-500/20',
+}
+
+const VARIANT_COLORS = {
+  A: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  B: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+}
+
 export function GeneratePhase() {
   const {
     prompts,
@@ -55,24 +77,11 @@ export function GeneratePhase() {
     setError,
   } = useAdLabStore()
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => {
-    // Default: all passing prompts selected, manual-review unchecked
-    const passing = new Set<string>()
-    for (const g of grades) {
-      if (g.status === 'pass') passing.add(g.promptId)
-    }
-    return passing
-  })
+  // Default: all prompts unselected - user must manually select
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const abortRef = useRef(false)
-
-  const promptsWithGrades = useMemo(() => {
-    return prompts.map(p => ({
-      prompt: p,
-      grade: grades.find(g => g.promptId === p.id)!,
-    })).filter(item => item.grade)
-  }, [prompts, grades])
 
   const selectedCount = selectedIds.size
   const imageCost = selectedCount * IMAGE_COST_PTS
@@ -91,12 +100,14 @@ export function GeneratePhase() {
     })
   }
 
-  const selectAll = () => {
-    setSelectedIds(new Set(prompts.map(p => p.id)))
-  }
+  const allSelected = selectedIds.size === prompts.length && prompts.length > 0
 
-  const selectNone = () => {
-    setSelectedIds(new Set())
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(prompts.map(p => p.id)))
+    }
   }
 
   const pollForVideo = useCallback(async (predictionId: string): Promise<{ url?: string; error?: string }> => {
@@ -289,11 +300,8 @@ export function GeneratePhase() {
 
       {/* Selection Controls */}
       <div className="flex items-center gap-3">
-        <Button variant="outline" size="sm" onClick={selectAll} disabled={isGenerating}>
-          Select All
-        </Button>
-        <Button variant="outline" size="sm" onClick={selectNone} disabled={isGenerating}>
-          Select None
+        <Button variant="outline" size="sm" onClick={toggleAll} disabled={isGenerating}>
+          {allSelected ? 'Deselect All' : 'Select All'}
         </Button>
         <span className="text-xs text-muted-foreground ml-auto">
           {selectedCount} of {prompts.length} selected
@@ -302,9 +310,8 @@ export function GeneratePhase() {
 
       {/* Prompt Selection Cards */}
       <div className="space-y-2">
-        {promptsWithGrades.map(({ prompt, grade }) => {
+        {prompts.map((prompt) => {
           const isSelected = selectedIds.has(prompt.id)
-          const isManualReview = grade.status === 'refine'
           const job = generationJobs.find(j => j.promptId === prompt.id)
 
           return (
@@ -312,7 +319,6 @@ export function GeneratePhase() {
               key={prompt.id}
               className={cn(
                 'border rounded-lg p-3 flex items-center gap-3 transition-colors',
-                isManualReview && 'opacity-50',
                 isSelected ? 'border-primary/40 bg-primary/5' : 'border-border/50 bg-card/30',
               )}
             >
@@ -333,12 +339,21 @@ export function GeneratePhase() {
               {/* Prompt Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-medium">{prompt.id}</span>
-                  <TotalScoreBadge score={grade.total} />
-                  <StatusBadge status={grade.status} />
+                  <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full border', RATIO_COLORS[prompt.aspectRatio])}>
+                    {prompt.aspectRatio}
+                  </span>
+                  <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full border', DURATION_COLORS[prompt.duration])}>
+                    {DURATION_DISPLAY[prompt.duration]}
+                  </span>
+                  <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full border', VARIANT_COLORS[prompt.variant])}>
+                    {prompt.variant}
+                  </span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5 truncate">{prompt.openingFrame}</p>
+                <p className="text-xs text-muted-foreground mt-1 truncate">{prompt.openingFrame}</p>
               </div>
+
+              {/* Copy Button */}
+              <CopyPromptButton prompt={prompt} />
 
               {/* Job Status */}
               {job && (
@@ -403,7 +418,7 @@ export function GeneratePhase() {
           size="lg"
         >
           <Video className="w-4 h-4 mr-2" />
-          Generate All ({selectedCount} prompts)
+          Generate ({selectedCount} selected)
         </Button>
       )}
 
@@ -465,5 +480,60 @@ export function GeneratePhase() {
         </div>
       )}
     </div>
+  )
+}
+
+function CopyPromptButton({ prompt }: { prompt: AdPrompt }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    const parts: string[] = []
+    parts.push(`[${prompt.aspectRatio}] [${DURATION_DISPLAY[prompt.duration]}] [Variant ${prompt.variant}]`)
+    parts.push('')
+    parts.push('OPENING FRAME:')
+    parts.push(prompt.openingFrame)
+    parts.push('')
+    parts.push('FULL PROMPT:')
+    parts.push(prompt.fullPrompt)
+    if (prompt.beatTimings.length > 0) {
+      parts.push('')
+      parts.push('BEAT TIMINGS:')
+      prompt.beatTimings.forEach((beat, i) => {
+        parts.push(`  ${i + 1}. ${beat}`)
+      })
+    }
+    parts.push('')
+    parts.push('CAMERA WORK:')
+    parts.push(prompt.cameraWork)
+    parts.push('')
+    parts.push('CTA PLACEMENT:')
+    parts.push(prompt.ctaPlacement)
+
+    try {
+      await navigator.clipboard.writeText(parts.join('\n'))
+    } catch {
+      const textarea = document.createElement('textarea')
+      textarea.value = parts.join('\n')
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="p-1.5 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+      title="Copy prompt"
+    >
+      {copied ? (
+        <Check className="w-3.5 h-3.5 text-green-400" />
+      ) : (
+        <Copy className="w-3.5 h-3.5" />
+      )}
+    </button>
   )
 }

@@ -7,7 +7,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type {
   AdLabPhase,
-  BriefInputMode,
+  BriefAsset,
   CreativeMandate,
   AdPrompt,
   GradeScore,
@@ -23,7 +23,7 @@ interface AdLabState {
 
   // Phase 1: Strategy
   briefText: string
-  briefInputMode: BriefInputMode
+  briefAssets: BriefAsset[]
   selectedModel: string
   mandate: CreativeMandate | null
   isParsingBrief: boolean
@@ -55,7 +55,8 @@ interface AdLabState {
 
   // Actions - Phase 1
   setBriefText: (text: string) => void
-  setBriefInputMode: (mode: BriefInputMode) => void
+  addBriefAsset: (asset: BriefAsset) => void
+  removeBriefAsset: (id: string) => void
   setSelectedModel: (model: string) => void
   setMandate: (mandate: CreativeMandate | null) => void
   setIsParsingBrief: (v: boolean) => void
@@ -90,7 +91,7 @@ const initialState = {
   currentPhase: 'strategy' as AdLabPhase,
   completedPhases: [] as AdLabPhase[],
   briefText: '',
-  briefInputMode: 'text' as BriefInputMode,
+  briefAssets: [] as BriefAsset[],
   selectedModel: 'openai/gpt-4.1-mini',
   mandate: null as CreativeMandate | null,
   isParsingBrief: false,
@@ -132,14 +133,19 @@ export const useAdLabStore = create<AdLabState>()(
           case 'execution': return !!state.mandate
           case 'quality': return state.prompts.length > 0
           case 'refine': return state.grades.length > 0 && state.grades.some(g => g.status === 'refine')
-          case 'generate': return state.grades.length > 0
+          case 'generate': return state.prompts.length > 0
           default: return false
         }
       },
 
       // Phase 1
       setBriefText: (text) => set({ briefText: text }),
-      setBriefInputMode: (mode) => set({ briefInputMode: mode }),
+      addBriefAsset: (asset) => set((state) => ({
+        briefAssets: state.briefAssets.length < 3 ? [...state.briefAssets, asset] : state.briefAssets
+      })),
+      removeBriefAsset: (id) => set((state) => ({
+        briefAssets: state.briefAssets.filter(a => a.id !== id)
+      })),
       setSelectedModel: (model) => set({ selectedModel: model }),
       setMandate: (mandate) => set({ mandate }),
       setIsParsingBrief: (v) => set({ isParsingBrief: v }),
@@ -180,7 +186,6 @@ export const useAdLabStore = create<AdLabState>()(
       name: 'ad-lab-store',
       partialize: (state) => ({
         briefText: state.briefText,
-        briefInputMode: state.briefInputMode,
         selectedModel: state.selectedModel,
         mandate: state.mandate,
         currentPhase: state.currentPhase,
