@@ -38,7 +38,7 @@ interface ModelSettingsModalProps {
 export function ModelSettingsModal({ settings, onSave }: ModelSettingsModalProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [localSettings, setLocalSettings] = useState<AnimatorSettings>(settings)
-  const [activeTab, setActiveTab] = useState<AnimationModel>('seedance-lite')
+  const [activeTab, setActiveTab] = useState<AnimationModel>('seedance-1.5-pro')
 
   const updateModelSettings = (model: AnimationModel, updates: Partial<ModelSettings>) => {
     setLocalSettings(prev => ({

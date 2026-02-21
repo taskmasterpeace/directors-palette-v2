@@ -64,6 +64,20 @@ export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
     promptStyle: 'reasoning',
     restrictions: ['Ref images not with 1080p or last frame'],
   },
+  'seedance-1.5-pro': {
+    id: 'seedance-1.5-pro',
+    displayName: 'Seedance 1.5 Pro',
+    description: 'Pro - High quality with last frame control',
+    maxReferenceImages: 0,
+    supportsLastFrame: true,
+    defaultResolution: '480p',
+    maxDuration: 10,
+    supportedResolutions: ['480p', '720p'],
+    supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
+    pricingType: 'per-second',
+    promptStyle: 'reasoning',
+    restrictions: ['Last frame requires start frame image'],
+  },
   'kling-2.5-turbo-pro': {
     id: 'kling-2.5-turbo-pro',
     displayName: 'Kling Premium',
@@ -266,6 +280,7 @@ export class VideoGenerationService {
       'wan-2.2-i2v-fast': 'wan-video/wan-2.2-i2v-fast',
       'seedance-pro-fast': 'bytedance/seedance-1-pro-fast',
       'seedance-lite': 'bytedance/seedance-1-lite',
+      'seedance-1.5-pro': 'bytedance/seedance-1.5-pro',
       'kling-2.5-turbo-pro': 'kwaivgi/kling-v2.5-turbo-pro',
       'seedance-pro': 'bytedance/seedance-1-pro',
     }

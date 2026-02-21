@@ -18,6 +18,7 @@ export interface ShotAnimatorSettings {
         'wan-2.2-i2v-fast': ModelSettingsEntry
         'seedance-pro-fast': ModelSettingsEntry
         'seedance-lite': ModelSettingsEntry
+        'seedance-1.5-pro': ModelSettingsEntry
         'kling-2.5-turbo-pro': ModelSettingsEntry
         'seedance-pro': ModelSettingsEntry  // Legacy
     }

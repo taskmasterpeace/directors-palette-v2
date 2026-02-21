@@ -73,6 +73,22 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
       'Reference images cannot be used with 1080p resolution'
     ]
   },
+  'seedance-1.5-pro': {
+    id: 'seedance-1.5-pro',
+    displayName: 'Seedance 1.5 Pro',
+    description: 'High quality with last frame control. Requires start frame for last frame generation.',
+    maxReferenceImages: 0,
+    supportsLastFrame: true,
+    defaultResolution: '480p',
+    maxDuration: 10,
+    supportedResolutions: ['480p', '720p'],
+    supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
+    pricingType: 'per-second',
+    promptStyle: 'reasoning',
+    restrictions: [
+      'Last frame requires start frame image'
+    ]
+  },
   'kling-2.5-turbo-pro': {
     id: 'kling-2.5-turbo-pro',
     displayName: 'Kling 2.5 Turbo Pro',
@@ -139,6 +155,13 @@ export const DEFAULT_MODEL_SETTINGS: Record<AnimationModel, ModelSettings> = {
     fps: 24,
     cameraFixed: false
   },
+  'seedance-1.5-pro': {
+    duration: 5,
+    resolution: '480p',
+    aspectRatio: '16:9',
+    fps: 24,
+    cameraFixed: false
+  },
   'kling-2.5-turbo-pro': {
     duration: 5,
     resolution: '720p',
@@ -190,7 +213,8 @@ export const ACTIVE_VIDEO_MODELS: AnimationModel[] = [
   'wan-2.2-5b-fast',      // Ultra Budget - 4 pts/video
   'wan-2.2-i2v-fast',     // Budget+ - 16 pts/video (has last frame)
   'seedance-pro-fast',    // Standard - 4 pts/sec
-  'seedance-lite',        // Featured - 5 pts/sec (has last frame + ref images)
+  'seedance-lite',        // Value - 5 pts/sec (has last frame + ref images)
+  'seedance-1.5-pro',     // Featured - last frame + high quality (DEFAULT)
   'kling-2.5-turbo-pro',  // Premium - 10 pts/sec
 ]
 
@@ -201,7 +225,8 @@ export const MODEL_TIER_LABELS: Record<AnimationModel, string> = {
   'wan-2.2-5b-fast': 'Budget',
   'wan-2.2-i2v-fast': 'Budget+',
   'seedance-pro-fast': 'Standard',
-  'seedance-lite': 'Featured',
+  'seedance-lite': 'Value',
+  'seedance-1.5-pro': 'Featured',
   'kling-2.5-turbo-pro': 'Premium',
   'seedance-pro': 'Legacy',
 }
@@ -214,6 +239,7 @@ export const VIDEO_MODEL_ICONS: Record<AnimationModel, string> = {
   'wan-2.2-i2v-fast': '🌊',
   'seedance-pro-fast': '⚡',
   'seedance-lite': '🌱',
+  'seedance-1.5-pro': '🎯',
   'kling-2.5-turbo-pro': '👑',
   'seedance-pro': '🎬',
 }

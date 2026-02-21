@@ -92,10 +92,10 @@ export function ShotAnimatorView() {
   const isMobile = useIsMobile()
   const [mobileGalleryOpen, setMobileGalleryOpen] = useState(false)
 
-  // State — restore last-used model from settings, default to seedance-lite
+  // State — restore last-used model from settings, default to seedance-1.5-pro
   const savedModel = shotAnimator.selectedModel as AnimationModel | undefined
   const [selectedModel, setSelectedModel] = useState<AnimationModel>(
-    savedModel && ANIMATION_MODELS[savedModel] ? savedModel : 'seedance-lite'
+    savedModel && ANIMATION_MODELS[savedModel] ? savedModel : 'seedance-1.5-pro'
   )
 
   // Sync local state when settings load from database (async)
@@ -135,7 +135,7 @@ export function ShotAnimatorView() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showOnlySelected, setShowOnlySelected] = useState(false)
 
-  const currentModelConfig = ANIMATION_MODELS[selectedModel] || ANIMATION_MODELS['seedance-lite']
+  const currentModelConfig = ANIMATION_MODELS[selectedModel] || ANIMATION_MODELS['seedance-1.5-pro']
 
   // Filtered shots
   const filteredShots = shotConfigs

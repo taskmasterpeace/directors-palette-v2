@@ -8,6 +8,7 @@ export type AnimationModel =
   | 'wan-2.2-i2v-fast'     // Budget+, 5s max, start + last frame
   | 'seedance-pro-fast'    // Standard, 12s max, start frame only
   | 'seedance-lite'        // Featured, 12s max, start + last + ref images
+  | 'seedance-1.5-pro'     // Pro, 480p, start + last frame
   | 'kling-2.5-turbo-pro'  // Premium, 10s max, best motion
   | 'seedance-pro'         // Legacy - keeping for backwards compatibility
 
@@ -52,6 +53,7 @@ export interface AnimatorSettings {
   'wan-2.2-i2v-fast': ModelSettings
   'seedance-pro-fast': ModelSettings
   'seedance-lite': ModelSettings
+  'seedance-1.5-pro': ModelSettings
   'kling-2.5-turbo-pro': ModelSettings
   'seedance-pro': ModelSettings // Legacy
 }
@@ -98,6 +100,7 @@ export const VIDEO_MODEL_PRICING: Record<AnimationModel, VideoPricing> = {
   'wan-2.2-i2v-fast': { '480p': 2, '720p': 3 },          // Per video (5s)
   'seedance-pro-fast': { '480p': 2, '720p': 4, '1080p': 9 },   // Per second
   'seedance-lite': { '480p': 3, '720p': 5, '1080p': 11 },      // Per second
+  'seedance-1.5-pro': { '480p': 5, '720p': 8 },                // Per second
   'kling-2.5-turbo-pro': { '480p': 10, '720p': 10 },           // Per second
   'seedance-pro': { '480p': 4, '720p': 6, '1080p': 15 },       // Per second (legacy)
 }
