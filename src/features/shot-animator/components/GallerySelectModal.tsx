@@ -107,7 +107,7 @@ export function GallerySelectModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-4xl bg-background border-border text-white safe-bottom">
+      <DialogContent className="w-full max-w-[calc(100%-2rem)] sm:max-w-4xl max-h-[calc(100vh-2rem)] overflow-y-auto bg-background border-border text-white safe-bottom">
         <DialogHeader>
           <DialogTitle>Add from Gallery</DialogTitle>
           <DialogDescription className="text-muted-foreground">
@@ -156,7 +156,7 @@ export function GallerySelectModal({
         </div>
 
         {/* Gallery Grid */}
-        <ScrollArea className="h-[60vh] sm:h-[500px] px-2 sm:px-0 sm:pr-4">
+        <ScrollArea className="h-[40vh] sm:h-[500px] px-2 sm:px-0 sm:pr-4">
           {galleryImages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
               <ImageIcon className="w-16 h-16 mb-4" />

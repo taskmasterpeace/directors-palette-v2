@@ -73,7 +73,7 @@ export function ModelSettingsModal({ settings, onSave }: ModelSettingsModalProps
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="w-full max-w-2xl bg-background border-border text-white safe-bottom">
+      <DialogContent className="w-full max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[calc(100vh-2rem)] overflow-y-auto overflow-x-hidden bg-background border-border text-white safe-bottom">
         <DialogHeader>
           <DialogTitle>Model Settings</DialogTitle>
           <DialogDescription className="text-muted-foreground">
