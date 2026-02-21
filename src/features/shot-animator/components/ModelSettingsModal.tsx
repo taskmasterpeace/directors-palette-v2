@@ -34,12 +34,22 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 interface ModelSettingsModalProps {
   settings: AnimatorSettings
   onSave: (settings: AnimatorSettings) => void
+  selectedModel?: AnimationModel
 }
 
-export function ModelSettingsModal({ settings, onSave }: ModelSettingsModalProps) {
+export function ModelSettingsModal({ settings, onSave, selectedModel }: ModelSettingsModalProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [localSettings, setLocalSettings] = useState<AnimatorSettings>(settings)
-  const [activeTab, setActiveTab] = useState<AnimationModel>('seedance-1.5-pro')
+  const [activeTab, setActiveTab] = useState<AnimationModel>(selectedModel || 'seedance-1.5-pro')
+
+  // Sync active tab when dialog opens
+  const handleOpenChange = (open: boolean) => {
+    if (open && selectedModel) {
+      setActiveTab(selectedModel)
+      setLocalSettings(settings)
+    }
+    setIsOpen(open)
+  }
 
   const updateModelSettings = (model: AnimationModel, updates: Partial<ModelSettings>) => {
     setLocalSettings(prev => ({
@@ -62,7 +72,7 @@ export function ModelSettingsModal({ settings, onSave }: ModelSettingsModalProps
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
           variant="ghost"
@@ -74,7 +84,7 @@ export function ModelSettingsModal({ settings, onSave }: ModelSettingsModalProps
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="w-full max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[calc(100vh-2rem)] overflow-y-auto overflow-x-hidden bg-background border-border text-white safe-bottom">
+      <DialogContent className="w-full max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[85vh] flex flex-col overflow-hidden bg-background border-border text-white safe-bottom">
         <DialogHeader>
           <DialogTitle>Model Settings</DialogTitle>
           <DialogDescription className="text-muted-foreground">
@@ -106,7 +116,7 @@ export function ModelSettingsModal({ settings, onSave }: ModelSettingsModalProps
           </ScrollArea>
 
           {/* Model Settings Panels */}
-          <div className="overflow-y-auto mt-4 px-2 sm:px-0" style={{ maxHeight: 'calc(100vh - 16rem)' }}>
+          <div className="overflow-y-auto flex-1 min-h-0 mt-4 px-2 sm:px-0">
             {ACTIVE_VIDEO_MODELS.map((modelId) => (
               <TabsContent key={modelId} value={modelId} className="space-y-6 mt-4">
                 <ModelSettingsPanel

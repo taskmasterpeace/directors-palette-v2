@@ -705,8 +705,14 @@ export function ShotAnimatorView() {
 
   return (
     <div className="w-full h-full flex flex-col bg-background">
-      {/* Top Toolbar */}
-      <div className="border-b border-border bg-background/50">
+      {/* Top Toolbar - entire area is a drop zone for creating new cards */}
+      <div
+        className={`border-b border-border bg-background/50 transition-colors ${isToolbarDragOver ? 'bg-primary/20 ring-2 ring-primary ring-inset' : ''}`}
+        onDragEnter={handleToolbarDragEnter}
+        onDragOver={handleToolbarDragOver}
+        onDragLeave={handleToolbarDragLeave}
+        onDrop={handleToolbarDrop}
+      >
         {/* MOBILE: Compact single-row toolbar */}
         <div className="flex sm:hidden items-center gap-2 px-2 py-2">
           {/* Model selector - compact */}
@@ -765,7 +771,7 @@ export function ShotAnimatorView() {
             </Button>
 
             {/* Settings - Mobile compact */}
-            <ModelSettingsModal settings={modelSettings} onSave={handleSaveModelSettings} />
+            <ModelSettingsModal settings={modelSettings} onSave={handleSaveModelSettings} selectedModel={selectedModel} />
           </div>
 
           {/* Selected count badge */}
@@ -829,14 +835,8 @@ export function ShotAnimatorView() {
               </div>
             </div>
 
-            {/* Action Buttons + Drop Zone for new cards */}
-            <div
-              className={`flex flex-row items-center justify-between transition-colors rounded ${isToolbarDragOver ? 'bg-primary/20 ring-2 ring-primary ring-inset' : ''}`}
-              onDragEnter={handleToolbarDragEnter}
-              onDragOver={handleToolbarDragOver}
-              onDragLeave={handleToolbarDragLeave}
-              onDrop={handleToolbarDrop}
-            >
+            {/* Action Buttons */}
+            <div className="flex flex-row items-center justify-between">
               {/* Search */}
               <div className="relative w-auto">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -883,7 +883,7 @@ export function ShotAnimatorView() {
                 </Button>
 
                 {/* Settings */}
-                <ModelSettingsModal settings={modelSettings} onSave={handleSaveModelSettings} />
+                <ModelSettingsModal settings={modelSettings} onSave={handleSaveModelSettings} selectedModel={selectedModel} />
               </div>
             </div>
           </div>
@@ -968,6 +968,16 @@ export function ShotAnimatorView() {
                     onDropLastFrame={(imageUrl) => updateShotConfig(config.id, { lastFrameImage: imageUrl })}
                   />
                 ))}
+                {/* Drop zone placeholder card - always visible at end of grid */}
+                <div
+                  className={`flex flex-col items-center justify-center min-h-[200px] border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
+                    isDragOver ? 'border-primary bg-primary/10 text-primary' : 'border-border/50 text-muted-foreground hover:border-border hover:text-foreground'
+                  }`}
+                  onClick={() => setIsGalleryModalOpen(true)}
+                >
+                  <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
+                  <p className="text-xs font-medium">{isDragOver ? 'Drop to add shot' : 'Drop image or click to add'}</p>
+                </div>
               </div>
             )}
           </ScrollArea>
