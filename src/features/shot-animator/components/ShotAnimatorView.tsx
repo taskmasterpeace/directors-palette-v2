@@ -136,7 +136,6 @@ export function ShotAnimatorView() {
 
   // Drag-and-drop state
   const [isDragOver, setIsDragOver] = useState(false)
-  const [isDragReject, setIsDragReject] = useState(false)
   const dragCounterRef = useRef(0)
 
   // Gallery panel state
@@ -398,19 +397,12 @@ export function ShotAnimatorView() {
   // Card-level handlers call stopPropagation() so these only fire for empty-area drops
   const dropZoneRef = useRef<HTMLDivElement>(null)
 
-  const hasNonImageFile = (dt: DataTransfer | null): boolean => {
-    if (!dt?.items) return false
-    return Array.from(dt.items).some(
-      (item) => item.kind === 'file' && !ALLOWED_IMAGE_TYPES.includes(item.type)
-    )
-  }
-
   const handleZoneDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     dragCounterRef.current++
     if (dragCounterRef.current === 1) {
       setIsDragOver(true)
-      setIsDragReject(hasNonImageFile(e.dataTransfer))
+
     }
   }, [])
 
@@ -425,7 +417,7 @@ export function ShotAnimatorView() {
     if (dragCounterRef.current <= 0) {
       dragCounterRef.current = 0
       setIsDragOver(false)
-      setIsDragReject(false)
+
     }
   }, [])
 
@@ -433,7 +425,6 @@ export function ShotAnimatorView() {
     e.preventDefault()
     dragCounterRef.current = 0
     setIsDragOver(false)
-    setIsDragReject(false)
 
     // Check for gallery image drag data first
     const galleryData = e.dataTransfer?.getData(GALLERY_IMAGE_MIME_TYPE)
@@ -888,28 +879,12 @@ export function ShotAnimatorView() {
           onDragLeave={handleZoneDragLeave}
           onDrop={handleZoneDrop}
         >
-          {isDragOver && (
-            <div
-              data-testid="shot-animator-drop-overlay"
-              className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 border-2 border-dashed border-primary rounded-lg pointer-events-none"
-            >
-              {isDragReject ? (
-                <div data-testid="drop-reject" className="text-center text-destructive">
-                  Images only
-                </div>
-              ) : (
-                <div className="text-center text-primary">
-                  <p>Drop to add new shot</p>
-                </div>
-              )}
-            </div>
-          )}
           <ScrollArea className="h-full">
             {filteredShots.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-96 text-muted-foreground">
+              <div className={`flex flex-col items-center justify-center h-96 text-muted-foreground border-2 border-dashed rounded-lg m-4 transition-colors ${isDragOver ? 'border-primary bg-primary/10' : 'border-transparent'}`}>
                 <ImageIcon className="w-16 h-16 mb-4" />
-                <p>No images to display</p>
-                <p className="text-sm mt-2">Upload images or add from gallery to get started</p>
+                <p>{isDragOver ? 'Drop images to add shots' : 'No images to display'}</p>
+                <p className="text-sm mt-2">{isDragOver ? '' : 'Upload images or add from gallery to get started'}</p>
               </div>
             ) : (
               <div className="p-2 sm:p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 pb-24 content-stretch">
