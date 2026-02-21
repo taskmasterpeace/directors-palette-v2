@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -714,7 +713,7 @@ export function ShotAnimatorView() {
         onDrop={handleToolbarDrop}
       >
         {/* MOBILE: Compact single-row toolbar */}
-        <div className="flex sm:hidden items-center gap-2 px-2 py-2">
+        <div className="flex sm:hidden items-center gap-2 px-2 py-2" onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }}>
           {/* Model selector - compact */}
           <Select
             value={selectedModel}
@@ -782,8 +781,8 @@ export function ShotAnimatorView() {
           )}
         </div>
 
-        {/* DESKTOP: Full toolbar */}
-        <div className="hidden sm:block">
+        {/* DESKTOP: Full toolbar — onDragOver preventDefault on inner wrappers ensures file drops work */}
+        <div className="hidden sm:block" onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }}>
           {/* Model Selection & Settings */}
           <div className="px-4 py-2 flex flex-col gap-3">
             {/* Model Selection */}
@@ -934,53 +933,53 @@ export function ShotAnimatorView() {
 
       {/* Main Content - Two Column Layout */}
       <div className={`flex-1 overflow-hidden grid grid-cols-1 ${galleryCollapsed ? '' : 'lg:grid-cols-[1fr_400px]'}`}>
-        {/* Left: Shots Grid */}
+        {/* Left: Shots Grid — uses plain overflow div instead of ScrollArea to avoid Radix swallowing drag events */}
         <div
           ref={dropZoneRef}
-          className="overflow-hidden relative"
+          className="overflow-y-auto relative"
           onDragEnter={handleZoneDragEnter}
           onDragOver={handleZoneDragOver}
           onDragLeave={handleZoneDragLeave}
           onDrop={handleZoneDrop}
         >
-          <ScrollArea className="h-full">
-            {filteredShots.length === 0 ? (
-              <div className={`flex flex-col items-center justify-center h-96 text-muted-foreground border-2 border-dashed rounded-lg m-4 transition-colors ${isDragOver ? 'border-primary bg-primary/10' : 'border-transparent'}`}>
-                <ImageIcon className="w-16 h-16 mb-4" />
-                <p>{isDragOver ? 'Drop images to add shots' : 'No images to display'}</p>
-                <p className="text-sm mt-2">{isDragOver ? '' : 'Upload images or add from gallery to get started'}</p>
+          {filteredShots.length === 0 ? (
+            <div className={`flex flex-col items-center justify-center h-96 text-muted-foreground border-2 border-dashed rounded-lg m-4 transition-colors ${isDragOver ? 'border-primary bg-primary/10' : 'border-transparent'}`}>
+              <ImageIcon className="w-16 h-16 mb-4" />
+              <p>{isDragOver ? 'Drop images to add shots' : 'No images to display'}</p>
+              <p className="text-sm mt-2">{isDragOver ? '' : 'Upload images or add from gallery to get started'}</p>
+            </div>
+          ) : (
+            <div className="p-2 sm:p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 pb-24 content-stretch">
+              {filteredShots.map((config) => (
+                <CompactShotCard
+                  key={config.id}
+                  config={config}
+                  maxReferenceImages={currentModelConfig.maxReferenceImages}
+                  supportsLastFrame={currentModelConfig.supportsLastFrame}
+                  selectedModel={selectedModel}
+                  onUpdate={(updates) => handleUpdateShotConfig(config.id, updates)}
+                  onDelete={() => handleDeleteShot(config.id)}
+                  onManageReferences={() => setRefEditState({ isOpen: true, configId: config.id })}
+                  onManageLastFrame={() => setLastFrameEditState({ isOpen: true, configId: config.id })}
+                  onRetryVideo={(galleryId) => handleRetryVideo(config.id, galleryId)}
+                  onDropStartFrame={(imageUrl, imageName) => updateShotConfig(config.id, { imageUrl, imageName: imageName || config.imageName })}
+                  onDropLastFrame={(imageUrl) => updateShotConfig(config.id, { lastFrameImage: imageUrl })}
+                />
+              ))}
+              {/* Drop zone placeholder card - explicit drag handlers to guarantee drop works */}
+              <div
+                className={`flex flex-col items-center justify-center min-h-[200px] border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
+                  isDragOver ? 'border-primary bg-primary/10 text-primary' : 'border-border/50 text-muted-foreground hover:border-border hover:text-foreground'
+                }`}
+                onClick={() => setIsGalleryModalOpen(true)}
+                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }}
+                onDrop={handleZoneDrop}
+              >
+                <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
+                <p className="text-xs font-medium">{isDragOver ? 'Drop to add shot' : 'Drop image or click to add'}</p>
               </div>
-            ) : (
-              <div className="p-2 sm:p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 pb-24 content-stretch">
-                {filteredShots.map((config) => (
-                  <CompactShotCard
-                    key={config.id}
-                    config={config}
-                    maxReferenceImages={currentModelConfig.maxReferenceImages}
-                    supportsLastFrame={currentModelConfig.supportsLastFrame}
-                    selectedModel={selectedModel}
-                    onUpdate={(updates) => handleUpdateShotConfig(config.id, updates)}
-                    onDelete={() => handleDeleteShot(config.id)}
-                    onManageReferences={() => setRefEditState({ isOpen: true, configId: config.id })}
-                    onManageLastFrame={() => setLastFrameEditState({ isOpen: true, configId: config.id })}
-                    onRetryVideo={(galleryId) => handleRetryVideo(config.id, galleryId)}
-                    onDropStartFrame={(imageUrl, imageName) => updateShotConfig(config.id, { imageUrl, imageName: imageName || config.imageName })}
-                    onDropLastFrame={(imageUrl) => updateShotConfig(config.id, { lastFrameImage: imageUrl })}
-                  />
-                ))}
-                {/* Drop zone placeholder card - always visible at end of grid */}
-                <div
-                  className={`flex flex-col items-center justify-center min-h-[200px] border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
-                    isDragOver ? 'border-primary bg-primary/10 text-primary' : 'border-border/50 text-muted-foreground hover:border-border hover:text-foreground'
-                  }`}
-                  onClick={() => setIsGalleryModalOpen(true)}
-                >
-                  <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
-                  <p className="text-xs font-medium">{isDragOver ? 'Drop to add shot' : 'Drop image or click to add'}</p>
-                </div>
-              </div>
-            )}
-          </ScrollArea>
+            </div>
+          )}
         </div>
 
         {/* Right: Unified Gallery - Desktop */}

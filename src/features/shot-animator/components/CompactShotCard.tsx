@@ -246,14 +246,14 @@ const CompactShotCardComponent = ({
 
           {/* Selection Overlay */}
           {config.includeInBatch && (
-            <div className="absolute inset-0 bg-primary/10" />
+            <div className="absolute inset-0 bg-primary/10 pointer-events-none" />
           )}
 
-          {/* Per-card drop zone overlays */}
+          {/* Per-card drop zone overlays — pointer-events-none so drag events pass through to parent */}
           {dropZoneSide && (
             <>
               {/* Left half - Start Frame */}
-              <div className={`absolute inset-y-0 left-0 w-1/2 z-20 flex items-center justify-center transition-colors ${
+              <div className={`absolute inset-y-0 left-0 w-1/2 z-20 flex items-center justify-center transition-colors pointer-events-none ${
                 dropZoneSide === 'left' ? 'bg-blue-500/30 border-r-2 border-blue-400' : ''
               }`}>
                 {dropZoneSide === 'left' && (
@@ -261,7 +261,7 @@ const CompactShotCardComponent = ({
                 )}
               </div>
               {/* Right half - End Frame (or Start if not supported) */}
-              <div className={`absolute inset-y-0 right-0 w-1/2 z-20 flex items-center justify-center transition-colors ${
+              <div className={`absolute inset-y-0 right-0 w-1/2 z-20 flex items-center justify-center transition-colors pointer-events-none ${
                 dropZoneSide === 'right'
                   ? supportsLastFrame
                     ? 'bg-amber-500/30 border-l-2 border-amber-400'
@@ -279,9 +279,9 @@ const CompactShotCardComponent = ({
             </>
           )}
 
-          {/* Zoom overlay on hover */}
+          {/* Zoom overlay on hover — pointer-events-none during drag so drops reach imageAreaRef */}
           <div
-            className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors cursor-pointer flex items-center justify-center z-[5]"
+            className={`absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors cursor-pointer flex items-center justify-center z-[5] ${dropZoneSide ? 'pointer-events-none' : ''}`}
             onClick={() => {
               if (recentDropRef.current) return
               setIsFullscreenOpen(true)
