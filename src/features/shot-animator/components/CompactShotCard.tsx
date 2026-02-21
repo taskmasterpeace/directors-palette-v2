@@ -119,9 +119,11 @@ const CompactShotCardComponent = ({
     e.preventDefault()
     e.stopPropagation()
     cardDragCounterRef.current = 0
-    // Read side from ref to avoid stale closure
-    const side = dropZoneSideRef.current
     updateSide(null)
+
+    // Compute side directly from drop position — most reliable, no stale state issues
+    const rect = imageAreaRef.current?.getBoundingClientRect()
+    const side: DropZoneSide = rect ? (e.clientX < rect.left + rect.width / 2 ? 'left' : 'right') : 'left'
 
     // Prevent click-through after drop
     recentDropRef.current = true

@@ -427,7 +427,6 @@ export function ShotAnimatorView() {
     e.preventDefault()
     dragCounterRef.current = 0
     setIsDragOver(false)
-
     // Check for gallery image drag data first
     const galleryData = e.dataTransfer?.getData(GALLERY_IMAGE_MIME_TYPE)
     if (galleryData) {
