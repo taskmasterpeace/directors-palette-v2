@@ -136,7 +136,9 @@ export function ShotAnimatorView() {
 
   // Drag-and-drop state
   const [isDragOver, setIsDragOver] = useState(false)
+  const [isToolbarDragOver, setIsToolbarDragOver] = useState(false)
   const dragCounterRef = useRef(0)
+  const toolbarDragCounterRef = useRef(0)
 
   // Gallery panel state
   const [galleryCollapsed, setGalleryCollapsed] = useState(false)
@@ -459,6 +461,63 @@ export function ShotAnimatorView() {
     addShotConfigs(newConfigs)
   }, [addShotConfigs])
 
+  // Toolbar drop zone - always creates new cards
+  const handleToolbarDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toolbarDragCounterRef.current++
+    if (toolbarDragCounterRef.current === 1) setIsToolbarDragOver(true)
+  }, [])
+
+  const handleToolbarDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = 'copy'
+  }, [])
+
+  const handleToolbarDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toolbarDragCounterRef.current--
+    if (toolbarDragCounterRef.current <= 0) {
+      toolbarDragCounterRef.current = 0
+      setIsToolbarDragOver(false)
+    }
+  }, [])
+
+  const handleToolbarDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toolbarDragCounterRef.current = 0
+    setIsToolbarDragOver(false)
+
+    const galleryData = e.dataTransfer?.getData(GALLERY_IMAGE_MIME_TYPE)
+    if (galleryData) {
+      try {
+        const parsed = JSON.parse(galleryData) as GalleryImageDragPayload
+        addShotConfigs([{
+          id: `shot-${Date.now()}-${Math.random()}`,
+          imageUrl: parsed.url,
+          imageName: parsed.name,
+          imageModel: parsed.imageModel,
+          prompt: '',
+          originalPrompt: parsed.originalPrompt,
+          referenceImages: [],
+          includeInBatch: true,
+          generatedVideos: [],
+        }])
+      } catch { /* ignore */ }
+      return
+    }
+
+    const files = e.dataTransfer?.files
+    if (!files || files.length === 0) return
+    const validFiles = Array.from(files).filter((f) => ALLOWED_IMAGE_TYPES.includes(f.type))
+    if (validFiles.length === 0) return
+    const newConfigs = await filesToShotConfigs(validFiles)
+    addShotConfigs(newConfigs)
+  }, [addShotConfigs])
+
   const handleUpdateShotConfig = (id: string, updates: ShotAnimationConfig) => {
     updateShotConfig(id, updates)
   }
@@ -771,8 +830,14 @@ export function ShotAnimatorView() {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-row items-center justify-between">
+            {/* Action Buttons + Drop Zone for new cards */}
+            <div
+              className={`flex flex-row items-center justify-between transition-colors rounded ${isToolbarDragOver ? 'bg-primary/20 ring-2 ring-primary ring-inset' : ''}`}
+              onDragEnter={handleToolbarDragEnter}
+              onDragOver={handleToolbarDragOver}
+              onDragLeave={handleToolbarDragLeave}
+              onDrop={handleToolbarDrop}
+            >
               {/* Search */}
               <div className="relative w-auto">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />

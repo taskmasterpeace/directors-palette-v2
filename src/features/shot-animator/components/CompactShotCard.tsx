@@ -52,6 +52,7 @@ const CompactShotCardComponent = ({
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false)
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false)
   const [dropZoneSide, setDropZoneSide] = useState<DropZoneSide>(null)
+  const dropZoneSideRef = useRef<DropZoneSide>(null)
   const cardDragCounterRef = useRef(0)
   const imageAreaRef = useRef<HTMLDivElement>(null)
   const recentDropRef = useRef(false)
@@ -76,16 +77,21 @@ const CompactShotCardComponent = ({
     })
   }, [])
 
+  const updateSide = useCallback((side: DropZoneSide) => {
+    dropZoneSideRef.current = side
+    setDropZoneSide(side)
+  }, [])
+
   const handleImageDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     cardDragCounterRef.current++
     if (cardDragCounterRef.current === 1) {
       const rect = imageAreaRef.current?.getBoundingClientRect()
-      const initialSide = rect ? (e.clientX < rect.left + rect.width / 2 ? 'left' : 'right') : 'left'
-      setDropZoneSide(initialSide)
+      const initialSide: DropZoneSide = rect ? (e.clientX < rect.left + rect.width / 2 ? 'left' : 'right') : 'left'
+      updateSide(initialSide)
     }
-  }, [])
+  }, [updateSide])
 
   const handleImageDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -94,10 +100,10 @@ const CompactShotCardComponent = ({
     const rect = imageAreaRef.current?.getBoundingClientRect()
     if (rect) {
       const midX = rect.left + rect.width / 2
-      const newSide = e.clientX < midX ? 'left' : 'right'
-      setDropZoneSide(prev => prev === newSide ? prev : newSide)
+      const newSide: DropZoneSide = e.clientX < midX ? 'left' : 'right'
+      if (dropZoneSideRef.current !== newSide) updateSide(newSide)
     }
-  }, [])
+  }, [updateSide])
 
   const handleImageDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -105,16 +111,17 @@ const CompactShotCardComponent = ({
     cardDragCounterRef.current--
     if (cardDragCounterRef.current <= 0) {
       cardDragCounterRef.current = 0
-      setDropZoneSide(null)
+      updateSide(null)
     }
-  }, [])
+  }, [updateSide])
 
   const handleImageDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     cardDragCounterRef.current = 0
-    const side = dropZoneSide
-    setDropZoneSide(null)
+    // Read side from ref to avoid stale closure
+    const side = dropZoneSideRef.current
+    updateSide(null)
 
     // Prevent click-through after drop
     recentDropRef.current = true
@@ -128,7 +135,7 @@ const CompactShotCardComponent = ({
     } else if (onDropStartFrame) {
       onDropStartFrame(result.url, result.name)
     }
-  }, [dropZoneSide, supportsLastFrame, onDropStartFrame, onDropLastFrame, readDroppedImage])
+  }, [supportsLastFrame, onDropStartFrame, onDropLastFrame, readDroppedImage, updateSide])
 
   const handleToggleSelect = () => {
     onUpdate({ ...config, includeInBatch: !config.includeInBatch })
