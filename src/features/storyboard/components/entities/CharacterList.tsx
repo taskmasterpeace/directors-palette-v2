@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { Users, ImagePlus, Upload, Link, X, ChevronDown, ChevronUp, CheckCircle, Sparkles, ChevronsUpDown, Images, UserPlus, Library, Loader2, Unlink } from 'lucide-react'
+import { Users, ImagePlus, Upload, Link, X, ChevronDown, ChevronUp, CheckCircle, Sparkles, Images, UserPlus, Library, Loader2, Unlink } from 'lucide-react'
 import { useStoryboardStore } from '../../store'
 import type { StoryboardCharacter, CharacterRole } from '../../types/storyboard.types'
 import { GalleryImagePicker } from './GalleryImagePicker'
@@ -30,7 +30,6 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe,
     const [imageInputMode, setImageInputMode] = useState<'upload' | 'url' | 'gallery'>('upload')
     const [imageUrl, setImageUrl] = useState(character.reference_image_url || '')
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const [isDescriptionOpen, setIsDescriptionOpen] = useState(!character.reference_image_url)
     const [galleryPickerOpen, setGalleryPickerOpen] = useState(false)
     const [categoryDialogOpen, setCategoryDialogOpen] = useState(false)
     const [isSavingToLibrary, setIsSavingToLibrary] = useState(false)
@@ -44,11 +43,6 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe,
             setIsExpanded(true)
         }
     }, [character.has_reference, character.reference_image_url])
-
-    // Collapse description when a reference image is added, expand when removed
-    useEffect(() => {
-        setIsDescriptionOpen(!character.reference_image_url)
-    }, [character.reference_image_url])
 
     const handleToggleReference = () => {
         onUpdate(index, { has_reference: !character.has_reference })
@@ -271,17 +265,12 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe,
                 {/* Expanded Content */}
                 <CollapsibleContent>
                     <div className="px-3 pb-3 border-t bg-muted/20">
-                        <div className="pt-3 space-y-4">
-                            {/* Reference Image Section */}
-                            {character.has_reference && (
-                                <div className="space-y-3">
-                                    <Label className="text-sm font-medium">Reference Image</Label>
-                                    <p className="text-xs text-muted-foreground">
-                                        Add a reference image with the character&apos;s name written on it for best results.
-                                    </p>
+                        <div className="pt-3 space-y-3">
 
+                            {/* Step 1: Reference Image */}
+                            {character.has_reference && (
+                                <div className="space-y-2">
                                     {character.reference_image_url ? (
-                                        /* Show current image */
                                         <div className="relative">
                                             <img
                                                 src={character.reference_image_url}
@@ -299,8 +288,10 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe,
                                             </Button>
                                         </div>
                                     ) : (
-                                        /* Image input options */
-                                        <div className="space-y-3">
+                                        <div className="space-y-2">
+                                            <p className="text-xs text-muted-foreground">
+                                                Upload a photo, sketch, or any image of this character.
+                                            </p>
                                             <div className="flex gap-2">
                                                 <Button
                                                     variant={imageInputMode === 'upload' ? 'default' : 'outline'}
@@ -339,12 +330,12 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe,
                                                     />
                                                     <Button
                                                         variant="outline"
-                                                        className="w-full h-24 border-dashed"
+                                                        className="w-full h-20 border-dashed"
                                                         onClick={() => fileInputRef.current?.click()}
                                                     >
                                                         <div className="text-center">
-                                                            <ImagePlus className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
-                                                            <span className="text-sm">Click to upload image</span>
+                                                            <ImagePlus className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
+                                                            <span className="text-sm">Click to upload</span>
                                                         </div>
                                                     </Button>
                                                 </div>
@@ -364,12 +355,12 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe,
                                                 <>
                                                     <Button
                                                         variant="outline"
-                                                        className="w-full h-24 border-dashed"
+                                                        className="w-full h-20 border-dashed"
                                                         onClick={() => setGalleryPickerOpen(true)}
                                                     >
                                                         <div className="text-center">
-                                                            <Images className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
-                                                            <span className="text-sm">Browse gallery images</span>
+                                                            <Images className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
+                                                            <span className="text-sm">Browse gallery</span>
                                                         </div>
                                                     </Button>
                                                     <GalleryImagePicker
@@ -385,80 +376,61 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe,
                                 </div>
                             )}
 
-                            {/* Description */}
-                            <Collapsible open={isDescriptionOpen} onOpenChange={setIsDescriptionOpen}>
-                                <CollapsibleTrigger asChild>
-                                    <button className="flex items-center gap-2 w-full text-left group">
-                                        <Label className="text-sm font-medium cursor-pointer">
-                                            {character.reference_image_url ? 'Description (optional)' : 'Description'}
-                                        </Label>
-                                        <ChevronsUpDown className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" />
-                                        {!isDescriptionOpen && character.description && (
-                                            <span className="text-xs text-muted-foreground truncate flex-1">{character.description}</span>
-                                        )}
-                                    </button>
-                                </CollapsibleTrigger>
-                                {character.reference_image_url && !isDescriptionOpen && (
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        Optional — add physical details the AI can&apos;t see in the image (e.g., height, voice, personality).
-                                    </p>
-                                )}
-                                <CollapsibleContent>
-                                    <div className="space-y-2 pt-2">
-                                        <Textarea
-                                            placeholder="Physical description for AI generation..."
-                                            value={character.description || ''}
-                                            onChange={(e) => handleDescriptionChange(e.target.value)}
-                                            className="min-h-[60px] text-sm"
-                                        />
-                                        <p className="text-xs text-muted-foreground">
-                                            This description will be included in prompts when this character appears.
-                                        </p>
-                                    </div>
-                                </CollapsibleContent>
-                            </Collapsible>
+                            {/* Step 2: Description - always visible, no nested collapsible */}
+                            <div className="space-y-1.5">
+                                <Label className="text-sm font-medium">
+                                    Description{character.reference_image_url ? ' (optional)' : ''}
+                                </Label>
+                                <Textarea
+                                    placeholder={character.reference_image_url
+                                        ? "Add details the AI can't see — height, voice, personality..."
+                                        : "Describe this character's appearance for AI generation..."
+                                    }
+                                    value={character.description || ''}
+                                    onChange={(e) => handleDescriptionChange(e.target.value)}
+                                    className="min-h-[50px] text-sm"
+                                />
+                            </div>
 
-                            {/* Character Sheet Generator Button */}
+                            {/* Actions */}
                             {(character.reference_image_url || character.description) && (
-                                <div className="pt-2 border-t space-y-2">
+                                <div className="flex flex-wrap gap-2 pt-2 border-t">
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="w-full gap-2"
+                                        className="gap-1.5"
                                         onClick={() => onOpenCharacterSheetRecipe(character.id)}
                                     >
-                                        <Sparkles className="w-4 h-4" />
-                                        Generate Character Sheet
+                                        <Sparkles className="w-3.5 h-3.5" />
+                                        Generate Sheet
                                     </Button>
 
-                                    {/* Save to Library Button - visible when image exists but no tag yet */}
                                     {character.reference_image_url && !referenceTag && (
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="w-full gap-2"
+                                            className="gap-1.5"
                                             onClick={handleSaveToLibrary}
                                             disabled={isSavingToLibrary}
                                         >
                                             {isSavingToLibrary ? (
-                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                             ) : (
-                                                <Library className="w-4 h-4" />
+                                                <Library className="w-3.5 h-3.5" />
                                             )}
-                                            Save to Reference Library
+                                            Save to Library
                                         </Button>
                                     )}
 
-                                    {/* Remove from Library Button - visible when tagged */}
                                     {referenceTag && (
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="w-full gap-2 text-muted-foreground"
+                                            className="gap-1.5 text-muted-foreground"
                                             onClick={handleRemoveFromLibrary}
                                         >
-                                            <Unlink className="w-4 h-4" />
-                                            Remove from Library ({referenceTag})
+                                            <Unlink className="w-3.5 h-3.5" />
+                                            Remove from Library
                                         </Button>
                                     )}
                                 </div>
