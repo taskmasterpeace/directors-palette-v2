@@ -44,7 +44,7 @@ const CompactShotCardComponent = ({
   onUpdate,
   onDelete,
   onManageReferences,
-  onManageLastFrame,
+  onManageLastFrame: _onManageLastFrame,
   onRetryVideo,
   onDropStartFrame,
   onDropLastFrame,
@@ -57,6 +57,7 @@ const CompactShotCardComponent = ({
   const imageAreaRef = useRef<HTMLDivElement>(null)
   const recentDropRef = useRef(false)
   const replaceInputRef = useRef<HTMLInputElement>(null)
+  const lastFrameInputRef = useRef<HTMLInputElement>(null)
 
   /** Handle file picker for replacing the start frame image */
   const handleReplaceImage = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,6 +71,19 @@ const CompactShotCardComponent = ({
     reader.readAsDataURL(file)
     e.target.value = ''
   }, [onDropStartFrame])
+
+  /** Handle file picker for setting the last frame image */
+  const handleLastFrameFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !ALLOWED_IMAGE_TYPES.includes(file.type)) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const url = ev.target?.result as string
+      if (url && onDropLastFrame) onDropLastFrame(url)
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }, [onDropLastFrame])
 
   /** Read an image URL from drag data - supports files (base64) or gallery JSON. */
   const readDroppedImage = useCallback((dt: DataTransfer): Promise<{ url: string; name?: string } | null> => {
@@ -318,12 +332,19 @@ const CompactShotCardComponent = ({
               <ZoomIn className="w-5 h-5 text-white" />
             </button>
           </div>
-          {/* Hidden file input for replacing the start frame */}
+          {/* Hidden file inputs for replacing start frame / setting last frame */}
           <input
             ref={replaceInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
             onChange={handleReplaceImage}
+            className="hidden"
+          />
+          <input
+            ref={lastFrameInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleLastFrameFile}
             className="hidden"
           />
 
@@ -400,7 +421,7 @@ const CompactShotCardComponent = ({
                   src={config.lastFrameImage}
                   alt="Last frame"
                   className="w-full h-full object-cover"
-                  onClick={(e) => { e.stopPropagation(); onManageLastFrame() }}
+                  onClick={(e) => { e.stopPropagation(); lastFrameInputRef.current?.click() }}
                 />
                 {/* Remove button overlay */}
                 <button
@@ -475,13 +496,13 @@ const CompactShotCardComponent = ({
               )}
             </div>
 
-            {/* Last Frame Button - Only show when no last frame is set */}
+            {/* Last Frame Button - click opens file picker */}
             <div className="w-1/2">
               {supportsLastFrame && !config.lastFrameImage && (
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={onManageLastFrame}
+                  onClick={() => lastFrameInputRef.current?.click()}
                   className="min-h-[36px] h-9 sm:h-8 px-2 w-full text-xs bg-secondary/50 hover:bg-secondary active:bg-muted text-primary border border-primary/30 touch-manipulation active:scale-95 transition-transform"
                   aria-label="Add last frame"
                 >
