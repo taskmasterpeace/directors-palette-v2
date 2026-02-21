@@ -18,6 +18,7 @@ import { ANIMATION_MODELS, getVideoModelIcon } from '../config/models.config'
 import { getModelIcon } from '@/features/shot-creator/constants/model-icons'
 import { toast } from '@/hooks/use-toast'
 import type { ReferenceEditorExport } from '@/features/shot-creator/components/reference-editor'
+import { ALLOWED_IMAGE_TYPES, GALLERY_IMAGE_MIME_TYPE } from '../constants/drag-drop.constants'
 
 interface CompactShotCardProps {
   config: ShotAnimationConfig
@@ -34,8 +35,6 @@ interface CompactShotCardProps {
 }
 
 type DropZoneSide = 'left' | 'right' | null
-
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 const CompactShotCardComponent = ({
   config,
@@ -60,7 +59,7 @@ const CompactShotCardComponent = ({
   /** Read an image URL from drag data - supports files (base64) or gallery JSON. */
   const readDroppedImage = useCallback((dt: DataTransfer): Promise<{ url: string; name?: string } | null> => {
     // Gallery image drag
-    const galleryData = dt.getData('application/x-gallery-image')
+    const galleryData = dt.getData(GALLERY_IMAGE_MIME_TYPE)
     if (galleryData) {
       try {
         const parsed = JSON.parse(galleryData)
@@ -82,7 +81,9 @@ const CompactShotCardComponent = ({
     e.stopPropagation()
     cardDragCounterRef.current++
     if (cardDragCounterRef.current === 1) {
-      setDropZoneSide('left') // default until mousemove refines
+      const rect = imageAreaRef.current?.getBoundingClientRect()
+      const initialSide = rect ? (e.clientX < rect.left + rect.width / 2 ? 'left' : 'right') : 'left'
+      setDropZoneSide(initialSide)
     }
   }, [])
 
@@ -93,7 +94,8 @@ const CompactShotCardComponent = ({
     const rect = imageAreaRef.current?.getBoundingClientRect()
     if (rect) {
       const midX = rect.left + rect.width / 2
-      setDropZoneSide(e.clientX < midX ? 'left' : 'right')
+      const newSide = e.clientX < midX ? 'left' : 'right'
+      setDropZoneSide(prev => prev === newSide ? prev : newSide)
     }
   }, [])
 
@@ -496,8 +498,6 @@ export const CompactShotCard = memo(CompactShotCardComponent, (prevProps, nextPr
     prevProps.config.lastFrameImage === nextProps.config.lastFrameImage &&
     prevProps.maxReferenceImages === nextProps.maxReferenceImages &&
     prevProps.supportsLastFrame === nextProps.supportsLastFrame &&
-    prevProps.selectedModel === nextProps.selectedModel &&
-    prevProps.onDropStartFrame === nextProps.onDropStartFrame &&
-    prevProps.onDropLastFrame === nextProps.onDropLastFrame
+    prevProps.selectedModel === nextProps.selectedModel
   )
 })

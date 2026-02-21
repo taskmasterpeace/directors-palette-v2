@@ -54,8 +54,7 @@ import { toast } from '@/hooks/use-toast'
 import VideoPreviewsModal from "./VideoPreviewsModal"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useIsMobile } from '@/hooks/use-mobile'
-
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+import { ALLOWED_IMAGE_TYPES, GALLERY_IMAGE_MIME_TYPE, GalleryImageDragPayload } from '../constants/drag-drop.constants'
 
 /** Convert an array of image Files into ShotAnimationConfig objects (base64). */
 function filesToShotConfigs(files: File[]): Promise<ShotAnimationConfig[]> {
@@ -440,10 +439,10 @@ export function ShotAnimatorView() {
       setIsDragReject(false)
 
       // Check for gallery image drag data first
-      const galleryData = e.dataTransfer?.getData('application/x-gallery-image')
+      const galleryData = e.dataTransfer?.getData(GALLERY_IMAGE_MIME_TYPE)
       if (galleryData) {
         try {
-          const parsed = JSON.parse(galleryData) as { url: string; name: string; originalPrompt?: string; imageModel?: string }
+          const parsed = JSON.parse(galleryData) as GalleryImageDragPayload
           const newConfig: ShotAnimationConfig = {
             id: `shot-${Date.now()}-${Math.random()}`,
             imageUrl: parsed.url,
@@ -477,11 +476,22 @@ export function ShotAnimatorView() {
     document.addEventListener('dragleave', onDragLeave)
     document.addEventListener('drop', onDrop)
 
+    // Safety: reset drag state when cursor leaves the browser window
+    const onWindowDragLeave = (e: DragEvent) => {
+      if (e.clientX <= 0 || e.clientY <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
+        dragCounterRef.current = 0
+        setIsDragOver(false)
+        setIsDragReject(false)
+      }
+    }
+    document.addEventListener('dragleave', onWindowDragLeave)
+
     return () => {
       document.removeEventListener('dragenter', onDragEnter)
       document.removeEventListener('dragover', onDragOver)
       document.removeEventListener('dragleave', onDragLeave)
       document.removeEventListener('drop', onDrop)
+      document.removeEventListener('dragleave', onWindowDragLeave)
     }
   }, [])
 

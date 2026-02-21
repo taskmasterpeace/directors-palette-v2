@@ -17,6 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Pagination } from "@/features/shot-creator"
+import { GALLERY_IMAGE_MIME_TYPE, GalleryImageDragPayload } from '../constants/drag-drop.constants'
 
 interface GalleryImage {
   id: string
@@ -47,7 +48,18 @@ export function GallerySelectModal({
   onPageChange,
 }: GallerySelectModalProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid') 
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+
+  const handleImageDragStart = (e: React.DragEvent, image: GalleryImage) => {
+    const payload: GalleryImageDragPayload = {
+      url: image.url,
+      name: image.name,
+      originalPrompt: image.originalPrompt,
+      imageModel: image.imageModel,
+    }
+    e.dataTransfer.setData(GALLERY_IMAGE_MIME_TYPE, JSON.stringify(payload))
+    e.dataTransfer.effectAllowed = 'copy'
+  }
 
   const handleToggleImage = (id: string) => {
     setSelectedIds(prev => {
@@ -159,15 +171,7 @@ export function GallerySelectModal({
                     key={image.id}
                     onClick={() => handleToggleImage(image.id)}
                     draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData('application/x-gallery-image', JSON.stringify({
-                        url: image.url,
-                        name: image.name,
-                        originalPrompt: image.originalPrompt,
-                        imageModel: image.imageModel,
-                      }))
-                      e.dataTransfer.effectAllowed = 'copy'
-                    }}
+                    onDragStart={(e) => handleImageDragStart(e, image)}
                     className={`relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all touch-manipulation ${isSelected
                       ? 'border-primary ring-2 ring-ring/30'
                       : 'border-border hover:border-border'
@@ -204,15 +208,7 @@ export function GallerySelectModal({
                     key={image.id}
                     onClick={() => handleToggleImage(image.id)}
                     draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData('application/x-gallery-image', JSON.stringify({
-                        url: image.url,
-                        name: image.name,
-                        originalPrompt: image.originalPrompt,
-                        imageModel: image.imageModel,
-                      }))
-                      e.dataTransfer.effectAllowed = 'copy'
-                    }}
+                    onDragStart={(e) => handleImageDragStart(e, image)}
                     className={`flex items-center gap-3 p-3 sm:p-2 rounded-md border-2 cursor-pointer transition-all touch-manipulation ${isSelected
                       ? 'border-primary bg-card/80'
                       : 'border-border hover:border-border'
