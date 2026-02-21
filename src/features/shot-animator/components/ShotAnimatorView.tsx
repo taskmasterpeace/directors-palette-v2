@@ -438,6 +438,10 @@ export function ShotAnimatorView() {
       setIsDragOver(false)
       setIsDragReject(false)
 
+      // If drop landed on an existing card's image area, let the card handle it
+      const target = e.target as HTMLElement
+      if (target.closest?.('[data-shot-card-image]')) return
+
       // Check for gallery image drag data first
       const galleryData = e.dataTransfer?.getData(GALLERY_IMAGE_MIME_TYPE)
       if (galleryData) {
@@ -914,7 +918,7 @@ export function ShotAnimatorView() {
           {isDragOver && (
             <div
               data-testid="shot-animator-drop-overlay"
-              className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 border-2 border-dashed border-primary rounded-lg"
+              className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 border-2 border-dashed border-primary rounded-lg pointer-events-none"
             >
               {isDragReject ? (
                 <div data-testid="drop-reject" className="text-center text-destructive">
@@ -922,7 +926,7 @@ export function ShotAnimatorView() {
                 </div>
               ) : (
                 <div className="text-center text-primary">
-                  <p>Drop images here</p>
+                  <p>Drop to add new shot</p>
                 </div>
               )}
             </div>

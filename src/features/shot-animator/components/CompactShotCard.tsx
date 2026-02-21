@@ -221,6 +221,7 @@ const CompactShotCardComponent = ({
         {/* Image with Checkbox Overlay - Constrained height on mobile */}
         <div
           ref={imageAreaRef}
+          data-shot-card-image
           className="relative aspect-square max-h-[180px] sm:max-h-none bg-background group overflow-hidden"
           onDragEnter={handleImageDragEnter}
           onDragOver={handleImageDragOver}
