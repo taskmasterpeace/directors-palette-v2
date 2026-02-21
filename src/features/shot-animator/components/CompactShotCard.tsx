@@ -2,7 +2,7 @@
 
 import React, { memo, useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
-import { Image as ImageIcon, Film, Trash2, Wand2, ZoomIn } from 'lucide-react'
+import { Image as ImageIcon, Film, Trash2, Wand2, ZoomIn, Replace } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -56,6 +56,20 @@ const CompactShotCardComponent = ({
   const cardDragCounterRef = useRef(0)
   const imageAreaRef = useRef<HTMLDivElement>(null)
   const recentDropRef = useRef(false)
+  const replaceInputRef = useRef<HTMLInputElement>(null)
+
+  /** Handle file picker for replacing the start frame image */
+  const handleReplaceImage = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !ALLOWED_IMAGE_TYPES.includes(file.type)) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const url = ev.target?.result as string
+      if (url && onDropStartFrame) onDropStartFrame(url, file.name)
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }, [onDropStartFrame])
 
   /** Read an image URL from drag data - supports files (base64) or gallery JSON. */
   const readDroppedImage = useCallback((dt: DataTransfer): Promise<{ url: string; name?: string } | null> => {
@@ -279,16 +293,39 @@ const CompactShotCardComponent = ({
             </>
           )}
 
-          {/* Zoom overlay on hover — pointer-events-none during drag so drops reach imageAreaRef */}
+          {/* Hover overlay with actions — pointer-events-none during drag so drops reach imageAreaRef */}
           <div
-            className={`absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors cursor-pointer flex items-center justify-center z-[5] ${dropZoneSide ? 'pointer-events-none' : ''}`}
-            onClick={() => {
-              if (recentDropRef.current) return
-              setIsFullscreenOpen(true)
-            }}
+            className={`absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-3 z-[5] ${dropZoneSide ? 'pointer-events-none' : ''}`}
           >
-            <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-80 transition-opacity drop-shadow-lg" />
+            {/* Replace image button */}
+            <button
+              className="w-10 h-10 rounded-full bg-black/60 hover:bg-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+              onClick={(e) => { e.stopPropagation(); replaceInputRef.current?.click() }}
+              title="Replace image"
+            >
+              <Replace className="w-5 h-5 text-white" />
+            </button>
+            {/* Zoom / fullscreen button */}
+            <button
+              className="w-10 h-10 rounded-full bg-black/60 hover:bg-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation()
+                if (recentDropRef.current) return
+                setIsFullscreenOpen(true)
+              }}
+              title="View fullscreen"
+            >
+              <ZoomIn className="w-5 h-5 text-white" />
+            </button>
           </div>
+          {/* Hidden file input for replacing the start frame */}
+          <input
+            ref={replaceInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleReplaceImage}
+            className="hidden"
+          />
 
           {/* Larger checkbox touch target for mobile */}
           <div className="absolute top-2 left-2 z-10">

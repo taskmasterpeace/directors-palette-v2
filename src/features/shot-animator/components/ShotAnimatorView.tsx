@@ -142,6 +142,28 @@ export function ShotAnimatorView() {
   // Gallery panel state
   const [galleryCollapsed, setGalleryCollapsed] = useState(false)
 
+  // Clipboard paste — Ctrl+V anywhere adds images as new shots
+  useEffect(() => {
+    const handlePaste = async (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items
+      if (!items) return
+      const imageFiles: File[] = []
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile()
+          if (file) imageFiles.push(file)
+        }
+      }
+      if (imageFiles.length === 0) return
+      e.preventDefault()
+      const newConfigs = await filesToShotConfigs(imageFiles)
+      addShotConfigs(newConfigs)
+      toast({ title: 'Image Pasted', description: `Added ${newConfigs.length} image${newConfigs.length > 1 ? 's' : ''} from clipboard.` })
+    }
+    window.addEventListener('paste', handlePaste)
+    return () => window.removeEventListener('paste', handlePaste)
+  }, [addShotConfigs])
+
   // Filters
   const [searchQuery, setSearchQuery] = useState('')
   const [showOnlySelected, setShowOnlySelected] = useState(false)
@@ -943,10 +965,22 @@ export function ShotAnimatorView() {
           onDrop={handleZoneDrop}
         >
           {filteredShots.length === 0 ? (
-            <div className={`flex flex-col items-center justify-center h-96 text-muted-foreground border-2 border-dashed rounded-lg m-4 transition-colors ${isDragOver ? 'border-primary bg-primary/10' : 'border-transparent'}`}>
-              <ImageIcon className="w-16 h-16 mb-4" />
-              <p>{isDragOver ? 'Drop images to add shots' : 'No images to display'}</p>
-              <p className="text-sm mt-2">{isDragOver ? '' : 'Upload images or add from gallery to get started'}</p>
+            <div
+              className={`flex flex-col items-center justify-center h-96 text-muted-foreground border-2 border-dashed rounded-lg m-4 transition-colors cursor-pointer hover:border-border hover:text-foreground ${isDragOver ? 'border-primary bg-primary/10' : 'border-border/50'}`}
+              onClick={() => document.getElementById('file-upload-toolbar')?.click()}
+            >
+              <Upload className="w-16 h-16 mb-4 opacity-50" />
+              <p className="font-medium">{isDragOver ? 'Drop images to add shots' : 'Click to upload images'}</p>
+              <p className="text-sm mt-2">or press Ctrl+V to paste from clipboard</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4 border-border"
+                onClick={(e) => { e.stopPropagation(); setIsGalleryModalOpen(true) }}
+              >
+                <ImageIcon className="w-4 h-4 mr-1" />
+                Browse Gallery
+              </Button>
             </div>
           ) : (
             <div className="p-2 sm:p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 pb-24 content-stretch">
@@ -966,17 +1000,14 @@ export function ShotAnimatorView() {
                   onDropLastFrame={(imageUrl) => updateShotConfig(config.id, { lastFrameImage: imageUrl })}
                 />
               ))}
-              {/* Drop zone placeholder card - explicit drag handlers to guarantee drop works */}
+              {/* Add new shot card — click opens file picker */}
               <div
-                className={`flex flex-col items-center justify-center min-h-[200px] border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
-                  isDragOver ? 'border-primary bg-primary/10 text-primary' : 'border-border/50 text-muted-foreground hover:border-border hover:text-foreground'
-                }`}
-                onClick={() => setIsGalleryModalOpen(true)}
-                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }}
-                onDrop={handleZoneDrop}
+                className="flex flex-col items-center justify-center min-h-[200px] border-2 border-dashed rounded-lg transition-colors cursor-pointer border-border/50 text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5"
+                onClick={() => document.getElementById('file-upload-toolbar')?.click()}
               >
-                <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
-                <p className="text-xs font-medium">{isDragOver ? 'Drop to add shot' : 'Drop image or click to add'}</p>
+                <Upload className="w-8 h-8 mb-2 opacity-50" />
+                <p className="text-xs font-medium">Click to add images</p>
+                <p className="text-[10px] mt-1 opacity-60">or Ctrl+V to paste</p>
               </div>
             </div>
           )}

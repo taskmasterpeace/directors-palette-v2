@@ -70,12 +70,43 @@ export const useShotAnimatorStore = create<ShotAnimatorStore>()(
       name: 'shot-animator-store',
       version: 1,
 
-      // Only persist serializable state (the shotConfigs array).
-      // Actions are recreated by Zustand; any future transient fields
-      // (loading flags, subscriptions, etc.) should be excluded here.
+      // Use a custom storage that catches quota errors silently
+      storage: {
+        getItem: (name) => {
+          try {
+            const value = localStorage.getItem(name)
+            return value ? JSON.parse(value) : null
+          } catch {
+            return null
+          }
+        },
+        setItem: (name, value) => {
+          try {
+            localStorage.setItem(name, JSON.stringify(value))
+          } catch {
+            // localStorage quota exceeded — silently ignore.
+            // In-memory state still works, just won't survive refresh.
+            console.warn('[shot-animator-store] localStorage quota exceeded, state not persisted')
+          }
+        },
+        removeItem: (name) => {
+          try {
+            localStorage.removeItem(name)
+          } catch { /* ignore */ }
+        },
+      },
+
+      // Only persist serializable state. Strip base64 data: URLs to avoid
+      // blowing the ~5MB localStorage quota — only https: gallery URLs survive.
       partialize: (state) => ({
-        shotConfigs: state.shotConfigs,
-      }),
+        shotConfigs: state.shotConfigs.map(config => ({
+          ...config,
+          // Only persist remote URLs, not base64 data (too large for localStorage)
+          imageUrl: config.imageUrl.startsWith('data:') ? '' : config.imageUrl,
+          lastFrameImage: config.lastFrameImage?.startsWith('data:') ? undefined : config.lastFrameImage,
+          referenceImages: (config.referenceImages || []).filter(url => !url.startsWith('data:')),
+        })).filter(config => config.imageUrl !== ''), // Drop configs with no persistable image
+      } as unknown as ShotAnimatorStore),
 
       // Revive Date objects and strip any legacy blob: URLs that may
       // still be in storage from before the base64 conversion was added.
