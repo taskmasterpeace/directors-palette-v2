@@ -158,6 +158,16 @@ export function GallerySelectModal({
                   <div
                     key={image.id}
                     onClick={() => handleToggleImage(image.id)}
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('application/x-gallery-image', JSON.stringify({
+                        url: image.url,
+                        name: image.name,
+                        originalPrompt: image.originalPrompt,
+                        imageModel: image.imageModel,
+                      }))
+                      e.dataTransfer.effectAllowed = 'copy'
+                    }}
                     className={`relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all touch-manipulation ${isSelected
                       ? 'border-primary ring-2 ring-ring/30'
                       : 'border-border hover:border-border'
@@ -193,6 +203,16 @@ export function GallerySelectModal({
                   <div
                     key={image.id}
                     onClick={() => handleToggleImage(image.id)}
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('application/x-gallery-image', JSON.stringify({
+                        url: image.url,
+                        name: image.name,
+                        originalPrompt: image.originalPrompt,
+                        imageModel: image.imageModel,
+                      }))
+                      e.dataTransfer.effectAllowed = 'copy'
+                    }}
                     className={`flex items-center gap-3 p-3 sm:p-2 rounded-md border-2 cursor-pointer transition-all touch-manipulation ${isSelected
                       ? 'border-primary bg-card/80'
                       : 'border-border hover:border-border'

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { memo, useState } from 'react'
+import React, { memo, useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import { Image as ImageIcon, Film, Trash2, Wand2, ZoomIn } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -29,7 +29,13 @@ interface CompactShotCardProps {
   onManageReferences: () => void
   onManageLastFrame: () => void
   onRetryVideo?: (galleryId: string) => void
+  onDropStartFrame?: (imageUrl: string, imageName?: string) => void
+  onDropLastFrame?: (imageUrl: string) => void
 }
+
+type DropZoneSide = 'left' | 'right' | null
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 const CompactShotCardComponent = ({
   config,
@@ -40,10 +46,87 @@ const CompactShotCardComponent = ({
   onDelete,
   onManageReferences,
   onManageLastFrame,
-  onRetryVideo
+  onRetryVideo,
+  onDropStartFrame,
+  onDropLastFrame,
 }: CompactShotCardProps) => {
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false)
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false)
+  const [dropZoneSide, setDropZoneSide] = useState<DropZoneSide>(null)
+  const cardDragCounterRef = useRef(0)
+  const imageAreaRef = useRef<HTMLDivElement>(null)
+  const recentDropRef = useRef(false)
+
+  /** Read an image URL from drag data - supports files (base64) or gallery JSON. */
+  const readDroppedImage = useCallback((dt: DataTransfer): Promise<{ url: string; name?: string } | null> => {
+    // Gallery image drag
+    const galleryData = dt.getData('application/x-gallery-image')
+    if (galleryData) {
+      try {
+        const parsed = JSON.parse(galleryData)
+        return Promise.resolve({ url: parsed.url, name: parsed.name })
+      } catch { /* ignore */ }
+    }
+    // File drag
+    const file = Array.from(dt.files).find(f => ALLOWED_IMAGE_TYPES.includes(f.type))
+    if (!file) return Promise.resolve(null)
+    return new Promise(resolve => {
+      const reader = new FileReader()
+      reader.onload = (ev) => resolve({ url: ev.target?.result as string, name: file.name })
+      reader.readAsDataURL(file)
+    })
+  }, [])
+
+  const handleImageDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    cardDragCounterRef.current++
+    if (cardDragCounterRef.current === 1) {
+      setDropZoneSide('left') // default until mousemove refines
+    }
+  }, [])
+
+  const handleImageDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = 'copy'
+    const rect = imageAreaRef.current?.getBoundingClientRect()
+    if (rect) {
+      const midX = rect.left + rect.width / 2
+      setDropZoneSide(e.clientX < midX ? 'left' : 'right')
+    }
+  }, [])
+
+  const handleImageDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    cardDragCounterRef.current--
+    if (cardDragCounterRef.current <= 0) {
+      cardDragCounterRef.current = 0
+      setDropZoneSide(null)
+    }
+  }, [])
+
+  const handleImageDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    cardDragCounterRef.current = 0
+    const side = dropZoneSide
+    setDropZoneSide(null)
+
+    // Prevent click-through after drop
+    recentDropRef.current = true
+    setTimeout(() => { recentDropRef.current = false }, 300)
+
+    const result = await readDroppedImage(e.dataTransfer)
+    if (!result) return
+
+    if (side === 'right' && supportsLastFrame && onDropLastFrame) {
+      onDropLastFrame(result.url)
+    } else if (onDropStartFrame) {
+      onDropStartFrame(result.url, result.name)
+    }
+  }, [dropZoneSide, supportsLastFrame, onDropStartFrame, onDropLastFrame, readDroppedImage])
 
   const handleToggleSelect = () => {
     onUpdate({ ...config, includeInBatch: !config.includeInBatch })
@@ -134,7 +217,14 @@ const CompactShotCardComponent = ({
           }`}
       >
         {/* Image with Checkbox Overlay - Constrained height on mobile */}
-        <div className="relative aspect-square max-h-[180px] sm:max-h-none bg-background group overflow-hidden">
+        <div
+          ref={imageAreaRef}
+          className="relative aspect-square max-h-[180px] sm:max-h-none bg-background group overflow-hidden"
+          onDragEnter={handleImageDragEnter}
+          onDragOver={handleImageDragOver}
+          onDragLeave={handleImageDragLeave}
+          onDrop={handleImageDrop}
+        >
           <Image
             src={config.imageUrl}
             alt={config.imageName}
@@ -147,10 +237,43 @@ const CompactShotCardComponent = ({
             <div className="absolute inset-0 bg-primary/10" />
           )}
 
+          {/* Per-card drop zone overlays */}
+          {dropZoneSide && (
+            <>
+              {/* Left half - Start Frame */}
+              <div className={`absolute inset-y-0 left-0 w-1/2 z-20 flex items-center justify-center transition-colors ${
+                dropZoneSide === 'left' ? 'bg-blue-500/30 border-r-2 border-blue-400' : ''
+              }`}>
+                {dropZoneSide === 'left' && (
+                  <span className="text-xs font-bold text-white bg-blue-600/80 px-2 py-1 rounded shadow-lg">Start Frame</span>
+                )}
+              </div>
+              {/* Right half - End Frame (or Start if not supported) */}
+              <div className={`absolute inset-y-0 right-0 w-1/2 z-20 flex items-center justify-center transition-colors ${
+                dropZoneSide === 'right'
+                  ? supportsLastFrame
+                    ? 'bg-amber-500/30 border-l-2 border-amber-400'
+                    : 'bg-blue-500/30 border-l-2 border-blue-400'
+                  : ''
+              }`}>
+                {dropZoneSide === 'right' && (
+                  <span className={`text-xs font-bold text-white px-2 py-1 rounded shadow-lg ${
+                    supportsLastFrame ? 'bg-amber-600/80' : 'bg-blue-600/80'
+                  }`}>
+                    {supportsLastFrame ? 'End Frame' : 'Start Frame'}
+                  </span>
+                )}
+              </div>
+            </>
+          )}
+
           {/* Zoom overlay on hover */}
           <div
             className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors cursor-pointer flex items-center justify-center z-[5]"
-            onClick={() => setIsFullscreenOpen(true)}
+            onClick={() => {
+              if (recentDropRef.current) return
+              setIsFullscreenOpen(true)
+            }}
           >
             <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-80 transition-opacity drop-shadow-lg" />
           </div>
@@ -373,6 +496,8 @@ export const CompactShotCard = memo(CompactShotCardComponent, (prevProps, nextPr
     prevProps.config.lastFrameImage === nextProps.config.lastFrameImage &&
     prevProps.maxReferenceImages === nextProps.maxReferenceImages &&
     prevProps.supportsLastFrame === nextProps.supportsLastFrame &&
-    prevProps.selectedModel === nextProps.selectedModel
+    prevProps.selectedModel === nextProps.selectedModel &&
+    prevProps.onDropStartFrame === nextProps.onDropStartFrame &&
+    prevProps.onDropLastFrame === nextProps.onDropLastFrame
   )
 })

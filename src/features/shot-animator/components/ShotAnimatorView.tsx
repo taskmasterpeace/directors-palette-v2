@@ -127,6 +127,7 @@ export function ShotAnimatorView() {
   // Drag-and-drop state
   const [isDragOver, setIsDragOver] = useState(false)
   const [isDragReject, setIsDragReject] = useState(false)
+  const dragCounterRef = useRef(0)
 
   // Gallery panel state
   const [galleryCollapsed, setGalleryCollapsed] = useState(false)
@@ -407,27 +408,57 @@ export function ShotAnimatorView() {
     const onDragEnter = (e: DragEvent) => {
       if (!isRelevantTarget(e.target)) return
       e.preventDefault()
-      setIsDragOver(true)
-      setIsDragReject(hasNonImageFile(e.dataTransfer))
+      dragCounterRef.current++
+      if (dragCounterRef.current === 1) {
+        setIsDragOver(true)
+        setIsDragReject(hasNonImageFile(e.dataTransfer))
+      }
     }
 
     const onDragOver = (e: DragEvent) => {
       if (!isRelevantTarget(e.target)) return
       e.preventDefault()
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
     }
 
     const onDragLeave = (e: DragEvent) => {
       if (!isRelevantTarget(e.target)) return
       e.preventDefault()
-      setIsDragOver(false)
-      setIsDragReject(false)
+      dragCounterRef.current--
+      if (dragCounterRef.current <= 0) {
+        dragCounterRef.current = 0
+        setIsDragOver(false)
+        setIsDragReject(false)
+      }
     }
 
     const onDrop = async (e: DragEvent) => {
       if (!isRelevantTarget(e.target)) return
       e.preventDefault()
+      dragCounterRef.current = 0
       setIsDragOver(false)
       setIsDragReject(false)
+
+      // Check for gallery image drag data first
+      const galleryData = e.dataTransfer?.getData('application/x-gallery-image')
+      if (galleryData) {
+        try {
+          const parsed = JSON.parse(galleryData) as { url: string; name: string; originalPrompt?: string; imageModel?: string }
+          const newConfig: ShotAnimationConfig = {
+            id: `shot-${Date.now()}-${Math.random()}`,
+            imageUrl: parsed.url,
+            imageName: parsed.name,
+            imageModel: parsed.imageModel,
+            prompt: '',
+            originalPrompt: parsed.originalPrompt,
+            referenceImages: [],
+            includeInBatch: true,
+            generatedVideos: [],
+          }
+          addShotConfigsRef.current([newConfig])
+        } catch { /* ignore malformed data */ }
+        return
+      }
 
       const files = e.dataTransfer?.files
       if (!files || files.length === 0) return
@@ -907,6 +938,8 @@ export function ShotAnimatorView() {
                     onManageReferences={() => setRefEditState({ isOpen: true, configId: config.id })}
                     onManageLastFrame={() => setLastFrameEditState({ isOpen: true, configId: config.id })}
                     onRetryVideo={(galleryId) => handleRetryVideo(config.id, galleryId)}
+                    onDropStartFrame={(imageUrl, imageName) => updateShotConfig(config.id, { imageUrl, imageName: imageName || config.imageName })}
+                    onDropLastFrame={(imageUrl) => updateShotConfig(config.id, { lastFrameImage: imageUrl })}
                   />
                 ))}
               </div>
