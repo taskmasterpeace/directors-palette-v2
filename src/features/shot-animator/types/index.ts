@@ -45,6 +45,7 @@ export interface ModelSettings {
   fps: number // Fixed at 24
   cameraFixed: boolean
   seed?: number
+  generateAudio?: boolean // Generate audio synced to video (seedance-1.5-pro)
 }
 
 // Settings per model
@@ -84,6 +85,7 @@ export interface ModelConfig {
   supportedAspectRatios: ('16:9' | '4:3' | '1:1' | '3:4' | '9:16' | '21:9' | '9:21')[]
   pricingType: 'per-video' | 'per-second'
   promptStyle: 'specific' | 'reasoning'
+  supportsAudio?: boolean // Model can generate synchronized audio
   restrictions?: string[]
 }
 

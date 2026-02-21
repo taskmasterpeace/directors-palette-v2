@@ -273,6 +273,27 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
         </div>
       </div>
 
+      {/* Audio Generation (models that support it) */}
+      {modelConfig.supportsAudio && (
+        <div className="space-y-3">
+          <Label className="text-white">Audio</Label>
+          <div className="flex items-center space-x-2 touch-manipulation min-h-[44px] sm:min-h-0">
+            <Checkbox
+              id={`${model}-generate-audio`}
+              checked={settings.generateAudio ?? false}
+              onCheckedChange={(checked) => onUpdate({ generateAudio: checked as boolean })}
+              className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0"
+            />
+            <Label
+              htmlFor={`${model}-generate-audio`}
+              className="text-foreground cursor-pointer"
+            >
+              Generate audio synced to video
+            </Label>
+          </div>
+        </div>
+      )}
+
       {/* Seed */}
       <div className="space-y-3">
         <Label className="text-white">Advanced</Label>

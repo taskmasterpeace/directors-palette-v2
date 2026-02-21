@@ -76,11 +76,12 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
   'seedance-1.5-pro': {
     id: 'seedance-1.5-pro',
     displayName: 'Seedance 1.5 Pro',
-    description: 'High quality with last frame control. Requires start frame for last frame generation.',
+    description: 'Joint audio-video generation with last frame control. Image is optional (supports text-to-video).',
     maxReferenceImages: 0,
     supportsLastFrame: true,
+    supportsAudio: true,
     defaultResolution: '480p',
-    maxDuration: 10,
+    maxDuration: 12,
     supportedResolutions: ['480p', '720p'],
     supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
@@ -156,11 +157,12 @@ export const DEFAULT_MODEL_SETTINGS: Record<AnimationModel, ModelSettings> = {
     cameraFixed: false
   },
   'seedance-1.5-pro': {
-    duration: 5,
+    duration: 12,
     resolution: '480p',
     aspectRatio: '16:9',
     fps: 24,
-    cameraFixed: false
+    cameraFixed: false,
+    generateAudio: true
   },
   'kling-2.5-turbo-pro': {
     duration: 5,

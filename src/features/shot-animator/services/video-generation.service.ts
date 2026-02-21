@@ -67,11 +67,12 @@ export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
   'seedance-1.5-pro': {
     id: 'seedance-1.5-pro',
     displayName: 'Seedance 1.5 Pro',
-    description: 'Pro - High quality with last frame control',
+    description: 'Pro - Joint audio-video generation with last frame control',
     maxReferenceImages: 0,
     supportsLastFrame: true,
+    supportsAudio: true,
     defaultResolution: '480p',
-    maxDuration: 10,
+    maxDuration: 12,
     supportedResolutions: ['480p', '720p'],
     supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
@@ -110,7 +111,7 @@ export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
 export interface VideoGenerationInput {
   model: AnimationModel
   prompt: string
-  image: string // Base image URL for image-to-video
+  image?: string // Base image URL (optional for seedance-1.5-pro text-to-video)
   modelSettings: ModelSettings
   referenceImages?: string[] // Only for seedance-lite (1-4 images)
   lastFrameImage?: string
@@ -118,13 +119,14 @@ export interface VideoGenerationInput {
 
 export interface ReplicateVideoInput {
   prompt: string
-  image: string
+  image?: string
   duration: number
-  resolution: string
+  resolution?: string
   aspect_ratio: string
   fps: number
   camera_fixed: boolean
   seed?: number
+  generate_audio?: boolean
   reference_images?: string[]
   last_frame_image?: string
 }
@@ -141,7 +143,8 @@ export class VideoGenerationService {
       errors.push('Prompt is required')
     }
 
-    if (!input.image) {
+    // Image is required for all models except seedance-1.5-pro (supports text-to-video)
+    if (!input.image && input.model !== 'seedance-1.5-pro') {
       errors.push('Base image is required for image-to-video generation')
     }
 
@@ -186,6 +189,11 @@ export class VideoGenerationService {
       errors.push(...this.validateSeedanceLite(input))
     } else if (input.model === 'seedance-pro') {
       errors.push(...this.validateSeedancePro(input))
+    } else if (input.model === 'seedance-1.5-pro') {
+      // Last frame only works when start frame image is also provided
+      if (input.lastFrameImage && !input.image) {
+        errors.push('Last frame image requires a start frame image for Seedance 1.5 Pro')
+      }
     }
 
     return {
@@ -245,17 +253,30 @@ export class VideoGenerationService {
   static buildReplicateInput(input: VideoGenerationInput): ReplicateVideoInput {
     const replicateInput: ReplicateVideoInput = {
       prompt: input.prompt,
-      image: input.image,
       duration: input.modelSettings.duration,
-      resolution: input.modelSettings.resolution,
       aspect_ratio: input.modelSettings.aspectRatio,
       fps: input.modelSettings.fps,
       camera_fixed: input.modelSettings.cameraFixed,
     }
 
+    // Add image (optional for seedance-1.5-pro which supports text-to-video)
+    if (input.image) {
+      replicateInput.image = input.image
+    }
+
+    // Add resolution (seedance-1.5-pro doesn't accept resolution param)
+    if (input.model !== 'seedance-1.5-pro') {
+      replicateInput.resolution = input.modelSettings.resolution
+    }
+
     // Add optional seed
     if (input.modelSettings.seed !== undefined && input.modelSettings.seed !== null) {
       replicateInput.seed = input.modelSettings.seed
+    }
+
+    // Add generate_audio for models that support it
+    if (input.modelSettings.generateAudio) {
+      replicateInput.generate_audio = true
     }
 
     // Add reference images (only for seedance-lite)
