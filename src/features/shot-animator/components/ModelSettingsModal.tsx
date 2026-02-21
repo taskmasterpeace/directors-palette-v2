@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input'
 import { AnimationModel, AnimatorSettings, ModelSettings } from '../types'
 import {
   ANIMATION_MODELS,
+  DEFAULT_MODEL_SETTINGS,
   DURATION_CONSTRAINTS,
   ASPECT_RATIOS,
   ACTIVE_VIDEO_MODELS,
@@ -105,12 +106,12 @@ export function ModelSettingsModal({ settings, onSave }: ModelSettingsModalProps
           </ScrollArea>
 
           {/* Model Settings Panels */}
-          <div className="max-h-[60vh] overflow-y-auto mt-4 px-2 sm:px-0">
+          <div className="overflow-y-auto mt-4 px-2 sm:px-0" style={{ maxHeight: 'calc(100vh - 16rem)' }}>
             {ACTIVE_VIDEO_MODELS.map((modelId) => (
               <TabsContent key={modelId} value={modelId} className="space-y-6 mt-4">
                 <ModelSettingsPanel
                   model={modelId}
-                  settings={localSettings[modelId]}
+                  settings={localSettings[modelId] ?? DEFAULT_MODEL_SETTINGS[modelId]}
                   onUpdate={(updates) => updateModelSettings(modelId, updates)}
                 />
               </TabsContent>
@@ -154,7 +155,7 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
   const isFixedDuration = modelConfig?.pricingType === 'per-video'
 
   return (
-    <div className="space-y-6 p-4 sm:p-4 overflow-y-auto bg-card/50 rounded-lg border border-border">
+    <div className="space-y-6 p-4 sm:p-4 bg-card/50 rounded-lg border border-border">
       {/* Pricing Info Banner */}
       <div className="flex items-center justify-between bg-primary/10 border border-primary/30 rounded p-3">
         <div className="flex items-center gap-2">

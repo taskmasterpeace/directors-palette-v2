@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useEffect, useRef } from 'react'
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { Upload, ImageIcon, Search, Play, VideoIcon, PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -113,8 +113,19 @@ export function ShotAnimatorView() {
     updateShotAnimatorSettings({ selectedModel: model })
   }
 
-  // Get model settings from settings store (fallback to defaults)
-  const modelSettings = shotAnimator.modelSettings || DEFAULT_MODEL_SETTINGS
+  // Get model settings from settings store, merging with defaults per-model
+  // so new models or new fields added after a user's settings were saved still work
+  const modelSettings = useMemo(() => {
+    const saved = shotAnimator.modelSettings
+    if (!saved) return DEFAULT_MODEL_SETTINGS
+    const merged = { ...DEFAULT_MODEL_SETTINGS } as AnimatorSettings
+    for (const key of Object.keys(merged) as AnimationModel[]) {
+      if (saved[key]) {
+        merged[key] = { ...merged[key], ...saved[key] }
+      }
+    }
+    return merged
+  }, [shotAnimator.modelSettings])
 
   // Modals
   const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false)
@@ -383,121 +394,79 @@ export function ShotAnimatorView() {
     e.target.value = ""
   }
 
-  // Drag-and-drop: document-level listeners so programmatically dispatched
-  // events (e.g. from test automation) are captured reliably.
+  // Drag-and-drop: React event handlers on the drop zone div
+  // Card-level handlers call stopPropagation() so these only fire for empty-area drops
   const dropZoneRef = useRef<HTMLDivElement>(null)
-  const addShotConfigsRef = useRef(addShotConfigs)
-  addShotConfigsRef.current = addShotConfigs
 
-  useEffect(() => {
-    const isRelevantTarget = (target: EventTarget | null): boolean => {
-      const el = dropZoneRef.current
-      if (!el || !target) return false
-      const t = target as Node
-      return el.contains(t) || t.contains(el)
+  const hasNonImageFile = (dt: DataTransfer | null): boolean => {
+    if (!dt?.items) return false
+    return Array.from(dt.items).some(
+      (item) => item.kind === 'file' && !ALLOWED_IMAGE_TYPES.includes(item.type)
+    )
+  }
+
+  const handleZoneDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    dragCounterRef.current++
+    if (dragCounterRef.current === 1) {
+      setIsDragOver(true)
+      setIsDragReject(hasNonImageFile(e.dataTransfer))
     }
+  }, [])
 
-    const hasNonImageFile = (dt: DataTransfer | null): boolean => {
-      if (!dt?.items) return false
-      return Array.from(dt.items).some(
-        (item) => item.kind === 'file' && !ALLOWED_IMAGE_TYPES.includes(item.type)
-      )
-    }
+  const handleZoneDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'copy'
+  }, [])
 
-    const onDragEnter = (e: DragEvent) => {
-      if (!isRelevantTarget(e.target)) return
-      e.preventDefault()
-      dragCounterRef.current++
-      if (dragCounterRef.current === 1) {
-        setIsDragOver(true)
-        setIsDragReject(hasNonImageFile(e.dataTransfer))
-      }
-    }
-
-    const onDragOver = (e: DragEvent) => {
-      if (!isRelevantTarget(e.target)) return
-      e.preventDefault()
-      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
-    }
-
-    const onDragLeave = (e: DragEvent) => {
-      if (!isRelevantTarget(e.target)) return
-      e.preventDefault()
-      dragCounterRef.current--
-      if (dragCounterRef.current <= 0) {
-        dragCounterRef.current = 0
-        setIsDragOver(false)
-        setIsDragReject(false)
-      }
-    }
-
-    const onDrop = async (e: DragEvent) => {
-      if (!isRelevantTarget(e.target)) return
-      e.preventDefault()
+  const handleZoneDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    dragCounterRef.current--
+    if (dragCounterRef.current <= 0) {
       dragCounterRef.current = 0
       setIsDragOver(false)
       setIsDragReject(false)
-
-      // If drop landed on an existing card's image area, let the card handle it
-      const target = e.target as HTMLElement
-      if (target.closest?.('[data-shot-card-image]')) return
-
-      // Check for gallery image drag data first
-      const galleryData = e.dataTransfer?.getData(GALLERY_IMAGE_MIME_TYPE)
-      if (galleryData) {
-        try {
-          const parsed = JSON.parse(galleryData) as GalleryImageDragPayload
-          const newConfig: ShotAnimationConfig = {
-            id: `shot-${Date.now()}-${Math.random()}`,
-            imageUrl: parsed.url,
-            imageName: parsed.name,
-            imageModel: parsed.imageModel,
-            prompt: '',
-            originalPrompt: parsed.originalPrompt,
-            referenceImages: [],
-            includeInBatch: true,
-            generatedVideos: [],
-          }
-          addShotConfigsRef.current([newConfig])
-        } catch { /* ignore malformed data */ }
-        return
-      }
-
-      const files = e.dataTransfer?.files
-      if (!files || files.length === 0) return
-
-      const validFiles = Array.from(files).filter((f) =>
-        ALLOWED_IMAGE_TYPES.includes(f.type)
-      )
-      if (validFiles.length === 0) return
-
-      const newConfigs = await filesToShotConfigs(validFiles)
-      addShotConfigsRef.current(newConfigs)
-    }
-
-    document.addEventListener('dragenter', onDragEnter)
-    document.addEventListener('dragover', onDragOver)
-    document.addEventListener('dragleave', onDragLeave)
-    document.addEventListener('drop', onDrop)
-
-    // Safety: reset drag state when cursor leaves the browser window
-    const onWindowDragLeave = (e: DragEvent) => {
-      if (e.clientX <= 0 || e.clientY <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
-        dragCounterRef.current = 0
-        setIsDragOver(false)
-        setIsDragReject(false)
-      }
-    }
-    document.addEventListener('dragleave', onWindowDragLeave)
-
-    return () => {
-      document.removeEventListener('dragenter', onDragEnter)
-      document.removeEventListener('dragover', onDragOver)
-      document.removeEventListener('dragleave', onDragLeave)
-      document.removeEventListener('drop', onDrop)
-      document.removeEventListener('dragleave', onWindowDragLeave)
     }
   }, [])
+
+  const handleZoneDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault()
+    dragCounterRef.current = 0
+    setIsDragOver(false)
+    setIsDragReject(false)
+
+    // Check for gallery image drag data first
+    const galleryData = e.dataTransfer?.getData(GALLERY_IMAGE_MIME_TYPE)
+    if (galleryData) {
+      try {
+        const parsed = JSON.parse(galleryData) as GalleryImageDragPayload
+        const newConfig: ShotAnimationConfig = {
+          id: `shot-${Date.now()}-${Math.random()}`,
+          imageUrl: parsed.url,
+          imageName: parsed.name,
+          imageModel: parsed.imageModel,
+          prompt: '',
+          originalPrompt: parsed.originalPrompt,
+          referenceImages: [],
+          includeInBatch: true,
+          generatedVideos: [],
+        }
+        addShotConfigs([newConfig])
+      } catch { /* ignore malformed data */ }
+      return
+    }
+
+    const files = e.dataTransfer?.files
+    if (!files || files.length === 0) return
+
+    const validFiles = Array.from(files).filter((f) =>
+      ALLOWED_IMAGE_TYPES.includes(f.type)
+    )
+    if (validFiles.length === 0) return
+
+    const newConfigs = await filesToShotConfigs(validFiles)
+    addShotConfigs(newConfigs)
+  }, [addShotConfigs])
 
   const handleUpdateShotConfig = (id: string, updates: ShotAnimationConfig) => {
     updateShotConfig(id, updates)
@@ -914,6 +883,10 @@ export function ShotAnimatorView() {
         <div
           ref={dropZoneRef}
           className="overflow-hidden relative"
+          onDragEnter={handleZoneDragEnter}
+          onDragOver={handleZoneDragOver}
+          onDragLeave={handleZoneDragLeave}
+          onDrop={handleZoneDrop}
         >
           {isDragOver && (
             <div
