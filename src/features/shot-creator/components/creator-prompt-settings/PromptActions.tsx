@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useRef } from "react"
+import React, { Fragment, useState, useRef, useCallback } from "react"
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { HighlightedPromptEditor } from '../prompt-editor/HighlightedPromptEditor'
@@ -13,9 +13,7 @@ import {
     HelpCircle,
     X,
     Minimize2,
-    Maximize2,
-    Square,
-    Expand
+    Maximize2
 } from 'lucide-react'
 import { useShotCreatorStore } from "@/features/shot-creator/store/shot-creator.store"
 import { useCustomStylesStore } from "../../store/custom-styles.store"
@@ -30,7 +28,6 @@ import { OrganizeButton } from "../prompt-organizer"
 import { PromptExpanderButton } from "../prompt-expander/PromptExpanderButton"
 import { DesktopPromptsRecipesBar } from "./DesktopPromptsRecipesBar"
 import { usePromptAutocomplete } from "../../hooks/usePromptAutocomplete"
-import { useCallback } from "react"
 import { extractAtTags, urlToFile } from "../../helpers"
 import { ShotCreatorReferenceImage } from "../../types"
 import { useUnifiedGalleryStore } from "../../store/unified-gallery-store"
@@ -51,7 +48,9 @@ function hasToolStages(recipe: Recipe): boolean {
     return recipe.stages.some(stage => stage.type === 'tool' || stage.type === 'analysis')
 }
 
-const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextAreaElement | null> }) => {
+type TextareaSize = 'small' | 'large'
+
+const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef: React.RefObject<HTMLTextAreaElement | null>; showResizeControls?: boolean }) => {
     const {
         shotCreatorPrompt,
         shotCreatorReferenceImages,
@@ -129,8 +128,13 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
     const autocompleteRef = useRef<HTMLDivElement>(null)
 
     // Textarea size state
-    type TextareaSize = 'small' | 'medium' | 'large' | 'xlarge'
-    const [textareaSize, setTextareaSize] = useState<TextareaSize>('medium')
+    const [textareaSize, setTextareaSize] = useState<TextareaSize>('small')
+
+    // Drag resize state
+    const [customHeight, setCustomHeight] = useState<number | null>(null)
+    const isDraggingRef = useRef(false)
+    const dragStartYRef = useRef(0)
+    const dragStartHeightRef = useRef(0)
 
     // Track last used recipe for generation metadata
     const [lastUsedRecipe, setLastUsedRecipe] = useState<{ recipeId: string; recipeName: string } | null>(null)
@@ -172,13 +176,38 @@ const PromptActions = ({ textareaRef }: { textareaRef: React.RefObject<HTMLTextA
 
     // Get textarea height class based on size
     const getTextareaHeight = (size: TextareaSize) => {
+        if (customHeight !== null) return '' // custom height overrides preset
         switch (size) {
             case 'small': return 'min-h-[44px]'
-            case 'medium': return 'min-h-[100px]'
             case 'large': return 'min-h-[240px]'
-            case 'xlarge': return 'min-h-[480px]'
         }
     }
+
+    const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
+        e.preventDefault()
+        isDraggingRef.current = true
+        dragStartYRef.current = e.clientY
+        const container = document.querySelector('[data-testid="prompt-textarea-container"]')
+        if (container) {
+            dragStartHeightRef.current = container.getBoundingClientRect().height
+        }
+
+        const handleMouseMove = (moveEvent: MouseEvent) => {
+            if (!isDraggingRef.current) return
+            const delta = moveEvent.clientY - dragStartYRef.current
+            const newHeight = Math.max(44, dragStartHeightRef.current + delta)
+            setCustomHeight(newHeight)
+        }
+
+        const handleMouseUp = () => {
+            isDraggingRef.current = false
+            document.removeEventListener('mousemove', handleMouseMove)
+            document.removeEventListener('mouseup', handleMouseUp)
+        }
+
+        document.addEventListener('mousemove', handleMouseMove)
+        document.addEventListener('mouseup', handleMouseUp)
+    }, [])
 
     // Autocomplete for @references - destructure to avoid circular dependencies
     const autocomplete = usePromptAutocomplete()
@@ -1100,7 +1129,11 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                     <label htmlFor="prompt" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                         Prompt
                     </label>
-                    <div className="relative">
+                    <div
+                        className="relative"
+                        data-testid={showResizeControls ? "prompt-textarea-container" : undefined}
+                        style={customHeight !== null ? { height: `${customHeight}px` } : undefined}
+                    >
                         <HighlightedPromptEditor
                             id="prompt"
                             textareaRef={textareaRef}
@@ -1111,7 +1144,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                             onMouseUp={calculateDropdownPosition}
                             onTouchEnd={calculateDropdownPosition}
                             placeholder="Enter your prompt here... Use @tag for references"
-                            className={cn("resize-y", getTextareaHeight(textareaSize))}
+                            className={cn("resize-none", customHeight !== null ? 'h-full' : getTextareaHeight(textareaSize))}
                         />
 
                         {/* Autocomplete dropdown */}
@@ -1177,42 +1210,35 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                             {generationCost.fontCost > 0 && ` + $${generationCost.fontCost.toFixed(2)} fonts`}
                             {' = $'}{generationCost.totalCost.toFixed(2)} ({generationCost.tokenCost} pts)
                         </span>
-                        <div className="flex gap-2">
+                        {showResizeControls && (
                             <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => setTextareaSize('small')}
-                                className={textareaSize === 'small' ? 'bg-slate-100 dark:bg-slate-700' : ''}
+                                onClick={() => {
+                                    setCustomHeight(null)
+                                    setTextareaSize(textareaSize === 'small' ? 'large' : 'small')
+                                }}
+                                title="Toggle prompt size"
                             >
-                                <Minimize2 className="w-4 h-4" />
+                                {textareaSize === 'small' && customHeight === null ? (
+                                    <Maximize2 className="lucide-maximize-2 w-4 h-4" />
+                                ) : (
+                                    <Minimize2 className="lucide-minimize-2 w-4 h-4" />
+                                )}
                             </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setTextareaSize('medium')}
-                                className={textareaSize === 'medium' ? 'bg-slate-100 dark:bg-slate-700' : ''}
-                            >
-                                <Square className="w-4 h-4" />
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setTextareaSize('large')}
-                                className={textareaSize === 'large' ? 'bg-slate-100 dark:bg-slate-700' : ''}
-                            >
-                                <Maximize2 className="w-4 h-4" />
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setTextareaSize('xlarge')}
-                                className={textareaSize === 'xlarge' ? 'bg-slate-100 dark:bg-slate-700' : ''}
-                                title="Extra large editor"
-                            >
-                                <Expand className="w-4 h-4" />
-                            </Button>
-                        </div>
+                        )}
                     </div>
+
+                    {/* Drag resize handle */}
+                    {showResizeControls && (
+                        <div
+                            data-testid="prompt-resize-handle"
+                            onMouseDown={handleResizeMouseDown}
+                            className="flex items-center justify-center h-3 cursor-ns-resize group hover:bg-slate-100 dark:hover:bg-slate-800 rounded-b transition-colors -mt-1"
+                        >
+                            <div className="w-12 h-1 rounded-full bg-slate-300 dark:bg-slate-600 group-hover:bg-slate-400 dark:group-hover:bg-slate-500 transition-colors" />
+                        </div>
+                    )}
                 </div>
 
                 {/* Desktop Prompts/Recipes Bar (tabbed interface) */}

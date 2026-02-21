@@ -25,7 +25,7 @@ import BasicSettings from "./BasicSettings"
 import { PromptActions } from "./PromptActions"
 import { PromptBrowser } from "./PromptBrowser"
 
-const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
+const CreatorPromptSettings = ({ compact, showResizeControls = true }: { compact?: boolean; showResizeControls?: boolean }) => {
     const [showAdvanced, setShowAdvanced] = useState(false)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const { shotCreatorPrompt, setShotCreatorPrompt, shotCreatorReferenceImages } = useShotCreatorStore()
@@ -71,7 +71,7 @@ const CreatorPromptSettings = ({ compact }: { compact?: boolean }) => {
         <TooltipProvider>
             <div className="p-4 lg:p-6 space-y-4">
                 {/* Prompt Input */}
-                <PromptActions textareaRef={textareaRef} />
+                <PromptActions textareaRef={textareaRef} showResizeControls={showResizeControls} />
 
                 {/* Basic Settings */}
                 <BasicSettings />

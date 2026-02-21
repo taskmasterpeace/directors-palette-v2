@@ -257,7 +257,7 @@ const ShotCreator = () => {
 
                     {/* Prompt */}
                     <div className="bg-background/30">
-                        <CreatorPromptSettings compact={false} />
+                        <CreatorPromptSettings compact={false} showResizeControls={false} />
                     </div>
 
                     {/* Gallery */}
