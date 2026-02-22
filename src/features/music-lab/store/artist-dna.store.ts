@@ -163,10 +163,21 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
       loadArtistIntoDraft: (id: string) => {
         const artist = get().artists.find((a) => a.id === id)
         if (artist) {
+          const defaults = createEmptyDNA()
+          const dna = structuredClone(artist.dna)
+          // Merge with defaults so older DB records don't crash on missing array fields
+          const merged: ArtistDNA = {
+            identity: { ...defaults.identity, ...dna.identity },
+            sound: { ...defaults.sound, ...dna.sound },
+            persona: { ...defaults.persona, ...dna.persona },
+            lexicon: { ...defaults.lexicon, ...dna.lexicon },
+            look: { ...defaults.look, ...dna.look },
+            catalog: { ...defaults.catalog, ...dna.catalog },
+          }
           set({
             editorOpen: true,
             activeArtistId: id,
-            draft: structuredClone(artist.dna),
+            draft: merged,
             isDirty: false,
             activeTab: 'identity',
             sunoOutput: null,
@@ -352,6 +363,22 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
         activeTab: state.activeTab,
         combineVocalAndStyle: state.combineVocalAndStyle,
       }),
+      merge: (persisted, current) => {
+        const p = persisted as Partial<ArtistDnaState>
+        const defaults = createEmptyDNA()
+        // Deep-merge draft so stale localStorage never leaves array fields undefined
+        const draft = p.draft
+          ? {
+              identity: { ...defaults.identity, ...p.draft.identity },
+              sound: { ...defaults.sound, ...p.draft.sound },
+              persona: { ...defaults.persona, ...p.draft.persona },
+              lexicon: { ...defaults.lexicon, ...p.draft.lexicon },
+              look: { ...defaults.look, ...p.draft.look },
+              catalog: { ...defaults.catalog, ...p.draft.catalog },
+            }
+          : current.draft
+        return { ...current, ...p, draft }
+      },
     }
   )
 )
