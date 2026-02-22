@@ -75,7 +75,7 @@ ${fieldGuidance}${contextStr}${currentStr}${excludeStr}`
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.9,
-        max_tokens: 500,
+        max_tokens: 4000,
       }),
     })
 
@@ -86,10 +86,16 @@ ${fieldGuidance}${contextStr}${currentStr}${excludeStr}`
     }
 
     const data = await response.json()
-    const content = data.choices?.[0]?.message?.content
+    const message = data.choices?.[0]?.message
+    let content = message?.content || ''
+    // Kimi K2.5 reasoning model fallback — extract JSON from reasoning if content empty
+    if (!content.trim() && message?.reasoning) {
+      const jsonMatch = message.reasoning.match(/\[[\s\S]*\]/)
+      if (jsonMatch) content = jsonMatch[0]
+    }
 
-    if (!content) {
-      return NextResponse.json({ error: 'No response from model' }, { status: 500 })
+    if (!content.trim()) {
+      return NextResponse.json({ suggestions: [] })
     }
 
     try {
@@ -97,7 +103,7 @@ ${fieldGuidance}${contextStr}${currentStr}${excludeStr}`
       const suggestions = JSON.parse(cleaned)
       return NextResponse.json({ suggestions: Array.isArray(suggestions) ? suggestions : [] })
     } catch {
-      console.error('Failed to parse suggestions:', content)
+      console.error('Failed to parse suggestions:', content.substring(0, 300))
       return NextResponse.json({ suggestions: [] })
     }
   } catch (error) {

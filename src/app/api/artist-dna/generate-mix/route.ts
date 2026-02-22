@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.8,
-        max_tokens: 2000,
+        max_tokens: 8000,
       }),
     })
 
@@ -176,7 +176,17 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
-    const lyricsTemplate = data.choices?.[0]?.message?.content || ''
+    const message = data.choices?.[0]?.message
+    let lyricsTemplate = message?.content || ''
+    // Kimi K2.5 reasoning model fallback
+    if (!lyricsTemplate.trim() && message?.reasoning) {
+      // Extract anything that looks like lyrics from reasoning
+      const lines = (message.reasoning as string).split('\n')
+      const lyricsLines = lines.filter((l: string) => l.startsWith('[') || (l.trim().length > 0 && !l.startsWith(' ')))
+      if (lyricsLines.length > 4) {
+        lyricsTemplate = lyricsLines.join('\n')
+      }
+    }
 
     return NextResponse.json({ lyricsTemplate })
   } catch (error) {

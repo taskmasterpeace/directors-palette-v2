@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
           { role: 'user', content: `Generate 4 draft options for this ${body.sectionType} section.` },
         ],
         temperature: 0.9,
-        max_tokens: 2000,
+        max_tokens: 8000,
       }),
     })
 
@@ -205,7 +205,15 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
-    const raw = data.choices?.[0]?.message?.content || '[]'
+    const message = data.choices?.[0]?.message
+    // Kimi K2.5 is a reasoning model — content may be empty if reasoning consumed all tokens
+    let raw = message?.content || ''
+    if (!raw.trim() && message?.reasoning) {
+      // Try to extract JSON from reasoning as fallback
+      const jsonMatch = message.reasoning.match(/\[[\s\S]*\]/)
+      if (jsonMatch) raw = jsonMatch[0]
+    }
+    if (!raw.trim()) raw = '[]'
 
     // Parse JSON response, handling potential markdown wrapping
     let options
@@ -213,7 +221,7 @@ export async function POST(request: NextRequest) {
       const cleaned = raw.replace(/```json?\s*/g, '').replace(/```\s*/g, '').trim()
       options = JSON.parse(cleaned)
     } catch {
-      console.error('Failed to parse options JSON:', raw)
+      console.error('Failed to parse options JSON:', raw.substring(0, 500))
       return NextResponse.json({ error: 'Failed to parse generated options' }, { status: 500 })
     }
 

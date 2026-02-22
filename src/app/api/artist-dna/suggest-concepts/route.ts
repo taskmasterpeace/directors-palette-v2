@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
           { role: 'user', content: 'Suggest 6 song concepts.' },
         ],
         temperature: 0.9,
-        max_tokens: 800,
+        max_tokens: 4000,
       }),
     })
 
@@ -82,14 +82,21 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
-    const raw = data.choices?.[0]?.message?.content || '[]'
+    const message = data.choices?.[0]?.message
+    let raw = message?.content || ''
+    // Kimi K2.5 reasoning model fallback
+    if (!raw.trim() && message?.reasoning) {
+      const jsonMatch = message.reasoning.match(/\[[\s\S]*\]/)
+      if (jsonMatch) raw = jsonMatch[0]
+    }
+    if (!raw.trim()) raw = '[]'
 
     let concepts: string[]
     try {
       const cleaned = raw.replace(/```json?\s*/g, '').replace(/```\s*/g, '').trim()
       concepts = JSON.parse(cleaned)
     } catch {
-      console.error('Failed to parse concepts JSON:', raw)
+      console.error('Failed to parse concepts JSON:', raw.substring(0, 300))
       return NextResponse.json({ error: 'Failed to parse suggestions' }, { status: 500 })
     }
 
