@@ -10,7 +10,7 @@ import type { AdhubStep } from '../types/adhub.types'
 interface StepInfo {
   id: AdhubStep
   label: string
-  icon: React.ElementType
+  icon: React.ComponentType<{ className?: string }>
 }
 
 const STEPS: StepInfo[] = [

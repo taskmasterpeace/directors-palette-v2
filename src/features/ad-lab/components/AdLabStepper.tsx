@@ -10,7 +10,7 @@ import type { AdLabPhase } from '../types/ad-lab.types'
 interface StepInfo {
   id: AdLabPhase
   label: string
-  icon: React.ElementType
+  icon: React.ComponentType<{ className?: string }>
 }
 
 const STEPS: StepInfo[] = [

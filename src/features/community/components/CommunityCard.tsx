@@ -36,7 +36,7 @@ const TYPE_COLORS: Record<CommunityItemType, string> = {
   director: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
 }
 
-const TYPE_ICONS: Record<CommunityItemType, React.ElementType> = {
+const TYPE_ICONS: Record<CommunityItemType, React.ComponentType<{ className?: string }>> = {
   wildcard: Layers,
   recipe: BookOpen,
   prompt: MessageSquare,

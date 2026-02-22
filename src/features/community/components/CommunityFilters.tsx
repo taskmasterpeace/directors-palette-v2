@@ -29,7 +29,7 @@ interface CommunityFiltersProps {
   onSortChange: (sortBy: CommunityFiltersType['sortBy']) => void
 }
 
-const TYPE_TABS: { value: CommunityItemType | 'all'; label: string; icon: React.ElementType }[] = [
+const TYPE_TABS: { value: CommunityItemType | 'all'; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { value: 'all', label: 'All', icon: Grid3X3 },
   { value: 'wildcard', label: 'Wildcards', icon: Layers },
   { value: 'recipe', label: 'Recipes', icon: BookOpen },

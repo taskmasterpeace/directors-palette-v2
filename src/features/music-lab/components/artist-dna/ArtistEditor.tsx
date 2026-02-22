@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Save } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -12,6 +13,17 @@ import { LexiconTab } from './tabs/LexiconTab'
 import { LookTab } from './tabs/LookTab'
 import { CatalogTab } from './tabs/CatalogTab'
 import { TheMixOutput } from './TheMixOutput'
+import { StudioTab } from '../writing-studio/StudioTab'
+
+const ConstellationWidget = dynamic(
+  () => import('./ConstellationWidget').then((m) => m.ConstellationWidget),
+  { ssr: false }
+)
+
+const TAB_HIGHLIGHT: Record<string, string> = {
+  'the-mix': 'text-amber-500 data-[state=active]:text-amber-600',
+  'studio': 'text-emerald-500 data-[state=active]:text-emerald-600',
+}
 
 export function ArtistEditor() {
   const { activeTab, setActiveTab, saveArtist, closeEditor, isDirty, draft } =
@@ -40,27 +52,32 @@ export function ArtistEditor() {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-        <TabsList className="w-full overflow-x-auto flex-nowrap justify-start">
-          {ARTIST_DNA_TABS.map((tab) => (
-            <TabsTrigger
-              key={tab.id}
-              value={tab.id}
-              className={tab.id === 'the-mix' ? 'text-amber-500 data-[state=active]:text-amber-600' : ''}
-            >
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      <div className="relative">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+          <TabsList className="w-full overflow-x-auto flex-nowrap justify-start">
+            {ARTIST_DNA_TABS.map((tab) => (
+              <TabsTrigger
+                key={tab.id}
+                value={tab.id}
+                className={TAB_HIGHLIGHT[tab.id] || ''}
+              >
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        <TabsContent value="identity"><IdentityTab /></TabsContent>
-        <TabsContent value="sound"><SoundTab /></TabsContent>
-        <TabsContent value="persona"><PersonaTab /></TabsContent>
-        <TabsContent value="lexicon"><LexiconTab /></TabsContent>
-        <TabsContent value="look"><LookTab /></TabsContent>
-        <TabsContent value="catalog"><CatalogTab /></TabsContent>
-        <TabsContent value="the-mix"><TheMixOutput /></TabsContent>
-      </Tabs>
+          <TabsContent value="identity"><IdentityTab /></TabsContent>
+          <TabsContent value="sound"><SoundTab /></TabsContent>
+          <TabsContent value="persona"><PersonaTab /></TabsContent>
+          <TabsContent value="lexicon"><LexiconTab /></TabsContent>
+          <TabsContent value="look"><LookTab /></TabsContent>
+          <TabsContent value="catalog"><CatalogTab /></TabsContent>
+          <TabsContent value="studio"><StudioTab /></TabsContent>
+          <TabsContent value="the-mix"><TheMixOutput /></TabsContent>
+        </Tabs>
+
+        <ConstellationWidget />
+      </div>
     </div>
   )
 }

@@ -54,7 +54,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 interface NavItem {
     id: TabValue
     label: string
-    icon: React.ElementType
+    icon: React.ComponentType<{ className?: string }>
     banner: string
     comingSoon?: boolean
     children?: NavItem[]  // Support nesting
@@ -1014,7 +1014,7 @@ function MobileNavigation({ open, onOpenChange, activeTab, onNavSelect, user, on
 }
 
 interface MobileNavButtonProps {
-    icon: React.ElementType
+    icon: React.ComponentType<{ className?: string }>
     label: string
     isActive: boolean
     comingSoon?: boolean
