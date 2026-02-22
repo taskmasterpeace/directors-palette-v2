@@ -68,42 +68,100 @@ function buildSystemPrompt(body: GenerateOptionsBody): string {
     parts.push(`Song concept: ${concept}`)
   }
 
-  // Artist DNA context
-  if (artistDna.sound?.melodyBias !== undefined) {
-    if (artistDna.sound.melodyBias <= 30) {
-      parts.push('Style: primarily rap/spoken-word. Focus on wordplay and lyrical density.')
-    } else if (artistDna.sound.melodyBias >= 70) {
-      parts.push('Style: primarily sung. Focus on melodic phrasing.')
-    } else {
-      parts.push('Style: blend of rap and singing.')
-    }
+  // Artist DNA context — full profile
+  if (artistDna.identity?.name) {
+    parts.push(`Artist name: ${artistDna.identity.name}`)
+  }
+  if (artistDna.identity?.city || artistDna.identity?.region) {
+    parts.push(`Origin: ${[artistDna.identity.city, artistDna.identity.region].filter(Boolean).join(', ')}`)
+  }
+  if (artistDna.identity?.backstory) {
+    parts.push(`Backstory: ${artistDna.identity.backstory.substring(0, 300)}`)
   }
 
-  if (artistDna.lexicon?.signaturePhrases?.length > 0) {
-    parts.push(`Signature phrases to weave in: ${artistDna.lexicon.signaturePhrases.join(', ')}`)
+  // Sound profile
+  if (artistDna.sound?.melodyBias !== undefined) {
+    if (artistDna.sound.melodyBias <= 30) {
+      parts.push('Style: primarily rap/spoken-word. Focus on wordplay, multisyllabic rhymes, and lyrical density.')
+    } else if (artistDna.sound.melodyBias >= 70) {
+      parts.push('Style: primarily sung. Focus on melodic phrasing, vocal hooks, and singable melodies.')
+    } else {
+      parts.push('Style: blend of rap and singing. Mix lyrical bars with melodic hooks.')
+    }
   }
-  if (artistDna.lexicon?.slang?.length > 0) {
-    parts.push(`Slang to use: ${artistDna.lexicon.slang.join(', ')}`)
+  if (artistDna.sound?.genres?.length > 0) {
+    parts.push(`Genres: ${artistDna.sound.genres.join(', ')}`)
   }
-  if (artistDna.lexicon?.bannedWords?.length > 0) {
-    parts.push(`NEVER use: ${artistDna.lexicon.bannedWords.join(', ')}`)
+  if (artistDna.sound?.subgenres?.length > 0) {
+    parts.push(`Sub-genres: ${artistDna.sound.subgenres.join(', ')}`)
   }
+  if (artistDna.sound?.artistInfluences?.length > 0) {
+    parts.push(`Influenced by: ${artistDna.sound.artistInfluences.join(', ')}. Channel their energy without copying.`)
+  }
+  if (artistDna.sound?.productionPreferences?.length > 0) {
+    parts.push(`Production vibe: ${artistDna.sound.productionPreferences.join(', ')}`)
+  }
+  if (artistDna.sound?.vocalTextures?.length > 0) {
+    parts.push(`Vocal texture: ${artistDna.sound.vocalTextures.join(', ')}`)
+  }
+
+  // Persona
   if (artistDna.persona?.attitude) {
     parts.push(`Artist attitude: ${artistDna.persona.attitude}`)
+  }
+  if (artistDna.persona?.worldview) {
+    parts.push(`Worldview: ${artistDna.persona.worldview}`)
+  }
+  if (artistDna.persona?.traits?.length > 0) {
+    parts.push(`Key traits: ${artistDna.persona.traits.join(', ')}`)
+  }
+  if (artistDna.persona?.likes?.length > 0) {
+    parts.push(`Themes they gravitate toward: ${artistDna.persona.likes.join(', ')}`)
+  }
+  if (artistDna.persona?.dislikes?.length > 0) {
+    parts.push(`Themes they avoid: ${artistDna.persona.dislikes.join(', ')}`)
+  }
+
+  // Lexicon
+  if (artistDna.lexicon?.signaturePhrases?.length > 0) {
+    parts.push(`Signature phrases to weave in naturally: ${artistDna.lexicon.signaturePhrases.join(', ')}`)
+  }
+  if (artistDna.lexicon?.slang?.length > 0) {
+    parts.push(`Slang/vocabulary to use: ${artistDna.lexicon.slang.join(', ')}`)
+  }
+  if (artistDna.lexicon?.adLibs?.length > 0) {
+    parts.push(`Ad-libs to sprinkle in: ${artistDna.lexicon.adLibs.join(', ')}`)
+  }
+  if (artistDna.lexicon?.bannedWords?.length > 0) {
+    parts.push(`NEVER use these words: ${artistDna.lexicon.bannedWords.join(', ')}`)
+  }
+
+  // Discography/catalog context
+  if (artistDna.catalog?.entries?.length > 0) {
+    parts.push(`Discography (${artistDna.catalog.entries.length} songs):`)
+    artistDna.catalog.entries.slice(0, 5).forEach((entry) => {
+      const meta = [entry.mood, entry.tempo].filter(Boolean).join(', ')
+      parts.push(`  - "${entry.title}"${meta ? ` (${meta})` : ''}`)
+      if (entry.lyrics) {
+        parts.push(`    Sample: ${entry.lyrics.substring(0, 100)}...`)
+      }
+    })
+    parts.push('Use this discography to understand the artist\'s established style. Build on it, don\'t repeat it.')
   }
 
   // Previous sections for context
   if (previousSections.length > 0) {
-    parts.push('Previously written sections (maintain continuity):')
+    parts.push('Previously written sections (maintain continuity and don\'t repeat imagery):')
     previousSections.forEach((s) => {
       parts.push(`[${s.type}]: ${s.content.substring(0, 200)}`)
     })
   }
 
   // Variety directive
-  parts.push('Make each of the 4 options DISTINCTLY different: different imagery, rhythm, opening lines.')
+  parts.push('Make each of the 4 options DISTINCTLY different: different imagery, rhythm, opening lines, rhyme schemes.')
   parts.push(`NEVER use these AI-sounding words: ${BANNED_AI_PHRASES.join(', ')}`)
-  parts.push('Write like a human songwriter, not an AI. Use concrete imagery.')
+  parts.push('Write like a human songwriter, not an AI. Use concrete, specific imagery from the artist\'s world.')
+  parts.push('End-of-line rhymes should feel natural, not forced. Vary rhyme schemes across options (AABB, ABAB, ABCB).')
 
   return parts.join('\n')
 }

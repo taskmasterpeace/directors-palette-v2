@@ -146,7 +146,7 @@ function ConstellationScene() {
 }
 
 export function ConstellationWidget() {
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(true)
   const { draft } = useArtistDnaStore()
 
   const fills = calculateRingFill(draft)

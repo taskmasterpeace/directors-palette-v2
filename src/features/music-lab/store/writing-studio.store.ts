@@ -179,6 +179,7 @@ export const useWritingStudioStore = create<WritingStudioState>()(
         set((state) => ({
           ideaBank: [entry, ...state.ideaBank],
           draftOptions: state.draftOptions.filter((d) => d.id !== draft.id),
+          ideaBankOpen: true, // Auto-open idea bank when chopping
         }))
       },
 

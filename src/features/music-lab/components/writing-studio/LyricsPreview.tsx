@@ -1,9 +1,11 @@
 'use client'
 
+import { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { FileText, Copy } from 'lucide-react'
 import { useWritingStudioStore } from '../../store/writing-studio.store'
+import { detectRhymes, colorLastWord } from '../../utils/rhyme-detector'
 
 const SECTION_HEADERS: Record<string, string> = {
   intro: 'Intro',
@@ -32,8 +34,42 @@ export function LyricsPreview() {
 
   const fullLyrics = assembledLyrics.join('\n\n')
 
+  const rhymeMap = useMemo(() => detectRhymes(fullLyrics), [fullLyrics])
+
   const handleCopy = () => {
     navigator.clipboard.writeText(fullLyrics)
+  }
+
+  const renderColoredLyrics = () => {
+    const lines = fullLyrics.split('\n')
+    return lines.map((line, i) => {
+      // Section headers
+      if (line.startsWith('[')) {
+        return (
+          <div key={i} className="text-amber-500 font-bold mt-2 first:mt-0">
+            {line}
+          </div>
+        )
+      }
+      // Empty lines
+      if (!line.trim()) return <div key={i} className="h-2" />
+
+      // Rhyme-colored lines
+      const color = rhymeMap[i]
+      if (color) {
+        const parts = colorLastWord(line, color)
+        if (parts) {
+          return (
+            <div key={i}>
+              {parts.before}
+              <span className={`${parts.colorClass} font-semibold`}>{parts.word}</span>
+            </div>
+          )
+        }
+      }
+
+      return <div key={i}>{line}</div>
+    })
   }
 
   return (
@@ -57,14 +93,21 @@ export function LyricsPreview() {
             Lock sections to build your lyrics
           </p>
         ) : (
-          <pre className="text-xs whitespace-pre-wrap font-mono leading-relaxed max-h-[400px] overflow-y-auto">
-            {fullLyrics}
-          </pre>
+          <div className="text-xs font-mono leading-relaxed max-h-[400px] overflow-y-auto">
+            {renderColoredLyrics()}
+          </div>
         )}
         {fullLyrics && (
-          <p className="text-[10px] text-muted-foreground mt-2">
-            {fullLyrics.length} / 3000 chars
-          </p>
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-[10px] text-muted-foreground">
+              {fullLyrics.length} / 3000 chars
+            </p>
+            {Object.keys(rhymeMap).length > 0 && (
+              <p className="text-[10px] text-muted-foreground">
+                Rhymes colored
+              </p>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>

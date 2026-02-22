@@ -2,7 +2,14 @@
 
 import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft, Save, ChevronDown } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useArtistDnaStore } from '../../store/artist-dna.store'
 import { ARTIST_DNA_TABS } from '../../types/artist-dna.types'
@@ -26,14 +33,17 @@ const TAB_HIGHLIGHT: Record<string, string> = {
 }
 
 export function ArtistEditor() {
-  const { activeTab, setActiveTab, saveArtist, closeEditor, isDirty, draft } =
-    useArtistDnaStore()
+  const {
+    activeTab, setActiveTab, saveArtist, closeEditor,
+    isDirty, draft, artists, activeArtistId, loadArtistIntoDraft, startNewArtist,
+  } = useArtistDnaStore()
 
   const handleSave = async () => {
     await saveArtist()
   }
 
   const artistName = draft.identity.name || 'New Artist'
+  const otherArtists = artists.filter((a) => a.id !== activeArtistId)
 
   return (
     <div className="space-y-4">
@@ -43,7 +53,37 @@ export function ArtistEditor() {
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back
           </Button>
-          <h2 className="text-xl font-semibold">{artistName}</h2>
+
+          {/* Artist name with quick-switch dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1.5 text-xl font-semibold hover:text-primary transition-colors">
+                {artistName}
+                {otherArtists.length > 0 && (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                )}
+              </button>
+            </DropdownMenuTrigger>
+            {otherArtists.length > 0 && (
+              <DropdownMenuContent align="start">
+                <p className="px-2 py-1 text-[10px] text-muted-foreground font-medium">Switch Artist</p>
+                {otherArtists.map((a) => (
+                  <DropdownMenuItem
+                    key={a.id}
+                    onClick={() => loadArtistIntoDraft(a.id)}
+                    className="text-sm"
+                  >
+                    {a.name}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={startNewArtist} className="text-sm">
+                  + New Artist
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            )}
+          </DropdownMenu>
+
           {isDirty && <span className="text-xs text-muted-foreground">(unsaved changes)</span>}
         </div>
         <Button onClick={handleSave} disabled={!isDirty}>
