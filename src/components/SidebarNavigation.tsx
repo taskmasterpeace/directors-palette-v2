@@ -24,7 +24,8 @@ import {
     Circle,
     ArrowRight,
     Megaphone,
-    Clapperboard
+    Clapperboard,
+    Dna
 } from 'lucide-react'
 import { useLayoutStore, TabValue } from '@/store/layout.store'
 import { useSidebarWizardSteps, useNavigateToWizardStep } from '@/features/storybook/hooks/useSidebarWizardSteps'
@@ -128,6 +129,13 @@ const NAV_SECTIONS: NavSection[] = [
                 icon: Music,
                 banner: '/banners/music-lab.webp',
                 tooltipExpanded: 'Music video treatments'
+            },
+            {
+                id: 'artist-dna',
+                label: 'Artist DNA',
+                icon: Dna,
+                banner: '/banners/music-lab.webp',
+                tooltipExpanded: 'Create and manage artist profiles'
             },
             {
                 id: 'ad-lab',

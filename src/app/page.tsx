@@ -19,9 +19,12 @@ import { SectionHeader } from "@/components/SectionHeader"
 import { NodeWorkflow } from "@/features/node-workflow"
 import { AdhubWorkspace } from "@/features/adhub"
 import { AdLabWorkspace } from "@/features/ad-lab"
+import { ArtistDnaPage } from "@/features/music-lab/components/artist-dna/ArtistDnaPage"
+import { useAuth } from "@/features/auth/hooks/useAuth"
 
 export default function Home() {
   const { activeTab, setActiveTab } = useLayoutStore();
+  const { user } = useAuth();
 
   useGalleryLoader();
 
@@ -120,6 +123,17 @@ export default function Home() {
                   <SectionHeader section="music-lab" />
                   <div className="flex-1 p-4 overflow-y-auto">
                     <MusicLabPage />
+                  </div>
+                </PageTransition>
+              </TabsContent>
+            )}
+
+            {activeTab === 'artist-dna' && user && (
+              <TabsContent key="artist-dna" value="artist-dna" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
+                <PageTransition>
+                  <SectionHeader section="artist-dna" />
+                  <div className="flex-1 p-4 overflow-y-auto">
+                    <ArtistDnaPage userId={user.id} />
                   </div>
                 </PageTransition>
               </TabsContent>

@@ -63,6 +63,12 @@ const SECTION_CONFIG: Record<TabValue, { banner: string; title: string; subtitle
     subtitle: 'Sync visuals with music',
     helpTip: 'Upload audio, transcribe lyrics, and create visual beat sheets'
   },
+  'artist-dna': {
+    banner: '/banners/music-lab.webp',
+    title: 'Artist DNA',
+    subtitle: 'Create and manage artist profiles',
+    helpTip: 'Build detailed artist personas with sound, flow, persona, lexicon, and look'
+  },
   'ad-lab': {
     banner: '/banners/adhub.webp',
     title: 'Ad Lab',
