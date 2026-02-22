@@ -29,31 +29,31 @@ function calculateRingFill(dna: ArtistDNA) {
     (dna.persona.attitude ? 0.25 : 0) +
     (dna.persona.worldview ? 0.25 : 0)
 
-  const delivery =
+  const lexicon =
     (dna.lexicon.signaturePhrases.length > 0 ? 0.25 : 0) +
     (dna.lexicon.slang.length > 0 ? 0.25 : 0) +
     (dna.lexicon.adLibs.length > 0 ? 0.25 : 0) +
     (dna.lexicon.bannedWords.length > 0 ? 0.25 : 0)
 
-  const lexicon =
+  const profile =
     (dna.identity.name ? 0.2 : 0) +
     (dna.identity.backstory ? 0.2 : 0) +
     (dna.identity.city ? 0.2 : 0) +
     (dna.look.visualDescription ? 0.2 : 0) +
     (dna.catalog.entries.length > 0 ? 0.2 : 0)
 
-  return { sound, influences, persona, delivery, lexicon }
+  return { sound, influences, persona, lexicon, profile }
 }
 
 const RING_COLORS = [
   '#f59e0b', // amber - Sound
   '#8b5cf6', // violet - Influences
   '#ef4444', // red - Persona
-  '#06b6d4', // cyan - Delivery
-  '#22c55e', // green - Lexicon
+  '#06b6d4', // cyan - Lexicon
+  '#22c55e', // green - Profile
 ]
 
-const RING_LABELS = ['Sound', 'Influences', 'Persona', 'Delivery', 'Lexicon']
+const RING_LABELS = ['Sound', 'Influences', 'Persona', 'Lexicon', 'Profile']
 
 interface OrbitalRingProps {
   radius: number
@@ -109,7 +109,7 @@ function OrbitalRing({ radius, fill, color, index }: OrbitalRingProps) {
 function ConstellationScene() {
   const { draft } = useArtistDnaStore()
   const fills = calculateRingFill(draft)
-  const fillValues = [fills.sound, fills.influences, fills.persona, fills.delivery, fills.lexicon]
+  const fillValues = [fills.sound, fills.influences, fills.persona, fills.lexicon, fills.profile]
 
   return (
     <>
@@ -167,7 +167,7 @@ export function ConstellationWidget() {
   }
 
   return (
-    <div className="absolute top-2 right-2 w-[220px] rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm shadow-lg overflow-hidden">
+    <div className="absolute top-2 right-2 z-20 w-[220px] rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm shadow-lg overflow-hidden">
       <div className="flex items-center justify-between px-2 py-1 border-b border-border/50">
         <span className="text-[10px] font-medium text-muted-foreground">DNA Constellation</span>
         <button
@@ -178,7 +178,7 @@ export function ConstellationWidget() {
         </button>
       </div>
 
-      <div className="h-[200px] bg-black/50">
+      <div className="h-[200px] bg-black/80 border-b border-border/30">
         <Canvas camera={{ position: [0, 0, 2.5], fov: 45 }}>
           <ConstellationScene />
         </Canvas>
@@ -187,7 +187,7 @@ export function ConstellationWidget() {
       {/* Ring legend */}
       <div className="px-2 py-1.5 space-y-0.5">
         {RING_LABELS.map((label, i) => {
-          const fillValues = [fills.sound, fills.influences, fills.persona, fills.delivery, fills.lexicon]
+          const fillValues = [fills.sound, fills.influences, fills.persona, fills.lexicon, fills.profile]
           return (
             <div key={label} className="flex items-center gap-1.5">
               <span
