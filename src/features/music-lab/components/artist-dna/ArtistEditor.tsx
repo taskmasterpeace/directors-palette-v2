@@ -46,56 +46,55 @@ export function ArtistEditor() {
   const otherArtists = artists.filter((a) => a.id !== activeArtistId)
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={closeEditor}>
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Back
-          </Button>
+    <div className="space-y-2">
+      {/* Header: Back + Name + Constellation + Save — all one row */}
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={closeEditor} className="shrink-0">
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back
+        </Button>
 
-          {/* Artist name with quick-switch dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1.5 text-xl font-semibold hover:text-primary transition-colors">
-                {artistName}
-                {otherArtists.length > 0 && (
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                )}
-              </button>
-            </DropdownMenuTrigger>
-            {otherArtists.length > 0 && (
-              <DropdownMenuContent align="start">
-                <p className="px-2 py-1 text-[10px] text-muted-foreground font-medium">Switch Artist</p>
-                {otherArtists.map((a) => (
-                  <DropdownMenuItem
-                    key={a.id}
-                    onClick={() => loadArtistIntoDraft(a.id)}
-                    className="text-sm"
-                  >
-                    {a.name}
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={startNewArtist} className="text-sm">
-                  + New Artist
+        {/* Artist name with quick-switch dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-1.5 text-xl font-semibold hover:text-primary transition-colors shrink-0">
+              {artistName}
+              {otherArtists.length > 0 && (
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          {otherArtists.length > 0 && (
+            <DropdownMenuContent align="start">
+              <p className="px-2 py-1 text-[10px] text-muted-foreground font-medium">Switch Artist</p>
+              {otherArtists.map((a) => (
+                <DropdownMenuItem
+                  key={a.id}
+                  onClick={() => loadArtistIntoDraft(a.id)}
+                  className="text-sm"
+                >
+                  {a.name}
                 </DropdownMenuItem>
-              </DropdownMenuContent>
-            )}
-          </DropdownMenu>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={startNewArtist} className="text-sm">
+                + New Artist
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          )}
+        </DropdownMenu>
 
-          {isDirty && <span className="text-xs text-muted-foreground">(unsaved changes)</span>}
+        {isDirty && <span className="text-xs text-muted-foreground shrink-0">(unsaved)</span>}
+
+        {/* Constellation fills the middle */}
+        <div className="flex-1 flex justify-end min-w-0">
+          <ConstellationWidget />
         </div>
-        <Button onClick={handleSave} disabled={!isDirty}>
+
+        <Button onClick={handleSave} disabled={!isDirty} className="shrink-0">
           <Save className="w-4 h-4 mr-1" />
           Save
         </Button>
-      </div>
-
-      {/* Constellation widget + Tab bar row */}
-      <div className="flex items-end gap-3">
-        <div className="flex-1 min-w-0" />
-        <ConstellationWidget />
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
