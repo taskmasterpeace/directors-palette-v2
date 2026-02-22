@@ -1,13 +1,13 @@
 /**
  * Artist DNA Suggestion API
- * Magic wand suggestions via OpenRouter gpt-4.1-mini
+ * Magic wand suggestions via OpenRouter Kimi K2.5
  * Genre-agnostic, context-aware suggestions
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 
-const MODEL = 'openai/gpt-4.1-mini'
+const MODEL = 'moonshotai/kimi-k2.5'
 
 export async function POST(request: NextRequest) {
   try {

@@ -8,7 +8,7 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import type { ToneSettings, SectionType } from '@/features/music-lab/types/writing-studio.types'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
 
-const MODEL = 'openai/gpt-4.1-mini'
+const MODEL = 'moonshotai/kimi-k2.5'
 
 const BANNED_AI_PHRASES = [
   'neon', 'echoes', 'shadows', 'whispers', 'tapestry', 'symphony',
