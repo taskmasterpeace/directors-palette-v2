@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useRef, useMemo } from 'react'
-import { Button } from '@/components/ui/button'
-import { Star } from 'lucide-react'
+import { Star, ChevronUp, ChevronDown } from 'lucide-react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { useArtistDnaStore } from '../../store/artist-dna.store'
@@ -64,7 +63,7 @@ interface OrbitalRingProps {
 
 function OrbitalRing({ radius, fill, color, index }: OrbitalRingProps) {
   const groupRef = useRef<THREE.Group>(null)
-  const starsCount = Math.round(fill * 8) // up to 8 stars per ring
+  const starsCount = Math.round(fill * 8)
 
   useFrame((state) => {
     if (groupRef.current) {
@@ -87,18 +86,14 @@ function OrbitalRing({ radius, fill, color, index }: OrbitalRingProps) {
 
   return (
     <group ref={groupRef}>
-      {/* Ring line */}
       <mesh rotation-x={Math.PI / 2}>
         <ringGeometry args={[radius - 0.005, radius + 0.005, 64]} />
         <meshBasicMaterial color={color} transparent opacity={0.15} />
       </mesh>
-
-      {/* Stars */}
       {stars.map((star, i) => (
         <mesh key={i} position={[star.x, star.y, star.z]}>
           <sphereGeometry args={[star.scale, 8, 8]} />
           <meshBasicMaterial color={color} />
-          {/* Glow */}
           <pointLight color={threeColor} intensity={0.1} distance={0.5} />
         </mesh>
       ))}
@@ -114,15 +109,11 @@ function ConstellationScene() {
   return (
     <>
       <ambientLight intensity={0.3} />
-
-      {/* Center glow */}
       <mesh>
         <sphereGeometry args={[0.05, 16, 16]} />
         <meshBasicMaterial color="#f59e0b" transparent opacity={0.6} />
       </mesh>
       <pointLight color="#f59e0b" intensity={0.5} distance={3} />
-
-      {/* Orbital rings */}
       {RING_COLORS.map((color, i) => (
         <OrbitalRing
           key={i}
@@ -132,7 +123,6 @@ function ConstellationScene() {
           index={i}
         />
       ))}
-
       <OrbitControls
         enableZoom={false}
         enablePan={false}
@@ -150,61 +140,92 @@ export function ConstellationWidget() {
   const { draft } = useArtistDnaStore()
 
   const fills = calculateRingFill(draft)
+  const fillValues = [fills.sound, fills.influences, fills.persona, fills.lexicon, fills.profile]
   const totalFill = Object.values(fills).reduce((sum, v) => sum + v, 0) / 5
 
+  // Collapsed: compact inline bar with ring dots and overall %
   if (!expanded) {
     return (
-      <Button
-        variant="ghost"
-        size="sm"
+      <button
         onClick={() => setExpanded(true)}
-        className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full"
-        title="DNA Constellation"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border/50 bg-background/80 hover:bg-muted/50 transition-colors"
       >
-        <Star className="w-4 h-4 text-amber-400" />
-      </Button>
+        <Star className="w-3.5 h-3.5 text-amber-400" />
+        {RING_LABELS.map((_, i) => (
+          <span
+            key={i}
+            className="w-2 h-2 rounded-full"
+            style={{
+              backgroundColor: RING_COLORS[i],
+              opacity: fillValues[i] > 0 ? 0.4 + fillValues[i] * 0.6 : 0.15,
+            }}
+          />
+        ))}
+        <span className="text-[10px] font-medium text-amber-400 ml-1">
+          {Math.round(totalFill * 100)}%
+        </span>
+        <ChevronDown className="w-3 h-3 text-muted-foreground" />
+      </button>
     )
   }
 
+  // Expanded: horizontal strip — 3D canvas on left, legend on right
   return (
-    <div className="absolute top-2 right-2 z-20 w-[220px] rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm shadow-lg overflow-hidden">
-      <div className="flex items-center justify-between px-2 py-1 border-b border-border/50">
-        <span className="text-[10px] font-medium text-muted-foreground">DNA Constellation</span>
-        <button
-          className="text-[10px] text-muted-foreground hover:text-foreground"
-          onClick={() => setExpanded(false)}
-        >
-          Collapse
-        </button>
-      </div>
+    <div className="rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm overflow-hidden">
+      <div className="flex">
+        {/* 3D Canvas */}
+        <div className="w-[160px] h-[140px] bg-black/80 shrink-0">
+          <Canvas camera={{ position: [0, 0, 2.5], fov: 45 }}>
+            <ConstellationScene />
+          </Canvas>
+        </div>
 
-      <div className="h-[200px] bg-black/80 border-b border-border/30">
-        <Canvas camera={{ position: [0, 0, 2.5], fov: 45 }}>
-          <ConstellationScene />
-        </Canvas>
-      </div>
+        {/* Legend + stats */}
+        <div className="flex-1 px-3 py-2 flex flex-col justify-between min-w-0">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-medium text-muted-foreground flex items-center gap-1">
+              <Star className="w-3 h-3 text-amber-400" />
+              DNA Constellation
+            </span>
+            <button
+              className="text-muted-foreground hover:text-foreground p-0.5"
+              onClick={() => setExpanded(false)}
+              title="Collapse"
+            >
+              <ChevronUp className="w-3.5 h-3.5" />
+            </button>
+          </div>
 
-      {/* Ring legend */}
-      <div className="px-2 py-1.5 space-y-0.5">
-        {RING_LABELS.map((label, i) => {
-          const fillValues = [fills.sound, fills.influences, fills.persona, fills.lexicon, fills.profile]
-          return (
-            <div key={label} className="flex items-center gap-1.5">
-              <span
-                className="w-1.5 h-1.5 rounded-full shrink-0"
-                style={{ backgroundColor: RING_COLORS[i] }}
-              />
-              <span className="text-[9px] text-muted-foreground flex-1">{label}</span>
-              <span className="text-[9px] text-muted-foreground">
-                {Math.round(fillValues[i] * 100)}%
-              </span>
+          <div className="space-y-0.5">
+            {RING_LABELS.map((label, i) => (
+              <div key={label} className="flex items-center gap-1.5">
+                <span
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ backgroundColor: RING_COLORS[i] }}
+                />
+                <span className="text-[10px] text-muted-foreground flex-1">{label}</span>
+                {/* Mini progress bar */}
+                <div className="w-12 h-1 rounded-full bg-muted/50 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${fillValues[i] * 100}%`,
+                      backgroundColor: RING_COLORS[i],
+                    }}
+                  />
+                </div>
+                <span className="text-[10px] text-muted-foreground w-7 text-right">
+                  {Math.round(fillValues[i] * 100)}%
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t border-border/50 pt-1 mt-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-medium">Overall</span>
+              <span className="text-[10px] font-bold text-amber-400">{Math.round(totalFill * 100)}%</span>
             </div>
-          )
-        })}
-        <div className="border-t border-border/50 pt-0.5 mt-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] font-medium">Overall</span>
-            <span className="text-[9px] text-amber-400">{Math.round(totalFill * 100)}%</span>
           </div>
         </div>
       </div>

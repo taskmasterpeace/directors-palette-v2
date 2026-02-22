@@ -92,32 +92,34 @@ export function ArtistEditor() {
         </Button>
       </div>
 
-      <div className="relative">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-          <TabsList className="w-full overflow-x-auto flex-nowrap justify-start">
-            {ARTIST_DNA_TABS.map((tab) => (
-              <TabsTrigger
-                key={tab.id}
-                value={tab.id}
-                className={TAB_HIGHLIGHT[tab.id] || ''}
-              >
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          <TabsContent value="identity"><IdentityTab /></TabsContent>
-          <TabsContent value="sound"><SoundTab /></TabsContent>
-          <TabsContent value="persona"><PersonaTab /></TabsContent>
-          <TabsContent value="lexicon"><LexiconTab /></TabsContent>
-          <TabsContent value="look"><LookTab /></TabsContent>
-          <TabsContent value="catalog"><CatalogTab /></TabsContent>
-          <TabsContent value="studio"><StudioTab /></TabsContent>
-          <TabsContent value="the-mix"><TheMixOutput /></TabsContent>
-        </Tabs>
-
+      {/* Constellation widget + Tab bar row */}
+      <div className="flex items-end gap-3">
+        <div className="flex-1 min-w-0" />
         <ConstellationWidget />
       </div>
+
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+        <TabsList className="w-full overflow-x-auto flex-nowrap justify-start">
+          {ARTIST_DNA_TABS.map((tab) => (
+            <TabsTrigger
+              key={tab.id}
+              value={tab.id}
+              className={TAB_HIGHLIGHT[tab.id] || ''}
+            >
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value="identity"><IdentityTab /></TabsContent>
+        <TabsContent value="sound"><SoundTab /></TabsContent>
+        <TabsContent value="persona"><PersonaTab /></TabsContent>
+        <TabsContent value="lexicon"><LexiconTab /></TabsContent>
+        <TabsContent value="look"><LookTab /></TabsContent>
+        <TabsContent value="catalog"><CatalogTab /></TabsContent>
+        <TabsContent value="studio"><StudioTab /></TabsContent>
+        <TabsContent value="the-mix"><TheMixOutput /></TabsContent>
+      </Tabs>
     </div>
   )
 }
