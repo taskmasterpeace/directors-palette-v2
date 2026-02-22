@@ -1,11 +1,12 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { Sparkles } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { X } from 'lucide-react'
 import { useArtistDnaStore } from '../../store/artist-dna.store'
 
@@ -28,10 +29,12 @@ export function MagicWandField({
 }: MagicWandFieldProps) {
   const { suggestionCache, setSuggestions, consumeSuggestion, dismissSuggestion, draft } =
     useArtistDnaStore()
+  const [isLoading, setIsLoading] = useState(false)
 
   const suggestions = suggestionCache[field]?.suggestions ?? []
 
   const fetchSuggestions = useCallback(async () => {
+    setIsLoading(true)
     try {
       const res = await fetch('/api/artist-dna/suggest', {
         method: 'POST',
@@ -52,6 +55,8 @@ export function MagicWandField({
       }
     } catch (error) {
       console.error('Failed to fetch suggestions:', error)
+    } finally {
+      setIsLoading(false)
     }
   }, [field, section, value, draft, setSuggestions])
 
@@ -75,16 +80,26 @@ export function MagicWandField({
           placeholder={placeholder}
           className={multiline ? 'pr-10 min-h-[80px]' : 'pr-10'}
         />
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={fetchSuggestions}
-          className="absolute top-1 right-1 h-7 w-7 p-0"
-          aria-label="Get suggestions"
-        >
-          <Sparkles className="w-4 h-4 text-amber-500" />
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={fetchSuggestions}
+                disabled={isLoading}
+                className="absolute top-1 right-1 h-7 w-7 p-0"
+                aria-label="Get suggestions"
+              >
+                <Sparkles className={`w-4 h-4 text-amber-500 ${isLoading ? 'animate-spin' : ''}`} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>AI suggestions based on your artist profile</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       {suggestions.length > 0 && (

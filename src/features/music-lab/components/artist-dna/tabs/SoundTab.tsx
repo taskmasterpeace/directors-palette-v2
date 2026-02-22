@@ -1,19 +1,49 @@
 'use client'
 
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import { Music2 } from 'lucide-react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { GenreCascade } from '../GenreCascade'
 import { TagInput } from '../TagInput'
 import { MagicWandField } from '../MagicWandField'
+import { MelodyBiasSlider } from '../MelodyBiasSlider'
 import { useArtistDnaStore } from '../../../store/artist-dna.store'
 
-const TEMPO_OPTIONS = ['Slow (60-80 BPM)', 'Mid (80-110 BPM)', 'Upbeat (110-140 BPM)', 'Fast (140-170 BPM)', 'Variable']
-
 export function SoundTab() {
-  const { draft, updateDraft } = useArtistDnaStore()
+  const { draft, updateDraft, suggestionCache, setSuggestions, consumeSuggestion, dismissSuggestion } =
+    useArtistDnaStore()
   const sound = draft.sound
+
+  const [loadingField, setLoadingField] = useState<string | null>(null)
+
+  const fetchTagSuggestions = async (field: string, existing: string[]) => {
+    setLoadingField(field)
+    try {
+      const res = await fetch('/api/artist-dna/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          field,
+          section: 'sound',
+          currentValue: '',
+          context: draft,
+          exclude: existing,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.suggestions?.length) {
+          setSuggestions(field, data.suggestions)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch suggestions:', error)
+    } finally {
+      setLoadingField(null)
+    }
+  }
 
   return (
     <Card>
@@ -26,57 +56,87 @@ export function SoundTab() {
       <CardContent className="space-y-4">
         <GenreCascade />
 
-        <div className="space-y-2">
-          <Label>Vocal Textures</Label>
-          <TagInput
-            tags={sound.vocalTextures}
-            onTagsChange={(vocalTextures) => updateDraft('sound', { vocalTextures })}
-            placeholder="e.g. raspy, smooth, falsetto..."
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Vocal Textures</Label>
+            <TagInput
+              tags={sound.vocalTextures}
+              onTagsChange={(vocalTextures) => updateDraft('sound', { vocalTextures })}
+              placeholder="e.g. raspy, smooth, falsetto..."
+              onWandClick={() => fetchTagSuggestions('vocalTextures', sound.vocalTextures)}
+              isLoading={loadingField === 'vocalTextures'}
+              suggestions={suggestionCache['vocalTextures']?.suggestions?.slice(0, 5) ?? []}
+              onSuggestionClick={(val) => {
+                if (!sound.vocalTextures.includes(val)) {
+                  updateDraft('sound', { vocalTextures: [...sound.vocalTextures, val] })
+                }
+                consumeSuggestion('vocalTextures', val)
+              }}
+              onSuggestionDismiss={(i) => dismissSuggestion('vocalTextures', i)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Production Preferences</Label>
+            <TagInput
+              tags={sound.productionPreferences}
+              onTagsChange={(productionPreferences) => updateDraft('sound', { productionPreferences })}
+              placeholder="e.g. lo-fi, minimalist, layered..."
+              onWandClick={() => fetchTagSuggestions('productionPreferences', sound.productionPreferences)}
+              isLoading={loadingField === 'productionPreferences'}
+              suggestions={suggestionCache['productionPreferences']?.suggestions?.slice(0, 5) ?? []}
+              onSuggestionClick={(val) => {
+                if (!sound.productionPreferences.includes(val)) {
+                  updateDraft('sound', { productionPreferences: [...sound.productionPreferences, val] })
+                }
+                consumeSuggestion('productionPreferences', val)
+              }}
+              onSuggestionDismiss={(i) => dismissSuggestion('productionPreferences', i)}
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
-          <Label>Tempo</Label>
-          <Select
-            value={sound.tempoPreference}
-            onValueChange={(tempoPreference) => updateDraft('sound', { tempoPreference })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select tempo..." />
-            </SelectTrigger>
-            <SelectContent>
-              {TEMPO_OPTIONS.map((t) => (
-                <SelectItem key={t} value={t}>{t}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Production Styles</Label>
+          <Label>Artist Influences</Label>
           <TagInput
-            tags={sound.productionStyles}
-            onTagsChange={(productionStyles) => updateDraft('sound', { productionStyles })}
-            placeholder="e.g. lo-fi, minimalist, layered..."
+            tags={sound.artistInfluences}
+            onTagsChange={(artistInfluences) => updateDraft('sound', { artistInfluences })}
+            placeholder="e.g. Kendrick Lamar, Radiohead, Billie Eilish..."
+            onWandClick={() => fetchTagSuggestions('artistInfluences', sound.artistInfluences)}
+            isLoading={loadingField === 'artistInfluences'}
+            suggestions={suggestionCache['artistInfluences']?.suggestions?.slice(0, 5) ?? []}
+            onSuggestionClick={(val) => {
+              if (!sound.artistInfluences.includes(val)) {
+                updateDraft('sound', { artistInfluences: [...sound.artistInfluences, val] })
+              }
+              consumeSuggestion('artistInfluences', val)
+            }}
+            onSuggestionDismiss={(i) => dismissSuggestion('artistInfluences', i)}
           />
         </div>
 
-        <div className="space-y-2">
-          <Label>Era Influences</Label>
-          <TagInput
-            tags={sound.eraInfluences}
-            onTagsChange={(eraInfluences) => updateDraft('sound', { eraInfluences })}
-            placeholder="e.g. 90s, Y2K, modern..."
-          />
-        </div>
+        <MelodyBiasSlider
+          value={sound.melodyBias}
+          onChange={(melodyBias) => updateDraft('sound', { melodyBias })}
+        />
 
-        <div className="space-y-2">
-          <Label>Instruments</Label>
-          <TagInput
-            tags={sound.instruments}
-            onTagsChange={(instruments) => updateDraft('sound', { instruments })}
-            placeholder="e.g. 808s, guitar, piano..."
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="sound-language">Language</Label>
+            <Input
+              id="sound-language"
+              value={sound.language}
+              onChange={(e) => updateDraft('sound', { language: e.target.value })}
+              placeholder="Primary language..."
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Secondary Languages</Label>
+            <TagInput
+              tags={sound.secondaryLanguages}
+              onTagsChange={(secondaryLanguages) => updateDraft('sound', { secondaryLanguages })}
+              placeholder="Add language..."
+            />
+          </div>
         </div>
 
         <div className="space-y-2">

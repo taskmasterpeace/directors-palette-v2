@@ -5,6 +5,7 @@ import { X, Sparkles } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface TagInputProps {
   tags: string[]
@@ -12,6 +13,7 @@ interface TagInputProps {
   placeholder?: string
   maxTags?: number
   onWandClick?: () => void
+  isLoading?: boolean
   suggestions?: string[]
   onSuggestionClick?: (value: string) => void
   onSuggestionDismiss?: (index: number) => void
@@ -23,6 +25,7 @@ export function TagInput({
   placeholder = 'Add tag...',
   maxTags,
   onWandClick,
+  isLoading = false,
   suggestions = [],
   onSuggestionClick,
   onSuggestionDismiss,
@@ -82,16 +85,26 @@ export function TagInput({
             className="border-0 shadow-none p-0 h-7 focus-visible:ring-0"
           />
           {onWandClick && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onWandClick}
-              className="h-7 w-7 p-0 shrink-0"
-              aria-label="Get suggestions"
-            >
-              <Sparkles className="w-4 h-4 text-amber-500" />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={onWandClick}
+                    disabled={isLoading}
+                    className="h-7 w-7 p-0 shrink-0"
+                    aria-label="Get suggestions"
+                  >
+                    <Sparkles className={`w-4 h-4 text-amber-500 ${isLoading ? 'animate-spin' : ''}`} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>AI suggestions based on your artist profile</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
       </div>

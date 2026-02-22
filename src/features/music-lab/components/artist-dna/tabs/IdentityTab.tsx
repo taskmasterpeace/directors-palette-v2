@@ -21,14 +21,25 @@ export function IdentityTab() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="artist-name">Name</Label>
-          <Input
-            id="artist-name"
-            value={identity.name}
-            onChange={(e) => updateDraft('identity', { name: e.target.value })}
-            placeholder="Artist name..."
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="artist-name">Name</Label>
+            <Input
+              id="artist-name"
+              value={identity.name}
+              onChange={(e) => updateDraft('identity', { name: e.target.value })}
+              placeholder="Artist name..."
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="artist-ethnicity">Ethnicity</Label>
+            <Input
+              id="artist-ethnicity"
+              value={identity.ethnicity}
+              onChange={(e) => updateDraft('identity', { ethnicity: e.target.value })}
+              placeholder="Ethnicity..."
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -70,6 +81,34 @@ export function IdentityTab() {
             tags={identity.significantEvents}
             onTagsChange={(significantEvents) => updateDraft('identity', { significantEvents })}
             placeholder="Add life event..."
+            onWandClick={() => {
+              fetch('/api/artist-dna/suggest', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  field: 'significantEvents',
+                  section: 'identity',
+                  currentValue: '',
+                  context: draft,
+                  exclude: identity.significantEvents,
+                }),
+              })
+                .then((r) => r.json())
+                .then((d) => {
+                  if (d.suggestions?.length) {
+                    useArtistDnaStore.getState().setSuggestions('significantEvents', d.suggestions)
+                  }
+                })
+                .catch(console.error)
+            }}
+            suggestions={useArtistDnaStore.getState().suggestionCache['significantEvents']?.suggestions?.slice(0, 5) ?? []}
+            onSuggestionClick={(val) => {
+              if (!identity.significantEvents.includes(val)) {
+                updateDraft('identity', { significantEvents: [...identity.significantEvents, val] })
+              }
+              useArtistDnaStore.getState().consumeSuggestion('significantEvents', val)
+            }}
+            onSuggestionDismiss={(i) => useArtistDnaStore.getState().dismissSuggestion('significantEvents', i)}
           />
         </div>
       </CardContent>

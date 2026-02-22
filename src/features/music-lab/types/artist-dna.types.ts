@@ -9,6 +9,7 @@
 
 export interface ArtistIdentity {
   name: string
+  ethnicity: string
   city: string
   region: string
   backstory: string
@@ -20,21 +21,12 @@ export interface ArtistSound {
   subgenres: string[]
   microgenres: string[]
   vocalTextures: string[]
-  tempoPreference: string
-  productionStyles: string[]
-  eraInfluences: string[]
-  instruments: string[]
-  soundDescription: string
-}
-
-export interface ArtistFlow {
-  rhymeDensity: string
-  flowPatterns: string[]
+  productionPreferences: string[]
+  artistInfluences: string[]
   melodyBias: number // 0 = Pure Rap, 100 = Pure Singing
-  avgLineLength: string
   language: string
   secondaryLanguages: string[]
-  flowDescription: string
+  soundDescription: string
 }
 
 export interface ArtistPersona {
@@ -43,7 +35,6 @@ export interface ArtistPersona {
   dislikes: string[]
   attitude: string
   worldview: string
-  quirks: string[]
 }
 
 export interface ArtistLexicon {
@@ -51,8 +42,6 @@ export interface ArtistLexicon {
   slang: string[]
   bannedWords: string[]
   adLibs: string[]
-  adLibPlacement: string
-  vocabularyLevel: string
 }
 
 export interface ArtistLook {
@@ -62,7 +51,6 @@ export interface ArtistLook {
   jewelry: string
   tattoos: string
   visualDescription: string
-  referenceImageUrl?: string
 }
 
 export interface CatalogEntry {
@@ -85,7 +73,6 @@ export interface ArtistCatalog {
 export interface ArtistDNA {
   identity: ArtistIdentity
   sound: ArtistSound
-  flow: ArtistFlow
   persona: ArtistPersona
   lexicon: ArtistLexicon
   look: ArtistLook
@@ -141,7 +128,6 @@ export interface UserArtistProfile {
 export type ArtistDnaTab =
   | 'identity'
   | 'sound'
-  | 'flow'
   | 'persona'
   | 'lexicon'
   | 'look'
@@ -151,7 +137,6 @@ export type ArtistDnaTab =
 export const ARTIST_DNA_TABS: { id: ArtistDnaTab; label: string }[] = [
   { id: 'identity', label: 'Identity' },
   { id: 'sound', label: 'Sound' },
-  { id: 'flow', label: 'Flow' },
   { id: 'persona', label: 'Persona' },
   { id: 'lexicon', label: 'Lexicon' },
   { id: 'look', label: 'Look' },
@@ -167,6 +152,7 @@ export function createEmptyDNA(): ArtistDNA {
   return {
     identity: {
       name: '',
+      ethnicity: '',
       city: '',
       region: '',
       backstory: '',
@@ -177,20 +163,12 @@ export function createEmptyDNA(): ArtistDNA {
       subgenres: [],
       microgenres: [],
       vocalTextures: [],
-      tempoPreference: '',
-      productionStyles: [],
-      eraInfluences: [],
-      instruments: [],
-      soundDescription: '',
-    },
-    flow: {
-      rhymeDensity: '',
-      flowPatterns: [],
+      productionPreferences: [],
+      artistInfluences: [],
       melodyBias: 50,
-      avgLineLength: '',
       language: 'English',
       secondaryLanguages: [],
-      flowDescription: '',
+      soundDescription: '',
     },
     persona: {
       traits: [],
@@ -198,15 +176,12 @@ export function createEmptyDNA(): ArtistDNA {
       dislikes: [],
       attitude: '',
       worldview: '',
-      quirks: [],
     },
     lexicon: {
       signaturePhrases: [],
       slang: [],
       bannedWords: [],
       adLibs: [],
-      adLibPlacement: '',
-      vocabularyLevel: '',
     },
     look: {
       skinTone: '',

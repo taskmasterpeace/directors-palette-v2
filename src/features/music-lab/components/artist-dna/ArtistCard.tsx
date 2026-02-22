@@ -30,17 +30,9 @@ export function ArtistCard({ artist, onClick, onDelete }: ArtistCardProps) {
     >
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
-          {artist.dna.look.referenceImageUrl ? (
-            <img
-              src={artist.dna.look.referenceImageUrl}
-              alt={artist.name}
-              className="w-12 h-12 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-              {initials || '?'}
-            </div>
-          )}
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+            {initials || '?'}
+          </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">

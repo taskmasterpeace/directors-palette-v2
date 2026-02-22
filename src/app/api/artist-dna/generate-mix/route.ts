@@ -23,15 +23,21 @@ function buildSystemPrompt(dna: ArtistDNA): string {
   parts.push('Generate a lyrics template that matches this artist\'s DNA exactly.')
   parts.push('Return ONLY the lyrics text with section headers like [Verse 1], [Chorus], etc.')
 
-  // Flow rules
-  if (dna.flow.rhymeDensity) {
-    parts.push(`Rhyme density: ${dna.flow.rhymeDensity}`)
+  // Sound context
+  if (dna.sound.melodyBias <= 30) {
+    parts.push('This is primarily a rap/spoken-word track. Focus on lyrical density and wordplay.')
+  } else if (dna.sound.melodyBias >= 70) {
+    parts.push('This is primarily a sung track. Focus on melodic phrasing and hooks.')
+  } else {
+    parts.push('This blends rapping and singing. Alternate between lyrical sections and melodic hooks.')
   }
-  if (dna.flow.flowPatterns.length > 0) {
-    parts.push(`Flow patterns: ${dna.flow.flowPatterns.join(', ')}`)
+
+  if (dna.sound.productionPreferences.length > 0) {
+    parts.push(`Production style: ${dna.sound.productionPreferences.join(', ')}`)
   }
-  if (dna.flow.avgLineLength) {
-    parts.push(`Average line length: ${dna.flow.avgLineLength}`)
+
+  if (dna.sound.artistInfluences.length > 0) {
+    parts.push(`Influenced by: ${dna.sound.artistInfluences.join(', ')}`)
   }
 
   // Lexicon rules
@@ -44,11 +50,8 @@ function buildSystemPrompt(dna: ArtistDNA): string {
   if (dna.lexicon.bannedWords.length > 0) {
     parts.push(`NEVER use these words: ${dna.lexicon.bannedWords.join(', ')}`)
   }
-  if (dna.lexicon.vocabularyLevel) {
-    parts.push(`Vocabulary level: ${dna.lexicon.vocabularyLevel}`)
-  }
   if (dna.lexicon.adLibs.length > 0) {
-    parts.push(`Include ad-libs: ${dna.lexicon.adLibs.join(', ')} (placement: ${dna.lexicon.adLibPlacement || 'natural'})`)
+    parts.push(`Include ad-libs: ${dna.lexicon.adLibs.join(', ')}`)
   }
 
   // Persona

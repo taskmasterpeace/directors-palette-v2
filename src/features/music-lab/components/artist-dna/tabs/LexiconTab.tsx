@@ -1,18 +1,45 @@
 'use client'
 
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { BookOpen } from 'lucide-react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { TagInput } from '../TagInput'
 import { useArtistDnaStore } from '../../../store/artist-dna.store'
 
-const PLACEMENT_OPTIONS = ['Start of bar', 'End of bar', 'Between bars', 'Random', 'After punchlines']
-const VOCAB_LEVELS = ['Street', 'Conversational', 'Literary', 'Academic', 'Mixed']
-
 export function LexiconTab() {
-  const { draft, updateDraft } = useArtistDnaStore()
+  const { draft, updateDraft, suggestionCache, setSuggestions, consumeSuggestion, dismissSuggestion } =
+    useArtistDnaStore()
   const lexicon = draft.lexicon
+
+  const [loadingField, setLoadingField] = useState<string | null>(null)
+
+  const fetchTagSuggestions = async (field: string, existing: string[]) => {
+    setLoadingField(field)
+    try {
+      const res = await fetch('/api/artist-dna/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          field,
+          section: 'lexicon',
+          currentValue: '',
+          context: draft,
+          exclude: existing,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.suggestions?.length) {
+          setSuggestions(field, data.suggestions)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch suggestions:', error)
+    } finally {
+      setLoadingField(null)
+    }
+  }
 
   return (
     <Card>
@@ -23,74 +50,82 @@ export function LexiconTab() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label>Signature Phrases</Label>
-          <TagInput
-            tags={lexicon.signaturePhrases}
-            onTagsChange={(signaturePhrases) => updateDraft('lexicon', { signaturePhrases })}
-            placeholder="Catchphrases, mottos..."
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Signature Phrases</Label>
+            <TagInput
+              tags={lexicon.signaturePhrases}
+              onTagsChange={(signaturePhrases) => updateDraft('lexicon', { signaturePhrases })}
+              placeholder="Catchphrases, mottos..."
+              onWandClick={() => fetchTagSuggestions('signaturePhrases', lexicon.signaturePhrases)}
+              isLoading={loadingField === 'signaturePhrases'}
+              suggestions={suggestionCache['signaturePhrases']?.suggestions?.slice(0, 5) ?? []}
+              onSuggestionClick={(val) => {
+                if (!lexicon.signaturePhrases.includes(val)) {
+                  updateDraft('lexicon', { signaturePhrases: [...lexicon.signaturePhrases, val] })
+                }
+                consumeSuggestion('signaturePhrases', val)
+              }}
+              onSuggestionDismiss={(i) => dismissSuggestion('signaturePhrases', i)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Slang</Label>
+            <TagInput
+              tags={lexicon.slang}
+              onTagsChange={(slang) => updateDraft('lexicon', { slang })}
+              placeholder="Regional/personal slang..."
+              onWandClick={() => fetchTagSuggestions('slang', lexicon.slang)}
+              isLoading={loadingField === 'slang'}
+              suggestions={suggestionCache['slang']?.suggestions?.slice(0, 5) ?? []}
+              onSuggestionClick={(val) => {
+                if (!lexicon.slang.includes(val)) {
+                  updateDraft('lexicon', { slang: [...lexicon.slang, val] })
+                }
+                consumeSuggestion('slang', val)
+              }}
+              onSuggestionDismiss={(i) => dismissSuggestion('slang', i)}
+            />
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label>Slang</Label>
-          <TagInput
-            tags={lexicon.slang}
-            onTagsChange={(slang) => updateDraft('lexicon', { slang })}
-            placeholder="Regional/personal slang..."
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Banned Words</Label>
-          <TagInput
-            tags={lexicon.bannedWords}
-            onTagsChange={(bannedWords) => updateDraft('lexicon', { bannedWords })}
-            placeholder="Words to never use..."
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Ad-Libs</Label>
-          <TagInput
-            tags={lexicon.adLibs}
-            onTagsChange={(adLibs) => updateDraft('lexicon', { adLibs })}
-            placeholder="e.g. yeah, skrrt, uh..."
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Ad-Lib Placement</Label>
-          <Select
-            value={lexicon.adLibPlacement}
-            onValueChange={(adLibPlacement) => updateDraft('lexicon', { adLibPlacement })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select placement..." />
-            </SelectTrigger>
-            <SelectContent>
-              {PLACEMENT_OPTIONS.map((p) => (
-                <SelectItem key={p} value={p}>{p}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Vocabulary Level</Label>
-          <Select
-            value={lexicon.vocabularyLevel}
-            onValueChange={(vocabularyLevel) => updateDraft('lexicon', { vocabularyLevel })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select level..." />
-            </SelectTrigger>
-            <SelectContent>
-              {VOCAB_LEVELS.map((v) => (
-                <SelectItem key={v} value={v}>{v}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Ad-Libs</Label>
+            <TagInput
+              tags={lexicon.adLibs}
+              onTagsChange={(adLibs) => updateDraft('lexicon', { adLibs })}
+              placeholder="e.g. yeah, skrrt, uh..."
+              onWandClick={() => fetchTagSuggestions('adLibs', lexicon.adLibs)}
+              isLoading={loadingField === 'adLibs'}
+              suggestions={suggestionCache['adLibs']?.suggestions?.slice(0, 5) ?? []}
+              onSuggestionClick={(val) => {
+                if (!lexicon.adLibs.includes(val)) {
+                  updateDraft('lexicon', { adLibs: [...lexicon.adLibs, val] })
+                }
+                consumeSuggestion('adLibs', val)
+              }}
+              onSuggestionDismiss={(i) => dismissSuggestion('adLibs', i)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Banned Words</Label>
+            <TagInput
+              tags={lexicon.bannedWords}
+              onTagsChange={(bannedWords) => updateDraft('lexicon', { bannedWords })}
+              placeholder="Words to never use..."
+              onWandClick={() => fetchTagSuggestions('bannedWords', lexicon.bannedWords)}
+              isLoading={loadingField === 'bannedWords'}
+              suggestions={suggestionCache['bannedWords']?.suggestions?.slice(0, 5) ?? []}
+              onSuggestionClick={(val) => {
+                if (!lexicon.bannedWords.includes(val)) {
+                  updateDraft('lexicon', { bannedWords: [...lexicon.bannedWords, val] })
+                }
+                consumeSuggestion('bannedWords', val)
+              }}
+              onSuggestionDismiss={(i) => dismissSuggestion('bannedWords', i)}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>

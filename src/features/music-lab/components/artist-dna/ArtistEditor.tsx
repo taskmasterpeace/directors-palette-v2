@@ -7,7 +7,6 @@ import { useArtistDnaStore } from '../../store/artist-dna.store'
 import { ARTIST_DNA_TABS } from '../../types/artist-dna.types'
 import { IdentityTab } from './tabs/IdentityTab'
 import { SoundTab } from './tabs/SoundTab'
-import { FlowTab } from './tabs/FlowTab'
 import { PersonaTab } from './tabs/PersonaTab'
 import { LexiconTab } from './tabs/LexiconTab'
 import { LookTab } from './tabs/LookTab'
@@ -56,7 +55,6 @@ export function ArtistEditor() {
 
         <TabsContent value="identity"><IdentityTab /></TabsContent>
         <TabsContent value="sound"><SoundTab /></TabsContent>
-        <TabsContent value="flow"><FlowTab /></TabsContent>
         <TabsContent value="persona"><PersonaTab /></TabsContent>
         <TabsContent value="lexicon"><LexiconTab /></TabsContent>
         <TabsContent value="look"><LookTab /></TabsContent>

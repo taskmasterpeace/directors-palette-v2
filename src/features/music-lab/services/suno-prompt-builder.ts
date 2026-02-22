@@ -18,21 +18,16 @@ export function buildVocalPrompt(dna: ArtistDNA): string {
   }
 
   // Melody bias interpretation
-  if (dna.flow.melodyBias <= 20) {
+  if (dna.sound.melodyBias <= 20) {
     parts.push('spoken word delivery')
-  } else if (dna.flow.melodyBias <= 40) {
+  } else if (dna.sound.melodyBias <= 40) {
     parts.push('rap-focused with occasional melody')
-  } else if (dna.flow.melodyBias <= 60) {
+  } else if (dna.sound.melodyBias <= 60) {
     parts.push('balanced rap and singing')
-  } else if (dna.flow.melodyBias <= 80) {
+  } else if (dna.sound.melodyBias <= 80) {
     parts.push('melodic with spoken sections')
   } else {
     parts.push('fully sung vocals')
-  }
-
-  // Flow patterns
-  if (dna.flow.flowPatterns.length > 0) {
-    parts.push(dna.flow.flowPatterns.slice(0, 3).join(', ') + ' flow')
   }
 
   // Persona attitude coloring
@@ -65,24 +60,14 @@ export function buildMusicStylePrompt(dna: ArtistDNA): string {
     tags.push(...dna.sound.subgenres.slice(0, 2))
   }
 
-  // Production styles
-  if (dna.sound.productionStyles.length > 0) {
-    tags.push(...dna.sound.productionStyles.slice(0, 2))
+  // Production preferences
+  if (dna.sound.productionPreferences.length > 0) {
+    tags.push(...dna.sound.productionPreferences.slice(0, 2))
   }
 
-  // Tempo
-  if (dna.sound.tempoPreference) {
-    tags.push(dna.sound.tempoPreference)
-  }
-
-  // Era influence
-  if (dna.sound.eraInfluences.length > 0) {
-    tags.push(dna.sound.eraInfluences[0] + ' influenced')
-  }
-
-  // Instruments
-  if (dna.sound.instruments.length > 0) {
-    tags.push(...dna.sound.instruments.slice(0, 2))
+  // Artist influences
+  if (dna.sound.artistInfluences.length > 0) {
+    tags.push(dna.sound.artistInfluences[0] + ' influenced')
   }
 
   return tags.filter(Boolean).join(', ')
