@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useMemo, useCallback } from 'react'
-import { Star, ChevronUp, ChevronDown, ArrowLeft, Save, User } from 'lucide-react'
+import { Star, ChevronUp, ChevronDown, ArrowLeft, Save, User, Sparkles, X } from 'lucide-react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Html } from '@react-three/drei'
 import { Button } from '@/components/ui/button'
@@ -313,7 +313,7 @@ function ConstellationScene() {
 
 export function ConstellationWidget() {
   const [expanded, setExpanded] = useState(true)
-  const { draft, isDirty, saveArtist, closeEditor, artists, activeArtistId, loadArtistIntoDraft, startNewArtist } = useArtistDnaStore()
+  const { draft, isDirty, saveArtist, closeEditor, artists, activeArtistId, loadArtistIntoDraft, startNewArtist, seededFrom, clearSeededFrom } = useArtistDnaStore()
 
   const fills = calculateRingFill(draft)
   const fillValues = [fills.sound, fills.influences, fills.persona, fills.lexicon, fills.profile]
@@ -373,7 +373,7 @@ export function ConstellationWidget() {
             </div>
           </div>
 
-          {/* Overlay: Bottom-left — Back + Artist Name */}
+          {/* Overlay: Bottom-left — Back + Seeded badge + Artist Name */}
           <div className="absolute bottom-3 left-3 flex items-center gap-2 z-10">
             <Button
               variant="ghost"
@@ -384,6 +384,22 @@ export function ConstellationWidget() {
               <ArrowLeft className="w-3.5 h-3.5 mr-1" />
               Back
             </Button>
+
+            {seededFrom && (
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 backdrop-blur-sm border border-amber-400/30">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span className="text-[10px] text-amber-300 font-medium whitespace-nowrap">
+                  from {seededFrom}
+                </span>
+                <button
+                  onClick={clearSeededFrom}
+                  className="ml-0.5 text-amber-400/60 hover:text-amber-300 transition-colors"
+                  title="Dismiss"
+                >
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              </div>
+            )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

@@ -55,6 +55,8 @@ interface ArtistDnaState {
   // Actions - Seed from real artist
   startFromArtist: (artistName: string) => Promise<boolean>
   isSeedingFromArtist: boolean
+  seededFrom: string | null
+  clearSeededFrom: () => void
 
   // Actions - Draft editing
   setActiveTab: (tab: ArtistDnaTab) => void
@@ -96,6 +98,9 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
       sunoOutput: null,
       combineVocalAndStyle: false,
       isSeedingFromArtist: false,
+      seededFrom: null,
+
+      clearSeededFrom: () => set({ seededFrom: null }),
 
       initialize: async (userId: string) => {
         const state = get()
@@ -190,6 +195,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             isDirty: false,
             activeTab: 'identity',
             sunoOutput: null,
+            seededFrom: null,
           })
         }
       },
@@ -203,6 +209,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           activeTab: 'identity',
           sunoOutput: null,
           suggestionCache: {},
+          seededFrom: null,
         })
       },
 
@@ -218,7 +225,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             set({ isSeedingFromArtist: false })
             return false
           }
-          const { dna } = await res.json()
+          const { dna, seededFrom } = await res.json()
           if (!dna) {
             set({ isSeedingFromArtist: false })
             return false
@@ -237,11 +244,12 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             editorOpen: true,
             activeArtistId: null,
             draft: merged,
-            isDirty: true, // Mark dirty so user knows to save
+            isDirty: true,
             activeTab: 'identity',
             sunoOutput: null,
             suggestionCache: {},
             isSeedingFromArtist: false,
+            seededFrom: seededFrom || artistName,
           })
           return true
         } catch (error) {
@@ -403,6 +411,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           activeTab: 'identity',
           sunoOutput: null,
           suggestionCache: {},
+          seededFrom: null,
         })
       },
     }),
