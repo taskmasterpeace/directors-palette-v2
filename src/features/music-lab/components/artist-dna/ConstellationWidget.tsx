@@ -169,20 +169,20 @@ export function ConstellationWidget() {
     )
   }
 
-  // Expanded: horizontal strip — 3D canvas on left, legend on right
+  // Expanded: wide horizontal strip — canvas takes up space, legend beside it
   return (
-    <div className="rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm overflow-hidden">
-      <div className="flex">
-        {/* 3D Canvas */}
-        <div className="w-[160px] h-[140px] bg-black/80 shrink-0">
+    <div className="w-full rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm overflow-hidden">
+      <div className="flex h-[120px]">
+        {/* 3D Canvas — fills available width */}
+        <div className="flex-1 bg-black/80 min-w-0">
           <Canvas camera={{ position: [0, 0, 2.5], fov: 45 }}>
             <ConstellationScene />
           </Canvas>
         </div>
 
-        {/* Legend + stats */}
-        <div className="flex-1 px-3 py-2 flex flex-col justify-between min-w-0">
-          <div className="flex items-center justify-between mb-1.5">
+        {/* Legend + stats — compact fixed width */}
+        <div className="w-[200px] shrink-0 px-3 py-2 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1">
             <span className="text-[10px] font-medium text-muted-foreground flex items-center gap-1">
               <Star className="w-3 h-3 text-amber-400" />
               DNA Constellation
@@ -205,7 +205,7 @@ export function ConstellationWidget() {
                 />
                 <span className="text-[10px] text-muted-foreground flex-1">{label}</span>
                 {/* Mini progress bar */}
-                <div className="w-12 h-1 rounded-full bg-muted/50 overflow-hidden">
+                <div className="w-14 h-1.5 rounded-full bg-muted/50 overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{
