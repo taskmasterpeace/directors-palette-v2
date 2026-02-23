@@ -22,6 +22,8 @@ export function ArtistCard({ artist, onClick, onDelete }: ArtistCardProps) {
 
   const genres = artist.dna.sound.genres.slice(0, 3)
   const city = artist.dna.identity.city
+  const portraitUrl = artist.dna.look?.portraitUrl
+  const characterSheetUrl = artist.dna.look?.characterSheetUrl
 
   return (
     <Card
@@ -30,8 +32,12 @@ export function ArtistCard({ artist, onClick, onDelete }: ArtistCardProps) {
     >
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-            {initials || '?'}
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">
+            {portraitUrl ? (
+              <img src={portraitUrl} alt={artist.name} className="w-full h-full object-cover" />
+            ) : (
+              initials || '?'
+            )}
           </div>
 
           <div className="flex-1 min-w-0">
@@ -58,6 +64,11 @@ export function ArtistCard({ artist, onClick, onDelete }: ArtistCardProps) {
                     {g}
                   </Badge>
                 ))}
+              </div>
+            )}
+            {characterSheetUrl && (
+              <div className="mt-2 rounded-md overflow-hidden border border-border/30">
+                <img src={characterSheetUrl} alt="Character sheet" className="w-full h-auto" style={{ aspectRatio: '16/9' }} />
               </div>
             )}
           </div>
