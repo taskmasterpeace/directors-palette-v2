@@ -3,7 +3,7 @@
 import { useState, useRef, useMemo, useCallback } from 'react'
 import { Star, ChevronUp, ChevronDown, ArrowLeft, Save, ZoomIn, ZoomOut } from 'lucide-react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { OrbitControls, Text } from '@react-three/drei'
+import { OrbitControls, Html } from '@react-three/drei'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -136,7 +136,7 @@ function OrbitalRing({ radius, fill, color, label, index }: OrbitalRingProps) {
       const x = Math.cos(angle) * radius
       const z = Math.sin(angle) * radius
       const y = (Math.random() - 0.5) * 0.2
-      return { x, y, z, scale: 0.03 + Math.random() * 0.04 }
+      return { x, y, z, scale: 0.04 + Math.random() * 0.06 }
     })
   }, [starsCount, radius])
 
@@ -146,20 +146,27 @@ function OrbitalRing({ radius, fill, color, label, index }: OrbitalRingProps) {
     <group ref={groupRef}>
       {/* Ring torus */}
       <mesh rotation-x={Math.PI / 2}>
-        <torusGeometry args={[radius, 0.008, 8, 64]} />
+        <torusGeometry args={[radius, 0.012, 8, 64]} />
         <meshBasicMaterial color={color} transparent opacity={fill > 0 ? 0.3 : 0.08} />
       </mesh>
       {/* Label at the edge of the ring */}
-      <Text
-        position={[radius + 0.08, 0, 0]}
-        fontSize={0.06}
-        color={color}
-        anchorX="left"
-        anchorY="middle"
-        fillOpacity={fill > 0 ? 0.8 : 0.3}
+      <Html
+        position={[radius + 0.12, 0, 0]}
+        style={{ pointerEvents: 'none', whiteSpace: 'nowrap' }}
+        center={false}
       >
-        {label}
-      </Text>
+        <span
+          style={{
+            color,
+            fontSize: '10px',
+            fontWeight: 600,
+            opacity: fill > 0 ? 0.8 : 0.3,
+            textShadow: '0 0 4px rgba(0,0,0,0.8)',
+          }}
+        >
+          {label}
+        </span>
+      </Html>
       {/* Stars on the ring */}
       {stars.map((star, i) => (
         <mesh key={i} position={[star.x, star.y, star.z]}>
@@ -175,9 +182,9 @@ function OrbitalRing({ radius, fill, color, label, index }: OrbitalRingProps) {
 // Camera controller that responds to zoom level
 function CameraController({ zoom }: { zoom: number }) {
   const { camera } = useThree()
-  // zoom 0 = closest (0.8), zoom 1 = furthest (1.8)
-  const targetZ = 0.8 + zoom * 1.0
-  const targetY = 0.3 + zoom * 0.5
+  // zoom 0 = closest, zoom 1 = furthest
+  const targetZ = 1.5 + zoom * 2.5
+  const targetY = 1.5 + zoom * 1.5
 
   useFrame(() => {
     camera.position.z += (targetZ - camera.position.z) * 0.05
@@ -200,12 +207,12 @@ function ConstellationScene({ zoom }: { zoom: number }) {
       <CameraController zoom={zoom} />
       {/* Core star — glowing amber */}
       <mesh>
-        <sphereGeometry args={[0.08, 16, 16]} />
+        <sphereGeometry args={[0.12, 16, 16]} />
         <meshBasicMaterial color="#f59e0b" />
       </mesh>
       {/* Outer glow */}
       <mesh>
-        <sphereGeometry args={[0.14, 16, 16]} />
+        <sphereGeometry args={[0.22, 16, 16]} />
         <meshBasicMaterial color="#f59e0b" transparent opacity={0.15} />
       </mesh>
       <pointLight color="#f59e0b" intensity={0.8} distance={4} />
@@ -213,7 +220,7 @@ function ConstellationScene({ zoom }: { zoom: number }) {
       {RING_COLORS.map((color, i) => (
         <OrbitalRing
           key={i}
-          radius={0.3 + i * 0.25}
+          radius={0.4 + i * 0.4}
           fill={fillValues[i]}
           color={color}
           label={RING_LABELS[i]}
@@ -234,7 +241,7 @@ function ConstellationScene({ zoom }: { zoom: number }) {
 
 export function ConstellationWidget() {
   const [expanded, setExpanded] = useState(true)
-  const [zoom, setZoom] = useState(0.5) // 0 = closest, 1 = furthest out
+  const [zoom, setZoom] = useState(0.3) // 0 = closest, 1 = furthest out
   const { draft, isDirty, saveArtist, closeEditor, artists, activeArtistId, loadArtistIntoDraft, startNewArtist } = useArtistDnaStore()
 
   const fills = calculateRingFill(draft)
@@ -276,10 +283,10 @@ export function ConstellationWidget() {
 
   return (
     <div className="w-full rounded-xl border border-border/40 overflow-hidden relative">
-      <div className="flex h-[200px]">
+      <div className="flex h-[260px]">
         {/* 3D Canvas — fills available width */}
         <div className="flex-1 min-w-0 relative">
-          <Canvas camera={{ position: [0, 0.55, 1.3], fov: 55 }}>
+          <Canvas camera={{ position: [0, 1.95, 2.25], fov: 60 }}>
             <ConstellationScene zoom={zoom} />
           </Canvas>
 
