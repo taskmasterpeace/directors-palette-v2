@@ -4,9 +4,17 @@ import { useState, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Palette, User, Loader2, Upload, Sparkles } from 'lucide-react'
+import { Palette, User, Loader2, Upload, Sparkles, Check, X } from 'lucide-react'
 import { MagicWandField } from '../MagicWandField'
 import { useArtistDnaStore } from '../../../store/artist-dna.store'
+
+interface ModelResult {
+  model: string
+  label: string
+  icon: string
+  url: string | null
+  error: string | null
+}
 
 export function LookTab() {
   const { draft, updateDraft } = useArtistDnaStore()
@@ -14,6 +22,7 @@ export function LookTab() {
   const [generatingPortrait, setGeneratingPortrait] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [generatingSheet, setGeneratingSheet] = useState(false)
+  const [sheetResults, setSheetResults] = useState<ModelResult[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleGeneratePortrait = async () => {
@@ -74,6 +83,7 @@ export function LookTab() {
 
   const handleVisualizeArtist = async () => {
     setGeneratingSheet(true)
+    setSheetResults([])
     try {
       const res = await fetch('/api/artist-dna/generate-character-sheet', {
         method: 'POST',
@@ -93,8 +103,13 @@ export function LookTab() {
       })
       if (res.ok) {
         const data = await res.json()
-        if (data.url) {
-          updateDraft('look', { characterSheetUrl: data.url })
+        if (data.results) {
+          setSheetResults(data.results)
+          // Auto-select the first successful result
+          const first = data.results.find((r: ModelResult) => r.url)
+          if (first?.url) {
+            updateDraft('look', { characterSheetUrl: first.url })
+          }
         }
       }
     } catch (error) {
@@ -102,6 +117,10 @@ export function LookTab() {
     } finally {
       setGeneratingSheet(false)
     }
+  }
+
+  const handlePickSheet = (url: string) => {
+    updateDraft('look', { characterSheetUrl: url })
   }
 
   const hasLookFields = look.skinTone || look.hairStyle || look.fashionStyle || look.visualDescription
@@ -243,7 +262,9 @@ export function LookTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium">Character Sheet</p>
-              <p className="text-[11px] text-muted-foreground">Full reference sheet from your DNA</p>
+              <p className="text-[11px] text-muted-foreground">
+                {sheetResults.length > 0 ? 'Pick your favorite below' : 'Generates across 4 models — pick the best'}
+              </p>
             </div>
             <Button
               size="sm"
@@ -259,14 +280,62 @@ export function LookTab() {
               )}
             </Button>
           </div>
-          {look.characterSheetUrl && (
-            <div className="rounded-lg overflow-hidden border border-border/40">
-              <img
-                src={look.characterSheetUrl}
-                alt="Artist character sheet"
-                className="w-full h-auto"
-                style={{ aspectRatio: '16/9' }}
-              />
+
+          {/* Multi-model results grid */}
+          {sheetResults.length > 0 && (
+            <div className="grid grid-cols-2 gap-2">
+              {sheetResults.map((result) => {
+                const isSelected = result.url === look.characterSheetUrl
+                return (
+                  <div key={result.model} className="space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm">{result.icon}</span>
+                      <span className="text-[11px] font-medium">{result.label}</span>
+                      {isSelected && <Check className="w-3 h-3 text-green-400 ml-auto" />}
+                    </div>
+                    {result.url ? (
+                      <button
+                        type="button"
+                        onClick={() => handlePickSheet(result.url!)}
+                        className={`rounded-md overflow-hidden border-2 transition-all cursor-pointer w-full ${
+                          isSelected
+                            ? 'border-green-400 ring-1 ring-green-400/30'
+                            : 'border-border/40 hover:border-primary/50'
+                        }`}
+                      >
+                        <img
+                          src={result.url}
+                          alt={`${result.label} character sheet`}
+                          className="w-full h-auto"
+                          style={{ aspectRatio: '16/9' }}
+                        />
+                      </button>
+                    ) : (
+                      <div className="rounded-md border border-border/40 bg-muted/20 flex items-center justify-center p-3" style={{ aspectRatio: '16/9' }}>
+                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                          <X className="w-3 h-3" />
+                          <span>{result.error || 'Failed'}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Selected sheet (full-width preview) */}
+          {look.characterSheetUrl && !generatingSheet && (
+            <div>
+              <p className="text-[11px] text-muted-foreground mb-1">Selected sheet:</p>
+              <div className="rounded-lg overflow-hidden border border-border/40">
+                <img
+                  src={look.characterSheetUrl}
+                  alt="Artist character sheet"
+                  className="w-full h-auto"
+                  style={{ aspectRatio: '16/9' }}
+                />
+              </div>
             </div>
           )}
         </div>
