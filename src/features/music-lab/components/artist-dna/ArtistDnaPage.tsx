@@ -18,13 +18,16 @@ export function ArtistDnaPage({ userId }: ArtistDnaPageProps) {
   }, [userId, initialize])
 
   return (
-    <div className="w-full py-8 space-y-6">
-      <div className="flex items-center gap-2">
-        <Dna className="w-6 h-6 text-primary" />
-        <h1 className="text-2xl font-bold">Artist DNA</h1>
-      </div>
-
-      {editorOpen ? <ArtistEditor /> : <ArtistList />}
+    <div className="w-full space-y-2">
+      {editorOpen ? <ArtistEditor /> : (
+        <>
+          <div className="flex items-center gap-2 pt-6">
+            <Dna className="w-6 h-6 text-primary" />
+            <h1 className="text-2xl font-bold">Artist DNA</h1>
+          </div>
+          <ArtistList />
+        </>
+      )}
     </div>
   )
 }

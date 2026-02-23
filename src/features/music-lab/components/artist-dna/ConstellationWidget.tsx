@@ -179,17 +179,20 @@ function OrbitalRing({ radius, fill, color, label, index }: OrbitalRingProps) {
   )
 }
 
-// Camera controller that responds to zoom level
-function CameraController({ zoom }: { zoom: number }) {
+// Zoom by adjusting camera distance along its current orbit direction
+function ZoomController({ zoom }: { zoom: number }) {
   const { camera } = useThree()
-  // zoom 0 = closest, zoom 1 = furthest
-  const targetZ = 1.5 + zoom * 2.5
-  const targetY = 1.5 + zoom * 1.5
+  // zoom 0 = closest (2.5), zoom 1 = furthest (5.5)
+  const targetDist = 2.5 + zoom * 3.0
 
   useFrame(() => {
-    camera.position.z += (targetZ - camera.position.z) * 0.05
-    camera.position.y += (targetY - camera.position.y) * 0.05
-    camera.lookAt(0, 0, 0)
+    const pos = camera.position
+    const currentDist = pos.length()
+    if (Math.abs(currentDist - targetDist) > 0.01) {
+      const newDist = currentDist + (targetDist - currentDist) * 0.05
+      const scale = newDist / Math.max(currentDist, 0.001)
+      pos.multiplyScalar(scale)
+    }
   })
 
   return null
@@ -204,7 +207,7 @@ function ConstellationScene({ zoom }: { zoom: number }) {
     <>
       <ambientLight intensity={0.2} />
       <StarField />
-      <CameraController zoom={zoom} />
+      <ZoomController zoom={zoom} />
       {/* Core star — glowing amber */}
       <mesh>
         <sphereGeometry args={[0.12, 16, 16]} />
@@ -286,7 +289,7 @@ export function ConstellationWidget() {
       <div className="flex h-[260px]">
         {/* 3D Canvas — fills available width */}
         <div className="flex-1 min-w-0 relative">
-          <Canvas camera={{ position: [0, 1.95, 2.25], fov: 60 }}>
+          <Canvas camera={{ position: [0, 1.6, 2.8], fov: 60 }}>
             <ConstellationScene zoom={zoom} />
           </Canvas>
 
