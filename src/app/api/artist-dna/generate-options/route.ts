@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
           { role: 'user', content: `Generate 4 draft options for this ${body.sectionType} section.` },
         ],
         temperature: 0.9,
-        max_tokens: 4000,
+        max_tokens: 8000,
       }),
     })
 
