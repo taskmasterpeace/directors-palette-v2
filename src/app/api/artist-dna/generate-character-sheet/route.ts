@@ -1,6 +1,6 @@
 /**
  * Artist DNA Generate Character Sheet API
- * Generates a full character reference sheet via Replicate nano-banana-pro at 21:9
+ * Generates a full character reference sheet via Replicate nano-banana-pro at 16:9
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -18,6 +18,7 @@ interface CharacterSheetRequest {
   stageName: string
   realName: string
   ethnicity: string
+  genres: string[]
   skinTone: string
   hairStyle: string
   fashionStyle: string
@@ -29,6 +30,11 @@ interface CharacterSheetRequest {
 function buildPrompt(req: CharacterSheetRequest): string {
   const name = req.stageName || req.realName || 'Artist'
 
+  // Build the artist type descriptor from genres
+  const genreLabel = req.genres?.length
+    ? req.genres.slice(0, 3).join('/')
+    : null
+
   const parts: string[] = [
     `CHARACTER @${name}`,
     '',
@@ -37,12 +43,17 @@ function buildPrompt(req: CharacterSheetRequest): string {
     'SECTION 1 - FULL BODY VIEWS:',
   ]
 
-  const frontViewParts = ['- Large front view']
-  if (req.ethnicity) frontViewParts.push(`of a ${req.ethnicity} music artist`)
-  if (req.skinTone) frontViewParts.push(`with ${req.skinTone} skin`)
-  if (req.hairStyle) frontViewParts.push(`${req.hairStyle} hair`)
-  if (req.fashionStyle) frontViewParts.push(`wearing ${req.fashionStyle}`)
-  parts.push(frontViewParts.join(', '))
+  // Build front view description with natural grammar
+  const descriptors: string[] = []
+  if (req.ethnicity) descriptors.push(req.ethnicity)
+  if (genreLabel) descriptors.push(genreLabel)
+  descriptors.push('music artist')
+
+  let frontView = `- Large front view of a ${descriptors.join(' ')}`
+  if (req.skinTone) frontView += `, ${req.skinTone} skin`
+  if (req.hairStyle) frontView += `, ${req.hairStyle} hair`
+  if (req.fashionStyle) frontView += `, wearing ${req.fashionStyle}`
+  parts.push(frontView)
 
   parts.push('- Side profile view, Back view')
   parts.push('- COLOR PALETTE strip: skin, hair, outfit, accent, jewelry colors')
@@ -83,13 +94,23 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json() as CharacterSheetRequest
 
+    // Validate: must have a name and at least one visual field
+    const hasName = body.stageName || body.realName
+    const hasVisual = body.skinTone || body.hairStyle || body.fashionStyle || body.visualDescription
+    if (!hasName || !hasVisual) {
+      return NextResponse.json(
+        { error: 'A name and at least one visual field (skin tone, hair, fashion, or description) are required' },
+        { status: 400 }
+      )
+    }
+
     const prompt = buildPrompt(body)
 
     const prediction = await replicate.predictions.create({
       model: 'google/nano-banana-pro',
       input: {
         prompt,
-        aspect_ratio: '21:9',
+        aspect_ratio: '16:9',
         output_format: 'jpg',
         image_input: CHARACTER_SHEET_TEMPLATE_URL,
       },

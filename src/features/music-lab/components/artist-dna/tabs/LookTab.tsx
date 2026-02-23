@@ -82,6 +82,7 @@ export function LookTab() {
           stageName: draft.identity.stageName,
           realName: draft.identity.realName,
           ethnicity: draft.identity.ethnicity,
+          genres: draft.sound.genres,
           skinTone: look.skinTone,
           hairStyle: look.hairStyle,
           fashionStyle: look.fashionStyle,
@@ -104,6 +105,7 @@ export function LookTab() {
   }
 
   const hasLookFields = look.skinTone || look.hairStyle || look.fashionStyle || look.visualDescription
+  const hasNameAndLook = (draft.identity.stageName || draft.identity.realName) && hasLookFields
 
   return (
     <Card>
@@ -247,7 +249,7 @@ export function LookTab() {
               size="sm"
               variant="outline"
               onClick={handleVisualizeArtist}
-              disabled={generatingSheet || !hasLookFields}
+              disabled={generatingSheet || !hasNameAndLook}
               className="h-7 text-xs"
             >
               {generatingSheet ? (
@@ -263,7 +265,7 @@ export function LookTab() {
                 src={look.characterSheetUrl}
                 alt="Artist character sheet"
                 className="w-full h-auto"
-                style={{ aspectRatio: '21/9' }}
+                style={{ aspectRatio: '16/9' }}
               />
             </div>
           )}

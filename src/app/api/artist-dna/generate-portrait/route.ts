@@ -22,21 +22,23 @@ interface PortraitRequest {
 }
 
 function buildPrompt(req: PortraitRequest): string {
-  const parts: string[] = ['Portrait of a']
+  // Build natural-reading description
+  const descriptors: string[] = []
+  if (req.ethnicity) descriptors.push(req.ethnicity)
+  descriptors.push('music artist')
 
-  if (req.ethnicity) parts.push(req.ethnicity)
-  parts.push('music artist')
+  let description = `Portrait of a ${descriptors.join(' ')}`
+  if (req.skinTone) description += ` with ${req.skinTone} skin`
+  if (req.hairStyle) description += `, ${req.hairStyle} hair`
 
-  if (req.skinTone) parts.push(`with ${req.skinTone} skin`)
-  if (req.hairStyle) parts.push(`${req.hairStyle} hair`)
-  if (req.fashionStyle) parts.push(`Wearing ${req.fashionStyle}`)
-  if (req.jewelry) parts.push(req.jewelry)
-  if (req.tattoos) parts.push(req.tattoos)
-  if (req.visualDescription) parts.push(req.visualDescription)
+  const details: string[] = []
+  if (req.fashionStyle) details.push(`Wearing ${req.fashionStyle}`)
+  if (req.jewelry) details.push(req.jewelry)
+  if (req.tattoos) details.push(req.tattoos)
+  if (req.visualDescription) details.push(req.visualDescription)
 
-  parts.push('Professional headshot, studio lighting, high quality portrait photography.')
-
-  return parts.join('. ').replace(/\.\./g, '.')
+  const allParts = [description, ...details, 'Professional headshot, studio lighting, high quality portrait photography']
+  return allParts.filter(Boolean).join('. ') + '.'
 }
 
 export async function POST(request: NextRequest) {

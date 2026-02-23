@@ -3719,7 +3719,7 @@ What sets this shot apart: the iPhone screen content is sharp and luminous, acti
 LAYOUT (Left to Right):
 
 SECTION 1 - FULL BODY VIEWS:
-- Large front view with <<SKIN_TONE:text>> skin, <<HAIR_STYLE:text>> hair, wearing <<FASHION_STYLE:text!>>
+- Large front view of a <<GENRE:text>> music artist with <<SKIN_TONE:text>> skin, <<HAIR_STYLE:text>> hair, wearing <<FASHION_STYLE:text!>>
 - Side profile view, Back view
 - COLOR PALETTE strip: skin, hair, outfit, accent, jewelry colors
 
@@ -3746,7 +3746,7 @@ STYLE: photo quality, photo realistic, professional character reference sheet`,
         },
       ],
     }],
-    suggestedAspectRatio: '21:9',
+    suggestedAspectRatio: '16:9',
     isQuickAccess: true,
     quickAccessLabel: 'ArtistSheet',
     categoryId: 'artists',
