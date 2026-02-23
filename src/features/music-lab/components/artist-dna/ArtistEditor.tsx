@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
+import { Save, Check, Loader2 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useArtistDnaStore } from '../../store/artist-dna.store'
 import { ARTIST_DNA_TABS } from '../../types/artist-dna.types'
@@ -44,7 +45,37 @@ const PREFETCH_FIELDS: Record<string, { field: string; section: string }[]> = {
 }
 
 export function ArtistEditor() {
-  const { activeTab, setActiveTab, suggestionCache, setSuggestions, draft } = useArtistDnaStore()
+  const { activeTab, setActiveTab, suggestionCache, setSuggestions, draft, isDirty, saveArtist } = useArtistDnaStore()
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
+
+  const handleSave = useCallback(async () => {
+    if (!isDirty && saveState !== 'idle') return
+    setSaveState('saving')
+    const success = await saveArtist()
+    setSaveState(success ? 'saved' : 'idle')
+    if (success) {
+      setTimeout(() => setSaveState('idle'), 2000)
+    }
+  }, [isDirty, saveArtist, saveState])
+
+  // Ctrl+S / Cmd+S keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        if (isDirty) handleSave()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isDirty, handleSave])
+
+  // Reset save state when draft changes
+  useEffect(() => {
+    if (isDirty && saveState === 'saved') {
+      setSaveState('idle')
+    }
+  }, [isDirty, saveState])
 
   // Pre-fetch suggestions on tab switch
   useEffect(() => {
@@ -102,6 +133,42 @@ export function ArtistEditor() {
         <TabsContent value="look"><LookTab /></TabsContent>
         <TabsContent value="catalog"><CatalogTab /></TabsContent>
       </Tabs>
+
+      {/* Sticky save bar — always visible */}
+      {isDirty && (
+        <div className="sticky bottom-0 z-20 -mx-4 px-4 py-3 bg-background/90 backdrop-blur-md border-t border-border/50">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Unsaved changes
+              <span className="hidden sm:inline text-xs ml-2 text-muted-foreground/60">
+                Ctrl+S to save
+              </span>
+            </p>
+            <button
+              onClick={handleSave}
+              disabled={saveState === 'saving'}
+              className="inline-flex items-center gap-2 rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-black hover:bg-amber-400 disabled:opacity-60 transition-colors"
+            >
+              {saveState === 'saving' ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Saving...
+                </>
+              ) : saveState === 'saved' ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  Saved
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Save Artist
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
