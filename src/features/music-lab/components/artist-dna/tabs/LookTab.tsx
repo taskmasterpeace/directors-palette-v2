@@ -1,27 +1,91 @@
 'use client'
 
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { Palette } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Palette, User, Loader2 } from 'lucide-react'
 import { MagicWandField } from '../MagicWandField'
 import { useArtistDnaStore } from '../../../store/artist-dna.store'
 
 export function LookTab() {
   const { draft, updateDraft } = useArtistDnaStore()
   const look = draft.look
+  const [generatingPortrait, setGeneratingPortrait] = useState(false)
+
+  const handleGeneratePortrait = async () => {
+    setGeneratingPortrait(true)
+    try {
+      const res = await fetch('/api/artist-dna/generate-portrait', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          skinTone: look.skinTone,
+          hairStyle: look.hairStyle,
+          fashionStyle: look.fashionStyle,
+          jewelry: look.jewelry,
+          tattoos: look.tattoos,
+          visualDescription: look.visualDescription,
+          ethnicity: draft.identity.ethnicity,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.url) {
+          updateDraft('look', { portraitUrl: data.url })
+        }
+      }
+    } catch (error) {
+      console.error('Failed to generate portrait:', error)
+    } finally {
+      setGeneratingPortrait(false)
+    }
+  }
+
+  const hasLookFields = look.skinTone || look.hairStyle || look.fashionStyle || look.visualDescription
 
   return (
     <Card>
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Palette className="w-5 h-5" />
           Look
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Skin Tone</Label>
+      <CardContent className="space-y-3">
+        {/* Portrait section */}
+        <div className="flex items-center gap-4 pb-2 border-b border-border/30">
+          <div className="w-[80px] h-[80px] rounded-lg overflow-hidden bg-muted/30 border border-border/40 flex items-center justify-center shrink-0">
+            {look.portraitUrl ? (
+              <img src={look.portraitUrl} alt="Artist portrait" className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-8 h-8 text-muted-foreground/30" />
+            )}
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <p className="text-xs text-muted-foreground">
+              {look.portraitUrl ? 'Portrait generated from your Look profile' : 'Generate a portrait from your Look fields'}
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleGeneratePortrait}
+              disabled={generatingPortrait || !hasLookFields}
+              className="w-fit h-7 text-xs"
+            >
+              {generatingPortrait ? (
+                <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Generating...</>
+              ) : (
+                <>{look.portraitUrl ? 'Regenerate Portrait' : 'Generate Portrait'}</>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Row 1: Skin Tone | Hair Style | Fashion Style */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Skin Tone</Label>
             <MagicWandField
               field="skinTone"
               section="look"
@@ -30,8 +94,8 @@ export function LookTab() {
               placeholder="Skin tone..."
             />
           </div>
-          <div className="space-y-2">
-            <Label>Hair Style</Label>
+          <div className="space-y-1">
+            <Label className="text-xs">Hair Style</Label>
             <MagicWandField
               field="hairStyle"
               section="look"
@@ -40,11 +104,8 @@ export function LookTab() {
               placeholder="Hair style..."
             />
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Fashion Style</Label>
+          <div className="space-y-1">
+            <Label className="text-xs">Fashion Style</Label>
             <MagicWandField
               field="fashionStyle"
               section="look"
@@ -53,8 +114,12 @@ export function LookTab() {
               placeholder="Fashion style..."
             />
           </div>
-          <div className="space-y-2">
-            <Label>Jewelry</Label>
+        </div>
+
+        {/* Row 2: Jewelry | Tattoos */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Jewelry</Label>
             <MagicWandField
               field="jewelry"
               section="look"
@@ -63,11 +128,8 @@ export function LookTab() {
               placeholder="Jewelry..."
             />
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Tattoos</Label>
+          <div className="space-y-1">
+            <Label className="text-xs">Tattoos</Label>
             <MagicWandField
               field="tattoos"
               section="look"
@@ -76,17 +138,19 @@ export function LookTab() {
               placeholder="Tattoos..."
             />
           </div>
-          <div className="space-y-2">
-            <Label>Visual Description</Label>
-            <MagicWandField
-              field="visualDescription"
-              section="look"
-              value={look.visualDescription}
-              onChange={(visualDescription) => updateDraft('look', { visualDescription })}
-              placeholder="Overall visual vibe..."
-              multiline
-            />
-          </div>
+        </div>
+
+        {/* Full width: Visual Description */}
+        <div className="space-y-1">
+          <Label className="text-xs">Visual Description</Label>
+          <MagicWandField
+            field="visualDescription"
+            section="look"
+            value={look.visualDescription}
+            onChange={(visualDescription) => updateDraft('look', { visualDescription })}
+            placeholder="Overall visual vibe..."
+            multiline
+          />
         </div>
       </CardContent>
     </Card>

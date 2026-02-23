@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Sparkles } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -19,6 +19,23 @@ interface MagicWandFieldProps {
   multiline?: boolean
 }
 
+function calculateContextScore(draft: { identity: { name: string; ethnicity: string; city: string; backstory: string }; sound: { genres: string[]; artistInfluences: string[] }; persona: { attitude: string; traits: string[] }; look: { fashionStyle: string }; lexicon: { signaturePhrases: string[] } }) {
+  const fields = [
+    draft.identity.name,
+    draft.identity.ethnicity,
+    draft.identity.city,
+    draft.identity.backstory,
+    draft.sound.genres.length > 0,
+    draft.sound.artistInfluences.length > 0,
+    draft.persona.attitude,
+    draft.persona.traits.length > 0,
+    draft.look.fashionStyle,
+    draft.lexicon.signaturePhrases.length > 0,
+  ]
+  const filled = fields.filter(Boolean).length
+  return { filled, total: fields.length, pct: filled / fields.length }
+}
+
 export function MagicWandField({
   field,
   section,
@@ -32,6 +49,7 @@ export function MagicWandField({
   const [isLoading, setIsLoading] = useState(false)
 
   const suggestions = suggestionCache[field]?.suggestions ?? []
+  const ctx = useMemo(() => calculateContextScore(draft), [draft])
 
   const fetchSuggestions = useCallback(async () => {
     setIsLoading(true)
@@ -69,6 +87,9 @@ export function MagicWandField({
     consumeSuggestion(field, suggestion)
   }
 
+  // Context indicator color
+  const dotColor = ctx.pct >= 0.7 ? 'bg-green-400' : ctx.pct >= 0.4 ? 'bg-amber-400' : 'bg-amber-400'
+
   const InputComponent = multiline ? Textarea : Input
 
   return (
@@ -92,18 +113,21 @@ export function MagicWandField({
                 className="absolute top-1 right-1 h-7 w-7 p-0"
                 aria-label="Get suggestions"
               >
-                <Sparkles className={`w-4 h-4 text-amber-500 ${isLoading ? 'animate-spin' : ''}`} />
+                <span className="relative">
+                  <Sparkles className={`w-4 h-4 text-amber-500 ${isLoading ? 'animate-spin' : ''}`} />
+                  <span className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full ${dotColor}`} />
+                </span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>AI suggestions based on your artist profile</p>
+              <p>AI suggestions based on your artist profile ({ctx.filled}/{ctx.total} fields filled)</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>
 
       {suggestions.length > 0 && (
-        <div className="flex flex-wrap gap-1.5" data-testid="suggestion-chips">
+        <div className="flex flex-wrap gap-1.5 items-center" data-testid="suggestion-chips">
           {suggestions.slice(0, 5).map((suggestion, i) => (
             <Badge
               key={`${suggestion}-${i}`}
@@ -125,6 +149,15 @@ export function MagicWandField({
               </button>
             </Badge>
           ))}
+          {suggestions.length <= 2 && suggestions.length > 0 && !isLoading && (
+            <button
+              type="button"
+              onClick={fetchSuggestions}
+              className="text-[11px] text-amber-500 hover:text-amber-400 font-medium"
+            >
+              Get more
+            </button>
+          )}
         </div>
       )}
     </div>

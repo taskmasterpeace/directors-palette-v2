@@ -206,8 +206,6 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             [section]: { ...state.draft[section], ...data },
           },
           isDirty: true,
-          // Clear suggestion cache when draft changes to force fresh context
-          suggestionCache: {},
         }))
       },
 

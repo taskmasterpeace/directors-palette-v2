@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
 
-const MODEL = 'moonshotai/kimi-k2.5'
+const MODEL = 'openai/gpt-4.1-mini'
 
 const BANNED_AI_PHRASES = [
   'neon', 'echoes', 'shadows', 'whispers', 'tapestry', 'symphony',
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.8,
-        max_tokens: 8000,
+        max_tokens: 4000,
       }),
     })
 
@@ -176,17 +176,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
-    const message = data.choices?.[0]?.message
-    let lyricsTemplate = message?.content || ''
-    // Kimi K2.5 reasoning model fallback
-    if (!lyricsTemplate.trim() && message?.reasoning) {
-      // Extract anything that looks like lyrics from reasoning
-      const lines = (message.reasoning as string).split('\n')
-      const lyricsLines = lines.filter((l: string) => l.startsWith('[') || (l.trim().length > 0 && !l.startsWith(' ')))
-      if (lyricsLines.length > 4) {
-        lyricsTemplate = lyricsLines.join('\n')
-      }
-    }
+    const lyricsTemplate = data.choices?.[0]?.message?.content || ''
 
     return NextResponse.json({ lyricsTemplate })
   } catch (error) {

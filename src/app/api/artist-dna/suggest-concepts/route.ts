@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
 
-const MODEL = 'moonshotai/kimi-k2.5'
+const MODEL = 'openai/gpt-4.1-mini'
 
 interface SuggestConceptsBody {
   artistDna: ArtistDNA
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
           { role: 'user', content: 'Suggest 6 song concepts.' },
         ],
         temperature: 0.9,
-        max_tokens: 4000,
+        max_tokens: 2000,
       }),
     })
 
@@ -82,13 +82,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
-    const message = data.choices?.[0]?.message
-    let raw = message?.content || ''
-    // Kimi K2.5 reasoning model fallback
-    if (!raw.trim() && message?.reasoning) {
-      const jsonMatch = message.reasoning.match(/\[[\s\S]*\]/)
-      if (jsonMatch) raw = jsonMatch[0]
-    }
+    let raw = data.choices?.[0]?.message?.content || ''
     if (!raw.trim()) raw = '[]'
 
     let concepts: string[]

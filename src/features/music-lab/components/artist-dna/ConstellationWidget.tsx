@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useRef, useMemo, useCallback } from 'react'
-import { Star, ChevronUp, ChevronDown, ArrowLeft, Save, ZoomIn, ZoomOut } from 'lucide-react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Star, ChevronUp, ChevronDown, ArrowLeft, Save } from 'lucide-react'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Html } from '@react-three/drei'
 import { Button } from '@/components/ui/button'
 import {
@@ -52,9 +52,37 @@ function calculateRingFill(dna: ArtistDNA) {
   return { sound, influences, persona, lexicon, profile }
 }
 
+// Count items per ring for dynamic node sizing
+function calculateRingCounts(dna: ArtistDNA) {
+  const sound = dna.sound.genres.length + dna.sound.vocalTextures.length +
+    dna.sound.productionPreferences.length + (dna.sound.soundDescription ? 1 : 0)
+  const influences = dna.sound.artistInfluences.length
+  const persona = dna.persona.traits.length + dna.persona.likes.length +
+    dna.persona.dislikes.length + (dna.persona.attitude ? 1 : 0) + (dna.persona.worldview ? 1 : 0)
+  const lexicon = dna.lexicon.signaturePhrases.length + dna.lexicon.slang.length +
+    dna.lexicon.adLibs.length + dna.lexicon.bannedWords.length
+  const profile = (dna.identity.name ? 1 : 0) + (dna.identity.backstory ? 1 : 0) +
+    (dna.identity.city ? 1 : 0) + (dna.look.visualDescription ? 1 : 0) + dna.catalog.entries.length
+  return [sound, influences, persona, lexicon, profile]
+}
+
+// Total character length per ring for glow intensity
+function calculateRingGlow(dna: ArtistDNA) {
+  const sound = dna.sound.genres.join('').length + dna.sound.vocalTextures.join('').length +
+    dna.sound.productionPreferences.join('').length + dna.sound.soundDescription.length
+  const influences = dna.sound.artistInfluences.join('').length
+  const persona = dna.persona.traits.join('').length + dna.persona.likes.join('').length +
+    dna.persona.dislikes.join('').length + dna.persona.attitude.length + dna.persona.worldview.length
+  const lexicon = dna.lexicon.signaturePhrases.join('').length + dna.lexicon.slang.join('').length +
+    dna.lexicon.adLibs.join('').length + dna.lexicon.bannedWords.join('').length
+  const profile = dna.identity.name.length + dna.identity.backstory.length +
+    dna.identity.city.length + dna.look.visualDescription.length
+  return [sound, influences, persona, lexicon, profile]
+}
+
 const RING_COLORS = [
   '#f59e0b', // amber - Sound
-  '#8b5cf6', // violet - Influences
+  '#38bdf8', // sky blue - Influences
   '#ef4444', // red - Persona
   '#06b6d4', // cyan - Lexicon
   '#22c55e', // green - Profile
@@ -74,7 +102,7 @@ function StarField() {
       positions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
       positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
       positions[i * 3 + 2] = r * Math.cos(phi)
-      // Warm tints — mostly white/amber/violet
+      // Warm tints — mostly white/amber/sky blue
       const tint = Math.random()
       if (tint < 0.6) {
         colors[i * 3] = 0.8 + Math.random() * 0.2
@@ -85,9 +113,9 @@ function StarField() {
         colors[i * 3 + 1] = 0.7
         colors[i * 3 + 2] = 0.3
       } else {
-        colors[i * 3] = 0.6
-        colors[i * 3 + 1] = 0.4
-        colors[i * 3 + 2] = 0.9
+        colors[i * 3] = 0.22
+        colors[i * 3 + 1] = 0.74
+        colors[i * 3 + 2] = 0.97
       }
     }
     return { positions, colors }
@@ -117,11 +145,18 @@ interface OrbitalRingProps {
   color: string
   label: string
   index: number
+  itemCount: number
+  glowChars: number
 }
 
-function OrbitalRing({ radius, fill, color, label, index }: OrbitalRingProps) {
+function OrbitalRing({ radius, fill, color, label, index, itemCount, glowChars }: OrbitalRingProps) {
   const groupRef = useRef<THREE.Group>(null)
   const starsCount = Math.max(Math.round(fill * 12), fill > 0 ? 2 : 0)
+
+  // Dynamic node sizing based on item count
+  const nodeScale = 0.03 + Math.min(itemCount, 10) * 0.008
+  // Dynamic glow based on text richness
+  const glowIntensity = 0.05 + Math.min(glowChars / 500, 0.3)
 
   useFrame((state) => {
     if (groupRef.current) {
@@ -136,7 +171,10 @@ function OrbitalRing({ radius, fill, color, label, index }: OrbitalRingProps) {
       const x = Math.cos(angle) * radius
       const z = Math.sin(angle) * radius
       const y = (Math.random() - 0.5) * 0.2
-      return { x, y, z, scale: 0.04 + Math.random() * 0.06 }
+      // Vary pulse speed per node for organic feel
+      const pulseOffset = Math.random() * Math.PI * 2
+      const pulseSpeed = 1.5 + Math.random() * 1.5
+      return { x, y, z, pulseOffset, pulseSpeed }
     })
   }, [starsCount, radius])
 
@@ -169,45 +207,72 @@ function OrbitalRing({ radius, fill, color, label, index }: OrbitalRingProps) {
       </Html>
       {/* Stars on the ring */}
       {stars.map((star, i) => (
-        <mesh key={i} position={[star.x, star.y, star.z]}>
-          <sphereGeometry args={[star.scale, 12, 12]} />
-          <meshBasicMaterial color={color} />
-          <pointLight color={threeColor} intensity={0.15} distance={0.8} />
-        </mesh>
+        <AnimatedNode
+          key={i}
+          position={[star.x, star.y, star.z]}
+          scale={nodeScale}
+          color={color}
+          threeColor={threeColor}
+          glowIntensity={glowIntensity}
+          pulseOffset={star.pulseOffset}
+          pulseSpeed={star.pulseSpeed}
+        />
       ))}
     </group>
   )
 }
 
-// Zoom by adjusting camera distance along its current orbit direction
-function ZoomController({ zoom }: { zoom: number }) {
-  const { camera } = useThree()
-  // zoom 0 = closest (2.5), zoom 1 = furthest (5.5)
-  const targetDist = 2.5 + zoom * 3.0
+interface AnimatedNodeProps {
+  position: [number, number, number]
+  scale: number
+  color: string
+  threeColor: THREE.Color
+  glowIntensity: number
+  pulseOffset: number
+  pulseSpeed: number
+}
 
-  useFrame(() => {
-    const pos = camera.position
-    const currentDist = pos.length()
-    if (Math.abs(currentDist - targetDist) > 0.01) {
-      const newDist = currentDist + (targetDist - currentDist) * 0.05
-      const scale = newDist / Math.max(currentDist, 0.001)
-      pos.multiplyScalar(scale)
+function AnimatedNode({ position, scale, color, threeColor, glowIntensity, pulseOffset, pulseSpeed }: AnimatedNodeProps) {
+  const meshRef = useRef<THREE.Mesh>(null)
+  const lightRef = useRef<THREE.PointLight>(null)
+  const animatedScale = useRef(0)
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime
+    // Spring-in animation
+    if (animatedScale.current < scale) {
+      animatedScale.current += (scale - animatedScale.current) * 0.05
+    }
+    if (meshRef.current) {
+      const pulse = 1 + Math.sin(t * pulseSpeed + pulseOffset) * 0.15
+      const s = animatedScale.current * pulse
+      meshRef.current.scale.setScalar(s / scale) // normalize since geometry already has scale
+    }
+    if (lightRef.current) {
+      lightRef.current.intensity = glowIntensity * (1 + Math.sin(t * pulseSpeed + pulseOffset) * 0.3)
     }
   })
 
-  return null
+  return (
+    <mesh ref={meshRef} position={position}>
+      <sphereGeometry args={[scale, 12, 12]} />
+      <meshBasicMaterial color={color} />
+      <pointLight ref={lightRef} color={threeColor} intensity={glowIntensity} distance={0.8} />
+    </mesh>
+  )
 }
 
-function ConstellationScene({ zoom }: { zoom: number }) {
+function ConstellationScene() {
   const { draft } = useArtistDnaStore()
   const fills = calculateRingFill(draft)
   const fillValues = [fills.sound, fills.influences, fills.persona, fills.lexicon, fills.profile]
+  const ringCounts = calculateRingCounts(draft)
+  const ringGlow = calculateRingGlow(draft)
 
   return (
     <>
       <ambientLight intensity={0.2} />
       <StarField />
-      <ZoomController zoom={zoom} />
       {/* Core star — glowing amber */}
       <mesh>
         <sphereGeometry args={[0.12, 16, 16]} />
@@ -228,15 +293,19 @@ function ConstellationScene({ zoom }: { zoom: number }) {
           color={color}
           label={RING_LABELS[i]}
           index={i}
+          itemCount={ringCounts[i]}
+          glowChars={ringGlow[i]}
         />
       ))}
       <OrbitControls
-        enableZoom={false}
+        enableZoom={true}
         enablePan={false}
         autoRotate
         autoRotateSpeed={0.8}
         minPolarAngle={Math.PI / 4}
         maxPolarAngle={(3 * Math.PI) / 4}
+        minDistance={1.5}
+        maxDistance={6}
       />
     </>
   )
@@ -244,7 +313,6 @@ function ConstellationScene({ zoom }: { zoom: number }) {
 
 export function ConstellationWidget() {
   const [expanded, setExpanded] = useState(true)
-  const [zoom, setZoom] = useState(0.3) // 0 = closest, 1 = furthest out
   const { draft, isDirty, saveArtist, closeEditor, artists, activeArtistId, loadArtistIntoDraft, startNewArtist } = useArtistDnaStore()
 
   const fills = calculateRingFill(draft)
@@ -253,6 +321,7 @@ export function ConstellationWidget() {
 
   const artistName = draft.identity.name || 'New Artist'
   const otherArtists = artists.filter((a) => a.id !== activeArtistId)
+  const portraitUrl = draft.look.portraitUrl
 
   const handleSave = useCallback(async () => {
     await saveArtist()
@@ -290,8 +359,17 @@ export function ConstellationWidget() {
         {/* 3D Canvas — fills available width */}
         <div className="flex-1 min-w-0 relative">
           <Canvas camera={{ position: [0, 1.6, 2.8], fov: 60 }}>
-            <ConstellationScene zoom={zoom} />
+            <ConstellationScene />
           </Canvas>
+
+          {/* Portrait thumbnail overlay at center */}
+          {portraitUrl && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
+              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.5)]">
+                <img src={portraitUrl} alt="Artist portrait" className="w-full h-full object-cover" />
+              </div>
+            </div>
+          )}
 
           {/* Overlay: Bottom-left — Back + Artist Name */}
           <div className="absolute bottom-3 left-3 flex items-center gap-2 z-10">
@@ -341,21 +419,6 @@ export function ConstellationWidget() {
               <Save className="w-3.5 h-3.5 mr-1" />
               Save
             </Button>
-          </div>
-
-          {/* Overlay: Bottom-right — Zoom slider */}
-          <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm rounded-md px-2 py-1">
-            <ZoomIn className="w-3 h-3 text-white/60" />
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={zoom * 100}
-              onChange={(e) => setZoom(Number(e.target.value) / 100)}
-              className="w-20 h-1 accent-amber-500 cursor-pointer"
-              title="Zoom"
-            />
-            <ZoomOut className="w-3 h-3 text-white/60" />
           </div>
 
           {/* Overlay: Top-left — Collapse button */}

@@ -51,6 +51,7 @@ export interface ArtistLook {
   jewelry: string
   tattoos: string
   visualDescription: string
+  portraitUrl: string
 }
 
 export interface CatalogEntry {
@@ -192,6 +193,7 @@ export function createEmptyDNA(): ArtistDNA {
       jewelry: '',
       tattoos: '',
       visualDescription: '',
+      portraitUrl: '',
     },
     catalog: {
       entries: [],

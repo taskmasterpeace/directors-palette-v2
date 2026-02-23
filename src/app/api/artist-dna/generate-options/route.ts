@@ -8,7 +8,7 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import type { ToneSettings, SectionType } from '@/features/music-lab/types/writing-studio.types'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
 
-const MODEL = 'moonshotai/kimi-k2.5'
+const MODEL = 'openai/gpt-4.1-mini'
 
 const BANNED_AI_PHRASES = [
   'neon', 'echoes', 'shadows', 'whispers', 'tapestry', 'symphony',
@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
           { role: 'user', content: `Generate 4 draft options for this ${body.sectionType} section.` },
         ],
         temperature: 0.9,
-        max_tokens: 8000,
+        max_tokens: 4000,
       }),
     })
 
@@ -205,14 +205,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
-    const message = data.choices?.[0]?.message
-    // Kimi K2.5 is a reasoning model — content may be empty if reasoning consumed all tokens
-    let raw = message?.content || ''
-    if (!raw.trim() && message?.reasoning) {
-      // Try to extract JSON from reasoning as fallback
-      const jsonMatch = message.reasoning.match(/\[[\s\S]*\]/)
-      if (jsonMatch) raw = jsonMatch[0]
-    }
+    let raw = data.choices?.[0]?.message?.content || ''
     if (!raw.trim()) raw = '[]'
 
     // Parse JSON response, handling potential markdown wrapping

@@ -1,13 +1,13 @@
 /**
  * Artist DNA Suggestion API
- * Magic wand suggestions via OpenRouter Kimi K2.5
+ * Magic wand suggestions via OpenRouter GPT-4.1 Mini
  * Genre-agnostic, context-aware suggestions
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 
-const MODEL = 'moonshotai/kimi-k2.5'
+const MODEL = 'openai/gpt-4.1-mini'
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       : ''
 
     // Field-specific guidance for shorter, more targeted suggestions
-    const fieldGuidance = getFieldGuidance(field, section)
+    const fieldGuidance = getFieldGuidance(field, section, context)
 
     const systemPrompt = `You are a music industry creative consultant. Generate 10 unique, creative suggestions for an artist profile field.
 Return ONLY a JSON array of 10 strings, no other text.
@@ -75,7 +75,7 @@ ${fieldGuidance}${contextStr}${currentStr}${excludeStr}`
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.9,
-        max_tokens: 4000,
+        max_tokens: 2000,
       }),
     })
 
@@ -86,13 +86,7 @@ ${fieldGuidance}${contextStr}${currentStr}${excludeStr}`
     }
 
     const data = await response.json()
-    const message = data.choices?.[0]?.message
-    let content = message?.content || ''
-    // Kimi K2.5 reasoning model fallback — extract JSON from reasoning if content empty
-    if (!content.trim() && message?.reasoning) {
-      const jsonMatch = message.reasoning.match(/\[[\s\S]*\]/)
-      if (jsonMatch) content = jsonMatch[0]
-    }
+    const content = data.choices?.[0]?.message?.content || ''
 
     if (!content.trim()) {
       return NextResponse.json({ suggestions: [] })
@@ -112,7 +106,28 @@ ${fieldGuidance}${contextStr}${currentStr}${excludeStr}`
   }
 }
 
-function getFieldGuidance(field: string, section: string): string {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getFieldGuidance(field: string, section: string, context?: any): string {
+  // Smart skin tone guidance based on ethnicity
+  if (field === 'skinTone' && context?.identity?.ethnicity) {
+    const ethnicity = context.identity.ethnicity.toLowerCase()
+    let toneGuide = ''
+    if (ethnicity.includes('black') || ethnicity.includes('african')) {
+      toneGuide = 'Suggest tones like: deep mahogany, dark chocolate, espresso, ebony, chestnut, sienna, rich walnut, warm umber.'
+    } else if (ethnicity.includes('white') || ethnicity.includes('european') || ethnicity.includes('caucasian')) {
+      toneGuide = 'Suggest tones like: ivory, porcelain, fair, peach, cream, alabaster, rose-tinted, sun-kissed.'
+    } else if (ethnicity.includes('latin') || ethnicity.includes('hispanic')) {
+      toneGuide = 'Suggest tones like: caramel, golden, olive, honey, bronze, warm tan, sun-bronzed, café au lait.'
+    } else if (ethnicity.includes('south asian') || ethnicity.includes('indian')) {
+      toneGuide = 'Suggest tones like: golden brown, dusky, copper, warm brown, tawny, cinnamon, sandalwood.'
+    } else if (ethnicity.includes('asian') || ethnicity.includes('east asian')) {
+      toneGuide = 'Suggest tones like: warm beige, golden, light caramel, sand, wheat, soft amber, honey glow.'
+    } else {
+      toneGuide = `Consider the artist's ${context.identity.ethnicity} background when suggesting skin tones.`
+    }
+    return `Keep to 2-4 words. Descriptive skin tone. ${toneGuide}`
+  }
+
   const guides: Record<string, string> = {
     // Identity
     'backstory': 'Keep suggestions to 2-3 sentences max. Focus on origin stories, turning points, defining moments.',
