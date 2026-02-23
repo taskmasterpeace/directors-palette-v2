@@ -7,8 +7,7 @@
  */
 
 import { useState } from 'react'
-import { ChevronRight, Clapperboard, Dna } from 'lucide-react'
-import Link from 'next/link'
+import { ChevronRight, Clapperboard } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,18 +20,38 @@ import {
     useMusicLabStore,
     ReferenceSheetGenerator
 } from '@/features/music-lab'
+import { ArtistContextBar } from '@/features/music-lab/components/ArtistContextBar'
 import { ProposalList } from '@/features/music-lab/components/ProposalList'
 import { Timeline } from '@/features/music-lab/components/Timeline'
 import { DirectorQuestionsDialog } from '@/features/music-lab/components/DirectorQuestionsDialog'
 import { useTimelineStore } from '@/features/music-lab/store/timeline.store'
 import type { DirectorFingerprint, DirectorProposal } from '@/features/music-lab/types/director.types'
 import type { SongAnalysisInput } from '@/features/music-lab/types/timeline.types'
+import type { CatalogEntry } from '@/features/music-lab/types/artist-dna.types'
+import type { MusicGenre } from '@/features/music-lab/types/music-lab.types'
 import { PRESET_STYLES } from '@/features/storyboard/types/storyboard.types'
 import { getDirectorById } from '@/features/music-lab/data/directors.data'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useArtistDnaStore } from '@/features/music-lab/store/artist-dna.store'
 
 export default function MusicLabPage() {
-    const { project, setStyle, setStatus } = useMusicLabStore()
+    const { project, setStyle, setStatus, setGenre, setManualLyrics } = useMusicLabStore()
     const [isAnalyzing, setIsAnalyzing] = useState(false)
+    const { user } = useAuth()
+    const { draft } = useArtistDnaStore()
+
+    const handleArtistSelect = () => {
+        const genre = draft.sound?.genres?.[0]
+        if (genre) {
+            setGenre({ genre: genre as MusicGenre, subgenre: '' })
+        }
+    }
+
+    const handleTrackSelect = (entry: CatalogEntry) => {
+        if (entry.lyrics) {
+            setManualLyrics(entry.lyrics)
+        }
+    }
 
     // Director questions state
     const [pendingProposal, setPendingProposal] = useState<DirectorProposal | null>(null)
@@ -160,24 +179,26 @@ export default function MusicLabPage() {
     }
 
     return (
-        <div className="w-full py-8 space-y-8">
+        <div className="w-full space-y-8">
+            {/* Artist Context Bar */}
+            {user && (
+                <ArtistContextBar
+                    userId={user.id}
+                    onArtistSelect={handleArtistSelect}
+                    onTrackSelect={handleTrackSelect}
+                />
+            )}
+
             {/* Header */}
             <div className="text-center space-y-2">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary">
                     <Clapperboard className="w-5 h-5" />
                     <span className="font-medium">Studio Dashboard</span>
                 </div>
-                <h1 className="text-3xl font-bold">The Director&apos;s Palette</h1>
+                <h1 className="text-3xl font-bold">Music Video Treatment</h1>
                 <p className="text-muted-foreground max-w-lg mx-auto">
                     Scout your track, commission AI directors, and greenlight your favorite vision.
                 </p>
-                <Link
-                    href="/music-lab/artist-dna"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 transition-colors mt-2"
-                >
-                    <Dna className="w-4 h-4" />
-                    <span className="font-medium text-sm">Artist DNA Lab</span>
-                </Link>
             </div>
 
             {/* Setup Phase */}

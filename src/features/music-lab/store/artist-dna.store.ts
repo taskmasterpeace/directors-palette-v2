@@ -375,7 +375,9 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
               catalog: { ...defaults.catalog, ...p.draft.catalog },
             }
           : current.draft
-        return { ...current, ...p, draft }
+        const validTabs = ['identity', 'sound', 'persona', 'lexicon', 'look', 'catalog']
+        const activeTab = p.activeTab && validTabs.includes(p.activeTab) ? p.activeTab : 'identity'
+        return { ...current, ...p, draft, activeTab }
       },
     }
   )

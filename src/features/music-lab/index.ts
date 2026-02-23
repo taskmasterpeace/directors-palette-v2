@@ -47,6 +47,10 @@ export { referenceSheetService } from './services/reference-sheet.service'
 // Components - Artist DNA
 export { ArtistDnaPage } from './components/artist-dna/ArtistDnaPage'
 
+// Components - Shared
+export { ArtistContextBar } from './components/ArtistContextBar'
+export { WritingStudioPage } from './components/WritingStudioPage'
+
 // Store
 export { useArtistDnaStore } from './store/artist-dna.store'
 

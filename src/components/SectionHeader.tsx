@@ -57,17 +57,23 @@ const SECTION_CONFIG: Record<TabValue, { banner: string; title: string; subtitle
     subtitle: 'Turn stories into illustrated pages',
     helpTip: '5-step wizard: write story, choose style, create characters, generate pages, preview book'
   },
-  'music-lab': {
+  'artist-lab': {
     banner: '/banners/music-lab.webp',
-    title: 'Music Lab',
-    subtitle: 'Sync visuals with music',
-    helpTip: 'Upload audio, transcribe lyrics, and create visual beat sheets'
-  },
-  'artist-dna': {
-    banner: '/banners/music-lab.webp',
-    title: 'Artist DNA',
+    title: 'Artist Lab',
     subtitle: 'Create and manage artist profiles',
     helpTip: 'Build detailed artist personas with sound, flow, persona, lexicon, and look'
+  },
+  'writing-studio': {
+    banner: '/banners/music-lab.webp',
+    title: 'Writing Studio',
+    subtitle: 'AI-powered songwriting workspace',
+    helpTip: 'Write lyrics with your artist DNA identity, generate options, and mix prompts'
+  },
+  'music-video': {
+    banner: '/banners/music-lab.webp',
+    title: 'Music Video',
+    subtitle: 'Sync visuals with music',
+    helpTip: 'Upload audio, transcribe lyrics, and create visual beat sheets'
   },
   'ad-lab': {
     banner: '/banners/adhub.webp',

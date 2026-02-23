@@ -10,6 +10,7 @@ import {
     Images,
     FlaskConical,
     Music,
+    PenTool,
     BookOpen,
     BookHeart,
     ChevronLeft,
@@ -124,18 +125,25 @@ const NAV_SECTIONS: NavSection[] = [
                 tooltipExpanded: "Children's illustrated books"
             },
             {
-                id: 'music-lab',
-                label: 'Music Lab',
-                icon: Music,
-                banner: '/banners/music-lab.webp',
-                tooltipExpanded: 'Music video treatments'
-            },
-            {
-                id: 'artist-dna',
-                label: 'Artist DNA',
+                id: 'artist-lab',
+                label: 'Artist Lab',
                 icon: Dna,
                 banner: '/banners/music-lab.webp',
                 tooltipExpanded: 'Create and manage artist profiles'
+            },
+            {
+                id: 'writing-studio',
+                label: 'Writing Studio',
+                icon: PenTool,
+                banner: '/banners/music-lab.webp',
+                tooltipExpanded: 'AI-powered songwriting workspace'
+            },
+            {
+                id: 'music-video',
+                label: 'Music Video',
+                icon: Music,
+                banner: '/banners/music-lab.webp',
+                tooltipExpanded: 'Music video treatments'
             },
             {
                 id: 'ad-lab',

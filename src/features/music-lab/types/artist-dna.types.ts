@@ -133,8 +133,6 @@ export type ArtistDnaTab =
   | 'lexicon'
   | 'look'
   | 'catalog'
-  | 'studio'
-  | 'the-mix'
 
 export const ARTIST_DNA_TABS: { id: ArtistDnaTab; label: string }[] = [
   { id: 'identity', label: 'Identity' },
@@ -143,8 +141,6 @@ export const ARTIST_DNA_TABS: { id: ArtistDnaTab; label: string }[] = [
   { id: 'lexicon', label: 'Lexicon' },
   { id: 'look', label: 'Look' },
   { id: 'catalog', label: 'Catalog' },
-  { id: 'studio', label: 'Studio' },
-  { id: 'the-mix', label: 'The Mix' },
 ]
 
 // =============================================================================

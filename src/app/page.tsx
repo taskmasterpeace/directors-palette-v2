@@ -20,6 +20,7 @@ import { NodeWorkflow } from "@/features/node-workflow"
 import { AdhubWorkspace } from "@/features/adhub"
 import { AdLabWorkspace } from "@/features/ad-lab"
 import { ArtistDnaPage } from "@/features/music-lab/components/artist-dna/ArtistDnaPage"
+import { WritingStudioPage } from "@/features/music-lab/components/WritingStudioPage"
 import { useAuth } from "@/features/auth/hooks/useAuth"
 
 export default function Home() {
@@ -117,23 +118,34 @@ export default function Home() {
               </TabsContent>
             )}
 
-            {activeTab === 'music-lab' && (
-              <TabsContent key="music-lab" value="music-lab" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
+            {activeTab === 'artist-lab' && user && (
+              <TabsContent key="artist-lab" value="artist-lab" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
                 <PageTransition>
-                  <SectionHeader section="music-lab" />
+                  <SectionHeader section="artist-lab" />
                   <div className="flex-1 p-4 overflow-y-auto">
-                    <MusicLabPage />
+                    <ArtistDnaPage userId={user.id} />
                   </div>
                 </PageTransition>
               </TabsContent>
             )}
 
-            {activeTab === 'artist-dna' && user && (
-              <TabsContent key="artist-dna" value="artist-dna" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
+            {activeTab === 'writing-studio' && user && (
+              <TabsContent key="writing-studio" value="writing-studio" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
                 <PageTransition>
-                  <SectionHeader section="artist-dna" />
+                  <SectionHeader section="writing-studio" />
+                  <div className="flex-1 overflow-hidden">
+                    <WritingStudioPage userId={user.id} />
+                  </div>
+                </PageTransition>
+              </TabsContent>
+            )}
+
+            {activeTab === 'music-video' && (
+              <TabsContent key="music-video" value="music-video" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
+                <PageTransition>
+                  <SectionHeader section="music-video" />
                   <div className="flex-1 p-4 overflow-y-auto">
-                    <ArtistDnaPage userId={user.id} />
+                    <MusicLabPage />
                   </div>
                 </PageTransition>
               </TabsContent>

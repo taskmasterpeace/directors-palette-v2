@@ -23,7 +23,7 @@ export function ArtistDnaPage({ userId }: ArtistDnaPageProps) {
         <>
           <div className="flex items-center gap-2 pt-6">
             <Dna className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold">Artist DNA</h1>
+            <h1 className="text-2xl font-bold">Artist Lab</h1>
           </div>
           <ArtistList />
         </>
