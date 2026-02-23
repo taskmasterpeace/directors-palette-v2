@@ -63,12 +63,12 @@ interface OrbitalRingProps {
 
 function OrbitalRing({ radius, fill, color, index }: OrbitalRingProps) {
   const groupRef = useRef<THREE.Group>(null)
-  const starsCount = Math.round(fill * 8)
+  const starsCount = Math.max(Math.round(fill * 12), fill > 0 ? 2 : 0)
 
   useFrame((state) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = state.clock.elapsedTime * (0.1 + index * 0.03)
-      groupRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.2 + index) * 0.1
+      groupRef.current.rotation.y = state.clock.elapsedTime * (0.15 + index * 0.04)
+      groupRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.3 + index) * 0.15
     }
   })
 
@@ -77,8 +77,8 @@ function OrbitalRing({ radius, fill, color, index }: OrbitalRingProps) {
       const angle = (i / Math.max(starsCount, 1)) * Math.PI * 2
       const x = Math.cos(angle) * radius
       const z = Math.sin(angle) * radius
-      const y = (Math.random() - 0.5) * 0.3
-      return { x, y, z, scale: 0.02 + Math.random() * 0.03 }
+      const y = (Math.random() - 0.5) * 0.2
+      return { x, y, z, scale: 0.03 + Math.random() * 0.04 }
     })
   }, [starsCount, radius])
 
@@ -86,15 +86,17 @@ function OrbitalRing({ radius, fill, color, index }: OrbitalRingProps) {
 
   return (
     <group ref={groupRef}>
+      {/* Ring line — thicker, more visible */}
       <mesh rotation-x={Math.PI / 2}>
-        <ringGeometry args={[radius - 0.005, radius + 0.005, 64]} />
-        <meshBasicMaterial color={color} transparent opacity={0.15} />
+        <torusGeometry args={[radius, 0.008, 8, 64]} />
+        <meshBasicMaterial color={color} transparent opacity={fill > 0 ? 0.3 : 0.08} />
       </mesh>
+      {/* Stars on the ring */}
       {stars.map((star, i) => (
         <mesh key={i} position={[star.x, star.y, star.z]}>
-          <sphereGeometry args={[star.scale, 8, 8]} />
+          <sphereGeometry args={[star.scale, 12, 12]} />
           <meshBasicMaterial color={color} />
-          <pointLight color={threeColor} intensity={0.1} distance={0.5} />
+          <pointLight color={threeColor} intensity={0.15} distance={0.8} />
         </mesh>
       ))}
     </group>
@@ -108,16 +110,24 @@ function ConstellationScene() {
 
   return (
     <>
-      <ambientLight intensity={0.3} />
+      <ambientLight intensity={0.2} />
+      {/* Core star — glowing amber */}
       <mesh>
-        <sphereGeometry args={[0.05, 16, 16]} />
-        <meshBasicMaterial color="#f59e0b" transparent opacity={0.6} />
+        <sphereGeometry args={[0.08, 16, 16]} />
+        <meshBasicMaterial color="#f59e0b" />
       </mesh>
-      <pointLight color="#f59e0b" intensity={0.5} distance={3} />
+      {/* Outer glow */}
+      <mesh>
+        <sphereGeometry args={[0.14, 16, 16]} />
+        <meshBasicMaterial color="#f59e0b" transparent opacity={0.15} />
+      </mesh>
+      <pointLight color="#f59e0b" intensity={0.8} distance={4} />
+      {/* Subtle background glow */}
+      <pointLight color="#f59e0b" intensity={0.15} distance={8} position={[0, 0, 0]} />
       {RING_COLORS.map((color, i) => (
         <OrbitalRing
           key={i}
-          radius={0.3 + i * 0.2}
+          radius={0.3 + i * 0.25}
           fill={fillValues[i]}
           color={color}
           index={i}
@@ -127,7 +137,7 @@ function ConstellationScene() {
         enableZoom={false}
         enablePan={false}
         autoRotate
-        autoRotateSpeed={0.5}
+        autoRotateSpeed={0.8}
         minPolarAngle={Math.PI / 4}
         maxPolarAngle={(3 * Math.PI) / 4}
       />
@@ -169,26 +179,26 @@ export function ConstellationWidget() {
     )
   }
 
-  // Expanded: wide horizontal strip — canvas takes up space, legend beside it
+  // Expanded: full-width horizontal strip
   return (
-    <div className="w-full rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm overflow-hidden">
-      <div className="flex h-[120px]">
+    <div className="w-full rounded-xl border border-border/40 bg-gradient-to-r from-black/60 via-black/40 to-background/80 backdrop-blur-sm overflow-hidden">
+      <div className="flex h-[150px]">
         {/* 3D Canvas — fills available width */}
-        <div className="flex-1 bg-black/80 min-w-0">
-          <Canvas camera={{ position: [0, 0, 2.5], fov: 45 }}>
+        <div className="flex-1 min-w-0 bg-gradient-to-b from-black/90 to-black/70">
+          <Canvas camera={{ position: [0, 0.8, 1.8], fov: 55 }}>
             <ConstellationScene />
           </Canvas>
         </div>
 
-        {/* Legend + stats — compact fixed width */}
-        <div className="w-[200px] shrink-0 px-3 py-2 flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] font-medium text-muted-foreground flex items-center gap-1">
-              <Star className="w-3 h-3 text-amber-400" />
+        {/* Legend + stats — compact sidebar */}
+        <div className="w-[220px] shrink-0 px-4 py-3 flex flex-col justify-between border-l border-border/20">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+              <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400/30" />
               DNA Constellation
             </span>
             <button
-              className="text-muted-foreground hover:text-foreground p-0.5"
+              className="text-muted-foreground hover:text-foreground p-0.5 rounded transition-colors"
               onClick={() => setExpanded(false)}
               title="Collapse"
             >
@@ -196,35 +206,49 @@ export function ConstellationWidget() {
             </button>
           </div>
 
-          <div className="space-y-0.5">
+          <div className="space-y-1.5 flex-1">
             {RING_LABELS.map((label, i) => (
-              <div key={label} className="flex items-center gap-1.5">
+              <div key={label} className="flex items-center gap-2">
                 <span
-                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  className="w-2 h-2 rounded-full shrink-0 ring-1 ring-white/10"
                   style={{ backgroundColor: RING_COLORS[i] }}
                 />
-                <span className="text-[10px] text-muted-foreground flex-1">{label}</span>
-                {/* Mini progress bar */}
-                <div className="w-14 h-1.5 rounded-full bg-muted/50 overflow-hidden">
+                <span className="text-[11px] text-muted-foreground flex-1">{label}</span>
+                {/* Progress bar */}
+                <div className="w-16 h-1.5 rounded-full bg-white/5 overflow-hidden">
                   <div
-                    className="h-full rounded-full transition-all duration-500"
+                    className="h-full rounded-full transition-all duration-700 ease-out"
                     style={{
-                      width: `${fillValues[i] * 100}%`,
+                      width: `${Math.max(fillValues[i] * 100, 2)}%`,
                       backgroundColor: RING_COLORS[i],
+                      boxShadow: fillValues[i] > 0 ? `0 0 6px ${RING_COLORS[i]}40` : 'none',
                     }}
                   />
                 </div>
-                <span className="text-[10px] text-muted-foreground w-7 text-right">
+                <span className="text-[11px] tabular-nums text-muted-foreground w-8 text-right font-medium">
                   {Math.round(fillValues[i] * 100)}%
                 </span>
               </div>
             ))}
           </div>
 
-          <div className="border-t border-border/50 pt-1 mt-1.5">
+          <div className="border-t border-border/30 pt-2 mt-2">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-medium">Overall</span>
-              <span className="text-[10px] font-bold text-amber-400">{Math.round(totalFill * 100)}%</span>
+              <span className="text-xs font-semibold text-foreground/80">Overall</span>
+              <div className="flex items-center gap-2">
+                <div className="w-16 h-2 rounded-full bg-white/5 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-700"
+                    style={{
+                      width: `${Math.max(totalFill * 100, 2)}%`,
+                      boxShadow: '0 0 8px #f59e0b40',
+                    }}
+                  />
+                </div>
+                <span className="text-sm font-bold text-amber-400 tabular-nums">
+                  {Math.round(totalFill * 100)}%
+                </span>
+              </div>
             </div>
           </div>
         </div>
