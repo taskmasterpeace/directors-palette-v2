@@ -166,8 +166,12 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           const defaults = createEmptyDNA()
           const dna = structuredClone(artist.dna)
           // Merge with defaults so older DB records don't crash on missing array fields
+          const identity = { ...defaults.identity, ...dna.identity }
+          // Migrate old `name` field to `stageName` for backwards compat
+          const oldName = (dna.identity as unknown as Record<string, unknown>)?.name as string | undefined
+          if (oldName && !identity.stageName) identity.stageName = oldName
           const merged: ArtistDNA = {
-            identity: { ...defaults.identity, ...dna.identity },
+            identity,
             sound: { ...defaults.sound, ...dna.sound },
             persona: { ...defaults.persona, ...dna.persona },
             lexicon: { ...defaults.lexicon, ...dna.lexicon },
@@ -365,16 +369,23 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
         const p = persisted as Partial<ArtistDnaState>
         const defaults = createEmptyDNA()
         // Deep-merge draft so stale localStorage never leaves array fields undefined
-        const draft = p.draft
-          ? {
-              identity: { ...defaults.identity, ...p.draft.identity },
-              sound: { ...defaults.sound, ...p.draft.sound },
-              persona: { ...defaults.persona, ...p.draft.persona },
-              lexicon: { ...defaults.lexicon, ...p.draft.lexicon },
-              look: { ...defaults.look, ...p.draft.look },
-              catalog: { ...defaults.catalog, ...p.draft.catalog },
-            }
-          : current.draft
+        let draft: ArtistDNA
+        if (p.draft) {
+          const identity = { ...defaults.identity, ...p.draft.identity }
+          // Migrate old `name` field to `stageName` for backwards compat
+          const oldName = (p.draft.identity as unknown as Record<string, unknown>)?.name as string | undefined
+          if (oldName && !identity.stageName) identity.stageName = oldName
+          draft = {
+            identity,
+            sound: { ...defaults.sound, ...p.draft.sound },
+            persona: { ...defaults.persona, ...p.draft.persona },
+            lexicon: { ...defaults.lexicon, ...p.draft.lexicon },
+            look: { ...defaults.look, ...p.draft.look },
+            catalog: { ...defaults.catalog, ...p.draft.catalog },
+          }
+        } else {
+          draft = current.draft
+        }
         const validTabs = ['identity', 'sound', 'persona', 'lexicon', 'look', 'catalog']
         const activeTab = p.activeTab && validTabs.includes(p.activeTab) ? p.activeTab : 'identity'
         return { ...current, ...p, draft, activeTab }
