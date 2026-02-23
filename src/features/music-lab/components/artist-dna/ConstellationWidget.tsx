@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useMemo, useCallback } from 'react'
-import { Star, ChevronUp, ChevronDown, ArrowLeft, Save } from 'lucide-react'
+import { Star, ChevronUp, ChevronDown, ArrowLeft, Save, User } from 'lucide-react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Html } from '@react-three/drei'
 import { Button } from '@/components/ui/button'
@@ -43,7 +43,7 @@ function calculateRingFill(dna: ArtistDNA) {
     (dna.lexicon.bannedWords.length > 0 ? 0.25 : 0)
 
   const profile =
-    (dna.identity.name ? 0.2 : 0) +
+    (dna.identity.stageName || dna.identity.realName ? 0.2 : 0) +
     (dna.identity.backstory ? 0.2 : 0) +
     (dna.identity.city ? 0.2 : 0) +
     (dna.look.visualDescription ? 0.2 : 0) +
@@ -61,7 +61,7 @@ function calculateRingCounts(dna: ArtistDNA) {
     dna.persona.dislikes.length + (dna.persona.attitude ? 1 : 0) + (dna.persona.worldview ? 1 : 0)
   const lexicon = dna.lexicon.signaturePhrases.length + dna.lexicon.slang.length +
     dna.lexicon.adLibs.length + dna.lexicon.bannedWords.length
-  const profile = (dna.identity.name ? 1 : 0) + (dna.identity.backstory ? 1 : 0) +
+  const profile = (dna.identity.stageName || dna.identity.realName ? 1 : 0) + (dna.identity.backstory ? 1 : 0) +
     (dna.identity.city ? 1 : 0) + (dna.look.visualDescription ? 1 : 0) + dna.catalog.entries.length
   return [sound, influences, persona, lexicon, profile]
 }
@@ -75,7 +75,7 @@ function calculateRingGlow(dna: ArtistDNA) {
     dna.persona.dislikes.join('').length + dna.persona.attitude.length + dna.persona.worldview.length
   const lexicon = dna.lexicon.signaturePhrases.join('').length + dna.lexicon.slang.join('').length +
     dna.lexicon.adLibs.join('').length + dna.lexicon.bannedWords.join('').length
-  const profile = dna.identity.name.length + dna.identity.backstory.length +
+  const profile = (dna.identity.stageName?.length || 0) + (dna.identity.realName?.length || 0) + dna.identity.backstory.length +
     dna.identity.city.length + dna.look.visualDescription.length
   return [sound, influences, persona, lexicon, profile]
 }
@@ -319,7 +319,7 @@ export function ConstellationWidget() {
   const fillValues = [fills.sound, fills.influences, fills.persona, fills.lexicon, fills.profile]
   const totalFill = Object.values(fills).reduce((sum, v) => sum + v, 0) / 5
 
-  const artistName = draft.identity.name || 'New Artist'
+  const artistName = draft.identity.stageName || draft.identity.realName || 'New Artist'
   const otherArtists = artists.filter((a) => a.id !== activeArtistId)
   const portraitUrl = draft.look.portraitUrl
 
@@ -355,21 +355,23 @@ export function ConstellationWidget() {
 
   return (
     <div className="w-full rounded-xl border border-border/40 overflow-hidden relative">
-      <div className="flex h-[260px]">
+      <div className="flex h-[208px]">
         {/* 3D Canvas — fills available width */}
         <div className="flex-1 min-w-0 relative">
-          <Canvas camera={{ position: [0, 1.6, 2.8], fov: 60 }}>
+          <Canvas camera={{ position: [0, 1.4, 2.5], fov: 60 }}>
             <ConstellationScene />
           </Canvas>
 
           {/* Portrait thumbnail overlay at center */}
-          {portraitUrl && (
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
-              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.5)]">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
+            <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.5)] flex items-center justify-center bg-black/30">
+              {portraitUrl ? (
                 <img src={portraitUrl} alt="Artist portrait" className="w-full h-full object-cover" />
-              </div>
+              ) : (
+                <User className="w-8 h-8 text-amber-400/40" />
+              )}
             </div>
-          )}
+          </div>
 
           {/* Overlay: Bottom-left — Back + Artist Name */}
           <div className="absolute bottom-3 left-3 flex items-center gap-2 z-10">

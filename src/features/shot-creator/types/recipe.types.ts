@@ -3705,4 +3705,50 @@ What sets this shot apart: the iPhone screen content is sharp and luminous, acti
     quickAccessLabel: 'iPhone Shot',
     categoryId: 'products',
   },
+
+  // Artist Character Sheet - Full reference sheet from artist DNA
+  {
+    name: 'Artist Character Sheet',
+    description: 'Professional artist reference sheet with full-body views, expressions, close-up details, and performance poses',
+    recipeNote: 'Enter the artist details from your Artist DNA. Generates a 21:9 character sheet with body views, expression grid, accessories, and wardrobe variants.',
+    stages: [{
+      id: 'stage_artist_sheet_0',
+      order: 0,
+      template: `CHARACTER @<<STAGE_NAME:name!>>
+
+LAYOUT (Left to Right):
+
+SECTION 1 - FULL BODY VIEWS:
+- Large front view with <<SKIN_TONE:text>> skin, <<HAIR_STYLE:text>> hair, wearing <<FASHION_STYLE:text!>>
+- Side profile view, Back view
+- COLOR PALETTE strip: skin, hair, outfit, accent, jewelry colors
+
+SECTION 2 - EXPRESSIONS & DETAILS:
+- Header: "<<STAGE_NAME:name!>>"
+- EXPRESSION GRID (2x3): Neutral | Performing | Intense | Relaxed | Laughing | Mysterious
+- CLOSE-UP DETAILS: <<JEWELRY:text>> jewelry, <<TATTOOS:text>> tattoos
+- ACCESSORIES: microphone, sunglasses, chains, headphones
+
+SECTION 3 - PERFORMANCE POSES:
+- Stage performance pose, Studio recording pose, Music video glamour pose
+- WARDROBE VARIANTS: streetwear, stage outfit, casual
+
+<<VISUAL_DESCRIPTION:text>>
+
+STYLE: photo quality, photo realistic, professional character reference sheet`,
+      fields: [],
+      referenceImages: [
+        {
+          id: 'template_artist_charsheet',
+          url: SYSTEM_TEMPLATE_URLS.characterSheetAdvanced,
+          name: 'Character Sheet Layout Template',
+          aspectRatio: '21:9',
+        },
+      ],
+    }],
+    suggestedAspectRatio: '21:9',
+    isQuickAccess: true,
+    quickAccessLabel: 'ArtistSheet',
+    categoryId: 'artists',
+  },
 ]

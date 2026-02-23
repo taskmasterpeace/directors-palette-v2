@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Palette, User, Loader2 } from 'lucide-react'
+import { Palette, User, Loader2, Upload, Sparkles } from 'lucide-react'
 import { MagicWandField } from '../MagicWandField'
 import { useArtistDnaStore } from '../../../store/artist-dna.store'
 
@@ -12,6 +12,9 @@ export function LookTab() {
   const { draft, updateDraft } = useArtistDnaStore()
   const look = draft.look
   const [generatingPortrait, setGeneratingPortrait] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [generatingSheet, setGeneratingSheet] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleGeneratePortrait = async () => {
     setGeneratingPortrait(true)
@@ -42,6 +45,64 @@ export function LookTab() {
     }
   }
 
+  const handleUploadPortrait = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) return
+    if (file.size > 10 * 1024 * 1024) return // 10MB limit
+
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/upload-file', { method: 'POST', body: formData })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.url) {
+          updateDraft('look', { portraitUrl: data.url })
+        }
+      }
+    } catch (error) {
+      console.error('Failed to upload portrait:', error)
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const handleVisualizeArtist = async () => {
+    setGeneratingSheet(true)
+    try {
+      const res = await fetch('/api/artist-dna/generate-character-sheet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stageName: draft.identity.stageName,
+          realName: draft.identity.realName,
+          ethnicity: draft.identity.ethnicity,
+          skinTone: look.skinTone,
+          hairStyle: look.hairStyle,
+          fashionStyle: look.fashionStyle,
+          jewelry: look.jewelry,
+          tattoos: look.tattoos,
+          visualDescription: look.visualDescription,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.url) {
+          updateDraft('look', { characterSheetUrl: data.url })
+        }
+      }
+    } catch (error) {
+      console.error('Failed to generate character sheet:', error)
+    } finally {
+      setGeneratingSheet(false)
+    }
+  }
+
   const hasLookFields = look.skinTone || look.hairStyle || look.fashionStyle || look.visualDescription
 
   return (
@@ -66,19 +127,41 @@ export function LookTab() {
             <p className="text-xs text-muted-foreground">
               {look.portraitUrl ? 'Portrait generated from your Look profile' : 'Generate a portrait from your Look fields'}
             </p>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleGeneratePortrait}
-              disabled={generatingPortrait || !hasLookFields}
-              className="w-fit h-7 text-xs"
-            >
-              {generatingPortrait ? (
-                <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Generating...</>
-              ) : (
-                <>{look.portraitUrl ? 'Regenerate Portrait' : 'Generate Portrait'}</>
-              )}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleGeneratePortrait}
+                disabled={generatingPortrait || !hasLookFields}
+                className="h-7 text-xs"
+              >
+                {generatingPortrait ? (
+                  <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Generating...</>
+                ) : (
+                  <>{look.portraitUrl ? 'Regenerate Portrait' : 'Generate Portrait'}</>
+                )}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="h-7 text-xs"
+              >
+                {uploading ? (
+                  <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Uploading...</>
+                ) : (
+                  <><Upload className="w-3 h-3 mr-1" />Upload Photo</>
+                )}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleUploadPortrait}
+              />
+            </div>
           </div>
         </div>
 
@@ -151,6 +234,39 @@ export function LookTab() {
             placeholder="Overall visual vibe..."
             multiline
           />
+        </div>
+
+        {/* Character Sheet section */}
+        <div className="pt-2 border-t border-border/30 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium">Character Sheet</p>
+              <p className="text-[11px] text-muted-foreground">Full reference sheet from your DNA</p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleVisualizeArtist}
+              disabled={generatingSheet || !hasLookFields}
+              className="h-7 text-xs"
+            >
+              {generatingSheet ? (
+                <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Generating...</>
+              ) : (
+                <><Sparkles className="w-3 h-3 mr-1" />{look.characterSheetUrl ? 'Regenerate Sheet' : 'Visualize Artist'}</>
+              )}
+            </Button>
+          </div>
+          {look.characterSheetUrl && (
+            <div className="rounded-lg overflow-hidden border border-border/40">
+              <img
+                src={look.characterSheetUrl}
+                alt="Artist character sheet"
+                className="w-full h-auto"
+                style={{ aspectRatio: '21/9' }}
+              />
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

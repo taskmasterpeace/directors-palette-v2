@@ -28,8 +28,9 @@ export async function POST(request: NextRequest) {
     parts.push('Suggest 6 unique song concept ideas for this artist. Each concept should be 1-2 sentences.')
     parts.push('Return ONLY a JSON array of strings. No markdown, no explanation.')
 
-    if (artistDna.identity?.name) {
-      parts.push(`Artist: ${artistDna.identity.name}`)
+    const artistName = artistDna.identity?.stageName || artistDna.identity?.realName
+    if (artistName) {
+      parts.push(`Artist: ${artistName}`)
     }
     if (artistDna.identity?.city) {
       parts.push(`From: ${artistDna.identity.city}`)

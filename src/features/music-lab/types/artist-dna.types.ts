@@ -8,7 +8,8 @@
 // =============================================================================
 
 export interface ArtistIdentity {
-  name: string
+  stageName: string
+  realName: string
   ethnicity: string
   city: string
   region: string
@@ -52,6 +53,7 @@ export interface ArtistLook {
   tattoos: string
   visualDescription: string
   portraitUrl: string
+  characterSheetUrl: string
 }
 
 export interface CatalogEntry {
@@ -150,7 +152,8 @@ export const ARTIST_DNA_TABS: { id: ArtistDnaTab; label: string }[] = [
 export function createEmptyDNA(): ArtistDNA {
   return {
     identity: {
-      name: '',
+      stageName: '',
+      realName: '',
       ethnicity: '',
       city: '',
       region: '',
@@ -190,6 +193,7 @@ export function createEmptyDNA(): ArtistDNA {
       tattoos: '',
       visualDescription: '',
       portraitUrl: '',
+      characterSheetUrl: '',
     },
     catalog: {
       entries: [],

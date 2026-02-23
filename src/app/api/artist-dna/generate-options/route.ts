@@ -69,8 +69,9 @@ function buildSystemPrompt(body: GenerateOptionsBody): string {
   }
 
   // Artist DNA context — full profile
-  if (artistDna.identity?.name) {
-    parts.push(`Artist name: ${artistDna.identity.name}`)
+  const artistName = artistDna.identity?.stageName || artistDna.identity?.realName
+  if (artistName) {
+    parts.push(`Artist name: ${artistName}`)
   }
   if (artistDna.identity?.city || artistDna.identity?.region) {
     parts.push(`Origin: ${[artistDna.identity.city, artistDna.identity.region].filter(Boolean).join(', ')}`)

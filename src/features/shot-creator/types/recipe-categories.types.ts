@@ -20,6 +20,7 @@ export const DEFAULT_RECIPE_CATEGORIES: RecipeCategory[] = [
   { id: 'narrative', name: 'Narrative', icon: '📚', isDefault: true },
   { id: 'styles', name: 'Style Transfers', icon: '🎨', isDefault: true },
   { id: 'products', name: 'Products', icon: '📦', isDefault: true },
+  { id: 'artists', name: 'Artists', icon: '🎤', isDefault: true },
   { id: 'custom', name: 'Custom', icon: '✨', isDefault: true },
   // System-only categories (visible only to admin users)
   { id: 'storybook', name: 'Storybook', icon: '📖', isDefault: true, isSystemOnly: true },

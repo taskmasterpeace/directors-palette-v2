@@ -24,8 +24,9 @@ function buildSystemPrompt(dna: ArtistDNA): string {
   parts.push('Return ONLY the lyrics text with section headers like [Verse 1], [Chorus], etc.')
 
   // Identity context
-  if (dna.identity.name) {
-    parts.push(`Writing for: ${dna.identity.name}`)
+  const writingName = dna.identity.stageName || dna.identity.realName
+  if (writingName) {
+    parts.push(`Writing for: ${writingName}`)
   }
   if (dna.identity.city || dna.identity.region) {
     parts.push(`From: ${[dna.identity.city, dna.identity.region].filter(Boolean).join(', ')}`)
@@ -141,7 +142,7 @@ export async function POST(request: NextRequest) {
     }
 
     const systemPrompt = buildSystemPrompt(dna)
-    const artistName = dna.identity.name || 'this artist'
+    const artistName = dna.identity.stageName || dna.identity.realName || 'this artist'
     const genre = dna.sound.genres[0] || 'music'
     const city = dna.identity.city || 'the city'
     const influences = dna.sound.artistInfluences.length > 0

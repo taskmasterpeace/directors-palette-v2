@@ -22,7 +22,8 @@ export async function POST(request: NextRequest) {
 
     // Build rich context from ALL filled DNA fields
     const contextParts: string[] = []
-    if (context?.identity?.name) contextParts.push(`Artist: ${context.identity.name}`)
+    const artistName = context?.identity?.stageName || context?.identity?.name || context?.identity?.realName
+    if (artistName) contextParts.push(`Artist: ${artistName}`)
     if (context?.identity?.ethnicity) contextParts.push(`Ethnicity: ${context.identity.ethnicity}`)
     if (context?.identity?.city) contextParts.push(`From: ${context.identity.city}, ${context.identity.region || ''}`.trim())
     if (context?.identity?.backstory) contextParts.push(`Backstory: ${context.identity.backstory.slice(0, 200)}`)

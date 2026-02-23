@@ -110,7 +110,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
         const { currentUserId, draft } = get()
         if (!currentUserId) return null
 
-        const name = draft.identity.name || 'Untitled Artist'
+        const name = draft.identity.stageName || draft.identity.realName || 'Untitled Artist'
         const result = await artistDnaService.createArtist(currentUserId, name, draft)
 
         if (result) {
@@ -128,7 +128,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
         const { currentUserId, activeArtistId, draft } = get()
         if (!currentUserId) return false
 
-        const name = draft.identity.name || 'Untitled Artist'
+        const name = draft.identity.stageName || draft.identity.realName || 'Untitled Artist'
 
         if (activeArtistId) {
           const result = await artistDnaService.updateArtist(activeArtistId, currentUserId, name, draft)
@@ -213,7 +213,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
         set((state) => ({
           draft: {
             ...state.draft,
-            identity: { ...state.draft.identity, name },
+            identity: { ...state.draft.identity, stageName: name },
           },
           isDirty: true,
         }))

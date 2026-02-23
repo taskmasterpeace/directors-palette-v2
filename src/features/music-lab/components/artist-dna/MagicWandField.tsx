@@ -19,9 +19,9 @@ interface MagicWandFieldProps {
   multiline?: boolean
 }
 
-function calculateContextScore(draft: { identity: { name: string; ethnicity: string; city: string; backstory: string }; sound: { genres: string[]; artistInfluences: string[] }; persona: { attitude: string; traits: string[] }; look: { fashionStyle: string }; lexicon: { signaturePhrases: string[] } }) {
+function calculateContextScore(draft: { identity: { stageName: string; realName: string; ethnicity: string; city: string; backstory: string }; sound: { genres: string[]; artistInfluences: string[] }; persona: { attitude: string; traits: string[] }; look: { fashionStyle: string }; lexicon: { signaturePhrases: string[] } }) {
   const fields = [
-    draft.identity.name,
+    draft.identity.stageName || draft.identity.realName,
     draft.identity.ethnicity,
     draft.identity.city,
     draft.identity.backstory,

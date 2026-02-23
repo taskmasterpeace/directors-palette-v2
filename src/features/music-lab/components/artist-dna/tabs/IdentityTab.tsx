@@ -23,14 +23,26 @@ export function IdentityTab() {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="artist-name">Name</Label>
+            <Label htmlFor="artist-stage-name">Stage Name</Label>
             <Input
-              id="artist-name"
-              value={identity.name}
-              onChange={(e) => updateDraft('identity', { name: e.target.value })}
-              placeholder="Artist name..."
+              id="artist-stage-name"
+              value={identity.stageName}
+              onChange={(e) => updateDraft('identity', { stageName: e.target.value })}
+              placeholder="Stage name..."
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="artist-real-name">Real Name</Label>
+            <Input
+              id="artist-real-name"
+              value={identity.realName}
+              onChange={(e) => updateDraft('identity', { realName: e.target.value })}
+              placeholder="Legal name..."
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="artist-ethnicity">Ethnicity</Label>
             <Input
@@ -40,9 +52,6 @@ export function IdentityTab() {
               placeholder="Ethnicity..."
             />
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="artist-city">City</Label>
             <Input
