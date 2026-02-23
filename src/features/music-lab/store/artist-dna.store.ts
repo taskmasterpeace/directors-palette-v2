@@ -52,6 +52,10 @@ interface ArtistDnaState {
   loadArtistIntoDraft: (id: string) => void
   startNewArtist: () => void
 
+  // Actions - Seed from real artist
+  startFromArtist: (artistName: string) => Promise<boolean>
+  isSeedingFromArtist: boolean
+
   // Actions - Draft editing
   setActiveTab: (tab: ArtistDnaTab) => void
   updateDraft: <S extends keyof ArtistDNA>(section: S, data: Partial<ArtistDNA[S]>) => void
@@ -91,6 +95,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
       suggestionCache: {},
       sunoOutput: null,
       combineVocalAndStyle: false,
+      isSeedingFromArtist: false,
 
       initialize: async (userId: string) => {
         const state = get()
@@ -199,6 +204,51 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           sunoOutput: null,
           suggestionCache: {},
         })
+      },
+
+      startFromArtist: async (artistName: string) => {
+        set({ isSeedingFromArtist: true })
+        try {
+          const res = await fetch('/api/artist-dna/seed-from-artist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ artistName }),
+          })
+          if (!res.ok) {
+            set({ isSeedingFromArtist: false })
+            return false
+          }
+          const { dna } = await res.json()
+          if (!dna) {
+            set({ isSeedingFromArtist: false })
+            return false
+          }
+          // Merge with defaults so any missing fields get sensible values
+          const defaults = createEmptyDNA()
+          const merged: ArtistDNA = {
+            identity: { ...defaults.identity, ...dna.identity },
+            sound: { ...defaults.sound, ...dna.sound },
+            persona: { ...defaults.persona, ...dna.persona },
+            lexicon: { ...defaults.lexicon, ...dna.lexicon },
+            look: { ...defaults.look, ...dna.look },
+            catalog: { ...defaults.catalog, ...dna.catalog },
+          }
+          set({
+            editorOpen: true,
+            activeArtistId: null,
+            draft: merged,
+            isDirty: true, // Mark dirty so user knows to save
+            activeTab: 'identity',
+            sunoOutput: null,
+            suggestionCache: {},
+            isSeedingFromArtist: false,
+          })
+          return true
+        } catch (error) {
+          console.error('Error seeding from artist:', error)
+          set({ isSeedingFromArtist: false })
+          return false
+        }
       },
 
       setActiveTab: (tab) => set({ activeTab: tab }),
