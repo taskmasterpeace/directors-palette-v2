@@ -8,7 +8,7 @@ import { LayoutAnnotation } from "@/features/layout-annotation"
 import { Storyboard } from "@/features/storyboard"
 import { Storybook } from "@/features/storybook"
 import { PromptToolsPage } from "@/features/prompt-tools"
-import MusicLabPage from "@/app/(app)/music-lab/page"
+import { MusicLabHub } from "@/features/music-lab/components/MusicLabHub"
 import { UnifiedImageGallery } from "@/features/shot-creator/components/unified-gallery/UnifiedImageGallery"
 import { useGalleryLoader } from "@/features/shot-creator/hooks/useGalleryLoader"
 import { SidebarNavigation } from "@/components/SidebarNavigation"
@@ -19,8 +19,6 @@ import { SectionHeader } from "@/components/SectionHeader"
 import { NodeWorkflow } from "@/features/node-workflow"
 import { AdhubWorkspace } from "@/features/adhub"
 import { AdLabWorkspace } from "@/features/ad-lab"
-import { ArtistDnaPage } from "@/features/music-lab/components/artist-dna/ArtistDnaPage"
-import { WritingStudioPage } from "@/features/music-lab/components/WritingStudioPage"
 import { useAuth } from "@/features/auth/hooks/useAuth"
 
 export default function Home() {
@@ -118,34 +116,12 @@ export default function Home() {
               </TabsContent>
             )}
 
-            {activeTab === 'artist-lab' && user && (
-              <TabsContent key="artist-lab" value="artist-lab" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
+            {activeTab === 'music-lab' && user && (
+              <TabsContent key="music-lab" value="music-lab" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
                 <PageTransition>
-                  <SectionHeader section="artist-lab" />
-                  <div className="flex-1 p-4 overflow-y-auto">
-                    <ArtistDnaPage userId={user.id} />
-                  </div>
-                </PageTransition>
-              </TabsContent>
-            )}
-
-            {activeTab === 'writing-studio' && user && (
-              <TabsContent key="writing-studio" value="writing-studio" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
-                <PageTransition>
-                  <SectionHeader section="writing-studio" />
+                  <SectionHeader section="music-lab" />
                   <div className="flex-1 overflow-hidden">
-                    <WritingStudioPage userId={user.id} />
-                  </div>
-                </PageTransition>
-              </TabsContent>
-            )}
-
-            {activeTab === 'music-video' && (
-              <TabsContent key="music-video" value="music-video" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
-                <PageTransition>
-                  <SectionHeader section="music-video" />
-                  <div className="flex-1 p-4 overflow-y-auto">
-                    <MusicLabPage />
+                    <MusicLabHub userId={user.id} />
                   </div>
                 </PageTransition>
               </TabsContent>

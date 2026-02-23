@@ -10,7 +10,6 @@ import {
     Images,
     FlaskConical,
     Music,
-    PenTool,
     BookOpen,
     BookHeart,
     ChevronLeft,
@@ -25,8 +24,7 @@ import {
     Circle,
     ArrowRight,
     Megaphone,
-    Clapperboard,
-    Dna
+    Clapperboard
 } from 'lucide-react'
 import { useLayoutStore, TabValue } from '@/store/layout.store'
 import { useSidebarWizardSteps, useNavigateToWizardStep } from '@/features/storybook/hooks/useSidebarWizardSteps'
@@ -125,25 +123,11 @@ const NAV_SECTIONS: NavSection[] = [
                 tooltipExpanded: "Children's illustrated books"
             },
             {
-                id: 'artist-lab',
-                label: 'Artist Lab',
-                icon: Dna,
-                banner: '/banners/music-lab.webp',
-                tooltipExpanded: 'Create and manage artist profiles'
-            },
-            {
-                id: 'writing-studio',
-                label: 'Writing Studio',
-                icon: PenTool,
-                banner: '/banners/music-lab.webp',
-                tooltipExpanded: 'AI-powered songwriting workspace'
-            },
-            {
-                id: 'music-video',
-                label: 'Music Video',
+                id: 'music-lab',
+                label: 'Music Lab',
                 icon: Music,
                 banner: '/banners/music-lab.webp',
-                tooltipExpanded: 'Music video treatments'
+                tooltipExpanded: 'Artist Lab, Writing Studio & Music Video'
             },
             {
                 id: 'ad-lab',

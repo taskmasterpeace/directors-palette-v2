@@ -34,8 +34,9 @@ export function ArtistContextBar({
     isInitialized,
     initialize,
     loadArtistIntoDraft,
+    startNewArtist,
   } = useArtistDnaStore()
-  const { setActiveTab } = useLayoutStore()
+  const { setActiveTab, setMusicLabSubTab } = useLayoutStore()
 
   useEffect(() => {
     initialize(userId)
@@ -50,7 +51,9 @@ export function ArtistContextBar({
   }
 
   const handleCreateNew = () => {
-    setActiveTab('artist-lab')
+    startNewArtist()
+    setActiveTab('music-lab')
+    setMusicLabSubTab('artist-lab')
   }
 
   // Empty state: no artist selected

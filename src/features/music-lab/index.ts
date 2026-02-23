@@ -50,6 +50,7 @@ export { ArtistDnaPage } from './components/artist-dna/ArtistDnaPage'
 // Components - Shared
 export { ArtistContextBar } from './components/ArtistContextBar'
 export { WritingStudioPage } from './components/WritingStudioPage'
+export { MusicLabHub } from './components/MusicLabHub'
 
 // Store
 export { useArtistDnaStore } from './store/artist-dna.store'

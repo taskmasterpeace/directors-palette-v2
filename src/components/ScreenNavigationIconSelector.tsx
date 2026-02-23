@@ -22,7 +22,7 @@ const SCREEN_OPTIONS: ScreenOption[] = [
     { value: 'storyboard', label: 'Storyboard', icon: Film },
     { value: 'gallery', label: 'Gallery', icon: Images },
     { value: 'prompt-tools', label: 'Prompt Tools', icon: FlaskConical },
-    { value: 'music-video', label: 'Music Video', icon: Music },
+    { value: 'music-lab', label: 'Music Lab', icon: Music },
 ]
 
 interface ScreenNavigationIconSelectorProps {
