@@ -24,7 +24,7 @@ export function MusicLabHub({ userId }: MusicLabHubProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Sub-tab bar */}
-      <div className="flex items-center gap-1 px-4 py-2 border-b border-border/50 bg-card/30 flex-shrink-0">
+      <div className="flex items-center gap-1 px-2 py-1.5 border-b border-border/50 bg-card/30 flex-shrink-0">
         {SUB_TABS.map((tab) => {
           const Icon = tab.icon
           const isActive = musicLabSubTab === tab.id
@@ -33,14 +33,14 @@ export function MusicLabHub({ userId }: MusicLabHubProps) {
               key={tab.id}
               onClick={() => setMusicLabSubTab(tab.id)}
               className={cn(
-                'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                'flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all min-w-0',
                 isActive
                   ? 'bg-amber-500/15 text-amber-400 shadow-sm'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               )}
             >
-              <Icon className="w-4 h-4" />
-              {tab.label}
+              <Icon className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">{tab.label}</span>
             </button>
           )
         })}
