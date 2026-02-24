@@ -65,7 +65,7 @@ function buildPrompt(entries: AnalyzedEntry[], artistName: string): string {
   parts.push('- experiments: traits in <40% of songs (frequency 0.01-0.39)')
   parts.push('- With only 1 song, everything is a signature (frequency 1.0)')
   parts.push('- essenceStatement should read like instructions to a ghostwriter: "This artist writes about X. Their rhymes tend to Y. When writing as them, always Z."')
-  parts.push('- blueprint.avoidRepeating: list specific imagery/phrases/themes from the catalog that should NOT be reused verbatim')
+  parts.push('- blueprint.avoidRepeating: list 3-5 specific verbatim phrases, images, or metaphors from the analyzed songs that should NOT be recycled in new writing (e.g. exact lines or imagery already used)')
   parts.push('- blueprint.suggestExploring: based on the artist\'s style, suggest 3-5 new creative directions')
   parts.push('- Do NOT include markdown formatting or code fences. Return raw JSON only.')
 

@@ -147,6 +147,7 @@ function buildSystemPrompt(body: GenerateOptionsBody): string {
     if (genome.vocabularyProfile) parts.push(`Vocabulary profile: ${genome.vocabularyProfile}`)
     if (genome.blueprint) {
       if (genome.blueprint.mustInclude.length > 0) parts.push(`Must include: ${genome.blueprint.mustInclude.join('; ')}`)
+      if (genome.blueprint.shouldInclude.length > 0) parts.push(`Should include: ${genome.blueprint.shouldInclude.join('; ')}`)
       if (genome.blueprint.avoidRepeating.length > 0) parts.push(`Avoid repeating: ${genome.blueprint.avoidRepeating.join('; ')}`)
     }
     parts.push('Use this genome to understand the artist\'s established style. Build on it, don\'t repeat it.')

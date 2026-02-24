@@ -72,7 +72,7 @@ function TraitBadges({ traits, variant }: { traits: GenomeTrait[]; variant: 'sig
 }
 
 function GenomePanel() {
-  const { draft, recalculateGenome, analyzeCatalog } = useArtistDnaStore()
+  const { draft, recalculateGenome, analyzeCatalog, isAnalyzingCatalog } = useArtistDnaStore()
   const genome = draft.catalog.genome
   const genomeStatus = draft.catalog.genomeStatus
   const entries = draft.catalog.entries
@@ -184,10 +184,11 @@ function GenomePanel() {
                   size="sm"
                   variant="outline"
                   onClick={() => analyzeCatalog()}
+                  disabled={isAnalyzingCatalog}
                   className="text-xs h-7"
                 >
-                  <Sparkles className="w-3.5 h-3.5 mr-1" />
-                  Analyze Catalog
+                  <Sparkles className={`w-3.5 h-3.5 mr-1 ${isAnalyzingCatalog ? 'animate-spin' : ''}`} />
+                  {isAnalyzingCatalog ? 'Analyzing...' : 'Analyze Catalog'}
                 </Button>
               )}
               {analyzedCount > 0 && (

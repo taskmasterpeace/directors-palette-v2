@@ -72,6 +72,7 @@ interface ArtistDnaState {
   analyzeSong: (entryId: string) => Promise<void>
   recalculateGenome: () => Promise<void>
   analyzeCatalog: () => Promise<void>
+  isAnalyzingCatalog: boolean
 
   // Actions - Suggestions
   setSuggestions: (field: string, suggestions: string[]) => void
@@ -108,6 +109,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
       combineVocalAndStyle: false,
       isSeedingFromArtist: false,
       seededFrom: null,
+      isAnalyzingCatalog: false,
 
       clearSeededFrom: () => set({ seededFrom: null }),
 
@@ -463,13 +465,19 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
       },
 
       analyzeCatalog: async () => {
-        const { draft, analyzeSong } = get()
-        const unanalyzed = draft.catalog.entries.filter(
-          (e) => e.lyrics && (!e.analysis || e.analysisStatus === 'error')
-        )
-        // Analyze sequentially to avoid rate limits
-        for (const entry of unanalyzed) {
-          await analyzeSong(entry.id)
+        if (get().isAnalyzingCatalog) return
+        set({ isAnalyzingCatalog: true })
+        try {
+          const { draft, analyzeSong } = get()
+          const unanalyzed = draft.catalog.entries.filter(
+            (e) => e.lyrics && (!e.analysis || e.analysisStatus === 'error')
+          )
+          // Analyze sequentially to avoid rate limits
+          for (const entry of unanalyzed) {
+            await analyzeSong(entry.id)
+          }
+        } finally {
+          set({ isAnalyzingCatalog: false })
         }
       },
 
