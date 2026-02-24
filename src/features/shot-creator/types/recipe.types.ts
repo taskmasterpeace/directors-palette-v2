@@ -3683,27 +3683,29 @@ No style drift between tiles. Black grid lines between all cells. 16:9 aspect ra
     isSystemOnly: true,
   },
 
-  // iPhone Product Shot - Ultra-macro product photography
+  // Device Screen Shot - Ultra-macro product photography of any device screen
   {
-    name: 'iPhone Product Shot',
-    description: 'Ultra-macro photorealistic product photograph of an iPhone screen being held in someone\'s hand',
-    recipeNote: 'Describe the person holding the phone and the location/setting. Creates a cinematic product shot with dramatic depth of field.',
+    name: 'Device Screen Shot',
+    description: 'Ultra-macro photorealistic product photograph of a device screen showing specific content in a cinematic setting',
+    recipeNote: 'Pick the device type, describe what\'s on the screen, who is using it, and where. Creates a cinematic product hero shot with dramatic depth of field.',
     stages: [{
-      id: 'stage_iphone_product_0',
+      id: 'stage_device_screen_0',
       order: 0,
-      template: `An ultra-macro, photorealistic product photograph of the illuminated screen of a iPhone being held in <<PERSON:text!>>'s hand. The camera is extremely close to the physical screen, capturing the phone's edge, the curve of the user's fingers, and a richly atmospheric background that extends into <<LOCATION:text!>>.
+      template: `An ultra-macro, photorealistic product photograph of the illuminated screen of <<DEVICE:select(a smartphone,a laptop,a desktop monitor,a tablet,a smartwatch)!>> showing <<SCREEN_CONTENT:text!>> on the display. <<PERSON_CONTEXT:select(Being held in someone's hand,Sitting on a desk with a person typing,On a table in front of someone,Mounted on a wall in a room,Sitting on a nightstand,Being used by someone on a couch)!>>. The camera is extremely close to the physical screen, capturing the device's edge, and a richly atmospheric background that extends into <<LOCATION:text!>>.
 
-The shallow depth of field turns the setting into a soft bokeh tapestry—warm ambient glows, streaks of neon, silhouettes of passersby, and hints of architectural detail dissolve into painterly blur. Cinematic color grading—teal shadows, amber highlights, and subtle film grain—anchors the scene in a premium, editorial aesthetic.
+The shallow depth of field turns the setting into a soft bokeh tapestry—warm ambient glows, streaks of light, silhouettes, and hints of architectural detail dissolve into painterly blur. Cinematic color grading—teal shadows, amber highlights, and subtle film grain—anchors the scene in a premium, editorial aesthetic.
 
-What sets this shot apart: the iPhone screen content is sharp and luminous, acting as a beacon of clarity amid the dreamy surroundings. The interplay of crisp digital interface against velvety out-of-focus reality evokes the feeling of a product hero shot in a high-end commercial, where cutting-edge technology meets human moment.`,
+The screen content is sharp and luminous, acting as a beacon of clarity amid the dreamy surroundings. The interplay of crisp digital interface against velvety out-of-focus reality evokes the feeling of a product hero shot in a high-end commercial, where cutting-edge technology meets human moment.`,
       fields: [],
       referenceImages: [],
     }],
     suggestedAspectRatio: '9:16',
     suggestedModel: 'nano-banana-pro',
     isQuickAccess: true,
-    quickAccessLabel: 'iPhone Shot',
+    quickAccessLabel: 'DeviceShot',
     categoryId: 'products',
+    isSystem: true,
+    isSystemOnly: false,
   },
 
   // Artist Character Sheet - Full reference sheet from artist DNA
