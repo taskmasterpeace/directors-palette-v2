@@ -229,31 +229,31 @@ export const PRESET_STYLES: PresetStyle[] = [
     // ---- NEW FILM PRESETS ----
     {
         id: 'black-dynamite',
-        name: 'Black Dynamite',
-        description: '70s blaxploitation homage with retro grain',
+        name: 'Street Fury',
+        description: '70s exploitation cinema with raw gritty energy and retro grain',
         imagePath: '/storyboard-assets/styles/black-dynamite.webp',
-        stylePrompt: 'in the style of 1970s blaxploitation cinema, retro Super 16mm film look, heavy grain, amber and brown color grading, dramatic zoom shots',
+        stylePrompt: '1970s exploitation cinema aesthetic shot on Super 16mm Color Reversal film stock with heavy visible grain and high contrast saturated color, aggressive crash zooms that snap into extreme close-ups on dramatic moments, low-angle heroic framing shooting upward to make protagonists appear larger than life and dominant in the frame, handheld camera work with natural shoulder sway creating raw documentary-like energy on the streets, amber and brown warm color grading with oversaturated reds and golds, practical location lighting using available sunlight and bare interior bulbs with no diffusion, intentional one-take roughness with boom mic shadows and slight focus hunting adding gritty authenticity, smash cuts to close-ups punctuating key dialogue beats, split screen and double exposure photography for stylized action sequences, urban street compositions framing subjects against concrete walls and neon signs, high-contrast silhouettes in doorways and alleys with hard backlight, film jitter and gate weave adding analog texture and period authenticity',
         technicalAttributes: {
-            cameraRenderType: 'Super 16mm film camera',
-            lensPerspective: 'Clumsy dramatic zooms, low-angle heroic',
-            stockMedium: 'Kodak Color Reversal, heavy grain',
-            colorPalette: 'High-contrast saturated, amber and brown',
-            texture: 'Heavy film grain, jitter, retro',
+            cameraRenderType: 'Super 16mm film camera, handheld with shoulder sway',
+            lensPerspective: 'Aggressive crash zooms snapping to extreme close-ups, low-angle heroic shots looking upward, handheld with documentary energy',
+            stockMedium: 'Kodak Color Reversal Super 16mm, heavy grain, high contrast',
+            colorPalette: 'Oversaturated amber and brown warmth, hot reds and golds, high-contrast silhouettes in hard backlight',
+            texture: 'Heavy film grain, gate weave, film jitter, intentional roughness with boom shadows and focus hunting',
             medium: 'live-action'
         }
     },
     {
         id: 'blade-runner',
-        name: 'Blade Runner',
-        description: 'Neon-noir dystopia with atmospheric haze',
+        name: 'Neon Noir',
+        description: 'Rain-soaked dystopian noir with atmospheric haze and neon reflections',
         imagePath: '/storyboard-assets/styles/blade-runner.webp',
-        stylePrompt: 'in the style of Blade Runner, neon-noir dystopian cinematography, anamorphic lens flares, rain-soaked reflections, teal and amber color grading, atmospheric haze',
+        stylePrompt: 'neon-noir dystopian cinematography, screen bathed in darkness for most of the frame with bold theatrical color choices contrasting sterile cool blue interiors against warm amber-cast exteriors, xenon spotlight shafts cutting through dense atmospheric smoke and haze creating volumetric light beams, venetian blind shadow patterns fragmenting illumination across walls and faces, anamorphic lens flares streaking horizontally across the frame, rain-soaked streets and surfaces creating reflective neon pools of teal and amber on wet pavement, warm soft uplight in foreground subjects combined with hard backlight and smoke in backgrounds as the signature lighting motif, many hard and soft light sources mixed within single compositions with some shifting dimensionally during scenes, deep shadow with faces half-lit by practicals and neon signage, push-processed film stock with elevated grain and deep blacks, silhouetted figures backlit against rain-streaked windows, glowing eye-level catch lights creating an unsettling almost supernatural quality in close-ups, oppressive urban density with layered architectural depth receding into smoky haze',
         technicalAttributes: {
-            cameraRenderType: 'Panavision Panaflex',
-            lensPerspective: 'Anamorphic, smoke and haze diffusion',
-            stockMedium: 'Eastman 5293, push-processed',
-            colorPalette: 'Neon-reflected, deep shadow, teal-amber',
-            texture: 'Atmospheric haze, wet surface reflection',
+            cameraRenderType: 'Panavision Panaflex with anamorphic lenses',
+            lensPerspective: 'Anamorphic with horizontal flares, smoke and haze diffusion, mixed hard and soft sources shifting within scenes',
+            stockMedium: 'Eastman 5293 push-processed, elevated grain, deep blacks',
+            colorPalette: 'Sterile cool blue interiors vs warm amber exteriors, neon teal and amber reflected on wet surfaces, bold theatrical color, deep shadow',
+            texture: 'Dense atmospheric smoke and haze, rain-soaked reflective surfaces, venetian blind light patterns, volumetric xenon light shafts',
             medium: 'live-action'
         }
     },
@@ -274,16 +274,16 @@ export const PRESET_STYLES: PresetStyle[] = [
     },
     {
         id: 'toy-story',
-        name: 'Toy Story',
-        description: 'Pixar 3D animation with plastic sheen',
+        name: 'Plastic World',
+        description: 'Saturated 3D animation with toy-scale perspective and glossy plastic surfaces',
         imagePath: '/storyboard-assets/styles/toy-story.webp',
-        stylePrompt: 'in the style of Pixar 3D animation, smooth plastic surfaces, bright saturated colors, subsurface scattering, soft ambient occlusion, toy-like proportions',
+        stylePrompt: 'premium 3D animated cinematography with virtual camera treated as a real physical camera obeying real-world constraints, low-angle perspective shot from toy-scale height looking upward at an oversized world making everyday objects appear monumental, smooth glossy plastic surface rendering with visible seam lines and joint articulation on characters, bright saturated primary color palette with slightly caricatured forms and tangible realistic textures, soft ambient occlusion in corners and crevices grounding objects in their environment, subsurface scattering on translucent materials creating warm skin-like glow, virtual Cooke spherical prime lens characteristics with subtle barrel distortion and natural focus breathing during rack focus pulls, split-diopter deep focus compositions keeping foreground and background sharp with visible transition artifacts, shallow depth of field with creamy circular bokeh isolating subjects, gentle handheld motion-captured camera sway adding organic unpredictability to movement, warm interior lighting with soft window light and colorful bounce fill, global illumination with radiosity creating naturalistic light interaction between brightly colored surfaces',
         technicalAttributes: {
-            cameraRenderType: 'Pixar virtual camera',
-            lensPerspective: 'Virtual lens, slight barrel distortion',
-            stockMedium: '3D render, subsurface scattering',
-            colorPalette: 'Bright saturated primary colors',
-            texture: 'Smooth plastic, soft ambient occlusion',
+            cameraRenderType: 'Virtual camera with real-world physical constraints, motion-captured movement',
+            lensPerspective: 'Virtual Cooke spherical primes with barrel distortion, split-diopter deep focus, shallow DOF with circular bokeh, low toy-scale angle',
+            stockMedium: '3D render with subsurface scattering, global illumination, radiosity',
+            colorPalette: 'Bright saturated primaries, caricatured forms, warm interior bounce light, colorful radiosity between surfaces',
+            texture: 'Glossy smooth plastic with visible seam lines, soft ambient occlusion in crevices, subsurface glow on translucent materials',
             medium: '3d-animation'
         }
     },
