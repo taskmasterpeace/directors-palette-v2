@@ -131,8 +131,8 @@ function getFieldGuidance(field: string, section: string, context?: any): string
 
   const guides: Record<string, string> = {
     // Identity
-    'backstory': 'Keep suggestions to 2-3 sentences max. Focus on origin stories, turning points, defining moments.',
-    'significantEvents': 'Keep each tag to 5-8 words. Life-changing events, milestones, pivotal moments.',
+    'backstory': 'Write actual backstory paragraphs (2-3 sentences each) in third person as if describing a fictional artist. DO NOT write questions or prompts. Write concrete narrative: "Grew up in...", "After losing...", "Found music when...". Each suggestion should be a different backstory angle the user can click to populate the field.',
+    'significantEvents': 'Keep each tag to 5-8 words. Write concrete events, NOT questions. Examples: "Lost father at age 12", "First open mic at 16", "Dropped out to pursue music". Life-changing events, milestones, pivotal moments.',
     // Sound
     'vocalTextures': 'Keep tags to 1-3 words. Descriptive vocal qualities across all music styles.',
     'productionPreferences': 'Keep tags to 1-3 words. Production techniques and aesthetics.',
