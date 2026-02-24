@@ -991,6 +991,7 @@ export function ShotAnimatorView() {
                   maxReferenceImages={currentModelConfig.maxReferenceImages}
                   supportsLastFrame={currentModelConfig.supportsLastFrame}
                   selectedModel={selectedModel}
+                  currentModelSettings={modelSettings[selectedModel]}
                   onUpdate={(updates) => handleUpdateShotConfig(config.id, updates)}
                   onDelete={() => handleDeleteShot(config.id)}
                   onManageReferences={() => setRefEditState({ isOpen: true, configId: config.id })}

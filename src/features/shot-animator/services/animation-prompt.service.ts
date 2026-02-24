@@ -15,6 +15,8 @@ export interface AnimationPromptOptions {
     existingPrompt?: string
     mode: 'generate' | 'enhance'
     promptStyle?: 'specific' | 'reasoning'
+    audioEnabled?: boolean
+    multiShot?: boolean
 }
 
 export interface AnimationPromptRequest {
@@ -23,6 +25,8 @@ export interface AnimationPromptRequest {
     existingPrompt?: string
     mode: 'generate' | 'enhance'
     promptStyle?: 'specific' | 'reasoning'
+    audioEnabled?: boolean
+    multiShot?: boolean
 }
 
 export interface AnimationPromptResponse {
@@ -58,6 +62,8 @@ export async function generateAnimationPrompt(
             existingPrompt: options.existingPrompt,
             mode: options.mode,
             promptStyle: options.promptStyle,
+            audioEnabled: options.audioEnabled,
+            multiShot: options.multiShot,
         }),
     })
 

@@ -28,7 +28,13 @@ FORMAT: Always lead with the camera move, then subject/environment motion.
 Structure: "[Camera movement], [subject action and/or environment motion]"
 
 CAMERA MOVES (pick one):
-slow push-in, gentle pull-out, slow pan left/right, tracking shot, crane up/down, dolly forward, orbital drift, locked static frame, slow zoom, handheld drift
+slow push-in, gentle pull-out, slow dolly in/out, pan left/right, truck left/right, tracking shot, crane up/down, orbit/circle around, dolly forward, orbital drift, locked static frame, slow zoom in/out, handheld drift, Hitchcock zoom
+
+SHOT TYPES you can reference:
+establishing shot, extreme wide shot, cowboy shot, medium close-up, insert shot, POV shot, over-the-shoulder, low-angle, high-angle, aerial, macro
+
+LENS & FOCUS (use when it fits):
+rack focus foreground to background, shallow depth of field, deep focus, anamorphic lens, wide-angle with slight distortion
 
 SUBJECT MOTION (pick 0-1):
 breathing, hair/cloth moving, walking, turning, gesturing, blinking, subtle body sway
@@ -41,8 +47,9 @@ RULES:
 2. One sentence only, under 30 words
 3. Present tense, active voice
 4. NEVER describe what is in the image — ONLY describe how things MOVE
-5. Match the energy of the scene
+5. Match the energy of the scene — always include a pacing adverb (slowly, rapidly, gently, violently, rhythmically, deliberately, powerfully)
 6. If director camera direction is provided, use THAT specific camera movement
+7. NEVER use negative phrasing ("no movement", "don't shake") — only describe what DOES happen
 
 OUTPUT: Return ONLY the animation direction. No quotes, no explanation.`
 
@@ -50,6 +57,15 @@ const SYSTEM_GENERATE_REASONING = `You are a cinematic motion director creating 
 
 FORMAT: Subject + Action + Camera + Scene atmosphere
 Structure: "[Subject does action], [camera movement], [atmosphere/environment detail]"
+
+CAMERA VOCABULARY:
+Movements: dolly in/out, push-in, pull-out, pan left/right, truck left/right, orbit/circle around, tracking shot, crane up/down, zoom in/out, handheld/shaky cam, Hitchcock zoom, follow shot
+Shot types: establishing, extreme wide, cowboy, medium close-up, insert, POV, over-the-shoulder, low-angle, high-angle, aerial, macro
+Lens/focus: rack focus, shallow depth of field, deep focus, anamorphic lens, wide-angle distortion
+
+MOTION INTENSITY — always include pacing adverbs:
+Speed: slowly, rapidly, gently, deliberately, rhythmically
+Force: powerfully, violently, wildly, softly, with large amplitude, at high frequency
 
 RULES:
 1. 30-80 words — this model benefits from more detail
@@ -59,14 +75,19 @@ RULES:
 5. Add atmospheric details: lighting shifts, weather, environmental particles
 6. NEVER just describe what is in the image — describe what HAPPENS next
 7. If director camera direction is provided, use THAT specific camera movement
+8. When appropriate, describe 2-3 sequential actions in chronological order (the model handles multi-beat action well)
+9. Always include motion intensity adverbs — the model cannot infer speed/force from the image alone
+10. NEVER use negative phrasing — only describe what DOES happen
+11. Use standard film terminology: "dolly push-in" not "moves closer", "tracking shot" not "follows them"
 
 GOOD:
-- "The warrior slowly draws their sword, cape billowing in the wind, as the camera tracks forward into a slow push-in. Golden hour light shifts across the cliff face, dust particles drift in the warm air."
-- "The figure turns to face the camera with a slight smile, hair catching the breeze, as a gentle orbital drift reveals the cityscape behind them. Neon reflections ripple on wet pavement."
+- "The warrior slowly draws their sword, cape billowing powerfully in the wind, as the camera tracks forward into a deliberate push-in. Golden hour light shifts across the cliff face, dust particles drift gently in the warm air."
+- "The figure turns rapidly to face the camera with a slight smile, hair catching the breeze, then raises one hand deliberately as a gentle orbital drift reveals the cityscape behind them. Neon reflections ripple on wet pavement."
 
 BAD:
-- "A warrior on a cliff at sunset" (just describes the scene)
-- "Slow push-in, cape ripples" (too short for reasoning model — add atmosphere)
+- "A warrior on a cliff at sunset" (just describes the scene — no motion)
+- "Slow push-in, cape ripples" (too short, no atmosphere, no intensity adverbs)
+- "No camera shake, don't move the background" (negative phrasing — the model ignores negatives)
 
 OUTPUT: Return ONLY the animation direction. No quotes, no explanation.`
 
@@ -78,8 +99,11 @@ RULES:
 3. If the user's prompt has no camera move, add one that fits the described action
 4. Fix any grammar or awkward phrasing
 5. Make vague verbs specific (e.g., "moves" → "walks forward", "goes up" → "crane up")
-6. Do NOT add entirely new content the user didn't mention
-7. Present tense, active voice
+6. Add motion intensity adverbs if missing (slowly, rapidly, gently, powerfully, deliberately)
+7. Do NOT add entirely new content the user didn't mention
+8. Present tense, active voice
+9. Remove any negative phrasing ("no shaking", "don't move") — rephrase as what DOES happen
+10. Use standard film terminology: "dolly push-in" not "moves closer"
 
 OUTPUT: Return ONLY the refined animation direction. No quotes, no explanation.`
 
@@ -90,20 +114,52 @@ RULES:
 2. Keep the user's described action and camera move as the foundation
 3. Add atmospheric details: lighting, weather, particles, environmental motion
 4. Add character emotion or physical nuance where it fits
-5. Fix grammar or vague descriptions
+5. Fix grammar or vague descriptions — use standard film terminology
 6. Do NOT contradict or remove what the user wrote — enhance it
 7. Present tense, active voice
+8. Add motion intensity adverbs if missing (slowly, rapidly, gently, powerfully, deliberately, rhythmically)
+9. When the user describes a single action, consider extending to 2-3 sequential actions in chronological order
+10. Remove any negative phrasing — rephrase as what DOES happen
+11. The model cannot infer speed/force from the image — always be explicit about motion intensity
 
 OUTPUT: Return ONLY the enhanced animation direction. No quotes, no explanation.`
+
+const AUDIO_ADDON = `
+
+AUDIO GENERATION IS ENABLED — this model generates synchronized audio alongside video.
+- Naturally integrate sound descriptions into your prompt: footsteps on gravel, ambient wind, rustling fabric, rain on windows, heels clicking on marble
+- For dialogue scenes: specify the language and emotional tone, e.g. "she says warmly in English: 'This feels like home'"
+- Sound effects should be woven into the scene description, not listed separately
+- The model supports: English, Mandarin, Japanese, Korean, Spanish, Portuguese and more
+- Max 2 speakers for clean dialogue sync
+- Do NOT prompt for singing — speech and ambient audio only`
+
+const MULTI_SHOT_ADDON = `
+
+MULTI-SHOT MODE — create a sequence of 2-3 distinct shots within one prompt.
+- Use "camera switch" or "lens switch" as the transition keyword between shots
+- Each shot should logically follow the previous one
+- After each cut, describe the new framing and action
+- Include shot type in brackets: [Wide shot], [Close-up], [Medium shot]
+- Maximum 3 shots per prompt — beyond that the model gets confused
+- Maintain continuity: same subject, style, and scene across cuts
+
+FORMAT: [Shot 1: subject + action + camera] → "camera switch" → [Shot 2: new framing + action] → "camera switch" → [Shot 3: new framing + action]`
 
 type PromptMode = 'generate' | 'enhance'
 type PromptStyle = 'specific' | 'reasoning'
 
-function getSystemPrompt(mode: PromptMode, style: PromptStyle): string {
-    if (mode === 'generate' && style === 'specific') return SYSTEM_GENERATE_SPECIFIC
-    if (mode === 'generate' && style === 'reasoning') return SYSTEM_GENERATE_REASONING
-    if (mode === 'enhance' && style === 'specific') return SYSTEM_ENHANCE_SPECIFIC
-    return SYSTEM_ENHANCE_REASONING
+function getSystemPrompt(mode: PromptMode, style: PromptStyle, options?: { audioEnabled?: boolean; multiShot?: boolean }): string {
+    let base: string
+    if (mode === 'generate' && style === 'specific') base = SYSTEM_GENERATE_SPECIFIC
+    else if (mode === 'generate' && style === 'reasoning') base = SYSTEM_GENERATE_REASONING
+    else if (mode === 'enhance' && style === 'specific') base = SYSTEM_ENHANCE_SPECIFIC
+    else base = SYSTEM_ENHANCE_REASONING
+
+    if (options?.audioEnabled) base += AUDIO_ADDON
+    if (options?.multiShot) base += MULTI_SHOT_ADDON
+
+    return base
 }
 
 interface AnimationPromptRequest {
@@ -114,6 +170,8 @@ interface AnimationPromptRequest {
     promptStyle?: PromptStyle
     storyContext?: string
     directorMotion?: string
+    audioEnabled?: boolean
+    multiShot?: boolean
 }
 
 async function callOpenRouter(
@@ -188,7 +246,7 @@ export async function POST(request: NextRequest) {
         userEmail = auth.user.email
 
         const body: AnimationPromptRequest = await request.json()
-        const { imageUrl, originalPrompt, existingPrompt, mode, promptStyle, storyContext, directorMotion } = body
+        const { imageUrl, originalPrompt, existingPrompt, mode, promptStyle, storyContext, directorMotion, audioEnabled, multiShot } = body
 
         if (!imageUrl) {
             return NextResponse.json({ error: 'No image URL provided' }, { status: 400 })
@@ -199,7 +257,7 @@ export async function POST(request: NextRequest) {
         }
 
         const effectiveStyle: PromptStyle = promptStyle || 'specific'
-        const systemPrompt = getSystemPrompt(mode, effectiveStyle)
+        const systemPrompt = getSystemPrompt(mode, effectiveStyle, { audioEnabled, multiShot })
 
         // Build user message
         const textParts: string[] = []

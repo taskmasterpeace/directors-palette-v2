@@ -2,14 +2,15 @@
 
 import React, { memo, useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
-import { Image as ImageIcon, Film, Trash2, Wand2, ZoomIn, Replace } from 'lucide-react'
+import { Image as ImageIcon, Film, Trash2, Wand2, ZoomIn, Replace, Clapperboard, Info } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
-import { ShotAnimationConfig, ShotGeneratedVideo, AnimationModel } from '../types'
+import { ShotAnimationConfig, ShotGeneratedVideo, AnimationModel, ModelSettings } from '../types'
 import { Textarea } from "@/components/ui/textarea"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { CompactVideoCard } from './CompactVideoCard'
 import { FullscreenImageViewModal } from './FullscreenImageViewModal'
 import { VideoGalleryService } from '../services/gallery.service'
@@ -25,6 +26,7 @@ interface CompactShotCardProps {
   maxReferenceImages: number
   supportsLastFrame: boolean
   selectedModel: AnimationModel
+  currentModelSettings?: ModelSettings
   onUpdate: (config: ShotAnimationConfig) => void
   onDelete: () => void
   onManageReferences: () => void
@@ -41,6 +43,7 @@ const CompactShotCardComponent = ({
   maxReferenceImages,
   supportsLastFrame,
   selectedModel,
+  currentModelSettings,
   onUpdate,
   onDelete,
   onManageReferences,
@@ -50,6 +53,8 @@ const CompactShotCardComponent = ({
   onDropLastFrame,
 }: CompactShotCardProps) => {
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false)
+  const [multiShotMode, setMultiShotMode] = useState(false)
+  const [showTips, setShowTips] = useState(false)
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false)
   const [dropZoneSide, setDropZoneSide] = useState<DropZoneSide>(null)
   const dropZoneSideRef = useRef<DropZoneSide>(null)
@@ -179,11 +184,14 @@ const CompactShotCardComponent = ({
     setIsGeneratingPrompt(true)
     try {
       const modelConfig = ANIMATION_MODELS[selectedModel]
+      const audioEnabled = currentModelSettings?.generateAudio && modelConfig?.supportsAudio
       const result = await generateAnimationPrompt(config.imageUrl, {
         originalPrompt: config.originalPrompt,
         existingPrompt: wandMode === 'enhance' ? config.prompt : undefined,
         mode: wandMode,
         promptStyle: modelConfig?.promptStyle,
+        audioEnabled: !!audioEnabled,
+        multiShot: multiShotMode,
       })
       onUpdate({ ...config, prompt: result.animationPrompt })
       toast({
@@ -453,8 +461,11 @@ const CompactShotCardComponent = ({
             <Textarea
               value={config.prompt}
               onChange={(e) => onUpdate({ ...config, prompt: e.target.value })}
-              placeholder="Describe the animation..."
-              className="bg-secondary text-white text-sm sm:text-xs min-h-[80px] sm:min-h-[100px] resize-none touch-manipulation focus:ring-2 focus:ring-ring transition-shadow p-2 pr-10"
+              placeholder={multiShotMode
+                ? "Describe a multi-shot sequence... Use 'camera switch' between shots."
+                : "Describe the animation motion..."
+              }
+              className={`bg-secondary text-white text-sm sm:text-xs ${multiShotMode ? 'min-h-[120px] sm:min-h-[140px]' : 'min-h-[80px] sm:min-h-[100px]'} resize-none touch-manipulation focus:ring-2 focus:ring-ring transition-shadow p-2 pr-10`}
             />
             {/* AI Generate/Enhance Button - Always visible */}
             <Button
@@ -473,6 +484,61 @@ const CompactShotCardComponent = ({
               )}
             </Button>
           </div>
+          {/* Prompt Controls: Multi-shot toggle + Tips */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Multi-shot toggle - only for Seedance models */}
+            {ANIMATION_MODELS[selectedModel]?.promptStyle === 'reasoning' && (
+              <Button
+                size="sm"
+                variant={multiShotMode ? 'default' : 'ghost'}
+                onClick={() => setMultiShotMode(!multiShotMode)}
+                className={`h-6 px-2 text-[10px] ${multiShotMode ? 'bg-primary text-white' : 'text-muted-foreground hover:text-white bg-secondary/50'}`}
+                title="Enable multi-shot mode for camera switch sequences"
+              >
+                <Clapperboard className="w-3 h-3 mr-1" />
+                Multi-Shot
+              </Button>
+            )}
+            {/* Tips toggle */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowTips(!showTips)}
+                    className={`h-6 w-6 p-0 ${showTips ? 'text-primary' : 'text-muted-foreground hover:text-white'}`}
+                  >
+                    <Info className="w-3 h-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[250px] text-xs">
+                  <p>Prompt tips for better video generation</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          {/* Prompt Tips Panel */}
+          {showTips && (
+            <div className="bg-secondary/50 border border-border/50 rounded p-2 text-[10px] text-muted-foreground space-y-1">
+              <p className="font-medium text-foreground text-[11px]">Prompt Tips:</p>
+              <p>• Describe <span className="text-primary">motion</span>, not what&apos;s already in the image</p>
+              <p>• Use intensity adverbs: <span className="text-primary">slowly, rapidly, gently, powerfully</span></p>
+              <p>• Use film terms: <span className="text-primary">dolly push-in, tracking shot, crane up</span></p>
+              <p>• Don&apos;t use negatives — describe what <span className="text-primary">does</span> happen</p>
+              {ANIMATION_MODELS[selectedModel]?.supportsAudio && currentModelSettings?.generateAudio && (
+                <p>• Audio is ON — include sounds: <span className="text-primary">footsteps, wind, speech in English</span></p>
+              )}
+              {multiShotMode && (
+                <>
+                  <p className="font-medium text-foreground text-[11px] mt-1.5">Multi-Shot:</p>
+                  <p>• Use <span className="text-primary">&quot;camera switch&quot;</span> between shots (max 3 shots)</p>
+                  <p>• Each shot: <span className="text-primary">[Shot type] subject + action</span></p>
+                  <p>• Maintain continuity across cuts</p>
+                </>
+              )}
+            </div>
+          )}
           {/* Action Buttons - Compact on mobile */}
           <div className="flex w-full items-center gap-1 sm:gap-2 pb-2">
             {/* Reference Images Button */}
@@ -566,6 +632,7 @@ export const CompactShotCard = memo(CompactShotCardComponent, (prevProps, nextPr
     prevProps.config.lastFrameImage === nextProps.config.lastFrameImage &&
     prevProps.maxReferenceImages === nextProps.maxReferenceImages &&
     prevProps.supportsLastFrame === nextProps.supportsLastFrame &&
-    prevProps.selectedModel === nextProps.selectedModel
+    prevProps.selectedModel === nextProps.selectedModel &&
+    prevProps.currentModelSettings?.generateAudio === nextProps.currentModelSettings?.generateAudio
   )
 })
