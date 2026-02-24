@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useMemo, useCallback } from 'react'
-import { Star, ChevronUp, ChevronDown, ArrowLeft, Save, User, Sparkles, X } from 'lucide-react'
+import { Star, ChevronUp, ChevronDown, ArrowLeft, Save, User, Sparkles, X, Dna } from 'lucide-react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Html } from '@react-three/drei'
 import { Button } from '@/components/ui/button'
@@ -313,7 +313,7 @@ function ConstellationScene() {
 
 export function ConstellationWidget() {
   const [expanded, setExpanded] = useState(true)
-  const { draft, isDirty, saveArtist, closeEditor, artists, activeArtistId, loadArtistIntoDraft, startNewArtist, seededFrom, clearSeededFrom } = useArtistDnaStore()
+  const { draft, isDirty, saveArtist, closeEditor, artists, activeArtistId, loadArtistIntoDraft, startNewArtist, seededFrom, clearSeededFrom, setActiveTab } = useArtistDnaStore()
 
   const fills = calculateRingFill(draft)
   const fillValues = [fills.sound, fills.influences, fills.persona, fills.lexicon, fills.profile]
@@ -500,6 +500,23 @@ export function ConstellationWidget() {
               </div>
             </div>
           </div>
+
+          {/* Genome indicator */}
+          {draft.catalog.entries.length > 0 && (
+            <button
+              onClick={() => setActiveTab('catalog')}
+              className="border-t border-border/30 pt-2 mt-2 flex items-center gap-1.5 w-full hover:opacity-80 transition-opacity"
+            >
+              <Dna className="w-3 h-3 text-purple-400" />
+              <span className="text-[11px] text-muted-foreground flex-1 text-left">Genome</span>
+              <span className="text-[11px] tabular-nums text-purple-400 font-medium">
+                {draft.catalog.entries.filter((e) => e.analysis).length} song{draft.catalog.entries.filter((e) => e.analysis).length !== 1 ? 's' : ''}
+              </span>
+              {draft.catalog.genome && (
+                <span className="text-emerald-400 text-[11px]">&#10003;</span>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>

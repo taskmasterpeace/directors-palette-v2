@@ -9,6 +9,7 @@ import type {
   ArtistDNA,
   ArtistDnaTab,
   CatalogEntry,
+  CatalogSongAnalysis,
   SuggestionBatch,
   SunoPromptOutput,
   UserArtistProfile,
@@ -67,6 +68,11 @@ interface ArtistDnaState {
   addCatalogEntry: (entry: Omit<CatalogEntry, 'id' | 'createdAt'>) => void
   removeCatalogEntry: (id: string) => void
 
+  // Actions - Genome
+  analyzeSong: (entryId: string) => Promise<void>
+  recalculateGenome: () => Promise<void>
+  analyzeCatalog: () => Promise<void>
+
   // Actions - Suggestions
   setSuggestions: (field: string, suggestions: string[]) => void
   consumeSuggestion: (field: string, value: string) => void
@@ -80,6 +86,9 @@ interface ArtistDnaState {
   // Actions - Navigation
   closeEditor: () => void
 }
+
+// Debounce timer for genome recalculation
+let genomeDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
 export const useArtistDnaStore = create<ArtistDnaState>()(
   persist(
@@ -286,16 +295,22 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           ...entry,
           id: crypto.randomUUID(),
           createdAt: new Date().toISOString(),
+          analysisStatus: entry.lyrics ? 'pending' : undefined,
         }
         set((state) => ({
           draft: {
             ...state.draft,
             catalog: {
+              ...state.draft.catalog,
               entries: [...state.draft.catalog.entries, newEntry],
             },
           },
           isDirty: true,
         }))
+        // Fire async analysis if there are lyrics
+        if (newEntry.lyrics) {
+          get().analyzeSong(newEntry.id)
+        }
       },
 
       removeCatalogEntry: (id) => {
@@ -303,11 +318,159 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           draft: {
             ...state.draft,
             catalog: {
+              ...state.draft.catalog,
               entries: state.draft.catalog.entries.filter((e) => e.id !== id),
             },
           },
           isDirty: true,
         }))
+        // Recalculate genome after removal (debounced)
+        const remaining = get().draft.catalog.entries
+        const analyzedCount = remaining.filter((e) => e.analysis).length
+        if (analyzedCount > 0) {
+          if (genomeDebounceTimer) clearTimeout(genomeDebounceTimer)
+          genomeDebounceTimer = setTimeout(() => {
+            get().recalculateGenome()
+          }, 2000)
+        } else {
+          // No analyzed songs left — clear genome
+          set((state) => ({
+            draft: {
+              ...state.draft,
+              catalog: { ...state.draft.catalog, genome: undefined, genomeStatus: 'idle' },
+            },
+          }))
+        }
+      },
+
+      analyzeSong: async (entryId: string) => {
+        const { draft } = get()
+        const entry = draft.catalog.entries.find((e) => e.id === entryId)
+        if (!entry || !entry.lyrics) return
+
+        // Mark as analyzing
+        set((state) => ({
+          draft: {
+            ...state.draft,
+            catalog: {
+              ...state.draft.catalog,
+              entries: state.draft.catalog.entries.map((e) =>
+                e.id === entryId ? { ...e, analysisStatus: 'analyzing' as const } : e
+              ),
+            },
+          },
+        }))
+
+        try {
+          const artistName = draft.identity.stageName || draft.identity.realName || ''
+          const res = await fetch('/api/artist-dna/analyze-song', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              lyrics: entry.lyrics,
+              title: entry.title,
+              mood: entry.mood,
+              tempo: entry.tempo,
+              artistName,
+            }),
+          })
+
+          if (!res.ok) throw new Error('Analysis failed')
+
+          const { analysis } = await res.json() as { analysis: CatalogSongAnalysis }
+
+          set((state) => ({
+            draft: {
+              ...state.draft,
+              catalog: {
+                ...state.draft.catalog,
+                entries: state.draft.catalog.entries.map((e) =>
+                  e.id === entryId ? { ...e, analysis, analysisStatus: 'done' as const } : e
+                ),
+              },
+            },
+            isDirty: true,
+          }))
+
+          // Debounced genome recalculation
+          if (genomeDebounceTimer) clearTimeout(genomeDebounceTimer)
+          genomeDebounceTimer = setTimeout(() => {
+            get().recalculateGenome()
+          }, 2000)
+        } catch (error) {
+          console.error('Song analysis error:', error)
+          set((state) => ({
+            draft: {
+              ...state.draft,
+              catalog: {
+                ...state.draft.catalog,
+                entries: state.draft.catalog.entries.map((e) =>
+                  e.id === entryId ? { ...e, analysisStatus: 'error' as const } : e
+                ),
+              },
+            },
+          }))
+        }
+      },
+
+      recalculateGenome: async () => {
+        const { draft } = get()
+        const analyzedEntries = draft.catalog.entries.filter((e) => e.analysis)
+        if (analyzedEntries.length === 0) return
+
+        set((state) => ({
+          draft: {
+            ...state.draft,
+            catalog: { ...state.draft.catalog, genomeStatus: 'calculating' },
+          },
+        }))
+
+        try {
+          const artistName = draft.identity.stageName || draft.identity.realName || ''
+          const payload = analyzedEntries.map((e) => ({
+            title: e.title,
+            mood: e.mood,
+            tempo: e.tempo,
+            analysis: e.analysis!,
+          }))
+
+          const res = await fetch('/api/artist-dna/calculate-genome', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ entries: payload, artistName }),
+          })
+
+          if (!res.ok) throw new Error('Genome calculation failed')
+
+          const { genome } = await res.json()
+
+          set((state) => ({
+            draft: {
+              ...state.draft,
+              catalog: { ...state.draft.catalog, genome, genomeStatus: 'done' },
+            },
+            isDirty: true,
+          }))
+        } catch (error) {
+          console.error('Genome calculation error:', error)
+          set((state) => ({
+            draft: {
+              ...state.draft,
+              catalog: { ...state.draft.catalog, genomeStatus: 'error' },
+            },
+          }))
+        }
+      },
+
+      analyzeCatalog: async () => {
+        const { draft, analyzeSong } = get()
+        const unanalyzed = draft.catalog.entries.filter(
+          (e) => e.lyrics && (!e.analysis || e.analysisStatus === 'error')
+        )
+        // Analyze sequentially to avoid rate limits
+        for (const entry of unanalyzed) {
+          await analyzeSong(entry.id)
+        }
       },
 
       setSuggestions: (field, suggestions) => {

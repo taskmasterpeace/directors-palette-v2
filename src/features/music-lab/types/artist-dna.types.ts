@@ -56,6 +56,61 @@ export interface ArtistLook {
   characterSheetUrl: string
 }
 
+// =============================================================================
+// CATALOG GENOME TYPES
+// =============================================================================
+
+export interface VerseAttribution {
+  section: string
+  artist: 'primary' | 'feature'
+  featureName?: string
+}
+
+export interface CatalogSongAnalysis {
+  themes: string[]
+  moodProgression: string
+  rhymeSchemes: string[]
+  storytellingApproach: string
+  vocabularyLevel: string
+  notableDevices: string[]
+  recurringImagery: string[]
+  verseMap: VerseAttribution[]
+  primaryVerseCount: number
+  emotionalIntensity: number
+  analyzedAt: string
+}
+
+export interface GenomeTrait {
+  trait: string
+  frequency: number
+  category: string
+}
+
+export interface GenomeBlueprint {
+  mustInclude: string[]
+  shouldInclude: string[]
+  avoidRepeating: string[]
+  suggestExploring: string[]
+}
+
+export interface CatalogGenome {
+  signatures: GenomeTrait[]
+  tendencies: GenomeTrait[]
+  experiments: GenomeTrait[]
+  dominantThemes: string[]
+  dominantMood: string
+  rhymeProfile: string
+  storytellingProfile: string
+  vocabularyProfile: string
+  essenceStatement: string
+  blueprint: GenomeBlueprint
+  songCount: number
+  calculatedAt: string
+}
+
+export type AnalysisStatus = 'pending' | 'analyzing' | 'done' | 'error'
+export type GenomeStatus = 'idle' | 'calculating' | 'done' | 'error'
+
 export interface CatalogEntry {
   id: string
   title: string
@@ -63,10 +118,14 @@ export interface CatalogEntry {
   mood: string
   tempo: string
   createdAt: string
+  analysis?: CatalogSongAnalysis
+  analysisStatus?: AnalysisStatus
 }
 
 export interface ArtistCatalog {
   entries: CatalogEntry[]
+  genome?: CatalogGenome
+  genomeStatus?: GenomeStatus
 }
 
 // =============================================================================

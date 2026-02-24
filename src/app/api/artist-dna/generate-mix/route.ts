@@ -100,14 +100,29 @@ function buildSystemPrompt(dna: ArtistDNA): string {
     parts.push(`Themes they avoid: ${dna.persona.dislikes.join(', ')}`)
   }
 
-  // Discography/catalog — learn from existing songs
-  if (dna.catalog.entries.length > 0) {
+  // Discography/catalog — use genome if available, fall back to raw lyrics
+  if (dna.catalog.genome?.essenceStatement) {
+    const genome = dna.catalog.genome
+    parts.push(`\nCATALOG GENOME (distilled from ${genome.songCount} song${genome.songCount !== 1 ? 's' : ''}):`)
+    parts.push(genome.essenceStatement)
+    if (genome.rhymeProfile) parts.push(`Rhyme profile: ${genome.rhymeProfile}`)
+    if (genome.storytellingProfile) parts.push(`Storytelling profile: ${genome.storytellingProfile}`)
+    if (genome.vocabularyProfile) parts.push(`Vocabulary profile: ${genome.vocabularyProfile}`)
+    if (genome.dominantThemes.length > 0) parts.push(`Dominant themes: ${genome.dominantThemes.join(', ')}`)
+    if (genome.dominantMood) parts.push(`Dominant mood: ${genome.dominantMood}`)
+    if (genome.blueprint) {
+      if (genome.blueprint.mustInclude.length > 0) parts.push(`Must include: ${genome.blueprint.mustInclude.join('; ')}`)
+      if (genome.blueprint.shouldInclude.length > 0) parts.push(`Should include: ${genome.blueprint.shouldInclude.join('; ')}`)
+      if (genome.blueprint.avoidRepeating.length > 0) parts.push(`Avoid repeating: ${genome.blueprint.avoidRepeating.join('; ')}`)
+      if (genome.blueprint.suggestExploring.length > 0) parts.push(`Explore: ${genome.blueprint.suggestExploring.join('; ')}`)
+    }
+    parts.push('The new song should feel like it belongs in this catalog but covers NEW ground.')
+  } else if (dna.catalog.entries.length > 0) {
     parts.push(`\nDISCOGRAPHY (${dna.catalog.entries.length} existing songs):`)
     dna.catalog.entries.forEach((entry) => {
       const meta = [entry.mood, entry.tempo].filter(Boolean).join(', ')
       parts.push(`  "${entry.title}"${meta ? ` — ${meta}` : ''}`)
       if (entry.lyrics) {
-        // Include up to 200 chars of lyrics for style reference
         parts.push(`    Lyrics excerpt: ${entry.lyrics.substring(0, 200)}`)
       }
     })

@@ -137,8 +137,20 @@ function buildSystemPrompt(body: GenerateOptionsBody): string {
     parts.push(`NEVER use these words: ${artistDna.lexicon.bannedWords.join(', ')}`)
   }
 
-  // Discography/catalog context
-  if (artistDna.catalog?.entries?.length > 0) {
+  // Discography/catalog — use genome if available, fall back to raw lyrics
+  if (artistDna.catalog?.genome?.essenceStatement) {
+    const genome = artistDna.catalog.genome
+    parts.push(`Catalog genome (from ${genome.songCount} song${genome.songCount !== 1 ? 's' : ''}):`)
+    parts.push(genome.essenceStatement)
+    if (genome.rhymeProfile) parts.push(`Rhyme profile: ${genome.rhymeProfile}`)
+    if (genome.storytellingProfile) parts.push(`Storytelling profile: ${genome.storytellingProfile}`)
+    if (genome.vocabularyProfile) parts.push(`Vocabulary profile: ${genome.vocabularyProfile}`)
+    if (genome.blueprint) {
+      if (genome.blueprint.mustInclude.length > 0) parts.push(`Must include: ${genome.blueprint.mustInclude.join('; ')}`)
+      if (genome.blueprint.avoidRepeating.length > 0) parts.push(`Avoid repeating: ${genome.blueprint.avoidRepeating.join('; ')}`)
+    }
+    parts.push('Use this genome to understand the artist\'s established style. Build on it, don\'t repeat it.')
+  } else if (artistDna.catalog?.entries?.length > 0) {
     parts.push(`Discography (${artistDna.catalog.entries.length} songs):`)
     artistDna.catalog.entries.slice(0, 5).forEach((entry) => {
       const meta = [entry.mood, entry.tempo].filter(Boolean).join(', ')
