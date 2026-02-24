@@ -73,8 +73,8 @@ function buildSystemPrompt(body: GenerateOptionsBody): string {
   if (artistName) {
     parts.push(`Artist name: ${artistName}`)
   }
-  if (artistDna.identity?.city || artistDna.identity?.region) {
-    parts.push(`Origin: ${[artistDna.identity.city, artistDna.identity.region].filter(Boolean).join(', ')}`)
+  if (artistDna.identity?.city || artistDna.identity?.state) {
+    parts.push(`Origin: ${[artistDna.identity.neighborhood, artistDna.identity.city, artistDna.identity.state].filter(Boolean).join(', ')}`)
   }
   if (artistDna.identity?.backstory) {
     parts.push(`Backstory: ${artistDna.identity.backstory.substring(0, 300)}`)

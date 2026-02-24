@@ -30,7 +30,8 @@ Return ONLY a valid JSON object matching this exact structure (no markdown, no c
     "realName": "birth/legal name (research this — most artists' real names are publicly known)",
     "ethnicity": "specific ethnic background (e.g. 'African American', 'Puerto Rican', 'Korean American')",
     "city": "city they grew up in or are most associated with",
-    "region": "state/province and country (e.g. 'California, USA')",
+    "state": "state or province (e.g. 'California', 'Ontario')",
+    "neighborhood": "specific neighborhood, borough, or area within the city (e.g. 'Compton', 'South Bronx', 'Brixton')",
     "backstory": "3-4 sentence origin story covering childhood, how they got into music, and their breakthrough moment",
     "significantEvents": ["5-7 real career milestones — debut album, awards, controversies, collaborations, cultural moments"]
   },

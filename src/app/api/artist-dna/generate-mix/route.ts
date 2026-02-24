@@ -28,8 +28,8 @@ function buildSystemPrompt(dna: ArtistDNA): string {
   if (writingName) {
     parts.push(`Writing for: ${writingName}`)
   }
-  if (dna.identity.city || dna.identity.region) {
-    parts.push(`From: ${[dna.identity.city, dna.identity.region].filter(Boolean).join(', ')}`)
+  if (dna.identity.city || dna.identity.state) {
+    parts.push(`From: ${[dna.identity.neighborhood, dna.identity.city, dna.identity.state].filter(Boolean).join(', ')}`)
   }
   if (dna.identity.ethnicity) {
     parts.push(`Background: ${dna.identity.ethnicity}`)

@@ -191,6 +191,9 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           // Migrate old `name` field to `stageName` for backwards compat
           const oldName = (dna.identity as unknown as Record<string, unknown>)?.name as string | undefined
           if (oldName && !identity.stageName) identity.stageName = oldName
+          // Migrate old `region` field to `state` for backwards compat
+          const oldRegion = (dna.identity as unknown as Record<string, unknown>)?.region as string | undefined
+          if (oldRegion && !identity.state) identity.state = oldRegion
           const merged: ArtistDNA = {
             identity,
             sound: { ...defaults.sound, ...dna.sound },
@@ -605,6 +608,9 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           // Migrate old `name` field to `stageName` for backwards compat
           const oldName = (p.draft.identity as unknown as Record<string, unknown>)?.name as string | undefined
           if (oldName && !identity.stageName) identity.stageName = oldName
+          // Migrate old `region` field to `state` for backwards compat
+          const oldRegion = (p.draft.identity as unknown as Record<string, unknown>)?.region as string | undefined
+          if (oldRegion && !identity.state) identity.state = oldRegion
           draft = {
             identity,
             sound: { ...defaults.sound, ...p.draft.sound },

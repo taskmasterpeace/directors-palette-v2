@@ -12,7 +12,8 @@ export interface ArtistIdentity {
   realName: string
   ethnicity: string
   city: string
-  region: string
+  state: string
+  neighborhood: string
   backstory: string
   significantEvents: string[]
 }
@@ -215,7 +216,8 @@ export function createEmptyDNA(): ArtistDNA {
       realName: '',
       ethnicity: '',
       city: '',
-      region: '',
+      state: '',
+      neighborhood: '',
       backstory: '',
       significantEvents: [],
     },

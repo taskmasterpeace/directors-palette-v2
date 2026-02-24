@@ -25,7 +25,11 @@ export async function POST(request: NextRequest) {
     const artistName = context?.identity?.stageName || context?.identity?.name || context?.identity?.realName
     if (artistName) contextParts.push(`Artist: ${artistName}`)
     if (context?.identity?.ethnicity) contextParts.push(`Ethnicity: ${context.identity.ethnicity}`)
-    if (context?.identity?.city) contextParts.push(`From: ${context.identity.city}, ${context.identity.region || ''}`.trim())
+    if (context?.identity?.city) {
+      const loc = [context.identity.city, context.identity.state].filter(Boolean).join(', ')
+      contextParts.push(`From: ${loc}`)
+    }
+    if (context?.identity?.neighborhood) contextParts.push(`Neighborhood: ${context.identity.neighborhood}`)
     if (context?.identity?.backstory) contextParts.push(`Backstory: ${context.identity.backstory.slice(0, 200)}`)
     if (context?.sound?.genres?.length) contextParts.push(`Genres: ${context.sound.genres.join(', ')}`)
     if (context?.sound?.subgenres?.length) contextParts.push(`Subgenres: ${context.sound.subgenres.join(', ')}`)
@@ -52,7 +56,7 @@ export async function POST(request: NextRequest) {
       : ''
 
     // Field-specific guidance for shorter, more targeted suggestions
-    const fieldGuidance = getFieldGuidance(field, section, context)
+    const fieldGuidance = getFieldGuidance(field, section, context, currentValue)
 
     const systemPrompt = `You are a music industry creative consultant. Generate 10 unique, creative suggestions for an artist profile field.
 Return ONLY a JSON array of 10 strings, no other text.
@@ -108,7 +112,7 @@ ${fieldGuidance}${contextStr}${currentStr}${excludeStr}`
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getFieldGuidance(field: string, section: string, context?: any): string {
+function getFieldGuidance(field: string, section: string, context?: any, currentValue?: string): string {
   // Smart skin tone guidance based on ethnicity
   if (field === 'skinTone' && context?.identity?.ethnicity) {
     const ethnicity = context.identity.ethnicity.toLowerCase()
@@ -131,7 +135,9 @@ function getFieldGuidance(field: string, section: string, context?: any): string
 
   const guides: Record<string, string> = {
     // Identity
-    'backstory': 'Write actual backstory paragraphs (2-3 sentences each) in third person as if describing a fictional artist. DO NOT write questions or prompts. Write concrete narrative: "Grew up in...", "After losing...", "Found music when...". Each suggestion should be a different backstory angle the user can click to populate the field.',
+    'backstory': currentValue
+      ? `The backstory already reads:\n"${currentValue.slice(0, 600)}"\n\nGenerate 5 CONTINUATION paragraphs (2-3 sentences each) that naturally extend this existing backstory. Each option should add a new story beat — a turning point, conflict, breakthrough, relationship, or setback. Continue in the same third-person voice and tense. Do NOT repeat what's already written. Do NOT re-introduce the character. Pick up where the story leaves off and push the narrative forward. Return a JSON array of 5 strings.`
+      : 'Write 5 different opening backstory paragraphs (2-3 sentences each) in third person as if describing a fictional artist. DO NOT write questions or prompts. Write concrete narrative: "Grew up in...", "After losing...", "Found music when...". Each suggestion should be a different backstory angle the user can click to populate the field.',
     'significantEvents': 'Keep each tag to 5-8 words. Write concrete events, NOT questions. Examples: "Lost father at age 12", "First open mic at 16", "Dropped out to pursue music". Life-changing events, milestones, pivotal moments.',
     // Sound
     'vocalTextures': 'Keep tags to 1-3 words. Descriptive vocal qualities across all music styles.',

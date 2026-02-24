@@ -42,7 +42,7 @@ export function IdentityTab() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="artist-ethnicity">Ethnicity</Label>
             <Input
@@ -62,12 +62,21 @@ export function IdentityTab() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="artist-region">Region</Label>
+            <Label htmlFor="artist-state">State</Label>
             <Input
-              id="artist-region"
-              value={identity.region}
-              onChange={(e) => updateDraft('identity', { region: e.target.value })}
-              placeholder="Region..."
+              id="artist-state"
+              value={identity.state}
+              onChange={(e) => updateDraft('identity', { state: e.target.value })}
+              placeholder="State..."
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="artist-neighborhood">Neighborhood</Label>
+            <Input
+              id="artist-neighborhood"
+              value={identity.neighborhood}
+              onChange={(e) => updateDraft('identity', { neighborhood: e.target.value })}
+              placeholder="Neighborhood..."
             />
           </div>
         </div>

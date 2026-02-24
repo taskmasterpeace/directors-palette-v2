@@ -80,7 +80,7 @@ export function MagicWandField({
 
   const handleSuggestionClick = (suggestion: string) => {
     if (multiline) {
-      onChange(value ? `${value}\n${suggestion}` : suggestion)
+      onChange(value ? `${value}\n\n${suggestion}` : suggestion)
     } else {
       onChange(suggestion)
     }
