@@ -233,32 +233,83 @@ interface AnimatedNodeProps {
 }
 
 function AnimatedNode({ position, scale, color, threeColor, glowIntensity, pulseOffset, pulseSpeed }: AnimatedNodeProps) {
+  const groupRef = useRef<THREE.Group>(null)
   const meshRef = useRef<THREE.Mesh>(null)
   const lightRef = useRef<THREE.PointLight>(null)
+  const trailRef = useRef<THREE.Mesh>(null)
   const animatedScale = useRef(0)
+  const flyProgress = useRef(0) // 0 = at origin, 1 = at final position
+
+  // Random spawn direction from far away (for the shooting-in effect)
+  const spawnOrigin = useMemo(() => {
+    const dir = new THREE.Vector3(
+      (Math.random() - 0.5) * 2,
+      (Math.random() - 0.5) * 2,
+      (Math.random() - 0.5) * 2
+    ).normalize()
+    return dir.multiplyScalar(4 + Math.random() * 3) // spawn 4-7 units away
+  }, [])
+
+  const targetPos = useMemo(() => new THREE.Vector3(...position), [position])
 
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    // Spring-in animation
-    if (animatedScale.current < scale) {
-      animatedScale.current += (scale - animatedScale.current) * 0.05
+
+    // Fly-in animation (fast ease-out)
+    if (flyProgress.current < 1) {
+      flyProgress.current = Math.min(flyProgress.current + 0.035, 1)
+      const ease = 1 - Math.pow(1 - flyProgress.current, 3) // cubic ease-out
+      if (groupRef.current) {
+        groupRef.current.position.lerpVectors(spawnOrigin, targetPos, ease)
+      }
     }
+
+    // Scale-in (starts after 30% of fly-in)
+    const scaleDelay = Math.max((flyProgress.current - 0.3) / 0.7, 0)
+    const targetScale = scale * scaleDelay
+    if (animatedScale.current < targetScale) {
+      animatedScale.current += (targetScale - animatedScale.current) * 0.1
+    }
+
     if (meshRef.current) {
       const pulse = 1 + Math.sin(t * pulseSpeed + pulseOffset) * 0.15
       const s = animatedScale.current * pulse
-      meshRef.current.scale.setScalar(s / scale) // normalize since geometry already has scale
+      meshRef.current.scale.setScalar(s / scale)
     }
     if (lightRef.current) {
       lightRef.current.intensity = glowIntensity * (1 + Math.sin(t * pulseSpeed + pulseOffset) * 0.3)
     }
+
+    // Trail effect — visible during fly-in, fades out
+    if (trailRef.current) {
+      const trailOpacity = flyProgress.current < 1 ? 0.6 * (1 - flyProgress.current) : 0
+      const mat = trailRef.current.material as THREE.MeshBasicMaterial
+      mat.opacity = trailOpacity
+      // Stretch trail in the direction of travel
+      if (flyProgress.current < 1 && groupRef.current) {
+        const dir = targetPos.clone().sub(groupRef.current.position)
+        if (dir.length() > 0.01) {
+          trailRef.current.lookAt(groupRef.current.position.clone().sub(dir))
+          const stretch = Math.min(dir.length() * 1.5, 0.8)
+          trailRef.current.scale.set(1, 1, stretch / 0.15)
+        }
+      }
+    }
   })
 
   return (
-    <mesh ref={meshRef} position={position}>
-      <sphereGeometry args={[scale, 12, 12]} />
-      <meshBasicMaterial color={color} />
-      <pointLight ref={lightRef} color={threeColor} intensity={glowIntensity} distance={0.8} />
-    </mesh>
+    <group ref={groupRef} position={spawnOrigin.toArray() as [number, number, number]}>
+      <mesh ref={meshRef}>
+        <sphereGeometry args={[scale, 12, 12]} />
+        <meshBasicMaterial color={color} />
+        <pointLight ref={lightRef} color={threeColor} intensity={glowIntensity} distance={0.8} />
+      </mesh>
+      {/* Trail streak */}
+      <mesh ref={trailRef}>
+        <cylinderGeometry args={[scale * 0.3, 0, 0.15, 6]} />
+        <meshBasicMaterial color={color} transparent opacity={0.6} />
+      </mesh>
+    </group>
   )
 }
 
