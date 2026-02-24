@@ -99,7 +99,7 @@ const AdvancedSettings = () => {
                 </div>
             )}
 
-            {/* Sequential Generation - for Seedream 4.5 */}
+            {/* Sequential Generation - for Seedream models */}
             {supportsSequentialGeneration && (
                 <div className="space-y-3">
                     <div className="flex items-center gap-2">
@@ -115,9 +115,21 @@ const AdvancedSettings = () => {
                         <Label htmlFor="sequentialGeneration" className="text-sm text-foreground cursor-pointer">
                             Sequential Generation
                         </Label>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-muted text-muted-foreground text-[10px] font-bold cursor-help shrink-0">?</span>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" className="max-w-xs text-xs leading-relaxed">
+                                <p className="font-medium mb-1">How to write sequential prompts:</p>
+                                <p className="mb-1">Number each image in your prompt and match the Max Images count. Example:</p>
+                                <p className="italic text-muted-foreground">&quot;Generate 4 character poses. Image 1: neutral stance; Image 2: action pose; Image 3: side profile; Image 4: back view. Same outfit and palette.&quot;</p>
+                                <p className="mt-1">The model keeps style, identity, and color consistent across all images. Great for storyboards, character sheets, ad campaigns, and step-by-step tutorials.</p>
+                                <p className="mt-1 text-amber-400">Cost is per-image: 4 images = 4x the cost.</p>
+                            </TooltipContent>
+                        </Tooltip>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                        Generate multiple related images (e.g., story scenes, character variations)
+                        Generate multiple related images with consistent style and identity
                     </p>
 
                     {/* Max Images slider - only shows when sequential is enabled */}
@@ -138,7 +150,7 @@ const AdvancedSettings = () => {
                                 className="w-full"
                             />
                             <p className="text-xs text-muted-foreground">
-                                Generate 2-15 related images. Cost multiplied by count.
+                                Match this number in your prompt (e.g. &quot;Generate 4 images...&quot;). Cost multiplied by count.
                             </p>
                         </div>
                     )}
