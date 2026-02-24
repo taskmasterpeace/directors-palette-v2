@@ -58,7 +58,7 @@ export function SoundTab() {
         <GenreCascade />
 
         {/* Genre Evolution Timeline */}
-        {sound.genreEvolution && sound.genreEvolution.length > 0 && (
+        {Array.isArray(sound.genreEvolution) && sound.genreEvolution.length > 0 && (
           <div className="space-y-2">
             <button
               type="button"
@@ -75,7 +75,7 @@ export function SoundTab() {
                     <div className="absolute -left-[calc(1rem+5px)] top-1.5 w-2.5 h-2.5 rounded-full bg-amber-500/70" />
                     <p className="text-sm font-medium text-foreground">{era.era}</p>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {era.genres.map((g, j) => (
+                      {(era.genres || []).map((g, j) => (
                         <span key={j} className="text-xs px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
                           {g}
                         </span>

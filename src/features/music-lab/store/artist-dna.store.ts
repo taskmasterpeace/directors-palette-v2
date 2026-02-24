@@ -194,14 +194,17 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           // Migrate old `region` field to `state` for backwards compat
           const oldRegion = (dna.identity as unknown as Record<string, unknown>)?.region as string | undefined
           if (oldRegion && !identity.state) identity.state = oldRegion
+          const sound = { ...defaults.sound, ...dna.sound }
+          if (!Array.isArray(sound.genreEvolution)) sound.genreEvolution = []
+          if (!Array.isArray(sound.keyCollaborators)) sound.keyCollaborators = []
           const merged: ArtistDNA = {
             identity,
-            sound: { ...defaults.sound, ...dna.sound },
+            sound,
             persona: { ...defaults.persona, ...dna.persona },
             lexicon: { ...defaults.lexicon, ...dna.lexicon },
             look: { ...defaults.look, ...dna.look },
             catalog: { ...defaults.catalog, ...dna.catalog },
-            lowConfidenceFields: dna.lowConfidenceFields || [],
+            lowConfidenceFields: Array.isArray(dna.lowConfidenceFields) ? dna.lowConfidenceFields : [],
           }
           set({
             editorOpen: true,
@@ -248,14 +251,17 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           }
           // Merge with defaults so any missing fields get sensible values
           const defaults = createEmptyDNA()
+          const sound = { ...defaults.sound, ...dna.sound }
+          if (!Array.isArray(sound.genreEvolution)) sound.genreEvolution = []
+          if (!Array.isArray(sound.keyCollaborators)) sound.keyCollaborators = []
           const merged: ArtistDNA = {
             identity: { ...defaults.identity, ...dna.identity },
-            sound: { ...defaults.sound, ...dna.sound },
+            sound,
             persona: { ...defaults.persona, ...dna.persona },
             lexicon: { ...defaults.lexicon, ...dna.lexicon },
             look: { ...defaults.look, ...dna.look },
             catalog: { ...defaults.catalog, ...dna.catalog },
-            lowConfidenceFields: dna.lowConfidenceFields || [],
+            lowConfidenceFields: Array.isArray(dna.lowConfidenceFields) ? dna.lowConfidenceFields : [],
           }
           set({
             editorOpen: true,
@@ -614,14 +620,17 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           // Migrate old `region` field to `state` for backwards compat
           const oldRegion = (p.draft.identity as unknown as Record<string, unknown>)?.region as string | undefined
           if (oldRegion && !identity.state) identity.state = oldRegion
+          const sound = { ...defaults.sound, ...p.draft.sound }
+          if (!Array.isArray(sound.genreEvolution)) sound.genreEvolution = []
+          if (!Array.isArray(sound.keyCollaborators)) sound.keyCollaborators = []
           draft = {
             identity,
-            sound: { ...defaults.sound, ...p.draft.sound },
+            sound,
             persona: { ...defaults.persona, ...p.draft.persona },
             lexicon: { ...defaults.lexicon, ...p.draft.lexicon },
             look: { ...defaults.look, ...p.draft.look },
             catalog: { ...defaults.catalog, ...p.draft.catalog },
-            lowConfidenceFields: p.draft.lowConfidenceFields || [],
+            lowConfidenceFields: Array.isArray(p.draft.lowConfidenceFields) ? p.draft.lowConfidenceFields : [],
           }
         } else {
           draft = current.draft

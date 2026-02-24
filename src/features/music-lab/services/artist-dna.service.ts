@@ -5,10 +5,29 @@
 
 import { getClient } from '@/lib/db/client'
 import type { ArtistDNA, DbArtistProfile, UserArtistProfile } from '../types/artist-dna.types'
+import { createEmptyDNA } from '../types/artist-dna.types'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getArtistClient(): Promise<any> {
   return await getClient()
+}
+
+/** Merge raw DB dna with defaults so old records don't crash on missing fields */
+function safeDna(raw: ArtistDNA): ArtistDNA {
+  const d = createEmptyDNA()
+  const sound = { ...d.sound, ...raw.sound }
+  // Ensure new array fields aren't null (spread of { ...defaults, ...{ field: null } } yields null)
+  if (!Array.isArray(sound.genreEvolution)) sound.genreEvolution = []
+  if (!Array.isArray(sound.keyCollaborators)) sound.keyCollaborators = []
+  return {
+    identity: { ...d.identity, ...raw.identity },
+    sound,
+    persona: { ...d.persona, ...raw.persona },
+    lexicon: { ...d.lexicon, ...raw.lexicon },
+    look: { ...d.look, ...raw.look },
+    catalog: { ...d.catalog, ...raw.catalog },
+    lowConfidenceFields: Array.isArray(raw.lowConfidenceFields) ? raw.lowConfidenceFields : [],
+  }
 }
 
 function dbToUserProfile(db: DbArtistProfile): UserArtistProfile {
@@ -16,7 +35,7 @@ function dbToUserProfile(db: DbArtistProfile): UserArtistProfile {
     id: db.id,
     userId: db.user_id,
     name: db.name,
-    dna: db.dna,
+    dna: safeDna(db.dna),
     createdAt: db.created_at,
     updatedAt: db.updated_at,
   }
