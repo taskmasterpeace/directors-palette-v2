@@ -201,6 +201,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             lexicon: { ...defaults.lexicon, ...dna.lexicon },
             look: { ...defaults.look, ...dna.look },
             catalog: { ...defaults.catalog, ...dna.catalog },
+            lowConfidenceFields: dna.lowConfidenceFields || [],
           }
           set({
             editorOpen: true,
@@ -253,6 +254,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             lexicon: { ...defaults.lexicon, ...dna.lexicon },
             look: { ...defaults.look, ...dna.look },
             catalog: { ...defaults.catalog, ...dna.catalog },
+            lowConfidenceFields: dna.lowConfidenceFields || [],
           }
           set({
             editorOpen: true,
@@ -618,6 +620,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             lexicon: { ...defaults.lexicon, ...p.draft.lexicon },
             look: { ...defaults.look, ...p.draft.look },
             catalog: { ...defaults.catalog, ...p.draft.catalog },
+            lowConfidenceFields: p.draft.lowConfidenceFields || [],
           }
         } else {
           draft = current.draft

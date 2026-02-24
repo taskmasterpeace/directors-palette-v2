@@ -18,10 +18,16 @@ export interface ArtistIdentity {
   significantEvents: string[]
 }
 
+export interface GenreEra {
+  era: string        // e.g. "2016-2020", "Renaissance era"
+  genres: string[]   // genres active in this era
+}
+
 export interface ArtistSound {
   genres: string[]
   subgenres: string[]
   microgenres: string[]
+  genreEvolution: GenreEra[]  // for genre-fluid artists — tracks how their sound changed over time
   vocalTextures: string[]
   flowStyle: string
   productionPreferences: string[]
@@ -142,6 +148,7 @@ export interface ArtistDNA {
   lexicon: ArtistLexicon
   look: ArtistLook
   catalog: ArtistCatalog
+  lowConfidenceFields: string[]  // field paths where data may be inaccurate (e.g. "identity.realName", "lexicon.adLibs")
 }
 
 // =============================================================================
@@ -227,6 +234,7 @@ export function createEmptyDNA(): ArtistDNA {
       genres: [],
       subgenres: [],
       microgenres: [],
+      genreEvolution: [],
       vocalTextures: [],
       flowStyle: '',
       productionPreferences: [],
@@ -263,5 +271,6 @@ export function createEmptyDNA(): ArtistDNA {
     catalog: {
       entries: [],
     },
+    lowConfidenceFields: [],
   }
 }
