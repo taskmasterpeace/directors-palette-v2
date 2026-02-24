@@ -23,7 +23,9 @@ export interface ArtistSound {
   subgenres: string[]
   microgenres: string[]
   vocalTextures: string[]
+  flowStyle: string
   productionPreferences: string[]
+  keyCollaborators: string[]
   artistInfluences: string[]
   melodyBias: number // 0 = Pure Rap, 100 = Pure Singing
   language: string
@@ -226,7 +228,9 @@ export function createEmptyDNA(): ArtistDNA {
       subgenres: [],
       microgenres: [],
       vocalTextures: [],
+      flowStyle: '',
       productionPreferences: [],
+      keyCollaborators: [],
       artistInfluences: [],
       melodyBias: 50,
       language: 'English',

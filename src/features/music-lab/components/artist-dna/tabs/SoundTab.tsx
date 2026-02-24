@@ -96,6 +96,37 @@ export function SoundTab() {
         </div>
 
         <div className="space-y-2">
+          <Label>Flow / Delivery Style</Label>
+          <MagicWandField
+            field="flowStyle"
+            section="sound"
+            value={sound.flowStyle}
+            onChange={(flowStyle) => updateDraft('sound', { flowStyle })}
+            placeholder="Describe rap flow or vocal phrasing style..."
+            multiline
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Key Collaborators</Label>
+          <TagInput
+            tags={sound.keyCollaborators}
+            onTagsChange={(keyCollaborators) => updateDraft('sound', { keyCollaborators })}
+            placeholder="e.g. producers, frequent features..."
+            onWandClick={() => fetchTagSuggestions('keyCollaborators', sound.keyCollaborators)}
+            isLoading={loadingField === 'keyCollaborators'}
+            suggestions={suggestionCache['keyCollaborators']?.suggestions?.slice(0, 5) ?? []}
+            onSuggestionClick={(val) => {
+              if (!sound.keyCollaborators.includes(val)) {
+                updateDraft('sound', { keyCollaborators: [...sound.keyCollaborators, val] })
+              }
+              consumeSuggestion('keyCollaborators', val)
+            }}
+            onSuggestionDismiss={(i) => dismissSuggestion('keyCollaborators', i)}
+          />
+        </div>
+
+        <div className="space-y-2">
           <Label>Artist Influences</Label>
           <TagInput
             tags={sound.artistInfluences}
