@@ -259,16 +259,16 @@ export const PRESET_STYLES: PresetStyle[] = [
     },
     {
         id: 'mr-robot',
-        name: 'Mr. Robot',
-        description: 'Cold digital precision with off-center framing',
+        name: 'Digital Paranoia',
+        description: 'Oppressive off-center framing, cold clinical precision, surveillance aesthetic',
         imagePath: '/storyboard-assets/styles/mr-robot.webp',
-        stylePrompt: 'in the style of Mr. Robot, extreme off-center framing, cold desaturated tones, fluorescent green tint, clinical digital precision, wide angle distortion',
+        stylePrompt: 'cinematic digital paranoia aesthetic, characters pushed to extreme edges or bottom of the frame leaving large oppressive empty spaces above or beside them to suggest emotional smallness, shortsighted framing that places subjects on the near edge breaking classical leading-room rules creating tense disorienting conversations, wide lenses used close to faces with slight distortion emphasizing large expressive eyes drawing viewers into an interior subjective world, shallow depth of field isolating subjects from surroundings so backgrounds fall out of focus and figures appear to float in space, under-lit high-contrast lighting with strong practicals like lamps windows and screens creating pools of light in otherwise shadowy environments, silhouettes and backlit figures obscuring faces reinforcing secrecy and mistrust, cool desaturated color palette with fluorescent green tint for corporate and urban spaces deepening technological and emotional coldness, clinical digital precision, balanced centered framing reserved only for moments of relative stability or introspection as a deliberate contrast to the dominant off-center compositions',
         technicalAttributes: {
             cameraRenderType: 'ARRI Alexa Mini',
-            lensPerspective: 'Wide angle, extreme off-center framing',
+            lensPerspective: 'Wide angle close to face with slight distortion, extreme off-center shortsighted framing, shallow depth of field isolating subjects',
             stockMedium: 'Digital ProRes 4444',
-            colorPalette: 'Cold desaturated, fluorescent green tint',
-            texture: 'Clean digital, clinical precision',
+            colorPalette: 'Cool desaturated tones, fluorescent green tint, high-contrast pools of light in shadow, silhouetted backlit figures',
+            texture: 'Clean clinical digital, under-lit environments, strong practicals casting isolated light pools',
             medium: 'live-action'
         }
     },
