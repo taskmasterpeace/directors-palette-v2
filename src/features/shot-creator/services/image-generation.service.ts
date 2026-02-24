@@ -69,6 +69,12 @@ export class ImageGenerationService {
           errors.push('Seedream 4.5 supports maximum 14 reference images')
         }
         break
+      case 'seedream-5-lite':
+        // Seedream 5 Lite supports up to 14 reference images
+        if (input.referenceImages && input.referenceImages.length > 14) {
+          errors.push('Seedream 5 Lite supports maximum 14 reference images')
+        }
+        break
       case 'riverflow-2-pro':
         errors.push(...this.validateRiverflowPro(input))
         break
@@ -207,6 +213,7 @@ export class ImageGenerationService {
       case 'gpt-image-high':
         return this.buildGptImageInput(input, 'high')
       case 'seedream-4.5':
+      case 'seedream-5-lite':
         return this.buildSeedreamInput(input)
       case 'riverflow-2-pro':
         return this.buildRiverflowProInput(input)
@@ -401,8 +408,10 @@ export class ImageGenerationService {
       replicateInput.size = settings.resolution // 2K, 4K, or custom
     }
 
-    // Note: Seedream 4.5 does NOT support output_format parameter
-    // Output is always JPG
+    // Seedream 5 Lite supports output_format; Seedream 4.5 does not (always JPG)
+    if (input.model === 'seedream-5-lite' && settings.outputFormat) {
+      replicateInput.output_format = settings.outputFormat
+    }
 
     // Sequential image generation - API accepts 'auto' or 'disabled' string
     if (settings.sequentialGeneration !== undefined) {

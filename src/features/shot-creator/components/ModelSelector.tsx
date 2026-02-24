@@ -80,6 +80,12 @@ const MODEL_CAPABILITIES: Record<ModelId, {
     refImages: 'Up to 14',
     bestFor: ['4K resolution', 'Sequential images', 'High quality']
   },
+  'seedream-5-lite': {
+    speed: '~10s (Moderate)',
+    textRendering: 'Good',
+    refImages: 'Up to 14',
+    bestFor: ['Deep thinking', 'Reasoning', 'Editing', 'Cheap']
+  },
   'riverflow-2-pro': {
     speed: '~20s (Moderate)',
     textRendering: 'Excellent',

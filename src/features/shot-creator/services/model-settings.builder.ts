@@ -64,6 +64,17 @@ export function buildModelSettings(
       }
       break;
 
+    case 'seedream-5-lite':
+      modelSettings.aspectRatio = settings.aspectRatio;
+      modelSettings.outputFormat = settings.outputFormat || 'png';
+      modelSettings.resolution = settings.resolution || '2K';
+      // Sequential generation settings
+      if (settings.sequentialGeneration) {
+        modelSettings.sequentialGeneration = true;
+        modelSettings.maxImages = settings.maxImages || 3;
+      }
+      break;
+
     case 'qwen-image-2512':
       modelSettings.aspectRatio = settings.aspectRatio;
       modelSettings.outputFormat = settings.outputFormat || 'webp';
@@ -114,6 +125,8 @@ export function getDefaultOutputFormat(model: string): string {
     case 'z-image-turbo':
     case 'seedream-4.5':
       return 'jpg';
+    case 'seedream-5-lite':
+      return 'png';
     case 'qwen-image-2512':
     case 'gpt-image-low':
     case 'gpt-image-medium':
@@ -129,12 +142,12 @@ export function getDefaultOutputFormat(model: string): string {
  * Check if a model supports resolution settings
  */
 export function supportsResolution(model: string): boolean {
-  return ['nano-banana-pro', 'seedream-4.5', 'riverflow-2-pro'].includes(model);
+  return ['nano-banana-pro', 'seedream-4.5', 'seedream-5-lite', 'riverflow-2-pro'].includes(model);
 }
 
 /**
  * Check if a model supports sequential generation
  */
 export function supportsSequentialGeneration(model: string): boolean {
-  return model === 'seedream-4.5';
+  return model === 'seedream-4.5' || model === 'seedream-5-lite';
 }

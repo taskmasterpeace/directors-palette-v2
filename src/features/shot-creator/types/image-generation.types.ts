@@ -15,6 +15,7 @@ export type ImageModel = Extract<ModelId,
   | 'gpt-image-medium'
   | 'gpt-image-high'
   | 'seedream-4.5'
+  | 'seedream-5-lite'
   | 'riverflow-2-pro'
 >
 
@@ -51,7 +52,7 @@ export interface QwenImage2512Settings {
 export interface SeedreamSettings {
   aspectRatio?: string
   outputFormat?: 'jpg' | 'png'
-  resolution?: '2K' | '4K' | 'custom'
+  resolution?: '2K' | '3K' | '4K' | 'custom'
   maxImages?: number // 1-15
   sequentialGeneration?: boolean
 }
@@ -142,7 +143,7 @@ export interface QwenImage2512Input {
 export interface SeedreamInput {
   prompt: string
   aspect_ratio?: string
-  size?: '2K' | '4K' | 'custom'
+  size?: '2K' | '3K' | '4K' | 'custom'
   output_format?: string
   sequential_image_generation?: 'auto' | 'disabled'
   max_images?: number

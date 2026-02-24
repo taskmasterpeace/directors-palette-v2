@@ -22,7 +22,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-2512' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5' | 'riverflow-2-pro'
+export type ModelId = 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-2512' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5' | 'seedream-5-lite' | 'riverflow-2-pro'
 
 export interface ModelParameter {
     id: string
@@ -110,6 +110,16 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
             { value: '2K', label: '2K (2048px) - Default quality' },
             { value: '4K', label: '4K (4096px) - High quality' },
             { value: 'custom', label: 'Custom dimensions' }
+        ]
+    },
+    seedream5Resolution: {
+        id: 'resolution',
+        label: 'Resolution',
+        type: 'select',
+        default: '2K',
+        options: [
+            { value: '2K', label: '2K (2048px) - Default quality' },
+            { value: '3K', label: '3K (3072px) - High quality' }
         ]
     },
     seed: {
@@ -534,6 +544,28 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             resolution: MODEL_PARAMETERS.seedreamResolution,
             maxImages: MODEL_PARAMETERS.maxImages,
             sequentialGeneration: MODEL_PARAMETERS.sequentialGeneration
+        },
+        maxReferenceImages: 14
+    },
+    'seedream-5-lite': {
+        id: 'seedream-5-lite',
+        name: 'seedream-5-lite',
+        displayName: 'Seedream 5 Lite',
+        type: 'generation',
+        icon: '🌿',
+        description: 'Deep thinking image generation with reasoning, web search, and editing capabilities.',
+        badge: 'New',
+        badgeColor: 'bg-green-600',
+        textColor: 'text-green-300',
+        endpoint: 'bytedance/seedream-5-lite',
+        costPerImage: 0.04, // 4 points = 4 cents ($0.035 cost, ~14% margin)
+        supportedParameters: ['aspectRatio', 'seedream5Resolution', 'maxImages', 'sequentialGeneration', 'outputFormat'],
+        parameters: {
+            aspectRatio: MODEL_PARAMETERS.aspectRatio,
+            resolution: MODEL_PARAMETERS.seedream5Resolution,
+            maxImages: MODEL_PARAMETERS.maxImages,
+            sequentialGeneration: MODEL_PARAMETERS.sequentialGeneration,
+            outputFormat: MODEL_PARAMETERS.outputFormat
         },
         maxReferenceImages: 14
     },
