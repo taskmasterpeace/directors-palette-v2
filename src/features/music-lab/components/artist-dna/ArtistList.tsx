@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/dialog'
 import { ArtistCard } from './ArtistCard'
 import { useArtistDnaStore } from '../../store/artist-dna.store'
+import { useCreditsStore } from '@/features/credits/store/credits.store'
 
 const LOADING_PHASES = [
   'Researching artist...',
@@ -28,6 +29,8 @@ const LOADING_PHASES = [
   'Building persona...',
   'Analyzing discography...',
   'Assembling DNA profile...',
+  'Fact-checking with web search...',
+  'Verifying accuracy...',
 ]
 
 export function ArtistList() {
@@ -61,10 +64,15 @@ export function ArtistList() {
   const handleSeedFromArtist = async () => {
     if (!seedInput.trim()) return
     setSeedError('')
-    const success = await startFromArtist(seedInput.trim())
-    if (success) {
+    const result = await startFromArtist(seedInput.trim())
+    if (result === true) {
       setSeedDialogOpen(false)
       setSeedInput('')
+      useCreditsStore.getState().fetchBalance(true)
+    } else if (result === 'insufficient_credits') {
+      setSeedError('')
+      setSeedDialogOpen(false)
+      useCreditsStore.getState().openPurchaseDialog()
     } else {
       setSeedError('Could not build a profile for that artist. Check the spelling or try a more well-known artist.')
     }
@@ -156,6 +164,7 @@ export function ArtistList() {
                 >
                   <Sparkles className="w-4 h-4" />
                   Build Profile
+                  <span className="text-xs font-normal opacity-70">25 pts</span>
                 </button>
               </div>
             </>

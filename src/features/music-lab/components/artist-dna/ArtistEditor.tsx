@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
-import { Save, Check, Loader2 } from 'lucide-react'
+import { Save, Check, Loader2, Sparkles } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useArtistDnaStore } from '../../store/artist-dna.store'
 import { ARTIST_DNA_TABS } from '../../types/artist-dna.types'
@@ -44,8 +44,19 @@ const PREFETCH_FIELDS: Record<string, { field: string; section: string }[]> = {
   ],
 }
 
+// Map field path prefixes to their DNA tab
+function getLowConfidenceTabCounts(fields: string[]): Record<string, number> {
+  const counts: Record<string, number> = {}
+  for (const f of fields) {
+    const section = f.split('.')[0] // "identity.realName" -> "identity"
+    counts[section] = (counts[section] || 0) + 1
+  }
+  return counts
+}
+
 export function ArtistEditor() {
   const { activeTab, setActiveTab, suggestionCache, setSuggestions, draft, isDirty, saveArtist } = useArtistDnaStore()
+  const lcfCounts = getLowConfidenceTabCounts(draft.lowConfidenceFields || [])
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
 
   const handleSave = useCallback(async () => {
@@ -120,11 +131,30 @@ export function ArtistEditor() {
             <TabsTrigger
               key={tab.id}
               value={tab.id}
+              className="relative"
             >
               {tab.label}
+              {lcfCounts[tab.id] > 0 && (
+                <Sparkles className="w-3 h-3 text-amber-400/60 ml-1 inline-block" />
+              )}
             </TabsTrigger>
           ))}
         </TabsList>
+
+        {/* Low confidence banner for active tab */}
+        {lcfCounts[activeTab] > 0 && (
+          <div className="flex items-start gap-2 rounded-md bg-amber-500/5 border border-amber-500/20 px-3 py-2 mt-2 mb-1">
+            <Sparkles className="w-4 h-4 text-amber-400/70 mt-0.5 shrink-0" />
+            <div className="text-xs text-amber-400/80">
+              <span className="font-medium">AI-estimated fields:</span>{' '}
+              {(draft.lowConfidenceFields || [])
+                .filter(f => f.startsWith(activeTab + '.'))
+                .map(f => f.split('.').slice(1).join('.'))
+                .join(', ')}
+              <span className="text-muted-foreground ml-1">— verify these for accuracy</span>
+            </div>
+          </div>
+        )}
 
         <TabsContent value="identity"><IdentityTab /></TabsContent>
         <TabsContent value="sound"><SoundTab /></TabsContent>

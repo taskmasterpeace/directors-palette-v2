@@ -54,7 +54,7 @@ interface ArtistDnaState {
   startNewArtist: () => void
 
   // Actions - Seed from real artist
-  startFromArtist: (artistName: string) => Promise<boolean>
+  startFromArtist: (artistName: string) => Promise<boolean | 'insufficient_credits'>
   isSeedingFromArtist: boolean
   seededFrom: string | null
   clearSeededFrom: () => void
@@ -238,6 +238,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           })
           if (!res.ok) {
             set({ isSeedingFromArtist: false })
+            if (res.status === 402) return 'insufficient_credits'
             return false
           }
           const { dna, seededFrom } = await res.json()

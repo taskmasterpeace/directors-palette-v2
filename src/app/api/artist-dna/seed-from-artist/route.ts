@@ -9,9 +9,14 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { creditsService } from '@/features/credits/services/credits.service'
 
 const GENERATION_MODEL = 'openai/gpt-4.1'
 const REFINEMENT_MODEL = 'perplexity/sonar-pro'
+
+// 2-pass cost: GPT-4.1 (~$0.035) + Perplexity Sonar Pro (~$0.053) = ~$0.09 actual cost
+// Price: 25 credits ($0.25) — ~2.8x margin, consistent with image gen pricing
+const SEED_ARTIST_COST_CENTS = 25
 
 // ─── Pass 1: Generate initial profile ────────────────────────────────────────
 
@@ -152,6 +157,23 @@ export async function POST(request: NextRequest) {
     }
 
     const trimmedName = artistName.trim()
+    const { user } = auth
+
+    // ─── Credit deduction ─────────────────────────────────────────────
+
+    const deductResult = await creditsService.deductCredits(user.id, 'artist-dna-seed', {
+      generationType: 'text',
+      description: `Artist DNA seed: ${trimmedName} (2-pass with web search)`,
+      overrideAmount: SEED_ARTIST_COST_CENTS,
+      user_email: user.email,
+    })
+
+    if (!deductResult.success) {
+      return NextResponse.json(
+        { error: deductResult.error || 'Insufficient credits' },
+        { status: 402 }
+      )
+    }
 
     // ─── Pass 1: Generate initial profile ──────────────────────────────
 
