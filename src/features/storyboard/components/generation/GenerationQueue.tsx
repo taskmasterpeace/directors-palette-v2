@@ -15,8 +15,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { useEffectiveStyleGuide } from '../../hooks/useEffectiveStyleGuide'
 import { Input } from '@/components/ui/input'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { ChevronDown, Settings2 } from 'lucide-react'
+import { Settings2 } from 'lucide-react'
 import { type WildCard } from '@/features/shot-creator/helpers/wildcard/parser'
 import {
     ensurePresetWildcards,
@@ -258,36 +257,11 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
     }
 
     return (
-        <div className="space-y-3">
-            {/* Compact Settings Bar */}
-            <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 border">
-                <span className="text-sm text-muted-foreground">Settings:</span>
-                <Select value={aspectRatio} onValueChange={(v) => setGenerationSettings({ aspectRatio: v })}>
-                    <SelectTrigger className="h-8 w-[100px] text-sm">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="16:9">16:9</SelectItem>
-                        <SelectItem value="9:16">9:16</SelectItem>
-                        <SelectItem value="1:1">1:1</SelectItem>
-                        <SelectItem value="4:3">4:3</SelectItem>
-                        <SelectItem value="21:9">21:9</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Select value={resolution} onValueChange={(v) => setGenerationSettings({ resolution: v as '1K' | '2K' | '4K' })}>
-                    <SelectTrigger className="h-8 w-[70px] text-sm">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="1K">1K</SelectItem>
-                        <SelectItem value="2K">2K</SelectItem>
-                        <SelectItem value="4K">4K</SelectItem>
-                    </SelectContent>
-                </Select>
-
-                {/* Model Selector */}
+        <div className="space-y-2">
+            {/* Compact Settings Row */}
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border flex-wrap">
                 <Select value={imageModel || 'nano-banana-pro'} onValueChange={(v) => setGenerationSettings({ imageModel: v as ModelId })}>
-                    <SelectTrigger className="h-8 w-[180px] text-sm">
+                    <SelectTrigger className="h-7 w-[160px] text-xs">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -301,201 +275,189 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                         ))}
                     </SelectContent>
                 </Select>
+                <Select value={aspectRatio} onValueChange={(v) => setGenerationSettings({ aspectRatio: v })}>
+                    <SelectTrigger className="h-7 w-[80px] text-xs">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="16:9">16:9</SelectItem>
+                        <SelectItem value="9:16">9:16</SelectItem>
+                        <SelectItem value="1:1">1:1</SelectItem>
+                        <SelectItem value="4:3">4:3</SelectItem>
+                        <SelectItem value="21:9">21:9</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Select value={resolution} onValueChange={(v) => setGenerationSettings({ resolution: v as '1K' | '2K' | '4K' })}>
+                    <SelectTrigger className="h-7 w-[60px] text-xs">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="1K">1K</SelectItem>
+                        <SelectItem value="2K">2K</SelectItem>
+                        <SelectItem value="4K">4K</SelectItem>
+                    </SelectContent>
+                </Select>
 
                 {/* Wildcard Toggle */}
-                <div className="flex items-center gap-1.5 border-l pl-3 ml-1">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <div className="flex items-center gap-1.5">
-                                    <Sparkles className={`w-3.5 h-3.5 ${wildcardsEnabled ? 'text-amber-500' : 'text-muted-foreground'}`} />
-                                    <Switch
-                                        checked={wildcardsEnabled}
-                                        onCheckedChange={setWildcardsEnabled}
-                                        disabled={wildcardsLoading || wildcards.length === 0}
-                                        className="scale-75"
-                                    />
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom" className="max-w-[250px]">
-                                <p className="font-medium">Wildcards {wildcardsEnabled ? 'ON' : 'OFF'}</p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Use <code className="bg-muted px-1 rounded">_variableName_</code> in prompts to randomly substitute values.
-                                    {wildcards.length > 0 && (
-                                        <span className="block mt-1">{wildcards.length} wildcards available</span>
-                                    )}
-                                </p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                </div>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div className="flex items-center gap-1 border-l pl-2 ml-1">
+                                <Sparkles className={`w-3 h-3 ${wildcardsEnabled ? 'text-amber-500' : 'text-muted-foreground'}`} />
+                                <Switch
+                                    checked={wildcardsEnabled}
+                                    onCheckedChange={setWildcardsEnabled}
+                                    disabled={wildcardsLoading || wildcards.length === 0}
+                                    className="scale-[0.65]"
+                                />
+                            </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-[250px]">
+                            <p className="font-medium">Wildcards {wildcardsEnabled ? 'ON' : 'OFF'}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Use <code className="bg-muted px-1 rounded">_variableName_</code> in prompts to randomly substitute values.
+                                {wildcards.length > 0 && (
+                                    <span className="block mt-1">{wildcards.length} wildcards available</span>
+                                )}
+                            </p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+
+                {/* Prefix/Suffix toggle */}
+                <button
+                    onClick={() => setShowPrefixSuffix(!showPrefixSuffix)}
+                    className={`flex items-center gap-1 text-xs px-1.5 py-0.5 rounded border transition-colors ${
+                        showPrefixSuffix || globalPromptPrefix || globalPromptSuffix
+                            ? 'bg-primary/10 border-primary/30 text-primary'
+                            : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                >
+                    <Settings2 className="w-3 h-3" />
+                    {(globalPromptPrefix || globalPromptSuffix) ? 'Prefix/Suffix Active' : 'Prefix/Suffix'}
+                </button>
 
                 <div className="flex-1" />
+
+                {/* Inline cost info */}
+                <div className="flex items-center gap-2 text-xs">
+                    <Coins className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="font-medium">{selectedShots.size} shots</span>
+                    <span className="text-muted-foreground">=</span>
+                    <span className="font-medium">~{estimatedCost} tokens</span>
+                    <span className="text-muted-foreground/50">|</span>
+                    <span className={`font-medium ${balance - estimatedCost < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                        {balance} bal
+                    </span>
+                    {balance > 0 && balance < estimatedCost && (
+                        <Badge variant="destructive" className="text-[10px] py-0 px-1">
+                            Low
+                        </Badge>
+                    )}
+                </div>
                 {effectiveStyleGuide && (
-                    <Badge variant="secondary" className="text-xs">
-                        Style: {effectiveStyleGuide.name}
+                    <Badge variant="secondary" className="text-[10px] py-0">
+                        {effectiveStyleGuide.name}
                     </Badge>
                 )}
             </div>
 
-            {/* Prompt Prefix/Suffix */}
-            <Collapsible open={showPrefixSuffix} onOpenChange={setShowPrefixSuffix}>
-                <CollapsibleTrigger asChild>
-                    <Button variant="ghost" size="sm" className="w-full justify-between h-7 text-xs px-2 bg-muted/30">
-                        <div className="flex items-center gap-1.5">
-                            <Settings2 className="w-3.5 h-3.5" />
-                            <span>Prompt Prefix/Suffix</span>
-                            {(globalPromptPrefix || globalPromptSuffix) && (
-                                <Badge variant="secondary" className="text-xs py-0 px-1.5">
-                                    Active
-                                </Badge>
-                            )}
-                        </div>
-                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showPrefixSuffix ? 'rotate-180' : ''}`} />
-                    </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-2 space-y-2 p-2 bg-muted/20 rounded-lg border">
+            {/* Prefix/Suffix - collapsible inline */}
+            {showPrefixSuffix && (
+                <div className="grid grid-cols-2 gap-2 p-2 bg-muted/20 rounded-lg border">
                     <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground">Prefix (added to start of every prompt)</label>
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-wider">Prefix</label>
                         <Input
                             placeholder="e.g., cinematic lighting, 4K quality,"
                             value={globalPromptPrefix}
                             onChange={(e) => setGlobalPromptPrefix(e.target.value)}
-                            className="h-8 text-xs"
+                            className="h-7 text-xs"
                         />
                     </div>
                     <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground">Suffix (added to end of every prompt)</label>
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-wider">Suffix</label>
                         <Input
-                            placeholder="e.g., , professional photography, studio lighting"
+                            placeholder="e.g., , professional photography"
                             value={globalPromptSuffix}
                             onChange={(e) => setGlobalPromptSuffix(e.target.value)}
-                            className="h-8 text-xs"
+                            className="h-7 text-xs"
                         />
                     </div>
-                    {(globalPromptPrefix || globalPromptSuffix) && (
-                        <p className="text-xs text-muted-foreground">
-                            These will be applied to all {selectedShots.size} selected shots during generation.
-                        </p>
-                    )}
-                </CollapsibleContent>
-            </Collapsible>
-
-            {/* Cost Banner */}
-            <div className={`flex items-center gap-3 p-2.5 rounded-lg border ${
-                balance > 0 && balance < estimatedCost
-                    ? 'bg-red-500/10 border-red-500/30'
-                    : 'bg-muted/30'
-            }`}>
-                <Coins className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                <div className="flex items-center gap-3 flex-wrap text-sm">
-                    <span>
-                        <span className="text-muted-foreground">Selected:</span>{' '}
-                        <span className="font-medium">{selectedShots.size} shots</span>{' '}
-                        <span className="text-muted-foreground">=</span>{' '}
-                        <span className="font-medium">~{estimatedCost} tokens</span>
-                    </span>
-                    <span className="text-muted-foreground">|</span>
-                    <span>
-                        <span className="text-muted-foreground">Balance:</span>{' '}
-                        <span className="font-medium">{balance} tokens</span>
-                    </span>
-                    <span className="text-muted-foreground">|</span>
-                    <span>
-                        <span className="text-muted-foreground">Remaining:</span>{' '}
-                        <span className={`font-medium ${balance - estimatedCost < 0 ? 'text-red-500' : ''}`}>
-                            {balance - estimatedCost} tokens
-                        </span>
-                    </span>
                 </div>
-                {balance > 0 && balance < estimatedCost && (
-                    <Badge variant="destructive" className="text-xs ml-auto">
-                        Insufficient credits
-                    </Badge>
-                )}
+            )}
+
+            {/* Selection Controls - single compact row */}
+            <div className="flex items-center gap-1.5">
+                <Button variant="outline" size="sm" className="h-6 text-xs px-2" onClick={selectAll}>
+                    <CheckSquare className="w-3 h-3 mr-1" /> All
+                </Button>
+                <Button variant="outline" size="sm" className="h-6 text-xs px-2" onClick={selectNone}>
+                    <Square className="w-3 h-3 mr-1" /> None
+                </Button>
+                <Button variant="outline" size="sm" className="h-6 text-xs px-1.5" onClick={() => selectRange(5)}>5</Button>
+                <Button variant="outline" size="sm" className="h-6 text-xs px-1.5" onClick={() => selectRange(10)}>10</Button>
+                <Button variant="outline" size="sm" className="h-6 text-xs px-1.5" onClick={() => selectRange(20)}>20</Button>
             </div>
 
-            {/* Selection Controls */}
-            <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm text-muted-foreground">Select:</span>
-                <Button variant="outline" size="sm" className="h-7 text-sm px-2" onClick={selectAll}>
-                    <CheckSquare className="w-3.5 h-3.5 mr-1" /> All
-                </Button>
-                <Button variant="outline" size="sm" className="h-7 text-sm px-2" onClick={selectNone}>
-                    <Square className="w-3.5 h-3.5 mr-1" /> None
-                </Button>
-                <Button variant="outline" size="sm" className="h-7 text-sm px-2" onClick={() => selectRange(5)}>
-                    First 5
-                </Button>
-                <Button variant="outline" size="sm" className="h-7 text-sm px-2" onClick={() => selectRange(10)}>
-                    First 10
-                </Button>
-                <Button variant="outline" size="sm" className="h-7 text-sm px-2" onClick={() => selectRange(20)}>
-                    First 20
-                </Button>
-                <div className="flex-1" />
-                <Badge variant={selectedShots.size > 20 ? "destructive" : "outline"} className="text-sm font-medium">
-                    {selectedShots.size} selected ~ {estimatedCost} tokens
-                </Badge>
-            </div>
+            {/* Progress Banner - prominent when generating */}
+            {isGenerating && (
+                <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <LoadingSpinner size="sm" color="primary" />
+                            <span className="text-sm font-medium">
+                                {isPaused ? 'Paused' : 'Generating'} — Shot {progress.current} of {progress.total}
+                            </span>
+                        </div>
+                        <span className="text-lg font-bold text-primary">{Math.round(progressPercent)}%</span>
+                    </div>
+                    <Progress value={progressPercent} className="h-2" />
+                    {lastCompletedImageUrl && (
+                        <div className="flex items-center gap-3">
+                            <img
+                                src={lastCompletedImageUrl}
+                                alt="Last completed shot"
+                                className="w-14 h-9 object-cover rounded border"
+                            />
+                            <span className="text-xs text-muted-foreground">
+                                {progress.current} of {progress.total} complete
+                                {failedCount > 0 && ` • ${failedCount} failed`}
+                            </span>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Results Summary */}
+            {results.length > 0 && !isGenerating && (
+                <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 border">
+                    <div className="flex items-center gap-1.5 text-green-500">
+                        <CheckCircle className="w-4 h-4" />
+                        <span className="text-sm font-medium">{successCount}</span>
+                    </div>
+                    {failedCount > 0 && (
+                        <div className="flex items-center gap-1.5 text-destructive">
+                            <AlertCircle className="w-4 h-4" />
+                            <span className="text-sm font-medium">{failedCount}</span>
+                        </div>
+                    )}
+                    {successCount > 0 && (
+                        <Button
+                            variant="default"
+                            size="sm"
+                            className="ml-auto h-7 text-xs"
+                            onClick={() => setInternalTab('gallery')}
+                        >
+                            <Images className="w-3.5 h-3.5 mr-1.5" />
+                            View Results
+                        </Button>
+                    )}
+                </div>
+            )}
 
             {/* Shot List with Checkboxes */}
             <Card>
-                <CardContent className="p-3 space-y-3">
-                    {/* Progress with Live Preview */}
-                    {isGenerating && (
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between text-sm">
-                                <span>
-                                    {isPaused ? 'Paused' : 'Generating'} shot {progress.current} of {progress.total}
-                                    {isPaused && ' (will resume from next shot)'}
-                                </span>
-                                <span>{Math.round(progressPercent)}%</span>
-                            </div>
-                            <Progress value={progressPercent} />
-                            {/* Live preview strip */}
-                            {lastCompletedImageUrl && (
-                                <div className="flex items-center gap-3 p-2 bg-muted/30 rounded-md">
-                                    <img
-                                        src={lastCompletedImageUrl}
-                                        alt="Last completed shot"
-                                        className="w-16 h-10 object-cover rounded border"
-                                    />
-                                    <span className="text-xs text-muted-foreground">
-                                        Shot {progress.current > 0 ? progress.current : 1} completed
-                                        {progress.current < progress.total && ` \u2022 Generating shot ${progress.current + 1}...`}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Results Summary */}
-                    {results.length > 0 && !isGenerating && (
-                        <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/30">
-                            <div className="flex items-center gap-2 text-green-500">
-                                <CheckCircle className="w-4 h-4" />
-                                <span className="text-sm">{successCount} completed</span>
-                            </div>
-                            {failedCount > 0 && (
-                                <div className="flex items-center gap-2 text-destructive">
-                                    <AlertCircle className="w-4 h-4" />
-                                    <span className="text-sm">{failedCount} failed</span>
-                                </div>
-                            )}
-                            {successCount > 0 && (
-                                <Button
-                                    variant="default"
-                                    size="sm"
-                                    className="ml-auto"
-                                    onClick={() => setInternalTab('gallery')}
-                                >
-                                    <Images className="w-4 h-4 mr-2" />
-                                    View {successCount} Shot{successCount !== 1 ? 's' : ''} in Gallery
-                                </Button>
-                            )}
-                        </div>
-                    )}
+                <CardContent className="p-3 space-y-2">
 
                     {/* Shot List - Show AI Generated Prompts with Checkboxes */}
                     <ScrollArea className="h-[350px]">
