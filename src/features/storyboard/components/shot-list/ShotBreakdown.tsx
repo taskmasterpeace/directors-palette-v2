@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress'
 import { SplitSquareVertical, Wand2, AlertCircle, CheckCircle, MapPin, Sparkles } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
+import { useDocumentaryPipeline } from '../../hooks/useDocumentaryPipeline'
 import { DIRECTORS } from '@/features/music-lab/data/directors.data'
 import { StoryDirectorService } from '../../services/story-director.service'
 import {
@@ -41,6 +42,10 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         generatedImages,
         openContactSheetModal,
         openBRollModal,
+        isDocumentaryMode,
+        isClassifyingSegments,
+        isGeneratingBrollPool,
+        isGeneratingTitleCards,
         setBreakdownResult,
         addGeneratedPrompts,
         updateGeneratedPrompt,
@@ -49,6 +54,8 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         clearGeneratedPrompts,
         setShotNote
     } = useStoryboardStore()
+
+    const { runPipeline } = useDocumentaryPipeline()
 
 
     const handleGetAngles = (sequence: number) => {
@@ -367,6 +374,11 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         }
 
         setIsGeneratingPrompts(false)
+
+        // Run documentary pipeline if documentary mode is enabled
+        if (useStoryboardStore.getState().isDocumentaryMode && allPrompts.length > 0) {
+            await runPipeline()
+        }
     }
 
     const handleGeneratePrompts = () => generatePrompts()
@@ -375,6 +387,10 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
     const progressPercent = generationProgress
         ? Math.round((generationProgress.processed / generationProgress.total) * 100)
         : 0
+
+    // Combined busy state: prompt generation OR documentary pipeline running
+    const isDocPipelineRunning = isClassifyingSegments || isGeneratingBrollPool || isGeneratingTitleCards
+    const isBusy = isGeneratingPrompts || isDocPipelineRunning
 
     // Get generated prompt for a segment
     const getGeneratedPrompt = (sequence: number): GeneratedShotPrompt | undefined => {
@@ -412,7 +428,7 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                     </div>
                     <Button
                         onClick={handleGeneratePrompts}
-                        disabled={isGeneratingPrompts}
+                        disabled={isBusy}
                         variant="ghost"
                         size="sm"
                     >
@@ -420,6 +436,11 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                             <>
                                 <LoadingSpinner size="xs" color="current" className="mr-1" />
                                 Regenerating...
+                            </>
+                        ) : isDocPipelineRunning ? (
+                            <>
+                                <LoadingSpinner size="xs" color="current" className="mr-1" />
+                                Doc pipeline...
                             </>
                         ) : (
                             <>
@@ -445,12 +466,17 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                             </div>
                             <Button
                                 onClick={handleGeneratePrompts}
-                                disabled={isGeneratingPrompts}
+                                disabled={isBusy}
                             >
                                 {isGeneratingPrompts ? (
                                     <>
                                         <LoadingSpinner size="sm" color="current" className="mr-2" />
                                         Generating...
+                                    </>
+                                ) : isDocPipelineRunning ? (
+                                    <>
+                                        <LoadingSpinner size="sm" color="current" className="mr-2" />
+                                        Doc pipeline...
                                     </>
                                 ) : (
                                     <>
@@ -507,6 +533,18 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                         )}
                     </div>
                     <Progress value={progressPercent} className="h-1.5" />
+                </div>
+            )}
+
+            {/* Documentary pipeline loading indicator */}
+            {isDocumentaryMode && (isClassifyingSegments || isGeneratingBrollPool || isGeneratingTitleCards) && (
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <LoadingSpinner size="xs" color="current" />
+                    <span className="text-xs text-amber-600 dark:text-amber-400">
+                        {isClassifyingSegments && 'Classifying segments...'}
+                        {isGeneratingTitleCards && !isClassifyingSegments && 'Generating title cards...'}
+                        {isGeneratingBrollPool && !isClassifyingSegments && !isGeneratingTitleCards && 'Generating B-roll pools...'}
+                    </span>
                 </div>
             )}
 
