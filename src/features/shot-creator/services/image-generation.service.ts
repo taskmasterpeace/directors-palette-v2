@@ -56,12 +56,6 @@ export class ImageGenerationService {
       case 'gpt-image-high':
         errors.push(...this.validateGptImage(input))
         break
-      case 'seedream-4.5':
-        // Seedream 4.5 supports up to 14 reference images
-        if (input.referenceImages && input.referenceImages.length > 14) {
-          errors.push('Seedream 4.5 supports maximum 14 reference images')
-        }
-        break
       case 'seedream-5-lite':
         // Seedream 5 Lite supports up to 14 reference images
         if (input.referenceImages && input.referenceImages.length > 14) {
@@ -203,7 +197,6 @@ export class ImageGenerationService {
         return this.buildGptImageInput(input, 'medium')
       case 'gpt-image-high':
         return this.buildGptImageInput(input, 'high')
-      case 'seedream-4.5':
       case 'seedream-5-lite':
         return this.buildSeedreamInput(input)
       case 'riverflow-2-pro':

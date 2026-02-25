@@ -132,7 +132,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
     const modelConfig = getModelConfig(model as ImageModel)
     if (!modelConfig) {
       return NextResponse.json(
-        { success: false, error: `Invalid model: ${model}. Use: nano-banana, nano-banana-pro, z-image-turbo, gpt-image-low, gpt-image-medium, gpt-image-high, or seedream-4.5` },
+        { success: false, error: `Invalid model: ${model}. Use: nano-banana, nano-banana-pro, z-image-turbo, gpt-image-low, gpt-image-medium, gpt-image-high, seedream-5-lite, or riverflow-2-pro` },
         { status: 400 }
       )
     }
@@ -460,7 +460,7 @@ export async function GET(): Promise<NextResponse> {
         type: 'string',
         required: false,
         default: 'nano-banana',
-        options: ['nano-banana', 'nano-banana-pro', 'z-image-turbo', 'gpt-image-low', 'gpt-image-medium', 'gpt-image-high', 'seedream-4.5'],
+        options: ['nano-banana', 'nano-banana-pro', 'z-image-turbo', 'gpt-image-low', 'gpt-image-medium', 'gpt-image-high', 'seedream-5-lite', 'riverflow-2-pro'],
         description: 'Model to use for generation',
       },
       aspectRatio: {
@@ -495,7 +495,8 @@ export async function GET(): Promise<NextResponse> {
       'gpt-image-low': '3 points/image ($0.03)',
       'gpt-image-medium': '10 points/image ($0.10)',
       'gpt-image-high': '27 points/image ($0.27)',
-      'seedream-4.5': '6 points/image ($0.06)',
+      'seedream-5-lite': '4 points/image ($0.04)',
+      'riverflow-2-pro': '27 points/image ($0.27)',
     },
     modelCapabilities: {
       'nano-banana': {
@@ -535,12 +536,17 @@ export async function GET(): Promise<NextResponse> {
         referenceImages: 'Up to 10',
         bestFor: 'Maximum quality, client work, detailed scenes',
       },
-      'seedream-4.5': {
+      'seedream-5-lite': {
+        speed: 'Medium',
+        quality: 'Good',
+        referenceImages: 'Up to 14',
+        bestFor: 'Deep thinking, reasoning, editing, cheap',
+      },
+      'riverflow-2-pro': {
         speed: 'Medium',
         quality: 'Excellent',
-        referenceImages: 'Up to 14',
-        resolution: 'Up to 4K',
-        bestFor: 'High-quality 4K images, sequential generation',
+        referenceImages: 'Up to 10 + 4 detail',
+        bestFor: 'Custom fonts, logo cleanup, infographics',
       },
     },
     anchorTransform: {

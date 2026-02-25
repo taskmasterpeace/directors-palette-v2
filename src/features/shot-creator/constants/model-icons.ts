@@ -9,7 +9,6 @@ export const MODEL_ICONS: Record<string, string> = {
   'gpt-image-low': '🎨',
   'gpt-image-medium': '🎨',
   'gpt-image-high': '✨',
-  'seedream-4.5': '🌱',
   'seedream-5-lite': '🌿',
   'riverflow-2-pro': '🌊',
 }

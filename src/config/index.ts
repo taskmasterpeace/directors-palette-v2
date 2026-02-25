@@ -22,7 +22,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5' | 'seedream-5-lite' | 'riverflow-2-pro'
+export type ModelId = 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-5-lite' | 'riverflow-2-pro'
 
 export interface ModelParameter {
     id: string
@@ -501,28 +501,6 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             inputFidelity: MODEL_PARAMETERS.gptImageInputFidelity
         },
         maxReferenceImages: 10 // Supports input_images parameter
-    },
-    'seedream-4.5': {
-        id: 'seedream-4.5',
-        name: 'seedream-4.5',
-        displayName: 'Seedream 4.5',
-        type: 'generation',
-        icon: '🌱',
-        description: 'High quality generation with 4K support and sequential image generation.',
-        badge: 'Quality',
-        badgeColor: 'bg-emerald-600',
-        textColor: 'text-emerald-300',
-        endpoint: 'bytedance/seedream-4.5',
-        costPerImage: 0.06, // 6 points = 6 cents ($0.04 cost, 50% margin)
-        // Note: Seedream does NOT support outputFormat - always outputs JPG
-        supportedParameters: ['aspectRatio', 'seedreamResolution', 'maxImages', 'sequentialGeneration'],
-        parameters: {
-            aspectRatio: MODEL_PARAMETERS.aspectRatio,
-            resolution: MODEL_PARAMETERS.seedreamResolution,
-            maxImages: MODEL_PARAMETERS.maxImages,
-            sequentialGeneration: MODEL_PARAMETERS.sequentialGeneration
-        },
-        maxReferenceImages: 14
     },
     'seedream-5-lite': {
         id: 'seedream-5-lite',

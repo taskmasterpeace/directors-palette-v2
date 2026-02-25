@@ -446,16 +446,6 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                 baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
                 // numInferenceSteps and guidanceScale use config defaults (8 and 0)
                 break
-            case 'seedream-4.5':
-                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
-                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
-                baseSettings.resolution = shotCreatorSettings.resolution || '2K'
-                // Sequential generation settings
-                if (shotCreatorSettings.sequentialGeneration) {
-                    baseSettings.sequentialGeneration = true
-                    baseSettings.maxImages = shotCreatorSettings.maxImages || 3
-                }
-                break
             case 'seedream-5-lite':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
                 baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
@@ -908,7 +898,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
 
             // Apply suggested settings from recipe
             if (activeRecipe.suggestedModel) {
-                updateSettings({ model: activeRecipe.suggestedModel as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5' | 'riverflow-2-pro' })
+                updateSettings({ model: activeRecipe.suggestedModel as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-5-lite' | 'riverflow-2-pro' })
             }
             if (activeRecipe.suggestedAspectRatio) {
                 updateSettings({ aspectRatio: activeRecipe.suggestedAspectRatio })
@@ -938,7 +928,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                     stageReferenceImages[0] = [...new Set([...allRefs, ...stageReferenceImages[0]])]
                 }
 
-                const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-pro') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5' | 'riverflow-2-pro'
+                const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-pro') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-5-lite' | 'riverflow-2-pro'
                 const aspectRatio = shotCreatorSettings.aspectRatio || activeRecipe.suggestedAspectRatio || '16:9'
 
                 try {
@@ -981,7 +971,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
             }
 
             // Build model settings
-            const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5' | 'riverflow-2-pro'
+            const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-5-lite' | 'riverflow-2-pro'
             const modelSettings = buildModelSettings()
 
             toast.info(`Generating with recipe: ${activeRecipe.name}`)

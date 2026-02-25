@@ -68,12 +68,6 @@ const MODEL_CAPABILITIES: Record<ModelId, {
     refImages: 'Up to 10',
     bestFor: ['Maximum quality', 'Client work', 'Detailed scenes']
   },
-  'seedream-4.5': {
-    speed: '~10s (Moderate)',
-    textRendering: 'Good',
-    refImages: 'Up to 14',
-    bestFor: ['4K resolution', 'Sequential images', 'High quality']
-  },
   'seedream-5-lite': {
     speed: '~10s (Moderate)',
     textRendering: 'Good',

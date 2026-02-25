@@ -86,7 +86,7 @@ export interface ValidatedApiKey {
 // API Request/Response types
 export interface GenerateImageRequest {
   prompt: string
-  model?: 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5'
+  model?: 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-5-lite' | 'riverflow-2-pro'
   aspectRatio?: string
   outputFormat?: 'webp' | 'jpg' | 'png'
   referenceImages?: string[]  // URLs
@@ -117,7 +117,7 @@ export interface GenerateImageResponse {
 export interface ExecuteRecipeRequest {
   recipeId: string
   variables?: Record<string, string>
-  model?: 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5'
+  model?: 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-5-lite' | 'riverflow-2-pro'
   aspectRatio?: string
   outputFormat?: 'webp' | 'jpg' | 'png'
 }

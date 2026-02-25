@@ -17,7 +17,6 @@ const IMAGE_ONLY_MODELS: ModelId[] = [
     'gpt-image-low',
     'gpt-image-medium',
     'gpt-image-high',
-    'seedream-4.5',
     'riverflow-2-pro'
 ]
 

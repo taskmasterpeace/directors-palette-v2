@@ -6,7 +6,6 @@ import { useState, useEffect, useRef } from 'react'
 const MODEL_ESTIMATED_SECONDS: Record<string, number> = {
   'z-image-turbo': 2,
   'nano-banana': 22,
-  'seedream-4.5': 45,
   'seedream-5-lite': 49,
   'nano-banana-pro': 71,
   'riverflow-2-pro': 600,
@@ -17,7 +16,6 @@ const MODEL_DISPLAY_NAMES: Record<string, string> = {
   'nano-banana': 'Nano Banana',
   'nano-banana-pro': 'Nano Banana Pro',
   'z-image-turbo': 'Z-Image Turbo',
-  'seedream-4.5': 'Seedream 4.5',
   'seedream-5-lite': 'Seedream 5 Lite',
   'riverflow-2-pro': 'Riverflow Pro',
 }
