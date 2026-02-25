@@ -2,18 +2,18 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-/** Estimated generation time in seconds per model */
+/** Estimated generation time in seconds per model (measured averages) */
 const MODEL_ESTIMATED_SECONDS: Record<string, number> = {
-  'qwen-image-2512': 3,
-  'z-image-turbo': 5,
-  'nano-banana': 8,
-  'seedream-4.5': 10,
-  'seedream-5-lite': 10,
-  'nano-banana-pro': 15,
-  'gpt-image-low': 16,
-  'gpt-image-medium': 18,
-  'riverflow-2-pro': 20,
-  'gpt-image-high': 25,
+  'z-image-turbo': 2,
+  'qwen-image-2512': 6,
+  'nano-banana': 22,
+  'seedream-4.5': 45,
+  'seedream-5-lite': 49,
+  'nano-banana-pro': 71,
+  'gpt-image-low': 30,
+  'gpt-image-medium': 40,
+  'gpt-image-high': 55,
+  'riverflow-2-pro': 35,
 }
 
 /** Map model ID to a short display name */
