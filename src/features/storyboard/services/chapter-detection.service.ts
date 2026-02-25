@@ -349,3 +349,107 @@ export function getChapterForIndex(
 ): StoryChapter | undefined {
     return chapters.find(ch => index >= ch.startIndex && index < ch.endIndex)
 }
+
+/**
+ * Generate cinematic arc names for chapters using an LLM.
+ * Falls back to default names on any error.
+ */
+export async function generateChapterArcNames(config: {
+    apiKey: string
+    model: string
+    chapters: StoryChapter[]
+    storyText: string
+}): Promise<Array<{ index: number; name: string }>> {
+    const { apiKey, model, chapters, storyText } = config
+
+    // Single chapter — no need for LLM
+    if (chapters.length <= 1) {
+        return [{ index: 0, name: chapters[0]?.title || 'Full Story' }]
+    }
+
+    const defaultNames = chapters.map((ch, i) => ({
+        index: i,
+        name: ch.title || `Chapter ${i + 1}`
+    }))
+
+    try {
+        // Build a preview of each chapter (first 300 chars)
+        const chapterPreviews = chapters
+            .map((ch, i) => {
+                const text = storyText.slice(ch.startIndex, ch.endIndex).trim()
+                const preview = text.length > 300 ? text.slice(0, 300) + '...' : text
+                return `Chapter ${i + 1}:\n${preview}`
+            })
+            .join('\n\n')
+
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'https://directors-palette.vercel.app'
+            },
+            body: JSON.stringify({
+                model,
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a documentary filmmaker naming chapters for a film. Give each chapter a cinematic title (2-5 words) that captures its emotional core. Be specific and evocative — not generic titles like \'The Beginning\' or \'The End\'. Think like a Netflix documentary producer.'
+                    },
+                    {
+                        role: 'user',
+                        content: chapterPreviews
+                    }
+                ],
+                tools: [
+                    {
+                        type: 'function',
+                        function: {
+                            name: 'name_chapters',
+                            description: 'Assign cinematic arc names to each chapter',
+                            parameters: {
+                                type: 'object',
+                                properties: {
+                                    chapters: {
+                                        type: 'array',
+                                        items: {
+                                            type: 'object',
+                                            properties: {
+                                                index: { type: 'number' },
+                                                name: { type: 'string' }
+                                            },
+                                            required: ['index', 'name']
+                                        }
+                                    }
+                                },
+                                required: ['chapters']
+                            }
+                        }
+                    }
+                ],
+                tool_choice: { type: 'function', function: { name: 'name_chapters' } }
+            })
+        })
+
+        if (!response.ok) {
+            return defaultNames
+        }
+
+        const data = await response.json()
+        const toolCall = data?.choices?.[0]?.message?.tool_calls?.[0]
+        if (!toolCall?.function?.arguments) {
+            return defaultNames
+        }
+
+        const parsed = JSON.parse(toolCall.function.arguments)
+        const named: Array<{ index: number; name: string }> = parsed.chapters
+
+        if (!Array.isArray(named) || named.length === 0) {
+            return defaultNames
+        }
+
+        return named
+    } catch {
+        return defaultNames
+    }
+}
