@@ -238,6 +238,11 @@ function ModelSettingsPanel({ model, settings, onUpdate }: ModelSettingsPanelPro
       {/* Aspect Ratio */}
       <div className="space-y-3">
         <Label className="text-white">Aspect Ratio</Label>
+        {modelConfig.aspectRatioIgnoredWithImage && (
+          <div className="rounded-md bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-xs text-amber-400">
+            For image-to-video, the output aspect ratio matches your input image. This setting only applies to text-to-video mode.
+          </div>
+        )}
         <RadioGroup
           value={settings.aspectRatio}
           onValueChange={(value) => onUpdate({ aspectRatio: value as '16:9' | '4:3' | '1:1' | '3:4' | '9:16' | '21:9' | '9:21' })}

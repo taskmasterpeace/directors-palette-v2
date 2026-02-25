@@ -86,6 +86,7 @@ export interface ModelConfig {
   pricingType: 'per-video' | 'per-second'
   promptStyle: 'specific' | 'reasoning'
   supportsAudio?: boolean // Model can generate synchronized audio
+  aspectRatioIgnoredWithImage?: boolean // API ignores aspect_ratio when an image is provided (i2v)
   restrictions?: string[]
 }
 

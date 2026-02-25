@@ -52,6 +52,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
     promptStyle: 'reasoning',
+    aspectRatioIgnoredWithImage: true,
     restrictions: [
       'No last frame support',
       'No reference images'
@@ -69,6 +70,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
     promptStyle: 'reasoning',
+    aspectRatioIgnoredWithImage: true,
     restrictions: [
       'Reference images cannot be used with 1080p resolution'
     ]
@@ -86,6 +88,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
     promptStyle: 'reasoning',
+    aspectRatioIgnoredWithImage: true,
     restrictions: [
       'Last frame requires start frame image'
     ]
@@ -102,6 +105,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     supportedAspectRatios: ['16:9', '9:16', '1:1'],
     pricingType: 'per-second',
     promptStyle: 'specific',
+    aspectRatioIgnoredWithImage: true,
     restrictions: [
       '720p only',
       'No last frame support',
@@ -120,6 +124,7 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
     supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
     pricingType: 'per-second',
     promptStyle: 'reasoning',
+    aspectRatioIgnoredWithImage: true,
     restrictions: []
   }
 }
