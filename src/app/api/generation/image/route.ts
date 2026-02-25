@@ -418,9 +418,11 @@ export async function POST(request: NextRequest) {
         const completedPrediction = await replicate.wait(prediction, { interval: 1000 })
 
         if (completedPrediction.status === 'succeeded' && completedPrediction.output) {
-          const replicateUrl = Array.isArray(completedPrediction.output)
-            ? completedPrediction.output[0]
-            : completedPrediction.output
+          // Normalize output to array
+          const anchorOutputUrls = Array.isArray(completedPrediction.output)
+            ? completedPrediction.output
+            : [completedPrediction.output]
+          const replicateUrl = anchorOutputUrls[0]
 
           // Upload to storage
           const { buffer } = await StorageService.downloadAsset(replicateUrl)
@@ -445,7 +447,48 @@ export async function POST(request: NextRequest) {
             })
             .eq('id', gallery.id)
 
-          // Deduct credits (admins bypass)
+          // Process additional images from this anchor transform prediction
+          if (anchorOutputUrls.length > 1) {
+            for (let j = 1; j < anchorOutputUrls.length; j++) {
+              const extraUrl = anchorOutputUrls[j]
+              if (!extraUrl || typeof extraUrl !== 'string') continue
+
+              try {
+                const { buffer: extraBuffer } = await StorageService.downloadAsset(extraUrl)
+                const { ext: extraExt, mimeType: extraMimeType } = StorageService.getMimeType(extraUrl, modelSettings?.outputFormat)
+                const extraPredictionId = `${prediction.id}_img_${j}`
+                const { publicUrl: extraPublicUrl, storagePath: extraStoragePath, fileSize: extraFileSize } =
+                  await StorageService.uploadToStorage(extraBuffer, user.id, extraPredictionId, extraExt, extraMimeType)
+
+                await supabase
+                  .from('gallery')
+                  .insert({
+                    user_id: user.id,
+                    prediction_id: extraPredictionId,
+                    generation_type: 'image' as const,
+                    status: 'completed',
+                    storage_path: extraStoragePath,
+                    public_url: extraPublicUrl,
+                    file_size: extraFileSize,
+                    mime_type: extraMimeType,
+                    metadata: {
+                      ...metadata,
+                      replicate_url: extraUrl,
+                      completed_at: new Date().toISOString(),
+                      image_index: j,
+                      total_images: anchorOutputUrls.length,
+                      parent_prediction_id: prediction.id,
+                    } as Database['public']['Tables']['gallery']['Insert']['metadata'],
+                  })
+              } catch (imgError) {
+                lognog.devError(`Anchor transform: failed extra image ${j}`, {
+                  error: imgError instanceof Error ? imgError.message : String(imgError)
+                })
+              }
+            }
+          }
+
+          // Deduct credits (admins bypass) — once per prediction
           if (!userIsAdmin) {
             const deductResult = await creditsService.deductCredits(user.id, model, {
               generationType: 'image',
@@ -714,10 +757,11 @@ export async function POST(request: NextRequest) {
         lognog.devDebug('Prediction completed', { status: completedPrediction.status });
 
         if (completedPrediction.status === 'succeeded' && completedPrediction.output) {
-          // Get the image URL (output can be string or array)
-          const replicateUrl = Array.isArray(completedPrediction.output)
-            ? completedPrediction.output[0]
-            : completedPrediction.output;
+          // Normalize output to array
+          const outputUrls = Array.isArray(completedPrediction.output)
+            ? completedPrediction.output
+            : [completedPrediction.output];
+          const replicateUrl = outputUrls[0];
 
           // Download from Replicate and upload to Supabase Storage (same as webhook handler)
           try {
@@ -747,7 +791,55 @@ export async function POST(request: NextRequest) {
               lognog.devError('Failed to update gallery', { error: updateError.message });
             }
 
+            // Process additional images (output[1..n]) — insert new gallery rows
+            if (outputUrls.length > 1) {
+              lognog.devDebug('Multi-image output', { count: outputUrls.length });
+
+              for (let i = 1; i < outputUrls.length; i++) {
+                const extraUrl = outputUrls[i];
+                if (!extraUrl || typeof extraUrl !== 'string') continue;
+
+                try {
+                  const { buffer: extraBuffer } = await StorageService.downloadAsset(extraUrl);
+                  const { ext: extraExt, mimeType: extraMimeType } = StorageService.getMimeType(extraUrl, modelSettings?.outputFormat);
+                  const extraPredictionId = `${prediction.id}_img_${i}`;
+                  const { publicUrl: extraPublicUrl, storagePath: extraStoragePath, fileSize: extraFileSize } =
+                    await StorageService.uploadToStorage(extraBuffer, user.id, extraPredictionId, extraExt, extraMimeType);
+
+                  const currentMetadata = (finalMetadata as Record<string, unknown>) || {};
+                  await supabase
+                    .from('gallery')
+                    .insert({
+                      user_id: user.id,
+                      prediction_id: extraPredictionId,
+                      generation_type: 'image' as const,
+                      status: 'completed',
+                      storage_path: extraStoragePath,
+                      public_url: extraPublicUrl,
+                      file_size: extraFileSize,
+                      mime_type: extraMimeType,
+                      metadata: {
+                        ...currentMetadata,
+                        replicate_url: extraUrl,
+                        completed_at: new Date().toISOString(),
+                        image_index: i,
+                        total_images: outputUrls.length,
+                        parent_prediction_id: prediction.id,
+                      } as Database['public']['Tables']['gallery']['Insert']['metadata'],
+                      ...(folderId && { folder_id: folderId }),
+                    });
+
+                  lognog.devDebug(`Saved additional image ${i}`, { url: extraPublicUrl });
+                } catch (imgError) {
+                  lognog.devError(`Failed to process additional image ${i}`, {
+                    error: imgError instanceof Error ? imgError.message : String(imgError)
+                  });
+                }
+              }
+            }
+
             // ✅ CREDITS: Deduct credits only AFTER successful generation (admins bypass)
+            // Charged once per prediction, not per image
             if (!userIsAdmin) {
               const deductResult = await creditsService.deductCredits(user.id, model, {
                 generationType: 'image',
@@ -792,6 +884,7 @@ export async function POST(request: NextRequest) {
               galleryId: gallery.id,
               status: 'completed',
               imageUrl: publicUrl,
+              imageCount: outputUrls.length,
             });
           } catch (uploadError) {
             // Log detailed error for debugging in production

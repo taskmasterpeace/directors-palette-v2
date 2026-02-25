@@ -632,6 +632,14 @@ export function useImageGeneration() {
                         modelSettings.aspectRatio || '16:9'
                     )
                 }
+
+                // If the API returned multiple images (Seedream sequential_image_generation),
+                // refresh gallery so additional DB rows appear immediately
+                if (response.imageCount && response.imageCount > 1) {
+                    console.log(`[Multi-Image] ${response.imageCount} images returned, refreshing gallery`)
+                    useUnifiedGalleryStore.getState().refreshGallery()
+                }
+
                 results.push(response)
                 // For pipe chaining, wait for the image to complete before proceeding to next step for pipe previous result
                 if (isPipeChaining) {

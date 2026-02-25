@@ -147,8 +147,9 @@ export class WebhookService {
     output: string | string[],
     input?: ReplicatePredictionInput
   ): Promise<void> {
-    // Get asset URL (output can be string or array, take first)
-    const assetUrl = Array.isArray(output) ? output[0] : output;
+    // Normalize output to array
+    const outputUrls = Array.isArray(output) ? output : [output];
+    const assetUrl = outputUrls[0];
 
     if (!assetUrl || typeof assetUrl !== 'string') {
       throw new Error('Invalid output URL');
@@ -188,6 +189,8 @@ export class WebhookService {
           ...currentMetadata,
           replicate_url: assetUrl,
           completed_at: new Date().toISOString(),
+          image_index: 0,
+          total_images: outputUrls.length,
         },
       })
       .eq('prediction_id', galleryEntry.prediction_id);
@@ -195,6 +198,66 @@ export class WebhookService {
     if (updateError) {
       console.error('Error updating gallery record:', updateError);
       throw new Error(`Failed to update gallery: ${updateError.message}`);
+    }
+
+    // Process additional images (output[1..n]) — insert new gallery rows
+    if (outputUrls.length > 1) {
+      console.log(`Multi-image output: processing ${outputUrls.length - 1} additional images`);
+
+      for (let i = 1; i < outputUrls.length; i++) {
+        const extraUrl = outputUrls[i];
+        if (!extraUrl || typeof extraUrl !== 'string') continue;
+
+        try {
+          const { buffer: extraBuffer } = await StorageService.downloadAsset(extraUrl);
+          const { ext: extraExt, mimeType: extraMimeType } = StorageService.getMimeType(
+            extraUrl,
+            input?.output_format as string | undefined
+          );
+
+          // Use a unique predictionId suffix for storage path
+          const extraPredictionId = `${galleryEntry.prediction_id}_img_${i}`;
+          const { publicUrl: extraPublicUrl, storagePath: extraStoragePath, fileSize: extraFileSize } =
+            await StorageService.uploadToStorage(
+              extraBuffer,
+              galleryEntry.user_id,
+              extraPredictionId,
+              extraExt,
+              extraMimeType
+            );
+
+          // Insert a new gallery row for this additional image
+          const { error: insertError } = await getSupabase()
+            .from('gallery')
+            .insert({
+              user_id: galleryEntry.user_id,
+              prediction_id: extraPredictionId,
+              generation_type: galleryEntry.generation_type,
+              status: 'completed' as GalleryStatus,
+              storage_path: extraStoragePath,
+              public_url: extraPublicUrl,
+              file_size: extraFileSize,
+              mime_type: extraMimeType,
+              metadata: {
+                ...currentMetadata,
+                replicate_url: extraUrl,
+                completed_at: new Date().toISOString(),
+                image_index: i,
+                total_images: outputUrls.length,
+                parent_prediction_id: galleryEntry.prediction_id,
+              },
+            });
+
+          if (insertError) {
+            console.error(`Error inserting gallery row for image ${i}:`, insertError);
+          } else {
+            console.log(`Saved additional image ${i}/${outputUrls.length - 1}: ${extraPublicUrl}`);
+          }
+        } catch (imgError) {
+          console.error(`Failed to process additional image ${i}:`, imgError);
+          // Continue with remaining images
+        }
+      }
     }
 
     // ✅ CREDITS: Deduct credits ONLY after successful generation

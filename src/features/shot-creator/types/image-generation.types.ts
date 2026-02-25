@@ -211,6 +211,7 @@ export interface ImageGenerationResponse {
   galleryId: string
   status: string
   imageUrl?: string // Present when status is 'completed' (from polling)
+  imageCount?: number // Number of images returned (for multi-image models like Seedream)
 }
 
 export interface ImageGenerationError {
