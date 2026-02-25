@@ -15,6 +15,7 @@ import { uploadImageToStorage } from '../helpers/image-resize.helper'
 import { ImageGenerationRequest, ImageModel, ImageModelSettings } from "../types/image-generation.types"
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { useCustomStylesStore } from '../store/custom-styles.store'
+import { getModelConfig } from '@/config'
 
 export interface GenerationProgress {
     status: 'idle' | 'starting' | 'processing' | 'waiting' | 'succeeded' | 'failed'
@@ -542,6 +543,14 @@ export function useImageGeneration() {
                 })
                 console.log(`🔗 Prompt rewritten with reference tokens:`)
                 console.log(`   Sample: ${variations[0]?.slice(0, 120)}`)
+            }
+
+            // Strip reference images for text-only models (e.g., Z-Image Turbo)
+            // Style injection may have added refs that the model can't accept
+            const modelConfig = getModelConfig(model)
+            if (modelConfig && modelConfig.maxReferenceImages === 0 && uniqueReferenceImages.length > 0) {
+                console.log(`🚫 ${modelConfig.displayName} is text-only — stripping ${uniqueReferenceImages.length} reference image(s)`)
+                uniqueReferenceImages = []
             }
 
             // Upload reference images to Replicate first (convert data URLs / blob URLs to HTTPS URLs)

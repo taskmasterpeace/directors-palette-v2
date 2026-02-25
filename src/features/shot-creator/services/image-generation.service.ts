@@ -13,7 +13,6 @@ import type {
   NanoBananaSettings,
   NanoBananaProSettings,
   ZImageTurboSettings,
-  QwenImage2512Settings,
   GptImageSettings,
   SeedreamSettings,
   RiverflowProSettings,
@@ -51,12 +50,6 @@ export class ImageGenerationService {
         break
       case 'z-image-turbo':
         errors.push(...this.validateZImageTurbo(input))
-        break
-      case 'qwen-image-2512':
-        // Qwen Image 2512 supports single image for i2i
-        if (input.referenceImages && input.referenceImages.length > 1) {
-          errors.push('Qwen Image 2512 supports maximum 1 reference image')
-        }
         break
       case 'gpt-image-low':
       case 'gpt-image-medium':
@@ -204,8 +197,6 @@ export class ImageGenerationService {
         return this.buildNanoBananaProInput(input)
       case 'z-image-turbo':
         return this.buildZImageTurboInput(input)
-      case 'qwen-image-2512':
-        return this.buildQwenImage2512Input(input)
       case 'gpt-image-low':
         return this.buildGptImageInput(input, 'low')
       case 'gpt-image-medium':
@@ -313,48 +304,6 @@ export class ImageGenerationService {
 
     // Note: Z-Image Turbo is TEXT-TO-IMAGE ONLY
     // It does NOT support image input - reference images are ignored
-
-    return replicateInput
-  }
-
-  private static buildQwenImage2512Input(input: ImageGenerationInput) {
-    const settings = input.modelSettings as QwenImage2512Settings
-    const replicateInput: Record<string, unknown> = {
-      prompt: input.prompt,
-    }
-
-    // Qwen Image 2512 supports aspect_ratio directly
-    if (settings.aspectRatio && settings.aspectRatio !== 'match_input_image') {
-      replicateInput.aspect_ratio = settings.aspectRatio
-    }
-
-    if (settings.guidance !== undefined) {
-      replicateInput.guidance = settings.guidance
-    }
-
-    if (settings.num_inference_steps !== undefined) {
-      replicateInput.num_inference_steps = settings.num_inference_steps
-    }
-
-    if (settings.negative_prompt) {
-      replicateInput.negative_prompt = settings.negative_prompt
-    }
-
-    if (settings.outputFormat) {
-      replicateInput.output_format = settings.outputFormat
-    }
-
-    // go_fast optimization
-    if (settings.goFast !== undefined) {
-      replicateInput.go_fast = settings.goFast
-    }
-
-    // Image-to-image support
-    if (input.referenceImages && input.referenceImages.length > 0) {
-      replicateInput.image = this.normalizeReferenceImages(input.referenceImages)[0]
-      // Default strength for i2i
-      replicateInput.strength = 0.8
-    }
 
     return replicateInput
   }

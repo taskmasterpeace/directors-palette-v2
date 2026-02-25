@@ -888,51 +888,6 @@ export function UserManual() {
                         </p>
 
                         <div className="grid gap-6">
-                            {/* Qwen Image Fast */}
-                            <Card className="bg-gradient-to-br from-cyan-950/20 to-background border-cyan-900/30">
-                                <CardHeader className="pb-2">
-                                    <div className="flex items-center justify-between">
-                                        <CardTitle className="flex items-center gap-2">
-                                            <span className="text-2xl">🚀</span> Qwen Image Fast
-                                        </CardTitle>
-                                        <span className="px-2 py-1 text-xs font-bold rounded bg-cyan-500/20 text-cyan-400">2 TOKENS</span>
-                                    </div>
-                                    <CardDescription>Lightning-fast with world-class text rendering</CardDescription>
-                                </CardHeader>
-                                <CardContent className="text-sm space-y-4">
-                                    <div className="flex flex-wrap gap-4 text-muted-foreground">
-                                        <span><strong>Speed:</strong> ~2 seconds</span>
-                                        <span><strong>Quality:</strong> Good</span>
-                                        <span><strong>References:</strong> None</span>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <h4 className="font-semibold text-cyan-400">Prompting Tips</h4>
-                                        <ul className="text-muted-foreground space-y-1 list-disc pl-4">
-                                            <li>Keep prompts simple and clear (1-3 sentences)</li>
-                                            <li>Describe: subject → environment → details</li>
-                                            <li>Best for precise, literal interpretations</li>
-                                            <li>For text: use short phrases in quotes with font/color specs</li>
-                                        </ul>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4 text-xs">
-                                        <div className="p-2 rounded bg-green-500/10 border border-green-500/20">
-                                            <span className="font-semibold text-green-400">Strengths</span>
-                                            <p className="text-muted-foreground mt-1">Best text rendering (EN/ZH), minimal hallucinations, exceptional prompt accuracy</p>
-                                        </div>
-                                        <div className="p-2 rounded bg-red-500/10 border border-red-500/20">
-                                            <span className="font-semibold text-red-400">Weaknesses</span>
-                                            <p className="text-muted-foreground mt-1">Lacks creative flair, struggles with abstract/fantasy art, can have &quot;AI skin&quot; look</p>
-                                        </div>
-                                    </div>
-
-                                    <p className="text-muted-foreground border-t border-border/50 pt-3">
-                                        <strong>Best for:</strong> Marketing with text, bilingual content (EN/ZH), presentations, signage, brand logos, precision over creativity.
-                                    </p>
-                                </CardContent>
-                            </Card>
-
                             {/* Z-Image Turbo */}
                             <Card className="bg-gradient-to-br from-purple-950/20 to-background border-purple-900/30">
                                 <CardHeader className="pb-2">
@@ -1162,14 +1117,6 @@ export function UserManual() {
                                             </tr>
                                         </thead>
                                         <tbody className="text-muted-foreground">
-                                            <tr className="border-b border-border/30 hover:bg-muted/30">
-                                                <td className="p-2">🚀 Qwen Image Fast</td>
-                                                <td className="text-center p-2 text-cyan-400">2 pts</td>
-                                                <td className="text-center p-2">⚡⚡⚡</td>
-                                                <td className="text-center p-2">★★★☆☆</td>
-                                                <td className="text-center p-2">★★★★★</td>
-                                                <td className="text-center p-2 text-muted-foreground/50">-</td>
-                                            </tr>
                                             <tr className="border-b border-border/30 hover:bg-muted/30">
                                                 <td className="p-2">⚡ Z-Image Turbo</td>
                                                 <td className="text-center p-2 text-purple-400">5 pts</td>

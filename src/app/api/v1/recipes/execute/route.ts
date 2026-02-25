@@ -23,7 +23,7 @@ const replicate = new Replicate({
 interface RecipeExecuteRequest {
   template: string  // Recipe template with <<FIELD:type>> placeholders
   variables: Record<string, string>  // Values for placeholders
-  model?: 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-2512' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5'
+  model?: 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5'
   aspectRatio?: string
   outputFormat?: 'webp' | 'jpg' | 'png'
   referenceImages?: string[]  // URLs
@@ -407,7 +407,7 @@ export async function GET(): Promise<NextResponse> {
         type: 'string',
         required: false,
         default: 'nano-banana',
-        options: ['nano-banana', 'nano-banana-pro', 'z-image-turbo', 'qwen-image-2512', 'gpt-image-low', 'gpt-image-medium', 'gpt-image-high', 'seedream-4.5'],
+        options: ['nano-banana', 'nano-banana-pro', 'z-image-turbo', 'gpt-image-low', 'gpt-image-medium', 'gpt-image-high', 'seedream-4.5'],
       },
       aspectRatio: {
         type: 'string',

@@ -75,11 +75,6 @@ export function buildModelSettings(
       }
       break;
 
-    case 'qwen-image-2512':
-      modelSettings.aspectRatio = settings.aspectRatio;
-      modelSettings.outputFormat = settings.outputFormat || 'webp';
-      break;
-
     case 'gpt-image-low':
     case 'gpt-image-medium':
     case 'gpt-image-high':
@@ -127,7 +122,6 @@ export function getDefaultOutputFormat(model: string): string {
       return 'jpg';
     case 'seedream-5-lite':
       return 'png';
-    case 'qwen-image-2512':
     case 'gpt-image-low':
     case 'gpt-image-medium':
     case 'gpt-image-high':

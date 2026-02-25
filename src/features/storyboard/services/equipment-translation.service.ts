@@ -14,7 +14,6 @@ const IMAGE_ONLY_MODELS: ModelId[] = [
     'nano-banana',
     'nano-banana-pro',
     'z-image-turbo',
-    'qwen-image-2512',
     'gpt-image-low',
     'gpt-image-medium',
     'gpt-image-high',

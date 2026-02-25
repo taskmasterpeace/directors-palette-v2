@@ -132,7 +132,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
     const modelConfig = getModelConfig(model as ImageModel)
     if (!modelConfig) {
       return NextResponse.json(
-        { success: false, error: `Invalid model: ${model}. Use: nano-banana, nano-banana-pro, z-image-turbo, qwen-image-2512, gpt-image-low, gpt-image-medium, gpt-image-high, or seedream-4.5` },
+        { success: false, error: `Invalid model: ${model}. Use: nano-banana, nano-banana-pro, z-image-turbo, gpt-image-low, gpt-image-medium, gpt-image-high, or seedream-4.5` },
         { status: 400 }
       )
     }
@@ -460,7 +460,7 @@ export async function GET(): Promise<NextResponse> {
         type: 'string',
         required: false,
         default: 'nano-banana',
-        options: ['nano-banana', 'nano-banana-pro', 'z-image-turbo', 'qwen-image-2512', 'gpt-image-low', 'gpt-image-medium', 'gpt-image-high', 'seedream-4.5'],
+        options: ['nano-banana', 'nano-banana-pro', 'z-image-turbo', 'gpt-image-low', 'gpt-image-medium', 'gpt-image-high', 'seedream-4.5'],
         description: 'Model to use for generation',
       },
       aspectRatio: {
@@ -492,7 +492,6 @@ export async function GET(): Promise<NextResponse> {
       'nano-banana': '8 points/image ($0.08)',
       'nano-banana-pro': '40 points/image ($0.40)',
       'z-image-turbo': '5 points/image ($0.05)',
-      'qwen-image-2512': '4 points/image ($0.04)',
       'gpt-image-low': '3 points/image ($0.03)',
       'gpt-image-medium': '10 points/image ($0.10)',
       'gpt-image-high': '27 points/image ($0.27)',
@@ -517,12 +516,6 @@ export async function GET(): Promise<NextResponse> {
         quality: 'Good',
         referenceImages: 'Up to 1',
         bestFor: 'Rapid visualization, quick prototyping',
-      },
-      'qwen-image-2512': {
-        speed: 'Fast (~3 sec)',
-        quality: 'Good',
-        referenceImages: 'Up to 1 (image-to-image)',
-        bestFor: 'Fast generation, image-to-image, budget workflows',
       },
       'gpt-image-low': {
         speed: 'Medium',

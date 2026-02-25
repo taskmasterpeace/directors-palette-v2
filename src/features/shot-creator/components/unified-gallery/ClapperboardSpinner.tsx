@@ -5,7 +5,6 @@ import { useState, useEffect, useRef } from 'react'
 /** Estimated generation time in seconds per model (measured averages) */
 const MODEL_ESTIMATED_SECONDS: Record<string, number> = {
   'z-image-turbo': 2,
-  'qwen-image-2512': 6,
   'nano-banana': 22,
   'seedream-4.5': 45,
   'seedream-5-lite': 49,
@@ -18,7 +17,6 @@ const MODEL_DISPLAY_NAMES: Record<string, string> = {
   'nano-banana': 'Nano Banana',
   'nano-banana-pro': 'Nano Banana Pro',
   'z-image-turbo': 'Z-Image Turbo',
-  'qwen-image-2512': 'Qwen 2512',
   'seedream-4.5': 'Seedream 4.5',
   'seedream-5-lite': 'Seedream 5 Lite',
   'riverflow-2-pro': 'Riverflow Pro',

@@ -32,12 +32,6 @@ const MODEL_CAPABILITIES: Record<ModelId, {
   refImages: string
   bestFor: string[]
 }> = {
-  'qwen-image-2512': {
-    speed: '~3s (Fast)',
-    textRendering: 'Good',
-    refImages: 'Up to 1 (i2i)',
-    bestFor: ['Fast generation', 'Image-to-image', 'Budget work']
-  },
   'z-image-turbo': {
     speed: '~5s (Fast)',
     textRendering: 'Good',

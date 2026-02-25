@@ -10,7 +10,6 @@ export type ImageModel = Extract<ModelId,
   | 'nano-banana'
   | 'nano-banana-pro'
   | 'z-image-turbo'
-  | 'qwen-image-2512'
   | 'gpt-image-low'
   | 'gpt-image-medium'
   | 'gpt-image-high'
@@ -38,15 +37,6 @@ export interface ZImageTurboSettings {
   numInferenceSteps?: number
   guidanceScale?: number
   promptStrength?: number
-}
-
-export interface QwenImage2512Settings {
-  aspectRatio?: string
-  outputFormat?: 'jpg' | 'png' | 'webp'
-  guidance?: number
-  num_inference_steps?: number
-  negative_prompt?: string
-  goFast?: boolean
 }
 
 export interface SeedreamSettings {
@@ -81,7 +71,6 @@ export type ImageModelSettings =
   | NanoBananaSettings
   | NanoBananaProSettings
   | ZImageTurboSettings
-  | QwenImage2512Settings
   | GptImageSettings
   | SeedreamSettings
   | RiverflowProSettings
@@ -128,18 +117,6 @@ export interface ZImageTurboInput {
   output_format?: string
 }
 
-export interface QwenImage2512Input {
-  prompt: string
-  aspect_ratio?: string
-  guidance?: number
-  num_inference_steps?: number
-  negative_prompt?: string
-  output_format?: string
-  go_fast?: boolean
-  image?: string // For i2i
-  strength?: number
-}
-
 export interface SeedreamInput {
   prompt: string
   aspect_ratio?: string
@@ -180,7 +157,6 @@ export type ReplicateImageInput =
   | NanoBananaInput
   | NanoBananaProInput
   | ZImageTurboInput
-  | QwenImage2512Input
   | GptImageInput
   | SeedreamInput
   | RiverflowProInput

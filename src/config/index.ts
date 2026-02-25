@@ -22,7 +22,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'qwen-image-2512' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5' | 'seedream-5-lite' | 'riverflow-2-pro'
+export type ModelId = 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-4.5' | 'seedream-5-lite' | 'riverflow-2-pro'
 
 export interface ModelParameter {
     id: string
@@ -432,29 +432,6 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             guidanceScale: MODEL_PARAMETERS.guidanceScale
         },
         maxReferenceImages: 0 // Text-to-image only - no image input support
-    },
-    'qwen-image-2512': {
-        id: 'qwen-image-2512',
-        name: 'qwen-image-2512',
-        displayName: 'Qwen Image 2512',
-        type: 'generation',
-        icon: '🚀',
-        description: 'Fast, high-quality image generation with image-to-image support.',
-        badge: 'Fast',
-        badgeColor: 'bg-cyan-600',
-        textColor: 'text-cyan-300',
-        endpoint: 'qwen/qwen-image-2512',
-        costPerImage: 0.04, // 4 points = 4 cents ($0.02 cost, 100% margin)
-        supportedParameters: ['outputFormat', 'aspectRatio', 'qwenGuidance', 'qwenSteps', 'negativePrompt', 'goFast'],
-        parameters: {
-            outputFormat: MODEL_PARAMETERS.outputFormat,
-            aspectRatio: MODEL_PARAMETERS.aspectRatio,
-            guidance: MODEL_PARAMETERS.qwenGuidance,
-            num_inference_steps: MODEL_PARAMETERS.qwenSteps,
-            negative_prompt: MODEL_PARAMETERS.negativePrompt,
-            goFast: MODEL_PARAMETERS.goFast
-        },
-        maxReferenceImages: 1 // Supports single image for i2i
     },
     // OpenAI GPT Image 1.5 - Low Quality (Budget option)
     'gpt-image-low': {
