@@ -451,27 +451,18 @@ export function useImageGeneration() {
                 }
             }
 
-            // ✅ REFERENCE TAG REWRITING: Replace @tags with indexed references
-            // e.g., "@hero fighting @villain" → "hero [Reference Image 3] fighting villain [Reference Image 4]"
-            // This tells the AI model which uploaded image corresponds to which character
-            if (tagToUrlMap.size > 0) {
-                let rewrittenPrompt = promptWithStyle
-                for (const [tag, url] of tagToUrlMap) {
-                    // Find the 1-based index of this image in the final reference array
-                    const imageIndex = uniqueReferenceImages.indexOf(url)
-                    if (imageIndex !== -1) {
-                        const displayName = tag.replace(/^@/, '')
-                        const replacement = `${displayName} [Reference Image ${imageIndex + 1}]`
-                        // Replace all case-insensitive occurrences of @tag in the prompt
-                        const tagRegex = new RegExp(tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
-                        rewrittenPrompt = rewrittenPrompt.replace(tagRegex, replacement)
+            // Also map reference slot tags (manual uploads with tags like "hero")
+            // This handles images uploaded to slots and tagged, not just library references
+            const slotImages = useShotCreatorStore.getState().shotCreatorReferenceImages
+            for (const slot of slotImages) {
+                const slotUrl = slot.url || slot.preview
+                if (!slotUrl || slot.tags.length === 0) continue
+                for (const tag of slot.tags) {
+                    const normalizedTag = `@${tag.toLowerCase().replace(/^@/, '')}`
+                    // Only add if not already mapped by library lookup (library takes priority)
+                    if (!tagToUrlMap.has(normalizedTag)) {
+                        tagToUrlMap.set(normalizedTag, slotUrl)
                     }
-                }
-                if (rewrittenPrompt !== promptWithStyle) {
-                    console.log(`🔗 Prompt rewritten with reference indices:`)
-                    console.log(`   Before: ${promptWithStyle.slice(0, 100)}`)
-                    console.log(`   After:  ${rewrittenPrompt.slice(0, 100)}`)
-                    promptWithStyle = rewrittenPrompt
                 }
             }
 
@@ -530,6 +521,27 @@ export function useImageGeneration() {
                         promptResult.warnings.forEach(warning => console.warn(`⚠️ ${warning}`))
                     }
                 }
+            }
+
+            // ✅ REFERENCE TAG REWRITING: Replace @tags with indexed reference tokens
+            // Done AFTER bracket/pipe expansion so [REF:IMG_X] doesn't conflict with prompt syntax
+            // e.g., "@hero fighting @villain" → "hero (REF:IMG_3) fighting villain (REF:IMG_4)"
+            // This tells the AI model which uploaded image corresponds to which character
+            if (tagToUrlMap.size > 0) {
+                variations = variations.map(v => {
+                    let rewritten = v
+                    for (const [tag, url] of tagToUrlMap) {
+                        const imageIndex = uniqueReferenceImages.indexOf(url)
+                        if (imageIndex === -1) continue
+                        const displayName = tag.replace(/^@/, '')
+                        const replacement = `${displayName} (REF:IMG_${imageIndex + 1})`
+                        const tagRegex = new RegExp(tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
+                        rewritten = rewritten.replace(tagRegex, replacement)
+                    }
+                    return rewritten
+                })
+                console.log(`🔗 Prompt rewritten with reference tokens:`)
+                console.log(`   Sample: ${variations[0]?.slice(0, 120)}`)
             }
 
             // Upload reference images to Replicate first (convert data URLs / blob URLs to HTTPS URLs)
