@@ -523,18 +523,18 @@ export function useImageGeneration() {
                 }
             }
 
-            // ✅ REFERENCE TAG REWRITING: Replace @tags with indexed reference tokens
-            // Done AFTER bracket/pipe expansion so [REF:IMG_X] doesn't conflict with prompt syntax
-            // e.g., "@hero fighting @villain" → "hero (REF:IMG_3) fighting villain (REF:IMG_4)"
-            // This tells the AI model which uploaded image corresponds to which character
+            // ✅ REFERENCE TAG REWRITING: Append indexed reference tokens to @tags
+            // Done AFTER bracket/pipe expansion so tokens don't conflict with prompt syntax
+            // e.g., "@hero fighting @villain" → "@hero (REF:IMG_3) fighting @villain (REF:IMG_4)"
+            // Keeps @name for character sheet continuity, adds token so AI maps name → image
             if (tagToUrlMap.size > 0) {
                 variations = variations.map(v => {
                     let rewritten = v
                     for (const [tag, url] of tagToUrlMap) {
                         const imageIndex = uniqueReferenceImages.indexOf(url)
                         if (imageIndex === -1) continue
-                        const displayName = tag.replace(/^@/, '')
-                        const replacement = `${displayName} (REF:IMG_${imageIndex + 1})`
+                        const replacement = `${tag} (REF:IMG_${imageIndex + 1})`
+                        // Match the @tag and append the token (case-insensitive)
                         const tagRegex = new RegExp(tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
                         rewritten = rewritten.replace(tagRegex, replacement)
                     }
