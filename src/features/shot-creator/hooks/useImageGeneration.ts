@@ -353,12 +353,21 @@ export function useImageGeneration() {
             // Parse @reference tags from the prompt and auto-attach tagged images
             const parsedRefs = parseReferenceTags(prompt)
             const autoReferencedImages: string[] = []
+            // Map @tag → image URL for prompt rewriting (tag-to-index mapping)
+            const tagToUrlMap = new Map<string, string>()
 
             // 1. Handle specific references (e.g., @hero, @villain)
             if (parsedRefs.specificReferences.length > 0) {
                 const specificImages = useUnifiedGalleryStore.getState().getImagesByReferences(parsedRefs.specificReferences)
                 const specificUrls = specificImages.map(img => img.url)
                 autoReferencedImages.push(...specificUrls)
+
+                // Build tag → URL mapping for prompt rewriting
+                for (const img of specificImages) {
+                    if (img.reference) {
+                        tagToUrlMap.set(img.reference.toLowerCase(), img.url)
+                    }
+                }
 
                 console.log(`🏷️ Found ${parsedRefs.specificReferences.length} specific reference(s):`, parsedRefs.specificReferences)
                 console.log(`📸 Auto-attached ${specificImages.length} image(s) from specific tags`)
@@ -386,6 +395,8 @@ export function useImageGeneration() {
 
                     if (randomImage) {
                         autoReferencedImages.push(randomImage.url)
+                        // Map category tag to its resolved URL
+                        tagToUrlMap.set(`@${category}`, randomImage.url)
                         console.log(`✅ Random selection from ${category}:`, randomImage.reference || randomImage.id)
                     } else {
                         console.warn(`⚠️ No images found in category: ${category}`)
@@ -437,6 +448,30 @@ export function useImageGeneration() {
                     console.log(`🎨 Style applied: ${selectedStyle.name}${isCustom ? ' (custom)' : ''}`)
                     console.log(`📝 Style prompt injected: "${selectedStyle.stylePrompt}"`)
                     console.log(`🖼️ Style reference added: ${styleImageUrl.startsWith('data:') ? '[data URL]' : styleImageUrl}`)
+                }
+            }
+
+            // ✅ REFERENCE TAG REWRITING: Replace @tags with indexed references
+            // e.g., "@hero fighting @villain" → "hero [Reference Image 3] fighting villain [Reference Image 4]"
+            // This tells the AI model which uploaded image corresponds to which character
+            if (tagToUrlMap.size > 0) {
+                let rewrittenPrompt = promptWithStyle
+                for (const [tag, url] of tagToUrlMap) {
+                    // Find the 1-based index of this image in the final reference array
+                    const imageIndex = uniqueReferenceImages.indexOf(url)
+                    if (imageIndex !== -1) {
+                        const displayName = tag.replace(/^@/, '')
+                        const replacement = `${displayName} [Reference Image ${imageIndex + 1}]`
+                        // Replace all case-insensitive occurrences of @tag in the prompt
+                        const tagRegex = new RegExp(tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
+                        rewrittenPrompt = rewrittenPrompt.replace(tagRegex, replacement)
+                    }
+                }
+                if (rewrittenPrompt !== promptWithStyle) {
+                    console.log(`🔗 Prompt rewritten with reference indices:`)
+                    console.log(`   Before: ${promptWithStyle.slice(0, 100)}`)
+                    console.log(`   After:  ${rewrittenPrompt.slice(0, 100)}`)
+                    promptWithStyle = rewrittenPrompt
                 }
             }
 
