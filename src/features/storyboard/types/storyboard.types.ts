@@ -663,6 +663,66 @@ export interface GeneratedShotPrompt {
 }
 
 /**
+ * Documentary Mode — Segment classification
+ */
+export type SegmentClassification = 'action' | 'narration' | 'transition'
+
+/**
+ * Enhanced segment with documentary classification
+ */
+export interface ClassifiedSegment extends ShotBreakdownSegment {
+    classification: SegmentClassification
+    brollCategoryId?: string  // Linked B-roll pool category for narration segments
+}
+
+/**
+ * B-Roll pool prompt variant
+ */
+export interface BRollPoolPrompt {
+    id: string
+    prompt: string           // Full cinematic prompt ready for image generation
+    imageUrl?: string        // Generated image URL
+    status: 'pending' | 'generating' | 'completed' | 'failed'
+    selected: boolean        // Active variant for display in timeline
+}
+
+/**
+ * Themed B-Roll pool category (e.g., "Ohio Winter Atmosphere")
+ */
+export interface BRollPoolCategory {
+    id: string
+    theme: string            // Human-readable theme name
+    chapterIndex: number
+    prompts: BRollPoolPrompt[]       // 4 prompt variants
+    assignedSegments: number[]       // Segment sequence numbers this covers
+}
+
+/**
+ * Chapter title card
+ */
+export interface TitleCard {
+    chapterIndex: number
+    chapterName: string      // "Four Doors in the Snow"
+    prompt: string           // Full image generation prompt
+    imageUrl?: string
+    status: 'pending' | 'generating' | 'completed' | 'failed'
+}
+
+/**
+ * Documentary chapter (enhanced from StoryChapter)
+ */
+export interface DocumentaryChapter {
+    index: number
+    name: string             // LLM-generated cinematic arc name
+    nameEdited: boolean      // User renamed?
+    startIndex: number       // Text position start
+    endIndex: number         // Text position end
+    titleCard: TitleCard
+    brollPool: BRollPoolCategory[]
+    segments: ClassifiedSegment[]
+}
+
+/**
  * Style guide reference for metadata
  */
 export interface StyleGuideRef {
