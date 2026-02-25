@@ -233,7 +233,8 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         const characterReplacements: CharacterReplacement[] = characters.map(char => ({
             name: char.name,
             description: char.description || '',
-            has_reference: char.has_reference
+            has_reference: char.has_reference,
+            aliases: (char.metadata?.aliases as string[] | undefined) || undefined
         }))
 
         // Helper function to replace @tags AND plain names with descriptions

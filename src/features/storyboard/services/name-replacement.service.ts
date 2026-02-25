@@ -7,6 +7,7 @@ export interface CharacterReplacement {
     name: string
     description: string
     has_reference?: boolean
+    aliases?: string[]
 }
 
 /**
@@ -45,6 +46,13 @@ export function buildTagReplacements(characters: CharacterReplacement[]): Record
         if (char.description && !char.has_reference) {
             const atName = '@' + char.name.toLowerCase().replace(/\s+/g, '_')
             replacements[atName] = char.description
+            // Also create @tags for aliases so @marcus_fantroy resolves to the same description as @geechi_gotti
+            if (char.aliases) {
+                for (const alias of char.aliases) {
+                    const aliasTag = '@' + alias.toLowerCase().replace(/\s+/g, '_')
+                    replacements[aliasTag] = char.description
+                }
+            }
         }
     }
 
@@ -61,6 +69,12 @@ export function buildNameReplacements(characters: CharacterReplacement[]): Array
     for (const char of characters) {
         if (char.description && !char.has_reference) {
             replacements.push({ name: char.name, description: char.description })
+            // Also replace alias names with the same description
+            if (char.aliases) {
+                for (const alias of char.aliases) {
+                    replacements.push({ name: alias, description: char.description })
+                }
+            }
         }
     }
 
