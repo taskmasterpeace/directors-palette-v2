@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 /** Estimated generation time in seconds per model (measured averages) */
 const MODEL_ESTIMATED_SECONDS: Record<string, number> = {
@@ -39,23 +39,18 @@ export function ClapperboardSpinner({ model, prompt }: ClapperboardSpinnerProps)
   const displayName = MODEL_DISPLAY_NAMES[model] ?? model
 
   const startTimeRef = useRef(Date.now())
-  const rafRef = useRef<number>(0)
   const [progress, setProgress] = useState(0) // 0..1, can exceed 1
   const [elapsed, setElapsed] = useState(0)
 
-  const tick = useCallback(() => {
-    const now = Date.now()
-    const elapsedSec = (now - startTimeRef.current) / 1000
-    setElapsed(elapsedSec)
-    setProgress(elapsedSec / estimatedSeconds)
-    rafRef.current = requestAnimationFrame(tick)
-  }, [estimatedSeconds])
-
   useEffect(() => {
     startTimeRef.current = Date.now()
-    rafRef.current = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(rafRef.current)
-  }, [tick])
+    const interval = setInterval(() => {
+      const elapsedSec = (Date.now() - startTimeRef.current) / 1000
+      setElapsed(elapsedSec)
+      setProgress(elapsedSec / estimatedSeconds)
+    }, 500) // Update twice per second — smooth enough for a countdown
+    return () => clearInterval(interval)
+  }, [estimatedSeconds])
 
   const overtime = progress > 1
   const clamped = Math.min(1, progress)
