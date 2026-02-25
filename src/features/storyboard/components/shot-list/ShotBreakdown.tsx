@@ -605,7 +605,7 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                                 <select
                                     value={locationFilter || ''}
                                     onChange={(e) => setLocationFilter(e.target.value || null)}
-                                    className="text-xs bg-transparent border rounded px-1.5 py-0.5 text-foreground cursor-pointer"
+                                    className="text-xs bg-background border rounded px-1.5 py-0.5 text-foreground cursor-pointer [&>option]:bg-background [&>option]:text-foreground"
                                 >
                                     <option value="">All locations</option>
                                     {locationNames.map(name => (

@@ -116,15 +116,9 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
         wildcards
     })
 
-    // Reset selection when chapter changes
+    // Clear selection when chapter changes so the initializer below can pick up the new chapter's shots
     useEffect(() => {
-        if (filteredPrompts.length > 0) {
-            // Default: select all shots in the chapter
-            const initialSelection = new Set(filteredPrompts.map(p => p.sequence))
-            setSelectedShots(initialSelection)
-        } else {
-            setSelectedShots(new Set())
-        }
+        setSelectedShots(new Set())
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally only trigger on chapter change
     }, [chapterIndex])
 

@@ -99,14 +99,14 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
                         table: 'gallery',
                     },
                     (payload) => {
-                        const updatedRecord = payload.new as { id: string; public_url?: string; metadata?: Record<string, unknown> }
+                        const updatedRecord = payload.new as { id: string; prediction_id?: string; public_url?: string; metadata?: Record<string, unknown> }
 
                         // Find which sequence this gallery record belongs to
                         for (const [seq, img] of Object.entries(generatedImages)) {
                             if (img.videoPredictionId && img.videoStatus === 'generating') {
-                                // Match by checking metadata for prediction ID or by gallery record
+                                // Match by prediction_id column first, then fallback to metadata
                                 const metadata = updatedRecord.metadata as Record<string, unknown> | undefined
-                                const recordPredictionId = metadata?.prediction_id || metadata?.predictionId
+                                const recordPredictionId = updatedRecord.prediction_id || metadata?.prediction_id || metadata?.predictionId
 
                                 if (recordPredictionId === img.videoPredictionId) {
                                     const sequence = Number(seq)
