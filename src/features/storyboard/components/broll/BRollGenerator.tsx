@@ -13,7 +13,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
-import { TOKENS_PER_IMAGE } from '../../constants/generation.constants'
+import { getImageCostTokens } from '../../constants/generation.constants'
 import { toast } from 'sonner'
 
 export function BRollGenerator() {
@@ -113,7 +113,8 @@ export function BRollGenerator() {
         }
 
         // Credit check
-        const totalCost = shotsToGenerate.length * TOKENS_PER_IMAGE
+        const costPerImg = getImageCostTokens(generationSettings.imageModel, generationSettings.resolution)
+        const totalCost = shotsToGenerate.length * costPerImg
 
         try {
             await fetchBalance()
@@ -291,7 +292,7 @@ export function BRollGenerator() {
                                 {/* Inline balance display */}
                                 {balance > 0 && (
                                     <Badge variant="outline" className={`text-xs ${
-                                        balance < brollShots.filter(s => s.status === 'pending' || s.status === 'ready').length * TOKENS_PER_IMAGE
+                                        balance < brollShots.filter(s => s.status === 'pending' || s.status === 'ready').length * getImageCostTokens(generationSettings.imageModel, generationSettings.resolution)
                                             ? 'text-red-500 border-red-500/30' : ''
                                     }`}>
                                         <Coins className="w-3 h-3 mr-1" />

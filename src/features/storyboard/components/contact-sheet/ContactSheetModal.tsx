@@ -12,7 +12,7 @@ import { Grid3X3, CheckCircle, AlertCircle, Maximize2, Coins } from 'lucide-reac
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
-import { TOKENS_PER_IMAGE } from '../../constants/generation.constants'
+import { getImageCostTokens } from '../../constants/generation.constants'
 import { toast } from 'sonner'
 import { DEFAULT_CONTACT_SHEET_CONFIG, ANGLE_PROMPTS } from '../../types/storyboard.types'
 import { useEffectiveStyleGuide } from '../../hooks/useEffectiveStyleGuide'
@@ -38,7 +38,7 @@ export function ContactSheetModal({
     onOpenChange,
     shot
 }: ContactSheetModalProps) {
-    const { setContactSheetVariants } = useStoryboardStore()
+    const { setContactSheetVariants, generationSettings } = useStoryboardStore()
     const { balance, fetchBalance } = useCreditsStore()
     const effectiveStyleGuide = useEffectiveStyleGuide()
 
@@ -97,7 +97,7 @@ export function ContactSheetModal({
         if (!shot) return
 
         // Credit check - use fresh balance after fetch
-        const estimatedCost = TOKENS_PER_IMAGE
+        const estimatedCost = getImageCostTokens(generationSettings.imageModel, generationSettings.resolution)
         try {
             await fetchBalance()
         } catch { /* continue */ }
@@ -160,9 +160,9 @@ export function ContactSheetModal({
                     </DialogTitle>
                     <DialogDescription>
                         Generate a single 3x3 grid with 9 camera angles, then auto-slice into cells
-                        <Badge variant="outline" className="ml-2 text-xs">Cost: ~{TOKENS_PER_IMAGE} tokens</Badge>
+                        <Badge variant="outline" className="ml-2 text-xs">Cost: ~{getImageCostTokens(generationSettings.imageModel, generationSettings.resolution)} tokens</Badge>
                         {balance > 0 && (
-                            <Badge variant="outline" className={`ml-1 text-xs ${balance < TOKENS_PER_IMAGE ? 'text-red-500 border-red-500/30' : ''}`}>
+                            <Badge variant="outline" className={`ml-1 text-xs ${balance < getImageCostTokens(generationSettings.imageModel, generationSettings.resolution) ? 'text-red-500 border-red-500/30' : ''}`}>
                                 <Coins className="w-3 h-3 mr-1" />
                                 Balance: {balance}
                             </Badge>

@@ -14,7 +14,7 @@ import { characterSheetService, DEFAULT_SIDE1_PROMPT, DEFAULT_SIDE2_PROMPT } fro
 import { useStoryboardStore } from '../../store'
 import { useEffectiveStyleGuide } from '../../hooks/useEffectiveStyleGuide'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
-import { TOKENS_PER_IMAGE } from '../../constants/generation.constants'
+import { getImageCostTokens } from '../../constants/generation.constants'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
 import { toast } from 'sonner'
 
@@ -54,7 +54,7 @@ Output a crisp, print-ready reference sheet look with sharp details.`
 }
 
 export function CharacterSheetGenerator() {
-    const { characters, updateCharacter, setInternalTab, preSelectedCharacterId, setPreSelectedCharacterId } = useStoryboardStore()
+    const { characters, updateCharacter, setInternalTab, preSelectedCharacterId, setPreSelectedCharacterId, generationSettings } = useStoryboardStore()
     const effectiveStyleGuide = useEffectiveStyleGuide()
     const { fetchBalance } = useCreditsStore()
     const containerRef = useRef<HTMLDivElement>(null)
@@ -266,7 +266,8 @@ export function CharacterSheetGenerator() {
         }
 
         // Credit check before batch generation
-        const totalCost = characters.length * TOKENS_PER_IMAGE
+        const costPerImg = getImageCostTokens(generationSettings.imageModel, generationSettings.resolution)
+        const totalCost = characters.length * costPerImg
         try {
             await fetchBalance()
         } catch {

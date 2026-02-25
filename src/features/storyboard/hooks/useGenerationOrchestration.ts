@@ -6,10 +6,9 @@ import { storyboardGenerationService } from '../services/storyboard-generation.s
 import { useEffectiveStyle } from './useEffectiveStyleGuide'
 import { processPromptsWithWildcards } from '../services/wildcard-integration.service'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
-import { TOKENS_PER_IMAGE } from '../constants/generation.constants'
 import { toast } from 'sonner'
 import type { WildCard } from '@/features/shot-creator/helpers/wildcard/parser'
-import type { ModelId } from '@/config'
+import { getModelCost, type ModelId } from '@/config'
 
 interface GenerationResult {
     shotNumber: number
@@ -69,8 +68,10 @@ export function useGenerationOrchestration({
     const startGeneration = async () => {
         if (!promptsGenerated || !generatedPrompts.length || selectedShots.size === 0) return
 
-        // Credit check - use fresh balance after fetch
-        const totalCost = selectedShots.size * TOKENS_PER_IMAGE
+        // Credit check - use actual model + resolution cost
+        const costDollars = getModelCost(imageModel, resolution)
+        const costPerImagePts = Math.ceil(costDollars * 100)
+        const totalCost = selectedShots.size * costPerImagePts
 
         try {
             await fetchBalance()

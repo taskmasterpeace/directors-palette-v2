@@ -84,14 +84,23 @@ export async function POST(request: NextRequest) {
     // ✅ CREDITS: Check if user has sufficient credits (admins bypass)
     const userIsAdmin = isAdminEmail(user.email)
     if (!userIsAdmin) {
-      const creditCheck = await creditsService.hasSufficientCredits(user.id, model, 'video')
-      if (!creditCheck.sufficient) {
+      // Calculate actual cost based on model, duration, and resolution
+      const settings = modelSettings as ModelSettings
+      const estimatedCost = VideoGenerationService.calculateCost(
+        model as AnimationModel,
+        settings.duration ?? 5,
+        settings.resolution ?? '720p'
+      )
+      const balance = await creditsService.getBalance(user.id)
+      const currentBalance = balance?.balance ?? 0
+
+      if (currentBalance < estimatedCost) {
         return NextResponse.json(
           {
             error: 'Insufficient credits',
-            details: `You need ${creditCheck.required} points but only have ${creditCheck.balance} points.`,
-            required: creditCheck.required,
-            balance: creditCheck.balance,
+            details: `You need ${estimatedCost} points but only have ${currentBalance} points.`,
+            required: estimatedCost,
+            balance: currentBalance,
           },
           { status: 402 } // Payment Required
         );

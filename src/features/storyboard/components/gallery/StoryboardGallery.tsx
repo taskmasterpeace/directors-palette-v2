@@ -15,7 +15,7 @@ import { ContactSheetModal } from '../contact-sheet/ContactSheetModal'
 import { storyboardGenerationService } from '../../services/storyboard-generation.service'
 import { toast } from 'sonner'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
-import { TOKENS_PER_IMAGE } from '../../constants/generation.constants'
+import { getImageCostTokens } from '../../constants/generation.constants'
 import type { GeneratedShotPrompt } from '../../types/storyboard.types'
 import { ShotAnimationService } from '../../services/shot-animation.service'
 import { DIRECTORS } from '@/features/music-lab/data/directors.data'
@@ -434,8 +434,9 @@ The color temperature, lighting direction, and overall mood must match across al
             // Continue anyway
         }
 
-        if (balance < TOKENS_PER_IMAGE) {
-            toast.error(`Insufficient credits. Need ${TOKENS_PER_IMAGE} tokens.`)
+        const costPerImage = getImageCostTokens(generationSettings.imageModel, generationSettings.resolution)
+        if (balance < costPerImage) {
+            toast.error(`Insufficient credits. Need ${costPerImage} tokens.`)
             return
         }
 
@@ -496,8 +497,9 @@ The color temperature, lighting direction, and overall mood must match across al
             // Continue anyway
         }
 
-        if (balance < TOKENS_PER_IMAGE) {
-            toast.error(`Insufficient credits. Need ${TOKENS_PER_IMAGE} tokens.`)
+        const costPerImage = getImageCostTokens(generationSettings.imageModel, generationSettings.resolution)
+        if (balance < costPerImage) {
+            toast.error(`Insufficient credits. Need ${costPerImage} tokens.`)
             return
         }
 
@@ -559,7 +561,8 @@ The color temperature, lighting direction, and overall mood must match across al
         }
 
         // Credit check
-        const totalCost = failedShots.length * TOKENS_PER_IMAGE
+        const costPerImg = getImageCostTokens(generationSettings.imageModel, generationSettings.resolution)
+        const totalCost = failedShots.length * costPerImg
         try {
             await fetchBalance()
         } catch {

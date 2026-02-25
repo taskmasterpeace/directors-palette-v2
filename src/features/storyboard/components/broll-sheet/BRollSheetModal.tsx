@@ -15,7 +15,8 @@ import {
     BRollVariant,
     BRollSheetProgress
 } from '../../services/broll-sheet.service'
-import { TOKENS_PER_IMAGE } from '../../constants/generation.constants'
+import { getImageCostTokens } from '../../constants/generation.constants'
+import { useStoryboardStore } from '../../store'
 
 interface BRollSheetModalProps {
     open: boolean
@@ -30,6 +31,7 @@ export function BRollSheetModal({
     referenceImageUrl,
     shotNumber
 }: BRollSheetModalProps) {
+    const { generationSettings } = useStoryboardStore()
     const [isGenerating, setIsGenerating] = useState(false)
     const [progress, setProgress] = useState<BRollSheetProgress>({ total: 2, current: 0, status: 'idle' })
     const [variants, setVariants] = useState<BRollVariant[]>([])
@@ -95,7 +97,7 @@ export function BRollSheetModal({
                     </DialogTitle>
                     <DialogDescription>
                         Generate 9 complementary B-roll shots that maintain visual continuity
-                        <Badge variant="outline" className="ml-2 text-xs">Cost: ~{TOKENS_PER_IMAGE} tokens</Badge>
+                        <Badge variant="outline" className="ml-2 text-xs">Cost: ~{getImageCostTokens(generationSettings.imageModel, generationSettings.resolution)} tokens</Badge>
                     </DialogDescription>
                 </DialogHeader>
 

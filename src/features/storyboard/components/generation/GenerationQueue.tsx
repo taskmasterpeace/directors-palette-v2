@@ -23,9 +23,8 @@ import {
 } from '../../services/wildcard-integration.service'
 import { HighlightedPrompt } from '../shared'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
-import { TOKENS_PER_IMAGE } from '../../constants/generation.constants'
 import { useGenerationOrchestration } from '../../hooks/useGenerationOrchestration'
-import { getAvailableModels, type ModelId } from '@/config'
+import { getAvailableModels, getModelCost, type ModelId } from '@/config'
 
 interface GenerationQueueProps {
     chapterIndex?: number
@@ -196,10 +195,13 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
         setSelectedShots(new Set(filteredPrompts.slice(0, count).map(p => p.sequence)))
     }
 
-    // Calculate estimated cost in tokens
+    // Calculate estimated cost in tokens based on actual model + resolution
     const estimatedCost = useMemo(() => {
-        return selectedShots.size * TOKENS_PER_IMAGE
-    }, [selectedShots.size])
+        const model = imageModel || 'nano-banana-pro'
+        const costDollars = getModelCost(model, resolution)
+        const costPerImagePts = Math.ceil(costDollars * 100)
+        return selectedShots.size * costPerImagePts
+    }, [selectedShots.size, imageModel, resolution])
 
     const successCount = results.filter(r => !r.error).length
     const failedCount = results.filter(r => r.error).length
