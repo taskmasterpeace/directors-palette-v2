@@ -460,6 +460,86 @@ IMPORTANT: When a Director's Note is provided, incorporate that specific guidanc
     }
 
     /**
+     * Classify story segments as action, narration, or transition
+     * Used by documentary mode to determine visual treatment per segment
+     */
+    async classifySegments(
+        segments: Array<{ sequence: number; text: string }>,
+        storyContext: string
+    ): Promise<Array<{ sequence: number; classification: 'action' | 'narration' | 'transition' }>> {
+        const messages: OpenRouterMessage[] = [
+            {
+                role: 'system',
+                content: `You are a documentary film editor classifying story segments for visual treatment. Each segment must be classified as one of three types:
+
+- ACTION: Filmable visual action — people doing things, physical events, visible actions that a camera could capture. Examples: "He walked into the courtroom", "She slammed her fist on the table", "The crowd erupted in cheers."
+- NARRATION: Explanatory or analytical text — legal explanations, statistics, background information, commentary, or abstract concepts that cannot be directly filmed as a single visual moment. Examples: "The statute of limitations had expired", "Studies show that 60% of cases...", "His reputation preceded him."
+- TRANSITION: Bridges between scenes or time periods — time jumps, scene changes, temporal markers. Examples: "Meanwhile, across town...", "If you rewind to 2015...", "Three months later...", "But that was about to change."
+
+Classify each segment based on its PRIMARY nature. If a segment mixes types, choose the dominant one.`
+            },
+            {
+                role: 'user',
+                content: `Classify each of these story segments for documentary visual treatment.
+
+Story context (for reference):
+${storyContext.substring(0, 2000)}${storyContext.length > 2000 ? '...' : ''}
+
+Segments to classify:
+${segments.map(s => `[${s.sequence}] "${s.text}"`).join('\n')}`
+            }
+        ]
+
+        const tool: OpenRouterTool = {
+            type: 'function',
+            function: {
+                name: 'classify_segments',
+                description: 'Classify story segments as action, narration, or transition for documentary visual treatment',
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        classifications: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    sequence: {
+                                        type: 'number',
+                                        description: 'The segment sequence number'
+                                    },
+                                    classification: {
+                                        type: 'string',
+                                        enum: ['action', 'narration', 'transition'],
+                                        description: 'The segment classification type'
+                                    }
+                                },
+                                required: ['sequence', 'classification']
+                            }
+                        }
+                    },
+                    required: ['classifications']
+                }
+            }
+        }
+
+        const response = await this.callWithTool(messages, tool)
+        const toolCall = response.choices[0]?.message?.tool_calls?.[0]
+
+        if (!toolCall) {
+            throw new Error('No tool call in response')
+        }
+
+        try {
+            const result = JSON.parse(toolCall.function.arguments) as {
+                classifications: Array<{ sequence: number; classification: 'action' | 'narration' | 'transition' }>
+            }
+            return result.classifications
+        } catch {
+            throw new Error('Failed to parse segment classifications')
+        }
+    }
+
+    /**
      * Make API call with tool calling
      */
     private async callWithTool(
