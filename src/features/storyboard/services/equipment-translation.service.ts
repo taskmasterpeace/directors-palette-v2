@@ -14,9 +14,7 @@ const IMAGE_ONLY_MODELS: ModelId[] = [
     'nano-banana',
     'nano-banana-pro',
     'z-image-turbo',
-    'gpt-image-low',
-    'gpt-image-medium',
-    'gpt-image-high',
+    'seedream-5-lite',
     'riverflow-2-pro'
 ]
 

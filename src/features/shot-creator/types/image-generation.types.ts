@@ -10,9 +10,6 @@ export type ImageModel = Extract<ModelId,
   | 'nano-banana'
   | 'nano-banana-pro'
   | 'z-image-turbo'
-  | 'gpt-image-low'
-  | 'gpt-image-medium'
-  | 'gpt-image-high'
   | 'seedream-5-lite'
   | 'riverflow-2-pro'
 >
@@ -46,14 +43,6 @@ export interface SeedreamSettings {
   sequentialGeneration?: boolean
 }
 
-export interface GptImageSettings {
-  aspectRatio?: '1:1' | '3:2' | '2:3'
-  outputFormat?: 'png' | 'jpeg' | 'webp'
-  background?: 'opaque' | 'transparent' | 'auto'
-  numImages?: number // 1-10
-  inputFidelity?: 'low' | 'high' // How closely to match reference image features
-}
-
 export interface RiverflowProSettings {
   aspectRatio?: string
   resolution?: '1K' | '2K' | '4K'
@@ -70,7 +59,6 @@ export type ImageModelSettings =
   | NanoBananaSettings
   | NanoBananaProSettings
   | ZImageTurboSettings
-  | GptImageSettings
   | SeedreamSettings
   | RiverflowProSettings
 
@@ -140,23 +128,11 @@ export interface RiverflowProInput {
   max_iterations?: 1 | 2 | 3
 }
 
-export interface GptImageInput {
-  prompt: string
-  aspect_ratio?: '1:1' | '3:2' | '2:3'
-  output_format?: 'png' | 'jpeg' | 'webp'
-  background?: 'opaque' | 'transparent' | 'auto'
-  quality?: 'low' | 'medium' | 'high' | 'auto'
-  n?: number // Number of images (1-10)
-  input_images?: string[] // Reference images (up to 10)
-  input_fidelity?: 'low' | 'high' // How closely to match reference features
-}
-
 // Union type for all Replicate inputs
 export type ReplicateImageInput =
   | NanoBananaInput
   | NanoBananaProInput
   | ZImageTurboInput
-  | GptImageInput
   | SeedreamInput
   | RiverflowProInput
 

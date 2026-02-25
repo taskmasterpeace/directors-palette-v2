@@ -13,7 +13,6 @@ import type {
   NanoBananaSettings,
   NanoBananaProSettings,
   ZImageTurboSettings,
-  GptImageSettings,
   SeedreamSettings,
   RiverflowProSettings,
 } from '../types/image-generation.types'
@@ -50,11 +49,6 @@ export class ImageGenerationService {
         break
       case 'z-image-turbo':
         errors.push(...this.validateZImageTurbo(input))
-        break
-      case 'gpt-image-low':
-      case 'gpt-image-medium':
-      case 'gpt-image-high':
-        errors.push(...this.validateGptImage(input))
         break
       case 'seedream-5-lite':
         // Seedream 5 Lite supports up to 14 reference images
@@ -114,33 +108,6 @@ export class ImageGenerationService {
   }
 
   /**
-   * Validate gpt-image specific constraints
-   */
-  private static validateGptImage(input: ImageGenerationInput): string[] {
-    const errors: string[] = []
-    const settings = input.modelSettings as GptImageSettings
-
-    // GPT Image supports up to 10 reference images via input_images
-    if (input.referenceImages && input.referenceImages.length > 10) {
-      errors.push('GPT Image supports maximum 10 reference images')
-    }
-
-    // Validate numImages if provided
-    if (settings.numImages !== undefined) {
-      if (settings.numImages < 1 || settings.numImages > 10) {
-        errors.push('GPT Image supports 1-10 images per request')
-      }
-    }
-
-    // Validate transparent background requires PNG
-    if (settings.background === 'transparent' && settings.outputFormat && settings.outputFormat !== 'png') {
-      errors.push('Transparent background requires PNG output format')
-    }
-
-    return errors
-  }
-
-  /**
    * Validate riverflow-2-pro specific constraints
    */
   private static validateRiverflowPro(input: ImageGenerationInput): string[] {
@@ -191,12 +158,6 @@ export class ImageGenerationService {
         return this.buildNanoBananaProInput(input)
       case 'z-image-turbo':
         return this.buildZImageTurboInput(input)
-      case 'gpt-image-low':
-        return this.buildGptImageInput(input, 'low')
-      case 'gpt-image-medium':
-        return this.buildGptImageInput(input, 'medium')
-      case 'gpt-image-high':
-        return this.buildGptImageInput(input, 'high')
       case 'seedream-5-lite':
         return this.buildSeedreamInput(input)
       case 'riverflow-2-pro':
@@ -297,41 +258,6 @@ export class ImageGenerationService {
 
     // Note: Z-Image Turbo is TEXT-TO-IMAGE ONLY
     // It does NOT support image input - reference images are ignored
-
-    return replicateInput
-  }
-
-  private static buildGptImageInput(input: ImageGenerationInput, quality: 'low' | 'medium' | 'high' | 'auto') {
-    const settings = input.modelSettings as GptImageSettings
-    const replicateInput: Record<string, unknown> = {
-      prompt: input.prompt,
-      quality: quality,
-    }
-
-    // Reference images support via input_images parameter
-    if (input.referenceImages && input.referenceImages.length > 0) {
-      replicateInput.input_images = this.normalizeReferenceImages(input.referenceImages)
-      // Add input fidelity if specified (controls how closely to match reference features)
-      if (settings.inputFidelity) {
-        replicateInput.input_fidelity = settings.inputFidelity
-      }
-    }
-
-    if (settings.aspectRatio) {
-      replicateInput.aspect_ratio = settings.aspectRatio
-    }
-
-    if (settings.outputFormat) {
-      replicateInput.output_format = settings.outputFormat
-    }
-
-    if (settings.background) {
-      replicateInput.background = settings.background
-    }
-
-    if (settings.numImages && settings.numImages > 1) {
-      replicateInput.number_of_images = settings.numImages
-    }
 
     return replicateInput
   }

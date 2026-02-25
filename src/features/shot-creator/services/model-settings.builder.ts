@@ -64,13 +64,6 @@ export function buildModelSettings(
       }
       break;
 
-    case 'gpt-image-low':
-    case 'gpt-image-medium':
-    case 'gpt-image-high':
-      modelSettings.aspectRatio = settings.aspectRatio;
-      modelSettings.outputFormat = settings.outputFormat || 'webp';
-      break;
-
     case 'riverflow-2-pro':
       modelSettings.aspectRatio = settings.aspectRatio;
       // Riverflow-specific settings from panel state
@@ -110,9 +103,6 @@ export function getDefaultOutputFormat(model: string): string {
       return 'jpg';
     case 'seedream-5-lite':
       return 'png';
-    case 'gpt-image-low':
-    case 'gpt-image-medium':
-    case 'gpt-image-high':
     case 'riverflow-2-pro':
       return 'webp';
     default:

@@ -50,24 +50,6 @@ const MODEL_CAPABILITIES: Record<ModelId, {
     refImages: 'Up to 14',
     bestFor: ['Text in images', 'Complex scenes', 'Multi-reference composites']
   },
-  'gpt-image-low': {
-    speed: '~16s (Slower)',
-    textRendering: 'Very Good',
-    refImages: 'Up to 10',
-    bestFor: ['Budget GPT quality', 'Drafts with refs', 'Quick concepts']
-  },
-  'gpt-image-medium': {
-    speed: '~18s (Slower)',
-    textRendering: 'Excellent',
-    refImages: 'Up to 10',
-    bestFor: ['Accurate text', 'Story prompts', 'Final renders']
-  },
-  'gpt-image-high': {
-    speed: '~25s (Slowest)',
-    textRendering: 'Excellent',
-    refImages: 'Up to 10',
-    bestFor: ['Maximum quality', 'Client work', 'Detailed scenes']
-  },
   'seedream-5-lite': {
     speed: '~10s (Moderate)',
     textRendering: 'Good',

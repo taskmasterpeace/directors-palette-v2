@@ -22,7 +22,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'gpt-image-low' | 'gpt-image-medium' | 'gpt-image-high' | 'seedream-5-lite' | 'riverflow-2-pro'
+export type ModelId = 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
 
 export interface ModelParameter {
     id: string
@@ -432,75 +432,6 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             guidanceScale: MODEL_PARAMETERS.guidanceScale
         },
         maxReferenceImages: 0 // Text-to-image only - no image input support
-    },
-    // OpenAI GPT Image 1.5 - Low Quality (Budget option)
-    'gpt-image-low': {
-        id: 'gpt-image-low',
-        name: 'gpt-image-low',
-        displayName: 'GPT Image Low',
-        type: 'generation',
-        icon: '🎨',
-        description: 'OpenAI GPT Image - Budget quality. Fast & affordable for drafts.',
-        badge: 'Budget',
-        badgeColor: 'bg-green-600',
-        textColor: 'text-green-300',
-        endpoint: 'openai/gpt-image-1.5',
-        costPerImage: 0.03, // 3 tokens = 3 cents (~130% margin on $0.013)
-        supportedParameters: ['gptImageAspectRatio', 'gptImageOutputFormat', 'gptImageBackground', 'gptImageNumImages', 'gptImageInputFidelity'],
-        parameters: {
-            aspectRatio: MODEL_PARAMETERS.gptImageAspectRatio,
-            outputFormat: MODEL_PARAMETERS.gptImageOutputFormat,
-            background: MODEL_PARAMETERS.gptImageBackground,
-            numImages: MODEL_PARAMETERS.gptImageNumImages,
-            inputFidelity: MODEL_PARAMETERS.gptImageInputFidelity
-        },
-        maxReferenceImages: 10 // Supports input_images parameter
-    },
-    // OpenAI GPT Image 1.5 - Medium Quality
-    'gpt-image-medium': {
-        id: 'gpt-image-medium',
-        name: 'gpt-image-medium',
-        displayName: 'GPT Image',
-        type: 'generation',
-        icon: '🎨',
-        description: 'OpenAI GPT Image - Standard quality. Excellent text rendering.',
-        badge: 'Standard',
-        badgeColor: 'bg-blue-600',
-        textColor: 'text-blue-300',
-        endpoint: 'openai/gpt-image-1.5',
-        costPerImage: 0.10, // 10 tokens = 10 cents (100% margin on $0.05)
-        supportedParameters: ['gptImageAspectRatio', 'gptImageOutputFormat', 'gptImageBackground', 'gptImageNumImages', 'gptImageInputFidelity'],
-        parameters: {
-            aspectRatio: MODEL_PARAMETERS.gptImageAspectRatio,
-            outputFormat: MODEL_PARAMETERS.gptImageOutputFormat,
-            background: MODEL_PARAMETERS.gptImageBackground,
-            numImages: MODEL_PARAMETERS.gptImageNumImages,
-            inputFidelity: MODEL_PARAMETERS.gptImageInputFidelity
-        },
-        maxReferenceImages: 10 // Supports input_images parameter
-    },
-    // OpenAI GPT Image 1.5 - High Quality
-    'gpt-image-high': {
-        id: 'gpt-image-high',
-        name: 'gpt-image-high',
-        displayName: 'GPT Image HD',
-        type: 'generation',
-        icon: '✨',
-        description: 'OpenAI GPT Image - Highest quality. Best for final renders & detailed work.',
-        badge: 'Premium',
-        badgeColor: 'bg-violet-600',
-        textColor: 'text-violet-300',
-        endpoint: 'openai/gpt-image-1.5',
-        costPerImage: 0.27, // 27 tokens = 27 cents (~100% margin on $0.136)
-        supportedParameters: ['gptImageAspectRatio', 'gptImageOutputFormat', 'gptImageBackground', 'gptImageNumImages', 'gptImageInputFidelity'],
-        parameters: {
-            aspectRatio: MODEL_PARAMETERS.gptImageAspectRatio,
-            outputFormat: MODEL_PARAMETERS.gptImageOutputFormat,
-            background: MODEL_PARAMETERS.gptImageBackground,
-            numImages: MODEL_PARAMETERS.gptImageNumImages,
-            inputFidelity: MODEL_PARAMETERS.gptImageInputFidelity
-        },
-        maxReferenceImages: 10 // Supports input_images parameter
     },
     'seedream-5-lite': {
         id: 'seedream-5-lite',

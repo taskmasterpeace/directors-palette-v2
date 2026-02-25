@@ -132,7 +132,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
     const modelConfig = getModelConfig(model as ImageModel)
     if (!modelConfig) {
       return NextResponse.json(
-        { success: false, error: `Invalid model: ${model}. Use: nano-banana, nano-banana-pro, z-image-turbo, gpt-image-low, gpt-image-medium, gpt-image-high, seedream-5-lite, or riverflow-2-pro` },
+        { success: false, error: `Invalid model: ${model}. Use: nano-banana, nano-banana-pro, z-image-turbo, seedream-5-lite, or riverflow-2-pro` },
         { status: 400 }
       )
     }
@@ -460,7 +460,7 @@ export async function GET(): Promise<NextResponse> {
         type: 'string',
         required: false,
         default: 'nano-banana',
-        options: ['nano-banana', 'nano-banana-pro', 'z-image-turbo', 'gpt-image-low', 'gpt-image-medium', 'gpt-image-high', 'seedream-5-lite', 'riverflow-2-pro'],
+        options: ['nano-banana', 'nano-banana-pro', 'z-image-turbo', 'seedream-5-lite', 'riverflow-2-pro'],
         description: 'Model to use for generation',
       },
       aspectRatio: {
@@ -492,9 +492,6 @@ export async function GET(): Promise<NextResponse> {
       'nano-banana': '8 points/image ($0.08)',
       'nano-banana-pro': '40 points/image ($0.40)',
       'z-image-turbo': '5 points/image ($0.05)',
-      'gpt-image-low': '3 points/image ($0.03)',
-      'gpt-image-medium': '10 points/image ($0.10)',
-      'gpt-image-high': '27 points/image ($0.27)',
       'seedream-5-lite': '4 points/image ($0.04)',
       'riverflow-2-pro': '27 points/image ($0.27)',
     },
@@ -517,24 +514,6 @@ export async function GET(): Promise<NextResponse> {
         quality: 'Good',
         referenceImages: 'Up to 1',
         bestFor: 'Rapid visualization, quick prototyping',
-      },
-      'gpt-image-low': {
-        speed: 'Medium',
-        quality: 'Good',
-        referenceImages: 'Up to 10',
-        bestFor: 'Budget GPT quality, quick concepts',
-      },
-      'gpt-image-medium': {
-        speed: 'Medium',
-        quality: 'Excellent',
-        referenceImages: 'Up to 10',
-        bestFor: 'Accurate text, story prompts, final renders',
-      },
-      'gpt-image-high': {
-        speed: 'Slower',
-        quality: 'Excellent',
-        referenceImages: 'Up to 10',
-        bestFor: 'Maximum quality, client work, detailed scenes',
       },
       'seedream-5-lite': {
         speed: 'Medium',
