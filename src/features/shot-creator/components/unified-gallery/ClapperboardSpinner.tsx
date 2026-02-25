@@ -10,10 +10,7 @@ const MODEL_ESTIMATED_SECONDS: Record<string, number> = {
   'seedream-4.5': 45,
   'seedream-5-lite': 49,
   'nano-banana-pro': 71,
-  'gpt-image-low': 30,
-  'gpt-image-medium': 40,
-  'gpt-image-high': 55,
-  'riverflow-2-pro': 35,
+  'riverflow-2-pro': 600,
 }
 
 /** Map model ID to a short display name */
@@ -22,9 +19,6 @@ const MODEL_DISPLAY_NAMES: Record<string, string> = {
   'nano-banana-pro': 'Nano Banana Pro',
   'z-image-turbo': 'Z-Image Turbo',
   'qwen-image-2512': 'Qwen 2512',
-  'gpt-image-low': 'GPT Image Low',
-  'gpt-image-medium': 'GPT Image',
-  'gpt-image-high': 'GPT Image HD',
   'seedream-4.5': 'Seedream 4.5',
   'seedream-5-lite': 'Seedream 5 Lite',
   'riverflow-2-pro': 'Riverflow Pro',
