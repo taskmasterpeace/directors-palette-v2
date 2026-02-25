@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 import {
     CheckCircle, AlertCircle, Film, RefreshCw, Eye, Download,
-    FlaskConical, Grid3X3, Layers, Wand2, Play, ChevronDown, ChevronUp,
+    Grid3X3, Layers, Clapperboard, Play, ChevronDown, ChevronUp,
     Users, Camera
 } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
@@ -22,7 +22,6 @@ interface GalleryListViewProps {
     animatingShots: Set<number>
     regeneratingShots: Set<number>
     generatingBRollId: number | null
-    onShotLab: (sequence: number) => void
     onPreview: (imageUrl: string) => void
     onContactSheet: (sequence: number) => void
     onBRoll: (imageUrl: string, sequence: number) => void
@@ -41,7 +40,6 @@ export function GalleryListView({
     animatingShots,
     regeneratingShots,
     generatingBRollId,
-    onShotLab,
     onPreview,
     onContactSheet,
     onBRoll,
@@ -196,7 +194,6 @@ export function GalleryListView({
                                         {hasImage && !isFailed && (
                                             <>
                                                 <ActionButton icon={Eye} label="Preview" onClick={() => onPreview(genImage!.imageUrl!)} />
-                                                <ActionButton icon={FlaskConical} label="Shot Lab" onClick={() => onShotLab(segment.sequence)} />
                                                 <ActionButton icon={Grid3X3} label="Angles" onClick={() => onContactSheet(segment.sequence)} />
                                                 <ActionButton
                                                     icon={generatingBRollId === segment.sequence ? undefined : Layers}
@@ -206,8 +203,8 @@ export function GalleryListView({
                                                     loading={generatingBRollId === segment.sequence}
                                                 />
                                                 <ActionButton
-                                                    icon={isAnimating ? undefined : (genImage?.videoStatus === 'completed' && genImage?.videoUrl ? Play : Wand2)}
-                                                    label={isAnimating ? 'Animating...' : genImage?.videoStatus === 'completed' ? 'Play' : 'Animate'}
+                                                    icon={isAnimating ? undefined : (genImage?.videoStatus === 'completed' && genImage?.videoUrl ? Play : Clapperboard)}
+                                                    label={isAnimating ? 'Animating...' : genImage?.videoStatus === 'completed' ? 'Play' : 'Make Video'}
                                                     onClick={() => onAnimate(segment.sequence)}
                                                     disabled={isAnimating}
                                                     loading={isAnimating}

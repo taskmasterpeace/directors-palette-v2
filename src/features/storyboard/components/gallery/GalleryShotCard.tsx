@@ -17,7 +17,6 @@ interface GalleryShotCardProps {
     isAnimating: boolean
     isRegenerating: boolean
     isGeneratingBRoll: boolean
-    onShotLab: () => void
     onPreview: () => void
     onContactSheet: () => void
     onBRoll: () => void
@@ -35,7 +34,6 @@ export function GalleryShotCard({
     isAnimating,
     isRegenerating,
     isGeneratingBRoll,
-    onShotLab,
     onPreview,
     onContactSheet,
     onBRoll,
@@ -229,7 +227,6 @@ export function GalleryShotCard({
                         videoUrl={generatedImage?.videoUrl}
                         isAnimating={isAnimating}
                         isGeneratingBRoll={isGeneratingBRoll}
-                        onShotLab={onShotLab}
                         onPreview={onPreview}
                         onContactSheet={onContactSheet}
                         onBRoll={onBRoll}

@@ -119,8 +119,7 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
     // Clear selection when chapter changes so the initializer below can pick up the new chapter's shots
     useEffect(() => {
         setSelectedShots(new Set())
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally only trigger on chapter change
-    }, [chapterIndex])
+    }, [chapterIndex]) // setSelectedShots is a stable zustand action
 
     // Initialize selected shots on first load
     useEffect(() => {

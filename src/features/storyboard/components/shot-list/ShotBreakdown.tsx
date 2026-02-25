@@ -579,7 +579,7 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                                     ) : (
                                         <>
                                             <Sparkles className="w-3 h-3 mr-1" />
-                                            Refine Prompts
+                                            Enhance with AI
                                         </>
                                     )}
                                 </Button>

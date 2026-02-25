@@ -19,7 +19,6 @@ interface GalleryCarouselViewProps {
     animatingShots: Set<number>
     regeneratingShots: Set<number>
     generatingBRollId: number | null
-    onShotLab: (sequence: number) => void
     onPreview: (imageUrl: string) => void
     onContactSheet: (sequence: number) => void
     onBRoll: (imageUrl: string, sequence: number) => void
@@ -38,7 +37,6 @@ export function GalleryCarouselView({
     animatingShots,
     regeneratingShots,
     generatingBRollId,
-    onShotLab,
     onPreview,
     onContactSheet,
     onBRoll,
@@ -219,7 +217,6 @@ export function GalleryCarouselView({
                                                         videoUrl={genImage?.videoUrl}
                                                         isAnimating={isAnimating}
                                                         isGeneratingBRoll={generatingBRollId === segment.sequence}
-                                                        onShotLab={() => onShotLab(segment.sequence)}
                                                         onPreview={() => onPreview(genImage!.imageUrl!)}
                                                         onContactSheet={() => onContactSheet(segment.sequence)}
                                                         onBRoll={() => onBRoll(genImage!.imageUrl!, segment.sequence)}

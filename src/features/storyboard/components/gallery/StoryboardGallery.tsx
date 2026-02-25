@@ -45,7 +45,6 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
         characters,
         locations,
         generationSettings,
-        openShotLab,
         selectedDirectorId,
         setVideoStatus,
         setAnimationPrompt,
@@ -715,7 +714,7 @@ The color temperature, lighting direction, and overall mood must match across al
                                     animatingShots={animatingShots}
                                     regeneratingShots={regeneratingShots}
                                     generatingBRollId={generatingBRollId}
-                                    onShotLab={(seq) => openShotLab(seq)}
+
                                     onPreview={(imageUrl) => setPreviewImage(imageUrl)}
                                     onContactSheet={handleOpenContactSheet}
                                     onBRoll={handleGenerateBRollGrid}
@@ -734,7 +733,7 @@ The color temperature, lighting direction, and overall mood must match across al
                                     animatingShots={animatingShots}
                                     regeneratingShots={regeneratingShots}
                                     generatingBRollId={generatingBRollId}
-                                    onShotLab={(seq) => openShotLab(seq)}
+
                                     onPreview={(imageUrl) => setPreviewImage(imageUrl)}
                                     onContactSheet={handleOpenContactSheet}
                                     onBRoll={handleGenerateBRollGrid}
@@ -753,7 +752,7 @@ The color temperature, lighting direction, and overall mood must match across al
                                     animatingShots={animatingShots}
                                     regeneratingShots={regeneratingShots}
                                     generatingBRollId={generatingBRollId}
-                                    onShotLab={(seq) => openShotLab(seq)}
+
                                     onPreview={(imageUrl) => setPreviewImage(imageUrl)}
                                     onContactSheet={handleOpenContactSheet}
                                     onBRoll={handleGenerateBRollGrid}

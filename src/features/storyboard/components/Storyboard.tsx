@@ -18,7 +18,7 @@ import { StyleGuideGenerator } from "./style-guides/StyleGuideGenerator"
 import { GenerationQueue } from "./generation/GenerationQueue"
 import { StoryboardGallery } from "./gallery/StoryboardGallery"
 import { ChapterTabs } from "./chapter-view"
-import { SaveIndicator } from "./shared"
+import { SaveIndicator, StepNavigation } from "./shared"
 import { StoryboardHelp } from "./StoryboardHelp"
 import { ShotLab } from "./ShotLab/ShotLab"
 import { ContactSheetModal } from "./contact-sheet/ContactSheetModal"
@@ -226,30 +226,44 @@ export function Storyboard() {
                 {/* Tab Content (full height) */}
                 <div className="flex-1 overflow-auto p-3">
                     {/* Story Input Tab */}
-                    {internalTab === 'input' && <StoryInput />}
+                    {internalTab === 'input' && (
+                        <>
+                            <StoryInput />
+                            <StepNavigation />
+                        </>
+                    )}
 
                     {/* Style Tab */}
                     {internalTab === 'style' && (
                         <div className="space-y-3">
                             <StyleGuideEditor />
                             <StyleGuideGenerator />
+                            <StepNavigation />
                         </div>
                     )}
 
                     {/* Directors Tab */}
-                    {internalTab === 'directors' && <DirectorTab />}
+                    {internalTab === 'directors' && (
+                        <>
+                            <DirectorTab />
+                            <StepNavigation />
+                        </>
+                    )}
 
                     {/* Characters Tab */}
                     {internalTab === 'entities' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <div className="space-y-3">
-                                <CharacterList />
-                                <LocationList />
+                        <>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div className="space-y-3">
+                                    <CharacterList />
+                                    <LocationList />
+                                </div>
+                                <div>
+                                    <CharacterSheetGenerator />
+                                </div>
                             </div>
-                            <div>
-                                <CharacterSheetGenerator />
-                            </div>
-                        </div>
+                            <StepNavigation />
+                        </>
                     )}
 
                     {/* Shots Tab */}
@@ -272,16 +286,20 @@ export function Storyboard() {
                                     </div>
                                 )}
                             </ChapterTabs>
+                            <StepNavigation />
                         </div>
                     )}
 
                     {/* Generation Tab */}
                     {internalTab === 'generation' && (
-                        <ChapterTabs>
-                            {(chapterIndex) => (
-                                <GenerationQueue chapterIndex={chapterIndex} />
-                            )}
-                        </ChapterTabs>
+                        <>
+                            <ChapterTabs>
+                                {(chapterIndex) => (
+                                    <GenerationQueue chapterIndex={chapterIndex} />
+                                )}
+                            </ChapterTabs>
+                            <StepNavigation />
+                        </>
                     )}
 
                     {/* Gallery Tab */}

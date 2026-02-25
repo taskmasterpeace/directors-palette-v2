@@ -1,7 +1,7 @@
 'use client'
 
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
-import { FlaskConical, Eye, Grid3X3, Layers, Wand2, Play, Download } from 'lucide-react'
+import { Eye, Grid3X3, Layers, Clapperboard, Play, Download } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 interface GalleryActionBarProps {
@@ -11,7 +11,6 @@ interface GalleryActionBarProps {
     videoUrl?: string
     isAnimating: boolean
     isGeneratingBRoll: boolean
-    onShotLab: () => void
     onPreview: () => void
     onContactSheet: () => void
     onBRoll: () => void
@@ -20,12 +19,10 @@ interface GalleryActionBarProps {
 }
 
 export function GalleryActionBar({
-    imageUrl,
     videoStatus,
     videoUrl,
     isAnimating,
     isGeneratingBRoll,
-    onShotLab,
     onPreview,
     onContactSheet,
     onBRoll,
@@ -33,7 +30,6 @@ export function GalleryActionBar({
     onDownload,
 }: GalleryActionBarProps) {
     const actions = [
-        { icon: FlaskConical, label: 'Shot Lab', onClick: onShotLab, disabled: false },
         { icon: Eye, label: 'Preview', onClick: onPreview, disabled: false },
         { icon: Grid3X3, label: 'Angles', onClick: onContactSheet, disabled: false },
         {
@@ -44,8 +40,8 @@ export function GalleryActionBar({
             loading: isGeneratingBRoll,
         },
         {
-            icon: isAnimating ? undefined : (videoStatus === 'completed' && videoUrl ? Play : Wand2),
-            label: isAnimating ? 'Animating...' : videoStatus === 'completed' ? 'Play Video' : 'Animate',
+            icon: isAnimating ? undefined : (videoStatus === 'completed' && videoUrl ? Play : Clapperboard),
+            label: isAnimating ? 'Animating...' : videoStatus === 'completed' ? 'Play Video' : 'Make Video',
             onClick: onAnimate,
             disabled: isAnimating,
             loading: isAnimating,
@@ -54,18 +50,10 @@ export function GalleryActionBar({
         {
             icon: Download,
             label: 'Download',
-            onClick: () => {
-                const link = document.createElement('a')
-                link.href = imageUrl
-                link.download = `shot.png`
-                link.click()
-            },
+            onClick: onDownload,
             disabled: false,
         },
     ]
-
-    // Override download with the passed handler
-    actions[5].onClick = onDownload
 
     return (
         <div className="absolute bottom-0 left-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
