@@ -14,8 +14,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { cn } from "@/utils/utils"
 import type { GridSize } from "../../store/unified-gallery-store"
 import { AlertCircle, RefreshCw, Trash2 } from "lucide-react"
-import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Button } from "@/components/ui/button"
+import { ClapperboardSpinner } from "./ClapperboardSpinner"
 
 interface ImageCardProps {
   image: GeneratedImage
@@ -82,27 +82,16 @@ const ImageCardComponent = ({
   const hasFailed = image.status === 'failed' || imageLoadError
   // Note: completed state is the default render path (no explicit check needed)
 
-  // Render loading state
+  // Render loading state — clapperboard spinner with countdown
   if (isLoading) {
     return (
       <div className="relative group rounded-lg overflow-hidden bg-card border border-border">
         <div className={cn(
-          "w-full relative flex flex-col items-center justify-center bg-gradient-to-br from-violet-950/30 via-background to-fuchsia-950/20",
+          "w-full relative flex flex-col items-center justify-center",
           useNativeAspectRatio ? "aspect-video" : "aspect-square"
         )}>
-          {/* Animated loading spinner */}
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full blur-xl opacity-30 animate-pulse" />
-            <LoadingSpinner size="xl" color="accent" className="relative z-10" />
-          </div>
-          <p className="text-sm text-muted-foreground mt-3">Generating...</p>
-          {image.prompt && (
-            <p className="text-xs text-muted-foreground/60 mt-1 px-4 text-center line-clamp-2 max-w-[200px]">
-              {image.prompt.slice(0, 60)}...
-            </p>
-          )}
+          <ClapperboardSpinner model={image.model} prompt={image.prompt} />
         </div>
-        {/* Model badge for loading state */}
         <ModelBadge model={image.model} />
       </div>
     )
