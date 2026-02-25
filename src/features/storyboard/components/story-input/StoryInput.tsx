@@ -14,7 +14,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Sparkles, FileText, AlertCircle, Trash2 } from 'lucide-react'
+import { Sparkles, FileText, AlertCircle, Trash2, Film } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { LLMModelSelector } from '../settings/LLMModelSelector'
@@ -36,7 +36,9 @@ export function StoryInput() {
         characters,
         locations,
         generatedPrompts,
-        generatedImages
+        generatedImages,
+        isDocumentaryMode,
+        setDocumentaryMode,
     } = useStoryboardStore()
 
     const [error, setError] = useState<string | null>(null)
@@ -102,6 +104,45 @@ export function StoryInput() {
                 </CardHeader>
                 <CardContent>
                     <LLMModelSelector />
+                </CardContent>
+            </Card>
+
+            {/* Documentary Mode Toggle */}
+            <Card className="bg-card/50 border-primary/20">
+                <CardContent className="py-3 px-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Film className="w-4 h-4 text-primary" />
+                            <span className="text-sm font-medium">Mode</span>
+                        </div>
+                        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+                            <button
+                                onClick={() => setDocumentaryMode(false)}
+                                className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                                    !isDocumentaryMode
+                                        ? 'bg-background text-foreground shadow-sm'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                Storyboard
+                            </button>
+                            <button
+                                onClick={() => setDocumentaryMode(true)}
+                                className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                                    isDocumentaryMode
+                                        ? 'bg-primary text-primary-foreground shadow-sm'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                Documentary
+                            </button>
+                        </div>
+                    </div>
+                    {isDocumentaryMode && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                            Documentary mode classifies segments, generates B-roll pools, and creates chapter title cards.
+                        </p>
+                    )}
                 </CardContent>
             </Card>
 
