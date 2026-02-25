@@ -2,10 +2,10 @@
 
 import { CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Images, CheckCircle, AlertCircle, Clock, RefreshCw, Archive, LayoutGrid, GalleryHorizontal, Download, Upload } from 'lucide-react'
+import { Images, CheckCircle, AlertCircle, Clock, RefreshCw, Archive, LayoutGrid, GalleryHorizontal, List, Download, Upload } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
-export type GalleryViewMode = 'grid' | 'carousel'
+export type GalleryViewMode = 'grid' | 'list' | 'carousel'
 
 interface GalleryHeaderProps {
     generatedCount: number
@@ -96,6 +96,13 @@ export function GalleryHeader({
                             <LayoutGrid className="w-3.5 h-3.5" />
                         </button>
                         <button
+                            onClick={() => onViewModeChange('list')}
+                            className={`p-1.5 transition-colors ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                            title="List view"
+                        >
+                            <List className="w-3.5 h-3.5" />
+                        </button>
+                        <button
                             onClick={() => onViewModeChange('carousel')}
                             className={`p-1.5 transition-colors ${viewMode === 'carousel' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
                             title="Carousel view"
@@ -107,7 +114,7 @@ export function GalleryHeader({
             </CardTitle>
             <CardDescription className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <span>{viewMode === 'grid' ? 'Hover for actions.' : 'Navigate shots with arrows.'}</span>
+                    <span>{viewMode === 'grid' ? 'Hover for actions.' : viewMode === 'list' ? 'Expand rows for details.' : 'Navigate shots with arrows.'}</span>
                     <button
                         onClick={onToggleCompletedOnly}
                         className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${showCompletedOnly ? 'bg-green-500/10 border-green-500/30 text-green-600' : 'bg-muted border-border text-muted-foreground'}`}

@@ -23,6 +23,7 @@ import JSZip from 'jszip'
 
 import { GalleryHeader, type GalleryViewMode } from './GalleryHeader'
 import { GalleryGridView } from './GalleryGridView'
+import { GalleryListView } from './GalleryListView'
 import { GalleryCarouselView } from './GalleryCarouselView'
 import { DocumentaryTimeline } from './DocumentaryTimeline'
 
@@ -181,7 +182,7 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
     const [previewImage, setPreviewImage] = useState<string | null>(null)
     const [isDownloadingAll, setIsDownloadingAll] = useState(false)
     const [showCompletedOnly, setShowCompletedOnly] = useState(true)
-    const [viewMode, setViewMode] = useState<GalleryViewMode>('grid')
+    const [viewMode, setViewMode] = useState<GalleryViewMode>('list')
     const importFileRef = useRef<HTMLInputElement>(null)
 
     // ---- Export / Import JSON ----
@@ -720,6 +721,26 @@ The color temperature, lighting direction, and overall mood must match across al
                                     onBRoll={handleGenerateBRollGrid}
                                     onAnimate={handleAnimateShot}
                                     onRegenerate={handleRegenerateSingleShot}
+                                    onDownload={handleDownloadSingleShot}
+                                    onVideoPreview={(url, seq) => setVideoPreview({ url, sequence: seq })}
+                                />
+                            ) : viewMode === 'list' ? (
+                                <GalleryListView
+                                    segments={filteredSegments}
+                                    generatedImages={generatedImages}
+                                    generatedPrompts={generatedPrompts}
+                                    contactSheetVariants={contactSheetVariants}
+                                    showCompletedOnly={showCompletedOnly}
+                                    animatingShots={animatingShots}
+                                    regeneratingShots={regeneratingShots}
+                                    generatingBRollId={generatingBRollId}
+                                    onShotLab={(seq) => openShotLab(seq)}
+                                    onPreview={(imageUrl) => setPreviewImage(imageUrl)}
+                                    onContactSheet={handleOpenContactSheet}
+                                    onBRoll={handleGenerateBRollGrid}
+                                    onAnimate={handleAnimateShot}
+                                    onRegenerate={handleRegenerateSingleShot}
+                                    onRegenerateWithPrompt={handleRegenerateWithPrompt}
                                     onDownload={handleDownloadSingleShot}
                                     onVideoPreview={(url, seq) => setVideoPreview({ url, sequence: seq })}
                                 />
