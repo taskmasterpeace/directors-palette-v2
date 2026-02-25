@@ -24,6 +24,7 @@ import JSZip from 'jszip'
 import { GalleryHeader, type GalleryViewMode } from './GalleryHeader'
 import { GalleryGridView } from './GalleryGridView'
 import { GalleryCarouselView } from './GalleryCarouselView'
+import { DocumentaryTimeline } from './DocumentaryTimeline'
 
 interface StoryboardGalleryProps {
     chapterIndex?: number
@@ -57,6 +58,8 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
         setShotNote,
         setGlobalPromptPrefix,
         setGlobalPromptSuffix,
+        isDocumentaryMode,
+        documentaryChapters,
     } = useStoryboardStore()
 
     const { user } = useAuth()
@@ -632,6 +635,10 @@ The color temperature, lighting direction, and overall mood must match across al
     const generatedCount = Object.values(generatedImages).filter(img => img.status === 'completed').length
     const pendingCount = Object.values(generatedImages).filter(img => img.status === 'pending' || img.status === 'generating').length
     const failedCount = Object.values(generatedImages).filter(img => img.status === 'failed').length
+
+    if (isDocumentaryMode && documentaryChapters.length > 0) {
+        return <DocumentaryTimeline />
+    }
 
     if (filteredSegments.length === 0) {
         return (
