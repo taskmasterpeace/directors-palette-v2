@@ -15,6 +15,10 @@ import type {
     ExtractionResult,
     GeneratedShotPrompt,
     GeneratedImageData,
+    BRollPoolPrompt,
+    BRollPoolCategory,
+    TitleCard,
+    DocumentaryChapter,
 } from "../types/storyboard.types";
 import type { StoryChapter, ChapterDetectionResult } from "../services/chapter-detection.service";
 import type { ModelId } from "@/config";
@@ -105,6 +109,13 @@ export interface StoryboardStore {
     activeChapterIndex: number
     shouldShowChapters: boolean
     chapterDetectionReason: string
+
+    // ---- Documentary Mode State ----
+    isDocumentaryMode: boolean
+    documentaryChapters: DocumentaryChapter[]
+    isClassifyingSegments: boolean
+    isGeneratingBrollPool: boolean
+    isGeneratingTitleCards: boolean
 
     // ---- UI State ----
     internalTab: StoryboardTab
@@ -241,6 +252,20 @@ export interface StoryboardStore {
     clearChapters: () => void
     getChapterSegments: (chapterIndex: number) => GeneratedShotPrompt[]
 
+    // ---- Documentary Mode Actions ----
+    setDocumentaryMode: (enabled: boolean) => void
+    setDocumentaryChapters: (chapters: DocumentaryChapter[]) => void
+    updateDocumentaryChapter: (index: number, updates: Partial<DocumentaryChapter>) => void
+    updateChapterName: (index: number, name: string) => void
+    setBrollPoolCategory: (chapterIndex: number, categoryId: string, updates: Partial<BRollPoolCategory>) => void
+    updateBrollPromptStatus: (categoryId: string, promptId: string, updates: Partial<BRollPoolPrompt>) => void
+    selectBrollVariant: (categoryId: string, promptId: string) => void
+    updateTitleCard: (chapterIndex: number, updates: Partial<TitleCard>) => void
+    setIsClassifyingSegments: (classifying: boolean) => void
+    setIsGeneratingBrollPool: (generating: boolean) => void
+    setIsGeneratingTitleCards: (generating: boolean) => void
+    clearDocumentaryData: () => void
+
     // ---- UI Actions ----
     setInternalTab: (tab: StoryboardTab) => void
     setStoryText: (text: string) => void
@@ -337,6 +362,12 @@ const initialState = {
     shouldShowChapters: false,
     chapterDetectionReason: '',
 
+    isDocumentaryMode: false,
+    documentaryChapters: [],
+    isClassifyingSegments: false,
+    isGeneratingBrollPool: false,
+    isGeneratingTitleCards: false,
+
     internalTab: 'input' as StoryboardTab,
     storyText: '',
     searchQuery: '',
@@ -394,7 +425,8 @@ const PERSISTED_FIELDS = [
     'generationSettings',
     'globalPromptPrefix',
     'globalPromptSuffix',
-    'shotNotes'
+    'shotNotes',
+    'isDocumentaryMode'
 ] as const
 
 export const useStoryboardStore = create<StoryboardStore>()(
@@ -681,6 +713,88 @@ export const useStoryboardStore = create<StoryboardStore>()(
                     chapter.segmentIndices.includes(p.sequence)
                 )
             },
+
+            // ---- Documentary Mode Actions ----
+            setDocumentaryMode: (enabled) => set({ isDocumentaryMode: enabled }),
+
+            setDocumentaryChapters: (chapters) => set({ documentaryChapters: chapters }),
+
+            updateDocumentaryChapter: (index, updates) => set((state) => ({
+                documentaryChapters: state.documentaryChapters.map((ch) =>
+                    ch.index === index ? { ...ch, ...updates } : ch
+                ),
+            })),
+
+            updateChapterName: (index, name) => set((state) => ({
+                documentaryChapters: state.documentaryChapters.map((ch) =>
+                    ch.index === index ? { ...ch, name, nameEdited: true } : ch
+                ),
+            })),
+
+            setBrollPoolCategory: (chapterIndex, categoryId, updates) => set((state) => ({
+                documentaryChapters: state.documentaryChapters.map((ch) =>
+                    ch.index === chapterIndex
+                        ? {
+                            ...ch,
+                            brollPool: ch.brollPool.map((cat) =>
+                                cat.id === categoryId ? { ...cat, ...updates } : cat
+                            ),
+                        }
+                        : ch
+                ),
+            })),
+
+            updateBrollPromptStatus: (categoryId, promptId, updates) => set((state) => ({
+                documentaryChapters: state.documentaryChapters.map((ch) => ({
+                    ...ch,
+                    brollPool: ch.brollPool.map((cat) =>
+                        cat.id === categoryId
+                            ? {
+                                ...cat,
+                                prompts: cat.prompts.map((p) =>
+                                    p.id === promptId ? { ...p, ...updates } : p
+                                ),
+                            }
+                            : cat
+                    ),
+                })),
+            })),
+
+            selectBrollVariant: (categoryId, promptId) => set((state) => ({
+                documentaryChapters: state.documentaryChapters.map((ch) => ({
+                    ...ch,
+                    brollPool: ch.brollPool.map((cat) =>
+                        cat.id === categoryId
+                            ? {
+                                ...cat,
+                                prompts: cat.prompts.map((p) => ({
+                                    ...p,
+                                    selected: p.id === promptId,
+                                })),
+                            }
+                            : cat
+                    ),
+                })),
+            })),
+
+            updateTitleCard: (chapterIndex, updates) => set((state) => ({
+                documentaryChapters: state.documentaryChapters.map((ch) =>
+                    ch.index === chapterIndex
+                        ? { ...ch, titleCard: { ...ch.titleCard, ...updates } }
+                        : ch
+                ),
+            })),
+
+            setIsClassifyingSegments: (classifying) => set({ isClassifyingSegments: classifying }),
+            setIsGeneratingBrollPool: (generating) => set({ isGeneratingBrollPool: generating }),
+            setIsGeneratingTitleCards: (generating) => set({ isGeneratingTitleCards: generating }),
+
+            clearDocumentaryData: () => set({
+                documentaryChapters: [],
+                isClassifyingSegments: false,
+                isGeneratingBrollPool: false,
+                isGeneratingTitleCards: false,
+            }),
 
             // ---- UI Actions ----
             setInternalTab: (tab) => set({ internalTab: tab }),
