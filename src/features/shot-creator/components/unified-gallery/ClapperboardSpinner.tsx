@@ -27,6 +27,8 @@ const MODEL_DISPLAY_NAMES: Record<string, string> = {
 interface ClapperboardSpinnerProps {
   model: string
   prompt?: string
+  /** Epoch ms when generation started — survives remounts so progress doesn't reset on navigation */
+  startedAt?: number
 }
 
 /**
@@ -34,21 +36,26 @@ interface ClapperboardSpinnerProps {
  * Shows progress bar, estimated countdown, and model name.
  * Handles overtime gracefully when generation exceeds the estimate.
  */
-export function ClapperboardSpinner({ model, prompt }: ClapperboardSpinnerProps) {
+export function ClapperboardSpinner({ model, prompt, startedAt }: ClapperboardSpinnerProps) {
   const estimatedSeconds = MODEL_ESTIMATED_SECONDS[model] ?? 12
   const displayName = MODEL_DISPLAY_NAMES[model] ?? model
 
-  const startTimeRef = useRef(Date.now())
-  const [progress, setProgress] = useState(0) // 0..1, can exceed 1
-  const [elapsed, setElapsed] = useState(0)
+  // Use the passed-in start time so progress survives remounts (navigation away and back)
+  const origin = startedAt ?? Date.now()
+  const originRef = useRef(origin)
+
+  const [progress, setProgress] = useState(() => {
+    const sec = (Date.now() - originRef.current) / 1000
+    return sec / estimatedSeconds
+  })
+  const [elapsed, setElapsed] = useState(() => (Date.now() - originRef.current) / 1000)
 
   useEffect(() => {
-    startTimeRef.current = Date.now()
     const interval = setInterval(() => {
-      const elapsedSec = (Date.now() - startTimeRef.current) / 1000
+      const elapsedSec = (Date.now() - originRef.current) / 1000
       setElapsed(elapsedSec)
       setProgress(elapsedSec / estimatedSeconds)
-    }, 500) // Update twice per second — smooth enough for a countdown
+    }, 500)
     return () => clearInterval(interval)
   }, [estimatedSeconds])
 

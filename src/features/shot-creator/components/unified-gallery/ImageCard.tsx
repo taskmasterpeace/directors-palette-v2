@@ -90,7 +90,7 @@ const ImageCardComponent = ({
           "w-full relative flex flex-col items-center justify-center",
           useNativeAspectRatio ? "aspect-video" : "aspect-square"
         )}>
-          <ClapperboardSpinner model={image.model} prompt={image.prompt} />
+          <ClapperboardSpinner model={image.model} prompt={image.prompt} startedAt={image.timestamp} />
         </div>
         <ModelBadge model={image.model} />
       </div>
