@@ -23,6 +23,7 @@ import { CanvasToolbar } from './CanvasToolbar'
 import { useCanvasDragDrop } from './useCanvasDragDrop'
 import { useCanvasImport } from './useCanvasImport'
 import { ShotAnimationService } from '../../services/shot-animation.service'
+import { useGenerationOrchestration } from '../../hooks/useGenerationOrchestration'
 import { DIRECTORS } from '@/features/music-lab/data/directors.data'
 import { toast } from 'sonner'
 import { cn } from '@/utils/utils'
@@ -34,6 +35,7 @@ export function CanvasView() {
         openShotLab,
         chapters,
         activeChapterIndex,
+        setActiveChapter,
         selectedDirectorId,
         setVideoStatus,
         setAnimationPrompt,
@@ -44,6 +46,22 @@ export function CanvasView() {
     const [isDragOver, setIsDragOver] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [gridDensity, setGridDensity] = useState<'compact' | 'normal'>('normal')
+
+    // Generation orchestration
+    const {
+        startGeneration,
+        cancelGeneration,
+        pauseGeneration,
+        resumeGeneration,
+        isGenerating,
+        isPaused,
+        progress,
+    } = useGenerationOrchestration({
+        chapterIndex: activeChapterIndex,
+        selectedShots: selectedSequences,
+        wildcardsEnabled: false,
+        wildcards: [],
+    })
     // Derive canvas video entries from generatedImages video fields
     const canvasVideos = useMemo(() => {
         const videos: Record<number, CanvasVideoEntry> = {}
@@ -128,8 +146,8 @@ export function CanvasView() {
 
     const handleGenerateSelected = useCallback(() => {
         if (selectedSequences.size === 0) return
-        toast.info(`${selectedSequences.size} shots queued. Switch to Generation tab to start.`)
-    }, [selectedSequences])
+        startGeneration()
+    }, [selectedSequences, startGeneration])
 
     const handleAnimateSelected = useCallback(() => {
         const eligibleCount = Array.from(selectedSequences).filter(
@@ -288,6 +306,15 @@ export function CanvasView() {
                     onSearchChange={setSearchQuery}
                     gridDensity={gridDensity}
                     onToggleDensity={toggleDensity}
+                    chapters={chapters}
+                    activeChapterIndex={activeChapterIndex}
+                    onChapterChange={setActiveChapter}
+                    isGenerating={isGenerating}
+                    isPaused={isPaused}
+                    progress={progress}
+                    onPause={pauseGeneration}
+                    onResume={resumeGeneration}
+                    onCancel={cancelGeneration}
                 />
 
                 {/* Search results info */}
