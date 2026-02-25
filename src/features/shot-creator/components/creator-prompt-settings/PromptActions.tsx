@@ -456,6 +456,15 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                     baseSettings.maxImages = shotCreatorSettings.maxImages || 3
                 }
                 break
+            case 'seedream-5-lite':
+                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
+                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
+                baseSettings.resolution = shotCreatorSettings.resolution || '2K'
+                if (shotCreatorSettings.sequentialGeneration) {
+                    baseSettings.sequentialGeneration = true
+                    baseSettings.maxImages = shotCreatorSettings.maxImages || 3
+                }
+                break
             case 'qwen-image-2512':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
                 baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'webp'
