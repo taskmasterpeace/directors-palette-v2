@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Director's Palette — Countdown Spinner Playground</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: oklch(0.18 0.02 290);
+    --card: oklch(0.22 0.025 290);
+    --card-hover: oklch(0.25 0.03 290);
+    --primary: oklch(0.6 0.2 290);
+    --primary-dim: oklch(0.45 0.15 290);
+    --primary-glow: oklch(0.7 0.25 290);
+    --text: oklch(0.9 0.02 290);
+    --text-muted: oklch(0.65 0.04 290);
+    --border: oklch(0.32 0.03 290);
+    --accent-warm: oklch(0.65 0.18 60);
+    --accent-red: oklch(0.55 0.2 20);
+    --accent-green: oklch(0.6 0.18 145);
+    --radius: 0.625rem;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    padding: 1.5rem;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    margin-bottom: 0.25rem;
+  }
+  header p { color: var(--text-muted); font-size: 0.8rem; }
+
+  .controls-bar {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .controls-bar label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .controls-bar input[type="number"],
+  .controls-bar input[type="text"] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 0.375rem;
+    padding: 0.3rem 0.5rem;
+    width: 5rem;
+    font-size: 0.75rem;
+  }
+  .controls-bar input[type="text"] { width: 10rem; }
+
+  .btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    padding: 0.4rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.2s;
+  }
+  .btn:hover { filter: brightness(1.15); }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+  .btn-outline:hover { border-color: var(--primary); color: var(--text); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.75rem;
+    max-width: 100%;
+  }
+
+  .spinner-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+  .spinner-card:hover {
+    border-color: var(--primary-dim);
+    box-shadow: 0 2px 12px oklch(0.2 0.05 290 / 0.4);
+  }
+  .spinner-card .card-number {
+    position: absolute;
+    top: 0.4rem;
+    left: 0.5rem;
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .spinner-card h3 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-align: center;
+  }
+  .spinner-area {
+    width: 140px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .spinner-area svg { overflow: visible; }
+
+  .spinner-meta {
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .spinner-meta .time-left {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .spinner-meta .model-name {
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  /* Prompt output */
+  .prompt-section {
+    margin-top: 1.5rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+  }
+  .prompt-section h2 {
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-muted);
+  }
+  .prompt-output {
+    font-family: 'SF Mono', 'Cascadia Code', monospace;
+    font-size: 0.75rem;
+    color: var(--text);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    min-height: 3rem;
+  }
+  .copy-btn {
+    margin-top: 0.5rem;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.75rem;
+  }
+
+  /* Individual spinner styles */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  @keyframes iris-open {
+    0% { clip-path: circle(0% at 50% 50%); }
+    100% { clip-path: circle(50% at 50% 50%); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Countdown Spinner Playground</h1>
+  <p>20 loading indicator variants for Director's Palette</p>
+</header>
+
+<div class="controls-bar">
+  <label>Time (s): <input type="number" id="globalTime" value="15" min="5" max="120"></label>
+  <label>Model: <input type="text" id="globalModel" value="flux-1.1-pro"></label>
+  <button class="btn" onclick="startAll()">Start All</button>
+  <button class="btn btn-outline" onclick="resetAll()">Reset All</button>
+</div>
+
+<div class="grid" id="spinnerGrid"></div>
+
+<div class="prompt-section">
+  <h2>Prompt Output</h2>
+  <div class="prompt-output" id="promptOutput">Adjust controls and click "Start All" to preview all spinners.</div>
+  <button class="btn copy-btn" onclick="copyPrompt()">Copy</button>
+</div>
+
+<script>
+// ─── State ───
+const SPINNER_COUNT = 20;
+const state = {
+  duration: 15,
+  model: 'flux-1.1-pro',
+  running: false,
+  startTime: null,
+  selected: null,
+  animFrameId: null,
+};
+
+const spinnerNames = [
+  'Circular Progress Ring',    // 1
+  'Film Reel Spin',            // 2
+  'Clapperboard',              // 3
+  'Film Strip',                // 4
+  'Meter Gauge',               // 5
+  'Radial Wipe',               // 6
+  'Neon Ring Pulse',           // 7
+  'Director Chair Fill',       // 8
+  'Spotlight Sweep',           // 9
+  'Ticket Stub Reveal',        // 10
+  'Countdown Numbers',          // 11
+  'Film Grain Shimmer',        // 12
+  'Camera Iris',               // 13
+  'Popcorn Bucket',            // 14
+  'Star Rating Fill',          // 15
+  'Projector Light',           // 16
+  'Scene Slate',               // 17
+  'Reel-to-Reel Tape',        // 18
+  'Marquee Lights',            // 19
+  'Golden Spiral',             // 20
+];
+
+// ─── Build grid ───
+const grid = document.getElementById('spinnerGrid');
+spinnerNames.forEach((name, i) => {
+  const card = document.createElement('div');
+  card.className = 'spinner-card';
+  card.dataset.index = i;
+  card.innerHTML = `
+    <span class="card-number">#${i + 1}</span>
+    <h3>${name}</h3>
+    <div class="spinner-area" id="area-${i}"></div>
+    <div class="spinner-meta">
+      <div class="time-left" id="time-${i}">0:00</div>
+      <div class="model-name" id="model-${i}">${state.model}</div>
+    </div>
+  `;
+  card.addEventListener('click', () => selectSpinner(i));
+  grid.appendChild(card);
+});
+
+function selectSpinner(idx) {
+  document.querySelectorAll('.spinner-card').forEach(c => c.style.borderColor = '');
+  const card = document.querySelector(`.spinner-card[data-index="${idx}"]`);
+  if (card) card.style.borderColor = 'oklch(0.6 0.2 290)';
+  state.selected = idx;
+  updatePrompt();
+}
+
+// ─── Render functions for each spinner ───
+function renderSpinner(idx, progress) {
+  const area = document.getElementById(`area-${idx}`);
+  if (!area) return;
+  const p = Math.min(1, Math.max(0, progress));
+
+  switch(idx) {
+    case 0: renderCircularRing(area, p); break;
+    case 1: renderFilmReel(area, p); break;
+    case 2: renderClapperboard(area, p); break;
+    case 3: renderFilmStrip(area, p); break;
+    case 4: renderMeterGauge(area, p); break;
+    case 5: renderRadialWipe(area, p); break;
+    case 6: renderNeonRing(area, p); break;
+    case 7: renderDirectorChair(area, p); break;
+    case 8: renderSpotlight(area, p); break;
+    case 9: renderTicketStub(area, p); break;
+    case 10: renderCountdownNumbers(area, p); break;
+    case 11: renderFilmGrain(area, p); break;
+    case 12: renderCameraIris(area, p); break;
+    case 13: renderPopcornBucket(area, p); break;
+    case 14: renderStarRating(area, p); break;
+    case 15: renderProjectorLight(area, p); break;
+    case 16: renderSceneSlate(area, p); break;
+    case 17: renderReelToReel(area, p); break;
+    case 18: renderMarqueeLights(area, p); break;
+    case 19: renderGoldenSpiral(area, p); break;
+  }
+}
+
+/* 1. Circular Progress Ring */
+function renderCircularRing(el, p) {
+  const r = 50, c = Math.PI * 2 * r;
+  const offset = c * (1 - p);
+  el.innerHTML = `<svg width="120" height="120" viewBox="0 0 120 120">
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="oklch(0.28 0.03 290)" stroke-width="8"/>
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="oklch(0.6 0.2 290)" stroke-width="8"
+      stroke-dasharray="${c}" stroke-dashoffset="${offset}"
+      stroke-linecap="round" transform="rotate(-90 60 60)"
+      style="transition:stroke-dashoffset 0.3s"/>
+    <text x="60" y="65" text-anchor="middle" fill="oklch(0.9 0.02 290)" font-size="22" font-weight="700" font-family="system-ui">${Math.round(p*100)}%</text>
+  </svg>`;
+}
+
+/* 2. Film Reel Spin */
+function renderFilmReel(el, p) {
+  const rot = p * 720;
+  const holes = Array.from({length:8}, (_,i) => {
+    const a = (i/8)*Math.PI*2;
+    return `<circle cx="${50+25*Math.cos(a)}" cy="${50+25*Math.sin(a)}" r="5" fill="oklch(0.18 0.02 290)"/>`;
+  }).join('');
+  el.innerHTML = `<svg width="120" height="120" viewBox="0 0 100 100" style="transform:rotate(${rot}deg)">
+    <circle cx="50" cy="50" r="45" fill="oklch(0.3 0.03 290)" stroke="oklch(0.6 0.2 290)" stroke-width="3"/>
+    <circle cx="50" cy="50" r="12" fill="oklch(0.18 0.02 290)" stroke="oklch(0.5 0.1 290)" stroke-width="2"/>
+    ${holes}
+    <circle cx="50" cy="50" r="45" fill="none" stroke="oklch(0.6 0.2 290)" stroke-width="4"
+      stroke-dasharray="${Math.PI*90}" stroke-dashoffset="${Math.PI*90*(1-p)}"
+      stroke-linecap="round" transform="rotate(-90 50 50)"/>
+  </svg>`;
+}
+
+/* 3. Clapperboard */
+function renderClapperboard(el, p) {
+  const clapAngle = p < 0.1 ? (p/0.1)*-30 : p < 0.2 ? -30+(((p-0.1)/0.1)*30) : 0;
+  const barWidth = 100 * p;
+  el.innerHTML = `<svg width="120" height="120" viewBox="0 0 100 100">
+    <rect x="10" y="35" width="80" height="55" rx="3" fill="oklch(0.25 0.03 290)" stroke="oklch(0.6 0.2 290)" stroke-width="2"/>
+    <rect x="10" y="80" width="${barWidth*0.8}" height="6" rx="2" fill="oklch(0.6 0.2 290)"/>
+    <g transform="rotate(${clapAngle} 10 35)">
+      <rect x="10" y="20" width="80" height="18" rx="2" fill="oklch(0.3 0.04 290)" stroke="oklch(0.6 0.2 290)" stroke-width="2"/>
+      ${Array.from({length:5}, (_,i) => `<rect x="${15+i*16}" y="20" width="8" height="18" fill="${i%2===0?'oklch(0.18 0.02 290)':'oklch(0.4 0.05 290)'}" rx="1"/>`).join('')}
+    </g>
+    <text x="50" y="65" text-anchor="middle" fill="oklch(0.9 0.02 290)" font-size="16" font-weight="700" font-family="system-ui">${Math.round(p*100)}%</text>
+  </svg>`;
+}
+
+/* 4. Film Strip */
+function renderFilmStrip(el, p) {
+  const frames = 5;
+  const filledFrames = Math.floor(p * frames);
+  const partial = (p * frames) - filledFrames;
+  let rects = '';
+  for(let i = 0; i < frames; i++) {
+    const y = 5 + i * 22;
+    const fill = i < filledFrames ? 'oklch(0.6 0.2 290)' :
+                 i === filledFrames ? `oklch(${0.3+partial*0.3} ${0.05+partial*0.15} 290)` :
+                 'oklch(0.25 0.02 290)';
+    rects += `<rect x="20" y="${y}" width="60" height="18" rx="2" fill="${fill}" stroke="oklch(0.4 0.04 290)" stroke-width="1"/>`;
+    // Sprocket holes
+    rects += `<circle cx="12" cy="${y+9}" r="3" fill="oklch(0.18 0.02 290)"/>`;
+    rects += `<circle cx="88" cy="${y+9}" r="3" fill="oklch(0.18 0.02 290)"/>`;
+  }
+  el.innerHTML = `<svg width="120" height="120" viewBox="0 0 100 120">
+    <rect x="6" y="0" width="88" height="117" rx="3" fill="none" stroke="oklch(0.35 0.03 290)" stroke-width="2"/>
+    ${rects}
+  </svg>`;
+}
+
+/* 5. Meter Gauge */
+function renderMeterGauge(el, p) {
+  const startAngle = -135, endAngle = 135;
+  const angle = startAngle + (endAngle - startAngle) * p;
+  const rad = angle * Math.PI / 180;
+  const cx = 60, cy = 65, nr = 40;
+  const nx = cx + nr * Math.cos(rad), ny = cy + nr * Math.sin(rad);
+
+  // Arc for the filled portion
+  const arcStart = startAngle * Math.PI / 180;
+  const x1 = cx + 45*Math.cos(arcStart), y1 = cy + 45*Math.sin(arcStart);
+  const x2 = cx + 45*Math.cos(rad), y2 = cy + 45*Math.sin(rad);
+  const largeArc = (angle - startAngle) > 180 ? 1 : 0;
+
+  el.innerHTML = `<svg width="130" height="120" viewBox="0 0 120 110">
+    <path d="M ${cx+45*Math.cos(arcStart)} ${cy+45*Math.sin(arcStart)} A 45 45 0 ${largeArc} 1 ${cx+45*Math.cos(endAngle*Math.PI/180)} ${cy+45*Math.sin(endAngle*Math.PI/180)}"
+      fill="none" stroke="oklch(0.28 0.03 290)" stroke-width="8" stroke-linecap="round"/>
+    <path d="M ${x1} ${y1} A 45 45 0 ${largeArc} 1 ${x2} ${y2}"
+      fill="none" stroke="oklch(0.6 0.2 290)" stroke-width="8" stroke-linecap="round"/>
+    <line x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" stroke="oklch(0.9 0.02 290)" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="5" fill="oklch(0.6 0.2 290)"/>
+    <text x="${cx}" y="${cy+20}" text-anchor="middle" fill="oklch(0.65 0.04 290)" font-size="11" font-family="system-ui">${Math.round(p*100)}%</text>
+  </svg>`;
+}
+
+/* 6. Radial Wipe */
+function renderRadialWipe(el, p) {
+  const angle = p * 360;
+  const largeArc = angle > 180 ? 1 : 0;
+  const rad = (angle - 90) * Math.PI / 180;
+  const ex = 60 + 50 * Math.cos(rad);
+  const ey = 60 + 50 * Math.sin(rad);
+  const pathD = angle >= 360
+    ? `M 60 60 m 0 -50 a 50 50 0 1 1 0 100 a 50 50 0 1 1 0 -100 Z`
+    : `M 60 60 L 60 10 A 50 50 0 ${largeArc} 1 ${ex} ${ey} Z`;
+  el.innerHTML = `<svg width="120" height="120" viewBox="0 0 120 120">
+    <circle cx="60" cy="60" r="50" fill="oklch(0.25 0.02 290)" stroke="oklch(0.35 0.03 290)" stroke-width="2"/>
+    <path d="${pathD}" fill="oklch(0.6 0.2 290 / 0.5)"/>
+    <circle cx="60" cy="60" r="20" fill="oklch(0.22 0.025 290)"/>
+    <text x="60" y="65" text-anchor="middle" fill="oklch(0.9 0.02 290)" font-size="14" font-weight="700" font-family="system-ui">${Math.round(p*100)}%</text>
+  </svg>`;
+}
+
+/* 7. Neon Ring Pulse */
+function renderNeonRing(el, p) {
+  const r = 46, c = Math.PI*2*r;
+  const pulseOp = 0.3 + Math.sin(Date.now()/200)*0.3;
+  el.innerHTML = `<svg width="120" height="120" viewBox="0 0 120 120">
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="oklch(0.6 0.2 290 / ${pulseOp})" stroke-width="12"/>
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="oklch(0.7 0.25 290)" stroke-width="4"
+      stroke-dasharray="${c}" stroke-dashoffset="${c*(1-p)}"
+      stroke-linecap="round" transform="rotate(-90 60 60)"
+      style="filter:drop-shadow(0 0 6px oklch(0.7 0.25 290))"/>
+    <text x="60" y="65" text-anchor="middle" fill="oklch(0.9 0.02 290)" font-size="20" font-weight="700"
+      font-family="system-ui" style="filter:drop-shadow(0 0 4px oklch(0.6 0.2 290))">${Math.round(p*100)}%</text>
+  </svg>`;
+}
+
+/* 8. Director Chair Fill */
+function renderDirectorChair(el, p) {
+  const fillH = 50 * p;
+  el.innerHTML = `<svg width="120" height="120" viewBox="0 0 100 100">
+    <!-- Chair frame -->
+    <line x1="25" y1="25" x2="20" y2="90" stroke="oklch(0.5 0.1 290)" stroke-width="4" stroke-linecap="round"/>
+    <line x1="75" y1="25" x2="80" y2="90" stroke="oklch(0.5 0.1 290)" stroke-width="4" stroke-linecap="round"/>
+    <line x1="30" y1="55" x2="70" y2="55" stroke="oklch(0.5 0.1 290)" stroke-width="3"/>
+    <!-- Back rest with fill -->
+    <rect x="22" y="20" width="56" height="30" rx="3" fill="oklch(0.25 0.02 290)" stroke="oklch(0.5 0.1 290)" stroke-width="2"/>
+    <clipPath id="chairClip"><rect x="22" y="${50-fillH}" width="56" height="${fillH}"/></clipPath>
+    <rect x="22" y="20" width="56" height="30" rx="3" fill="oklch(0.6 0.2 290)" clip-path="url(#chairClip)"/>
+    <!-- Seat -->
+    <rect x="25" y="52" width="50" height="8" rx="2" fill="oklch(0.6 0.2 290 / ${0.3+p*0.7})"/>
+    <text x="50" y="42" text-anchor="middle" fill="oklch(0.95 0.01 290)" font-size="11" font-weight="700" font-family="system-ui">${Math.round(p*100)}%</text>
+  </svg>`;
+}
+
+/* 9. Spotlight Sweep */
+function renderSpotlight(el, p) {
+  const angle = -40 + p * 80;
+  const rad = angle * Math.PI / 180;
+  const bx = 60 + 80 * Math.sin(rad);
+  const by = 110;
+  el.innerHTML = `<svg width="120" height="120" viewBox="0 0 120 120">
+    <defs>
+      <radialGradient id="spotGrad" cx="50%" cy="0%" r="80%">
+        <stop offset="0%" stop-color="oklch(0.8 0.15 60 / 0.5)"/>
+        <stop offset="100%" stop-color="oklch(0.8 0.15 60 / 0)"/>
+      </radialGradient>
+    </defs>
+    <!-- Beam -->
+    <polygon points="55,15 65,15 ${bx+25},${by} ${bx-25},${by}" fill="url(#spotGrad)" opacity="${0.4+p*0.6}"/>
+    <!-- Light housing -->
+    <ellipse cx="60" cy="12" rx="14" ry="8" fill="oklch(0.35 0.04 290)"/>
+    <circle cx="60" cy="12" r="6" fill="oklch(0.8 0.15 60)"/>
+    <!-- Progress bar at bottom -->
+    <rect x="10" y="105" width="100" height="6" rx="3" fill="oklch(0.25 0.02 290)"/>
+    <rect x="10" y="105" width="${100*p}" height="6" rx="3" fill="oklch(0.6 0.2 290)"/>
+  </svg>`;
+}
+
+/* 10. Ticket Stub Reveal */
+function renderTicketStub(el, p) {
+  const revealH = 90 * p;
+  el.innerHTML = `<svg width="110" height="120" viewBox="0 0 90 110">
+    <defs>
+      <clipPath id="ticketReveal"><rect x="0" y="${100-revealH}" width="90" height="${revealH+10}"/></clipPath>
+    </defs>
+    <!-- Background ticket -->
+    <rect x="10" y="10" width="70" height="90" rx="6" fill="oklch(0.25 0.02 290)" stroke="oklch(0.35 0.03 290)" stroke-width="1.5"/>
+    <!-- Dashed tear line -->
+    <line x1="10" y1="70" x2="80" y2="70" stroke="oklch(0.35 0.03 290)" stroke-width="1" stroke-dasharray="4 3"/>
+    <!-- Revealed (filled) ticket -->
+    <rect x="10" y="10" width="70" height="90" rx="6" fill="oklch(0.6 0.2 290 / 0.4)" clip-path="url(#ticketReveal)"/>
+    <text x="45" y="45" text-anchor="middle" fill="oklch(0.9 0.02 290)" font-size="10" font-weight="600" font-family="system-ui">ADMIT ONE</text>
+    <text x="45" y="62" text-anchor="middle" fill="oklch(0.7 0.25 290)" font-size="18" font-weight="700" font-family="system-ui">${Math.round(p*100)}%</text>
+    <!-- Notches -->
+    <circle cx="10" cy="70" r="5" fill="oklch(0.18 0.02 290)"/>
+    <circle cx="80" cy="70" r="5" fill="oklch(0.18 0.02 290)"/>
+  </svg>`;
+}
+
+/* 11. Countdown Numbers */
+function renderCountdownNumbers(el, p) {
+  const remaining = Math.ceil((1 - p) * state.duration);
+  const scale = 0.8 + 0.4 * Math.abs(Math.sin(p * Math.PI * 4));
+  const opacity = p >= 1 ? 1 : 0.6 + 0.4 * Math.abs(Math.sin(p * Math.PI * 6));
+  el.innerHTML = `<svg width="120" height="120" viewBox="0 0 120 120">
+    <circle cx="60" cy="60" r="50" fill="none" stroke="oklch(0.3 0.03 290)" stroke-width="3"/>
+    <text x="60" y="72" text-anchor="middle" fill="${p>=1?'oklch(0.6 0.18 145)':'oklch(0.7 0.25 290)'}"
+      font-size="${p>=1?28:42}" font-weight="800" font-family="system-ui"
+      opacity="${opacity}" transform="scale(${scale})" transform-origin="60 60">${p>=1?'✓':remaining}</text>
+    ${p<1?`<text x="60" y="95" text-anchor="middle" fill="oklch(0.5 0.04 290)" font-size="9" font-family="system-ui">seconds left</text>`:''}
+  </svg>`;
+}
+
+/* 12. Film Grain Shimmer */
+function renderFilmGrain(el, p) {
+  const canvas = el.querySelector('canvas') || document.createElement('canvas');
+  canvas.width = 120; canvas.height = 120;
+  if (!el.contains(canvas)) { el.innerHTML = ''; el.appendChild(canvas); }
+  const ctx = canvas.getContext('2d');
+
+  // Dark background
+  ctx.fillStyle = '#1a1425';
+  ctx.fillRect(0, 0, 120, 120);
+
+  // Grain noise
+  const imgData = ctx.getImageData(0, 0, 120, 120);
+  for (let i = 0; i < imgData.data.length; i += 4) {
+    const noise = Math.random() * 40 * (1-p);
+    imgData.data[i] = imgData.data[i] + noise;
+    imgData.data[i+1] = imgData.data[i+1] + noise * 0.5;
+    imgData.data[i+2] = imgData.data[i+2] + noise * 1.5;
+  }
+  ctx.putImageData(imgData, 0, 0);
+
+  // Progress bar overlay
+  ctx.fillStyle = `oklch(0.6 0.2 290)`;
+  ctx.fillRect(10, 100, 100 * p, 8);
+  ctx.strokeStyle = 'oklch(0.35 0.03 290)';
+  ctx.strokeRect(10, 100, 100, 8);
+
+  // Percentage text
+  ctx.fillStyle = '#e8e0f0';
+  ctx.font = 'bold 22px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText(`${Math.round(p*100)}%`, 60, 65);
+}
+
+/* 13. Camera Iris */
+function renderCameraIris(el, p) {
+  const blades = 6;
+  const openRadius = 8 + 42 * p;
+  let paths = '';
+  for (let i = 0; i < blades; i++) {
+    const angle = (i / blades) * Math.PI * 2;
+    const nextAngle = ((i+1) / blades) * Math.PI * 2;
+    const midAngle = angle + (nextAngle - angle) / 2;
+    const outerR = 55;
+    const innerR = Math.max(5, 50 - openRadius);
+    const x1 = 60 + innerR * Math.cos(angle);
+    const y1 = 60 + innerR * Math.sin(angle);
+    const x2 = 60 + outerR * Math.cos(angle + 0.15);
+    const y2 = 60 + outerR * Math.sin(angle + 0.15);
+    const x3 = 60 + outerR * Math.cos(nextAngle - 0.15);
+    const y3 = 60 + outerR * Math.sin(nextAngle - 0.15);
+    const x4 = 60 + innerR * Math.cos(nextAngle);
+    const y4 = 60 + innerR * Math.sin(nextAngle);
+    paths += `<path d="M${x1},${y1} L${x2},${y2} L${x3},${y3} L${x4},${y4} Z"
+      fill="oklch(0.28 0.04 290)" stroke="oklch(0.4 0.06 290)" stroke-width="0.5"/>`;
+  }
+  el.innerHTML = `<svg width="120" height="120" viewBox="0 0 120 120">
+    <circle cx="60" cy="60" r="55" fill="oklch(0.22 0.025 290)" stroke="oklch(0.4 0.05 290)" stroke-width="2"/>
+    ${paths}
+    <circle cx="60" cy="60" r="${openRadius}" fill="oklch(0.6 0.2 290 / 0.3)"/>
+    <text x="60" y="65" text-anchor="middle" fill="oklch(0.9 0.02 290)" font-size="14" font-weight="700" font-family="system-ui">${Math.round(p*100)}%</text>
+  </svg>`;
+}
+
+/* 14. Popcorn Bucket */
+function renderPopcornBucket(el, p) {
+  const fillY = 85 - 55 * p;
+  const kernelCount = Math.floor(p * 12);
+  let kernels = '';
+  for (let i = 0; i < kernelCount; i++) {
+    const kx = 35 + (i % 4) * 13 + Math.sin(i*2)*3;
+    const ky = fillY - 2 - Math.floor(i/4)*10 + Math.cos(i*3)*2;
+    kernels += `<circle cx="${kx}" cy="${ky}" r="5" fill="oklch(0.8 0.12 80)" stroke="oklch(0.65 0.1 60)" stroke-width="0.5"/>`;
+  }
+  el.innerHTML = `<svg width="110" height="120" viewBox="0 0 100 100">
+    <!-- Bucket -->
+    <path d="M 25 30 L 20 88 Q 20 92 24 92 L 76 92 Q 80 92 80 88 L 75 30 Z"
+      fill="oklch(0.55 0.2 20)" stroke="oklch(0.4 0.15 20)" stroke-width="2"/>
+    <!-- Stripes -->
+    <path d="M 35 30 L 33 92" stroke="oklch(0.9 0.02 60)" stroke-width="3"/>
+    <path d="M 50 30 L 50 92" stroke="oklch(0.9 0.02 60)" stroke-width="3"/>
+    <path d="M 65 30 L 67 92" stroke="oklch(0.9 0.02 60)" stroke-width="3"/>
+    <!-- Fill level -->
+    <clipPath id="bucketClip"><path d="M 25 30 L 20 88 Q 20 92 24 92 L 76 92 Q 80 92 80 88 L 75 30 Z"/></clipPath>
+    <rect x="18" y="${fillY}" width="64" height="${92-fillY}" fill="oklch(0.85 0.1 80 / 0.6)" clip-path="url(#bucketClip)"/>
+    ${kernels}
+    <!-- Percentage -->
+    <text x="50" y="18" text-anchor="middle" fill="oklch(0.7 0.25 290)" font-size="14" font-weight="700" font-family="system-ui">${Math.round(p*100)}%</text>
+  </svg>`;
+}
+
+/* 15. Star Rating Fill */
+function renderStarRating(el, p) {
+  const totalStars = 5;
+  const filledStars = p * totalStars;
+  let stars = '';
+  for (let i = 0; i < totalStars; i++) {
+    const cx = 15 + i * 22, cy = 55;
+    const starPath = starSvgPath(cx, cy, 10, 5);
+    const fillAmount = Math.min(1, Math.max(0, filledStars - i));
+    if (fillAmount >= 1) {
+      stars += `<path d="${starPath}" fill="oklch(0.7 0.2 60)" stroke="oklch(0.6 0.18 60)" stroke-width="1"/>`;
+    } else if (fillAmount > 0) {
+      stars += `<path d="${starPath}" fill="oklch(0.3 0.03 290)" stroke="oklch(0.5 0.08 60)" stroke-width="1"/>`;
+      stars += `<clipPath id="starClip${i}"><rect x="${cx-10}" y="${cy-12}" width="${20*fillAmount}" height="24"/></clipPath>`;
+      stars += `<path d="${starPath}" fill="oklch(0.7 0.2 60)" clip-path="url(#starClip${i})"/>`;
+    } else {
+      stars += `<path d="${starPath}" fill="oklch(0.3 0.03 290)" stroke="oklch(0.4 0.04 290)" stroke-width="1"/>`;
+    }
+  }
+  el.innerHTML = `<svg width="125" height="120" viewBox="0 0 120 110">
+    ${stars}
+    <text x="60" y="90" text-anchor="middle" fill="oklch(0.9 0.02 290)" font-size="14" font-weight="700" font-family="system-ui">${Math.round(p*100)}%</text>
+  </svg>`;
+}
+function starSvgPath(cx, cy, outerR, innerR) {
+  let d = '';
+  for (let i = 0; i < 5; i++) {
+    const outerAngle = (i * 72 - 90) * Math.PI/180;
+    const innerAngle = ((i * 72 + 36) - 90) * Math.PI/180;
+    d += `${i===0?'M':'L'}${cx+outerR*Math.cos(outerAngle)},${cy+outerR*Math.sin(outerAngle)} `;
+    d += `L${cx+innerR*Math.cos(innerAngle)},${cy+innerR*Math.sin(innerAngle)} `;
+  }
+  return d + 'Z';
+}
+
+/* 16. Projector Light */
+function renderProjectorLight(el, p) {
+  const flicker = 0.7 + Math.random() * 0.3;
+  const beamOpacity = (0.2 + p * 0.5) * flicker;
+  el.innerHTML = `<svg width="120" height="120" viewBox="0 0 120 120">
+    <!-- Light beam -->
+    <defs>
+      <linearGradient id="beamGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="oklch(0.9 0.08 60 / ${beamOpacity})"/>
+        <stop offset="100%" stop-color="oklch(0.9 0.08 60 / 0)"/>
+      </linearGradient>
+    </defs>
+    <polygon points="25,30 95,5 105,45 35,50" fill="url(#beamGrad)"/>
+    <!-- Projector body -->
+    <rect x="8" y="25" width="35" height="30" rx="4" fill="oklch(0.3 0.03 290)" stroke="oklch(0.45 0.05 290)" stroke-width="2"/>
+    <circle cx="25" cy="40" r="10" fill="oklch(0.22 0.025 290)" stroke="oklch(0.5 0.08 290)" stroke-width="2"/>
+    <circle cx="25" cy="40" r="4" fill="oklch(0.8 0.15 60 / ${flicker})"/>
+    <!-- Film reels on top -->
+    <circle cx="15" cy="22" r="8" fill="none" stroke="oklch(0.4 0.05 290)" stroke-width="2"/>
+    <circle cx="35" cy="22" r="8" fill="none" stroke="oklch(0.4 0.05 290)" stroke-width="2"/>
+    <!-- Progress -->
+    <rect x="10" y="100" width="100" height="8" rx="4" fill="oklch(0.25 0.02 290)"/>
+    <rect x="10" y="100" width="${100*p}" height="8" rx="4" fill="oklch(0.65 0.18 60)"/>
+    <text x="60" y="85" text-anchor="middle" fill="oklch(0.9 0.02 290)" font-size="16" font-weight="700" font-family="system-ui">${Math.round(p*100)}%</text>
+  </svg>`;
+}
+
+/* 17. Scene Slate */
+function renderSceneSlate(el, p) {
+  const chars = 'GENERATING...';
+  const shown = Math.floor(p * chars.length);
+  const displayText = chars.slice(0, shown) + (p < 1 ? '█' : '');
+  el.innerHTML = `<svg width="130" height="120" viewBox="0 0 120 105">
+    <!-- Slate body -->
+    <rect x="5" y="25" width="110" height="75" rx="4" fill="oklch(0.2 0.02 290)" stroke="oklch(0.4 0.04 290)" stroke-width="2"/>
+    <!-- Top clapper -->
+    <rect x="5" y="10" width="110" height="18" rx="3" fill="oklch(0.3 0.04 290)" stroke="oklch(0.4 0.04 290)" stroke-width="1.5"/>
+    ${Array.from({length:7}, (_,i) => `<rect x="${8+i*16}" y="10" width="8" height="18" fill="${i%2===0?'oklch(0.18 0.02 290)':'oklch(0.4 0.05 290)'}"/>`).join('')}
+    <!-- Text lines -->
+    <text x="15" y="48" fill="oklch(0.65 0.04 290)" font-size="8" font-family="system-ui">SCENE</text>
+    <text x="60" y="48" fill="oklch(0.65 0.04 290)" font-size="8" font-family="system-ui">TAKE</text>
+    <text x="15" y="60" fill="oklch(0.9 0.02 290)" font-size="11" font-weight="700" font-family="system-ui">${Math.round(p*100)}%</text>
+    <text x="60" y="60" fill="oklch(0.9 0.02 290)" font-size="11" font-weight="700" font-family="system-ui">1</text>
+    <!-- Typing text -->
+    <text x="15" y="82" fill="oklch(0.6 0.2 290)" font-size="10" font-weight="600" font-family="monospace">${displayText}</text>
+    <!-- Progress bar -->
+    <rect x="10" y="90" width="100" height="4" rx="2" fill="oklch(0.28 0.03 290)"/>
+    <rect x="10" y="90" width="${100*p}" height="4" rx="2" fill="oklch(0.6 0.2 290)"/>
+  </svg>`;
+}
+
+/* 18. Reel-to-Reel Tape */
+function renderReelToReel(el, p) {
+  const leftR = 20 - 12 * p;  // Left reel shrinks
+  const rightR = 8 + 12 * p;  // Right reel grows
+  const rot = (Date.now() / 10) % 360;
+  const leftSpokes = Array.from({length:3}, (_,i) => {
+    const a = (rot + i*120)*Math.PI/180;
+    return `<line x1="30" y1="45" x2="${30+leftR*Math.cos(a)}" y2="${45+leftR*Math.sin(a)}" stroke="oklch(0.5 0.06 290)" stroke-width="2"/>`;
+  }).join('');
+  const rightSpokes = Array.from({length:3}, (_,i) => {
+    const a = (-rot + i*120)*Math.PI/180;
+    return `<line x1="90" y1="45" x2="${90+rightR*Math.cos(a)}" y2="${45+rightR*Math.sin(a)}" stroke="oklch(0.5 0.06 290)" stroke-width="2"/>`;
+  }).join('');
+  el.innerHTML = `<svg width="130" height="120" viewBox="0 0 120 100">
+    <!-- Housing -->
+    <rect x="5" y="15" width="110" height="65" rx="6" fill="oklch(0.25 0.025 290)" stroke="oklch(0.4 0.04 290)" stroke-width="2"/>
+    <!-- Left reel -->
+    <circle cx="30" cy="45" r="${leftR}" fill="oklch(0.2 0.02 290)" stroke="oklch(0.5 0.1 290)" stroke-width="2.5"/>
+    <circle cx="30" cy="45" r="5" fill="oklch(0.4 0.06 290)"/>
+    ${leftSpokes}
+    <!-- Right reel -->
+    <circle cx="90" cy="45" r="${rightR}" fill="oklch(0.2 0.02 290)" stroke="oklch(0.5 0.1 290)" stroke-width="2.5"/>
+    <circle cx="90" cy="45" r="5" fill="oklch(0.4 0.06 290)"/>
+    ${rightSpokes}
+    <!-- Tape path between reels -->
+    <path d="M${30+leftR},45 Q60,25 ${90-rightR},45" fill="none" stroke="oklch(0.5 0.08 290)" stroke-width="1.5"/>
+    <!-- Head -->
+    <rect x="55" y="36" width="10" height="18" rx="2" fill="oklch(0.6 0.2 290)"/>
+    <!-- Progress -->
+    <text x="60" y="93" text-anchor="middle" fill="oklch(0.9 0.02 290)" font-size="12" font-weight="700" font-family="system-ui">${Math.round(p*100)}%</text>
+  </svg>`;
+}
+
+/* 19. Marquee Lights */
+function renderMarqueeLights(el, p) {
+  const totalLights = 20;
+  const litCount = Math.floor(p * totalLights);
+  const t = Date.now() / 300;
+  let lights = '';
+
+  // Top row
+  for (let i = 0; i < 8; i++) {
+    const on = i < Math.floor(litCount * 8/20);
+    const chase = Math.sin(t + i * 0.5) > 0;
+    const fill = on ? (chase ? 'oklch(0.8 0.2 60)' : 'oklch(0.7 0.2 290)') : 'oklch(0.3 0.02 290)';
+    lights += `<circle cx="${16+i*13}" cy="12" r="4" fill="${fill}"/>`;
+  }
+  // Bottom row
+  for (let i = 0; i < 8; i++) {
+    const on = (8+i) < litCount;
+    const chase = Math.sin(t + i * 0.5 + 2) > 0;
+    const fill = on ? (chase ? 'oklch(0.8 0.2 60)' : 'oklch(0.7 0.2 290)') : 'oklch(0.3 0.02 290)';
+    lights += `<circle cx="${16+i*13}" cy="98" r="4" fill="${fill}"/>`;
+  }
+  // Sides
+  for (let i = 0; i < 2; i++) {
+    const idx = 16 + i;
+    const on = idx < litCount;
+    const chase = Math.sin(t + i * 0.5 + 4) > 0;
+    const fill = on ? (chase ? 'oklch(0.8 0.2 60)' : 'oklch(0.7 0.2 290)') : 'oklch(0.3 0.02 290)';
+    lights += `<circle cx="8" cy="${35+i*30}" r="4" fill="${fill}"/>`;
+    const fill2 = (18+i) < litCount ? (Math.sin(t + i*0.5+6)>0?'oklch(0.8 0.2 60)':'oklch(0.7 0.2 290)') : 'oklch(0.3 0.02 290)';
+    lights += `<circle cx="112" cy="${35+i*30}" r="4" fill="${fill2}"/>`;
+  }
+
+  el.innerHTML = `<svg width="120" height="120" viewBox="0 0 120 110">
+    <rect x="4" y="4" width="112" height="102" rx="8" fill="none" stroke="oklch(0.35 0.04 290)" stroke-width="2"/>
+    ${lights}
+    <text x="60" y="62" text-anchor="middle" fill="oklch(0.9 0.02 290)" font-size="24" font-weight="800" font-family="system-ui">${Math.round(p*100)}%</text>
+  </svg>`;
+}
+
+/* 20. Golden Spiral */
+function renderGoldenSpiral(el, p) {
+  const phi = 1.618;
+  const steps = 80;
+  const maxAngle = p * 6 * Math.PI;
+  let pathD = '';
+  for (let i = 0; i <= steps; i++) {
+    const t = (i / steps) * maxAngle;
+    const r = 2 * Math.pow(phi, t / (Math.PI * 2));
+    if (r > 55) break;
+    const x = 60 + r * Math.cos(t);
+    const y = 60 + r * Math.sin(t);
+    pathD += `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)} `;
+  }
+  el.innerHTML = `<svg width="120" height="120" viewBox="0 0 120 120">
+    <circle cx="60" cy="60" r="55" fill="none" stroke="oklch(0.25 0.02 290)" stroke-width="1"/>
+    <path d="${pathD}" fill="none" stroke="oklch(0.6 0.2 290)" stroke-width="2.5" stroke-linecap="round"
+      style="filter:drop-shadow(0 0 3px oklch(0.6 0.2 290))"/>
+    <circle cx="60" cy="60" r="3" fill="oklch(0.7 0.25 290)"/>
+    <text x="60" y="115" text-anchor="middle" fill="oklch(0.9 0.02 290)" font-size="12" font-weight="700" font-family="system-ui">${Math.round(p*100)}%</text>
+  </svg>`;
+}
+
+// ─── Animation loop ───
+function tick() {
+  if (!state.running || !state.startTime) {
+    state.animFrameId = requestAnimationFrame(tick);
+    return;
+  }
+  const elapsed = (Date.now() - state.startTime) / 1000;
+  const p = Math.min(1, elapsed / state.duration);
+
+  for (let i = 0; i < SPINNER_COUNT; i++) {
+    renderSpinner(i, p);
+    const remaining = Math.max(0, state.duration - elapsed);
+    const mins = Math.floor(remaining / 60);
+    const secs = Math.floor(remaining % 60);
+    const timeEl = document.getElementById(`time-${i}`);
+    if (timeEl) timeEl.textContent = `${mins}:${secs.toString().padStart(2,'0')}`;
+  }
+
+  if (p >= 1) {
+    state.running = false;
+    for (let i = 0; i < SPINNER_COUNT; i++) {
+      const timeEl = document.getElementById(`time-${i}`);
+      if (timeEl) timeEl.textContent = 'Done!';
+    }
+  }
+
+  state.animFrameId = requestAnimationFrame(tick);
+}
+state.animFrameId = requestAnimationFrame(tick);
+
+// ─── Controls ───
+function startAll() {
+  state.duration = parseInt(document.getElementById('globalTime').value) || 15;
+  state.model = document.getElementById('globalModel').value || 'flux-1.1-pro';
+  state.startTime = Date.now();
+  state.running = true;
+
+  // Update model labels
+  for (let i = 0; i < SPINNER_COUNT; i++) {
+    const modelEl = document.getElementById(`model-${i}`);
+    if (modelEl) modelEl.textContent = state.model;
+  }
+  updatePrompt();
+}
+
+function resetAll() {
+  state.running = false;
+  state.startTime = null;
+  for (let i = 0; i < SPINNER_COUNT; i++) {
+    renderSpinner(i, 0);
+    const timeEl = document.getElementById(`time-${i}`);
+    if (timeEl) timeEl.textContent = '0:00';
+  }
+}
+
+// Initialize all at 0
+for (let i = 0; i < SPINNER_COUNT; i++) renderSpinner(i, 0);
+
+// ─── Prompt output ───
+function updatePrompt() {
+  const el = document.getElementById('promptOutput');
+  const parts = [];
+  if (state.selected !== null) {
+    parts.push(`Use spinner variant #${state.selected + 1} "${spinnerNames[state.selected]}" as the loading indicator.`);
+  }
+  if (state.duration !== 15) {
+    parts.push(`Default estimated time: ${state.duration} seconds.`);
+  }
+  if (state.model !== 'flux-1.1-pro') {
+    parts.push(`Display model name: "${state.model}".`);
+  }
+  parts.push('Show progress percentage, estimated time remaining, and model name during generation.');
+  parts.push('Use dark theme with OKLCH purple palette (hue 290).');
+
+  el.textContent = parts.length > 0 ? parts.join('\n') : 'Click a spinner card to select it, then copy this prompt.';
+}
+
+function copyPrompt() {
+  const text = document.getElementById('promptOutput').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+updatePrompt();
+</script>
+</body>
+</html>

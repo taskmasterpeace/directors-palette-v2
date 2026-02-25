@@ -257,6 +257,18 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       return false
     }
 
+    // Always remove from local state immediately (optimistic deletion)
+    // This prevents the "deleted image reappears" bug — even if DB delete fails,
+    // the user's intent was to remove it and it shouldn't come back
+    set((state) => ({
+      images: state.images.filter(img =>
+        img.id !== imageIdOrUrl && img.url !== imageIdOrUrl
+      ),
+      selectedImage: state.selectedImage === imageIdOrUrl ? null : state.selectedImage,
+      fullscreenImage: (state.fullscreenImage?.id === imageIdOrUrl || state.fullscreenImage?.url === imageIdOrUrl) ? null : state.fullscreenImage,
+      recentImages: state.recentImages.filter(img => img.id !== imageIdOrUrl && img.url !== imageIdOrUrl)
+    }))
+
     // Only try to delete from Supabase if the image has a valid database ID (not local-only)
     // and is not in a failed/pending state that was never persisted
     const isLocalOnly = image.id.startsWith('img_') && !image.persistence?.isPermanent
@@ -266,22 +278,10 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       const result = await GalleryService.deleteImage(image.id)
 
       if (!result.success) {
-        console.error('Failed to delete image from Supabase:', result.error)
-        // DON'T remove from local state if database delete failed
-        // This prevents the image from "coming back" on refresh
-        return false
+        console.warn('Failed to delete image from Supabase (already removed locally):', result.error)
+        // Image is already removed from local state — don't restore it
       }
     }
-
-    // Only remove from local store AFTER successful database deletion
-    set((state) => ({
-      images: state.images.filter(img =>
-        img.id !== imageIdOrUrl && img.url !== imageIdOrUrl
-      ),
-      selectedImage: state.selectedImage === imageIdOrUrl ? null : state.selectedImage,
-      fullscreenImage: (state.fullscreenImage?.id === imageIdOrUrl || state.fullscreenImage?.url === imageIdOrUrl) ? null : state.fullscreenImage,
-      recentImages: state.recentImages.filter(img => img.id !== imageIdOrUrl && img.url !== imageIdOrUrl)
-    }))
 
     return true
   },
@@ -556,6 +556,12 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       // Import GalleryService dynamically to avoid circular dependency
       const { GalleryService } = await import('../services/gallery.service')
 
+      // Preserve pending/processing placeholders — these only exist in local state
+      // and would be lost if we replace the array with DB data
+      const pendingImages = state.images.filter(
+        img => img.status === 'pending' || img.status === 'processing'
+      )
+
       // Fetch fresh data for the current page/folder with optional search query and source filter
       const result = await GalleryService.loadUserGalleryPaginated(
         1, // Always load first page on refresh
@@ -565,17 +571,24 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       )
 
       // Deduplicate images by ID before setting
-      const uniqueImages = result.images.filter((image, index, self) =>
+      const uniqueDbImages = result.images.filter((image, index, self) =>
         index === self.findIndex(img => img.id === image.id)
       )
 
+      // Merge: pending placeholders first, then DB images (excluding any that share an ID with pending)
+      const pendingIds = new Set(pendingImages.map(img => img.id))
+      const merged = [
+        ...pendingImages,
+        ...uniqueDbImages.filter(img => !pendingIds.has(img.id))
+      ]
+
       // Update store with fresh data
       set({
-        images: uniqueImages,
+        images: merged,
         totalItems: result.total,
         totalPages: result.totalPages,
-        offset: uniqueImages.length,
-        hasMore: uniqueImages.length < result.total,
+        offset: uniqueDbImages.length,
+        hasMore: uniqueDbImages.length < result.total,
         infiniteScrollPage: 1
       })
     } catch (error) {
