@@ -139,6 +139,10 @@ export interface StoryboardStore {
     preSelectedCharacterId: string | null
     setPreSelectedCharacterId: (id: string | null) => void
 
+    // ---- IndexedDB Project Persistence ----
+    activeProjectId: number | null
+    setActiveProjectId: (id: number | null) => void
+
     // ---- Shot Lab UI State ----
     isShotLabOpen: boolean
     activeLabShotSequence: number | null
@@ -341,7 +345,8 @@ const PERSISTED_FIELDS = [
     'globalPromptPrefix',
     'globalPromptSuffix',
     'shotNotes',
-    'isDocumentaryMode'
+    'isDocumentaryMode',
+    'activeProjectId'
 ] as const
 
 export const useStoryboardStore = create<StoryboardStore>()(

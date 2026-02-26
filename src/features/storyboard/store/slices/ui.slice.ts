@@ -18,6 +18,9 @@ export const uiInitialState = {
     // Character sheet pre-selection
     preSelectedCharacterId: null as string | null,
 
+    // IndexedDB project persistence
+    activeProjectId: null as number | null,
+
     // Director selection
     selectedDirectorId: null as string | null,
 
@@ -89,6 +92,9 @@ export const createUiSlice = (set: Set, get: Get) => ({
 
     // ---- Character Sheet Pre-Selection Actions ----
     setPreSelectedCharacterId: (id: string | null) => set({ preSelectedCharacterId: id }),
+
+    // ---- IndexedDB Project Persistence Actions ----
+    setActiveProjectId: (id: number | null) => set({ activeProjectId: id }),
 
     // ---- Shot Lab UI Actions ----
     openShotLab: (sequence: number) => set({ isShotLabOpen: true, activeLabShotSequence: sequence }),
@@ -192,6 +198,7 @@ export const createUiSlice = (set: Set, get: Get) => ({
         isPreviewCollapsed: false,
         viewMode: 'tabs' as const,
         preSelectedCharacterId: null,
+        activeProjectId: null,
         selectedDirectorId: null,
         isShotLabOpen: false,
         activeLabShotSequence: null,
