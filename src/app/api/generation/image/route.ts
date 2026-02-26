@@ -208,7 +208,14 @@ export async function POST(request: NextRequest) {
     lognog.devDebug('Image generation request received', {
       model,
       prompt_length: prompt?.length || 0,
-      reference_images_count: referenceImages?.length || 0
+      reference_images_count: referenceImages?.length || 0,
+      reference_images_types: referenceImages?.map((r: string) => {
+        if (!r) return 'null'
+        if (r.startsWith('https://')) return 'https'
+        if (r.startsWith('data:')) return 'data-uri'
+        if (r.startsWith('blob:')) return 'blob'
+        return 'unknown:' + r.substring(0, 30)
+      }) || [],
     });
 
     // Validate required fields
@@ -531,9 +538,21 @@ export async function POST(request: NextRequest) {
     // Process reference images - upload local/inaccessible URLs to Replicate
     let processedReferenceImages = referenceImages;
     if (referenceImages && referenceImages.length > 0) {
+      lognog.devDebug('Processing reference images', {
+        input_count: referenceImages.length,
+        first_url_preview: typeof referenceImages[0] === 'string' ? referenceImages[0].substring(0, 80) : 'not-string',
+      });
       processedReferenceImages = await processReferenceImages(referenceImages, replicate);
       lognog.devDebug('Processed reference images', {
-        count: processedReferenceImages.length
+        input_count: referenceImages.length,
+        output_count: processedReferenceImages.length,
+        output_types: processedReferenceImages.map((r: string | { url: string }) => typeof r === 'string' ? (r.startsWith('https') ? 'https' : r.substring(0, 20)) : 'object'),
+      });
+    } else {
+      lognog.devDebug('No reference images in request', {
+        referenceImages_is_null: referenceImages === null,
+        referenceImages_is_undefined: referenceImages === undefined,
+        referenceImages_length: referenceImages?.length,
       });
     }
 
@@ -550,7 +569,10 @@ export async function POST(request: NextRequest) {
     const replicateModelId = ImageGenerationService.getReplicateModelId(model as ImageModel);
     lognog.devDebug('Using Replicate model', {
       model_id: replicateModelId,
-      has_webhook: !!process.env.WEBHOOK_URL
+      has_webhook: !!process.env.WEBHOOK_URL,
+      replicate_input_has_image: !!replicateInput.image,
+      replicate_input_has_reference_images: !!replicateInput.reference_images,
+      replicate_input_keys: Object.keys(replicateInput),
     });
 
     // Create Replicate prediction with webhook (if configured)

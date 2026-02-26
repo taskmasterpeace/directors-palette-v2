@@ -144,16 +144,9 @@ export class ImageGenerationService {
       replicateInput.person_generation = settings.personGeneration
     }
 
-    // nano-banana-2: single image uses `image`, multiple uses `reference_images`
+    // nano-banana-2 API uses `image_input` array (supports up to 14 images)
     if (input.referenceImages && input.referenceImages.length > 0) {
-      if (input.referenceImages.length === 1) {
-        const url = typeof input.referenceImages[0] === 'string'
-          ? input.referenceImages[0]
-          : (input.referenceImages[0] as { url: string }).url
-        replicateInput.image = url
-      } else {
-        replicateInput.reference_images = this.normalizeReferenceImages(input.referenceImages)
-      }
+      replicateInput.image_input = this.normalizeReferenceImages(input.referenceImages)
     }
 
     // Note: nano-banana-2 output is always WebP, no output_format param
