@@ -96,9 +96,24 @@ class StoryboardPage {
     await this.page.waitForSelector('[class*="Loader"], [class*="animate-spin"]', { state: 'hidden', timeout: 60000 }).catch(() => {})
   }
 
-  // Main Workflow Tabs (Story, Style, Characters, Shots, Generate, Results)
+  // Main Workflow Sidebar Buttons (Story, Style, Director, Chars, Shots, Gen, Results)
+  // The storyboard uses a vertical sidebar with custom <button> elements, not role="tab"
+  private readonly sidebarLabelMap: Record<string, string> = {
+    'Story': 'Story',
+    'Style': 'Style',
+    'Director': 'Director',
+    'Characters': 'Chars',
+    'Chars': 'Chars',
+    'Shots': 'Shots',
+    'Generate': 'Gen',
+    'Gen': 'Gen',
+    'Results': 'Results',
+    'Gallery': 'Results',
+  }
+
   async getMainTabs() {
-    return this.page.locator('[role="tab"]')
+    // Sidebar buttons are inside the sidebar strip (w-14 border-r)
+    return this.page.locator('.flex-shrink-0.w-14 button')
   }
 
   async getMainTabCount(): Promise<number> {
@@ -107,42 +122,46 @@ class StoryboardPage {
   }
 
   async clickMainTab(tabName: string) {
-    await this.page.getByRole('tab', { name: new RegExp(tabName, 'i') }).click()
+    const label = this.sidebarLabelMap[tabName] || tabName
+    // Click the sidebar button containing the label text
+    await this.page.locator(`.flex-shrink-0.w-14 button:has-text("${label}")`).click()
   }
 
   async getActiveMainTab(): Promise<string | null> {
-    const activeTab = this.page.locator('[role="tab"][data-state="active"], [role="tab"][aria-selected="true"]')
+    // The active sidebar button has bg-background and shadow-sm classes
+    const activeTab = this.page.locator('.flex-shrink-0.w-14 button.bg-background')
     return await activeTab.textContent()
   }
 
   async isMainTabVisible(tabName: string): Promise<boolean> {
-    const tab = this.page.locator(`[role="tab"]:has-text("${tabName}")`)
+    const label = this.sidebarLabelMap[tabName] || tabName
+    const tab = this.page.locator(`.flex-shrink-0.w-14 button:has-text("${label}")`)
     return await tab.isVisible()
   }
 
   // Tab Navigation Shortcuts
   async clickStoryTab() {
-    await this.page.getByRole('tab', { name: /Story/i }).click()
+    await this.clickMainTab('Story')
   }
 
   async clickStyleTab() {
-    await this.page.getByRole('tab', { name: /Style/i }).click()
+    await this.clickMainTab('Style')
   }
 
   async clickCharactersTab() {
-    await this.page.getByRole('tab', { name: /Characters/i }).click()
+    await this.clickMainTab('Characters')
   }
 
   async clickShotsTab() {
-    await this.page.getByRole('tab', { name: /Shots/i }).click()
+    await this.clickMainTab('Shots')
   }
 
   async clickGenerateTab() {
-    await this.page.getByRole('tab', { name: /Generate/i }).click()
+    await this.clickMainTab('Generate')
   }
 
   async clickResultsTab() {
-    await this.page.getByRole('tab', { name: /Results/i }).click()
+    await this.clickMainTab('Results')
   }
 
   // Shot Segments
@@ -359,16 +378,15 @@ test.describe('Story Input', () => {
 // ============================================================================
 
 test.describe('Main Tab Navigation', () => {
-  test('should display all 6 main tabs', async ({ page }) => {
-    const storyboardPage = new StoryboardPage(page)
-
-    // Check all main tabs are visible
-    await expect(page.getByRole('tab', { name: /Story/i })).toBeVisible()
-    await expect(page.getByRole('tab', { name: /Style/i })).toBeVisible()
-    await expect(page.getByRole('tab', { name: /Characters/i })).toBeVisible()
-    await expect(page.getByRole('tab', { name: /Shots/i })).toBeVisible()
-    await expect(page.getByRole('tab', { name: /Generate/i })).toBeVisible()
-    await expect(page.getByRole('tab', { name: /Results/i })).toBeVisible()
+  test('should display all sidebar nav tabs', async ({ page }) => {
+    // Check key navigation labels are visible in sidebar
+    await expect(page.locator('.flex-shrink-0.w-14 button:has-text("Story")')).toBeVisible()
+    await expect(page.locator('.flex-shrink-0.w-14 button:has-text("Style")')).toBeVisible()
+    await expect(page.locator('.flex-shrink-0.w-14 button:has-text("Director")')).toBeVisible()
+    await expect(page.locator('.flex-shrink-0.w-14 button:has-text("Chars")')).toBeVisible()
+    await expect(page.locator('.flex-shrink-0.w-14 button:has-text("Shots")')).toBeVisible()
+    await expect(page.locator('.flex-shrink-0.w-14 button:has-text("Gen")')).toBeVisible()
+    await expect(page.locator('.flex-shrink-0.w-14 button:has-text("Results")')).toBeVisible()
   })
 
   test('should start on Story tab', async ({ page }) => {
@@ -386,10 +404,10 @@ test.describe('Main Tab Navigation', () => {
     let activeTab = await storyboardPage.getActiveMainTab()
     expect(activeTab).toContain('Style')
 
-    // Click Characters tab
+    // Click Characters tab (sidebar label is "Chars")
     await storyboardPage.clickCharactersTab()
     activeTab = await storyboardPage.getActiveMainTab()
-    expect(activeTab).toContain('Characters')
+    expect(activeTab).toContain('Chars')
   })
 })
 
@@ -437,15 +455,21 @@ test.describe('Integration Tests', () => {
     await expect(extractButton).toBeEnabled()
   })
 
-  test('should navigate through all main tabs', async ({ page }) => {
+  test('should navigate through always-enabled main tabs', async ({ page }) => {
     const storyboardPage = new StoryboardPage(page)
 
-    const tabs = ['Story', 'Style', 'Characters', 'Shots', 'Generate', 'Results']
+    // Only test always-enabled tabs (Shots/Gen/Results may be disabled without story text)
+    const tabs = [
+      { click: 'Story', expect: 'Story' },
+      { click: 'Style', expect: 'Style' },
+      { click: 'Director', expect: 'Director' },
+      { click: 'Chars', expect: 'Chars' },
+    ]
 
-    for (const tabName of tabs) {
-      await storyboardPage.clickMainTab(tabName)
+    for (const tab of tabs) {
+      await storyboardPage.clickMainTab(tab.click)
       const activeTab = await storyboardPage.getActiveMainTab()
-      expect(activeTab).toContain(tabName)
+      expect(activeTab).toContain(tab.expect)
     }
   })
 })
