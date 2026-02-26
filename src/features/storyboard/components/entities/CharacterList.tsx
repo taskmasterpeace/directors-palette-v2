@@ -15,6 +15,7 @@ import type { StoryboardCharacter, CharacterRole } from '../../types/storyboard.
 import { GalleryImagePicker } from './GalleryImagePicker'
 import CategorySelectionDialog from '@/features/shot-creator/components/CategorySelectDialog'
 import { GalleryService } from '@/lib/services/gallery.service'
+import { useStyleAnalysisStore } from '../../hooks/useStyleAnalysis'
 
 interface CharacterCardProps {
     character: StoryboardCharacter
@@ -36,6 +37,7 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe,
     const [pendingGalleryId, setPendingGalleryId] = useState<string | null>(null)
 
     const referenceTag = (character.metadata as Record<string, unknown>)?.reference_tag as string | undefined
+    const styleAnalysis = useStyleAnalysisStore((s) => s.results[character.id])
 
     // Auto-expand when reference is enabled but no image yet
     useEffect(() => {
@@ -236,6 +238,18 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe,
                                     )}
                                     {character.has_reference && character.reference_image_url && (
                                         <CheckCircle className="w-4 h-4 text-green-500" />
+                                    )}
+                                    {styleAnalysis?.matchResult && (
+                                        <span
+                                            className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                                                styleAnalysis.matchResult.level === 'match'
+                                                    ? 'bg-green-500'
+                                                    : styleAnalysis.matchResult.level === 'partial'
+                                                        ? 'bg-yellow-500'
+                                                        : 'bg-red-500'
+                                            }`}
+                                            title={styleAnalysis.matchResult.reason}
+                                        />
                                     )}
                                 </div>
                                 {character.description && (

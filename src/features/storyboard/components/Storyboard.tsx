@@ -8,7 +8,7 @@ import { useStoryboardStore } from "../store"
 import { StoryInput } from "./story-input/StoryInput"
 import { CharacterList } from "./entities/CharacterList"
 import { LocationList } from "./entities/LocationList"
-import { CharacterSheetGenerator } from "./entities/CharacterSheetGenerator"
+import { CharacterSheetPanel } from "./entities/CharacterSheetPanel"
 import { GranularitySelect } from "./shot-list/GranularitySelect"
 import { DirectorSelector } from "./shot-list/DirectorSelector"
 import { ShotTextPreview } from "./shot-list/ShotTextPreview"
@@ -259,7 +259,7 @@ export function Storyboard() {
                                     <LocationList />
                                 </div>
                                 <div>
-                                    <CharacterSheetGenerator />
+                                    <CharacterSheetPanel />
                                 </div>
                             </div>
                             <StepNavigation />

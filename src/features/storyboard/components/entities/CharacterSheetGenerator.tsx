@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+// Card wrapper removed — rendered inside CharacterSheetPanel tabs
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Progress } from '@/components/ui/progress'
-import { Users, CheckCircle, AlertCircle, Image as ImageIcon, UserCircle, Layers, Palette } from 'lucide-react'
+import { CheckCircle, AlertCircle, Image as ImageIcon, UserCircle, Layers, Palette } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { PromptEditor, type PromptVariable } from '../shared/PromptEditor'
 import { characterSheetService, DEFAULT_SIDE1_PROMPT, DEFAULT_SIDE2_PROMPT } from '../../services/character-sheet.service'
@@ -398,17 +398,10 @@ export function CharacterSheetGenerator() {
     const canGenerate = selectedCharacterId && effectiveStyleGuide
 
     return (
-        <Card className="border-primary/20" ref={containerRef}>
-            <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                    <Users className="w-5 h-5" />
-                    Character Sheet Generator
-                </CardTitle>
-                <CardDescription>
-                    Generates two sheets per character: a full-body turnaround reference + an expression/face sheet
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <div className="space-y-4" ref={containerRef}>
+            <p className="text-sm text-muted-foreground">
+                Generates two sheets per character: a full-body turnaround reference + an expression/face sheet
+            </p>
                 {/* Active Style Badge */}
                 {effectiveStyleGuide ? (
                     <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
@@ -658,7 +651,6 @@ export function CharacterSheetGenerator() {
                         </>
                     )}
                 </Button>
-            </CardContent>
-        </Card>
+        </div>
     )
 }
