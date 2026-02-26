@@ -79,9 +79,8 @@ export function CharacterSheetGenerator() {
     // Handle preSelectedCharacterId from store (set by CharacterList)
     useEffect(() => {
         if (preSelectedCharacterId) {
-            // Only pre-select if the character has a reference image (required by generator)
             const char = characters.find(c => c.id === preSelectedCharacterId)
-            if (char?.has_reference && char?.reference_image_url) {
+            if (char) {
                 setSelectedCharacterId(preSelectedCharacterId)
             }
             setPreSelectedCharacterId(null)
@@ -193,7 +192,13 @@ export function CharacterSheetGenerator() {
         }
 
         if (!effectiveStyleGuide) {
-            setError('Please select or create a style guide in the Style tab first')
+            toast.error('Style guide required', {
+                description: 'Select a style in the Style tab before generating character sheets.',
+                action: {
+                    label: 'Go to Style',
+                    onClick: () => setInternalTab('style'),
+                },
+            })
             return
         }
 

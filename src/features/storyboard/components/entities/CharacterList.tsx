@@ -509,12 +509,13 @@ function AddCharacterForm({ onAdd, onCancel }: { onAdd: (name: string, role: Cha
 }
 
 export function CharacterList() {
-    const { extractionResult, characters, setCharacters, addCharacter, setPreSelectedCharacterId, saveCharacterToLibrary, removeCharacterFromLibrary } = useStoryboardStore()
+    const { extractionResult, characters, setCharacters, addCharacter, setPreSelectedCharacterId, setInternalTab, saveCharacterToLibrary, removeCharacterFromLibrary } = useStoryboardStore()
     const [showAddForm, setShowAddForm] = useState(false)
 
     // Handler to pre-select a character in the CharacterSheetGenerator
     const handleOpenCharacterSheetRecipe = (characterId: string) => {
         setPreSelectedCharacterId(characterId)
+        setInternalTab('entities') // ensure we're on the entities tab
     }
 
     const handleAddCharacter = (name: string, role: CharacterRole) => {
