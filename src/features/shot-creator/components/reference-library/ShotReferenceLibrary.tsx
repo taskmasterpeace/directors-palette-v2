@@ -128,6 +128,25 @@ const ShotReferenceLibrary = () => {
                                                     height={200}
                                                 />
 
+                                                {/* Tag pills - bottom left */}
+                                                {item.tags && item.tags.length > 0 && (
+                                                    <div className="absolute bottom-1 left-1 flex gap-1 max-w-[calc(100%-2rem)]">
+                                                        {item.tags.slice(0, 2).map((tag) => (
+                                                            <span
+                                                                key={tag}
+                                                                className="bg-black/70 text-white text-[10px] leading-tight px-1.5 py-0.5 rounded-full truncate max-w-[5rem]"
+                                                            >
+                                                                {tag}
+                                                            </span>
+                                                        ))}
+                                                        {item.tags.length > 2 && (
+                                                            <span className="bg-violet-500/70 text-white text-[10px] leading-tight px-1.5 py-0.5 rounded-full">
+                                                                +{item.tags.length - 2}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+
                                                 {/* Category icon */}
                                                 <div className="absolute bottom-1 right-1 bg-black/80 rounded p-1">
                                                     {item.category === 'people' && <Users className="w-3 h-3 text-accent" />}
@@ -212,9 +231,23 @@ const ShotReferenceLibrary = () => {
                                                     className="object-cover"
                                                 />
                                             </div>
-                                            <div className="flex-1">
-                                                <p className="text-sm text-foreground">{item.prompt || 'Untitled'}</p>
-                                                <p className="text-xs text-muted-foreground capitalize">{item.category || 'unorganized'}</p>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm text-foreground truncate">{item.prompt || 'Untitled'}</p>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <p className="text-xs text-muted-foreground capitalize">{item.category || 'unorganized'}</p>
+                                                    {item.tags && item.tags.length > 0 && (
+                                                        <div className="flex gap-1 flex-wrap">
+                                                            {item.tags.map((tag) => (
+                                                                <span
+                                                                    key={tag}
+                                                                    className="bg-violet-500/20 text-violet-300 text-[10px] leading-tight px-1.5 py-0.5 rounded-full"
+                                                                >
+                                                                    {tag}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
 
                                             {/* Actions (show on hover or always visible on large screens) */}
