@@ -61,22 +61,10 @@ interface ModelTestConfig {
 
 // Model configurations (matching src/config/index.ts)
 const MODELS: Record<string, ModelTestConfig> = {
-    'qwen-image-fast': {
-        endpoint: 'prunaai/qwen-image-fast:01b324d214eb4870ff424dc4215c067759c4c01a8751e327a434e2b16054db2f',
+    'z-image-turbo': {
+        endpoint: 'prunaai/z-image-turbo',
         inputKey: 'prompt',
-        costPts: 2
-    },
-    'gpt-image-low': {
-        endpoint: 'openai/gpt-image-1.5',
-        inputKey: 'prompt',
-        extraParams: { quality: 'low' },
-        costPts: 3
-    },
-    'gpt-image-medium': {
-        endpoint: 'openai/gpt-image-1.5',
-        inputKey: 'prompt',
-        extraParams: { quality: 'medium' },
-        costPts: 10
+        costPts: 5
     },
     'nano-banana': {
         endpoint: 'google/nano-banana',
@@ -88,10 +76,15 @@ const MODELS: Record<string, ModelTestConfig> = {
         inputKey: 'prompt',
         costPts: 20
     },
-    'z-image-turbo': {
-        endpoint: 'prunaai/z-image-turbo',
+    'seedream-5-lite': {
+        endpoint: 'bytedance/seedream-5-lite',
         inputKey: 'prompt',
-        costPts: 5
+        costPts: 4
+    },
+    'riverflow-2-pro': {
+        endpoint: 'bytedance/riverflow-2-pro',
+        inputKey: 'instruction',
+        costPts: 27
     }
 }
 
@@ -165,12 +158,11 @@ async function runTests() {
         // { name: 'instruction_complex', prompt: TESTS.instruction_complex },
     ]
 
-    // Select which models to test - focused comparison
-    // Budget vs Mid vs Premium for spelling capability
+    // Select which models to test
     const modelsToTest = [
-        'qwen-image-fast',      // 2 pts - fastest, budget
+        'seedream-5-lite',      // 4 pts - budget
+        'z-image-turbo',        // 5 pts - fast
         'nano-banana',          // 8 pts - good balance
-        'gpt-image-medium',     // 10 pts - standard GPT
         'nano-banana-pro',      // 20 pts - best text/spelling
     ]
 

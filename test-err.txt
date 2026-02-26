@@ -1,0 +1,10 @@
+[1A[2K[2m[WebServer] [22m [31m[1m⨯[22m[39m Failed to start server
+[1A[2K[2m[WebServer] [22mError: listen EADDRINUSE: address already in use :::3007
+[2m[WebServer] [22m    at <unknown> (Error: listen EADDRINUSE: address already in use :::3007)
+[2m[WebServer] [22m    at new Promise (<anonymous>) {
+[2m[WebServer] [22m  code: [32m'EADDRINUSE'[39m,
+[2m[WebServer] [22m  errno: [33m-4091[39m,
+[2m[WebServer] [22m  syscall: [32m'listen'[39m,
+[2m[WebServer] [22m  address: [32m'::'[39m,
+[2m[WebServer] [22m  port: [33m3007[39m
+[2m[WebServer] [22m}

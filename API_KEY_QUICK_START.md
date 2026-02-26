@@ -41,14 +41,11 @@ curl -X POST https://directorspalette.app/api/v1/images/generate \
 
 | Model | Cost | Best For |
 |-------|------|----------|
-| `nano-banana` | 8¢ | Quick iterations, style matching |
-| `nano-banana-pro` | 40¢ | High-quality 4K production |
+| `seedream-5-lite` | 4¢ | Budget-friendly, reasoning, editing |
 | `z-image-turbo` | 5¢ | Rapid prototyping |
-| `qwen-image-2512` | 4¢ | Budget-friendly |
-| `gpt-image-low` | 3¢ | Budget GPT quality |
-| `gpt-image-medium` | 10¢ | Accurate text rendering |
-| `gpt-image-high` | 27¢ | Maximum quality |
-| `seedream-4.5` | 6¢ | High-quality 4K |
+| `nano-banana` | 8¢ | Quick iterations, style matching |
+| `nano-banana-pro` | 20¢ | High-quality 4K production |
+| `riverflow-2-pro` | 27¢ | Custom fonts, logos, infographics |
 
 ---
 
@@ -83,10 +80,9 @@ Pass image URLs to match their style:
 **Limits by Model**:
 - `nano-banana`: Up to 10 images
 - `nano-banana-pro`: Up to 14 images
-- `seedream-4.5`: Up to 14 images
-- `z-image-turbo`: Up to 1 image
-- `qwen-image-2512`: Up to 1 image
-- GPT models: Up to 10 images
+- `seedream-5-lite`: Up to 14 images
+- `riverflow-2-pro`: Up to 10 source + 4 detail refs
+- `z-image-turbo`: None (text-to-image only)
 
 ---
 
@@ -134,7 +130,7 @@ Use one image (anchor) to transform multiple other images in a consistent style.
 }
 ```
 
-**Cost Breakdown**: 3 input images × $0.08 = $0.24 (anchor is FREE!)
+**Cost Breakdown**: 3 input images x $0.08 = $0.24 (anchor is FREE!)
 
 ### cURL Example
 
@@ -178,12 +174,12 @@ def anchor_transform_batch(anchor_url, input_urls, prompt="Transform to match st
     result = response.json()
 
     if result["success"]:
-        print(f"✅ Transformed {len(result['images'])} images")
-        print(f"💰 Cost: ${result['creditsUsed']}")
-        print(f"🎯 Anchor was FREE (only paid for {len(input_urls)} inputs)")
+        print(f"Transformed {len(result['images'])} images")
+        print(f"Cost: ${result['creditsUsed']}")
+        print(f"Anchor was FREE (only paid for {len(input_urls)} inputs)")
         return result["images"]
     else:
-        print(f"❌ Error: {result['error']}")
+        print(f"Error: {result['error']}")
         return []
 
 # Usage
@@ -204,8 +200,6 @@ transformed_images = anchor_transform_batch(anchor, inputs, "Watercolor painting
 - **Brand Style Guides**: Apply company visual style to product images
 - **Storyboard Shots**: Convert script scenes to consistent cinematic style
 - **Batch Processing**: Process 100 images for $8 instead of $16
-
-**💡 Pro Tip**: Upload a high-quality style reference as your anchor for best results!
 
 ---
 
@@ -487,14 +481,6 @@ Currently no rate limits enforced. Use responsibly!
 
 ---
 
-## Support
-
-- **Issues**: Check `/admin` → **API** tab for usage stats
-- **Credits**: Purchase at `/credits`
-- **Questions**: Contact support or check documentation
-
----
-
 ## Advanced: Model-Specific Parameters
 
 ### nano-banana-pro
@@ -519,21 +505,18 @@ Currently no rate limits enforced. Use responsibly!
 }
 ```
 
-### GPT Image Models
+---
 
-```json
-{
-  "prompt": "Logo with transparent background",
-  "model": "gpt-image-high",
-  "background": "transparent",
-  "numImages": 4
-}
-```
+## Support
+
+- **Issues**: Check `/admin` -> **API** tab for usage stats
+- **Credits**: Purchase at `/credits`
+- **Questions**: Contact support or check documentation
 
 ---
 
 **Quick Links**:
-- API Dashboard: `/admin` → API tab
+- API Dashboard: `/admin` -> API tab
 - Credits: `/credits`
 - Gallery: `/gallery`
 - Help: `/help`

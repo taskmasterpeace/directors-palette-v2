@@ -1,0 +1,149 @@
+   ▲ Next.js 15.5.7
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 14.3s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/98) ...
+   Generating static pages (24/98) 
+   Generating static pages (48/98) 
+   Generating static pages (73/98) 
+ ✓ Generating static pages (98/98)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                          Size  First Load JS
+┌ ƒ /                                              252 kB        1.03 MB
+├ ƒ /_not-found                                      1 kB         103 kB
+├ ƒ /admin                                        1.51 kB         346 kB
+├ ƒ /api/ad-lab/generate-matrix                     339 B         102 kB
+├ ƒ /api/ad-lab/grade-matrix                        339 B         102 kB
+├ ƒ /api/ad-lab/parse-brief                         339 B         102 kB
+├ ƒ /api/ad-lab/refine-prompt                       339 B         102 kB
+├ ƒ /api/adhub/ads                                  339 B         102 kB
+├ ƒ /api/adhub/brands                               339 B         102 kB
+├ ƒ /api/adhub/brands/[brandId]                     339 B         102 kB
+├ ƒ /api/adhub/brands/[brandId]/images              339 B         102 kB
+├ ƒ /api/adhub/extract-copy                         339 B         102 kB
+├ ƒ /api/adhub/generate                             339 B         102 kB
+├ ƒ /api/adhub/products                             339 B         102 kB
+├ ƒ /api/adhub/products/[productId]                 339 B         102 kB
+├ ƒ /api/admin/abuse-report                         339 B         102 kB
+├ ƒ /api/admin/check                                339 B         102 kB
+├ ƒ /api/admin/community                            339 B         102 kB
+├ ƒ /api/admin/export-logs                          240 B         341 kB
+├ ƒ /api/admin/financials                           240 B         341 kB
+├ ƒ /api/admin/financials/export                    240 B         341 kB
+├ ƒ /api/admin/generations                          240 B         341 kB
+├ ƒ /api/admin/generations/stats                    240 B         341 kB
+├ ƒ /api/admin/grant-credits                        240 B         341 kB
+├ ƒ /api/admin/migrate                              339 B         102 kB
+├ ƒ /api/admin/seed-recipes                         339 B         102 kB
+├ ƒ /api/admin/stats                                240 B         341 kB
+├ ƒ /api/admin/style-sheets                         339 B         102 kB
+├ ƒ /api/admin/users                                240 B         341 kB
+├ ƒ /api/animation-prompt/generate                  339 B         102 kB
+├ ƒ /api/artist-dna/analyze-song                    339 B         102 kB
+├ ƒ /api/artist-dna/calculate-genome                339 B         102 kB
+├ ƒ /api/artist-dna/generate-character-sheet        339 B         102 kB
+├ ƒ /api/artist-dna/generate-mix                    339 B         102 kB
+├ ƒ /api/artist-dna/generate-options                339 B         102 kB
+├ ƒ /api/artist-dna/generate-portrait               339 B         102 kB
+├ ƒ /api/artist-dna/seed-from-artist                339 B         102 kB
+├ ƒ /api/artist-dna/suggest                         339 B         102 kB
+├ ƒ /api/artist-dna/suggest-concepts                339 B         102 kB
+├ ƒ /api/community                                  339 B         102 kB
+├ ƒ /api/community/add                              339 B         102 kB
+├ ƒ /api/community/library                          339 B         102 kB
+├ ƒ /api/community/rate                             339 B         102 kB
+├ ƒ /api/coupons                                    339 B         102 kB
+├ ƒ /api/coupons/redeem                             339 B         102 kB
+├ ƒ /api/credits                                    339 B         102 kB
+├ ƒ /api/credits/packages                           339 B         102 kB
+├ ƒ /api/credits/pricing                            339 B         102 kB
+├ ƒ /api/credits/usage                              339 B         102 kB
+├ ƒ /api/cron/cleanup-expired                       339 B         102 kB
+├ ƒ /api/director-proposal/generate                 339 B         102 kB
+├ ƒ /api/gallery/save-frame                         339 B         102 kB
+├ ƒ /api/generation/cancel/[predictionId]           339 B         102 kB
+├ ƒ /api/generation/image                         1.01 kB         185 kB
+├ ƒ /api/generation/inpaint                         339 B         102 kB
+├ ƒ /api/generation/lip-sync                      1.01 kB         185 kB
+├ ƒ /api/generation/status/[predictionId]           339 B         102 kB
+├ ƒ /api/generation/video                         1.01 kB         185 kB
+├ ƒ /api/music-lab/analyze-structure                339 B         102 kB
+├ ƒ /api/music-lab/isolate-vocals                   339 B         102 kB
+├ ƒ /api/music-lab/transcribe                       339 B         102 kB
+├ ƒ /api/music-lab/upload                           339 B         102 kB
+├ ƒ /api/payments/create-checkout                   339 B         102 kB
+├ ƒ /api/predictions/[id]                         1.01 kB         185 kB
+├ ƒ /api/prompt-expander                            339 B         102 kB
+├ ƒ /api/prompt-organizer/parse                     339 B         102 kB
+├ ƒ /api/recipes/[recipeId]                         339 B         102 kB
+├ ƒ /api/recipes/[recipeId]/copy-images             339 B         102 kB
+├ ƒ /api/recipes/[recipeId]/execute                 339 B         102 kB
+├ ƒ /api/recipes/[recipeId]/images                  339 B         102 kB
+├ ƒ /api/recipes/[recipeId]/images/[imageId]        339 B         102 kB
+├ ƒ /api/slot-machine/expand                        339 B         102 kB
+├ ƒ /api/storage/limits                             339 B         102 kB
+├ ƒ /api/story-creator/llm-chat                     339 B         102 kB
+├ ƒ /api/storyboard/broll                           339 B         102 kB
+├ ƒ /api/storyboard/extract                         339 B         102 kB
+├ ƒ /api/storyboard/generate-prompts                339 B         102 kB
+├ ƒ /api/storyboard/refine-prompts                  339 B         102 kB
+├ ƒ /api/storybook/detect-characters                339 B         102 kB
+├ ƒ /api/storybook/enhance-character-description    339 B         102 kB
+├ ƒ /api/storybook/expand-style                     339 B         102 kB
+├ ƒ /api/storybook/export-pdf                       339 B         102 kB
+├ ƒ /api/storybook/extract-character-description    339 B         102 kB
+├ ƒ /api/storybook/extract-elements                 339 B         102 kB
+├ ƒ /api/storybook/generate-ideas                   339 B         102 kB
+├ ƒ /api/storybook/generate-story                   339 B         102 kB
+├ ƒ /api/storybook/generate-synopsis                339 B         102 kB
+├ ƒ /api/storybook/polish-story                     339 B         102 kB
+├ ƒ /api/storybook/projects                         339 B         102 kB
+├ ƒ /api/storybook/projects/[id]                    339 B         102 kB
+├ ƒ /api/storybook/sound-effects                    339 B         102 kB
+├ ƒ /api/storybook/synthesize                       339 B         102 kB
+├ ƒ /api/styles/analyze                             339 B         102 kB
+├ ƒ /api/tools/before-after-grid                    339 B         102 kB
+├ ƒ /api/tools/cinematic-grid                     1.01 kB         185 kB
+├ ƒ /api/tools/grid-split                           339 B         102 kB
+├ ƒ /api/tools/remove-background                  1.01 kB         185 kB
+├ ƒ /api/tools/style-guide-grid                   1.01 kB         185 kB
+├ ƒ /api/upload-file                                339 B         102 kB
+├ ƒ /api/upload-font                                339 B         102 kB
+├ ƒ /api/v1/images/generate                       1.01 kB         185 kB
+├ ƒ /api/v1/keys                                    339 B         102 kB
+├ ƒ /api/v1/recipes                                 339 B         102 kB
+├ ƒ /api/v1/recipes/execute                       1.01 kB         185 kB
+├ ƒ /api/v1/usage                                 1.01 kB         185 kB
+├ ƒ /api/wardrobe/generate-preview                  339 B         102 kB
+├ ƒ /api/wardrobe/generate-reference                339 B         102 kB
+├ ƒ /api/webhooks/replicate                       1.01 kB         185 kB
+├ ƒ /api/webhooks/stripe                          1.01 kB         185 kB
+├ ƒ /api/wildcards/generate                         339 B         102 kB
+├ ƒ /api/wildcards/seed                             339 B         102 kB
+├ ƒ /auth/callback                                  339 B         102 kB
+├ ƒ /auth/forgot-password                         2.77 kB         175 kB
+├ ƒ /auth/reset-password                          2.55 kB         172 kB
+├ ƒ /auth/signin                                  5.51 kB         191 kB
+├ ƒ /gallery                                      7.03 kB         330 kB
+├ ƒ /help                                         6.87 kB         120 kB
+├ ƒ /landing                                       9.9 kB         128 kB
+├ ƒ /music-lab                                    2.73 kB         317 kB
+├ ƒ /music-lab/artist-dna                          4.9 kB         236 kB
+├ ƒ /node-workflow                                3.47 kB         244 kB
+├ ƒ /test-frame-extractor                         5.84 kB         123 kB
+└ ƒ /test-storyboard                              4.24 kB         526 kB
++ First Load JS shared by all                      102 kB
+  ├ chunks/1255-01735991e86fac1b.js               45.4 kB
+  ├ chunks/4bd1b696-182b6b13bdad92e3.js           54.2 kB
+  └ other shared chunks (total)                   2.24 kB
+
+
+ƒ Middleware                                      70.3 kB
+
+ƒ  (Dynamic)  server-rendered on demand
+

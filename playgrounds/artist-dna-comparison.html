@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Artist DNA Comparison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0a;
+    --card: #1a1a1a;
+    --card-border: #2a2a2a;
+    --text: #e5e5e5;
+    --text-muted: #a3a3a3;
+    --text-dim: #737373;
+    --amber: #f59e0b;
+    --amber-dim: rgba(245, 158, 11, 0.15);
+    --blue: #3b82f6;
+    --blue-dim: rgba(59, 130, 246, 0.15);
+    --pink: #ec4899;
+    --pink-dim: rgba(236, 72, 153, 0.15);
+    --input-bg: #111111;
+    --input-border: #333333;
+    --chip-bg: #222222;
+    --chip-border: #3a3a3a;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--blue), var(--amber), var(--pink));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+  }
+  .header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  /* Top Actions */
+  .top-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: var(--radius);
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn:hover { border-color: var(--amber); color: var(--amber); }
+  .btn-amber { background: var(--amber-dim); border-color: var(--amber); color: var(--amber); }
+  .btn-amber:hover { background: var(--amber); color: #000; }
+
+  /* Columns */
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  .artist-col {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .artist-col[data-artist="a"] { --accent: var(--blue); --accent-dim: var(--blue-dim); }
+  .artist-col[data-artist="b"] { --accent: var(--pink); --accent-dim: var(--pink-dim); }
+
+  .col-header {
+    padding: 16px 20px;
+    background: var(--accent-dim);
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .col-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .col-header span {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .col-body { padding: 20px; }
+
+  .field { margin-bottom: 18px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .text-input {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .text-input:focus { border-color: var(--accent); }
+  .text-input::placeholder { color: var(--text-dim); }
+
+  /* Chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--chip-border);
+    background: var(--chip-bg);
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .chip:hover { border-color: var(--text-dim); color: var(--text); }
+  .chip.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Slider */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .slider-row input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--input-border);
+    outline: none;
+  }
+  .slider-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 6px rgba(0,0,0,0.4);
+  }
+  .slider-row input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--bg);
+  }
+  .slider-val {
+    min-width: 36px;
+    text-align: right;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Prompt Output */
+  .prompt-output {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--card-border);
+  }
+  .prompt-box {
+    margin-bottom: 12px;
+  }
+  .prompt-box:last-child { margin-bottom: 0; }
+  .prompt-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .prompt-text {
+    padding: 10px 14px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+    font-size: 0.82rem;
+    color: var(--text);
+    line-height: 1.55;
+    min-height: 40px;
+    word-break: break-word;
+  }
+
+  /* Comparison Panel */
+  .comparison-panel {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .comp-header {
+    padding: 16px 20px;
+    background: var(--amber-dim);
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .comp-header span {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .comp-body {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .comp-section {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+  }
+  .comp-section.full-width {
+    grid-column: 1 / -1;
+  }
+  .comp-section-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--amber);
+    margin-bottom: 14px;
+  }
+
+  /* Genre Overlap */
+  .genre-overlap {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .genre-col { flex: 1; }
+  .genre-col-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+  .genre-col-label.a-label { color: var(--blue); }
+  .genre-col-label.b-label { color: var(--pink); }
+  .genre-col-label.shared-label { color: var(--amber); }
+
+  .genre-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .genre-tag {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 500;
+  }
+  .genre-tag.a-tag { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(59,130,246,0.3); }
+  .genre-tag.b-tag { background: var(--pink-dim); color: var(--pink); border: 1px solid rgba(236,72,153,0.3); }
+  .genre-tag.shared-tag { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .genre-empty { font-size: 0.78rem; color: var(--text-dim); font-style: italic; }
+
+  /* Melody Spectrum */
+  .melody-bar-wrap { position: relative; margin-top: 8px; }
+  .melody-bar {
+    height: 8px;
+    background: linear-gradient(to right, var(--blue-dim), var(--card), var(--pink-dim));
+    border-radius: 4px;
+    position: relative;
+  }
+  .melody-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+  }
+  .melody-marker {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    border: 2px solid var(--bg);
+    transition: left 0.3s ease;
+    z-index: 1;
+  }
+  .melody-marker.a-marker { background: var(--blue); color: #fff; }
+  .melody-marker.b-marker { background: var(--pink); color: #fff; }
+
+  /* Contrast Lists */
+  .contrast-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .contrast-side {}
+  .contrast-side-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  .contrast-side-label.a-side { color: var(--blue); }
+  .contrast-side-label.b-side { color: var(--pink); }
+  .contrast-items { display: flex; flex-direction: column; gap: 3px; }
+  .contrast-item {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    background: var(--chip-bg);
+    color: var(--text-muted);
+  }
+  .contrast-item.shared {
+    background: var(--amber-dim);
+    color: var(--amber);
+    border: 1px solid rgba(245,158,11,0.25);
+  }
+  .contrast-empty { font-size: 0.78rem; color: var(--text-dim); font-style: italic; }
+
+  /* Prompt Diff */
+  .diff-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .diff-col {}
+  .diff-col-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  .diff-col-label.a-diff { color: var(--blue); }
+  .diff-col-label.b-diff { color: var(--pink); }
+  .diff-prompt-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    margin-bottom: 3px;
+    margin-top: 10px;
+  }
+  .diff-prompt-label:first-child { margin-top: 0; }
+  .diff-text {
+    font-size: 0.78rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    padding: 8px 12px;
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--card-border);
+    min-height: 28px;
+    word-break: break-word;
+  }
+  .diff-text .diff-unique-a {
+    background: var(--blue-dim);
+    color: var(--blue);
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+  .diff-text .diff-unique-b {
+    background: var(--pink-dim);
+    color: var(--pink);
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--card-border);
+    color: var(--text-dim);
+    font-size: 0.75rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .columns { grid-template-columns: 1fr; }
+    .comp-body { grid-template-columns: 1fr; }
+    .comp-section.full-width { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Artist DNA Comparison</h1>
+  <p>Compare two artist profiles side by side and see how DNA shapes output</p>
+</div>
+
+<div class="top-actions">
+  <button class="btn btn-amber" onclick="swapProfiles()">&#8644; Swap Profiles</button>
+  <button class="btn" onclick="resetDefaults()">&#8635; Reset to Defaults</button>
+</div>
+
+<div class="columns" id="columns"></div>
+
+<div class="comparison-panel">
+  <div class="comp-header">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+    <span>Comparison</span>
+  </div>
+  <div class="comp-body" id="compBody"></div>
+</div>
+
+<div class="footer">Artist DNA Comparison Tool &mdash; Director's Palette</div>
+
+<script>
+const GENRES = ['Hip-Hop/Rap','Pop','R&B/Soul','Rock','Electronic/Dance','Jazz','Country','Metal','Latino'];
+const PRODUCTIONS = ['lo-fi','polished','minimalist','layered','808-heavy','orchestral','sample-heavy','synth-driven','live instruments'];
+const VOCALS = ['raspy','smooth','falsetto','deep','breathy','gritty','nasal','powerful'];
+
+const DEFAULT_A = {
+  name: 'Shadow',
+  genres: ['Hip-Hop/Rap'],
+  production: ['lo-fi','808-heavy'],
+  vocal: ['raspy','deep'],
+  melodyBias: 25,
+  attitude: 'aggressive and unfiltered',
+  adLibs: 'yeah, brr, skrrt',
+  influences: 'Travis Scott, Playboi Carti'
+};
+
+const DEFAULT_B = {
+  name: 'Velvet',
+  genres: ['R&B/Soul','Pop'],
+  production: ['polished','layered'],
+  vocal: ['smooth','falsetto'],
+  melodyBias: 85,
+  attitude: 'sultry and introspective',
+  adLibs: 'ooh, mmm',
+  influences: 'The Weeknd, Frank Ocean'
+};
+
+let profiles = { a: structuredClone(DEFAULT_A), b: structuredClone(DEFAULT_B) };
+
+function buildVocalPrompt(p) {
+  const parts = [];
+  if (p.vocal.length > 0) parts.push(p.vocal.join(', '));
+  const mb = p.melodyBias;
+  if (mb <= 20) parts.push('spoken word delivery');
+  else if (mb <= 40) parts.push('rap-focused with occasional melody');
+  else if (mb <= 60) parts.push('balanced rap and singing');
+  else if (mb <= 80) parts.push('melodic with spoken sections');
+  else parts.push('fully sung vocals');
+  const att = p.attitude.trim();
+  if (att) parts.push(att + ' tone');
+  const libs = p.adLibs.split(',').map(s => s.trim()).filter(Boolean);
+  if (libs.length > 0) parts.push('ad-libs: ' + libs.slice(0, 3).join(', '));
+  return parts.join(', ');
+}
+
+function buildMusicPrompt(p) {
+  const tags = [];
+  tags.push(...p.genres.slice(0, 2));
+  tags.push(...p.production.slice(0, 2));
+  const infs = p.influences.split(',').map(s => s.trim()).filter(Boolean);
+  if (infs.length > 0) tags.push(infs[0] + ' influenced');
+  return tags.join(', ');
+}
+
+function renderColumns() {
+  const container = document.getElementById('columns');
+  container.innerHTML = '';
+  ['a', 'b'].forEach(key => {
+    const p = profiles[key];
+    const label = key === 'a' ? 'Artist A' : 'Artist B';
+    const col = document.createElement('div');
+    col.className = 'artist-col';
+    col.dataset.artist = key;
+    col.innerHTML = `
+      <div class="col-header"><div class="col-dot"></div><span>${label}</span></div>
+      <div class="col-body">
+        <div class="field">
+          <label class="field-label">Artist Name</label>
+          <input class="text-input" type="text" value="${esc(p.name)}" data-key="${key}" data-field="name" oninput="onText(this)">
+        </div>
+        <div class="field">
+          <label class="field-label">Genres</label>
+          <div class="chips">${GENRES.map(g => `<div class="chip${p.genres.includes(g)?' active':''}" data-key="${key}" data-field="genres" data-val="${esc(g)}" onclick="onChip(this)">${g}</div>`).join('')}</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Production Preferences</label>
+          <div class="chips">${PRODUCTIONS.map(g => `<div class="chip${p.production.includes(g)?' active':''}" data-key="${key}" data-field="production" data-val="${esc(g)}" onclick="onChip(this)">${g}</div>`).join('')}</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Vocal Textures</label>
+          <div class="chips">${VOCALS.map(g => `<div class="chip${p.vocal.includes(g)?' active':''}" data-key="${key}" data-field="vocal" data-val="${esc(g)}" onclick="onChip(this)">${g}</div>`).join('')}</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Melody Bias</label>
+          <div class="slider-row">
+            <input type="range" min="0" max="100" value="${p.melodyBias}" data-key="${key}" data-field="melodyBias" oninput="onSlider(this)">
+            <span class="slider-val" id="slider-val-${key}">${p.melodyBias}</span>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Attitude</label>
+          <input class="text-input" type="text" value="${esc(p.attitude)}" data-key="${key}" data-field="attitude" placeholder="e.g. aggressive, moody, uplifting" oninput="onText(this)">
+        </div>
+        <div class="field">
+          <label class="field-label">Ad-libs</label>
+          <input class="text-input" type="text" value="${esc(p.adLibs)}" data-key="${key}" data-field="adLibs" placeholder="comma-separated" oninput="onText(this)">
+        </div>
+        <div class="field">
+          <label class="field-label">Artist Influences</label>
+          <input class="text-input" type="text" value="${esc(p.influences)}" data-key="${key}" data-field="influences" placeholder="comma-separated" oninput="onText(this)">
+        </div>
+        <div class="prompt-output">
+          <div class="prompt-box">
+            <div class="prompt-label">Vocal Prompt</div>
+            <div class="prompt-text" id="vocal-${key}"></div>
+          </div>
+          <div class="prompt-box">
+            <div class="prompt-label">Music Style Prompt</div>
+            <div class="prompt-text" id="music-${key}"></div>
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(col);
+  });
+  updatePrompts();
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function onText(el) {
+  profiles[el.dataset.key][el.dataset.field] = el.value;
+  updatePrompts();
+}
+
+function onSlider(el) {
+  const val = parseInt(el.value);
+  profiles[el.dataset.key].melodyBias = val;
+  document.getElementById('slider-val-' + el.dataset.key).textContent = val;
+  updatePrompts();
+}
+
+function onChip(el) {
+  const key = el.dataset.key;
+  const field = el.dataset.field;
+  const val = el.dataset.val;
+  const arr = profiles[key][field];
+  const idx = arr.indexOf(val);
+  if (idx >= 0) arr.splice(idx, 1); else arr.push(val);
+  el.classList.toggle('active');
+  updatePrompts();
+}
+
+function updatePrompts() {
+  ['a','b'].forEach(key => {
+    document.getElementById('vocal-' + key).textContent = buildVocalPrompt(profiles[key]) || '(empty)';
+    document.getElementById('music-' + key).textContent = buildMusicPrompt(profiles[key]) || '(empty)';
+  });
+  renderComparison();
+}
+
+function renderComparison() {
+  const body = document.getElementById('compBody');
+  const a = profiles.a, b = profiles.b;
+
+  const sharedGenres = a.genres.filter(g => b.genres.includes(g));
+  const uniqueA_genres = a.genres.filter(g => !b.genres.includes(g));
+  const uniqueB_genres = b.genres.filter(g => !a.genres.includes(g));
+
+  const sharedProd = a.production.filter(p => b.production.includes(p));
+  const sharedVocal = a.vocal.filter(v => b.vocal.includes(v));
+
+  const vocalA = buildVocalPrompt(a);
+  const vocalB = buildVocalPrompt(b);
+  const musicA = buildMusicPrompt(a);
+  const musicB = buildMusicPrompt(b);
+
+  body.innerHTML = `
+    <!-- Genre Overlap -->
+    <div class="comp-section">
+      <div class="comp-section-title">Genre Overlap</div>
+      <div class="genre-overlap">
+        <div class="genre-col">
+          <div class="genre-col-label a-label">${esc(a.name || 'Artist A')} Only</div>
+          <div class="genre-tags">${uniqueA_genres.length ? uniqueA_genres.map(g => `<span class="genre-tag a-tag">${g}</span>`).join('') : '<span class="genre-empty">None</span>'}</div>
+        </div>
+        <div class="genre-col">
+          <div class="genre-col-label shared-label">Shared</div>
+          <div class="genre-tags">${sharedGenres.length ? sharedGenres.map(g => `<span class="genre-tag shared-tag">${g}</span>`).join('') : '<span class="genre-empty">None</span>'}</div>
+        </div>
+        <div class="genre-col">
+          <div class="genre-col-label b-label">${esc(b.name || 'Artist B')} Only</div>
+          <div class="genre-tags">${uniqueB_genres.length ? uniqueB_genres.map(g => `<span class="genre-tag b-tag">${g}</span>`).join('') : '<span class="genre-empty">None</span>'}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Melody Spectrum -->
+    <div class="comp-section">
+      <div class="comp-section-title">Melody Spectrum</div>
+      <div class="melody-bar-wrap">
+        <div class="melody-bar">
+          <div class="melody-marker a-marker" style="left:${a.melodyBias}%">${(a.name || 'A')[0].toUpperCase()}</div>
+          <div class="melody-marker b-marker" style="left:${b.melodyBias}%">${(b.name || 'B')[0].toUpperCase()}</div>
+        </div>
+        <div class="melody-labels"><span>Rap / Spoken 0</span><span>100 Fully Sung</span></div>
+      </div>
+    </div>
+
+    <!-- Production Contrast -->
+    <div class="comp-section">
+      <div class="comp-section-title">Production Contrast</div>
+      <div class="contrast-grid">
+        <div class="contrast-side">
+          <div class="contrast-side-label a-side">${esc(a.name || 'Artist A')}</div>
+          <div class="contrast-items">${a.production.length ? a.production.map(p => `<div class="contrast-item${sharedProd.includes(p)?' shared':''}">${p}</div>`).join('') : '<div class="contrast-empty">None selected</div>'}</div>
+        </div>
+        <div class="contrast-side">
+          <div class="contrast-side-label b-side">${esc(b.name || 'Artist B')}</div>
+          <div class="contrast-items">${b.production.length ? b.production.map(p => `<div class="contrast-item${sharedProd.includes(p)?' shared':''}">${p}</div>`).join('') : '<div class="contrast-empty">None selected</div>'}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vocal Contrast -->
+    <div class="comp-section">
+      <div class="comp-section-title">Vocal Contrast</div>
+      <div class="contrast-grid">
+        <div class="contrast-side">
+          <div class="contrast-side-label a-side">${esc(a.name || 'Artist A')}</div>
+          <div class="contrast-items">${a.vocal.length ? a.vocal.map(v => `<div class="contrast-item${sharedVocal.includes(v)?' shared':''}">${v}</div>`).join('') : '<div class="contrast-empty">None selected</div>'}</div>
+        </div>
+        <div class="contrast-side">
+          <div class="contrast-side-label b-side">${esc(b.name || 'Artist B')}</div>
+          <div class="contrast-items">${b.vocal.length ? b.vocal.map(v => `<div class="contrast-item${sharedVocal.includes(v)?' shared':''}">${v}</div>`).join('') : '<div class="contrast-empty">None selected</div>'}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prompt Diff -->
+    <div class="comp-section full-width">
+      <div class="comp-section-title">Prompt Diff</div>
+      <div class="diff-grid">
+        <div class="diff-col">
+          <div class="diff-col-label a-diff">${esc(a.name || 'Artist A')}</div>
+          <div class="diff-prompt-label">Vocal Prompt</div>
+          <div class="diff-text">${highlightDiff(vocalA, vocalB, 'a')}</div>
+          <div class="diff-prompt-label">Music Style Prompt</div>
+          <div class="diff-text">${highlightDiff(musicA, musicB, 'a')}</div>
+        </div>
+        <div class="diff-col">
+          <div class="diff-col-label b-diff">${esc(b.name || 'Artist B')}</div>
+          <div class="diff-prompt-label">Vocal Prompt</div>
+          <div class="diff-text">${highlightDiff(vocalB, vocalA, 'b')}</div>
+          <div class="diff-prompt-label">Music Style Prompt</div>
+          <div class="diff-text">${highlightDiff(musicB, musicA, 'b')}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function highlightDiff(text, otherText, side) {
+  if (!text) return '<span style="color:var(--text-dim);font-style:italic">(empty)</span>';
+  const wordsA = text.split(/(\s+|,\s*)/);
+  const otherWords = new Set(otherText.toLowerCase().split(/[\s,]+/).filter(Boolean));
+  const cls = side === 'a' ? 'diff-unique-a' : 'diff-unique-b';
+  return wordsA.map(w => {
+    const clean = w.replace(/[,\s]/g, '').toLowerCase();
+    if (!clean) return esc(w);
+    if (!otherWords.has(clean)) return `<span class="${cls}">${esc(w)}</span>`;
+    return esc(w);
+  }).join('');
+}
+
+function swapProfiles() {
+  const tmp = structuredClone(profiles.a);
+  profiles.a = structuredClone(profiles.b);
+  profiles.b = tmp;
+  renderColumns();
+}
+
+function resetDefaults() {
+  profiles.a = structuredClone(DEFAULT_A);
+  profiles.b = structuredClone(DEFAULT_B);
+  renderColumns();
+}
+
+// Initial render
+renderColumns();
+</script>
+</body>
+</html>

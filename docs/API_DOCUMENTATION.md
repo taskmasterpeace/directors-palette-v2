@@ -63,16 +63,6 @@ Generate images from text prompts using various AI models.
 - `numInferenceSteps`: 1-4 (default: 2)
 - `guidanceScale`: 0-2 (default: 1.0)
 
-**qwen-image-fast only:**
-- `guidance`: 0-10 (default: 3) - Guidance scale
-- `num_inference_steps`: 10-50 (default: 30)
-- `negative_prompt`: string - Things to avoid
-
-**gpt-image-low / gpt-image-medium / gpt-image-high:**
-- `background`: "opaque" | "transparent" | "auto" (default: "opaque") - Background type
-- `numImages`: 1-10 (default: 1) - Number of images to generate (cost multiplied by count)
-- Note: Only supports aspect ratios 1:1, 3:2, 2:3
-
 #### Response
 
 ```json
@@ -102,19 +92,12 @@ curl -X POST https://directorspalette.app/api/v1/images/generate \
 
 ## Available Models
 
-### qwen-image-fast (Fastest & Cheapest)
-- **Speed:** Almost Instant (~1 sec)
-- **Quality:** Good
-- **Cost:** 2 points ($0.02)
-- **Reference Images:** None (text-to-image only)
-- **Best For:** Ultra-fast generation, real-time previews, rapid prototyping, bulk operations
-
-### z-image-turbo
+### z-image-turbo (Fastest)
 - **Speed:** Very Fast (~2 sec)
 - **Quality:** Good
 - **Cost:** 5 points ($0.05)
-- **Reference Images:** Up to 1
-- **Best For:** Quick visualization with style reference
+- **Reference Images:** None (text-to-image only)
+- **Best For:** Quick visualization, rapid prototyping
 
 ### nano-banana
 - **Speed:** Fast (~5 sec)
@@ -131,32 +114,21 @@ curl -X POST https://directorspalette.app/api/v1/images/generate \
 - **Resolution:** Up to 4K
 - **Best For:** Production-quality images, accurate text rendering, final assets
 
-### gpt-image-low (Fast Drafts)
-- **Speed:** Fast (~3 sec)
+### seedream-5-lite (Best Value)
+- **Speed:** Medium (~10 sec)
 - **Quality:** Good
-- **Cost:** 3 points ($0.03)
-- **Reference Images:** None
-- **Special Features:** Transparent PNG backgrounds, multi-image generation (1-10)
-- **Aspect Ratios:** 1:1, 3:2, 2:3 only
-- **Best For:** Quick iterations, compositing work, transparent backgrounds
+- **Cost:** 4 points ($0.04)
+- **Reference Images:** Up to 14
+- **Resolution:** Up to 4K
+- **Best For:** Deep thinking, reasoning, editing, sequential generation
 
-### gpt-image-medium (Standard)
-- **Speed:** Medium (~5 sec)
-- **Quality:** Very Good
-- **Cost:** 10 points ($0.10)
-- **Reference Images:** None
-- **Special Features:** Transparent PNG backgrounds, multi-image generation (1-10)
-- **Aspect Ratios:** 1:1, 3:2, 2:3 only
-- **Best For:** Balanced quality/speed, product images, text-heavy designs
-
-### gpt-image-high (Premium)
-- **Speed:** Slower (~8 sec)
+### riverflow-2-pro (Design)
+- **Speed:** Medium (~20 sec)
 - **Quality:** Excellent
 - **Cost:** 27 points ($0.27)
-- **Reference Images:** None
-- **Special Features:** Transparent PNG backgrounds, multi-image generation (1-10)
-- **Aspect Ratios:** 1:1, 3:2, 2:3 only
-- **Best For:** Final renders, premium quality, professional assets
+- **Reference Images:** Up to 10 source + 4 detail
+- **Resolution:** Up to 4K
+- **Best For:** Custom fonts, logo cleanup, infographics, product shots
 
 ---
 
@@ -548,13 +520,11 @@ Credits are stored in cents (100 credits = $1.00). 1 point = 1 cent.
 
 | Model | Points per Image | Cost |
 |-------|------------------|------|
-| qwen-image-fast | 2 points | $0.02 |
-| gpt-image-low | 3 points | $0.03 |
+| seedream-5-lite | 4 points | $0.04 |
 | z-image-turbo | 5 points | $0.05 |
 | nano-banana | 8 points | $0.08 |
-| gpt-image-medium | 10 points | $0.10 |
 | nano-banana-pro | 20 points | $0.20 |
-| gpt-image-high | 27 points | $0.27 |
+| riverflow-2-pro | 27 points | $0.27 |
 
 ---
 
@@ -655,7 +625,7 @@ curl -X POST https://directorspalette.app/api/v1/images/generate \
   -H "Content-Type: application/json" \
   -d '{
     "prompt": "A sunset over mountains",
-    "model": "qwen-image-fast",
+    "model": "nano-banana",
     "aspectRatio": "16:9"
   }'
 

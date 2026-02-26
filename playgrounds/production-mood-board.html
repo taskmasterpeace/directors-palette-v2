@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Production Mood Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0a;
+    --card-bg: #1a1a1a;
+    --card-hover: #222222;
+    --border: #2a2a2a;
+    --text: #e5e5e5;
+    --text-muted: #888888;
+    --text-dim: #666666;
+    --amber: #f59e0b;
+    --amber-dim: rgba(245, 158, 11, 0.15);
+    --amber-glow: rgba(245, 158, 11, 0.35);
+
+    /* Category accent colors */
+    --cat-texture: #f59e0b;
+    --cat-layers: #8b5cf6;
+    --cat-rhythm: #ef4444;
+    --cat-melody: #10b981;
+    --cat-mood: #6366f1;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- Header ---- */
+  .header {
+    text-align: center;
+    padding: 48px 24px 32px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #111111 0%, var(--bg) 100%);
+  }
+  .header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 6px;
+  }
+  .header h1 span { color: var(--amber); }
+  .header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    font-weight: 300;
+  }
+  .selection-counter {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 4px 14px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    background: var(--amber-dim);
+    color: var(--amber);
+    transition: opacity 0.3s;
+  }
+  .selection-counter.hidden { opacity: 0; }
+
+  /* ---- Main content ---- */
+  .main { max-width: 1200px; margin: 0 auto; padding: 0 24px 200px; }
+
+  /* ---- Category section ---- */
+  .category {
+    margin-top: 48px;
+  }
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .category-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .category-header h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .category-header .cat-count {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-left: 4px;
+  }
+
+  /* ---- Tag grid ---- */
+  .tag-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 12px;
+  }
+
+  /* ---- Tag card ---- */
+  .tag-card {
+    position: relative;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 18px 18px 22px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    user-select: none;
+    overflow: hidden;
+  }
+  .tag-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    border-radius: 12px 0 0 12px;
+    transition: width 0.2s ease;
+  }
+  .tag-card:hover {
+    transform: translateY(-2px);
+    background: var(--card-hover);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+  .tag-card.selected {
+    border-color: var(--amber);
+    box-shadow: 0 0 0 1px var(--amber), 0 0 20px var(--amber-glow);
+  }
+  .tag-card.selected::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--amber-dim);
+    pointer-events: none;
+    border-radius: 11px;
+    animation: selectPulse 0.4s ease-out;
+  }
+  @keyframes selectPulse {
+    0% { background: rgba(245,158,11,0.3); }
+    100% { background: var(--amber-dim); }
+  }
+
+  .tag-card .check-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--amber);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #000;
+    font-weight: 700;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .tag-card.selected .check-badge {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .tag-card .tag-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    padding-right: 24px;
+  }
+  .tag-card .tag-desc {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+  }
+
+  /* Category border colors */
+  .cat-texture .tag-card::before { background: var(--cat-texture); }
+  .cat-layers .tag-card::before  { background: var(--cat-layers); }
+  .cat-rhythm .tag-card::before  { background: var(--cat-rhythm); }
+  .cat-melody .tag-card::before  { background: var(--cat-melody); }
+  .cat-mood .tag-card::before    { background: var(--cat-mood); }
+
+  /* Icon bg colors */
+  .icon-texture { background: rgba(245,158,11,0.15); color: var(--cat-texture); }
+  .icon-layers  { background: rgba(139,92,246,0.15); color: var(--cat-layers); }
+  .icon-rhythm  { background: rgba(239,68,68,0.15);  color: var(--cat-rhythm); }
+  .icon-melody  { background: rgba(16,185,129,0.15); color: var(--cat-melody); }
+  .icon-mood    { background: rgba(99,102,241,0.15); color: var(--cat-mood); }
+
+  /* ---- Bottom panel ---- */
+  .bottom-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #111111;
+    border-top: 1px solid var(--border);
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 100;
+  }
+  .bottom-panel.visible { transform: translateY(0); }
+
+  .panel-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 24px 24px;
+  }
+  .panel-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .panel-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .panel-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .btn {
+    padding: 7px 16px;
+    border-radius: 8px;
+    border: none;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-amber {
+    background: var(--amber);
+    color: #000;
+  }
+  .btn-amber:hover { background: #d97706; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: #1a1a1a; color: var(--text); }
+
+  /* Chips */
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    border: 1px solid transparent;
+  }
+  .chip:hover { opacity: 0.75; }
+  .chip .chip-x {
+    font-size: 0.65rem;
+    opacity: 0.6;
+    margin-left: 2px;
+  }
+  .chip-texture  { background: rgba(245,158,11,0.15); color: var(--cat-texture); border-color: rgba(245,158,11,0.25); }
+  .chip-layers   { background: rgba(139,92,246,0.15); color: var(--cat-layers);  border-color: rgba(139,92,246,0.25); }
+  .chip-rhythm   { background: rgba(239,68,68,0.15);  color: var(--cat-rhythm);  border-color: rgba(239,68,68,0.25); }
+  .chip-melody   { background: rgba(16,185,129,0.15); color: var(--cat-melody);  border-color: rgba(16,185,129,0.25); }
+  .chip-mood     { background: rgba(99,102,241,0.15); color: var(--cat-mood);    border-color: rgba(99,102,241,0.25); }
+
+  /* Palette bar */
+  .palette-bar-container { margin-bottom: 12px; }
+  .palette-bar-label {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .palette-bar {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--border);
+    overflow: hidden;
+    display: flex;
+  }
+  .palette-segment {
+    height: 100%;
+    transition: flex 0.35s ease;
+  }
+
+  /* Description */
+  .palette-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+    font-style: italic;
+  }
+  .palette-desc strong { color: var(--text); font-style: normal; font-weight: 500; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--amber);
+    color: #000;
+    padding: 8px 20px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    z-index: 200;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .header h1 { font-size: 1.5rem; }
+    .tag-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .tag-card { padding: 14px 14px 14px 18px; }
+    .tag-card .tag-name { font-size: 0.85rem; }
+    .tag-card .tag-desc { font-size: 0.72rem; }
+    .panel-inner { padding: 16px; }
+  }
+  @media (max-width: 420px) {
+    .tag-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Production <span>Mood Board</span></h1>
+  <p>Build your sonic palette by selecting production preferences</p>
+  <div class="selection-counter hidden" id="selectionCounter">0 selected</div>
+</div>
+
+<div class="main" id="main"></div>
+
+<div class="bottom-panel" id="bottomPanel">
+  <div class="panel-inner">
+    <div class="panel-top-row">
+      <div class="panel-title">Your Sonic Palette</div>
+      <div class="panel-actions">
+        <button class="btn btn-ghost" id="btnClear" onclick="clearAll()">Clear All</button>
+        <button class="btn btn-amber" id="btnCopy" onclick="copyPalette()">Copy Palette</button>
+      </div>
+    </div>
+    <div class="chip-row" id="chipRow"></div>
+    <div class="palette-bar-container">
+      <div class="palette-bar-label">Palette Mix</div>
+      <div class="palette-bar" id="paletteBar"></div>
+    </div>
+    <div class="palette-desc" id="paletteDesc"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Copied to clipboard!</div>
+
+<script>
+const DATA = [
+  {
+    id: 'texture',
+    name: 'Texture',
+    icon: '\u2248',
+    tags: [
+      { id: 'lo-fi', name: 'Lo-Fi', desc: 'Warm, dusty, imperfect. Vinyl crackle, tape hiss, low bitrate.' },
+      { id: 'polished', name: 'Polished', desc: 'Crystal clear, radio-ready, precision-mixed.' },
+      { id: 'raw', name: 'Raw', desc: 'Unprocessed, garage-band feel, intentional roughness.' },
+      { id: 'atmospheric', name: 'Atmospheric', desc: 'Spacious, reverb-heavy, cinematic.' },
+      { id: 'gritty', name: 'Gritty', desc: 'Distorted, crunchy, abrasive textures.' }
+    ]
+  },
+  {
+    id: 'layers',
+    name: 'Layers',
+    icon: '\u2261',
+    tags: [
+      { id: 'minimalist', name: 'Minimalist', desc: 'Stripped back, space between elements, less is more.' },
+      { id: 'layered', name: 'Layered', desc: 'Dense, multi-tracked, wall of sound.' },
+      { id: 'sparse', name: 'Sparse', desc: 'Few elements, each with purpose, breathing room.' },
+      { id: 'orchestral', name: 'Orchestral', desc: 'Full arrangement, strings, horns, cinematic scale.' },
+      { id: 'sample-heavy', name: 'Sample-Heavy', desc: 'Chopped samples, flipped loops, crate-digger aesthetic.' }
+    ]
+  },
+  {
+    id: 'rhythm',
+    name: 'Rhythm',
+    icon: '\u266A',
+    tags: [
+      { id: '808-heavy', name: '808-Heavy', desc: 'Deep sub bass, rattling 808 kicks and hi-hats.' },
+      { id: 'boom-bap', name: 'Boom-Bap', desc: 'Classic drum breaks, head-nod tempo, SP-1200.' },
+      { id: 'syncopated', name: 'Syncopated', desc: 'Off-beat patterns, polyrhythmic, complex grooves.' },
+      { id: 'four-on-the-floor', name: 'Four-on-the-Floor', desc: 'Steady kick drum, dance-floor ready.' },
+      { id: 'live-drums', name: 'Live Drums', desc: 'Organic drum sound, session musician feel.' },
+      { id: 'trap-patterns', name: 'Trap Patterns', desc: 'Rolling hi-hats, snare rolls, 808 slides.' }
+    ]
+  },
+  {
+    id: 'melody',
+    name: 'Melody',
+    icon: '\u266B',
+    tags: [
+      { id: 'synth-driven', name: 'Synth-Driven', desc: 'Analog/digital synths as primary melodic element.' },
+      { id: 'guitar-based', name: 'Guitar-Based', desc: 'Electric or acoustic guitar leads and riffs.' },
+      { id: 'piano-keys', name: 'Piano/Keys', desc: 'Piano, Rhodes, organ as melodic foundation.' },
+      { id: 'vocal-chops', name: 'Vocal Chops', desc: 'Pitched, chopped, and processed vocal samples.' },
+      { id: 'live-instruments', name: 'Live Instruments', desc: 'Real instruments, session musicians, organic feel.' }
+    ]
+  },
+  {
+    id: 'mood',
+    name: 'Mood',
+    icon: '\u25D0',
+    tags: [
+      { id: 'dark', name: 'Dark', desc: 'Minor keys, ominous tones, tension.' },
+      { id: 'uplifting', name: 'Uplifting', desc: 'Major keys, bright tones, positive energy.' },
+      { id: 'melancholic', name: 'Melancholic', desc: 'Bittersweet, nostalgic, emotional depth.' },
+      { id: 'aggressive', name: 'Aggressive', desc: 'Hard-hitting, confrontational, high energy.' },
+      { id: 'dreamy', name: 'Dreamy', desc: 'Reverb-washed, ethereal, floating textures.' },
+      { id: 'hypnotic', name: 'Hypnotic', desc: 'Repetitive loops, trance-like, meditative.' }
+    ]
+  }
+];
+
+const CAT_COLORS = {
+  texture: '#f59e0b',
+  layers:  '#8b5cf6',
+  rhythm:  '#ef4444',
+  melody:  '#10b981',
+  mood:    '#6366f1'
+};
+
+let selected = new Set(); // stores "catId:tagId"
+
+function init() {
+  const main = document.getElementById('main');
+  main.innerHTML = DATA.map(cat => `
+    <section class="category cat-${cat.id}">
+      <div class="category-header">
+        <div class="category-icon icon-${cat.id}">${cat.icon}</div>
+        <h2>${cat.name}</h2>
+        <span class="cat-count" id="count-${cat.id}"></span>
+      </div>
+      <div class="tag-grid">
+        ${cat.tags.map(tag => `
+          <div class="tag-card" id="card-${cat.id}-${tag.id}" onclick="toggle('${cat.id}','${tag.id}')">
+            <div class="check-badge">\u2713</div>
+            <div class="tag-name">${tag.name}</div>
+            <div class="tag-desc">${tag.desc}</div>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  `).join('');
+}
+
+function toggle(catId, tagId) {
+  const key = catId + ':' + tagId;
+  if (selected.has(key)) {
+    selected.delete(key);
+  } else {
+    selected.add(key);
+  }
+  render();
+}
+
+function removeTag(catId, tagId) {
+  selected.delete(catId + ':' + tagId);
+  render();
+}
+
+function clearAll() {
+  selected.clear();
+  render();
+}
+
+function render() {
+  // Update card states
+  DATA.forEach(cat => {
+    let catCount = 0;
+    cat.tags.forEach(tag => {
+      const key = cat.id + ':' + tag.id;
+      const card = document.getElementById('card-' + cat.id + '-' + tag.id);
+      if (selected.has(key)) {
+        card.classList.add('selected');
+        catCount++;
+      } else {
+        card.classList.remove('selected');
+      }
+    });
+    const countEl = document.getElementById('count-' + cat.id);
+    countEl.textContent = catCount > 0 ? catCount + ' selected' : '';
+  });
+
+  // Selection counter
+  const counter = document.getElementById('selectionCounter');
+  const total = selected.size;
+  counter.textContent = total + ' selected';
+  counter.classList.toggle('hidden', total === 0);
+
+  // Bottom panel
+  const panel = document.getElementById('bottomPanel');
+  panel.classList.toggle('visible', total > 0);
+
+  if (total === 0) return;
+
+  // Chips
+  const chipRow = document.getElementById('chipRow');
+  const chips = [];
+  DATA.forEach(cat => {
+    cat.tags.forEach(tag => {
+      if (selected.has(cat.id + ':' + tag.id)) {
+        chips.push(`<span class="chip chip-${cat.id}" onclick="removeTag('${cat.id}','${tag.id}')">
+          ${tag.name}<span class="chip-x">\u2715</span>
+        </span>`);
+      }
+    });
+  });
+  chipRow.innerHTML = chips.join('');
+
+  // Palette bar
+  const paletteBar = document.getElementById('paletteBar');
+  const catCounts = {};
+  DATA.forEach(cat => { catCounts[cat.id] = 0; });
+  selected.forEach(key => {
+    const catId = key.split(':')[0];
+    catCounts[catId]++;
+  });
+  let segments = '';
+  DATA.forEach(cat => {
+    if (catCounts[cat.id] > 0) {
+      const flex = catCounts[cat.id] / total;
+      segments += `<div class="palette-segment" style="flex:${flex};background:${CAT_COLORS[cat.id]}"></div>`;
+    }
+  });
+  paletteBar.innerHTML = segments;
+
+  // Description
+  buildDescription();
+}
+
+function buildDescription() {
+  const descEl = document.getElementById('paletteDesc');
+
+  const grouped = {};
+  DATA.forEach(cat => { grouped[cat.id] = []; });
+  selected.forEach(key => {
+    const [catId, tagId] = key.split(':');
+    const cat = DATA.find(c => c.id === catId);
+    const tag = cat.tags.find(t => t.id === tagId);
+    grouped[catId].push(tag.name.toLowerCase());
+  });
+
+  const parts = [];
+
+  // Texture + Layers combined as production style prefix
+  const textureAdj = grouped.texture.length > 0 ? grouped.texture.join(', ') : '';
+  const layersAdj = grouped.layers.length > 0 ? grouped.layers.join(', ') : '';
+
+  let prefix = '';
+  if (textureAdj && layersAdj) {
+    prefix = capitalize(textureAdj) + ', ' + layersAdj + ' production';
+  } else if (textureAdj) {
+    prefix = capitalize(textureAdj) + ' production';
+  } else if (layersAdj) {
+    prefix = capitalize(layersAdj) + ' production';
+  }
+
+  if (prefix) parts.push(prefix);
+
+  if (grouped.rhythm.length > 0) {
+    parts.push(grouped.rhythm.join(' and ') + ' rhythms');
+  }
+  if (grouped.melody.length > 0) {
+    parts.push(grouped.melody.join(' and ') + ' melodies');
+  }
+  if (grouped.mood.length > 0) {
+    const moods = grouped.mood;
+    if (moods.length === 1) {
+      parts.push('a ' + moods[0] + ' mood');
+    } else {
+      parts.push('a ' + moods.slice(0, -1).join(', ') + ' and ' + moods[moods.length - 1] + ' mood');
+    }
+  }
+
+  if (parts.length === 0) {
+    descEl.innerHTML = '';
+    return;
+  }
+
+  let sentence;
+  if (parts.length === 1) {
+    sentence = parts[0] + '.';
+  } else if (parts.length === 2) {
+    sentence = parts[0] + ' with ' + parts[1] + '.';
+  } else {
+    sentence = parts[0] + ' with ' + parts.slice(1, -1).join(', ') + ', and ' + parts[parts.length - 1] + '.';
+  }
+
+  descEl.innerHTML = '<strong>"</strong>' + sentence.charAt(0).toUpperCase() + sentence.slice(1) + '<strong>"</strong>';
+}
+
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function getFullDescription() {
+  const grouped = {};
+  DATA.forEach(cat => { grouped[cat.id] = []; });
+  selected.forEach(key => {
+    const [catId, tagId] = key.split(':');
+    const cat = DATA.find(c => c.id === catId);
+    const tag = cat.tags.find(t => t.id === tagId);
+    grouped[catId].push(tag.name);
+  });
+
+  const lines = ['Production Mood Board - Sonic Palette', ''];
+  DATA.forEach(cat => {
+    if (grouped[cat.id].length > 0) {
+      lines.push(cat.name + ': ' + grouped[cat.id].join(', '));
+    }
+  });
+
+  // Add the sentence description
+  const descEl = document.getElementById('paletteDesc');
+  if (descEl.textContent.trim()) {
+    lines.push('');
+    lines.push('Description: ' + descEl.textContent.trim());
+  }
+
+  return lines.join('\n');
+}
+
+function copyPalette() {
+  const text = getFullDescription();
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Copied to clipboard!');
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('Copied to clipboard!');
+  });
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+init();
+</script>
+</body>
+</html>

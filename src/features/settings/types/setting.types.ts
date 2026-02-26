@@ -45,7 +45,7 @@ export interface ShotCreatorSettings {
     aspectRatio: string
     resolution: string
     seed?: number
-    model?: 'nano-banana' | 'nano-banana-pro' | 'gen4-image' | 'gen4-image-turbo' | 'seedream-4' | 'qwen-image' | 'qwen-image-edit'
+    model?: 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
     maxImages?: number
     sequentialGeneration?: boolean
     promptLibrary?: PromptLibrarySettings

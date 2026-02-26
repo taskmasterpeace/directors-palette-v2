@@ -1,0 +1,235 @@
+   ▲ Next.js 15.5.7
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (114kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ⚠ Compiled with warnings in 2.9s
+
+./node_modules/@supabase/realtime-js/dist/module/lib/websocket-factory.js
+A Node.js API is used (process.versions at line: 35) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/@supabase/realtime-js/dist/module/lib/websocket-factory.js
+./node_modules/@supabase/realtime-js/dist/module/index.js
+./node_modules/@supabase/supabase-js/dist/module/index.js
+./node_modules/@supabase/ssr/dist/module/createServerClient.js
+./node_modules/@supabase/ssr/dist/module/index.js
+
+./node_modules/@supabase/supabase-js/dist/module/index.js
+A Node.js API is used (process.version at line: 24) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/@supabase/supabase-js/dist/module/index.js
+./node_modules/@supabase/ssr/dist/module/createServerClient.js
+./node_modules/@supabase/ssr/dist/module/index.js
+
+ ✓ Compiled successfully in 98s
+   Linting and checking validity of types ...
+   Collecting page data ...
+(node:37212) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:42428) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:45524) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:27264) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:47476) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:6804) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:50256) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:48012) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:43564) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:47552) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:49420) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:37800) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:50600) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:48492) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:44524) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:24504) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:45372) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:9096) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:51196) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:43464) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:47208) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:44092) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:34224) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:45528) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:52084) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:48088) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:49308) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:47244) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:41608) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:45116) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:48572) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+   Generating static pages (0/91) ...
+(node:39228) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:10864) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:47164) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:5048) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+   Generating static pages (22/91) 
+   Generating static pages (45/91) 
+   Generating static pages (68/91) 
+ ✓ Generating static pages (91/91)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                          Size  First Load JS
+┌ ƒ /                                              246 kB        1.02 MB
+├ ƒ /_not-found                                      1 kB         103 kB
+├ ƒ /admin                                        1.21 kB         346 kB
+├ ƒ /api/ad-lab/generate-matrix                     324 B         102 kB
+├ ƒ /api/ad-lab/grade-matrix                        324 B         102 kB
+├ ƒ /api/ad-lab/parse-brief                         324 B         102 kB
+├ ƒ /api/ad-lab/refine-prompt                       324 B         102 kB
+├ ƒ /api/adhub/ads                                  324 B         102 kB
+├ ƒ /api/adhub/brands                               324 B         102 kB
+├ ƒ /api/adhub/brands/[brandId]                     324 B         102 kB
+├ ƒ /api/adhub/brands/[brandId]/images              324 B         102 kB
+├ ƒ /api/adhub/extract-copy                         324 B         102 kB
+├ ƒ /api/adhub/generate                             324 B         102 kB
+├ ƒ /api/adhub/products                             324 B         102 kB
+├ ƒ /api/adhub/products/[productId]                 324 B         102 kB
+├ ƒ /api/admin/abuse-report                         324 B         102 kB
+├ ƒ /api/admin/check                                324 B         102 kB
+├ ƒ /api/admin/community                            324 B         102 kB
+├ ƒ /api/admin/export-logs                          240 B         342 kB
+├ ƒ /api/admin/financials                           240 B         342 kB
+├ ƒ /api/admin/financials/export                    240 B         342 kB
+├ ƒ /api/admin/generations                          240 B         342 kB
+├ ƒ /api/admin/generations/stats                    240 B         342 kB
+├ ƒ /api/admin/grant-credits                        240 B         342 kB
+├ ƒ /api/admin/migrate                              324 B         102 kB
+├ ƒ /api/admin/seed-recipes                         324 B         102 kB
+├ ƒ /api/admin/stats                                240 B         342 kB
+├ ƒ /api/admin/style-sheets                         324 B         102 kB
+├ ƒ /api/admin/users                                240 B         342 kB
+├ ƒ /api/animation-prompt/generate                  324 B         102 kB
+├ ƒ /api/artist-dna/generate-mix                    324 B         102 kB
+├ ƒ /api/artist-dna/suggest                         324 B         102 kB
+├ ƒ /api/community                                  324 B         102 kB
+├ ƒ /api/community/add                              324 B         102 kB
+├ ƒ /api/community/library                          324 B         102 kB
+├ ƒ /api/community/rate                             324 B         102 kB
+├ ƒ /api/coupons                                    324 B         102 kB
+├ ƒ /api/coupons/redeem                             324 B         102 kB
+├ ƒ /api/credits                                    324 B         102 kB
+├ ƒ /api/credits/packages                           324 B         102 kB
+├ ƒ /api/credits/pricing                            324 B         102 kB
+├ ƒ /api/credits/usage                              324 B         102 kB
+├ ƒ /api/cron/cleanup-expired                       324 B         102 kB
+├ ƒ /api/director-proposal/generate                 324 B         102 kB
+├ ƒ /api/gallery/save-frame                         324 B         102 kB
+├ ƒ /api/generation/cancel/[predictionId]           324 B         102 kB
+├ ƒ /api/generation/image                         1.01 kB         185 kB
+├ ƒ /api/generation/inpaint                         324 B         102 kB
+├ ƒ /api/generation/lip-sync                      1.01 kB         185 kB
+├ ƒ /api/generation/status/[predictionId]           324 B         102 kB
+├ ƒ /api/generation/video                         1.01 kB         185 kB
+├ ƒ /api/music-lab/analyze-structure                324 B         102 kB
+├ ƒ /api/music-lab/isolate-vocals                   324 B         102 kB
+├ ƒ /api/music-lab/transcribe                       324 B         102 kB
+├ ƒ /api/music-lab/upload                           324 B         102 kB
+├ ƒ /api/payments/create-checkout                   324 B         102 kB
+├ ƒ /api/predictions/[id]                         1.01 kB         185 kB
+├ ƒ /api/prompt-expander                            324 B         102 kB
+├ ƒ /api/prompt-organizer/parse                     324 B         102 kB
+├ ƒ /api/recipes/[recipeId]                         324 B         102 kB
+├ ƒ /api/recipes/[recipeId]/copy-images             324 B         102 kB
+├ ƒ /api/recipes/[recipeId]/execute                 324 B         102 kB
+├ ƒ /api/recipes/[recipeId]/images                  324 B         102 kB
+├ ƒ /api/recipes/[recipeId]/images/[imageId]        324 B         102 kB
+├ ƒ /api/slot-machine/expand                        324 B         102 kB
+├ ƒ /api/storage/limits                             324 B         102 kB
+├ ƒ /api/story-creator/llm-chat                     324 B         102 kB
+├ ƒ /api/storyboard/broll                           324 B         102 kB
+├ ƒ /api/storyboard/extract                         324 B         102 kB
+├ ƒ /api/storyboard/generate-prompts                324 B         102 kB
+├ ƒ /api/storyboard/refine-prompts                  324 B         102 kB
+├ ƒ /api/storybook/detect-characters                324 B         102 kB
+├ ƒ /api/storybook/enhance-character-description    324 B         102 kB
+├ ƒ /api/storybook/expand-style                     324 B         102 kB
+├ ƒ /api/storybook/export-pdf                       324 B         102 kB
+├ ƒ /api/storybook/extract-character-description    324 B         102 kB
+├ ƒ /api/storybook/extract-elements                 324 B         102 kB
+├ ƒ /api/storybook/generate-ideas                   324 B         102 kB
+├ ƒ /api/storybook/generate-story                   324 B         102 kB
+├ ƒ /api/storybook/generate-synopsis                324 B         102 kB
+├ ƒ /api/storybook/polish-story                     324 B         102 kB
+├ ƒ /api/storybook/projects                         324 B         102 kB
+├ ƒ /api/storybook/projects/[id]                    324 B         102 kB
+├ ƒ /api/storybook/sound-effects                    324 B         102 kB
+├ ƒ /api/storybook/synthesize                       324 B         102 kB
+├ ƒ /api/styles/analyze                             324 B         102 kB
+├ ƒ /api/tools/before-after-grid                    324 B         102 kB
+├ ƒ /api/tools/cinematic-grid                     1.01 kB         185 kB
+├ ƒ /api/tools/grid-split                           324 B         102 kB
+├ ƒ /api/tools/remove-background                  1.01 kB         185 kB
+├ ƒ /api/tools/style-guide-grid                   1.01 kB         185 kB
+├ ƒ /api/upload-file                                324 B         102 kB
+├ ƒ /api/upload-font                                324 B         102 kB
+├ ƒ /api/v1/images/generate                       1.01 kB         185 kB
+├ ƒ /api/v1/keys                                    324 B         102 kB
+├ ƒ /api/v1/recipes                                 324 B         102 kB
+├ ƒ /api/v1/recipes/execute                       1.01 kB         185 kB
+├ ƒ /api/v1/usage                                 1.01 kB         185 kB
+├ ƒ /api/wardrobe/generate-preview                  324 B         102 kB
+├ ƒ /api/wardrobe/generate-reference                324 B         102 kB
+├ ƒ /api/webhooks/replicate                       1.01 kB         185 kB
+├ ƒ /api/webhooks/stripe                          1.01 kB         185 kB
+├ ƒ /api/wildcards/generate                         324 B         102 kB
+├ ƒ /api/wildcards/seed                             324 B         102 kB
+├ ƒ /auth/callback                                  324 B         102 kB
+├ ƒ /auth/forgot-password                         2.49 kB         175 kB
+├ ƒ /auth/reset-password                          2.55 kB         172 kB
+├ ƒ /auth/signin                                  5.51 kB         191 kB
+├ ƒ /gallery                                      3.12 kB         331 kB
+├ ƒ /help                                         6.87 kB         120 kB
+├ ƒ /landing                                       9.9 kB         128 kB
+├ ƒ /music-lab                                    2.74 kB         285 kB
+├ ƒ /music-lab/artist-dna                         4.63 kB         224 kB
+├ ƒ /node-workflow                                3.52 kB         244 kB
+├ ƒ /test-frame-extractor                         5.84 kB         123 kB
+└ ƒ /test-storyboard                               4.8 kB         525 kB
++ First Load JS shared by all                      102 kB
+  ├ chunks/1255-01735991e86fac1b.js               45.4 kB
+  ├ chunks/4bd1b696-182b6b13bdad92e3.js           54.2 kB
+  └ other shared chunks (total)                   2.08 kB
+
+
+ƒ Middleware                                      70.3 kB
+
+ƒ  (Dynamic)  server-rendered on demand
+

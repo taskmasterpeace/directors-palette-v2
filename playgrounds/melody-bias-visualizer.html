@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Melody Bias Visualizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  :root {
+    --bg: #0a0a0a;
+    --card: #1a1a1a;
+    --card-border: #2a2a2a;
+    --amber: #f59e0b;
+    --amber-dim: #b47508;
+    --amber-glow: rgba(245, 158, 11, 0.15);
+    --amber-glow-strong: rgba(245, 158, 11, 0.3);
+    --text: #e5e5e5;
+    --text-dim: #999;
+    --text-muted: #666;
+    --rap-blue: #3b82f6;
+    --sing-amber: #f59e0b;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--text) 40%, var(--amber));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+  }
+
+  .header p {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    font-weight: 300;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    transition: border-color 0.3s ease;
+  }
+
+  .card:hover {
+    border-color: #333;
+  }
+
+  .card-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+  }
+
+  /* Slider Section */
+  .slider-section {
+    padding: 2.5rem 2rem;
+  }
+
+  .value-display {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .value-number {
+    font-size: 4.5rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    color: var(--amber);
+    line-height: 1;
+    transition: color 0.3s ease;
+    text-shadow: 0 0 40px var(--amber-glow-strong);
+  }
+
+  .value-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* Custom Range Slider */
+  .slider-wrapper {
+    position: relative;
+    padding: 0.5rem 0;
+  }
+
+  .slider-track-bg {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 8px;
+    transform: translateY(-50%);
+    border-radius: 4px;
+    background: #2a2a2a;
+    pointer-events: none;
+  }
+
+  .slider-track-fill {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 8px;
+    transform: translateY(-50%);
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--rap-blue), var(--amber));
+    pointer-events: none;
+    transition: width 0.05s ease;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 40px;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--amber);
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 2px var(--amber), 0 0 20px var(--amber-glow-strong);
+    cursor: grab;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 3px var(--amber), 0 0 30px var(--amber-glow-strong);
+  }
+
+  input[type="range"]::-webkit-slider-thumb:active {
+    cursor: grabbing;
+    transform: scale(1.05);
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--amber);
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 2px var(--amber), 0 0 20px var(--amber-glow-strong);
+    cursor: grab;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  input[type="range"]::-moz-range-track {
+    background: transparent;
+    height: 8px;
+  }
+
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.75rem;
+  }
+
+  .slider-labels span {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .label-rap {
+    color: var(--rap-blue);
+  }
+
+  .label-sing {
+    color: var(--amber);
+  }
+
+  /* Spectrum Bar */
+  .spectrum-section {
+    margin-top: 2rem;
+  }
+
+  .spectrum-bar {
+    position: relative;
+    height: 48px;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+  }
+
+  .spectrum-zone {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(255, 255, 255, 0.6);
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: default;
+    border-right: 1px solid rgba(0, 0, 0, 0.3);
+  }
+
+  .spectrum-zone:last-child {
+    border-right: none;
+  }
+
+  .spectrum-zone.active {
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .spectrum-zone:nth-child(1) { background: #2563eb; }
+  .spectrum-zone:nth-child(2) { background: #4f8ae6; }
+  .spectrum-zone:nth-child(3) { background: #8b7ec8; }
+  .spectrum-zone:nth-child(4) { background: #c9873e; }
+  .spectrum-zone:nth-child(5) { background: #d97706; }
+
+  .spectrum-zone.active:nth-child(1) { background: #3b82f6; box-shadow: inset 0 0 20px rgba(59,130,246,0.3); }
+  .spectrum-zone.active:nth-child(2) { background: #5a94f0; box-shadow: inset 0 0 20px rgba(90,148,240,0.3); }
+  .spectrum-zone.active:nth-child(3) { background: #9b8ed8; box-shadow: inset 0 0 20px rgba(155,142,216,0.3); }
+  .spectrum-zone.active:nth-child(4) { background: #d99548; box-shadow: inset 0 0 20px rgba(217,149,72,0.3); }
+  .spectrum-zone.active:nth-child(5) { background: #f59e0b; box-shadow: inset 0 0 20px rgba(245,158,11,0.3); }
+
+  .spectrum-marker {
+    position: absolute;
+    top: -6px;
+    width: 3px;
+    height: calc(100% + 12px);
+    background: #fff;
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(255,255,255,0.5);
+    transition: left 0.12s ease;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  /* Zone Info */
+  .zone-info {
+    margin-top: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--bg);
+    border-radius: 12px;
+    border-left: 3px solid var(--amber);
+    min-height: 100px;
+    transition: border-color 0.3s ease;
+  }
+
+  .zone-info[data-zone="0"] { border-left-color: #3b82f6; }
+  .zone-info[data-zone="1"] { border-left-color: #5a94f0; }
+  .zone-info[data-zone="2"] { border-left-color: #9b8ed8; }
+  .zone-info[data-zone="3"] { border-left-color: #d99548; }
+  .zone-info[data-zone="4"] { border-left-color: #f59e0b; }
+
+  .zone-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    transition: opacity 0.2s ease;
+  }
+
+  .zone-description {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    line-height: 1.55;
+    transition: opacity 0.2s ease;
+  }
+
+  .zone-artists {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    font-style: italic;
+  }
+
+  /* Prompt Builder */
+  .prompt-builder {
+    padding: 2rem;
+  }
+
+  .input-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .input-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-bottom: 0.6rem;
+    display: block;
+  }
+
+  /* Tag Chips */
+  .chip-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    border-radius: 100px;
+    font-size: 0.82rem;
+    color: var(--text);
+    font-weight: 500;
+    transition: all 0.15s ease;
+    cursor: default;
+  }
+
+  .chip .remove {
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1;
+    transition: color 0.15s ease;
+    display: flex;
+    align-items: center;
+  }
+
+  .chip .remove:hover {
+    color: #ef4444;
+  }
+
+  .chip-input {
+    background: transparent;
+    border: 1px dashed var(--card-border);
+    border-radius: 100px;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.82rem;
+    color: var(--text);
+    font-family: inherit;
+    outline: none;
+    width: 120px;
+    min-width: 80px;
+    transition: border-color 0.15s ease;
+  }
+
+  .chip-input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .chip-input:focus {
+    border-color: var(--amber);
+  }
+
+  /* Text Input */
+  .text-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    color: var(--text);
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+
+  .text-input:focus {
+    border-color: var(--amber);
+  }
+
+  /* Output Section */
+  .output-section {
+    padding: 2rem;
+    border: 1px solid var(--amber-dim);
+    background: linear-gradient(135deg, var(--card) 0%, rgba(245,158,11,0.03) 100%);
+  }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .output-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+  }
+
+  .copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    background: var(--amber);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .copy-btn:hover {
+    background: #fbbf24;
+    transform: translateY(-1px);
+  }
+
+  .copy-btn:active {
+    transform: translateY(0);
+  }
+
+  .copy-btn.copied {
+    background: #22c55e;
+  }
+
+  .prompt-output {
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: var(--text);
+    min-height: 60px;
+    word-break: break-word;
+    transition: all 0.3s ease;
+  }
+
+  .prompt-output .highlight {
+    color: var(--amber);
+    font-weight: 600;
+  }
+
+  .prompt-empty {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* Animations */
+  @keyframes fadeSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .zone-animate {
+    animation: fadeSlideIn 0.25s ease forwards;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 2px var(--amber), 0 0 20px var(--amber-glow); }
+    50% { box-shadow: 0 0 0 3px var(--amber), 0 0 30px var(--amber-glow-strong); }
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--card-border);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  .footer a {
+    color: var(--amber);
+    text-decoration: none;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    body { padding: 1rem 0.75rem; }
+    .card { padding: 1.5rem; }
+    .value-number { font-size: 3.5rem; }
+    .spectrum-zone { font-size: 0.5rem; }
+    .header h1 { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header class="header">
+    <h1>Melody Bias Visualizer</h1>
+    <p>See how the melody bias slider affects your Suno vocal prompt</p>
+  </header>
+
+  <!-- Slider Card -->
+  <div class="card slider-section">
+    <div class="value-display">
+      <div class="value-number" id="valueDisplay">50</div>
+      <div class="value-label">Melody Bias</div>
+    </div>
+
+    <div class="slider-wrapper">
+      <div class="slider-track-bg"></div>
+      <div class="slider-track-fill" id="trackFill"></div>
+      <input type="range" id="melodySlider" min="0" max="100" value="50" step="1">
+    </div>
+
+    <div class="slider-labels">
+      <span class="label-rap">Pure Rap</span>
+      <span class="label-sing">Pure Singing</span>
+    </div>
+
+    <!-- Spectrum -->
+    <div class="spectrum-section">
+      <div class="spectrum-bar" id="spectrumBar">
+        <div class="spectrum-zone" data-zone="0">Spoken</div>
+        <div class="spectrum-zone" data-zone="1">Rap+</div>
+        <div class="spectrum-zone" data-zone="2">Balanced</div>
+        <div class="spectrum-zone" data-zone="3">Melodic+</div>
+        <div class="spectrum-zone" data-zone="4">Sung</div>
+        <div class="spectrum-marker" id="spectrumMarker"></div>
+      </div>
+    </div>
+
+    <!-- Zone Info -->
+    <div class="zone-info" id="zoneInfo" data-zone="2">
+      <div class="zone-name" id="zoneName">Balanced Rap and Singing</div>
+      <div class="zone-description" id="zoneDesc">Seamless blend of rapping and singing throughout.</div>
+      <div class="zone-artists" id="zoneArtists">Artists: Drake, Juice WRLD, Post Malone</div>
+    </div>
+  </div>
+
+  <!-- Prompt Builder Card -->
+  <div class="card prompt-builder">
+    <div class="card-label">Prompt Builder Inputs</div>
+
+    <!-- Vocal Textures -->
+    <div class="input-group">
+      <label class="input-label">Vocal Textures</label>
+      <div class="chip-container" id="textureChips">
+        <span class="chip" data-value="raspy">raspy <span class="remove">&times;</span></span>
+        <span class="chip" data-value="deep">deep <span class="remove">&times;</span></span>
+        <span class="chip" data-value="gritty">gritty <span class="remove">&times;</span></span>
+        <input type="text" class="chip-input" id="textureInput" placeholder="Add texture..." maxlength="30">
+      </div>
+    </div>
+
+    <!-- Persona Attitude -->
+    <div class="input-group">
+      <label class="input-label">Persona Attitude</label>
+      <input type="text" class="text-input" id="attitudeInput" value="confident and unapologetic" placeholder="e.g. confident and unapologetic">
+    </div>
+
+    <!-- Ad-Libs -->
+    <div class="input-group">
+      <label class="input-label">Ad-Libs <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">(max 3 used in prompt)</span></label>
+      <div class="chip-container" id="adlibChips">
+        <span class="chip" data-value="yeah">yeah <span class="remove">&times;</span></span>
+        <span class="chip" data-value="skrrt">skrrt <span class="remove">&times;</span></span>
+        <span class="chip" data-value="uh">uh <span class="remove">&times;</span></span>
+        <input type="text" class="chip-input" id="adlibInput" placeholder="Add ad-lib..." maxlength="20">
+      </div>
+    </div>
+  </div>
+
+  <!-- Output Card -->
+  <div class="card output-section">
+    <div class="output-header">
+      <span class="output-title">Generated Suno Vocal Prompt</span>
+      <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span id="copyText">Copy</span>
+      </button>
+    </div>
+    <div class="prompt-output" id="promptOutput"></div>
+  </div>
+
+  <div class="footer">
+    Artist DNA &mdash; Melody Bias Module &mdash; Director's Palette
+  </div>
+</div>
+
+<script>
+const ZONES = [
+  {
+    name: 'Spoken Word Delivery',
+    desc: 'Raw, unmelodic delivery. Think spoken poetry, aggressive bars, monotone flow.',
+    artists: 'Earl Sweatshirt, early Eminem',
+    promptPart: 'spoken word delivery'
+  },
+  {
+    name: 'Rap-Focused with Occasional Melody',
+    desc: 'Primarily rapping with melodic hooks or sung choruses.',
+    artists: 'Kendrick Lamar, J. Cole, Nicki Minaj',
+    promptPart: 'rap-focused with occasional melody'
+  },
+  {
+    name: 'Balanced Rap and Singing',
+    desc: 'Seamless blend of rapping and singing throughout.',
+    artists: 'Drake, Juice WRLD, Post Malone',
+    promptPart: 'balanced rap and singing'
+  },
+  {
+    name: 'Melodic with Spoken Sections',
+    desc: 'Primarily sung with rap verses or spoken bridges.',
+    artists: 'The Weeknd, SZA, Frank Ocean',
+    promptPart: 'melodic with spoken sections'
+  },
+  {
+    name: 'Fully Sung Vocals',
+    desc: 'Pure vocal performance, no rapping.',
+    artists: 'Adele, Sam Smith, Beyonce (ballads)',
+    promptPart: 'fully sung vocals'
+  }
+];
+
+const slider = document.getElementById('melodySlider');
+const valueDisplay = document.getElementById('valueDisplay');
+const trackFill = document.getElementById('trackFill');
+const spectrumMarker = document.getElementById('spectrumMarker');
+const zoneName = document.getElementById('zoneName');
+const zoneDesc = document.getElementById('zoneDesc');
+const zoneArtists = document.getElementById('zoneArtists');
+const zoneInfo = document.getElementById('zoneInfo');
+const promptOutput = document.getElementById('promptOutput');
+const attitudeInput = document.getElementById('attitudeInput');
+const textureInput = document.getElementById('textureInput');
+const adlibInput = document.getElementById('adlibInput');
+
+let currentZone = -1;
+
+function getZoneIndex(value) {
+  if (value <= 20) return 0;
+  if (value <= 40) return 1;
+  if (value <= 60) return 2;
+  if (value <= 80) return 3;
+  return 4;
+}
+
+function getChipValues(containerId) {
+  const container = document.getElementById(containerId);
+  const chips = container.querySelectorAll('.chip');
+  return Array.from(chips).map(c => c.dataset.value);
+}
+
+function buildPrompt(value) {
+  const parts = [];
+
+  const textures = getChipValues('textureChips');
+  if (textures.length > 0) {
+    parts.push(textures.join(', '));
+  }
+
+  const zoneIdx = getZoneIndex(value);
+  parts.push(ZONES[zoneIdx].promptPart);
+
+  const attitude = attitudeInput.value.trim();
+  if (attitude) {
+    parts.push(attitude + ' tone');
+  }
+
+  const adlibs = getChipValues('adlibChips');
+  if (adlibs.length > 0) {
+    parts.push('ad-libs: ' + adlibs.slice(0, 3).join(', '));
+  }
+
+  return parts.join(', ');
+}
+
+function renderPrompt(value) {
+  const prompt = buildPrompt(value);
+  if (!prompt) {
+    promptOutput.innerHTML = '<span class="prompt-empty">Add vocal textures, attitude, or ad-libs to generate a prompt...</span>';
+    return;
+  }
+
+  // Highlight the melody bias part
+  const zoneIdx = getZoneIndex(value);
+  const biasText = ZONES[zoneIdx].promptPart;
+  const highlighted = prompt.replace(biasText, '<span class="highlight">' + biasText + '</span>');
+  promptOutput.innerHTML = highlighted;
+}
+
+function updateUI(value) {
+  const v = parseInt(value);
+
+  // Value display
+  valueDisplay.textContent = v;
+
+  // Track fill
+  trackFill.style.width = v + '%';
+
+  // Spectrum marker
+  const barWidth = document.getElementById('spectrumBar').offsetWidth;
+  const markerPos = (v / 100) * barWidth;
+  spectrumMarker.style.left = markerPos + 'px';
+
+  // Active zone highlighting
+  const zoneIdx = getZoneIndex(v);
+  const zones = document.querySelectorAll('.spectrum-zone');
+  zones.forEach((z, i) => {
+    z.classList.toggle('active', i === zoneIdx);
+  });
+
+  // Zone info update with animation
+  if (zoneIdx !== currentZone) {
+    currentZone = zoneIdx;
+    const zone = ZONES[zoneIdx];
+
+    zoneInfo.dataset.zone = zoneIdx;
+    zoneName.classList.remove('zone-animate');
+    zoneDesc.classList.remove('zone-animate');
+    zoneArtists.classList.remove('zone-animate');
+
+    // Force reflow to restart animation
+    void zoneName.offsetWidth;
+
+    zoneName.textContent = zone.name;
+    zoneDesc.textContent = zone.desc;
+    zoneArtists.textContent = 'Artists: ' + zone.artists;
+
+    zoneName.classList.add('zone-animate');
+    zoneDesc.classList.add('zone-animate');
+    zoneArtists.classList.add('zone-animate');
+  }
+
+  // Update prompt
+  renderPrompt(v);
+}
+
+// Slider events
+slider.addEventListener('input', (e) => updateUI(e.target.value));
+
+// Attitude input
+attitudeInput.addEventListener('input', () => renderPrompt(slider.value));
+
+// Chip management
+function setupChipContainer(containerId, inputId) {
+  const container = document.getElementById(containerId);
+  const input = document.getElementById(inputId);
+
+  // Remove chip on X click
+  container.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove')) {
+      const chip = e.target.parentElement;
+      chip.style.opacity = '0';
+      chip.style.transform = 'scale(0.8)';
+      chip.style.transition = 'all 0.15s ease';
+      setTimeout(() => {
+        chip.remove();
+        renderPrompt(slider.value);
+      }, 150);
+    }
+  });
+
+  // Add chip on Enter
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const val = input.value.trim().toLowerCase();
+      if (!val) return;
+
+      // Check duplicates
+      const existing = getChipValues(containerId);
+      if (existing.includes(val)) {
+        input.value = '';
+        return;
+      }
+
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.dataset.value = val;
+      chip.innerHTML = val + ' <span class="remove">&times;</span>';
+      chip.style.opacity = '0';
+      chip.style.transform = 'scale(0.8)';
+      container.insertBefore(chip, input);
+
+      requestAnimationFrame(() => {
+        chip.style.transition = 'all 0.15s ease';
+        chip.style.opacity = '1';
+        chip.style.transform = 'scale(1)';
+      });
+
+      input.value = '';
+      renderPrompt(slider.value);
+    }
+  });
+}
+
+setupChipContainer('textureChips', 'textureInput');
+setupChipContainer('adlibChips', 'adlibInput');
+
+// Copy prompt
+function copyPrompt() {
+  const prompt = buildPrompt(slider.value);
+  if (!prompt) return;
+
+  navigator.clipboard.writeText(prompt).then(() => {
+    const btn = document.getElementById('copyBtn');
+    const text = document.getElementById('copyText');
+    btn.classList.add('copied');
+    text.textContent = 'Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      text.textContent = 'Copy';
+    }, 1500);
+  });
+}
+
+// Window resize handler for spectrum marker
+window.addEventListener('resize', () => updateUI(slider.value));
+
+// Initial render
+updateUI(slider.value);
+</script>
+
+</body>
+</html>

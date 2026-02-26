@@ -26,7 +26,7 @@ Key tables: `auth.users`, `user_credits`, `generation_events`, `admin_users`, `a
 
 Token in `.env.local` as `REPLICATE_API_TOKEN`.
 
-Image models: `google/nano-banana` (fast, 8pts), `google/nano-banana-pro` (quality, 20pts), `ideogram-ai/ideogram-v2` (text), `prunaai/qwen-image-fast` (cheapest)
+Image models: `google/nano-banana` (fast, 8pts), `google/nano-banana-pro` (quality, 20pts), `prunaai/z-image-turbo` (5pts), `bytedance/seedream-5-lite` (cheapest, 4pts), `bytedance/riverflow-2-pro` (design, 27pts)
 
 Video models: `bytedance/seedance-1-lite`, `bytedance/seedance-1-pro-fast`, `wan-video/wan-2.2-i2v-fast`, `kwaivgi/kling-v2.5-turbo-pro`
 

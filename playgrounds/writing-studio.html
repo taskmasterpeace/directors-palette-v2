@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Writing Studio v2 - AI Songwriting Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0a0a0a;
+  color: #e0e0e0;
+  line-height: 1.5;
+  overflow: hidden;
+  height: 100vh;
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+input, textarea, button, select { font-family: inherit; }
+button { cursor: pointer; border: none; background: none; color: inherit; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   LAYOUT
+   ═══════════════════════════════════════════════════════════════════ */
+.app { display: flex; height: 100vh; overflow: hidden; }
+
+.sidebar {
+  width: 260px; min-width: 260px;
+  background: #141414;
+  border-right: 1px solid #2a2a2a;
+  display: flex; flex-direction: column;
+  overflow-y: auto; overflow-x: hidden;
+  padding: 16px 14px;
+  gap: 20px;
+  transition: width 0.3s ease, min-width 0.3s ease, padding 0.3s ease;
+}
+
+.center {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.right-panel {
+  width: 320px; min-width: 320px;
+  background: #141414;
+  border-left: 1px solid #2a2a2a;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  transition: width 0.3s ease, min-width 0.3s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TYPOGRAPHY & UTILITY
+   ═══════════════════════════════════════════════════════════════════ */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.section-header h3 {
+  font-size: 0.8rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: #999;
+}
+.section-header .action-btn {
+  font-size: 0.75rem; color: #666; padding: 2px 6px;
+  border-radius: 4px; transition: all 0.2s;
+}
+.section-header .action-btn:hover { color: #f59e0b; background: #1a1a1a; }
+
+.label { font-size: 0.75rem; font-weight: 500; color: #aaa; margin-bottom: 4px; }
+.sublabel { font-size: 0.68rem; color: #666; margin-bottom: 6px; }
+.muted { color: #888; }
+.mono { font-family: 'JetBrains Mono', monospace; }
+.amber { color: #f59e0b; }
+.divider { height: 1px; background: #2a2a2a; margin: 4px 0; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SIDEBAR — ARTIST PROFILE
+   ═══════════════════════════════════════════════════════════════════ */
+.artist-card {
+  background: #1a1a1a; border: 1px solid #2a2a2a;
+  border-radius: 8px; padding: 12px;
+}
+.artist-card .artist-name-input {
+  background: #0f0f0f; border: 1px solid #2a2a2a;
+  color: #e0e0e0; padding: 6px 10px; border-radius: 6px;
+  width: 100%; font-size: 0.9rem; font-weight: 600;
+  outline: none; transition: border-color 0.2s;
+}
+.artist-card .artist-name-input:focus { border-color: #f59e0b; }
+.genre-chips { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.genre-chip {
+  font-size: 0.65rem; padding: 2px 8px; border-radius: 10px;
+  background: #252525; color: #aaa; border: 1px solid #333;
+}
+.melody-info { font-size: 0.7rem; color: #666; margin-top: 6px; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SIDEBAR — CONCEPT
+   ═══════════════════════════════════════════════════════════════════ */
+.concept-card {
+  background: #1a1a1a; border: 1px solid #2a2a2a;
+  border-radius: 8px; padding: 10px; cursor: pointer;
+  transition: all 0.2s; font-size: 0.78rem; line-height: 1.45;
+  color: #bbb;
+}
+.concept-card:hover { border-color: #444; background: #1e1e1e; }
+.concept-card.active { border-color: #f59e0b; background: #1a1700; color: #e0e0e0; }
+.concept-cards { display: flex; flex-direction: column; gap: 6px; }
+.concept-own {
+  margin-top: 8px;
+}
+.concept-own textarea {
+  width: 100%; background: #0f0f0f; border: 1px solid #2a2a2a;
+  color: #e0e0e0; padding: 8px 10px; border-radius: 6px;
+  font-size: 0.78rem; resize: vertical; min-height: 48px;
+  outline: none; transition: border-color 0.2s;
+}
+.concept-own textarea:focus { border-color: #f59e0b; }
+.concept-own textarea::placeholder { color: #555; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SIDEBAR — TONE CONTROLS
+   ═══════════════════════════════════════════════════════════════════ */
+.tone-section { display: flex; flex-direction: column; gap: 14px; }
+.tone-axis { display: flex; flex-direction: column; gap: 4px; }
+
+.chip-grid { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip-grid.cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.chip-grid.cols-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+
+.tone-chip {
+  font-size: 0.68rem; padding: 4px 0; text-align: center;
+  border-radius: 12px; border: 1px solid #2a2a2a;
+  background: #1a1a1a; color: #888; cursor: pointer;
+  transition: all 0.2s; white-space: nowrap;
+  user-select: none;
+}
+.tone-chip:hover { border-color: #555; color: #bbb; }
+.tone-chip.active {
+  background: #f59e0b; color: #000; border-color: #f59e0b;
+  font-weight: 600;
+}
+
+/* Energy slider */
+.energy-slider-wrap { margin-top: 4px; }
+.energy-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 6px; border-radius: 3px;
+  outline: none; cursor: pointer;
+  background: linear-gradient(to right, #333 0%, #666 33%, #f59e0b 66%, #ef4444 100%);
+}
+.energy-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; border: 2px solid #f59e0b;
+  cursor: pointer; transition: transform 0.15s;
+}
+.energy-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.energy-slider::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; border: 2px solid #f59e0b; cursor: pointer;
+}
+.energy-zones {
+  display: flex; justify-content: space-between; margin-top: 4px;
+}
+.energy-zones span { font-size: 0.6rem; color: #555; }
+.energy-zones span.active-zone { color: #f59e0b; font-weight: 600; }
+.energy-readout {
+  font-size: 0.72rem; font-weight: 500; margin-top: 2px;
+}
+
+/* Per-section toggle */
+.toggle-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 6px; padding-top: 10px; border-top: 1px solid #222;
+}
+.toggle-row label { font-size: 0.7rem; color: #888; cursor: pointer; }
+.toggle-switch {
+  width: 32px; height: 18px; border-radius: 9px;
+  background: #333; position: relative; cursor: pointer;
+  transition: background 0.2s; flex-shrink: 0;
+}
+.toggle-switch.on { background: #f59e0b; }
+.toggle-switch::after {
+  content: ''; position: absolute;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #fff; top: 2px; left: 2px;
+  transition: transform 0.2s;
+}
+.toggle-switch.on::after { transform: translateX(14px); }
+
+/* Info tooltip */
+.info-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #2a2a2a; color: #666; font-size: 0.6rem;
+  cursor: help; position: relative; margin-left: 6px; flex-shrink: 0;
+}
+.info-icon .tooltip-text {
+  display: none; position: absolute; bottom: 100%; left: 50%;
+  transform: translateX(-50%); background: #222; color: #ccc;
+  padding: 6px 10px; border-radius: 6px; font-size: 0.68rem;
+  width: 200px; z-index: 100; margin-bottom: 6px;
+  border: 1px solid #333; line-height: 1.4;
+  font-weight: 400; text-transform: none; letter-spacing: normal;
+}
+.info-icon:hover .tooltip-text { display: block; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SIDEBAR — SONG STRUCTURE
+   ═══════════════════════════════════════════════════════════════════ */
+.structure-list { display: flex; flex-direction: column; gap: 2px; }
+.structure-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: 6px; cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all 0.2s; position: relative;
+  font-size: 0.8rem;
+}
+.structure-item:hover { background: #1a1a1a; }
+.structure-item.active { background: #1a1700; border-left-color: #f59e0b; }
+.structure-item .status-icon { font-size: 0.75rem; flex-shrink: 0; width: 16px; text-align: center; }
+.structure-item .section-name { flex: 1; }
+.structure-item .section-name-input {
+  background: transparent; border: 1px solid #f59e0b;
+  color: #e0e0e0; padding: 1px 4px; border-radius: 3px;
+  font-size: 0.8rem; width: 100%; outline: none;
+}
+.structure-item .override-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #555; flex-shrink: 0;
+}
+.structure-item .override-dot.has-override { background: #f59e0b; }
+.structure-item .override-btn {
+  font-size: 0.7rem; padding: 1px 3px; border-radius: 3px;
+  transition: all 0.2s; opacity: 0.5;
+}
+.structure-item .override-btn:hover { opacity: 1; background: #252525; }
+.structure-item .remove-btn {
+  font-size: 0.7rem; color: #555; opacity: 0;
+  transition: opacity 0.2s; padding: 2px;
+}
+.structure-item:hover .remove-btn { opacity: 1; }
+.structure-item .remove-btn:hover { color: #ef4444; }
+
+.add-section-row { margin-top: 4px; }
+.add-section-btn {
+  font-size: 0.75rem; color: #666; padding: 6px 10px;
+  border-radius: 6px; width: 100%; text-align: left;
+  transition: all 0.2s;
+}
+.add-section-btn:hover { color: #f59e0b; background: #1a1a1a; }
+.add-section-input {
+  width: 100%; background: #0f0f0f; border: 1px solid #f59e0b;
+  color: #e0e0e0; padding: 6px 10px; border-radius: 6px;
+  font-size: 0.78rem; outline: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TONE POPOVER (per-section override)
+   ═══════════════════════════════════════════════════════════════════ */
+.tone-popover {
+  position: fixed; z-index: 200;
+  background: #1a1a1a; border: 1px solid #2a2a2a;
+  border-radius: 10px; padding: 14px;
+  width: 280px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.tone-popover .popover-header {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.tone-popover .popover-header h4 {
+  font-size: 0.78rem; font-weight: 600; color: #f59e0b;
+}
+.tone-popover .popover-close {
+  font-size: 0.8rem; color: #666; padding: 2px 6px;
+  border-radius: 4px;
+}
+.tone-popover .popover-close:hover { color: #fff; background: #333; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CENTER — HEADER BAR
+   ═══════════════════════════════════════════════════════════════════ */
+.center-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 8px;
+}
+.center-header .section-title {
+  font-size: 1.4rem; font-weight: 700; color: #fff;
+}
+.center-header .section-template {
+  font-size: 0.75rem; color: #666; font-style: italic;
+  margin-left: 12px;
+}
+.tone-pills { display: flex; gap: 6px; align-items: center; }
+.tone-pill {
+  font-size: 0.68rem; padding: 3px 10px; border-radius: 12px;
+  background: #1a1a1a; border: 1px solid #2a2a2a; color: #aaa;
+}
+.tone-pill .pill-label { color: #f59e0b; font-weight: 500; }
+.override-label { font-size: 0.6rem; color: #f59e0b; margin-left: 2px; }
+
+.generate-btn {
+  background: #f59e0b; color: #000; font-weight: 600;
+  padding: 10px 20px; border-radius: 8px; font-size: 0.85rem;
+  transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+}
+.generate-btn:hover { background: #d97706; transform: translateY(-1px); }
+.generate-btn:active { transform: translateY(0); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CENTER — OPTION GRID
+   ═══════════════════════════════════════════════════════════════════ */
+.option-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px; flex: 1; min-height: 0;
+}
+.option-card {
+  background: #1a1a1a; border: 1px solid #2a2a2a;
+  border-radius: 10px; display: flex; flex-direction: column;
+  overflow: hidden; transition: all 0.3s ease;
+  position: relative;
+}
+.option-card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+.option-card.tossed { opacity: 0; transform: scale(0.95); pointer-events: none; }
+.option-card.kept { animation: keepFlash 0.6s ease; }
+@keyframes keepFlash {
+  0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+  50% { box-shadow: 0 0 20px 4px rgba(16,185,129,0.3); background: #0a1f0a; }
+  100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+}
+
+.option-card .card-accent {
+  position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+}
+.option-card[data-opt="0"] .card-accent { background: #3b82f6; }
+.option-card[data-opt="1"] .card-accent { background: #8b5cf6; }
+.option-card[data-opt="2"] .card-accent { background: #10b981; }
+.option-card[data-opt="3"] .card-accent { background: #f59e0b; }
+
+.card-header {
+  display: flex; align-items: center; padding: 10px 14px 0;
+}
+.card-label { font-size: 0.85rem; font-weight: 700; }
+.option-card[data-opt="0"] .card-label { color: #3b82f6; }
+.option-card[data-opt="1"] .card-label { color: #8b5cf6; }
+.option-card[data-opt="2"] .card-label { color: #10b981; }
+.option-card[data-opt="3"] .card-label { color: #f59e0b; }
+
+.card-lyrics {
+  flex: 1; padding: 8px 14px; overflow-y: auto; max-height: 280px;
+}
+.card-lyrics pre {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.76rem; line-height: 1.7;
+  color: #ccc; white-space: pre-wrap; word-wrap: break-word;
+}
+.card-lyrics textarea {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.76rem; line-height: 1.7;
+  color: #ccc; background: #111; border: 1px solid #333;
+  border-radius: 6px; width: 100%; min-height: 200px;
+  padding: 8px; resize: vertical; outline: none;
+}
+.card-lyrics textarea:focus { border-color: #f59e0b; }
+
+.card-actions {
+  display: flex; gap: 4px; padding: 8px 10px;
+  border-top: 1px solid #222;
+}
+.card-action-btn {
+  flex: 1; padding: 6px 0; border-radius: 6px;
+  font-size: 0.72rem; font-weight: 500;
+  transition: all 0.2s; text-align: center;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+.card-action-btn:hover { filter: brightness(1.2); }
+.btn-keep { background: rgba(16,185,129,0.1); color: #10b981; }
+.btn-keep:hover { background: rgba(16,185,129,0.2); }
+.btn-chop { background: rgba(245,158,11,0.1); color: #f59e0b; }
+.btn-chop:hover { background: rgba(245,158,11,0.2); }
+.btn-toss { background: rgba(239,68,68,0.08); color: #ef4444; opacity: 0.7; }
+.btn-toss:hover { background: rgba(239,68,68,0.15); opacity: 1; }
+.btn-edit { background: rgba(59,130,246,0.1); color: #3b82f6; }
+.btn-edit:hover { background: rgba(59,130,246,0.2); }
+
+/* Injected lines + idea bank trigger */
+.below-grid { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+.pull-bank-btn {
+  padding: 8px 16px; border-radius: 8px;
+  background: #1a1a1a; border: 1px solid #2a2a2a;
+  color: #888; font-size: 0.8rem; transition: all 0.2s;
+  display: inline-flex; align-items: center; gap: 6px;
+  align-self: flex-start;
+}
+.pull-bank-btn:hover { border-color: #f59e0b; color: #f59e0b; }
+
+.injected-section h4 {
+  font-size: 0.75rem; color: #888; font-weight: 500; margin-bottom: 6px;
+}
+.injected-line {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; background: #1a1a1a; border: 1px solid #2a2a2a;
+  border-radius: 6px; margin-bottom: 4px; font-size: 0.76rem;
+}
+.injected-line .line-text {
+  flex: 1; font-family: 'JetBrains Mono', monospace;
+  color: #f59e0b; font-size: 0.72rem;
+}
+.injected-line .remove-injected {
+  color: #555; font-size: 0.7rem;
+}
+.injected-line .remove-injected:hover { color: #ef4444; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   RIGHT PANEL — PROMPT PREVIEW
+   ═══════════════════════════════════════════════════════════════════ */
+.right-section {
+  padding: 14px; overflow-y: auto;
+}
+.right-section.prompt-section { flex: 0 0 auto; max-height: 45%; }
+.right-section.draft-section { flex: 1; overflow-y: auto; border-top: 1px solid #2a2a2a; }
+
+.prompt-box {
+  background: #0d0d0d; border: 1px solid #2a2a2a;
+  border-left: 3px solid #f59e0b;
+  border-radius: 6px; padding: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem; line-height: 1.7;
+  color: #aaa; white-space: pre-wrap; word-wrap: break-word;
+  max-height: 260px; overflow-y: auto;
+}
+.copy-prompt-btn {
+  margin-top: 8px; padding: 6px 14px; border-radius: 6px;
+  background: #1a1a1a; border: 1px solid #2a2a2a;
+  color: #888; font-size: 0.72rem; transition: all 0.2s;
+}
+.copy-prompt-btn:hover { border-color: #f59e0b; color: #f59e0b; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   RIGHT PANEL — SONG DRAFT
+   ═══════════════════════════════════════════════════════════════════ */
+.draft-empty {
+  color: #555; font-size: 0.8rem; text-align: center;
+  padding: 40px 20px; font-style: italic;
+}
+.draft-card {
+  background: #1a1a1a; border: 1px solid #2a2a2a;
+  border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+}
+.draft-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.draft-card-header .draft-section-name {
+  font-size: 0.78rem; font-weight: 600; color: #f59e0b;
+}
+.draft-card-header .draft-actions { display: flex; gap: 4px; }
+.draft-card-header .draft-actions button {
+  font-size: 0.65rem; color: #555; padding: 2px 5px;
+  border-radius: 3px; transition: all 0.2s;
+}
+.draft-card-header .draft-actions button:hover { color: #bbb; background: #252525; }
+.draft-card pre {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem; line-height: 1.65; color: #bbb;
+  white-space: pre-wrap; word-wrap: break-word;
+}
+.draft-card .draft-time { font-size: 0.6rem; color: #555; margin-top: 4px; }
+
+.export-btn {
+  margin-top: 8px; padding: 8px 16px; border-radius: 8px;
+  background: #f59e0b; color: #000; font-weight: 600;
+  font-size: 0.78rem; width: 100%; transition: all 0.2s;
+}
+.export-btn:hover { background: #d97706; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   IDEA BANK DRAWER
+   ═══════════════════════════════════════════════════════════════════ */
+.bank-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); z-index: 500;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.bank-overlay.open { opacity: 1; pointer-events: auto; }
+.bank-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0;
+  width: 350px; background: #141414;
+  border-left: 1px solid #2a2a2a;
+  z-index: 501; transform: translateX(100%);
+  transition: transform 0.3s ease;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.bank-overlay.open .bank-drawer { transform: translateX(0); }
+
+.bank-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px; border-bottom: 1px solid #2a2a2a;
+}
+.bank-header h3 { font-size: 1rem; font-weight: 700; color: #fff; }
+.bank-close { font-size: 1rem; color: #666; padding: 4px 8px; border-radius: 4px; }
+.bank-close:hover { color: #fff; background: #333; }
+
+.bank-search {
+  padding: 10px 16px; border-bottom: 1px solid #222;
+}
+.bank-search input {
+  width: 100%; background: #0f0f0f; border: 1px solid #2a2a2a;
+  color: #e0e0e0; padding: 8px 12px; border-radius: 6px;
+  font-size: 0.8rem; outline: none;
+}
+.bank-search input:focus { border-color: #f59e0b; }
+
+.bank-filters {
+  display: flex; gap: 4px; padding: 10px 16px;
+  flex-wrap: wrap; border-bottom: 1px solid #222;
+}
+.bank-filter-chip {
+  font-size: 0.68rem; padding: 3px 10px; border-radius: 12px;
+  background: #1a1a1a; border: 1px solid #2a2a2a; color: #888;
+  cursor: pointer; transition: all 0.2s;
+}
+.bank-filter-chip:hover { border-color: #555; }
+.bank-filter-chip.active { background: #f59e0b; color: #000; border-color: #f59e0b; font-weight: 600; }
+
+.bank-list { flex: 1; overflow-y: auto; padding: 12px 16px; }
+.bank-snippet {
+  background: #1a1a1a; border: 1px solid #2a2a2a;
+  border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+  transition: all 0.2s;
+}
+.bank-snippet:hover { border-color: #333; }
+.bank-snippet .snippet-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.74rem; color: #ccc; line-height: 1.5;
+  margin-bottom: 8px;
+}
+.bank-snippet .snippet-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+.snippet-tag {
+  font-size: 0.6rem; padding: 2px 7px; border-radius: 8px;
+  font-weight: 500;
+}
+.snippet-tag.metaphor { background: rgba(139,92,246,0.15); color: #a78bfa; }
+.snippet-tag.punchline { background: rgba(239,68,68,0.15); color: #f87171; }
+.snippet-tag.imagery { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.snippet-tag.wordplay { background: rgba(245,158,11,0.15); color: #fbbf24; }
+.snippet-tag.hook { background: rgba(16,185,129,0.15); color: #34d399; }
+.snippet-tag.verse { background: rgba(156,163,175,0.15); color: #9ca3af; }
+
+.bank-snippet .snippet-actions { display: flex; gap: 6px; }
+.snippet-inject-btn {
+  font-size: 0.7rem; padding: 4px 12px; border-radius: 5px;
+  background: rgba(245,158,11,0.1); color: #f59e0b;
+  border: 1px solid rgba(245,158,11,0.2); transition: all 0.2s;
+}
+.snippet-inject-btn:hover { background: rgba(245,158,11,0.2); }
+.snippet-delete-btn {
+  font-size: 0.7rem; color: #555; padding: 4px 8px;
+  border-radius: 5px; transition: all 0.2s;
+}
+.snippet-delete-btn:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CHOP MODAL
+   ═══════════════════════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6); z-index: 600;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+.chop-modal {
+  background: #1a1a1a; border: 1px solid #2a2a2a;
+  border-radius: 12px; width: 560px; max-width: 90vw;
+  max-height: 80vh; display: flex; flex-direction: column;
+  overflow: hidden; transform: scale(0.95);
+  transition: transform 0.3s;
+}
+.modal-overlay.open .chop-modal { transform: scale(1); }
+
+.chop-header {
+  padding: 16px 20px; border-bottom: 1px solid #2a2a2a;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.chop-header h3 { font-size: 1rem; font-weight: 700; color: #fff; }
+
+.chop-lines { flex: 1; overflow-y: auto; padding: 12px 20px; }
+.chop-line {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 6px 0; border-bottom: 1px solid #1f1f1f;
+}
+.chop-line input[type="checkbox"] {
+  margin-top: 4px; accent-color: #f59e0b; cursor: pointer;
+}
+.chop-line .line-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.76rem; color: #ccc; line-height: 1.5;
+}
+
+.chop-options { padding: 12px 20px; border-top: 1px solid #2a2a2a; }
+.chop-options h4 { font-size: 0.75rem; color: #888; margin-bottom: 8px; }
+.chop-tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.chop-tag {
+  font-size: 0.68rem; padding: 4px 10px; border-radius: 12px;
+  background: #252525; color: #888; border: 1px solid #333;
+  cursor: pointer; transition: all 0.2s;
+}
+.chop-tag.selected { background: #f59e0b; color: #000; border-color: #f59e0b; font-weight: 600; }
+.chop-fit-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.chop-fit {
+  font-size: 0.68rem; padding: 4px 10px; border-radius: 12px;
+  background: #252525; color: #888; border: 1px solid #333;
+  cursor: pointer; transition: all 0.2s;
+}
+.chop-fit.selected { background: #3b82f6; color: #fff; border-color: #3b82f6; font-weight: 500; }
+
+.chop-footer {
+  padding: 12px 20px; border-top: 1px solid #2a2a2a;
+  display: flex; justify-content: flex-end; gap: 8px;
+}
+.chop-cancel-btn {
+  padding: 8px 16px; border-radius: 6px;
+  background: #252525; color: #888; font-size: 0.8rem; transition: all 0.2s;
+}
+.chop-cancel-btn:hover { color: #ccc; background: #333; }
+.chop-save-btn {
+  padding: 8px 20px; border-radius: 6px;
+  background: #f59e0b; color: #000; font-weight: 600;
+  font-size: 0.8rem; transition: all 0.2s;
+}
+.chop-save-btn:hover { background: #d97706; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   TOAST
+   ═══════════════════════════════════════════════════════════════════ */
+.toast-container {
+  position: fixed; top: 16px; right: 16px;
+  z-index: 999; display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  background: #1a1a1a; border: 1px solid #2a2a2a;
+  border-radius: 8px; padding: 10px 16px;
+  font-size: 0.8rem; color: #e0e0e0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  transform: translateX(120%); transition: transform 0.3s ease;
+  display: flex; align-items: center; gap: 8px;
+}
+.toast.show { transform: translateX(0); }
+.toast.success { border-left: 3px solid #10b981; }
+.toast.info { border-left: 3px solid #3b82f6; }
+.toast.warning { border-left: 3px solid #f59e0b; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 1100px) {
+  .sidebar {
+    width: 52px; min-width: 52px;
+    padding: 10px 6px; overflow: hidden;
+  }
+  .sidebar .section-header h3,
+  .sidebar .artist-card .genre-chips,
+  .sidebar .artist-card .melody-info,
+  .sidebar .concept-cards,
+  .sidebar .concept-own,
+  .sidebar .tone-section,
+  .sidebar .sublabel,
+  .sidebar .toggle-row,
+  .sidebar .add-section-row,
+  .sidebar .info-icon { display: none; }
+  .sidebar .artist-card { padding: 8px; text-align: center; }
+  .sidebar .artist-card .artist-name-input { font-size: 0.7rem; padding: 4px; text-align: center; }
+  .sidebar .section-header .action-btn { display: none; }
+  .sidebar .structure-item .section-name { font-size: 0.6rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 26px; }
+  .sidebar .structure-item .remove-btn { display: none; }
+  .sidebar .structure-item .override-btn { display: none; }
+  .sidebar .structure-item .override-dot { display: none; }
+}
+@media (max-width: 900px) {
+  .app { flex-direction: column; overflow-y: auto; height: auto; }
+  .sidebar {
+    width: 100% !important; min-width: 100% !important;
+    flex-direction: row; flex-wrap: wrap; overflow: visible;
+    padding: 12px; gap: 12px; border-right: none;
+    border-bottom: 1px solid #2a2a2a; max-height: none;
+  }
+  .sidebar .section-header h3,
+  .sidebar .artist-card .genre-chips,
+  .sidebar .artist-card .melody-info,
+  .sidebar .concept-cards,
+  .sidebar .concept-own,
+  .sidebar .tone-section,
+  .sidebar .sublabel,
+  .sidebar .toggle-row,
+  .sidebar .add-section-row,
+  .sidebar .info-icon { display: revert; }
+  .sidebar .section-header .action-btn { display: revert; }
+  .sidebar .structure-item .section-name { max-width: none; font-size: 0.8rem; }
+  .sidebar .structure-item .remove-btn { display: revert; }
+  .sidebar > * { flex: 1; min-width: 200px; }
+  .center { min-height: 600px; }
+  .right-panel {
+    width: 100% !important; min-width: 100% !important;
+    border-left: none; border-top: 1px solid #2a2a2a;
+  }
+  .option-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- ═══════ LEFT SIDEBAR ═══════ -->
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <!-- ═══════ CENTER ═══════ -->
+  <main class="center" id="center"></main>
+
+  <!-- ═══════ RIGHT PANEL ═══════ -->
+  <aside class="right-panel" id="rightPanel"></aside>
+</div>
+
+<!-- Idea Bank Overlay -->
+<div class="bank-overlay" id="bankOverlay">
+  <div class="bank-drawer" id="bankDrawer"></div>
+</div>
+
+<!-- Chop Modal Overlay -->
+<div class="modal-overlay" id="chopOverlay">
+  <div class="chop-modal" id="chopModal"></div>
+</div>
+
+<!-- Tone Popover (per-section override) -->
+<div class="tone-popover" id="tonePopover" style="display:none;"></div>
+
+<!-- Toasts -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════════════ */
+const LABELS = ['A','B','C','D'];
+const COLORS = ['#3b82f6','#8b5cf6','#10b981','#f59e0b'];
+const EMOTIONS = ['Defiant','Nostalgic','Hopeful','Heartbroken','Angry','Vulnerable','Triumphant','Haunted','Playful','Confident','Melancholic','Numb'];
+const DELIVERIES = ['Raw','Polished','Vulnerable','Deadpan','Ironic','Preachy','Menacing','Storytelling'];
+const ENERGY_ZONES = [{max:25,label:'Whisper'},{max:50,label:'Conversational'},{max:75,label:'Heated'},{max:100,label:'Explosive'}];
+
+const CONCEPT_SETS = [
+  [
+    'Rise from the bottom \u2014 grinding through doubt to prove everyone wrong',
+    'Late night confessions \u2014 raw truths that only come out at 3AM',
+    'Crown heavy \u2014 the cost of success and the weight of loyalty'
+  ],
+  [
+    'Ghost of the old me \u2014 becoming someone new while haunted by who you were',
+    'Paper trail \u2014 chasing money and watching it change everything',
+    'Concrete lullaby \u2014 finding peace in a place that never sleeps'
+  ]
+];
+
+const SECTION_TEMPLATES = {
+  'Hook':   '2-4 bars \u2022 memorable tagline \u2022 simple diction',
+  'Verse 1':'12-16 bars \u2022 narrative detail \u2022 hook callbacks',
+  'Verse 2':'12-16 bars \u2022 narrative detail \u2022 hook callbacks',
+  'Bridge': '8 bars \u2022 mood shift \u2022 setup for final hook',
+  'Outro':  '4-8 bars \u2022 resolution or fade'
+};
+function getTemplate(name) {
+  if (SECTION_TEMPLATES[name]) return SECTION_TEMPLATES[name];
+  if (/verse/i.test(name)) return '12-16 bars \u2022 narrative detail \u2022 hook callbacks';
+  if (/hook/i.test(name)) return '2-4 bars \u2022 memorable tagline \u2022 simple diction';
+  if (/bridge/i.test(name)) return '8 bars \u2022 mood shift \u2022 setup for final hook';
+  if (/outro/i.test(name)) return '4-8 bars \u2022 resolution or fade';
+  return 'Custom section';
+}
+
+/* Pre-generated lyrics pools keyed by normalized section name */
+const LYRICS_POOL = {
+  'Hook': [
+    ['Crown heavy, but I never drop it\nEvery loss a lesson, I don\u2019t stop it\nThey said I\u2019d fall \u2014 I rose and topped it\nShadow in the light, you can\u2019t block it',
+     'From the mud I built a monument\nEvery scar a story, every bar a document\nThey whispered doubt but I was dominant\nShadow reign \u2014 permanent, not temporary compliment',
+     'Started at the floor now I\u2019m ceiling-bound\nEvery hater quiet, not a single sound\nI took the long way, broke the lost-and-found\nShadow king, they bow when I come around',
+     'Nothing given, everything I took it\nThey wrote me off \u2014 I rewrote the book then\nFrom the gutter to the gold, overlooked then\nNow they studying my moves like I shook them']
+  ],
+  'Verse 1': [
+    ['Woke up on the floor, couldn\u2019t pay the light bill\nMama working doubles just to keep it real\nNeighborhood was rough but it gave me steel\nEvery setback sharpened how I think and feel\nBlock was like a classroom, streets the only teacher\nCorner store philosophers, every one a preacher\nTold me keep my head down, but I had to reach up\nGrabbed the sky with both hands, refused to ease up\nThree jobs at sixteen, still I wrote at midnight\nNotebook full of verses by the pale streetlight\nThey said dreams don\u2019t pay rent in the projects\nBut I made my words into my own prospects\nNow I\u2019m standing where they said I\u2019d never be\nEvery doubt they had became my energy\nShadow from the bottom with the clearest view\nProved them wrong by simply being something new',
+     'First memory is concrete, cold and cracked\nHand-me-down shoes, worn sole on my back\nDaddy left before I knew his face\nMama said we don\u2019t need him, found our place\nSchool was warfare, every day a test\nNot the books \u2014 survival, at my best\nLearned to read a room before I read a page\nLearned to bite my tongue and swallow rage\nFifteen summers, already seen too much\nFriends gone early, some I couldn\u2019t clutch\nBut the music hit different, gave me air\nPut the headphones on, forgot I was there\nStarted spitting bars in the bathroom mirror\nEvery verse I wrote the vision got clearer\nShadow rising slow but with purpose though\nFrom the darkness came the brightest show',
+     'They gave me nothing, I made something raw\nBuilt my castle from the cracks and flaws\nEvery time they pushed I pushed back more\nUsed the pain as fuel to settle score\nLiving room was empty, fridge the same\nBut the fire in my chest was an open flame\nScribbled lyrics on the back of bills\nTurned my hunger into verbal skills\nSix AM bus rides, headphones in\nMouthing words that cut beneath the skin\nTeacher said I\u2019d never amount to much\nBut she never felt the way these verses clutch\nNow the same blocks that tried to hold me down\nAre the same blocks cheering at my sound\nShadow made it \u2014 not despite the ground\nBut because I grew from what I found',
+     'Born in the struggle, baptized in the rain\nEvery chapter opened with a different pain\nBut I never let the story write itself\nGrabbed the pen and put my tears on every shelf\nCorner boys said music was a waste of time\nBut they spent their days just chasing dimes\nI spent mine chasing lines and rhyme and rhythm\nTurned my cell into a lyrical prison\nBreaking out with every bar I spit\nEvery verse another brick, I\u2019m building it\nMama cried the day she heard me on the track\nSaid my voice sound like my father coming back\nThat hit different \u2014 fuel for the journey\nShadow walking through the fire, never turning\nFrom the ashes rose a king, hear the sermon\nEvery loss I took just confirmed I was learning']
+  ],
+  'Verse 2': [
+    ['Money came but so did all the snakes\nEverybody friendly when they see what you make\nHad to learn the hard way who was real\nLoyalty ain\u2019t something you can buy or steal\nPenthouse view but the ghetto\u2019s in my veins\nSuccess don\u2019t wash away the growing pains\nStill I hustle like I\u2019m back on empty\nHunger never leaves, it just gets plenty\nIndustry\u2019s a jungle, everybody biting\nSmiling in your face while they back there writing\nHeadlines, hot takes, trying to define me\nBut I wrote myself \u2014 nobody can rewind me\nShadow in the spotlight, still the same kid\nFrom the mud, I just changed what I did\nNot who I am \u2014 remember where I came\nAnd I\u2019ll burn it all before I lose my name',
+     'Second verse, deeper in the narrative\nEvery line I write is comparative\nTo the life I lived versus what they see\nMagazine cover hiding all the debris\nPhone blowing up but I feel alone\nIn a room full of people far from home\nFame\u2019s a mirror that distorts the face\nShows you everything except your actual place\nOld friends look at me like I\u2019m a stranger\nNew friends treat me like I owe them favors\nBalance on a razor, one wrong step\nAnd the whole illusion crumbles, nothing left\nBut the words remain, the bars don\u2019t lie\nShadow drops the truth while others butterfly\nFrom the projects to the penthouse ceiling\nStill the same kid, still the same feeling',
+     'They say the top is lonely \u2014 that\u2019s half the truth\nThe other half is everybody wants your proof\nReceipts, credentials, show us that you earned it\nLike surviving wasn\u2019t enough, I had to learn it\nTwice, three times, jump through every hoop\nWhile they skated in on daddy\u2019s money, silver spoon\nI sharpened mine from tin cans and ambition\nTurned a deficit into my ammunition\nLook around the room and count the faces\nHalf of them would trade me for some better spaces\nIn the algorithm, in the playlist, in the blog\nBut Shadow doesn\u2019t fit inside a catalog\nI\u2019m the anomaly that broke the equation\nMade the impossible my daily occupation\nEvery bar I write is an act of war\nAgainst everyone who said I wasn\u2019t built for more',
+     'Verse two, let me take you somewhere real\nPast the platinum plaques and record deals\nTo the nights I almost quit it all\nPen in hand, tears falling, back against the wall\nWrote a hundred songs nobody ever heard\nFilled a thousand pages with a desperate word\nHoping someone somewhere felt the same\nThat the darkness had a mouth and knew my name\nBut it passed \u2014 the way all darkness does\nWhen you feed the flame instead of what it was\nNow I write with scars instead of wounds\nEvery metaphor a battle, every verse a tomb\nFor the old me, rest in peace, you served your part\nShadow 2.0, rebuilt from the heart\nAnd I promise on everything I love and know\nI won\u2019t stop until the whole world feels my flow']
+  ],
+  'Bridge': [
+    ['Sometimes I wonder if the climb was worth the fall\nIf the throne is just a chair against a wall\nEvery crown comes with a price they never mention\nEvery victory another layer of tension\nBut I chose this \u2014 every scar, every mile\nAnd if I had to do it over, same trial\nBecause the shadow only lives where light exists\nAnd I exist \u2014 I persist, I resist',
+     'Quiet now \u2014 let the silence speak\nUnderneath the armor I\u2019m still weak\nStill the kid who cried when no one watched\nStill the dreamer that the world forgot\nBut maybe that\u2019s the point of all this noise\nTo remind the broken they still have a voice\nShadow fading into something brighter\nEvery ending makes the next beginning tighter',
+     'Take a breath between the wars we fight\nNot every battle needs to last all night\nI learned to rest without retreating\nHeart still beating, soul still leading\nFrom the ashes, from the flood, from the wreck\nCame a version of myself I can respect\nShadow standing in the morning sun\nNot running anymore \u2014 I already won',
+     'They don\u2019t tell you that the mountaintop is cold\nThat the higher up you go, the more you hold\nExpectations, obligations, people\u2019s dreams\nStacked on top of yours until you\u2019re bursting at the seams\nBut I wouldn\u2019t trade a second of this weight\nEvery heavy day still beats the time I spent to wait\nShadow at the summit, looking down and looking in\nGrateful for the journey, ready to begin again']
+  ],
+  'Outro': [
+    ['Shadow \u2014 that\u2019s the name they\u2019ll remember\nFrom the January cold to the last December\nEvery bar a brick, every verse a floor\nBuilding something they ain\u2019t never seen before',
+     'Started with a whisper, ended with a roar\nShadow stood for something \u2014 that\u2019s what I came for\nAnd when the lights go down and the music fades\nRemember \u2014 legends aren\u2019t born, they\u2019re self-made',
+     'From the mud, through the blood, to the crown\nShadow never broke, Shadow never bowed down\nWrite my name in the concrete where I grew\nThat\u2019s the monument \u2014 everything I\u2019ve been through',
+     'This the outro but it\u2019s really just a start\nEvery ending circles back right to the heart\nShadow lives where light and dark collide\nAnd I\u2019ll be here \u2014 on both sides of the divide']
+  ]
+};
+
+const INITIAL_BANK = [
+  { text: 'Concrete jungle raised me, asphalt in my veins', tags: ['Imagery','Verse'] },
+  { text: 'They built walls, I built ladders', tags: ['Metaphor','Verse'] },
+  { text: 'Check the scoreboard, I don\u2019t need validation', tags: ['Punchline','Hook'] },
+  { text: 'Midnight oil burning, dreams on the horizon', tags: ['Imagery','Verse'] },
+  { text: 'Crown so heavy my neck got strong', tags: ['Wordplay','Hook'] },
+  { text: 'Started with a whisper, now the whole block hear me', tags: ['Metaphor','Verse'] }
+];
+
+const BANK_TAG_TYPES = ['Metaphor','Punchline','Imagery','Wordplay','Hook','Verse'];
+
+const state = {
+  artistName: 'Shadow',
+  conceptSetIdx: 0,
+  selectedConcept: 0, // index in current set, or -1 if custom
+  customConcept: '',
+  emotion: 'Defiant',
+  energy: 65,
+  delivery: 'Raw',
+  perSectionOverride: false,
+  sections: [
+    { name: 'Hook', status: 'pending', toneOverride: null },
+    { name: 'Verse 1', status: 'pending', toneOverride: null },
+    { name: 'Verse 2', status: 'pending', toneOverride: null },
+    { name: 'Bridge', status: 'pending', toneOverride: null },
+    { name: 'Outro', status: 'pending', toneOverride: null }
+  ],
+  activeSection: 0,
+  optionCards: [null, null, null, null], // lyrics text per card
+  tossedPool: {}, // sectionName -> index of next replacement
+  editingCard: -1, // which card idx is in edit mode, -1 = none
+  songDraft: [], // { sectionName, lyrics, time }
+  ideaBank: JSON.parse(JSON.stringify(INITIAL_BANK)),
+  injectedLines: [], // strings
+  bankFilter: 'All',
+  bankSearch: '',
+  renamingSection: -1,
+  addingSectionOpen: false,
+  openPopoverSection: -1 // index of section with open tone popover
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════════════════════ */
+function getEnergyZone(val) {
+  for (const z of ENERGY_ZONES) { if (val <= z.max) return z.label; }
+  return 'Explosive';
+}
+function getEnergyColor(val) {
+  if (val <= 25) return '#666';
+  if (val <= 50) return '#aaa';
+  if (val <= 75) return '#f59e0b';
+  return '#ef4444';
+}
+function getConcept() {
+  if (state.selectedConcept === -1) return state.customConcept || '(none)';
+  return CONCEPT_SETS[state.conceptSetIdx][state.selectedConcept] || '(none)';
+}
+function getSectionTone(idx) {
+  const s = state.sections[idx];
+  if (state.perSectionOverride && s.toneOverride) return s.toneOverride;
+  return { emotion: state.emotion, energy: state.energy, delivery: state.delivery };
+}
+function normSectionKey(name) {
+  if (/hook/i.test(name)) return 'Hook';
+  if (/verse\s*2/i.test(name)) return 'Verse 2';
+  if (/verse/i.test(name)) return 'Verse 1';
+  if (/bridge/i.test(name)) return 'Bridge';
+  if (/outro/i.test(name)) return 'Outro';
+  return 'Hook'; // fallback
+}
+function getLyricsForSection(sectionName) {
+  const key = normSectionKey(sectionName);
+  const pool = LYRICS_POOL[key];
+  if (!pool || !pool[0]) return ['(No lyrics available)','(No lyrics available)','(No lyrics available)','(No lyrics available)'];
+  return pool[0];
+}
+function showToast(msg, type='info') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  c.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 400);
+  }, 3000);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENDER — SIDEBAR
+   ═══════════════════════════════════════════════════════════════════ */
+function renderSidebar() {
+  const el = document.getElementById('sidebar');
+  const concepts = CONCEPT_SETS[state.conceptSetIdx];
+
+  el.innerHTML = `
+    <!-- Artist Profile -->
+    <div>
+      <div class="section-header"><h3>Artist</h3></div>
+      <div class="artist-card">
+        <input class="artist-name-input" id="artistNameInput" value="${esc(state.artistName)}" placeholder="Artist name" />
+        <div class="genre-chips">
+          <span class="genre-chip">Hip-Hop/Rap</span>
+          <span class="genre-chip">Trap</span>
+        </div>
+        <div class="melody-info">35% \u2014 Rap-focused</div>
+      </div>
+    </div>
+
+    <!-- Concept -->
+    <div>
+      <div class="section-header">
+        <h3>Concept</h3>
+        <button class="action-btn" id="conceptCycleBtn" title="Regenerate concepts">\ud83d\udd04</button>
+      </div>
+      <div class="concept-cards">
+        ${concepts.map((c, i) => `
+          <div class="concept-card${state.selectedConcept === i ? ' active' : ''}" data-cidx="${i}">${esc(c)}</div>
+        `).join('')}
+      </div>
+      <div class="concept-own">
+        <textarea id="customConceptArea" placeholder="Write your own...">${esc(state.customConcept)}</textarea>
+      </div>
+    </div>
+
+    <!-- Tone -->
+    <div>
+      <div class="section-header">
+        <h3>Tone</h3>
+        <span class="info-icon">?<span class="tooltip-text">Controls the emotional direction of your lyrics. Set globally, override per section.</span></span>
+      </div>
+      <div class="tone-section">
+        <!-- Emotion -->
+        <div class="tone-axis">
+          <div class="label">Emotion</div>
+          <div class="sublabel">What the listener should feel</div>
+          <div class="chip-grid cols-3">
+            ${EMOTIONS.map(e => `<button class="tone-chip${state.emotion===e?' active':''}" data-emotion="${e}">${e}</button>`).join('')}
+          </div>
+        </div>
+        <!-- Energy -->
+        <div class="tone-axis">
+          <div class="label">Energy</div>
+          <div class="energy-slider-wrap">
+            <input type="range" class="energy-slider" id="energySlider" min="0" max="100" value="${state.energy}" />
+            <div class="energy-zones">
+              ${ENERGY_ZONES.map(z => `<span class="${getEnergyZone(state.energy)===z.label?'active-zone':''}">${z.label}</span>`).join('')}
+            </div>
+            <div class="energy-readout" style="color:${getEnergyColor(state.energy)}">${getEnergyZone(state.energy)} (${state.energy}/100)</div>
+          </div>
+        </div>
+        <!-- Delivery -->
+        <div class="tone-axis">
+          <div class="label">Delivery</div>
+          <div class="sublabel">How it\u2019s said</div>
+          <div class="chip-grid cols-4">
+            ${DELIVERIES.map(d => `<button class="tone-chip${state.delivery===d?' active':''}" data-delivery="${d}">${d}</button>`).join('')}
+          </div>
+        </div>
+        <!-- Per-section toggle -->
+        <div class="toggle-row">
+          <div class="toggle-switch${state.perSectionOverride?' on':''}" id="overrideToggle"></div>
+          <label for="overrideToggle">Per-section override</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Structure -->
+    <div>
+      <div class="section-header"><h3>Structure</h3></div>
+      <div class="structure-list">
+        ${state.sections.map((s, i) => {
+          const statusIcon = s.status === 'completed' ? '\u2713' : s.status === 'in-progress' ? '\u270f\ufe0f' : '\u25cb';
+          const statusColor = s.status === 'completed' ? '#10b981' : s.status === 'in-progress' ? '#f59e0b' : '#666';
+          const hasOverride = state.perSectionOverride && s.toneOverride;
+          return `
+          <div class="structure-item${state.activeSection===i?' active':''}" data-sidx="${i}">
+            <span class="status-icon" style="color:${statusColor}">${statusIcon}</span>
+            ${state.renamingSection === i
+              ? `<input class="section-name-input" id="renameInput" value="${esc(s.name)}" />`
+              : `<span class="section-name" data-sidx="${i}">${esc(s.name)}</span>`
+            }
+            ${state.perSectionOverride ? `
+              <span class="override-dot${hasOverride?' has-override':''}"></span>
+              <button class="override-btn" data-oidx="${i}" title="Tone override">\ud83c\udfa8</button>
+            ` : ''}
+            <button class="remove-btn" data-ridx="${i}" title="Remove">\u00d7</button>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="add-section-row">
+        ${state.addingSectionOpen
+          ? `<input class="add-section-input" id="addSectionInput" placeholder="Section name..." autofocus />`
+          : `<button class="add-section-btn" id="addSectionBtn">+ Add Section</button>`
+        }
+      </div>
+    </div>
+  `;
+
+  bindSidebarEvents();
+}
+
+function bindSidebarEvents() {
+  // Artist name
+  const nameInput = document.getElementById('artistNameInput');
+  if (nameInput) nameInput.addEventListener('input', e => { state.artistName = e.target.value; renderPrompt(); });
+
+  // Concept cycle
+  const cycleBtn = document.getElementById('conceptCycleBtn');
+  if (cycleBtn) cycleBtn.addEventListener('click', () => {
+    state.conceptSetIdx = (state.conceptSetIdx + 1) % CONCEPT_SETS.length;
+    if (state.selectedConcept >= 0) state.selectedConcept = 0;
+    renderSidebar(); renderPrompt();
+  });
+
+  // Concept cards
+  document.querySelectorAll('.concept-card').forEach(card => {
+    card.addEventListener('click', () => {
+      state.selectedConcept = parseInt(card.dataset.cidx);
+      state.customConcept = '';
+      renderSidebar(); renderPrompt();
+    });
+  });
+
+  // Custom concept
+  const customArea = document.getElementById('customConceptArea');
+  if (customArea) customArea.addEventListener('input', e => {
+    state.customConcept = e.target.value;
+    if (e.target.value.length > 0) state.selectedConcept = -1;
+    else if (state.selectedConcept === -1) state.selectedConcept = 0;
+    renderSidebar(); renderPrompt();
+  });
+
+  // Emotion chips
+  document.querySelectorAll('[data-emotion]').forEach(chip => {
+    chip.addEventListener('click', () => { state.emotion = chip.dataset.emotion; renderSidebar(); renderPrompt(); renderCenterHeader(); });
+  });
+
+  // Energy slider
+  const slider = document.getElementById('energySlider');
+  if (slider) slider.addEventListener('input', e => { state.energy = parseInt(e.target.value); renderSidebar(); renderPrompt(); renderCenterHeader(); });
+
+  // Delivery chips
+  document.querySelectorAll('[data-delivery]').forEach(chip => {
+    chip.addEventListener('click', () => { state.delivery = chip.dataset.delivery; renderSidebar(); renderPrompt(); renderCenterHeader(); });
+  });
+
+  // Per-section override toggle
+  const toggle = document.getElementById('overrideToggle');
+  if (toggle) toggle.addEventListener('click', () => { state.perSectionOverride = !state.perSectionOverride; renderSidebar(); renderPrompt(); renderCenterHeader(); });
+
+  // Section selection
+  document.querySelectorAll('.structure-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      if (e.target.closest('.remove-btn') || e.target.closest('.override-btn') || e.target.classList.contains('section-name-input')) return;
+      const idx = parseInt(item.dataset.sidx);
+      if (state.renamingSection >= 0) return;
+      switchSection(idx);
+    });
+  });
+
+  // Double-click to rename
+  document.querySelectorAll('.section-name').forEach(span => {
+    span.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      state.renamingSection = parseInt(span.dataset.sidx);
+      renderSidebar();
+      const inp = document.getElementById('renameInput');
+      if (inp) { inp.focus(); inp.select(); }
+    });
+  });
+
+  // Rename input
+  const renameInput = document.getElementById('renameInput');
+  if (renameInput) {
+    const finish = () => {
+      const val = renameInput.value.trim();
+      if (val) state.sections[state.renamingSection].name = val;
+      state.renamingSection = -1;
+      renderSidebar(); renderCenter(); renderPrompt();
+    };
+    renameInput.addEventListener('blur', finish);
+    renameInput.addEventListener('keydown', e => { if (e.key === 'Enter') finish(); if (e.key === 'Escape') { state.renamingSection = -1; renderSidebar(); }});
+  }
+
+  // Remove section
+  document.querySelectorAll('.remove-btn[data-ridx]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.ridx);
+      if (state.sections.length <= 1) return;
+      state.sections.splice(idx, 1);
+      if (state.activeSection >= state.sections.length) state.activeSection = state.sections.length - 1;
+      renderSidebar(); renderCenter(); renderPrompt();
+    });
+  });
+
+  // Override btn
+  document.querySelectorAll('.override-btn[data-oidx]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.oidx);
+      openTonePopover(idx, btn);
+    });
+  });
+
+  // Add section
+  const addBtn = document.getElementById('addSectionBtn');
+  if (addBtn) addBtn.addEventListener('click', () => { state.addingSectionOpen = true; renderSidebar(); const inp = document.getElementById('addSectionInput'); if (inp) inp.focus(); });
+
+  const addInput = document.getElementById('addSectionInput');
+  if (addInput) {
+    const finishAdd = () => {
+      const val = addInput.value.trim();
+      if (val) { state.sections.push({ name: val, status: 'pending', toneOverride: null }); }
+      state.addingSectionOpen = false;
+      renderSidebar();
+    };
+    addInput.addEventListener('blur', finishAdd);
+    addInput.addEventListener('keydown', e => { if (e.key === 'Enter') finishAdd(); if (e.key === 'Escape') { state.addingSectionOpen = false; renderSidebar(); }});
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENDER — CENTER
+   ═══════════════════════════════════════════════════════════════════ */
+function renderCenter() {
+  const el = document.getElementById('center');
+  const sec = state.sections[state.activeSection];
+  if (!sec) return;
+
+  // Load options if needed
+  if (!state.optionCards[0]) loadOptionsForSection(sec.name);
+
+  el.innerHTML = `
+    <div class="center-header" id="centerHeader"></div>
+    <div class="option-grid" id="optionGrid"></div>
+    <div class="below-grid" id="belowGrid"></div>
+  `;
+  renderCenterHeader();
+  renderOptionGrid();
+  renderBelowGrid();
+}
+
+function renderCenterHeader() {
+  const el = document.getElementById('centerHeader');
+  if (!el) return;
+  const sec = state.sections[state.activeSection];
+  if (!sec) return;
+  const tone = getSectionTone(state.activeSection);
+  const isOverride = state.perSectionOverride && sec.toneOverride;
+
+  el.innerHTML = `
+    <div style="display:flex;align-items:baseline;gap:4px;flex-wrap:wrap;">
+      <span class="section-title">${esc(sec.name)}</span>
+      <span class="section-template">${getTemplate(sec.name)}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="tone-pills">
+        <span class="tone-pill"><span class="pill-label">${esc(tone.emotion)}</span></span>
+        <span class="tone-pill"><span class="pill-label">${getEnergyZone(tone.energy)}</span> ${tone.energy}</span>
+        <span class="tone-pill"><span class="pill-label">${esc(tone.delivery)}</span></span>
+        ${isOverride ? '<span class="override-label">(override)</span>' : ''}
+      </div>
+      <button class="generate-btn" id="generateBtn">\u2726 Generate 4 Options</button>
+    </div>
+  `;
+
+  document.getElementById('generateBtn').addEventListener('click', () => {
+    loadOptionsForSection(sec.name);
+    state.editingCard = -1;
+    renderOptionGrid();
+    showToast('Generated 4 new options', 'info');
+  });
+}
+
+function loadOptionsForSection(name) {
+  const lyrics = getLyricsForSection(name);
+  for (let i = 0; i < 4; i++) state.optionCards[i] = lyrics[i] || '(No lyrics)';
+  state.tossedPool[name] = 4;
+  state.editingCard = -1;
+}
+
+function renderOptionGrid() {
+  const grid = document.getElementById('optionGrid');
+  if (!grid) return;
+
+  grid.innerHTML = state.optionCards.map((lyrics, i) => {
+    const isEditing = state.editingCard === i;
+    return `
+    <div class="option-card" data-opt="${i}" id="optCard${i}">
+      <div class="card-accent"></div>
+      <div class="card-header">
+        <span class="card-label">${LABELS[i]}</span>
+      </div>
+      <div class="card-lyrics">
+        ${isEditing
+          ? `<textarea id="editArea${i}">${esc(lyrics || '')}</textarea>`
+          : `<pre>${esc(lyrics || '')}</pre>`
+        }
+      </div>
+      <div class="card-actions">
+        <button class="card-action-btn btn-keep" data-ki="${i}">\ud83d\udc4d Keep</button>
+        <button class="card-action-btn btn-chop" data-ci="${i}">\u2702\ufe0f Chop</button>
+        <button class="card-action-btn btn-toss" data-ti="${i}">\u274c Toss</button>
+        <button class="card-action-btn btn-edit" data-ei="${i}">${isEditing ? '\u2713 Done' : '\u270f\ufe0f Edit'}</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  bindOptionEvents();
+}
+
+function bindOptionEvents() {
+  // Keep
+  document.querySelectorAll('[data-ki]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = parseInt(btn.dataset.ki);
+      const card = document.getElementById('optCard' + i);
+      card.classList.add('kept');
+      setTimeout(() => card.classList.remove('kept'), 600);
+      keepOption(i);
+    });
+  });
+  // Chop
+  document.querySelectorAll('[data-ci]').forEach(btn => {
+    btn.addEventListener('click', () => openChopModal(parseInt(btn.dataset.ci)));
+  });
+  // Toss
+  document.querySelectorAll('[data-ti]').forEach(btn => {
+    btn.addEventListener('click', () => tossOption(parseInt(btn.dataset.ti)));
+  });
+  // Edit
+  document.querySelectorAll('[data-ei]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = parseInt(btn.dataset.ei);
+      if (state.editingCard === i) {
+        // Done editing
+        const area = document.getElementById('editArea' + i);
+        if (area) state.optionCards[i] = area.value;
+        state.editingCard = -1;
+      } else {
+        state.editingCard = i;
+      }
+      renderOptionGrid();
+    });
+  });
+}
+
+function keepOption(idx) {
+  const sec = state.sections[state.activeSection];
+  const lyrics = state.optionCards[idx];
+  // Add to draft (remove existing draft for this section if any)
+  state.songDraft = state.songDraft.filter(d => d.sectionName !== sec.name);
+  state.songDraft.push({ sectionName: sec.name, lyrics: lyrics, time: new Date() });
+  // Sort draft by section order
+  const order = state.sections.map(s => s.name);
+  state.songDraft.sort((a, b) => order.indexOf(a.sectionName) - order.indexOf(b.sectionName));
+  // Mark section complete
+  sec.status = 'completed';
+  showToast(`${sec.name} added to draft`, 'success');
+  // Auto-advance
+  const nextIdx = state.sections.findIndex((s, i) => i > state.activeSection && s.status === 'pending');
+  if (nextIdx >= 0) {
+    setTimeout(() => switchSection(nextIdx), 400);
+  }
+  renderSidebar();
+  renderDraft();
+  renderPrompt();
+}
+
+function tossOption(idx) {
+  const card = document.getElementById('optCard' + idx);
+  card.classList.add('tossed');
+  setTimeout(() => {
+    const sec = state.sections[state.activeSection];
+    const key = normSectionKey(sec.name);
+    const pool = LYRICS_POOL[key];
+    const poolIdx = state.tossedPool[sec.name] || 4;
+    // We don't have more than 4 in the pool, so show a message
+    if (!pool || !pool[0] || poolIdx >= pool[0].length + 4) {
+      state.optionCards[idx] = '(No more options \u2014 click Generate to refresh all)';
+    } else {
+      // Cycle through existing ones with a "remix" label
+      state.optionCards[idx] = pool[0][poolIdx % pool[0].length];
+      state.tossedPool[sec.name] = poolIdx + 1;
+    }
+    renderOptionGrid();
+  }, 300);
+}
+
+function switchSection(idx) {
+  state.activeSection = idx;
+  state.sections[idx].status = state.sections[idx].status === 'completed' ? 'completed' : 'in-progress';
+  state.editingCard = -1;
+  loadOptionsForSection(state.sections[idx].name);
+  renderSidebar();
+  renderCenter();
+  renderPrompt();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENDER — BELOW GRID
+   ═══════════════════════════════════════════════════════════════════ */
+function renderBelowGrid() {
+  const el = document.getElementById('belowGrid');
+  if (!el) return;
+  el.innerHTML = `
+    <button class="pull-bank-btn" id="openBankBtn">\ud83d\udcda Pull from Idea Bank</button>
+    ${state.injectedLines.length > 0 ? `
+      <div class="injected-section">
+        <h4>Injected Lines</h4>
+        ${state.injectedLines.map((line, i) => `
+          <div class="injected-line">
+            <span class="line-text">${esc(line)}</span>
+            <button class="remove-injected" data-iidx="${i}">\u00d7</button>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+  `;
+
+  document.getElementById('openBankBtn').addEventListener('click', openBank);
+  document.querySelectorAll('.remove-injected').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.injectedLines.splice(parseInt(btn.dataset.iidx), 1);
+      renderBelowGrid(); renderPrompt();
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENDER — RIGHT PANEL
+   ═══════════════════════════════════════════════════════════════════ */
+function renderRightPanel() {
+  const el = document.getElementById('rightPanel');
+  el.innerHTML = `
+    <div class="right-section prompt-section">
+      <div class="section-header"><h3>Prompt Preview</h3></div>
+      <div class="prompt-box" id="promptBox"></div>
+      <button class="copy-prompt-btn" id="copyPromptBtn">Copy Prompt</button>
+    </div>
+    <div class="right-section draft-section" id="draftSection">
+      <div class="section-header"><h3>Song Draft</h3></div>
+      <div id="draftContent"></div>
+    </div>
+  `;
+  renderPrompt();
+  renderDraft();
+
+  document.getElementById('copyPromptBtn').addEventListener('click', () => {
+    const text = document.getElementById('promptBox').textContent;
+    navigator.clipboard.writeText(text).then(() => showToast('Prompt copied!', 'success'));
+  });
+}
+
+function renderPrompt() {
+  const box = document.getElementById('promptBox');
+  if (!box) return;
+  const sec = state.sections[state.activeSection];
+  const tone = getSectionTone(state.activeSection);
+  const injectedStr = state.injectedLines.length > 0 ? state.injectedLines.map(l => `  "${l}"`).join('\n') : '[none injected]';
+
+  box.textContent =
+`ARTIST: ${state.artistName} | Hip-Hop/Rap, Trap | Melody: 35% (rap-focused)
+
+CONCEPT: ${getConcept()}
+
+SECTION: ${sec ? sec.name : 'N/A'} \u2014 ${sec ? getTemplate(sec.name) : ''}
+
+TONE:
+  Emotion: ${tone.emotion}
+  Energy: ${getEnergyZone(tone.energy)} (${tone.energy}/100)
+  Delivery: ${tone.delivery}
+
+IDEA BANK:
+${injectedStr}`;
+}
+
+function renderDraft() {
+  const el = document.getElementById('draftContent');
+  if (!el) return;
+  if (state.songDraft.length === 0) {
+    el.innerHTML = '<div class="draft-empty">Keep options to build your song here</div>';
+    return;
+  }
+  el.innerHTML = state.songDraft.map((d, i) => `
+    <div class="draft-card">
+      <div class="draft-card-header">
+        <span class="draft-section-name">[${esc(d.sectionName)}]</span>
+        <div class="draft-actions">
+          <button data-dedit="${i}" title="Re-open section">\u270f\ufe0f</button>
+          <button data-dremove="${i}" title="Remove from draft">\u00d7</button>
+        </div>
+      </div>
+      <pre>${esc(d.lyrics)}</pre>
+      <div class="draft-time">${formatTime(d.time)}</div>
+    </div>
+  `).join('') + `<button class="export-btn" id="exportBtn">Export Lyrics</button>`;
+
+  // Bind draft events
+  document.querySelectorAll('[data-dedit]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const draft = state.songDraft[parseInt(btn.dataset.dedit)];
+      const sIdx = state.sections.findIndex(s => s.name === draft.sectionName);
+      if (sIdx >= 0) switchSection(sIdx);
+    });
+  });
+  document.querySelectorAll('[data-dremove]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.dremove);
+      const name = state.songDraft[idx].sectionName;
+      state.songDraft.splice(idx, 1);
+      const sIdx = state.sections.findIndex(s => s.name === name);
+      if (sIdx >= 0) state.sections[sIdx].status = 'pending';
+      renderDraft(); renderSidebar();
+    });
+  });
+  const exportBtn = document.getElementById('exportBtn');
+  if (exportBtn) exportBtn.addEventListener('click', exportLyrics);
+}
+
+function formatTime(d) {
+  if (!d) return '';
+  const diff = Math.round((Date.now() - new Date(d).getTime()) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  return Math.floor(diff/3600) + 'h ago';
+}
+
+function exportLyrics() {
+  const text = state.songDraft.map(d => `[${d.sectionName}]\n${d.lyrics}`).join('\n\n');
+  navigator.clipboard.writeText(text).then(() => showToast('Lyrics exported to clipboard!', 'success'));
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   IDEA BANK
+   ═══════════════════════════════════════════════════════════════════ */
+function openBank() {
+  const overlay = document.getElementById('bankOverlay');
+  overlay.classList.add('open');
+  renderBankDrawer();
+}
+function closeBank() {
+  document.getElementById('bankOverlay').classList.remove('open');
+}
+
+function renderBankDrawer() {
+  const el = document.getElementById('bankDrawer');
+  const filters = ['All', ...BANK_TAG_TYPES];
+  const filteredSnippets = state.ideaBank.filter(s => {
+    if (state.bankFilter !== 'All' && !s.tags.includes(state.bankFilter)) return false;
+    if (state.bankSearch && !s.text.toLowerCase().includes(state.bankSearch.toLowerCase())) return false;
+    return true;
+  });
+
+  el.innerHTML = `
+    <div class="bank-header">
+      <h3>Idea Bank</h3>
+      <button class="bank-close" id="bankCloseBtn">\u00d7</button>
+    </div>
+    <div class="bank-search">
+      <input id="bankSearchInput" placeholder="Search ideas..." value="${esc(state.bankSearch)}" />
+    </div>
+    <div class="bank-filters">
+      ${filters.map(f => `<button class="bank-filter-chip${state.bankFilter===f?' active':''}" data-bf="${f}">${f}</button>`).join('')}
+    </div>
+    <div class="bank-list">
+      ${filteredSnippets.length === 0 ? '<div style="color:#555;text-align:center;padding:20px;">No snippets found</div>' : ''}
+      ${filteredSnippets.map((s, i) => {
+        const realIdx = state.ideaBank.indexOf(s);
+        return `
+        <div class="bank-snippet">
+          <div class="snippet-text">${esc(s.text)}</div>
+          <div class="snippet-tags">
+            ${s.tags.map(t => `<span class="snippet-tag ${t.toLowerCase()}">${t}</span>`).join('')}
+          </div>
+          <div class="snippet-actions">
+            <button class="snippet-inject-btn" data-binject="${realIdx}">Inject</button>
+            <button class="snippet-delete-btn" data-bdelete="${realIdx}">\u00d7</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+
+  document.getElementById('bankCloseBtn').addEventListener('click', closeBank);
+  document.getElementById('bankSearchInput').addEventListener('input', e => { state.bankSearch = e.target.value; renderBankDrawer(); });
+  document.querySelectorAll('[data-bf]').forEach(btn => {
+    btn.addEventListener('click', () => { state.bankFilter = btn.dataset.bf; renderBankDrawer(); });
+  });
+  document.querySelectorAll('[data-binject]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const s = state.ideaBank[parseInt(btn.dataset.binject)];
+      if (s && !state.injectedLines.includes(s.text)) {
+        state.injectedLines.push(s.text);
+        renderBelowGrid(); renderPrompt();
+        showToast('Line injected', 'success');
+      }
+    });
+  });
+  document.querySelectorAll('[data-bdelete]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.ideaBank.splice(parseInt(btn.dataset.bdelete), 1);
+      renderBankDrawer();
+    });
+  });
+}
+
+// Close bank on overlay click
+document.getElementById('bankOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeBank();
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   CHOP MODAL
+   ═══════════════════════════════════════════════════════════════════ */
+let chopState = { lines: [], checked: [], tags: [], fit: '' };
+
+function openChopModal(cardIdx) {
+  const lyrics = state.optionCards[cardIdx] || '';
+  chopState.lines = lyrics.split('\n').filter(l => l.trim());
+  chopState.checked = chopState.lines.map(() => false);
+  chopState.tags = [];
+  chopState.fit = '';
+  document.getElementById('chopOverlay').classList.add('open');
+  renderChopModal();
+}
+function closeChopModal() {
+  document.getElementById('chopOverlay').classList.remove('open');
+}
+
+function renderChopModal() {
+  const el = document.getElementById('chopModal');
+  const tagOptions = ['Metaphor','Punchline','Imagery','Wordplay'];
+  const fitOptions = ['Hook','Verse','Bridge','Ad-lib'];
+
+  el.innerHTML = `
+    <div class="chop-header">
+      <h3>\u2702\ufe0f Chop Lines</h3>
+      <button class="bank-close" id="chopCloseBtn">\u00d7</button>
+    </div>
+    <div class="chop-lines">
+      ${chopState.lines.map((l, i) => `
+        <div class="chop-line">
+          <input type="checkbox" id="chopCheck${i}" ${chopState.checked[i]?'checked':''} data-chkidx="${i}" />
+          <label class="line-text" for="chopCheck${i}">${esc(l)}</label>
+        </div>
+      `).join('')}
+    </div>
+    <div class="chop-options">
+      <h4>Tags</h4>
+      <div class="chop-tag-row">
+        ${tagOptions.map(t => `<button class="chop-tag${chopState.tags.includes(t)?' selected':''}" data-ctag="${t}">${t}</button>`).join('')}
+      </div>
+      <h4>Section Fit</h4>
+      <div class="chop-fit-row">
+        ${fitOptions.map(f => `<button class="chop-fit${chopState.fit===f?' selected':''}" data-cfit="${f}">${f}</button>`).join('')}
+      </div>
+    </div>
+    <div class="chop-footer">
+      <button class="chop-cancel-btn" id="chopCancelBtn">Cancel</button>
+      <button class="chop-save-btn" id="chopSaveBtn">Save to Bank</button>
+    </div>
+  `;
+
+  document.getElementById('chopCloseBtn').addEventListener('click', closeChopModal);
+  document.getElementById('chopCancelBtn').addEventListener('click', closeChopModal);
+
+  document.querySelectorAll('[data-chkidx]').forEach(cb => {
+    cb.addEventListener('change', () => { chopState.checked[parseInt(cb.dataset.chkidx)] = cb.checked; });
+  });
+  document.querySelectorAll('[data-ctag]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = btn.dataset.ctag;
+      if (chopState.tags.includes(t)) chopState.tags = chopState.tags.filter(x => x !== t);
+      else chopState.tags.push(t);
+      renderChopModal();
+    });
+  });
+  document.querySelectorAll('[data-cfit]').forEach(btn => {
+    btn.addEventListener('click', () => { chopState.fit = btn.dataset.cfit; renderChopModal(); });
+  });
+
+  document.getElementById('chopSaveBtn').addEventListener('click', () => {
+    const selected = chopState.lines.filter((_, i) => chopState.checked[i]);
+    if (selected.length === 0) { showToast('Select at least one line', 'warning'); return; }
+    const tags = [...chopState.tags];
+    if (chopState.fit) tags.push(chopState.fit);
+    selected.forEach(line => {
+      state.ideaBank.push({ text: line, tags: tags.length ? tags : ['Verse'] });
+    });
+    showToast(`${selected.length} line${selected.length>1?'s':''} saved to Idea Bank`, 'success');
+    closeChopModal();
+  });
+}
+
+document.getElementById('chopOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeChopModal();
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   TONE POPOVER (Per-Section Override)
+   ═══════════════════════════════════════════════════════════════════ */
+function openTonePopover(sectionIdx, anchorEl) {
+  state.openPopoverSection = sectionIdx;
+  const sec = state.sections[sectionIdx];
+  const tone = sec.toneOverride || { emotion: state.emotion, energy: state.energy, delivery: state.delivery };
+  if (!sec.toneOverride) sec.toneOverride = { ...tone };
+
+  const popover = document.getElementById('tonePopover');
+  const rect = anchorEl.getBoundingClientRect();
+  popover.style.display = 'flex';
+  popover.style.top = Math.min(rect.bottom + 4, window.innerHeight - 400) + 'px';
+  popover.style.left = Math.min(rect.right + 4, window.innerWidth - 290) + 'px';
+  renderTonePopover();
+
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', closeTonePopoverOnOutside);
+  }, 10);
+}
+
+function closeTonePopoverOnOutside(e) {
+  const popover = document.getElementById('tonePopover');
+  if (!popover.contains(e.target) && !e.target.closest('.override-btn')) {
+    closeTonePopover();
+  }
+}
+
+function closeTonePopover() {
+  document.getElementById('tonePopover').style.display = 'none';
+  state.openPopoverSection = -1;
+  document.removeEventListener('click', closeTonePopoverOnOutside);
+  renderSidebar(); renderCenterHeader(); renderPrompt();
+}
+
+function renderTonePopover() {
+  const popover = document.getElementById('tonePopover');
+  const idx = state.openPopoverSection;
+  if (idx < 0) return;
+  const sec = state.sections[idx];
+  const tone = sec.toneOverride;
+
+  popover.innerHTML = `
+    <div class="popover-header">
+      <h4>${esc(sec.name)} Tone</h4>
+      <button class="popover-close" id="popoverCloseBtn">\u00d7</button>
+    </div>
+    <div class="tone-axis">
+      <div class="label" style="font-size:0.7rem;">Emotion</div>
+      <div class="chip-grid cols-3">
+        ${EMOTIONS.map(e => `<button class="tone-chip${tone.emotion===e?' active':''}" data-pe="${e}" style="font-size:0.62rem;padding:3px 0;">${e}</button>`).join('')}
+      </div>
+    </div>
+    <div class="tone-axis">
+      <div class="label" style="font-size:0.7rem;">Energy</div>
+      <input type="range" class="energy-slider" id="popoverEnergySlider" min="0" max="100" value="${tone.energy}" style="margin-top:2px;" />
+      <div class="energy-readout" style="font-size:0.68rem;color:${getEnergyColor(tone.energy)}">${getEnergyZone(tone.energy)} (${tone.energy}/100)</div>
+    </div>
+    <div class="tone-axis">
+      <div class="label" style="font-size:0.7rem;">Delivery</div>
+      <div class="chip-grid cols-4">
+        ${DELIVERIES.map(d => `<button class="tone-chip${tone.delivery===d?' active':''}" data-pd="${d}" style="font-size:0.62rem;padding:3px 0;">${d}</button>`).join('')}
+      </div>
+    </div>
+    <button style="font-size:0.68rem;color:#ef4444;padding:4px 8px;border-radius:4px;align-self:flex-start;margin-top:2px;" id="clearOverrideBtn">Clear override</button>
+  `;
+
+  popover.querySelector('#popoverCloseBtn').addEventListener('click', (e) => { e.stopPropagation(); closeTonePopover(); });
+
+  popover.querySelectorAll('[data-pe]').forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sec.toneOverride.emotion = chip.dataset.pe;
+      renderTonePopover();
+    });
+  });
+
+  const pSlider = popover.querySelector('#popoverEnergySlider');
+  pSlider.addEventListener('input', (e) => {
+    sec.toneOverride.energy = parseInt(e.target.value);
+    renderTonePopover();
+  });
+
+  popover.querySelectorAll('[data-pd]').forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sec.toneOverride.delivery = chip.dataset.pd;
+      renderTonePopover();
+    });
+  });
+
+  popover.querySelector('#clearOverrideBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    sec.toneOverride = null;
+    closeTonePopover();
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   UTILITY
+   ═══════════════════════════════════════════════════════════════════ */
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════════════════ */
+function init() {
+  state.sections[0].status = 'in-progress';
+  renderSidebar();
+  renderCenter();
+  renderRightPanel();
+}
+init();
+</script>
+</body>
+</html>

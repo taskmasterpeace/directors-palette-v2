@@ -1,0 +1,6 @@
+[dotenv@17.2.3] injecting env (17) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+
+
+Error: Process from config.webServer exited early.
+
+[1A[2K

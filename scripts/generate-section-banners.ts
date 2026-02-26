@@ -2,7 +2,7 @@
  * Generate Section Header Banners
  *
  * Generates cinematic header banners for each navigation section
- * Uses qwen-image-fast model for quick, cost-effective generation
+ * Uses seedream-5-lite model for quick, cost-effective generation
  *
  * Run with: npx tsx scripts/generate-section-banners.ts
  */
@@ -94,14 +94,11 @@ async function generateBanner(section: SectionBanner): Promise<string | null> {
 
   try {
     const output = await replicate.run(
-      'prunaai/qwen-image-fast:01b324d214eb4870ff424dc4215c067759c4c01a8751e327a434e2b16054db2f',
+      'bytedance/seedream-5-lite' as `${string}/${string}`,
       {
         input: {
           prompt: section.prompt,
-          width: 1344, // 21:9 ultrawide
-          height: 576,
-          guidance: 3,
-          num_inference_steps: 30,
+          aspect_ratio: '21:9',
           output_format: 'webp',
           output_quality: 90
         }
@@ -179,7 +176,7 @@ async function main() {
   }
 
   console.log(`\n📊 Generating ${SECTION_BANNERS.length} banners...`)
-  console.log(`   Cost: ~${SECTION_BANNERS.length * 2} points (2 pts each with qwen-image-fast)`)
+  console.log(`   Cost: ~${SECTION_BANNERS.length * 4} points (4 pts each with seedream-5-lite)`)
 
   const results: { section: string; path: string | null }[] = []
 

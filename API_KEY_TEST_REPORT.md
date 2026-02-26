@@ -190,7 +190,7 @@ curl -X POST https://directorspalette.app/api/v1/images/generate \
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | prompt | string | Yes | - | Text prompt for image generation |
-| model | string | No | nano-banana | Model: nano-banana, nano-banana-pro, z-image-turbo, qwen-image-2512, gpt-image-low/medium/high, seedream-4.5 |
+| model | string | No | nano-banana | Model: nano-banana, nano-banana-pro, z-image-turbo, seedream-5-lite, riverflow-2-pro |
 | aspectRatio | string | No | 1:1 | Aspect ratio: 1:1, 16:9, 9:16, 4:3, 3:4, 21:9, 3:2, 2:3 |
 | outputFormat | string | No | jpg | Format: jpg, png |
 | referenceImages | string[] | No | [] | Array of image URLs for style reference |
@@ -534,14 +534,11 @@ created_at        timestamp with time zone DEFAULT now()
 
 | Model | Cost | Speed | Quality | Ref Images | Best For |
 |-------|------|-------|---------|------------|----------|
+| seedream-5-lite | 4¢ | Medium | Good | Up to 14 | Budget-friendly, reasoning, editing |
+| z-image-turbo | 5¢ | Very Fast | Good | None | Rapid visualization |
 | nano-banana | 8¢ | Fast | Good | Up to 10 | Quick iterations, style matching |
-| nano-banana-pro | 40¢ | Medium | Excellent (SOTA) | Up to 14 | High-quality production, 4K |
-| z-image-turbo | 5¢ | Very Fast | Good | Up to 1 | Rapid visualization |
-| qwen-image-2512 | 4¢ | Fast (~3s) | Good | Up to 1 | Fast gen, budget workflows |
-| gpt-image-low | 3¢ | Medium | Good | Up to 10 | Budget GPT quality |
-| gpt-image-medium | 10¢ | Medium | Excellent | Up to 10 | Accurate text, story prompts |
-| gpt-image-high | 27¢ | Slower | Excellent | Up to 10 | Maximum quality, client work |
-| seedream-4.5 | 6¢ | Medium | Excellent | Up to 14 | High-quality 4K, sequential |
+| nano-banana-pro | 20¢ | Medium | Excellent (SOTA) | Up to 14 | High-quality production, 4K |
+| riverflow-2-pro | 27¢ | Medium | Excellent | Up to 10+4 | Custom fonts, logos, infographics |
 
 **Test Result**: ✅ ALL MODELS SUPPORTED
 

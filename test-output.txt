@@ -1,0 +1,262 @@
+[dotenv@17.2.3] injecting env (17) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
+🔐 Setting up test authentication...
+✓ Login successful
+✓ Auth state saved to D:\git\directors-palette-v2\tests\.auth\user.json
+
+Running 7 tests using 7 workers
+
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  override existing env vars with { override: true }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+  ✘  5 [chromium] › tests\prompt-resize.spec.ts:79:9 › Prompt Textarea Resize › Drag Resize Handle › should have a drag resize handle with correct data-testid (13.3s)
+  ✘  6 [chromium] › tests\prompt-resize.spec.ts:84:9 › Prompt Textarea Resize › Drag Resize Handle › should have a prompt textarea container with correct data-testid (13.3s)
+  ✘  4 [chromium] › tests\prompt-resize.spec.ts:62:9 › Prompt Textarea Resize › Size Toggle Button › clicking toggle twice should cycle back to small with Maximize2 icon (13.3s)
+  ✘  1 [chromium] › tests\prompt-resize.spec.ts:46:9 › Prompt Textarea Resize › Size Toggle Button › clicking toggle should switch from small to large and show Minimize2 icon (13.3s)
+  ✘  7 [chromium] › tests\prompt-resize.spec.ts:89:9 › Prompt Textarea Resize › Drag Resize Handle › dragging the handle should change the textarea container height (13.2s)
+  ✘  2 [chromium] › tests\prompt-resize.spec.ts:27:9 › Prompt Textarea Resize › Size Toggle Button › should have exactly one size toggle button, not four (13.3s)
+  ✘  3 [chromium] › tests\prompt-resize.spec.ts:35:9 › Prompt Textarea Resize › Size Toggle Button › toggle button should show Maximize2 icon in default small state (13.2s)
+
+
+  1) [chromium] › tests\prompt-resize.spec.ts:27:9 › Prompt Textarea Resize › Size Toggle Button › should have exactly one size toggle button, not four 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('button[title="Toggle prompt size"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('button[title="Toggle prompt size"]')[22m
+
+
+      29 |       // Look for the toggle by its title attribute.
+      30 |       const toggleButton = page.locator('button[title="Toggle prompt size"]')
+    > 31 |       await expect(toggleButton).toBeVisible({ timeout: 5000 })
+         |                                  ^
+      32 |       await expect(toggleButton).toHaveCount(1)
+      33 |     })
+      34 |
+        at D:\git\directors-palette-v2\tests\prompt-resize.spec.ts:31:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\prompt-resize-Prompt-Texta-4d961-size-toggle-button-not-four-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\prompt-resize-Prompt-Texta-4d961-size-toggle-button-not-four-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\prompt-resize-Prompt-Texta-4d961-size-toggle-button-not-four-chromium\error-context.md
+
+  2) [chromium] › tests\prompt-resize.spec.ts:35:9 › Prompt Textarea Resize › Size Toggle Button › toggle button should show Maximize2 icon in default small state 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('button[title="Toggle prompt size"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('button[title="Toggle prompt size"]')[22m
+
+
+      37 |       // indicating "click to expand"
+      38 |       const toggleButton = page.locator('button[title="Toggle prompt size"]')
+    > 39 |       await expect(toggleButton).toBeVisible({ timeout: 5000 })
+         |                                  ^
+      40 |
+      41 |       // The Maximize2 icon from lucide-react renders as an SVG with class lucide-maximize-2
+      42 |       const maximizeIcon = toggleButton.locator('svg.lucide-maximize-2')
+        at D:\git\directors-palette-v2\tests\prompt-resize.spec.ts:39:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\prompt-resize-Prompt-Texta-f25ae-icon-in-default-small-state-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\prompt-resize-Prompt-Texta-f25ae-icon-in-default-small-state-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\prompt-resize-Prompt-Texta-f25ae-icon-in-default-small-state-chromium\error-context.md
+
+  3) [chromium] › tests\prompt-resize.spec.ts:46:9 › Prompt Textarea Resize › Size Toggle Button › clicking toggle should switch from small to large and show Minimize2 icon 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('button[title="Toggle prompt size"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('button[title="Toggle prompt size"]')[22m
+
+
+      46 |     test('clicking toggle should switch from small to large and show Minimize2 icon', async ({ page }) => {
+      47 |       const toggleButton = page.locator('button[title="Toggle prompt size"]')
+    > 48 |       await expect(toggleButton).toBeVisible({ timeout: 5000 })
+         |                                  ^
+      49 |
+      50 |       // Click to expand from small to large
+      51 |       await toggleButton.click()
+        at D:\git\directors-palette-v2\tests\prompt-resize.spec.ts:48:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\prompt-resize-Prompt-Texta-6ed67-rge-and-show-Minimize2-icon-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\prompt-resize-Prompt-Texta-6ed67-rge-and-show-Minimize2-icon-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\prompt-resize-Prompt-Texta-6ed67-rge-and-show-Minimize2-icon-chromium\error-context.md
+
+  4) [chromium] › tests\prompt-resize.spec.ts:62:9 › Prompt Textarea Resize › Size Toggle Button › clicking toggle twice should cycle back to small with Maximize2 icon 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('button[title="Toggle prompt size"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('button[title="Toggle prompt size"]')[22m
+
+
+      62 |     test('clicking toggle twice should cycle back to small with Maximize2 icon', async ({ page }) => {
+      63 |       const toggleButton = page.locator('button[title="Toggle prompt size"]')
+    > 64 |       await expect(toggleButton).toBeVisible({ timeout: 5000 })
+         |                                  ^
+      65 |
+      66 |       // Click once: small -> large
+      67 |       await toggleButton.click()
+        at D:\git\directors-palette-v2\tests\prompt-resize.spec.ts:64:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\prompt-resize-Prompt-Texta-7dcfb-o-small-with-Maximize2-icon-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\prompt-resize-Prompt-Texta-7dcfb-o-small-with-Maximize2-icon-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\prompt-resize-Prompt-Texta-7dcfb-o-small-with-Maximize2-icon-chromium\error-context.md
+
+  5) [chromium] › tests\prompt-resize.spec.ts:79:9 › Prompt Textarea Resize › Drag Resize Handle › should have a drag resize handle with correct data-testid 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-testid="prompt-resize-handle"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-testid="prompt-resize-handle"]')[22m
+
+
+      79 |     test('should have a drag resize handle with correct data-testid', async ({ page }) => {
+      80 |       const handle = page.locator('[data-testid="prompt-resize-handle"]')
+    > 81 |       await expect(handle).toBeVisible({ timeout: 5000 })
+         |                            ^
+      82 |     })
+      83 |
+      84 |     test('should have a prompt textarea container with correct data-testid', async ({ page }) => {
+        at D:\git\directors-palette-v2\tests\prompt-resize.spec.ts:81:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\prompt-resize-Prompt-Texta-77e0e-le-with-correct-data-testid-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\prompt-resize-Prompt-Texta-77e0e-le-with-correct-data-testid-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\prompt-resize-Prompt-Texta-77e0e-le-with-correct-data-testid-chromium\error-context.md
+
+  6) [chromium] › tests\prompt-resize.spec.ts:84:9 › Prompt Textarea Resize › Drag Resize Handle › should have a prompt textarea container with correct data-testid 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-testid="prompt-textarea-container"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-testid="prompt-textarea-container"]')[22m
+
+
+      84 |     test('should have a prompt textarea container with correct data-testid', async ({ page }) => {
+      85 |       const container = page.locator('[data-testid="prompt-textarea-container"]')
+    > 86 |       await expect(container).toBeVisible({ timeout: 5000 })
+         |                               ^
+      87 |     })
+      88 |
+      89 |     test('dragging the handle should change the textarea container height', async ({ page }) => {
+        at D:\git\directors-palette-v2\tests\prompt-resize.spec.ts:86:31
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\prompt-resize-Prompt-Texta-8d38e-er-with-correct-data-testid-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\prompt-resize-Prompt-Texta-8d38e-er-with-correct-data-testid-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\prompt-resize-Prompt-Texta-8d38e-er-with-correct-data-testid-chromium\error-context.md
+
+  7) [chromium] › tests\prompt-resize.spec.ts:89:9 › Prompt Textarea Resize › Drag Resize Handle › dragging the handle should change the textarea container height 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-testid="prompt-textarea-container"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-testid="prompt-textarea-container"]')[22m
+
+
+      91 |       const handle = page.locator('[data-testid="prompt-resize-handle"]')
+      92 |
+    > 93 |       await expect(container).toBeVisible({ timeout: 5000 })
+         |                               ^
+      94 |       await expect(handle).toBeVisible({ timeout: 5000 })
+      95 |
+      96 |       // Measure initial height
+        at D:\git\directors-palette-v2\tests\prompt-resize.spec.ts:93:31
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\prompt-resize-Prompt-Texta-10702-e-textarea-container-height-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\prompt-resize-Prompt-Texta-10702-e-textarea-container-height-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\prompt-resize-Prompt-Texta-10702-e-textarea-container-height-chromium\error-context.md
+
+  7 failed
+    [chromium] › tests\prompt-resize.spec.ts:27:9 › Prompt Textarea Resize › Size Toggle Button › should have exactly one size toggle button, not four 
+    [chromium] › tests\prompt-resize.spec.ts:35:9 › Prompt Textarea Resize › Size Toggle Button › toggle button should show Maximize2 icon in default small state 
+    [chromium] › tests\prompt-resize.spec.ts:46:9 › Prompt Textarea Resize › Size Toggle Button › clicking toggle should switch from small to large and show Minimize2 icon 
+    [chromium] › tests\prompt-resize.spec.ts:62:9 › Prompt Textarea Resize › Size Toggle Button › clicking toggle twice should cycle back to small with Maximize2 icon 
+    [chromium] › tests\prompt-resize.spec.ts:79:9 › Prompt Textarea Resize › Drag Resize Handle › should have a drag resize handle with correct data-testid 
+    [chromium] › tests\prompt-resize.spec.ts:84:9 › Prompt Textarea Resize › Drag Resize Handle › should have a prompt textarea container with correct data-testid 
+    [chromium] › tests\prompt-resize.spec.ts:89:9 › Prompt Textarea Resize › Drag Resize Handle › dragging the handle should change the textarea container height 

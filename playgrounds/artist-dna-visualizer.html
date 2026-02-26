@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Artist DNA Constellation Visualizer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #000; color: #e5e5e5;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow: hidden; height: 100vh; width: 100vw;
+  }
+
+  #canvas-container {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
+  }
+  #labels-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 15; pointer-events: none;
+  }
+
+  /* ── Left Panel ── */
+  #panel {
+    position: fixed; top: 0; left: 0; width: 320px; height: 100vh;
+    background: rgba(10,10,10,0.92); z-index: 20; overflow-y: auto;
+    border-right: 1px solid rgba(245,158,11,0.12);
+    scrollbar-width: thin; scrollbar-color: #333 transparent;
+  }
+  #panel::-webkit-scrollbar { width: 5px; }
+  #panel::-webkit-scrollbar-track { background: transparent; }
+  #panel::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+  .panel-header {
+    padding: 18px 20px 14px; border-bottom: 1px solid rgba(245,158,11,0.1);
+    display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; background: rgba(10,10,10,0.97); z-index: 5;
+  }
+  .panel-header h1 {
+    font-size: 15px; font-weight: 700; letter-spacing: 1.5px;
+    color: #f59e0b; text-transform: uppercase;
+  }
+
+  /* Completion ring */
+  .completion-wrap { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+  .completion-ring { width: 34px; height: 34px; }
+  .completion-ring circle { fill: none; stroke-width: 3; }
+  .completion-ring .bg { stroke: #1a1a1a; }
+  .completion-ring .fg {
+    stroke: #f59e0b; stroke-linecap: round;
+    transition: stroke-dashoffset 0.6s cubic-bezier(.4,0,.2,1);
+  }
+  .completion-pct { font-size: 10px; color: #666; white-space: nowrap; letter-spacing: 0.5px; }
+
+  .section { padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .section:last-child { border-bottom: none; padding-bottom: 40px; }
+
+  .section-label {
+    font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px;
+    color: #555; margin-bottom: 8px; font-weight: 700;
+  }
+
+  .dna-input {
+    width: 100%; background: #0d0d0d; border: 1px solid #222; border-radius: 6px;
+    padding: 8px 12px; color: #ccc; font-size: 13px; outline: none;
+    font-family: inherit; transition: border-color 0.25s;
+  }
+  .dna-input:focus { border-color: rgba(245,158,11,0.5); }
+  .dna-input::placeholder { color: #3a3a3a; }
+
+  .chip-group { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip {
+    padding: 4px 11px; border-radius: 14px; font-size: 11px; cursor: pointer;
+    background: #111; border: 1px solid #222; color: #555;
+    transition: all 0.2s ease; user-select: none; font-weight: 500;
+  }
+  .chip:hover { border-color: #444; color: #888; }
+  .chip.selected {
+    background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.5);
+    color: #f59e0b;
+  }
+
+  .slider-container { padding: 4px 0; }
+  .slider-row { display: flex; align-items: center; gap: 10px; }
+  .slider-labels { display: flex; justify-content: space-between; margin-top: 3px; }
+  .slider-labels span { font-size: 9px; color: #3a3a3a; letter-spacing: 0.5px; }
+  .dna-slider {
+    -webkit-appearance: none; width: 100%; height: 3px; border-radius: 2px;
+    background: linear-gradient(to right, #222, #f59e0b); outline: none; cursor: pointer;
+  }
+  .dna-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+    background: #f59e0b; cursor: pointer; box-shadow: 0 0 10px rgba(245,158,11,0.4);
+  }
+  .dna-slider::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%; border: none;
+    background: #f59e0b; cursor: pointer; box-shadow: 0 0 10px rgba(245,158,11,0.4);
+  }
+  .slider-value {
+    font-size: 12px; color: #f59e0b; min-width: 28px; text-align: right;
+    font-weight: 600; font-variant-numeric: tabular-nums;
+  }
+
+  /* 3D label overlays */
+  .star-label {
+    position: absolute; pointer-events: none; z-index: 25;
+    padding: 3px 8px; border-radius: 4px; font-size: 10px;
+    white-space: nowrap; opacity: 0; transition: opacity 0.15s;
+    transform: translate(-50%, -130%); font-weight: 500;
+  }
+  .star-label.visible { opacity: 1; }
+  .star-label.lbl-section {
+    background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.2);
+    color: rgba(245,158,11,0.6); font-size: 9px; text-transform: uppercase;
+    letter-spacing: 1.2px; font-weight: 700;
+  }
+  .star-label.lbl-central {
+    background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.35);
+    color: #f59e0b; font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+  }
+  .star-label.lbl-constellation {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
+    color: #ccc; backdrop-filter: blur(4px);
+  }
+  .star-label.lbl-void {
+    background: rgba(40,40,40,0.5); border: 1px solid rgba(80,80,80,0.25);
+    color: #555; backdrop-filter: blur(2px);
+  }
+</style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+<div id="labels-overlay"></div>
+
+<!-- Left Panel -->
+<div id="panel">
+  <div class="panel-header">
+    <h1>Artist DNA</h1>
+    <div class="completion-wrap">
+      <svg class="completion-ring" viewBox="0 0 40 40">
+        <circle class="bg" cx="20" cy="20" r="16"/>
+        <circle class="fg" id="cmp-circle" cx="20" cy="20" r="16"
+          stroke-dasharray="100.53" stroke-dashoffset="100.53"
+          transform="rotate(-90 20 20)"/>
+      </svg>
+      <span class="completion-pct" id="cmp-text">0%</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Artist Name</div>
+    <input class="dna-input" id="inp-name" type="text" value="Shadow" placeholder="Your artist name...">
+  </div>
+
+  <div class="section">
+    <div class="section-label">Genres</div>
+    <div class="chip-group" id="cg-genres"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Vocal Textures</div>
+    <div class="chip-group" id="cg-vocal"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Production Preferences</div>
+    <div class="chip-group" id="cg-production"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Artist Influences</div>
+    <input class="dna-input" id="inp-influences" type="text" value="Travis Scott, Playboi Carti" placeholder="Comma-separated names...">
+  </div>
+
+  <div class="section">
+    <div class="section-label">Personality Traits</div>
+    <div class="chip-group" id="cg-personality"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Emotion</div>
+    <div class="chip-group" id="cg-emotion"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Delivery</div>
+    <div class="chip-group" id="cg-delivery"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Melody Bias</div>
+    <div class="slider-container">
+      <div class="slider-row">
+        <input class="dna-slider" id="inp-melody" type="range" min="0" max="100" value="35">
+        <span class="slider-value" id="melody-val">35</span>
+      </div>
+      <div class="slider-labels"><span>RAP</span><span>MELODIC</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Signature Phrases</div>
+    <input class="dna-input" id="inp-phrases" type="text" value="shadow reign, from the mud" placeholder="Comma-separated phrases...">
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ================================================================
+//  CONSTANTS
+// ================================================================
+const AMBER = 0xf59e0b;
+const AMBER_CSS = '#f59e0b';
+const PANEL_W = 320;
+
+const SECTIONS_DEF = {
+  Sound:      { angle: 0,   fields: ['genres','vocal','production'] },
+  Influences: { angle: 72,  fields: ['influences'] },
+  Persona:    { angle: 144, fields: ['personality','emotion'] },
+  Delivery:   { angle: 216, fields: ['delivery','melodyBias'] },
+  Lexicon:    { angle: 288, fields: ['phrases'] },
+};
+
+const CHIP_DEFS = {
+  genres: {
+    el: 'cg-genres',
+    opts: ['Hip-Hop/Rap','Trap','Pop','R&B/Soul','Rock','Electronic/Dance','Jazz','Country','Metal','Latino','Reggae','Blues','Classical'],
+    defaults: ['Hip-Hop/Rap','Trap'],
+    section: 'Sound', multi: true,
+  },
+  vocal: {
+    el: 'cg-vocal',
+    opts: ['Raspy','Smooth','Falsetto','Deep','Breathy','Gritty','Nasal','Powerful','Airy','Husky'],
+    defaults: ['Raspy','Deep'],
+    section: 'Sound', multi: true,
+  },
+  production: {
+    el: 'cg-production',
+    opts: ['Lo-fi','Polished','Minimalist','Layered','808-heavy','Orchestral','Sample-heavy','Synth-driven','Live instruments','Distorted'],
+    defaults: ['Lo-fi','808-heavy'],
+    section: 'Sound', multi: true,
+  },
+  personality: {
+    el: 'cg-personality',
+    opts: ['Resilient','Introspective','Aggressive','Vulnerable','Confident','Mysterious','Rebellious','Spiritual','Playful','Ambitious'],
+    defaults: ['Resilient','Aggressive'],
+    section: 'Persona', multi: true,
+  },
+  emotion: {
+    el: 'cg-emotion',
+    opts: ['Defiant','Nostalgic','Hopeful','Heartbroken','Angry','Vulnerable','Triumphant','Haunted','Playful','Confident','Melancholic','Numb'],
+    defaults: ['Defiant'],
+    section: 'Persona', multi: false,
+  },
+  delivery: {
+    el: 'cg-delivery',
+    opts: ['Raw','Polished','Vulnerable','Deadpan','Ironic','Preachy','Menacing','Storytelling'],
+    defaults: ['Raw'],
+    section: 'Delivery', multi: false,
+  },
+};
+
+// ================================================================
+//  STATE
+// ================================================================
+const DNA = {
+  artistName: 'Shadow',
+  genres: new Set(['Hip-Hop/Rap','Trap']),
+  vocal: new Set(['Raspy','Deep']),
+  production: new Set(['Lo-fi','808-heavy']),
+  influences: ['Travis Scott','Playboi Carti'],
+  personality: new Set(['Resilient','Aggressive']),
+  emotion: 'Defiant',
+  delivery: 'Raw',
+  melodyBias: 35,
+  phrases: ['shadow reign','from the mud'],
+};
+
+// ================================================================
+//  THREE.JS GLOBALS
+// ================================================================
+let scene, camera, renderer, clock;
+let isDragging = false, prevMX = 0, prevMY = 0;
+let orbX = 0.45, orbY = 0.25, tOrbX = 0.45, tOrbY = 0.25;
+let camDist = 300, tCamDist = 300;
+let autoRot = true, autoRotTimer = null;
+const raycaster = new THREE.Raycaster();
+const mouseNDC = new THREE.Vector2(-10, -10);
+
+// Star collections
+let centralMesh = null;
+const sectionMeshes = new Map();   // name -> mesh
+const sectionLinesToCenter = new Map();
+const cStars = new Map();          // key -> { mesh, section, label, targetPos }
+const cLines = new Map();          // key -> line
+const voidPool = new Map();        // key -> { mesh, label, section, field, restPos }
+const anims = [];                  // running animations
+const sparkles = [];               // particle bursts
+let hoveredObj = null;
+
+// DOM label cache
+const lblOverlay = document.getElementById('labels-overlay');
+const lblCache = new Map();
+
+// ================================================================
+//  SCENE INIT
+// ================================================================
+function init() {
+  clock = new THREE.Clock();
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x000000);
+
+  const cw = window.innerWidth - PANEL_W;
+  const ch = window.innerHeight;
+  camera = new THREE.PerspectiveCamera(50, cw / ch, 1, 2000);
+  camera.position.set(0, 0, camDist);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(cw, ch);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const container = document.getElementById('canvas-container');
+  container.appendChild(renderer.domElement);
+  renderer.domElement.style.marginLeft = PANEL_W + 'px';
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0xffffff, 0.12));
+  const pLight = new THREE.PointLight(AMBER, 0.5, 500);
+  scene.add(pLight);
+
+  buildBackground();
+  buildCentralStar();
+  buildSectionStars();
+  buildVoidPool();
+  syncConstellation();
+
+  // Controls
+  const cv = renderer.domElement;
+  cv.addEventListener('mousedown', e => {
+    isDragging = true; prevMX = e.clientX; prevMY = e.clientY;
+    stopAutoRot();
+  });
+  cv.addEventListener('mousemove', e => {
+    const rect = cv.getBoundingClientRect();
+    mouseNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouseNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    if (isDragging) {
+      tOrbY += (e.clientX - prevMX) * 0.005;
+      tOrbX += (e.clientY - prevMY) * 0.005;
+      tOrbX = Math.max(-1.4, Math.min(1.4, tOrbX));
+      prevMX = e.clientX; prevMY = e.clientY;
+    }
+  });
+  cv.addEventListener('mouseup', () => { isDragging = false; scheduleAutoRot(); });
+  cv.addEventListener('mouseleave', () => { isDragging = false; mouseNDC.set(-10,-10); scheduleAutoRot(); });
+  cv.addEventListener('wheel', e => {
+    e.preventDefault();
+    tCamDist = Math.max(80, Math.min(800, tCamDist + e.deltaY * 0.4));
+    stopAutoRot(); scheduleAutoRot();
+  }, { passive: false });
+  cv.addEventListener('contextmenu', e => e.preventDefault());
+  window.addEventListener('resize', onResize);
+
+  loop();
+}
+
+function stopAutoRot() { autoRot = false; clearTimeout(autoRotTimer); }
+function scheduleAutoRot() { clearTimeout(autoRotTimer); autoRotTimer = setTimeout(() => { autoRot = true; }, 4000); }
+
+function onResize() {
+  const w = window.innerWidth - PANEL_W, h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+
+// ================================================================
+//  BACKGROUND STARFIELD
+// ================================================================
+function buildBackground() {
+  const n = 500;
+  const pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const r = 400 + Math.random() * 500;
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos(2 * Math.random() - 1);
+    pos[i*3]   = r * Math.sin(ph) * Math.cos(th);
+    pos[i*3+1] = r * Math.sin(ph) * Math.sin(th);
+    pos[i*3+2] = r * Math.cos(ph);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
+    color: 0x888888, size: 1, sizeAttenuation: true, transparent: true, opacity: 0.35,
+  })));
+}
+
+// ================================================================
+//  CENTRAL STAR
+// ================================================================
+function buildCentralStar() {
+  const geo = new THREE.SphereGeometry(5, 32, 32);
+  const mat = new THREE.MeshStandardMaterial({
+    color: AMBER, emissive: AMBER, emissiveIntensity: 0.55,
+    roughness: 0.3, metalness: 0.15,
+  });
+  centralMesh = new THREE.Mesh(geo, mat);
+  centralMesh.userData = { type: 'central', label: DNA.artistName, baseEI: 0.55 };
+  scene.add(centralMesh);
+
+  // Glow shell
+  const gGeo = new THREE.SphereGeometry(7, 32, 32);
+  const gMat = new THREE.MeshBasicMaterial({ color: AMBER, transparent: true, opacity: 0.04 });
+  const glow = new THREE.Mesh(gGeo, gMat);
+  centralMesh.add(glow);
+}
+
+// ================================================================
+//  SECTION STARS
+// ================================================================
+function buildSectionStars() {
+  const dist = 80;
+  Object.entries(SECTIONS_DEF).forEach(([name, cfg]) => {
+    const a = (cfg.angle * Math.PI) / 180;
+    const x = Math.cos(a) * dist;
+    const y = Math.sin(a) * dist * 0.6;
+    const z = Math.sin(a) * 18;
+
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(3, 24, 24),
+      new THREE.MeshStandardMaterial({
+        color: 0xcccccc, emissive: AMBER, emissiveIntensity: 0.18,
+        roughness: 0.45, metalness: 0.1,
+      })
+    );
+    mesh.position.set(x, y, z);
+    mesh.userData = { type: 'section', label: name, baseEI: 0.18 };
+    scene.add(mesh);
+    sectionMeshes.set(name, mesh);
+
+    // Line to center
+    const lg = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0,0,0), new THREE.Vector3(x,y,z)
+    ]);
+    const lm = new THREE.LineBasicMaterial({ color: AMBER, transparent: true, opacity: 0.12 });
+    const line = new THREE.Line(lg, lm);
+    scene.add(line);
+    sectionLinesToCenter.set(name, line);
+  });
+}
+
+// ================================================================
+//  VOID POOL — all unselectable chip options live here
+// ================================================================
+function randVoidPos() {
+  const r = 200 + Math.random() * 350;
+  const th = Math.random() * Math.PI * 2;
+  const ph = Math.acos(2 * Math.random() - 1);
+  return new THREE.Vector3(
+    r * Math.sin(ph) * Math.cos(th),
+    r * Math.sin(ph) * Math.sin(th),
+    r * Math.cos(ph)
+  );
+}
+
+function buildVoidPool() {
+  Object.entries(CHIP_DEFS).forEach(([field, def]) => {
+    def.opts.forEach(opt => {
+      const key = field + ':' + opt;
+      const pos = randVoidPos();
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(0.7, 10, 10),
+        new THREE.MeshStandardMaterial({
+          color: 0x333333, emissive: 0x111111, emissiveIntensity: 0.05,
+          roughness: 0.9, metalness: 0,
+        })
+      );
+      mesh.position.copy(pos);
+      mesh.userData = { type: 'void', label: opt, key, section: def.section, field, baseEI: 0.05 };
+      scene.add(mesh);
+      voidPool.set(key, { mesh, label: opt, section: def.section, field, restPos: pos.clone() });
+    });
+  });
+}
+
+// ================================================================
+//  CONSTELLATION SYNC
+// ================================================================
+function sectionForField(f) {
+  for (const [n, c] of Object.entries(SECTIONS_DEF)) {
+    if (c.fields.includes(f)) return n;
+  }
+  return 'Sound';
+}
+
+function clusterPos(section, idx, total) {
+  const parent = sectionMeshes.get(section);
+  if (!parent) return new THREE.Vector3();
+  const base = parent.position.clone();
+  const r = 30 + (idx % 4) * 8 + (Math.random() - 0.5) * 4;
+  const a = (idx / Math.max(total, 1)) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
+  return base.clone().add(new THREE.Vector3(
+    Math.cos(a) * r,
+    Math.sin(a) * r * 0.7,
+    (Math.random() - 0.5) * 16
+  ));
+}
+
+function desiredValues() {
+  const out = [];
+  // Multi-select chips
+  ['genres','vocal','production','personality'].forEach(f => {
+    DNA[f].forEach(v => out.push({ key: f+':'+v, label: v, section: CHIP_DEFS[f].section, field: f }));
+  });
+  // Single-select chips
+  if (DNA.emotion) out.push({ key: 'emotion:'+DNA.emotion, label: DNA.emotion, section: 'Persona', field: 'emotion' });
+  if (DNA.delivery) out.push({ key: 'delivery:'+DNA.delivery, label: DNA.delivery, section: 'Delivery', field: 'delivery' });
+  // Influences
+  DNA.influences.forEach(v => {
+    if (v.trim()) out.push({ key: 'influences:'+v.trim(), label: v.trim(), section: 'Influences', field: 'influences' });
+  });
+  // Phrases
+  DNA.phrases.forEach(v => {
+    if (v.trim()) out.push({ key: 'phrases:'+v.trim(), label: v.trim(), section: 'Lexicon', field: 'phrases' });
+  });
+  // Melody bias
+  out.push({ key: 'melodyBias:val', label: 'Melody: '+DNA.melodyBias, section: 'Delivery', field: 'melodyBias' });
+  return out;
+}
+
+function syncConstellation() {
+  const want = desiredValues();
+  const wantKeys = new Set(want.map(w => w.key));
+
+  // Count per section for layout
+  const secCount = {};
+  const secIdx = {};
+  want.forEach(w => { secCount[w.section] = (secCount[w.section]||0)+1; secIdx[w.section] = 0; });
+
+  // ADD new
+  want.forEach(w => {
+    if (cStars.has(w.key)) {
+      secIdx[w.section]++;
+      // Update melody star position
+      if (w.field === 'melodyBias') {
+        const entry = cStars.get(w.key);
+        const par = sectionMeshes.get('Delivery');
+        const base = par ? par.position.clone() : new THREE.Vector3();
+        const yOff = ((DNA.melodyBias / 100) - 0.5) * 55;
+        const tp = base.clone().add(new THREE.Vector3(32, yOff, 4));
+        entry.targetPos = tp; entry.label = w.label;
+        pushAnim({ type:'pos', mesh: entry.mesh, from: entry.mesh.position.clone(), to: tp, dur: 0.35 });
+      }
+      return;
+    }
+    const idx = secIdx[w.section]++;
+    let tp;
+    if (w.field === 'melodyBias') {
+      const par = sectionMeshes.get('Delivery');
+      const base = par ? par.position.clone() : new THREE.Vector3();
+      const yOff = ((DNA.melodyBias / 100) - 0.5) * 55;
+      tp = base.clone().add(new THREE.Vector3(32, yOff, 4));
+    } else {
+      tp = clusterPos(w.section, idx, secCount[w.section]);
+    }
+
+    // Check if void star exists
+    const voidEntry = voidPool.get(w.key);
+    let mesh;
+    let startPos;
+    if (voidEntry) {
+      mesh = voidEntry.mesh;
+      startPos = mesh.position.clone();
+      // Upgrade appearance
+      mesh.geometry.dispose();
+      mesh.geometry = new THREE.SphereGeometry(1.8, 18, 18);
+      mesh.material.color.setHex(0xeeeeee);
+      mesh.material.emissive.setHex(0xaaaaaa);
+      mesh.material.emissiveIntensity = 0.25;
+      mesh.material.roughness = 0.4;
+    } else {
+      // Dynamic stars (influences, phrases)
+      startPos = randVoidPos();
+      mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(1.8, 18, 18),
+        new THREE.MeshStandardMaterial({
+          color: 0xeeeeee, emissive: 0xaaaaaa, emissiveIntensity: 0.25,
+          roughness: 0.4, metalness: 0.1,
+        })
+      );
+      mesh.position.copy(startPos);
+      scene.add(mesh);
+    }
+    mesh.userData = { type: 'constellation', label: w.label, key: w.key, section: w.section, field: w.field, baseEI: 0.25 };
+    cStars.set(w.key, { mesh, section: w.section, label: w.label, targetPos: tp.clone() });
+
+    // Fly in
+    pushAnim({ type:'pos', mesh, from: startPos, to: tp, dur: 0.7, onDone: () => {
+      drawLine(w.key, w.section, tp);
+      burst(tp);
+    }});
+  });
+
+  // REMOVE old
+  for (const [key, entry] of cStars) {
+    if (wantKeys.has(key)) continue;
+    removeStar(key, entry);
+    cStars.delete(key);
+  }
+
+  // Update central label
+  centralMesh.userData.label = DNA.artistName || 'Artist';
+  updateCompletion();
+}
+
+function removeStar(key, entry) {
+  // Remove line
+  const line = cLines.get(key);
+  if (line) {
+    pushAnim({ type:'prop', obj: line.material, prop:'opacity', from: line.material.opacity, to: 0, dur: 0.35, onDone: () => {
+      scene.remove(line); line.geometry.dispose(); line.material.dispose();
+    }});
+    cLines.delete(key);
+  }
+
+  const mesh = entry.mesh;
+  const dest = randVoidPos();
+  pushAnim({ type:'pos', mesh, from: mesh.position.clone(), to: dest, dur: 1.0, onDone: () => {
+    // Downgrade to void
+    mesh.geometry.dispose();
+    mesh.geometry = new THREE.SphereGeometry(0.7, 10, 10);
+    mesh.material.color.setHex(0x333333);
+    mesh.material.emissive.setHex(0x111111);
+    mesh.material.emissiveIntensity = 0.05;
+    mesh.material.roughness = 0.9;
+    mesh.userData = { type:'void', label: entry.label, key, section: entry.section, baseEI: 0.05 };
+    const ve = voidPool.get(key);
+    if (ve) ve.restPos = dest.clone();
+    // If no void entry (dynamic), remove from scene
+    if (!voidPool.has(key)) {
+      scene.remove(mesh); mesh.geometry.dispose(); mesh.material.dispose();
+    }
+  }});
+}
+
+function drawLine(key, section, endPos) {
+  const parent = sectionMeshes.get(section);
+  if (!parent) return;
+  const sp = parent.position.clone();
+  const geo = new THREE.BufferGeometry().setFromPoints([sp, endPos]);
+  const mat = new THREE.LineBasicMaterial({ color: AMBER, transparent: true, opacity: 0 });
+  const line = new THREE.Line(geo, mat);
+  scene.add(line);
+  cLines.set(key, line);
+  pushAnim({ type:'prop', obj: mat, prop:'opacity', from: 0, to: 0.3, dur: 0.4 });
+}
+
+function burst(pos) {
+  for (let i = 0; i < 6; i++) {
+    const m = new THREE.Mesh(
+      new THREE.SphereGeometry(0.3, 6, 6),
+      new THREE.MeshBasicMaterial({ color: AMBER, transparent: true, opacity: 1 })
+    );
+    m.position.copy(pos);
+    const vel = new THREE.Vector3((Math.random()-0.5)*2,(Math.random()-0.5)*2,(Math.random()-0.5)*2).normalize().multiplyScalar(0.6+Math.random()*0.8);
+    scene.add(m);
+    sparkles.push({ mesh: m, vel, born: clock.getElapsedTime(), life: 0.45 });
+  }
+}
+
+// ================================================================
+//  ANIMATION HELPERS
+// ================================================================
+function pushAnim(a) {
+  a.start = clock.getElapsedTime();
+  anims.push(a);
+}
+
+function easeOut(t) { return 1 - Math.pow(1-t, 3); }
+
+function tickAnims(now) {
+  for (let i = anims.length - 1; i >= 0; i--) {
+    const a = anims[i];
+    const t = Math.min((now - a.start) / a.dur, 1);
+    const e = easeOut(t);
+    if (a.type === 'pos') {
+      a.mesh.position.lerpVectors(a.from, a.to, e);
+      // Update line endpoint
+      const key = a.mesh.userData.key;
+      if (key && cLines.has(key)) {
+        const ln = cLines.get(key);
+        const arr = ln.geometry.attributes.position.array;
+        arr[3] = a.mesh.position.x; arr[4] = a.mesh.position.y; arr[5] = a.mesh.position.z;
+        ln.geometry.attributes.position.needsUpdate = true;
+      }
+    } else if (a.type === 'prop') {
+      a.obj[a.prop] = a.from + (a.to - a.from) * e;
+    }
+    if (t >= 1) {
+      if (a.onDone) a.onDone();
+      anims.splice(i, 1);
+    }
+  }
+}
+
+function tickSparkles(now) {
+  for (let i = sparkles.length - 1; i >= 0; i--) {
+    const s = sparkles[i];
+    const age = now - s.born;
+    const t = age / s.life;
+    if (t >= 1) {
+      scene.remove(s.mesh); s.mesh.geometry.dispose(); s.mesh.material.dispose();
+      sparkles.splice(i, 1);
+    } else {
+      s.mesh.position.add(s.vel);
+      s.vel.multiplyScalar(0.93);
+      s.mesh.material.opacity = 1 - t;
+      s.mesh.scale.setScalar(1 - t * 0.6);
+    }
+  }
+}
+
+// ================================================================
+//  HOVER / RAYCASTING
+// ================================================================
+function tickHover() {
+  raycaster.setFromCamera(mouseNDC, camera);
+  const targets = [centralMesh];
+  sectionMeshes.forEach(m => targets.push(m));
+  cStars.forEach(e => targets.push(e.mesh));
+  voidPool.forEach(v => { if (v.mesh.userData.type === 'void') targets.push(v.mesh); });
+
+  const hits = raycaster.intersectObjects(targets);
+
+  // Reset old
+  if (hoveredObj) {
+    const ei = hoveredObj.userData.baseEI;
+    if (ei !== undefined) hoveredObj.material.emissiveIntensity = ei;
+    hoveredObj = null;
+    removeLbl('hover');
+  }
+
+  if (hits.length > 0) {
+    hoveredObj = hits[0].object;
+    hoveredObj.material.emissiveIntensity = (hoveredObj.userData.baseEI || 0.05) + 0.45;
+    // Brighten connected line
+    const k = hoveredObj.userData.key;
+    if (k && cLines.has(k)) cLines.get(k).material.opacity = 0.75;
+  }
+}
+
+// ================================================================
+//  LABELS
+// ================================================================
+function getOrMakeLbl(id, cls) {
+  if (lblCache.has(id)) return lblCache.get(id);
+  const d = document.createElement('div');
+  d.className = 'star-label ' + cls;
+  lblOverlay.appendChild(d);
+  lblCache.set(id, d);
+  return d;
+}
+function removeLbl(id) {
+  const el = lblCache.get(id);
+  if (el) { el.remove(); lblCache.delete(id); }
+}
+
+function tickLabels() {
+  const w = renderer.domElement.clientWidth;
+  const h = renderer.domElement.clientHeight;
+
+  lblCache.forEach(el => el.classList.remove('visible'));
+
+  // Project helper
+  function proj(pos) {
+    const v = pos.clone().project(camera);
+    if (v.z > 1) return null;
+    return { x: (v.x * 0.5 + 0.5) * w + PANEL_W, y: (-v.y * 0.5 + 0.5) * h };
+  }
+
+  // Central
+  const cp = proj(centralMesh.position);
+  if (cp) {
+    const l = getOrMakeLbl('central', 'lbl-central');
+    l.textContent = DNA.artistName || 'Artist';
+    l.style.left = cp.x + 'px'; l.style.top = (cp.y - 8) + 'px';
+    l.classList.add('visible');
+  }
+
+  // Sections
+  sectionMeshes.forEach((mesh, name) => {
+    const p = proj(mesh.position);
+    if (p) {
+      const l = getOrMakeLbl('sec:'+name, 'lbl-section');
+      l.textContent = name;
+      l.style.left = p.x + 'px'; l.style.top = p.y + 'px';
+      l.classList.add('visible');
+    }
+  });
+
+  // Hovered
+  if (hoveredObj && hoveredObj.userData.type !== 'central') {
+    const p = proj(hoveredObj.position);
+    if (p) {
+      const isC = hoveredObj.userData.type === 'constellation' || hoveredObj.userData.type === 'section';
+      const l = getOrMakeLbl('hover', isC ? 'lbl-constellation' : 'lbl-void');
+      l.textContent = hoveredObj.userData.label || '';
+      l.style.left = p.x + 'px'; l.style.top = p.y + 'px';
+      l.classList.add('visible');
+    }
+  }
+}
+
+// ================================================================
+//  COMPLETION
+// ================================================================
+function updateCompletion() {
+  let n = 0; const total = 10;
+  if (DNA.artistName.trim()) n++;
+  if (DNA.genres.size) n++;
+  if (DNA.vocal.size) n++;
+  if (DNA.production.size) n++;
+  if (DNA.influences.filter(x=>x.trim()).length) n++;
+  if (DNA.personality.size) n++;
+  if (DNA.emotion) n++;
+  if (DNA.delivery) n++;
+  n++; // melody always filled
+  if (DNA.phrases.filter(x=>x.trim()).length) n++;
+
+  const pct = Math.round((n/total)*100);
+  const circ = 2 * Math.PI * 16;
+  document.getElementById('cmp-circle').style.strokeDashoffset = circ * (1 - pct/100);
+  document.getElementById('cmp-text').textContent = pct + '%';
+}
+
+// ================================================================
+//  RENDER LOOP
+// ================================================================
+function loop() {
+  requestAnimationFrame(loop);
+  const now = clock.getElapsedTime();
+
+  // Auto-rotate
+  if (autoRot) tOrbY += 0.0012;
+
+  // Smooth camera orbit
+  orbX += (tOrbX - orbX) * 0.07;
+  orbY += (tOrbY - orbY) * 0.07;
+  camDist += (tCamDist - camDist) * 0.07;
+
+  camera.position.x = camDist * Math.sin(orbY) * Math.cos(orbX);
+  camera.position.y = camDist * Math.sin(orbX);
+  camera.position.z = camDist * Math.cos(orbY) * Math.cos(orbX);
+  camera.lookAt(0, 0, 0);
+
+  // Central star pulse
+  const pulse = 0.5 + Math.sin(now * 2) * 0.12;
+  centralMesh.material.emissiveIntensity = hoveredObj === centralMesh
+    ? centralMesh.userData.baseEI + 0.45
+    : pulse;
+  centralMesh.scale.setScalar(1 + Math.sin(now * 1.5) * 0.04);
+
+  // Gentle float for constellation stars
+  cStars.forEach(entry => {
+    const m = entry.mesh;
+    const off = m.id * 0.47;
+    m.position.x += Math.sin(now * 0.3 + off) * 0.008;
+    m.position.y += Math.cos(now * 0.22 + off) * 0.008;
+  });
+
+  // Gentle float for section stars + update lines to center
+  sectionMeshes.forEach((mesh, name) => {
+    const off = mesh.id * 0.63;
+    mesh.position.x += Math.sin(now * 0.18 + off) * 0.004;
+    mesh.position.y += Math.cos(now * 0.14 + off) * 0.004;
+
+    // Update center-to-section line endpoints
+    const sl = sectionLinesToCenter.get(name);
+    if (sl) {
+      const arr = sl.geometry.attributes.position.array;
+      arr[3] = mesh.position.x; arr[4] = mesh.position.y; arr[5] = mesh.position.z;
+      sl.geometry.attributes.position.needsUpdate = true;
+    }
+  });
+
+  // Dim constellation lines back to normal
+  cLines.forEach((line, key) => {
+    if (!hoveredObj || hoveredObj.userData.key !== key) {
+      if (line.material.opacity > 0.3) {
+        line.material.opacity += (0.3 - line.material.opacity) * 0.08;
+      }
+    }
+  });
+
+  tickAnims(now);
+  tickSparkles(now);
+  tickHover();
+  tickLabels();
+
+  renderer.render(scene, camera);
+}
+
+// ================================================================
+//  UI SETUP
+// ================================================================
+function buildChips(containerId, field) {
+  const el = document.getElementById(containerId);
+  const def = CHIP_DEFS[field];
+
+  def.opts.forEach(opt => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.textContent = opt;
+
+    // Check defaults
+    if (def.multi) {
+      if (DNA[field].has(opt)) chip.classList.add('selected');
+    } else {
+      const val = field === 'emotion' ? DNA.emotion : DNA.delivery;
+      if (val === opt) chip.classList.add('selected');
+    }
+
+    chip.addEventListener('click', () => {
+      if (def.multi) {
+        if (DNA[field].has(opt)) { DNA[field].delete(opt); chip.classList.remove('selected'); }
+        else { DNA[field].add(opt); chip.classList.add('selected'); }
+      } else {
+        // Single select
+        el.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+        chip.classList.add('selected');
+        if (field === 'emotion') DNA.emotion = opt;
+        else DNA.delivery = opt;
+      }
+      syncConstellation();
+    });
+
+    el.appendChild(chip);
+  });
+}
+
+function initUI() {
+  buildChips('cg-genres', 'genres');
+  buildChips('cg-vocal', 'vocal');
+  buildChips('cg-production', 'production');
+  buildChips('cg-personality', 'personality');
+  buildChips('cg-emotion', 'emotion');
+  buildChips('cg-delivery', 'delivery');
+
+  document.getElementById('inp-name').addEventListener('input', e => {
+    DNA.artistName = e.target.value;
+    syncConstellation();
+  });
+
+  document.getElementById('inp-influences').addEventListener('input', e => {
+    DNA.influences = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+    syncConstellation();
+  });
+
+  document.getElementById('inp-phrases').addEventListener('input', e => {
+    DNA.phrases = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+    syncConstellation();
+  });
+
+  const slider = document.getElementById('inp-melody');
+  const sval = document.getElementById('melody-val');
+  slider.addEventListener('input', e => {
+    DNA.melodyBias = parseInt(e.target.value);
+    sval.textContent = DNA.melodyBias;
+    syncConstellation();
+  });
+}
+
+// ================================================================
+//  BOOT
+// ================================================================
+initUI();
+init();
+</script>
+</body>
+</html>

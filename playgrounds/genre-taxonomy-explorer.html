@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genre Taxonomy Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0a;
+    --card: #1a1a1a;
+    --card-hover: #222222;
+    --card-border: #2a2a2a;
+    --accent: #f59e0b;
+    --accent-dim: rgba(245, 158, 11, 0.15);
+    --accent-glow: rgba(245, 158, 11, 0.3);
+    --text: #e5e5e5;
+    --text-muted: #888888;
+    --text-dim: #555555;
+    --surface: #141414;
+    --surface-2: #1e1e1e;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 0;
+    min-height: 100vh;
+  }
+
+  /* ---- Header ---- */
+  .header {
+    grid-column: 1 / -1;
+    padding: 32px 40px 24px;
+    border-bottom: 1px solid var(--card-border);
+    background: var(--surface);
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+  .header h1 span { color: var(--accent); }
+  .header p {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  /* ---- Search ---- */
+  .search-bar {
+    grid-column: 1 / -1;
+    padding: 16px 40px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--card-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .search-wrap {
+    position: relative;
+    max-width: 480px;
+  }
+  .search-wrap svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    pointer-events: none;
+  }
+  .search-input {
+    width: 100%;
+    padding: 10px 14px 10px 42px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .search-input::placeholder { color: var(--text-dim); }
+  .search-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+  .search-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 4px;
+    display: none;
+  }
+  .search-clear.visible { display: block; }
+
+  /* ---- Main Panel ---- */
+  .main-panel {
+    padding: 24px 40px 40px;
+    overflow-y: auto;
+    max-height: calc(100vh - 130px);
+  }
+
+  /* ---- Genre Grid ---- */
+  .genre-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .genre-chip {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    user-select: none;
+  }
+  .genre-chip:hover {
+    background: var(--card-hover);
+    border-color: #3a3a3a;
+    transform: translateY(-1px);
+  }
+  .genre-chip.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px var(--accent-dim), inset 0 0 0 1px var(--accent-dim);
+    background: rgba(245, 158, 11, 0.06);
+  }
+  .genre-chip.expanded {
+    border-color: var(--accent);
+    background: rgba(245, 158, 11, 0.04);
+  }
+  .genre-chip.hidden { display: none; }
+
+  .genre-chip .name {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .genre-chip .badge {
+    flex-shrink: 0;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 99px;
+    min-width: 24px;
+    text-align: center;
+  }
+  .genre-chip.selected .badge,
+  .genre-chip.expanded .badge {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .genre-chip .chevron {
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+    color: var(--text-dim);
+    width: 16px;
+    height: 16px;
+  }
+  .genre-chip.expanded .chevron {
+    transform: rotate(90deg);
+    color: var(--accent);
+  }
+
+  /* ---- Subgenre Panels ---- */
+  .sub-panel {
+    grid-column: 1 / -1;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, opacity 0.25s ease, margin 0.25s ease;
+    opacity: 0;
+    margin: 0;
+  }
+  .sub-panel.open {
+    max-height: 2000px;
+    opacity: 1;
+    margin: 4px 0 12px;
+  }
+  .sub-panel-inner {
+    background: var(--surface);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .sub-panel-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    padding-left: 4px;
+  }
+  .sub-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .sub-chip {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 400;
+    user-select: none;
+  }
+  .sub-chip:hover {
+    background: var(--card-hover);
+    border-color: #3a3a3a;
+  }
+  .sub-chip.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent-dim);
+    background: rgba(245, 158, 11, 0.06);
+    color: var(--accent);
+  }
+  .sub-chip.expanded {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .sub-chip.hidden { display: none; }
+  .sub-chip .badge {
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 99px;
+    min-width: 18px;
+    text-align: center;
+  }
+  .sub-chip.selected .badge,
+  .sub-chip.expanded .badge {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .sub-chip .chevron {
+    width: 12px;
+    height: 12px;
+    transition: transform 0.25s ease;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .sub-chip.expanded .chevron {
+    transform: rotate(90deg);
+    color: var(--accent);
+  }
+
+  /* Micro panel */
+  .micro-panel {
+    width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.2s ease, margin 0.2s ease;
+    opacity: 0;
+    margin: 0;
+  }
+  .micro-panel.open {
+    max-height: 800px;
+    opacity: 1;
+    margin: 8px 0 4px;
+  }
+  .micro-panel-inner {
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+  }
+  .micro-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    padding-left: 2px;
+  }
+  .micro-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .micro-chip {
+    background: var(--surface-2);
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    font-weight: 400;
+    user-select: none;
+  }
+  .micro-chip:hover {
+    background: var(--card-hover);
+    border-color: #3a3a3a;
+  }
+  .micro-chip.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 6px var(--accent-dim);
+    background: rgba(245, 158, 11, 0.06);
+    color: var(--accent);
+  }
+  .micro-chip.hidden { display: none; }
+
+  /* ---- Right Sidebar ---- */
+  .sidebar {
+    background: var(--surface);
+    border-left: 1px solid var(--card-border);
+    padding: 24px;
+    overflow-y: auto;
+    max-height: calc(100vh - 130px);
+    position: sticky;
+    top: 130px;
+  }
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .sidebar-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .selection-count {
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 99px;
+  }
+
+  .selection-section {
+    margin-bottom: 20px;
+  }
+  .selection-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .selection-section-title .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .selection-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .selection-tag {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 400;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .selection-tag:hover {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+  }
+  .selection-tag .x {
+    font-size: 14px;
+    line-height: 1;
+    color: var(--text-dim);
+    transition: color 0.15s;
+  }
+  .selection-tag:hover .x { color: #ef4444; }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 16px;
+    color: var(--text-dim);
+  }
+  .empty-state svg {
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+  .empty-state p {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* ---- Copy Button ---- */
+  .copy-btn {
+    width: 100%;
+    padding: 10px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .copy-btn:hover { background: #d97706; }
+  .copy-btn:active { transform: scale(0.98); }
+  .copy-btn.copied {
+    background: #22c55e;
+    color: #fff;
+  }
+  .copy-btn:disabled {
+    background: var(--card);
+    color: var(--text-dim);
+    cursor: not-allowed;
+  }
+
+  .clear-btn {
+    width: 100%;
+    padding: 8px;
+    background: none;
+    color: var(--text-muted);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 6px;
+  }
+  .clear-btn:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+  }
+  .clear-btn:disabled {
+    color: var(--text-dim);
+    cursor: not-allowed;
+    border-color: var(--card-border);
+  }
+  .clear-btn:disabled:hover {
+    background: none;
+    color: var(--text-dim);
+    border-color: var(--card-border);
+  }
+
+  /* ---- Scrollbar ---- */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #444; }
+
+  /* ---- No results ---- */
+  .no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 48px 16px;
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+
+  /* ---- Responsive ---- */
+  @media (max-width: 900px) {
+    .layout {
+      grid-template-columns: 1fr;
+    }
+    .sidebar {
+      border-left: none;
+      border-top: 1px solid var(--card-border);
+      max-height: none;
+      position: static;
+    }
+    .main-panel { max-height: none; }
+    .header, .search-bar, .main-panel { padding-left: 20px; padding-right: 20px; }
+    .sidebar { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <div class="header">
+    <h1>Genre Taxonomy <span>Explorer</span></h1>
+    <p>Browse and select from 17 top-level genres, their subgenres, and microgenres</p>
+  </div>
+
+  <div class="search-bar">
+    <div class="search-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" class="search-input" id="searchInput" placeholder="Search genres, subgenres, microgenres..." autocomplete="off">
+      <button class="search-clear" id="searchClear">&times;</button>
+    </div>
+  </div>
+
+  <div class="main-panel" id="mainPanel"></div>
+
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Selected</h2>
+      <span class="selection-count" id="selectionCount">0</span>
+    </div>
+    <div id="selectionContent"></div>
+    <button class="copy-btn" id="copyBtn" disabled>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy Selection
+    </button>
+    <button class="clear-btn" id="clearBtn" disabled>Clear All</button>
+  </div>
+</div>
+
+<script>
+// ========== TAXONOMY DATA ==========
+const TAXONOMY = {
+  "Blues": {
+    "Electric Blues": ["Chicago Blues", "Texas Blues"],
+    "Delta Blues": ["Acoustic Blues", "Hill Country Blues"],
+    "Jump Blues": ["Swing Blues"],
+    "Blues Rock": ["British Blues", "Southern Blues Rock"]
+  },
+  "Hip-Hop/Rap": {
+    "Gangsta Rap": [],
+    "Rap (General)": [],
+    "Mumble Rap": [],
+    "Trap": ["Latin Trap", "Country Trap", "EDM Trap", "Drill (UK)", "Drill (Brooklyn)", "Drill (Chicago)", "Phonk", "Plugg", "Pluggnb", "Rage", "Tread Rap", "Trap Metal", "Gospel Trap", "Cloud Trap", "Hyperpop Rap", "Emo Trap", "Melodic Trap"],
+    "Conscious Rap": [],
+    "Boom Bap": [],
+    "Memphis Rap": [],
+    "Alternative Hip-Hop": [],
+    "Southern Hip-Hop": [],
+    "Pop Rap": [],
+    "Electronic/Industrial Hip-Hop": [],
+    "Gospel Rap": [],
+    "Cloud Rap": [],
+    "Emo Rap": [],
+    "SoundCloud Rap": ["Lo-Fi SoundCloud", "Emo SoundCloud", "Cloud Rap SoundCloud", "DIY Rap"]
+  },
+  "Children's": {
+    "Nursery Rhymes": ["Educational Songs"],
+    "Kids Pop": ["Tween Pop"],
+    "Lullabies": ["Instrumental Lullabies"]
+  },
+  "Classical": {
+    "Orchestral": ["Symphonic", "Chamber Orchestra"],
+    "Chamber Music": ["String Quartet", "Piano Trio"],
+    "Opera": ["Grand Opera", "Opera Buffa"],
+    "Contemporary Classical": ["Minimalist", "Neo-Classical"],
+    "Baroque": ["Harpsichord", "Early Music"]
+  },
+  "Country": {
+    "Modern Country": ["Country Pop", "Bro-Country"],
+    "Outlaw Country": ["Americana", "Alt-Country"],
+    "Bluegrass": ["Progressive Bluegrass", "Newgrass"],
+    "Honky Tonk": ["Western Swing", "Bakersfield Sound"],
+    "Country Rock": ["Southern Rock Country"]
+  },
+  "Gospel/Christian": {
+    "Contemporary Gospel": ["Urban Gospel", "Praise & Worship"],
+    "Traditional Gospel": ["Choir", "Hymns"],
+    "Christian Rock": ["Worship Rock"],
+    "Christian Hip-Hop": ["Holy Hip-Hop"]
+  },
+  "Jazz": {
+    "Modern Jazz": ["Nu Jazz", "Jazz Fusion"],
+    "Bebop": ["Hard Bop", "Cool Jazz"],
+    "Free Jazz": ["Avant-Garde Jazz"],
+    "Smooth Jazz": ["Jazz Pop"],
+    "Latin Jazz": ["Afro-Cuban Jazz", "Bossa Nova Jazz"],
+    "Swing": ["Big Band", "Gypsy Jazz"]
+  },
+  "Latino": {
+    "Reggaeton": ["Perreo", "Dembow"],
+    "Salsa": ["Timba", "Salsa Dura"],
+    "Bachata": ["Modern Bachata", "Bachata Sensual"],
+    "Cumbia": ["Digital Cumbia", "Cumbia Villera"],
+    "Bossa Nova": ["MPB", "Tropicalia"],
+    "Norte\u00f1o": ["Corridos", "Corridos Tumbados"],
+    "Mariachi": ["Ranchera"]
+  },
+  "Metal": {
+    "Heavy Metal": ["Thrash", "Speed Metal", "Power Metal"],
+    "Nu Metal": ["Rap Metal", "Alt Metal"],
+    "Death Metal": ["Melodic Death", "Technical Death", "Brutal Death"],
+    "Black Metal": ["Atmospheric Black", "Symphonic Black"],
+    "Doom Metal": ["Stoner Metal", "Funeral Doom"],
+    "Progressive Metal": ["Djent", "Math Metal"],
+    "Metalcore": ["Deathcore", "Post-Hardcore"]
+  },
+  "Pop": {
+    "Synth Pop": ["Dark Synth", "Electropop"],
+    "Art Pop": ["Avant-Pop", "Experimental Pop"],
+    "Dance Pop": ["Euro Pop", "Disco Pop"],
+    "Indie Pop": ["Bedroom Pop", "Chamber Pop"],
+    "K-Pop": ["K-Pop Boy Group", "K-Pop Girl Group"],
+    "Hyperpop": ["Glitchcore", "Bubblegum Bass"]
+  },
+  "R&B/Soul": {
+    "Neo-Soul": ["Conscious Soul", "Nu Jazz Soul"],
+    "Contemporary R&B": ["PBR&B", "Alternative R&B"],
+    "Classic R&B": ["Motown", "Quiet Storm"],
+    "Funk R&B": ["Electro Funk", "P-Funk"],
+    "Classic Soul": ["Northern Soul", "Southern Soul"],
+    "Psychedelic Soul": ["Funk Soul"]
+  },
+  "Reggae/Caribbean": {
+    "Dancehall": ["Modern Dancehall", "Bashment"],
+    "Roots Reggae": ["Lovers Rock", "Dub"],
+    "Soca": ["Power Soca", "Groovy Soca"],
+    "Calypso": ["Kaiso"]
+  },
+  "Rock": {
+    "Alternative": ["Grunge", "Shoegaze", "Dream Pop"],
+    "Punk Rock": ["Pop Punk", "Post-Punk", "Hardcore"],
+    "Hard Rock": ["Classic Rock", "Blues Rock"],
+    "Progressive Rock": ["Math Rock", "Post-Rock"],
+    "Indie Rock": ["Lo-Fi Rock", "Noise Rock", "Garage Rock"],
+    "Psychedelic Rock": ["Space Rock", "Acid Rock"]
+  },
+  "African & Diaspora": {
+    "Afrobeats": ["Afro-Pop", "Afro-Fusion"],
+    "Amapiano": ["Private School Amapiano", "Vocal Amapiano"],
+    "Highlife": ["Palm Wine", "Juju Music"],
+    "Afro House": ["Gqom", "Kwaito"],
+    "Soukous": ["Congolese Rumba"]
+  },
+  "Traditional Black American": {
+    "Spirituals": ["Work Songs"],
+    "Ragtime": ["Stride Piano"],
+    "Zydeco": ["Creole Music"],
+    "Go-Go": ["DC Go-Go"]
+  },
+  "World": {
+    "Middle Eastern": ["Arabic Pop", "Sufi Music"],
+    "Indian Classical": ["Hindustani", "Carnatic"],
+    "Celtic": ["Irish Traditional", "Scottish Folk"],
+    "East Asian": ["J-Pop", "C-Pop", "Enka"],
+    "Southeast Asian": ["Filipino OPM", "Thai Pop"]
+  },
+  "Electronic/Dance": {
+    "House": ["Deep House", "Tech House", "Afro House", "Chicago House", "Detroit House", "Garage House", "Vocal House", "Ballroom House", "Jersey Club"],
+    "Techno": ["Minimal Techno", "Industrial Techno", "Detroit Techno", "Acid Techno"],
+    "Drum & Bass": [],
+    "Ambient": [],
+    "Dubstep": [],
+    "UK Garage": [],
+    "Trance": [],
+    "IDM": [],
+    "Breakbeat": [],
+    "Disco/Nu-Disco": []
+  }
+};
+
+// ========== STATE ==========
+const state = {
+  selected: new Set(),       // all selected items (any level)
+  expandedGenre: null,       // currently expanded top-level genre key
+  expandedSub: null,         // currently expanded sub-genre key
+  searchQuery: ''
+};
+
+// Helpers: classify a name into its level
+function classifyItem(name) {
+  if (TAXONOMY[name]) return 'genre';
+  for (const g in TAXONOMY) {
+    const subs = TAXONOMY[g];
+    if (subs[name] !== undefined) return 'subgenre';
+    for (const s in subs) {
+      if (subs[s].includes(name)) return 'microgenre';
+    }
+  }
+  return 'unknown';
+}
+
+function countChildren(genreName) {
+  const subs = TAXONOMY[genreName];
+  if (!subs) return 0;
+  return Object.keys(subs).length;
+}
+
+function countSubChildren(genreName, subName) {
+  const subs = TAXONOMY[genreName];
+  if (!subs || !subs[subName]) return 0;
+  return subs[subName].length;
+}
+
+function matchesSearch(text) {
+  if (!state.searchQuery) return true;
+  return text.toLowerCase().includes(state.searchQuery.toLowerCase());
+}
+
+function genreMatchesSearch(genreName) {
+  if (matchesSearch(genreName)) return true;
+  const subs = TAXONOMY[genreName];
+  if (!subs) return false;
+  for (const s in subs) {
+    if (matchesSearch(s)) return true;
+    for (const m of subs[s]) {
+      if (matchesSearch(m)) return true;
+    }
+  }
+  return false;
+}
+
+function subMatchesSearch(genreName, subName) {
+  if (matchesSearch(subName)) return true;
+  const micros = TAXONOMY[genreName]?.[subName];
+  if (!micros) return false;
+  for (const m of micros) {
+    if (matchesSearch(m)) return true;
+  }
+  return false;
+}
+
+// ========== SVG ICONS ==========
+const chevronSVG = `<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+
+// ========== RENDER ==========
+function render() {
+  const mainPanel = document.getElementById('mainPanel');
+  let html = '<div class="genre-grid">';
+  let anyVisible = false;
+  const genreKeys = Object.keys(TAXONOMY);
+
+  for (const genre of genreKeys) {
+    const visible = genreMatchesSearch(genre);
+    if (visible) anyVisible = true;
+    const isSelected = state.selected.has(genre);
+    const isExpanded = state.expandedGenre === genre;
+    const childCount = countChildren(genre);
+    const classes = ['genre-chip'];
+    if (isSelected) classes.push('selected');
+    if (isExpanded) classes.push('expanded');
+    if (!visible) classes.push('hidden');
+
+    html += `<div class="${classes.join(' ')}" data-genre="${esc(genre)}" onclick="toggleGenre(event, '${esc(genre)}')">
+      <span class="name" title="${esc(genre)}">${esc(genre)}</span>
+      <span class="badge">${childCount}</span>
+      ${childCount > 0 ? chevronSVG : ''}
+    </div>`;
+
+    // Subgenre panel
+    if (isExpanded && childCount > 0) {
+      html += `<div class="sub-panel open">`;
+      html += `<div class="sub-panel-inner">`;
+      html += `<div class="sub-panel-title">Subgenres of ${esc(genre)}</div>`;
+      html += `<div class="sub-grid">`;
+
+      const subs = TAXONOMY[genre];
+      for (const sub in subs) {
+        const subVisible = subMatchesSearch(genre, sub);
+        const subSelected = state.selected.has(sub);
+        const subExpanded = state.expandedSub === sub;
+        const microCount = countSubChildren(genre, sub);
+        const subClasses = ['sub-chip'];
+        if (subSelected) subClasses.push('selected');
+        if (subExpanded) subClasses.push('expanded');
+        if (!subVisible) subClasses.push('hidden');
+
+        html += `<div class="${subClasses.join(' ')}" data-sub="${esc(sub)}" data-parent="${esc(genre)}" onclick="toggleSub(event, '${esc(genre)}', '${esc(sub)}')">
+          <span>${esc(sub)}</span>
+          ${microCount > 0 ? `<span class="badge">${microCount}</span>` : ''}
+          ${microCount > 0 ? `<svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>` : ''}
+        </div>`;
+
+        // Microgenre panel
+        if (subExpanded && microCount > 0) {
+          html += `<div class="micro-panel open">`;
+          html += `<div class="micro-panel-inner">`;
+          html += `<div class="micro-title">Microgenres of ${esc(sub)}</div>`;
+          html += `<div class="micro-grid">`;
+          for (const micro of subs[sub]) {
+            const microVisible = matchesSearch(micro);
+            const microSelected = state.selected.has(micro);
+            const microClasses = ['micro-chip'];
+            if (microSelected) microClasses.push('selected');
+            if (!microVisible) microClasses.push('hidden');
+            html += `<div class="${microClasses.join(' ')}" onclick="toggleSelect(event, '${esc(micro)}')">${esc(micro)}</div>`;
+          }
+          html += `</div></div></div>`;
+        }
+      }
+
+      html += `</div></div></div>`;
+    }
+  }
+
+  if (!anyVisible) {
+    html += `<div class="no-results">No genres match "${esc(state.searchQuery)}"</div>`;
+  }
+
+  html += '</div>';
+  mainPanel.innerHTML = html;
+
+  renderSidebar();
+}
+
+function renderSidebar() {
+  const content = document.getElementById('selectionContent');
+  const countEl = document.getElementById('selectionCount');
+  const copyBtn = document.getElementById('copyBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const total = state.selected.size;
+  countEl.textContent = total;
+
+  if (total === 0) {
+    content.innerHTML = `<div class="empty-state">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 10l7-7 7 7"/></svg>
+      <p>Click on genres to select them.<br>Build your genre profile here.</p>
+    </div>`;
+    copyBtn.disabled = true;
+    clearBtn.disabled = true;
+    return;
+  }
+
+  copyBtn.disabled = false;
+  clearBtn.disabled = false;
+
+  // Categorize selections
+  const genres = [];
+  const subgenres = [];
+  const microgenres = [];
+
+  for (const item of state.selected) {
+    const level = classifyItem(item);
+    if (level === 'genre') genres.push(item);
+    else if (level === 'subgenre') subgenres.push(item);
+    else microgenres.push(item);
+  }
+
+  let html = '';
+
+  if (genres.length > 0) {
+    html += `<div class="selection-section">
+      <div class="selection-section-title"><span class="dot"></span> Genres (${genres.length})</div>
+      <div class="selection-tags">${genres.map(g => `<div class="selection-tag" onclick="removeSelection('${esc(g)}')">${esc(g)}<span class="x">&times;</span></div>`).join('')}</div>
+    </div>`;
+  }
+  if (subgenres.length > 0) {
+    html += `<div class="selection-section">
+      <div class="selection-section-title"><span class="dot"></span> Subgenres (${subgenres.length})</div>
+      <div class="selection-tags">${subgenres.map(s => `<div class="selection-tag" onclick="removeSelection('${esc(s)}')">${esc(s)}<span class="x">&times;</span></div>`).join('')}</div>
+    </div>`;
+  }
+  if (microgenres.length > 0) {
+    html += `<div class="selection-section">
+      <div class="selection-section-title"><span class="dot"></span> Microgenres (${microgenres.length})</div>
+      <div class="selection-tags">${microgenres.map(m => `<div class="selection-tag" onclick="removeSelection('${esc(m)}')">${esc(m)}<span class="x">&times;</span></div>`).join('')}</div>
+    </div>`;
+  }
+
+  content.innerHTML = html;
+}
+
+// ========== INTERACTIONS ==========
+function toggleGenre(e, genre) {
+  e.stopPropagation();
+  const childCount = countChildren(genre);
+
+  if (childCount > 0) {
+    // Toggle expand
+    if (state.expandedGenre === genre) {
+      state.expandedGenre = null;
+      state.expandedSub = null;
+    } else {
+      state.expandedGenre = genre;
+      state.expandedSub = null;
+    }
+  }
+
+  // Toggle selection
+  if (state.selected.has(genre)) {
+    state.selected.delete(genre);
+  } else {
+    state.selected.add(genre);
+  }
+
+  render();
+}
+
+function toggleSub(e, genre, sub) {
+  e.stopPropagation();
+  const microCount = countSubChildren(genre, sub);
+
+  if (microCount > 0) {
+    if (state.expandedSub === sub) {
+      state.expandedSub = null;
+    } else {
+      state.expandedSub = sub;
+    }
+  }
+
+  if (state.selected.has(sub)) {
+    state.selected.delete(sub);
+  } else {
+    state.selected.add(sub);
+  }
+
+  render();
+}
+
+function toggleSelect(e, name) {
+  e.stopPropagation();
+  if (state.selected.has(name)) {
+    state.selected.delete(name);
+  } else {
+    state.selected.add(name);
+  }
+  render();
+}
+
+function removeSelection(name) {
+  state.selected.delete(name);
+  render();
+}
+
+// ========== COPY ==========
+document.getElementById('copyBtn').addEventListener('click', () => {
+  const text = Array.from(state.selected).join(', ');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.classList.add('copied');
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Selection`;
+    }, 2000);
+  });
+});
+
+// ========== CLEAR ALL ==========
+document.getElementById('clearBtn').addEventListener('click', () => {
+  state.selected.clear();
+  render();
+});
+
+// ========== SEARCH ==========
+const searchInput = document.getElementById('searchInput');
+const searchClear = document.getElementById('searchClear');
+
+searchInput.addEventListener('input', (e) => {
+  state.searchQuery = e.target.value;
+  searchClear.classList.toggle('visible', e.target.value.length > 0);
+
+  // Auto-expand genres that have matching children when searching
+  if (state.searchQuery) {
+    // If current expanded genre doesn't match, try to find one that does
+    if (state.expandedGenre && !genreMatchesSearch(state.expandedGenre)) {
+      state.expandedGenre = null;
+      state.expandedSub = null;
+    }
+  }
+
+  render();
+});
+
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  state.searchQuery = '';
+  searchClear.classList.remove('visible');
+  searchInput.focus();
+  render();
+});
+
+// ========== UTILS ==========
+function esc(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// ========== INIT ==========
+render();
+</script>
+</body>
+</html>
