@@ -354,12 +354,12 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         displayName: 'Nano Banana 2',
         type: 'generation',
         icon: '🍌',
-        description: 'Latest generation model. Fast, high quality. Currently free.',
+        description: 'Latest generation model. Fast, high quality.',
         badge: 'New',
         badgeColor: 'bg-green-600',
         textColor: 'text-green-300',
         endpoint: 'google/nano-banana-2',
-        costPerImage: 0, // Currently free — update when pricing announced
+        costPerImage: 0.06, // 6 pts = $0.06 (50% margin on $0.04 cost)
         supportedParameters: ['nanoBanana2AspectRatio', 'nanoBanana2SafetyFilter', 'personGeneration'],
         parameters: {
             aspectRatio: MODEL_PARAMETERS.nanoBanana2AspectRatio,
