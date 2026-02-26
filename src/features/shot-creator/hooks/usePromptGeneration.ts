@@ -147,8 +147,12 @@ export function usePromptGeneration() {
         switch (model) {
             case 'nano-banana-2':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
+                baseSettings.resolution = shotCreatorSettings.resolution || '1K'
                 baseSettings.safetyFilterLevel = shotCreatorSettings.safetyFilterLevel || 'block_only_high'
                 baseSettings.personGeneration = shotCreatorSettings.personGeneration || 'allow_all'
+                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
+                if (shotCreatorSettings.googleSearch) baseSettings.googleSearch = true
+                if (shotCreatorSettings.imageSearch) baseSettings.imageSearch = true
                 break
             case 'z-image-turbo':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio

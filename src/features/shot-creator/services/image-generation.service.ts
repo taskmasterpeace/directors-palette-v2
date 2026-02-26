@@ -144,12 +144,26 @@ export class ImageGenerationService {
       replicateInput.person_generation = settings.personGeneration
     }
 
+    if (settings.resolution) {
+      replicateInput.resolution = settings.resolution
+    }
+
+    if (settings.outputFormat) {
+      replicateInput.output_format = settings.outputFormat
+    }
+
+    if (settings.googleSearch) {
+      replicateInput.google_search = true
+    }
+
+    if (settings.imageSearch) {
+      replicateInput.image_search = true
+    }
+
     // nano-banana-2 API uses `image_input` array (supports up to 14 images)
     if (input.referenceImages && input.referenceImages.length > 0) {
       replicateInput.image_input = this.normalizeReferenceImages(input.referenceImages)
     }
-
-    // Note: nano-banana-2 output is always WebP, no output_format param
 
     return replicateInput
   }

@@ -44,6 +44,14 @@ const AdvancedSettings = () => {
         modelConfig.supportedParameters.includes('maxImages'),
         [modelConfig]
     )
+    const supportsGoogleSearch = useMemo(() =>
+        modelConfig.supportedParameters.includes('googleSearch'),
+        [modelConfig]
+    )
+    const supportsImageSearch = useMemo(() =>
+        modelConfig.supportedParameters.includes('imageSearch'),
+        [modelConfig]
+    )
 
     return (
         <div className="space-y-4 border-t border-border pt-4">
@@ -96,6 +104,44 @@ const AdvancedSettings = () => {
                         </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">Content safety filtering level</p>
+                </div>
+            )}
+
+            {/* Google Search - for Nano Banana 2 */}
+            {supportsGoogleSearch && (
+                <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                        <Checkbox
+                            id="googleSearch"
+                            checked={shotCreatorSettings.googleSearch || false}
+                            onCheckedChange={(checked) => updateSettings({ googleSearch: checked === true })}
+                        />
+                        <Label htmlFor="googleSearch" className="text-sm text-foreground cursor-pointer">
+                            Google Web Search
+                        </Label>
+                    </div>
+                    <p className="text-xs text-muted-foreground pl-6">
+                        Use real-time web info (weather, scores, recent events)
+                    </p>
+                </div>
+            )}
+
+            {/* Image Search - for Nano Banana 2 */}
+            {supportsImageSearch && (
+                <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                        <Checkbox
+                            id="imageSearch"
+                            checked={shotCreatorSettings.imageSearch || false}
+                            onCheckedChange={(checked) => updateSettings({ imageSearch: checked === true })}
+                        />
+                        <Label htmlFor="imageSearch" className="text-sm text-foreground cursor-pointer">
+                            Google Image Search
+                        </Label>
+                    </div>
+                    <p className="text-xs text-muted-foreground pl-6">
+                        Use web images as visual context (also enables web search)
+                    </p>
                 </div>
             )}
 

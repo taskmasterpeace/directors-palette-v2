@@ -174,6 +174,32 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         ],
         description: 'Control person generation in images'
     },
+    // Nano Banana 2 resolution (1K default, 2K higher quality)
+    nanoBanana2Resolution: {
+        id: 'resolution',
+        label: 'Resolution',
+        type: 'select',
+        default: '1K',
+        options: [
+            { value: '1K', label: '1K (1024px) - Default' },
+            { value: '2K', label: '2K (2048px) - Higher quality' }
+        ],
+        description: 'Higher resolution takes longer to generate'
+    },
+    googleSearch: {
+        id: 'googleSearch',
+        label: 'Google Web Search',
+        type: 'boolean',
+        default: false,
+        description: 'Use real-time web info (weather, scores, recent events)'
+    },
+    imageSearch: {
+        id: 'imageSearch',
+        label: 'Google Image Search',
+        type: 'boolean',
+        default: false,
+        description: 'Use web images as visual context (also enables web search)'
+    },
     // Z-Image Turbo parameters (Replicate API: 1-50 steps, 0-20 guidance, defaults per API docs)
     numInferenceSteps: {
         id: 'numInferenceSteps',
@@ -209,11 +235,15 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         textColor: 'text-green-300',
         endpoint: 'google/nano-banana-2',
         costPerImage: 0.06, // 6 pts = $0.06 (50% margin on $0.04 cost)
-        supportedParameters: ['aspectRatio', 'safetyFilterLevel', 'personGeneration'],
+        supportedParameters: ['aspectRatio', 'resolution', 'outputFormat', 'safetyFilterLevel', 'personGeneration', 'googleSearch', 'imageSearch'],
         parameters: {
             aspectRatio: MODEL_PARAMETERS.nanoBanana2AspectRatio,
+            resolution: MODEL_PARAMETERS.nanoBanana2Resolution,
+            outputFormat: MODEL_PARAMETERS.outputFormat,
             safetyFilterLevel: MODEL_PARAMETERS.nanoBanana2SafetyFilter,
-            personGeneration: MODEL_PARAMETERS.personGeneration
+            personGeneration: MODEL_PARAMETERS.personGeneration,
+            googleSearch: MODEL_PARAMETERS.googleSearch,
+            imageSearch: MODEL_PARAMETERS.imageSearch,
         },
         maxReferenceImages: 14,
         estimatedSeconds: 25,

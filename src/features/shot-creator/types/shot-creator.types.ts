@@ -56,6 +56,8 @@ export interface ShotCreatorSettings {
     // Nano-Banana-2 specific settings
     safetyFilterLevel?: 'block_low_and_above' | 'block_medium_and_above' | 'block_only_high' | 'block_none'
     personGeneration?: 'dont_allow' | 'allow_adult' | 'allow_all'
+    googleSearch?: boolean // Use Google Web Search grounding
+    imageSearch?: boolean // Use Google Image Search grounding
     // Output settings
     outputFormat?: string // webp, jpg, png
     // Style injection (supports preset IDs like 'claymation' or custom IDs like 'custom-123...')

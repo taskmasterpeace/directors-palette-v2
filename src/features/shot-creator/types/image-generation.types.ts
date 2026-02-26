@@ -16,8 +16,12 @@ export type ImageModel = Extract<ModelId,
 // Model-specific settings interfaces
 export interface NanoBanana2Settings {
   aspectRatio?: string
+  resolution?: '1K' | '2K'
   safetyFilterLevel?: 'block_low_and_above' | 'block_medium_and_above' | 'block_only_high' | 'block_none'
   personGeneration?: 'dont_allow' | 'allow_adult' | 'allow_all'
+  googleSearch?: boolean
+  imageSearch?: boolean
+  outputFormat?: 'jpg' | 'png' | 'webp'
 }
 
 export interface ZImageTurboSettings {
