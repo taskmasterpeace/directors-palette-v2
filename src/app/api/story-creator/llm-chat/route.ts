@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 
 const REQUESTY_API_URL = 'https://router.requesty.ai/v1/chat/completions'
 
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
 
         if (!response.ok) {
             const errorText = await response.text()
-            console.error('LLM API error:', response.status, errorText)
+            logger.api.error('LLM API error', { status: response.status, errorText: errorText })
             return NextResponse.json(
                 { error: 'LLM service error', details: errorText },
                 { status: response.status }
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(data)
 
     } catch (error) {
-        console.error('LLM chat route error:', error)
+        logger.api.error('LLM chat route error', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

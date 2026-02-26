@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -227,7 +228,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const error = await response.text()
-      console.error('Replicate API error:', error)
+      logger.api.error('Replicate API error', { error })
       return NextResponse.json({ error: 'Failed to generate grid' }, { status: 500 })
     }
 
@@ -284,7 +285,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Before/After Grid error:', error)
+    logger.api.error('Before/After Grid error', { error: error instanceof Error ? error.message : String(error) })
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     lognog.error('tool_before_after_grid_failed', {
       error: errorMessage,

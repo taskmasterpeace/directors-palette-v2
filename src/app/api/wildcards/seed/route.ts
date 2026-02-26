@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getClient } from '@/lib/db/client'
+import { logger } from '@/lib/logger'
 
 // Default wildcards to seed
 const DEFAULT_WILDCARDS = [
@@ -431,7 +432,7 @@ export async function POST(request: NextRequest) {
         })
 
     } catch (error) {
-        console.error('Seed wildcards error:', error)
+        logger.api.error('Seed wildcards error', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json(
             { error: 'An unexpected error occurred' },
             { status: 500 }

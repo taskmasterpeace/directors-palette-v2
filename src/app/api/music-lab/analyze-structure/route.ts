@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { logger } from '@/lib/logger'
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
@@ -88,7 +89,7 @@ Return format:
 
         if (!response.ok) {
             const error = await response.text()
-            console.error('OpenRouter error:', error)
+            logger.api.error('OpenRouter error', { error })
             return NextResponse.json({ error: 'LLM analysis failed' }, { status: 500 })
         }
 
@@ -102,7 +103,7 @@ Return format:
             const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
             sections = JSON.parse(cleaned)
         } catch {
-            console.error('Failed to parse LLM response:', content)
+            logger.api.error('Failed to parse LLM response', { detail: content })
             return NextResponse.json({ error: 'Failed to parse section analysis' }, { status: 500 })
         }
 
@@ -120,7 +121,7 @@ Return format:
 
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error'
-        console.error('Section detection error:', error)
+        logger.api.error('Section detection error', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json({ error: `Section detection failed: ${message}` }, { status: 500 })
     }
 }

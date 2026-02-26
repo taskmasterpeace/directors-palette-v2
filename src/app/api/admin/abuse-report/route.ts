@@ -8,6 +8,7 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { creditsService } from '@/features/credits/services/credits.service'
 import { getAPIClient } from '@/lib/db/client'
 import { adminService } from '@/features/admin/services/admin.service'
+import { logger } from '@/lib/logger'
 
 // Helper to get an untyped client for abuse tables (not in main DB types yet)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
             recent_flags: summary.recentFlags
         })
     } catch (error) {
-        console.error('Error fetching abuse report:', error)
+        logger.api.error('Error fetching abuse report', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
                     .eq('id', flag_id)
 
                 if (error) {
-                    console.error('Error resolving flag:', error)
+                    logger.api.error('Error resolving flag', { error: error instanceof Error ? error.message : String(error) })
                     return NextResponse.json({ error: 'Failed to resolve flag' }, { status: 500 })
                 }
 
@@ -140,7 +141,7 @@ export async function POST(request: NextRequest) {
                     .order('created_at', { ascending: false })
 
                 if (error) {
-                    console.error('Error fetching user flags:', error)
+                    logger.api.error('Error fetching user flags', { error: error instanceof Error ? error.message : String(error) })
                     return NextResponse.json({ error: 'Failed to fetch flags' }, { status: 500 })
                 }
 
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
                     .order('created_at', { ascending: false })
 
                 if (error) {
-                    console.error('Error fetching IP users:', error)
+                    logger.api.error('Error fetching IP users', { error: error instanceof Error ? error.message : String(error) })
                     return NextResponse.json({ error: 'Failed to fetch IP users' }, { status: 500 })
                 }
 
@@ -189,7 +190,7 @@ export async function POST(request: NextRequest) {
                 }, { status: 400 })
         }
     } catch (error) {
-        console.error('Admin abuse report error:', error)
+        logger.api.error('Admin abuse report error', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }

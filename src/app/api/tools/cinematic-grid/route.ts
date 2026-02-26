@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { creditsService } from '@/features/credits'
 import { isAdminEmail } from '@/features/admin/types/admin.types'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -94,13 +95,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('[Cinematic Grid] Starting generation with reference:', imageUrl)
+    logger.api.info('Cinematic Grid: Starting generation with reference', { detail: imageUrl })
 
     // Build the fixed cinematic grid prompt
     const gridPrompt = buildCinematicGridPrompt()
 
-    console.log('[Cinematic Grid] Using Nano Banana Pro model')
-    console.log('[Cinematic Grid] Prompt length:', gridPrompt.length)
+    logger.api.info('Cinematic Grid: Using Nano Banana Pro model')
+    logger.api.info('Cinematic Grid: Prompt length', { length: gridPrompt.length })
 
     // Call Replicate API using nano-banana-pro
     // Nano Banana Pro accepts: prompt, reference_images (array), aspect_ratio
@@ -112,21 +113,21 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    console.log('[Cinematic Grid] Generation completed')
-    console.log('  - rawOutput type:', typeof rawOutput)
-    console.log('  - rawOutput constructor:', (rawOutput as object)?.constructor?.name)
+    logger.api.info('Cinematic Grid: Generation completed')
+    logger.api.info('  - rawOutput type', { detail: typeof rawOutput })
+    logger.api.info('  - rawOutput constructor', { name: (rawOutput as object)?.constructor?.name })
 
     // Extract URL from output
     // Replicate SDK v1 returns FileOutput objects which have toString() -> URL
     let outputUrl: string | undefined
 
     if (typeof rawOutput === 'string') {
-      console.log('  - Detected: string output')
+      logger.api.info('  - Detected: string output')
       outputUrl = rawOutput
     } else if (Array.isArray(rawOutput) && rawOutput.length > 0) {
       // Some models return array of outputs
       const firstOutput = rawOutput[0]
-      console.log('  - Detected: array output, first item type:', typeof firstOutput)
+      logger.api.info('  - Detected: array output, first item type', { detail: typeof firstOutput })
       if (typeof firstOutput === 'string') {
         outputUrl = firstOutput
       } else {
@@ -138,14 +139,14 @@ export async function POST(request: NextRequest) {
     } else if (rawOutput && typeof rawOutput === 'object') {
       // FileOutput objects have toString() which returns the URL
       const stringified = String(rawOutput)
-      console.log('  - Detected: object output, toString() =', stringified)
+      logger.api.info('  - Detected: object output, toString() =', { detail: stringified })
 
       if (stringified && stringified.startsWith('http')) {
         outputUrl = stringified
       }
     }
 
-    console.log('[Cinematic Grid] Extracted outputUrl:', outputUrl)
+    logger.api.info('Cinematic Grid: Extracted outputUrl', { detail: outputUrl })
 
     if (outputUrl && typeof outputUrl === 'string' && outputUrl.startsWith('http')) {
       // Deduct credits after successful completion (admins bypass)
@@ -159,9 +160,9 @@ export async function POST(request: NextRequest) {
           },
         })
         if (!deductResult.success) {
-          console.error('[Cinematic Grid] Failed to deduct credits:', deductResult.error)
+          logger.api.error('Cinematic Grid: Failed to deduct credits', { error: deductResult.error })
         } else {
-          console.log(`[Cinematic Grid] Deducted ${CINEMATIC_GRID_COST_POINTS} credits. New balance: ${deductResult.newBalance}`)
+          logger.api.info('Cinematic Grid: Deducted credits', { points: CINEMATIC_GRID_COST_POINTS, newBalance: deductResult.newBalance })
         }
       }
 
@@ -177,13 +178,13 @@ export async function POST(request: NextRequest) {
       )
     }
   } catch (error) {
-    console.error('[Cinematic Grid] Error:', error)
+    logger.api.error('Cinematic Grid: Error', { error: error instanceof Error ? error.message : String(error) })
 
     // Better error details for debugging
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     const errorDetails = error instanceof Error ? error.stack : String(error)
 
-    console.error('[Cinematic Grid] Full error details:', errorDetails)
+    logger.api.error('Cinematic Grid: Full error details', { detail: errorDetails })
 
     lognog.error('tool_cinematic_grid_failed', {
       error: errorMessage,

@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { logger } from '@/lib/logger'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
     if (error) throw error
     return NextResponse.json({ styles: data || [] })
   } catch (error) {
-    console.error('Error fetching style sheets:', error)
+    logger.api.error('Error fetching style sheets', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to fetch style sheets' }, { status: 500 })
   }
 }
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
     if (error) throw error
     return NextResponse.json({ style: data })
   } catch (error) {
-    console.error('Error creating style sheet:', error)
+    logger.api.error('Error creating style sheet', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to create style sheet' }, { status: 500 })
   }
 }
@@ -153,7 +154,7 @@ export async function PUT(request: NextRequest) {
     if (error) throw error
     return NextResponse.json({ style: data })
   } catch (error) {
-    console.error('Error updating style sheet:', error)
+    logger.api.error('Error updating style sheet', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to update style sheet' }, { status: 500 })
   }
 }
@@ -182,7 +183,7 @@ export async function DELETE(request: NextRequest) {
     if (error) throw error
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting style sheet:', error)
+    logger.api.error('Error deleting style sheet', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to delete style sheet' }, { status: 500 })
   }
 }

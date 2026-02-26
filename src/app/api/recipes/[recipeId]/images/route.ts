@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { randomUUID } from 'crypto';
+import { logger } from '@/lib/logger'
 
 const STORAGE_BUCKET = 'directors-palette';
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -30,7 +31,7 @@ export async function POST(
 
     const { recipeId } = await params;
 
-    console.log('[recipe-images] POST request for recipe:', recipeId, 'user:', auth.user.id);
+    logger.api.info('recipe-images: POST request for recipe', { recipeId: recipeId, user: 'user:', id: auth.user.id });
 
     if (!recipeId) {
       return NextResponse.json(
@@ -41,7 +42,7 @@ export async function POST(
 
     // Validate recipe ID format (should be a UUID)
     if (!/^[a-f0-9-]{36}$/.test(recipeId)) {
-      console.error('[recipe-images] Invalid recipe ID format:', recipeId);
+      logger.api.error('recipe-images: Invalid recipe ID format', { detail: recipeId });
       return NextResponse.json(
         { error: 'Invalid recipe ID format', details: `Expected UUID, got: ${recipeId}` },
         { status: 400 }
@@ -108,7 +109,7 @@ export async function POST(
       });
 
     if (uploadError) {
-      console.error('[recipe-images] Storage upload error:', uploadError);
+      logger.api.error('recipe-images: Storage upload error', { error: uploadError instanceof Error ? uploadError.message : String(uploadError) });
       return NextResponse.json(
         { error: 'Failed to upload image', details: uploadError.message },
         { status: 500 }
@@ -127,7 +128,7 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('Recipe image upload error:', error);
+    logger.api.error('Recipe image upload error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       {
         error: 'Failed to upload image',
@@ -158,7 +159,7 @@ export async function GET(
       .list(`recipe-images/${recipeId}`);
 
     if (error) {
-      console.error('[recipe-images] List error:', error);
+      logger.api.error('recipe-images: List error', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json(
         { error: 'Failed to list images' },
         { status: 500 }
@@ -183,7 +184,7 @@ export async function GET(
     return NextResponse.json({ images });
 
   } catch (error) {
-    console.error('Recipe images list error:', error);
+    logger.api.error('Recipe images list error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to list images' },
       { status: 500 }
@@ -212,7 +213,7 @@ export async function DELETE(
       .list(`recipe-images/${recipeId}`);
 
     if (listError) {
-      console.error('[recipe-images] List error:', listError);
+      logger.api.error('recipe-images: List error', { error: listError instanceof Error ? listError.message : String(listError) });
       return NextResponse.json(
         { error: 'Failed to list images for deletion' },
         { status: 500 }
@@ -230,7 +231,7 @@ export async function DELETE(
       .remove(paths);
 
     if (deleteError) {
-      console.error('[recipe-images] Delete error:', deleteError);
+      logger.api.error('recipe-images: Delete error', { error: deleteError instanceof Error ? deleteError.message : String(deleteError) });
       return NextResponse.json(
         { error: 'Failed to delete images' },
         { status: 500 }
@@ -240,7 +241,7 @@ export async function DELETE(
     return NextResponse.json({ deleted: paths.length });
 
   } catch (error) {
-    console.error('Recipe images delete error:', error);
+    logger.api.error('Recipe images delete error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to delete images' },
       { status: 500 }

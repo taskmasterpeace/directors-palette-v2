@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOpenRouterService } from '@/features/storyboard/services/openrouter.service'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 interface PromptToRefine {
     sequence: number
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
             totalRefined: refined.length,
         })
     } catch (error) {
-        console.error('Prompt refinement error:', error)
+        logger.api.error('Prompt refinement error', { error: error instanceof Error ? error.message : String(error) })
 
         lognog.error(error instanceof Error ? error.message : 'Prompt refinement failed', {
             type: 'error',

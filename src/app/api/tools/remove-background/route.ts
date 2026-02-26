@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { creditsService } from '@/features/credits';
 import { isAdminEmail } from '@/features/admin/types/admin.types';
 import { lognog } from '@/lib/lognog';
+import { logger } from '@/lib/logger'
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -48,8 +49,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('Starting background removal for:', imageUrl);
-    console.log('Using Bria model:', REMOVE_BG_MODEL);
+    logger.api.info('Starting background removal for', { detail: imageUrl });
+    logger.api.info('Using Bria model', { detail: REMOVE_BG_MODEL });
 
     // Call Replicate API using bria/remove-background
     // Bria uses image_url (string) not image (uri), and outputs a URI
@@ -59,28 +60,28 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log('Background removal completed');
-    console.log('  - rawOutput type:', typeof rawOutput);
-    console.log('  - rawOutput constructor:', (rawOutput as object)?.constructor?.name);
+    logger.api.info('Background removal completed');
+    logger.api.info('  - rawOutput type', { detail: typeof rawOutput });
+    logger.api.info('  - rawOutput constructor', { name: (rawOutput as object)?.constructor?.name });
 
     // Extract URL from output
     // Replicate SDK v1 returns FileOutput objects which have toString() -> URL
     let outputUrl: string | undefined;
 
     if (typeof rawOutput === 'string') {
-      console.log('  - Detected: string output');
+      logger.api.info('  - Detected: string output');
       outputUrl = rawOutput;
     } else if (rawOutput && typeof rawOutput === 'object') {
       // FileOutput objects have toString() which returns the URL
       const stringified = String(rawOutput);
-      console.log('  - Detected: object output, toString() =', stringified);
+      logger.api.info('  - Detected: object output, toString() =', { detail: stringified });
 
       if (stringified && stringified.startsWith('http')) {
         outputUrl = stringified;
       }
     }
 
-    console.log('Extracted outputUrl:', outputUrl);
+    logger.api.info('Extracted outputUrl', { detail: outputUrl });
 
     if (outputUrl && typeof outputUrl === 'string' && outputUrl.startsWith('http')) {
 
@@ -95,9 +96,9 @@ export async function POST(request: NextRequest) {
           },
         });
         if (!deductResult.success) {
-          console.error('Failed to deduct credits:', deductResult.error);
+          logger.api.error('Failed to deduct credits', { error: deductResult.error });
         } else {
-          console.log(`Deducted ${REMOVE_BG_COST_POINTS} credits. New balance: ${deductResult.newBalance}`);
+          logger.api.info('Deducted credits', { points: REMOVE_BG_COST_POINTS, newBalance: deductResult.newBalance });
         }
       }
 
@@ -131,9 +132,9 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (insertError) {
-          console.error('Failed to create gallery entry:', insertError);
+          logger.api.error('Failed to create gallery entry', { error: insertError instanceof Error ? insertError.message : String(insertError) });
         } else {
-          console.log('Created new gallery entry:', newEntry?.id);
+          logger.api.info('Created new gallery entry', { id: newEntry?.id });
         }
 
         return NextResponse.json({
@@ -156,13 +157,13 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('Background removal error:', error);
+    logger.api.error('Background removal error', { error: error instanceof Error ? error.message : String(error) });
 
     // Better error details for debugging
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const errorDetails = error instanceof Error ? error.stack : String(error);
 
-    console.error('Full error details:', errorDetails);
+    logger.api.error('Full error details', { detail: errorDetails });
 
     lognog.error('tool_remove_background_failed', {
       error: errorMessage,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { logger } from '@/lib/logger'
 
 /**
  * POST /api/community/rate
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
       })
 
     if (error) {
-      console.error('Error rating item:', error)
+      logger.api.error('Error rating item', { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: 'Failed to rate item' },
         { status: 500 }
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
       rating,
     })
   } catch (error) {
-    console.error('Community rate error:', error)
+    logger.api.error('Community rate error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -100,7 +101,7 @@ export async function GET(request: NextRequest) {
       .eq('user_id', user.id)
 
     if (error) {
-      console.error('Error fetching ratings:', error)
+      logger.api.error('Error fetching ratings', { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: 'Failed to fetch ratings' },
         { status: 500 }
@@ -115,7 +116,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ ratings })
   } catch (error) {
-    console.error('Community ratings GET error:', error)
+    logger.api.error('Community ratings GET error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

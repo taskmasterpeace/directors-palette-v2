@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { logger } from '@/lib/logger'
 
 const MODEL = 'openai/gpt-4.1-mini'
 
@@ -86,7 +87,7 @@ ${fieldGuidance}${contextStr}${currentStr}${excludeStr}`
 
     if (!response.ok) {
       const error = await response.text()
-      console.error('OpenRouter error:', error)
+      logger.api.error('OpenRouter error', { error })
       return NextResponse.json({ error: 'Suggestion generation failed' }, { status: 500 })
     }
 
@@ -102,11 +103,11 @@ ${fieldGuidance}${contextStr}${currentStr}${excludeStr}`
       const suggestions = JSON.parse(cleaned)
       return NextResponse.json({ suggestions: Array.isArray(suggestions) ? suggestions : [] })
     } catch {
-      console.error('Failed to parse suggestions:', content.substring(0, 300))
+      logger.api.error('Failed to parse suggestions', { detail: content.substring(0, 300) })
       return NextResponse.json({ suggestions: [] })
     }
   } catch (error) {
-    console.error('Suggestion error:', error)
+    logger.api.error('Suggestion error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

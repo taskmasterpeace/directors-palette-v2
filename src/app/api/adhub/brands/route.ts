@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getClient } from '@/lib/db/client'
 import { AdhubBrandService } from '@/features/adhub/services/adhub-brand.service'
+import { logger } from '@/lib/logger'
 
 // GET - List all brands for user
 export async function GET() {
@@ -20,7 +21,7 @@ export async function GET() {
     const brands = await AdhubBrandService.listBrands(user.id)
     return NextResponse.json({ brands })
   } catch (error) {
-    console.error('Error fetching brands:', error)
+    logger.api.error('Error fetching brands', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to fetch brands' }, { status: 500 })
   }
 }
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ brand })
   } catch (error) {
-    console.error('Error creating brand:', error)
+    logger.api.error('Error creating brand', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to create brand' }, { status: 500 })
   }
 }

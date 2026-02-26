@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { logger } from '@/lib/logger'
 
 const GEMINI_MODEL = 'google/gemini-2.0-flash-exp:free'
 
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
 
         if (!response.ok) {
             const error = await response.text()
-            console.error('OpenRouter error:', error)
+            logger.api.error('OpenRouter error', { error })
             return NextResponse.json({ error: 'Generation failed' }, { status: 500 })
         }
 
@@ -73,14 +74,14 @@ export async function POST(request: NextRequest) {
                 directorName
             })
         } catch (parseError) {
-            console.error('JSON parse error:', parseError, 'Content:', content)
+            logger.api.error('JSON parse error', { error: parseError instanceof Error ? parseError.message : String(parseError), Content: 'Content:', content: content })
             return NextResponse.json({
                 error: 'Invalid JSON response',
                 raw: content
             }, { status: 500 })
         }
     } catch (error) {
-        console.error('Proposal generation error:', error)
+        logger.api.error('Proposal generation error', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }

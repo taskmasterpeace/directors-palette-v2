@@ -15,6 +15,7 @@ import {
   parseRecipeTemplate,
   getAllFields,
 } from '@/features/shot-creator/types/recipe.types'
+import { logger } from '@/lib/logger'
 
 interface ApiRecipeField {
   name: string
@@ -126,7 +127,7 @@ export async function GET(): Promise<NextResponse> {
       },
     })
   } catch (error) {
-    console.error('[API v1] Recipe list error:', error)
+    logger.api.error('API v1: Recipe list error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { success: false, error: 'Failed to fetch recipes' },
       { status: 500 }

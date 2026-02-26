@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Replicate from 'replicate';
 import { ReplicatePrediction, WebhookService } from '@/features/generation/services/webhook.service';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { logger } from '@/lib/logger'
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -32,7 +33,7 @@ export async function GET(
       try {
         await WebhookService.processCompletedPrediction(prediction as unknown as ReplicatePrediction);
       } catch (processError) {
-        console.error('Error processing prediction:', processError);
+        logger.api.error('Error processing prediction', { error: processError instanceof Error ? processError.message : String(processError) });
       }
     }
 
@@ -48,7 +49,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Prediction fetch error:', error);
+    logger.api.error('Prediction fetch error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to fetch prediction status' },
       { status: 500 }

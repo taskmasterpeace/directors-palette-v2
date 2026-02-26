@@ -5,6 +5,7 @@
 
 import { NextResponse } from 'next/server'
 import { creditsService } from '@/features/credits/services/credits.service'
+import { logger } from '@/lib/logger'
 
 /**
  * GET /api/credits/packages
@@ -27,7 +28,7 @@ export async function GET() {
 
         return NextResponse.json({ packages: formattedPackages })
     } catch (error) {
-        console.error('Error fetching credit packages:', error)
+        logger.api.error('Error fetching credit packages', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }

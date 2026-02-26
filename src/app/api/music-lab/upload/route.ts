@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
     try {
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ url: publicUrl })
 
     } catch (error: unknown) {
-        console.error('Local upload error:', error)
+        logger.api.error('Local upload error', { error: error instanceof Error ? error.message : String(error) })
         const message = error instanceof Error ? error.message : 'Unknown error'
         return NextResponse.json({
             error: `Internal server error: ${message}`

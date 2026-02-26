@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getClient } from '@/lib/db/client'
 import { AdhubProductService } from '@/features/adhub/services/adhub-product.service'
+import { logger } from '@/lib/logger'
 
 export async function GET(
   _request: NextRequest,
@@ -30,7 +31,7 @@ export async function GET(
 
     return NextResponse.json({ product })
   } catch (error) {
-    console.error('Error fetching product:', error)
+    logger.api.error('Error fetching product', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 })
   }
 }
@@ -53,7 +54,7 @@ export async function PUT(
     const product = await AdhubProductService.updateProduct(productId, user.id, body)
     return NextResponse.json({ product })
   } catch (error) {
-    console.error('Error updating product:', error)
+    logger.api.error('Error updating product', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
   }
 }
@@ -74,7 +75,7 @@ export async function DELETE(
     await AdhubProductService.deleteProduct(productId, user.id)
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting product:', error)
+    logger.api.error('Error deleting product', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })
   }
 }

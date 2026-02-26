@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
+import { logger } from '@/lib/logger'
 
 const MIGRATION_SQL = `
 -- API Keys table for external API access
@@ -170,7 +171,7 @@ export async function POST(_request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('[Admin] Migration error:', error)
+    logger.api.error('Admin: Migration error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Migration failed' },
       { status: 500 }

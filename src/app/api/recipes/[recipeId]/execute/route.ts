@@ -4,6 +4,7 @@ import { getRecipe } from '@/features/shot-creator/services/recipe.service'
 import { buildRecipePrompts, validateRecipe } from '@/features/shot-creator/types/recipe.types'
 import type { RecipeFieldValues } from '@/features/shot-creator/types/recipe.types'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 /**
  * Recipe Execution API
@@ -106,7 +107,7 @@ export async function POST(
     )
 
     // DEBUG: Log recipe execution details
-    console.log('[Recipe Execute] DEBUG:', {
+    logger.api.info('Recipe Execute: DEBUG', { detail: {
       recipeName: recipe.name,
       recipeId: recipe.id,
       stageCount: recipe.stages.length,
@@ -114,7 +115,7 @@ export async function POST(
       fieldValues,
       referenceImages,
       prompts: prompts.map((p, i) => ({ stage: i, promptPreview: p.substring(0, 150) + '...' }))
-    })
+    } })
 
     // For now, only support single-stage recipes for storybook
     if (prompts.length > 1) {
@@ -277,7 +278,7 @@ export async function POST(
     )
 
   } catch (error) {
-    console.error('[Recipe Execute] Error:', error)
+    logger.api.error('Recipe Execute: Error', { error: error instanceof Error ? error.message : String(error) })
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 

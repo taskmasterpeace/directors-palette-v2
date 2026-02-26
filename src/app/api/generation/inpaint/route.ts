@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import Replicate from 'replicate'
+import { logger } from '@/lib/logger'
 
 // Initialize Replicate client
 const replicate = new Replicate({
@@ -73,8 +74,8 @@ export async function POST(request: NextRequest) {
 
         const modelId = MODELS[model as keyof typeof MODELS] || MODELS['nano-banana']
 
-        console.log('[Inpaint] Using model:', modelId)
-        console.log('[Inpaint] User prompt:', prompt.substring(0, 100))
+        logger.api.info('Inpaint: Using model', { detail: modelId })
+        logger.api.info('Inpaint: User prompt', { detail: prompt.substring(0, 100) })
 
         // Use custom system prompt if provided, otherwise use default
         const effectiveSystemPrompt = systemPrompt || NANO_BANANA_SYSTEM_PROMPT
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
         const fullPrompt = `${prompt}. ${effectiveSystemPrompt}`
 
         // Convert base64 data URL to File and upload to Replicate
-        console.log('[Inpaint] Converting base64 to File...')
+        logger.api.info('Inpaint: Converting base64 to File...')
         const base64Match = image.match(/^data:image\/(\w+);base64,(.+)$/)
         if (!base64Match) {
             return NextResponse.json({
@@ -100,11 +101,11 @@ export async function POST(request: NextRequest) {
         // Create a File object from the buffer
         const file = new File([buffer], 'inpaint-image.png', { type: mimeType })
 
-        console.log('[Inpaint] Uploading image to Replicate...')
+        logger.api.info('Inpaint: Uploading image to Replicate...')
         const uploadedFile = await replicate.files.create(file)
         const imageUrl = uploadedFile.urls.get
 
-        console.log('[Inpaint] Image uploaded:', imageUrl.substring(0, 100))
+        logger.api.info('Inpaint: Image uploaded', { detail: imageUrl.substring(0, 100) })
 
         // Build input for Replicate with uploaded image URL
         // Nano Banana uses 'image_input' parameter (matches shot creator)
@@ -114,12 +115,12 @@ export async function POST(request: NextRequest) {
             image_input: [imageUrl], // Array of image URLs
         }
 
-        console.log('[Inpaint] Calling Replicate model with input:', JSON.stringify({ prompt: fullPrompt.substring(0, 100), image_input: 'uploaded' }))
+        logger.api.info('Inpaint: Calling Replicate model with input', { detail: JSON.stringify({ prompt: fullPrompt.substring(0, 100), image_input: 'uploaded' }) })
 
         // Run the model
         const output = await replicate.run(modelId, { input })
 
-        console.log('[Inpaint] Raw output:', typeof output, output)
+        logger.api.info('Inpaint: Raw output', { type: typeof output, output })
 
         // Handle output - Replicate returns FileOutput which can be converted to string URL
         let resultUrl: string | null = null
@@ -135,14 +136,14 @@ export async function POST(request: NextRequest) {
         }
 
         if (!resultUrl) {
-            console.log('[Inpaint] No valid output received')
+            logger.api.info('Inpaint: No valid output received')
             return NextResponse.json({
                 error: 'No image generated from model',
                 details: 'The model returned an empty response'
             }, { status: 400 })
         }
 
-        console.log('[Inpaint] Success! Generated URL:', resultUrl.substring(0, 100))
+        logger.api.info('Inpaint: Success! Generated URL', { detail: resultUrl.substring(0, 100) })
 
         return NextResponse.json({
             url: resultUrl,
@@ -152,7 +153,7 @@ export async function POST(request: NextRequest) {
 
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error'
-        console.error('[Inpaint] Error:', error)
+        logger.api.error('Inpaint: Error', { error: error instanceof Error ? error.message : String(error) })
 
         // Check for specific Replicate errors
         if (message.includes('Invalid version') || message.includes('not found')) {

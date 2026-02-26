@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 interface SoundEffectRequest {
   description: string
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
     userId = user.id
     userEmail = user.email
 
-    console.log(`[Storybook API] sound-effects (ElevenLabs) called by user ${user.id}`)
+    logger.api.info('Storybook API: sound-effects (ElevenLabs) called by user', { user: user.id })
 
     const body: SoundEffectRequest = await request.json()
     let { description } = body
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const error = await response.text()
-      console.error('ElevenLabs Sound Effects error:', error)
+      logger.api.error('ElevenLabs Sound Effects error', { error })
 
       lognog.warn(`elevenlabs FAIL ${Date.now() - elevenLabsStart}ms`, {
         type: 'integration',
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
     } as SoundEffectResponse)
 
   } catch (error) {
-    console.error('Error in sound-effects:', error)
+    logger.api.error('Error in sound-effects', { error: error instanceof Error ? error.message : String(error) })
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 

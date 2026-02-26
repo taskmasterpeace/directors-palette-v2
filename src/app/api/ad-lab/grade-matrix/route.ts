@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createGradingService } from '@/features/ad-lab/services/grading.service'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ grades })
   } catch (error) {
-    console.error('Grading error:', error)
+    logger.api.error('Grading error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Grading failed' },
       { status: 500 }

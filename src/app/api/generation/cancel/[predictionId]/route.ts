@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Replicate from 'replicate';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { getAPIClient } from '@/lib/db/client';
+import { logger } from '@/lib/logger'
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -64,7 +65,7 @@ export async function POST(
       message: 'Prediction canceled successfully',
     });
   } catch (error) {
-    console.error('Error canceling prediction:', error);
+    logger.api.error('Error canceling prediction', { error: error instanceof Error ? error.message : String(error) });
 
     // Check if it's a "not found" error from Replicate
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

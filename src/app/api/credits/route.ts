@@ -9,6 +9,7 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { creditsService } from '@/features/credits/services/credits.service'
 import type { GenerationType } from '@/features/credits/types/credits.types'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 /**
  * Extract client IP from Next.js request headers
@@ -67,7 +68,7 @@ export async function GET(request: NextRequest) {
         })
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-        console.error('Error fetching credits:', error)
+        logger.api.error('Error fetching credits', { error: error instanceof Error ? error.message : String(error) })
         lognog.error('credits_fetch_failed', {
             userId: auth.user.id,
             error: errorMessage,
@@ -179,7 +180,7 @@ export async function POST(request: NextRequest) {
         }
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-        console.error('Credits API error:', error)
+        logger.api.error('Credits API error', { error: error instanceof Error ? error.message : String(error) })
         lognog.error('credits_api_error', {
             userId: auth.user.id,
             error: errorMessage,

@@ -9,6 +9,7 @@ import { getClient } from '@/lib/db/client'
 import { AdhubBrandService } from '@/features/adhub/services/adhub-brand.service'
 import { AdhubProductService } from '@/features/adhub/services/adhub-product.service'
 import { getPresetBySlug } from '@/features/adhub/data/presets.data'
+import { logger } from '@/lib/logger'
 
 // POST - Generate ad image
 export async function POST(request: NextRequest) {
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (adError) {
-      console.error('Error creating ad record:', adError)
+      logger.api.error('Error creating ad record', { error: adError instanceof Error ? adError.message : String(adError) })
       return NextResponse.json({ error: 'Failed to create ad record' }, { status: 500 })
     }
 
@@ -186,7 +187,7 @@ export async function POST(request: NextRequest) {
 
       if (!genResponse.ok) {
         const error = await genResponse.json()
-        console.error('Image generation API error:', error)
+        logger.api.error('Image generation API error', { error: error instanceof Error ? error.message : String(error) })
 
         await apiClient
           .from('adhub_ads')
@@ -226,7 +227,7 @@ export async function POST(request: NextRequest) {
       throw error
     }
   } catch (error) {
-    console.error('Error generating ad:', error)
+    logger.api.error('Error generating ad', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to generate ad' }, { status: 500 })
   }
 }

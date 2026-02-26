@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { adminService } from '@/features/admin'
+import { logger } from '@/lib/logger'
 
 /**
  * GET /api/admin/stats
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     // Check admin status via database query (not the broken sync function)
     const isAdmin = await adminService.checkAdminEmailAsync(auth.user.email || '')
-    console.log(`[StatsAPI] Check for ${auth.user.email}: is_admin=${isAdmin}`)
+    logger.api.info('StatsAPI: Check for', { auth: auth.user.email, isAdmin: isAdmin })
 
     if (!isAdmin) {
         return NextResponse.json(
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
             }
         })
     } catch (error) {
-        console.error('Error fetching stats:', error)
+        logger.api.error('Error fetching stats', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

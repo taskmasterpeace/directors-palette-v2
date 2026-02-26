@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { getClient } from '@/lib/db/client'
+import { logger } from '@/lib/logger'
 
 /**
  * GET /api/credits/usage
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
             .eq('type', 'usage')
 
         if (error) {
-            console.error('Error fetching usage:', error)
+            logger.api.error('Error fetching usage', { error: error instanceof Error ? error.message : String(error) })
             return NextResponse.json({ error: 'Failed to fetch usage' }, { status: 500 })
         }
 
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
             generationsTotal
         })
     } catch (error) {
-        console.error('Error fetching usage stats:', error)
+        logger.api.error('Error fetching usage stats', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }

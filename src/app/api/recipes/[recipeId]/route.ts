@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { logger } from '@/lib/logger'
 
 function getSupabaseClient(): SupabaseClient {
   return createClient(
@@ -100,7 +101,7 @@ export async function PATCH(
       .single();
 
     if (error) {
-      console.error('[admin-recipes] Update error:', error);
+      logger.api.error('admin-recipes: Update error', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json(
         { error: 'Failed to update recipe', details: error.message },
         { status: 500 }
@@ -110,7 +111,7 @@ export async function PATCH(
     return NextResponse.json({ recipe: data });
 
   } catch (error) {
-    console.error('Admin recipe update error:', error);
+    logger.api.error('Admin recipe update error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to update recipe' },
       { status: 500 }
@@ -159,10 +160,10 @@ export async function DELETE(
       if (files && files.length > 0) {
         const paths = files.map((f: { name: string }) => `recipe-images/${recipeId}/${f.name}`);
         await supabase.storage.from('directors-palette').remove(paths);
-        console.log(`[admin-recipes] Deleted ${paths.length} images for recipe ${recipeId}`);
+        logger.api.info('admin-recipes: Deleted', { paths: paths.length, recipeId: recipeId });
       }
     } catch (storageError) {
-      console.error('[admin-recipes] Error deleting recipe images:', storageError);
+      logger.api.error('admin-recipes: Error deleting recipe images', { error: storageError instanceof Error ? storageError.message : String(storageError) });
       // Continue anyway - image cleanup is best effort
     }
 
@@ -173,7 +174,7 @@ export async function DELETE(
       .eq('id', recipeId);
 
     if (error) {
-      console.error('[admin-recipes] Delete error:', error);
+      logger.api.error('admin-recipes: Delete error', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json(
         { error: 'Failed to delete recipe', details: error.message },
         { status: 500 }
@@ -183,7 +184,7 @@ export async function DELETE(
     return NextResponse.json({ deleted: true, recipeId });
 
   } catch (error) {
-    console.error('Admin recipe delete error:', error);
+    logger.api.error('Admin recipe delete error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to delete recipe' },
       { status: 500 }

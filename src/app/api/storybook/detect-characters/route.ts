@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 interface DetectCharactersRequest {
   storyText: string
@@ -147,7 +148,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const error = await response.text()
-      console.error('OpenRouter API error:', error)
+      logger.api.error('OpenRouter API error', { error })
 
       lognog.warn(`openrouter FAIL ${Date.now() - openRouterStart}ms`, {
         type: 'integration',
@@ -181,7 +182,7 @@ export async function POST(request: NextRequest) {
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0]
 
     if (!toolCall) {
-      console.error('No tool call in response:', data)
+      logger.api.error('No tool call in response', { detail: data })
       return NextResponse.json(
         { error: 'Failed to parse character detection response' },
         { status: 500 }
@@ -205,14 +206,14 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(result)
     } catch (parseError) {
-      console.error('Failed to parse tool call arguments:', parseError)
+      logger.api.error('Failed to parse tool call arguments', { error: parseError instanceof Error ? parseError.message : String(parseError) })
       return NextResponse.json(
         { error: 'Failed to parse detected characters' },
         { status: 500 }
       )
     }
   } catch (error) {
-    console.error('Error in detect-characters:', error)
+    logger.api.error('Error in detect-characters', { error: error instanceof Error ? error.message : String(error) })
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 

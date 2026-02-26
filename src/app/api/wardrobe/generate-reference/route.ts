@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Replicate from 'replicate'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { logger } from '@/lib/logger'
 
 // Use nano-banana-pro for clean wardrobe generation
 const IMAGE_MODEL = 'fofr/nano-banana-pro'
@@ -67,7 +68,7 @@ no person visible, clothing only`
         })
 
     } catch (error) {
-        console.error('Wardrobe reference generation error:', error)
+        logger.api.error('Wardrobe reference generation error', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json({
             error: 'Failed to generate wardrobe reference',
             details: error instanceof Error ? error.message : 'Unknown error'

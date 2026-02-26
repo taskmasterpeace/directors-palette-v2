@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { adminService } from '@/features/admin'
 import { financialsService } from '@/features/admin/services/financials.service'
+import { logger } from '@/lib/logger'
 
 export async function GET(request: NextRequest) {
     const auth = await getAuthenticatedUser(request)
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
             }
         })
     } catch (error) {
-        console.error('Error exporting financials:', error)
+        logger.api.error('Error exporting financials', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

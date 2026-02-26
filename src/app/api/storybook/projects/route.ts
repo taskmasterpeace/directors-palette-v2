@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { StorybookProjectsService } from '@/features/storybook/services/storybook-projects.service';
 import { lognog } from '@/lib/lognog';
+import { logger } from '@/lib/logger'
 
 /**
  * GET /api/storybook/projects
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ projects });
   } catch (error) {
-    console.error('Projects list error:', error);
+    logger.api.error('Projects list error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to list projects', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
@@ -123,7 +124,7 @@ export async function POST(request: NextRequest) {
       message: 'Project created successfully',
     });
   } catch (error) {
-    console.error('Project save error:', error);
+    logger.api.error('Project save error', { error: error instanceof Error ? error.message : String(error) });
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 

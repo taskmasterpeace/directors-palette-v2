@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import type { ToneSettings, SectionType } from '@/features/music-lab/types/writing-studio.types'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
+import { logger } from '@/lib/logger'
 
 const MODEL = 'openai/gpt-4.1-mini'
 
@@ -214,7 +215,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const error = await response.text()
-      console.error('OpenRouter error:', error)
+      logger.api.error('OpenRouter error', { error })
       return NextResponse.json({ error: 'Generation failed' }, { status: 500 })
     }
 
@@ -228,7 +229,7 @@ export async function POST(request: NextRequest) {
       const cleaned = raw.replace(/```json?\s*/g, '').replace(/```\s*/g, '').trim()
       options = JSON.parse(cleaned)
     } catch {
-      console.error('Failed to parse options JSON:', raw.substring(0, 500))
+      logger.api.error('Failed to parse options JSON', { detail: raw.substring(0, 500) })
       return NextResponse.json({ error: 'Failed to parse generated options' }, { status: 500 })
     }
 
@@ -243,7 +244,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ options: optionsWithIds })
   } catch (error) {
-    console.error('Generate options error:', error)
+    logger.api.error('Generate options error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

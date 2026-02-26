@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Replicate from 'replicate'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { logger } from '@/lib/logger'
 
 // P-Edit model on Replicate
 const P_EDIT_MODEL = 'prunaai/p-image-edit'
@@ -68,7 +69,7 @@ Professional fashion photography style, clean, high quality.`
         })
 
     } catch (error) {
-        console.error('Wardrobe preview generation error:', error)
+        logger.api.error('Wardrobe preview generation error', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json({
             error: 'Failed to generate wardrobe preview',
             details: error instanceof Error ? error.message : 'Unknown error'

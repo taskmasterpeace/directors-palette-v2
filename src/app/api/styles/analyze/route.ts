@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
         // Get OpenRouter API key from env
         const apiKey = process.env.OPENROUTER_API_KEY
         if (!apiKey) {
-            console.error('OPENROUTER_API_KEY not found in environment')
+            logger.api.error('OPENROUTER_API_KEY not found in environment')
             return NextResponse.json(
                 { error: 'OpenRouter API key not configured' },
                 { status: 500 }
@@ -100,7 +101,7 @@ Do not include any text outside the JSON object.`
 
         if (!response.ok) {
             const errorText = await response.text()
-            console.error('OpenRouter API error:', response.status, errorText)
+            logger.api.error('OpenRouter API error', { status: response.status, errorText: errorText })
             return NextResponse.json(
                 { error: `OpenRouter API error: ${response.status}` },
                 { status: 500 }
@@ -111,7 +112,7 @@ Do not include any text outside the JSON object.`
         const content = data.choices?.[0]?.message?.content
 
         if (!content) {
-            console.error('No content in OpenRouter response:', data)
+            logger.api.error('No content in OpenRouter response', { detail: data })
             return NextResponse.json(
                 { error: 'No response from AI' },
                 { status: 500 }
@@ -129,7 +130,7 @@ Do not include any text outside the JSON object.`
                 styleData = JSON.parse(content)
             }
         } catch (_parseError) {
-            console.error('Failed to parse AI response as JSON:', content)
+            logger.api.error('Failed to parse AI response as JSON', { detail: content })
             return NextResponse.json(
                 { error: 'Invalid AI response format' },
                 { status: 500 }
@@ -138,7 +139,7 @@ Do not include any text outside the JSON object.`
 
         // Validate response structure
         if (!styleData.name || !styleData.description || !styleData.stylePrompt) {
-            console.error('Missing required fields in AI response:', styleData)
+            logger.api.error('Missing required fields in AI response', { detail: styleData })
             return NextResponse.json(
                 { error: 'Incomplete AI response' },
                 { status: 500 }
@@ -152,7 +153,7 @@ Do not include any text outside the JSON object.`
         })
 
     } catch (error) {
-        console.error('Style analysis error:', error)
+        logger.api.error('Style analysis error', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json(
             { error: error instanceof Error ? error.message : 'Unknown error' },
             { status: 500 }

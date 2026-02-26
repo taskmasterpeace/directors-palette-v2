@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { WebhookVerificationService } from '@/features/generation/services/webhook-verification.service';
 import { WebhookService } from '@/features/generation/services/webhook.service';
 import { lognog } from '@/lib/lognog';
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   const webhookStart = Date.now();
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     // 2. Validate required headers exist
     if (!webhookId || !webhookTimestamp || !webhookSignature) {
-      console.error('Missing webhook headers');
+      logger.api.error('Missing webhook headers');
       return NextResponse.json(
         { error: 'Missing webhook headers' },
         { status: 400 }
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     // 3. Validate timestamp (prevent replay attacks - 5 min tolerance)
     if (!WebhookVerificationService.isTimestampValid(webhookTimestamp)) {
-      console.error('Webhook timestamp too old');
+      logger.api.error('Webhook timestamp too old');
       return NextResponse.json(
         { error: 'Webhook timestamp too old' },
         { status: 400 }
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
     try {
       signingSecret = await WebhookVerificationService.getSigningSecret();
     } catch (error) {
-      console.error('Failed to get signing secret:', error);
+      logger.api.error('Failed to get signing secret', { error: error instanceof Error ? error.message : String(error) });
       return NextResponse.json(
         { error: 'Failed to get webhook secret' },
         { status: 500 }
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
     );
 
     if (!isValid) {
-      console.error('Invalid webhook signature');
+      logger.api.error('Invalid webhook signature');
       return NextResponse.json(
         { error: 'Invalid webhook signature' },
         { status: 401 }
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
     // 6. Parse and process the prediction event
     const event = JSON.parse(body);
     predictionId = event.id;
-    console.log(`Webhook received for prediction ${event.id}: ${event.status}`);
+    logger.api.info('Webhook received for prediction', { predictionId: event.id, status: event.status });
 
     // 7. Process the prediction asynchronously
     try {
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     } catch (processingError) {
       // If processing fails (e.g., download timeout), return 500 so Replicate retries
-      console.error('Prediction processing error:', processingError);
+      logger.api.error('Prediction processing error', { error: processingError instanceof Error ? processingError.message : String(processingError) });
 
       lognog.error(processingError instanceof Error ? processingError.message : 'Webhook processing failed', {
         type: 'error',
@@ -113,7 +114,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Webhook processing error:', error);
+    logger.api.error('Webhook processing error', { error: error instanceof Error ? error.message : String(error) });
 
     lognog.error(error instanceof Error ? error.message : 'Webhook failed', {
       type: 'error',

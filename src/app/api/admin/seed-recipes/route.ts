@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server'
 import { getAPIClient } from '@/lib/db/client'
 import { SAMPLE_RECIPES } from '@/features/shot-creator/types/recipe.types'
+import { logger } from '@/lib/logger'
 
 // Helper to get admin client (untyped for tables not in DB types yet)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -40,7 +41,7 @@ export async function POST() {
       })
     }
 
-    console.log(`Seeding ${newRecipes.length} new system recipes (${existingNames.size} already exist)...`)
+    logger.api.info('Seeding', { newRecipes: newRecipes.length, existingNames: existingNames.size })
     let insertedCount = 0
 
     for (const sample of newRecipes) {
@@ -73,9 +74,9 @@ export async function POST() {
         .insert(dbRecipe)
 
       if (error) {
-        console.error(`Error inserting recipe "${sample.name}":`, error)
+        logger.api.error('Error inserting recipe', { name: sample.name, error: error instanceof Error ? error.message : String(error) })
       } else {
-        console.log(`✓ Inserted: ${sample.name}`)
+        logger.api.info('Inserted recipe', { name: sample.name })
         insertedCount++
       }
     }
@@ -87,7 +88,7 @@ export async function POST() {
       existing: existingNames.size,
     })
   } catch (error) {
-    console.error('Error seeding recipes:', error)
+    logger.api.error('Error seeding recipes', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({
       success: false,
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -114,7 +115,7 @@ export async function GET() {
       recipes: data
     })
   } catch (error) {
-    console.error('Error checking recipes:', error)
+    logger.api.error('Error checking recipes', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({
       error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })

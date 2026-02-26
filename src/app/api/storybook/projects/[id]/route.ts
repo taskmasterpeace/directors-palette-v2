@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { lognog } from '@/lib/lognog';
 import { StorybookProjectsService } from '@/features/storybook/services/storybook-projects.service';
+import { logger } from '@/lib/logger'
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ project });
   } catch (error) {
-    console.error('Project fetch error:', error);
+    logger.api.error('Project fetch error', { error: error instanceof Error ? error.message : String(error) });
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
@@ -132,7 +133,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       message: 'Project updated successfully',
     });
   } catch (error) {
-    console.error('Project update error:', error);
+    logger.api.error('Project update error', { error: error instanceof Error ? error.message : String(error) });
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
@@ -218,7 +219,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       message: 'Project deleted successfully',
     });
   } catch (error) {
-    console.error('Project delete error:', error);
+    logger.api.error('Project delete error', { error: error instanceof Error ? error.message : String(error) });
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 

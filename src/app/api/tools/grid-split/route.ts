@@ -3,6 +3,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import sharp from 'sharp'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 const STORAGE_BUCKET = 'directors-palette'
 
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log(`[Grid Split] Starting ${rows}x${cols} split for:`, imageUrl)
+    logger.api.info('Grid Split: Starting', { rows: rows, cols: cols, detail: imageUrl })
 
     // Fetch the grid image
     const imageResponse = await fetch(imageUrl)
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
     const cellWidth = Math.floor(metadata.width / cols)
     const cellHeight = Math.floor(metadata.height / rows)
 
-    console.log(`[Grid Split] Image: ${metadata.width}x${metadata.height}, Cell: ${cellWidth}x${cellHeight}`)
+    logger.api.info('Grid Split: Image', { width: metadata.width, height: metadata.height, cellWidth, cellHeight })
 
     // Split into cells and upload each
     const imageUrls: string[] = []
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
           })
 
         if (uploadError) {
-          console.error(`[Grid Split] Upload error for cell ${row},${col}:`, uploadError)
+          logger.api.error('Grid Split: Upload error for cell', { row: row, col: col, error: uploadError instanceof Error ? uploadError.message : String(uploadError) })
           return NextResponse.json(
             { error: `Failed to upload cell ${cellIndex + 1}` },
             { status: 500 }
@@ -121,11 +122,11 @@ export async function POST(request: NextRequest) {
           .getPublicUrl(storagePath)
 
         imageUrls.push(publicUrl)
-        console.log(`[Grid Split] Uploaded cell ${row},${col}: ${publicUrl}`)
+        logger.api.info('Grid Split: Uploaded cell', { row: row, col: col, publicUrl: publicUrl })
       }
     }
 
-    console.log(`[Grid Split] Successfully split into ${imageUrls.length} cells`)
+    logger.api.info('Grid Split: Successfully split into', { imageUrls: imageUrls.length })
 
     return NextResponse.json({
       success: true,
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('[Grid Split] Error:', error)
+    logger.api.error('Grid Split: Error', { error: error instanceof Error ? error.message : String(error) })
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     lognog.error('tool_grid_split_failed', {

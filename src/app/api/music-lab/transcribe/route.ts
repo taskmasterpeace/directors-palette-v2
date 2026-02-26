@@ -9,6 +9,7 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import Replicate from 'replicate'
 import { readFile } from 'fs/promises'
 import path from 'path'
+import { logger } from '@/lib/logger'
 
 // Using official OpenAI Whisper large-v3 - much better quality than whisper-diarization
 const WHISPER_MODEL = 'openai/whisper:4d50db2a3dbc86e2eeeed463f29d0c15d319f1b8c3cdae41f8f2cbe59c3a23be'
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Run transcription
-        console.log('[Transcribe] Running Whisper large-v3...')
+        logger.api.info('Transcribe: Running Whisper large-v3...')
         const output = await replicate.run(WHISPER_MODEL, { input }) as {
             transcription: string
             segments?: Array<{
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
             detected_language?: string
         }
 
-        console.log('[Transcribe] Done. Language:', output.detected_language || output.language)
+        logger.api.info('Transcribe: Done. Language', { language: output.detected_language || output.language })
 
         // Format response to match expected interface
         const fullText = output.transcription || ''
@@ -127,7 +128,7 @@ export async function POST(request: NextRequest) {
         })
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error'
-        console.error('Transcription error:', error)
+        logger.api.error('Transcription error', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json({
             error: `Transcription failed: ${message}`
         }, { status: 500 })

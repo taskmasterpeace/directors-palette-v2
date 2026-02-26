@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { randomUUID } from 'crypto';
+import { logger } from '@/lib/logger'
 
 const STORAGE_BUCKET = 'directors-palette';
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB server-side limit
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      console.error('[upload-file] Storage upload error:', uploadError);
+      logger.api.error('upload-file: Storage upload error', { error: uploadError instanceof Error ? uploadError.message : String(uploadError) });
       return NextResponse.json(
         { error: 'Failed to upload file', details: uploadError.message },
         { status: 500 }
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('File upload error:', error);
+    logger.api.error('File upload error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       {
         error: 'Failed to upload file',

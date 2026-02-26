@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getClient } from '@/lib/db/client'
 import { AdhubBrandService } from '@/features/adhub/services/adhub-brand.service'
+import { logger } from '@/lib/logger'
 
 interface RouteContext {
   params: Promise<{ brandId: string }>
@@ -31,7 +32,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     const images = await AdhubBrandService.listBrandImages(brandId)
     return NextResponse.json({ images })
   } catch (error) {
-    console.error('Error fetching brand images:', error)
+    logger.api.error('Error fetching brand images', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to fetch brand images' }, { status: 500 })
   }
 }
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ image })
   } catch (error) {
-    console.error('Error adding brand image:', error)
+    logger.api.error('Error adding brand image', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to add brand image' }, { status: 500 })
   }
 }
@@ -99,7 +100,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     await AdhubBrandService.removeBrandImage(imageId)
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error removing brand image:', error)
+    logger.api.error('Error removing brand image', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to remove brand image' }, { status: 500 })
   }
 }

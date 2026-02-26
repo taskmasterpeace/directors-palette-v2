@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getClient } from '@/lib/db/client'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.json()
-      console.error('OpenRouter error:', errorData)
+      logger.api.error('OpenRouter error', { error: errorData instanceof Error ? errorData.message : String(errorData) })
       return NextResponse.json({ error: 'Failed to extract copy from text' }, { status: 500 })
     }
 
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ extractedCopy })
   } catch (error) {
-    console.error('Error extracting copy:', error)
+    logger.api.error('Error extracting copy', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to extract copy' }, { status: 500 })
   }
 }

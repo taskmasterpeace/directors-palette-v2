@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { adminService } from '@/features/admin/services/admin.service'
 import { apiKeyService } from '@/features/api-keys/services/api-key.service'
+import { logger } from '@/lib/logger'
 
 /**
  * GET /api/v1/keys
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
       })),
     })
   } catch (error) {
-    console.error('[API Keys] GET error:', error)
+    logger.api.error('API Keys: GET error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('[API Keys] POST error:', error)
+    logger.api.error('API Keys: POST error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -175,7 +176,7 @@ export async function DELETE(request: NextRequest) {
       message: 'API key revoked successfully',
     })
   } catch (error) {
-    console.error('[API Keys] DELETE error:', error)
+    logger.api.error('API Keys: DELETE error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

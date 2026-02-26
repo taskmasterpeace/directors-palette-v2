@@ -8,6 +8,7 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { adminService } from '@/features/admin'
 import { financialsService } from '@/features/admin/services/financials.service'
 import type { TimePeriod, DateRange } from '@/features/admin/types/financials.types'
+import { logger } from '@/lib/logger'
 
 export async function GET(request: NextRequest) {
     const auth = await getAuthenticatedUser(request)
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
         const stats = await financialsService.getFinancialStats(period, customRange)
         return NextResponse.json(stats)
     } catch (error) {
-        console.error('Error fetching financials:', error)
+        logger.api.error('Error fetching financials', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

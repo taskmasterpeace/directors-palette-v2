@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createMatrixService } from '@/features/ad-lab/services/matrix.service'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ prompts })
   } catch (error) {
-    console.error('Matrix generation error:', error)
+    logger.api.error('Matrix generation error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Matrix generation failed' },
       { status: 500 }

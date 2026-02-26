@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { randomUUID } from 'crypto';
+import { logger } from '@/lib/logger'
 
 const STORAGE_BUCKET = 'directors-palette';
 
@@ -52,7 +53,7 @@ export async function POST(
       .list(`recipe-images/${sourceRecipeId}`);
 
     if (listError) {
-      console.error('[copy-images] List error:', listError);
+      logger.api.error('copy-images: List error', { error: listError instanceof Error ? listError.message : String(listError) });
       return NextResponse.json(
         { error: 'Failed to list source images' },
         { status: 500 }
@@ -77,7 +78,7 @@ export async function POST(
           .download(sourcePath);
 
         if (downloadError || !fileData) {
-          console.error(`[copy-images] Download error for ${file.name}:`, downloadError);
+          logger.api.error('copy-images: Download error for', { file: file.name, error: downloadError instanceof Error ? downloadError.message : String(downloadError) });
           continue;
         }
 
@@ -97,7 +98,7 @@ export async function POST(
           });
 
         if (uploadError) {
-          console.error(`[copy-images] Upload error for ${file.name}:`, uploadError);
+          logger.api.error('copy-images: Upload error for', { file: file.name, error: uploadError instanceof Error ? uploadError.message : String(uploadError) });
           continue;
         }
 
@@ -118,17 +119,17 @@ export async function POST(
         });
 
       } catch (fileError) {
-        console.error(`[copy-images] Error copying ${file.name}:`, fileError);
+        logger.api.error('copy-images: Error copying', { file: file.name, error: fileError instanceof Error ? fileError.message : String(fileError) });
         continue;
       }
     }
 
-    console.log(`[copy-images] Copied ${copies.length}/${files.length} images from recipe ${sourceRecipeId} to ${targetRecipeId}`);
+    logger.api.info('copy-images: Copied', { copies: copies.length, files: files.length, sourceRecipeId: sourceRecipeId, targetRecipeId: targetRecipeId });
 
     return NextResponse.json({ copies });
 
   } catch (error) {
-    console.error('Copy images error:', error);
+    logger.api.error('Copy images error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to copy images' },
       { status: 500 }

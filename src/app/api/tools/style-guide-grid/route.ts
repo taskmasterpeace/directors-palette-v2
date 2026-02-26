@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { creditsService } from '@/features/credits'
 import { isAdminEmail } from '@/features/admin/types/admin.types'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -112,16 +113,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('[Style Guide Grid] Starting generation')
-    console.log('  - Style name:', styleName)
-    console.log('  - Style description:', styleDescription || '(none - will analyze from reference)')
-    console.log('  - Reference image:', imageUrl)
+    logger.api.info('Style Guide Grid: Starting generation')
+    logger.api.info('  - Style name', { detail: styleName })
+    logger.api.info('  - Style description', { detail: styleDescription || '(none - will analyze from reference)' })
+    logger.api.info('  - Reference image', { detail: imageUrl })
 
     // Build the style guide grid prompt
     const gridPrompt = buildStyleGuidePrompt(styleName.trim(), styleDescription?.trim())
 
-    console.log('[Style Guide Grid] Using Nano Banana Pro model')
-    console.log('[Style Guide Grid] Prompt length:', gridPrompt.length)
+    logger.api.info('Style Guide Grid: Using Nano Banana Pro model')
+    logger.api.info('Style Guide Grid: Prompt length', { length: gridPrompt.length })
 
     // Call Replicate API using nano-banana-pro
     // Using 16:9 for title banner + 3x3 grid layout
@@ -133,8 +134,8 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    console.log('[Style Guide Grid] Generation completed')
-    console.log('  - rawOutput type:', typeof rawOutput)
+    logger.api.info('Style Guide Grid: Generation completed')
+    logger.api.info('  - rawOutput type', { detail: typeof rawOutput })
 
     // Extract URL from output
     let outputUrl: string | undefined
@@ -158,7 +159,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('[Style Guide Grid] Extracted outputUrl:', outputUrl)
+    logger.api.info('Style Guide Grid: Extracted outputUrl', { detail: outputUrl })
 
     if (outputUrl && typeof outputUrl === 'string' && outputUrl.startsWith('http')) {
       // Deduct credits after successful completion (admins bypass)
@@ -173,9 +174,9 @@ export async function POST(request: NextRequest) {
           },
         })
         if (!deductResult.success) {
-          console.error('[Style Guide Grid] Failed to deduct credits:', deductResult.error)
+          logger.api.error('Style Guide Grid: Failed to deduct credits', { error: deductResult.error })
         } else {
-          console.log(`[Style Guide Grid] Deducted ${STYLE_GUIDE_GRID_COST_POINTS} credits. New balance: ${deductResult.newBalance}`)
+          logger.api.info('Style Guide Grid: Deducted credits', { points: STYLE_GUIDE_GRID_COST_POINTS, newBalance: deductResult.newBalance })
         }
       }
 
@@ -191,12 +192,12 @@ export async function POST(request: NextRequest) {
       )
     }
   } catch (error) {
-    console.error('[Style Guide Grid] Error:', error)
+    logger.api.error('Style Guide Grid: Error', { error: error instanceof Error ? error.message : String(error) })
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     const errorDetails = error instanceof Error ? error.stack : String(error)
 
-    console.error('[Style Guide Grid] Full error details:', errorDetails)
+    logger.api.error('Style Guide Grid: Full error details', { detail: errorDetails })
 
     lognog.error('tool_style_guide_grid_failed', {
       error: errorMessage,

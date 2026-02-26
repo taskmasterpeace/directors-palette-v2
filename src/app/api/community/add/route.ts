@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { logger } from '@/lib/logger'
 
 /**
  * POST /api/community/add
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error('Error adding to library:', error)
+      logger.api.error('Error adding to library', { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: 'Failed to add to library' },
         { status: 500 }
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
       message: 'Item added to library',
     })
   } catch (error) {
-    console.error('Community add error:', error)
+    logger.api.error('Community add error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createMandateService } from '@/features/ad-lab/services/mandate.service'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(mandate)
   } catch (error) {
-    console.error('Brief parsing error:', error)
+    logger.api.error('Brief parsing error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Brief parsing failed' },
       { status: 500 }

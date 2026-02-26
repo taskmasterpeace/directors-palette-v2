@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOpenRouterService } from '@/features/storyboard/services/openrouter.service'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 const BATCH_SIZE = 15 // Process 15 shots at a time to avoid token limits
 
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
             const batchNumber = Math.floor(i / BATCH_SIZE) + 1
             const totalBatches = Math.ceil(totalSegments / BATCH_SIZE)
 
-            console.log(`Processing batch ${batchNumber}/${totalBatches} (shots ${batch[0].sequence}-${batch[batch.length - 1].sequence})`)
+            logger.api.info('Processing batch', { batchNumber, totalBatches, firstShot: batch[0].sequence, lastShot: batch[batch.length - 1].sequence })
 
             try {
                 const batchStart = Date.now()
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
                     prompt_length: batch.reduce((sum, s) => sum + (s.text?.length || 0), 0),
                 })
             } catch (batchError) {
-                console.error(`Batch ${batchNumber} failed:`, batchError)
+                logger.api.error('Batch', { batchNumber: batchNumber, error: batchError instanceof Error ? batchError.message : String(batchError) })
                 errors.push(`Batch ${batchNumber} (shots ${batch[0].sequence}-${batch[batch.length - 1].sequence}) failed: ${batchError instanceof Error ? batchError.message : 'Unknown error'}`)
 
                 // Log OpenRouter integration failure
@@ -110,7 +111,7 @@ export async function POST(request: NextRequest) {
             complete: allResults.length === segments.length
         })
     } catch (error) {
-        console.error('Shot prompt generation error:', error)
+        logger.api.error('Shot prompt generation error', { error: error instanceof Error ? error.message : String(error) })
 
         // Log error
         lognog.error(error instanceof Error ? error.message : 'Shot prompt generation failed', {

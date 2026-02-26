@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
@@ -91,7 +92,7 @@ Output only the new items, one per line:`
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}))
-            console.error('OpenRouter API error:', errorData)
+            logger.api.error('OpenRouter API error', { error: errorData instanceof Error ? errorData.message : String(errorData) })
             return NextResponse.json(
                 { error: 'AI generation failed. Please try again.' },
                 { status: 500 }
@@ -133,7 +134,7 @@ Output only the new items, one per line:`
         })
 
     } catch (error) {
-        console.error('Wildcard generation error:', error)
+        logger.api.error('Wildcard generation error', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json(
             { error: 'An unexpected error occurred' },
             { status: 500 }

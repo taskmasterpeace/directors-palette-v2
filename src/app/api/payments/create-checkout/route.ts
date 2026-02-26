@@ -8,6 +8,7 @@ import Stripe from 'stripe'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { getClient } from '@/lib/db/client'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 // Initialize Stripe (only if key is available)
 const stripe = process.env.STRIPE_SECRET_KEY
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-        console.error('Checkout error:', error)
+        logger.api.error('Checkout error', { error: error instanceof Error ? error.message : String(error) })
         lognog.error('checkout_session_failed', {
             userId: auth.user.id,
             error: errorMessage,

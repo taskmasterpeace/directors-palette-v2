@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { createClient } from '@supabase/supabase-js'
 import { adminService } from '@/features/admin/services/admin.service'
+import { logger } from '@/lib/logger'
 
 /**
  * GET /api/admin/community
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query
 
     if (error) {
-      console.error('Error fetching community items for admin:', error)
+      logger.api.error('Error fetching community items for admin', { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: 'Failed to fetch items' },
         { status: 500 }
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ items })
   } catch (error) {
-    console.error('Admin community GET error:', error)
+    logger.api.error('Admin community GET error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -155,7 +156,7 @@ export async function POST(request: NextRequest) {
           .eq('id', itemId)
 
         if (deleteError) {
-          console.error('Error deleting item:', deleteError)
+          logger.api.error('Error deleting item', { error: deleteError instanceof Error ? deleteError.message : String(deleteError) })
           return NextResponse.json(
             { error: 'Failed to delete item' },
             { status: 500 }
@@ -204,7 +205,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error('Error updating item:', error)
+      logger.api.error('Error updating item', { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: 'Failed to update item' },
         { status: 500 }
@@ -222,7 +223,7 @@ export async function POST(request: NextRequest) {
       message: `Item ${action}d successfully`,
     })
   } catch (error) {
-    console.error('Admin community POST error:', error)
+    logger.api.error('Admin community POST error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

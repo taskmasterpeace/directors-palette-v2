@@ -16,6 +16,7 @@ import {
 import type { StoryCharacterInput } from '@/features/storybook/types/storybook.types'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 interface GenerateStoryRequest {
   characterName: string
@@ -437,7 +438,7 @@ export async function POST(request: NextRequest) {
     userId = user.id
     userEmail = user.email
 
-    console.log(`[Storybook API] generate-story (GPT-4o) called by user ${user.id}`)
+    logger.api.info('Storybook API: generate-story (GPT-4o) called by user', { user: user.id })
 
     const body: GenerateStoryRequest = await request.json()
     const {
@@ -577,7 +578,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const error = await response.text()
-      console.error('OpenRouter API error:', error)
+      logger.api.error('OpenRouter API error', { error })
 
       // Log OpenRouter failure
       lognog.warn(`openrouter FAIL ${Date.now() - openRouterStart}ms openai/gpt-4o-mini`, {
@@ -615,7 +616,7 @@ export async function POST(request: NextRequest) {
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0]
 
     if (!toolCall) {
-      console.error('No tool call in response:', data)
+      logger.api.error('No tool call in response', { detail: data })
       return NextResponse.json(
         { error: 'Failed to parse story response' },
         { status: 500 }
@@ -674,14 +675,14 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(story)
     } catch (parseError) {
-      console.error('Failed to parse tool call arguments:', parseError)
+      logger.api.error('Failed to parse tool call arguments', { error: parseError instanceof Error ? parseError.message : String(parseError) })
       return NextResponse.json(
         { error: 'Failed to parse generated story' },
         { status: 500 }
       )
     }
   } catch (error) {
-    console.error('Error in generate-story:', error)
+    logger.api.error('Error in generate-story', { error: error instanceof Error ? error.message : String(error) })
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 

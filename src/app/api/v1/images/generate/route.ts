@@ -15,6 +15,7 @@ import { StorageService } from '@/features/generation/services/storage.service'
 import { getModelConfig } from '@/config'
 import { GenerateImageRequest, GenerateImageResponse } from '@/features/api-keys/types/api-key.types'
 import type { ImageModel, ImageModelSettings } from '@/features/shot-creator/types/image-generation.types'
+import { logger } from '@/lib/logger'
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -65,7 +66,7 @@ async function processReferenceImages(
       const uploadedFile = await replicateClient.files.create(file)
       processed.push(uploadedFile.urls.get)
     } catch (error) {
-      console.error('[API v1] Failed to process reference image:', error)
+      logger.api.error('API v1: Failed to process reference image', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -386,7 +387,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
 
     if (!deductResult.success) {
       // Image was generated but credit deduction failed - log but continue
-      console.error('[API v1] Credit deduction failed:', deductResult.error)
+      logger.api.error('API v1: Credit deduction failed', { error: deductResult.error })
     }
 
     // Get remaining balance
@@ -418,7 +419,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
       requestId: predictionId,
     })
   } catch (error) {
-    console.error('[API v1] Image generation error:', error)
+    logger.api.error('API v1: Image generation error', { error: error instanceof Error ? error.message : String(error) })
 
     // Log failed request
     if (validatedKey) {

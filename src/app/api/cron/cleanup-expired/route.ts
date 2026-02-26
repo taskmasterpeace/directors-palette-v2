@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { StorageLimitsService } from '@/features/storage/services/storage-limits.service'
+import { logger } from '@/lib/logger'
 
 // Verify the request is from Vercel Cron or has valid secret
 // SECURITY: Only accept secret via Authorization header, not query params
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
   try {
     const deletedCount = await StorageLimitsService.deleteExpiredContent()
 
-    console.log(`[Cron] Cleanup completed: ${deletedCount} expired items deleted`)
+    logger.api.info('Cron: Cleanup completed', { deletedCount: deletedCount })
 
     return NextResponse.json({
       success: true,
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error('[Cron] Cleanup failed:', error)
+    logger.api.error('Cron: Cleanup failed', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Cleanup failed', details: String(error) },
       { status: 500 }

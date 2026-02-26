@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { couponService } from '@/features/coupons/services/coupon.service'
+import { logger } from '@/lib/logger'
 
 /**
  * GET /api/coupons
@@ -37,51 +38,51 @@ export async function GET(request: NextRequest) {
  * Create new coupon (Admin only)
  */
 export async function POST(request: NextRequest) {
-    console.log('[CouponAPI] POST /api/coupons called')
+    logger.api.info('CouponAPI: POST /api/coupons called')
 
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) {
-        console.log('[CouponAPI] Auth failed - returning auth response')
+        logger.api.info('CouponAPI: Auth failed - returning auth response')
         return auth
     }
 
     const userEmail = auth.user.email
-    console.log('[CouponAPI] User email:', userEmail)
+    logger.api.info('CouponAPI: User email', { detail: userEmail })
 
     if (!userEmail) {
-        console.log('[CouponAPI] No user email found')
+        logger.api.info('CouponAPI: No user email found')
         return NextResponse.json({ error: 'User email not found' }, { status: 401 })
     }
 
     try {
         const body = await request.json()
-        console.log('[CouponAPI] Request body:', body)
+        logger.api.info('CouponAPI: Request body', { detail: body })
 
         const { code, points, max_uses, expires_at } = body
 
         if (!code || !points) {
-            console.log('[CouponAPI] Missing code or points')
+            logger.api.info('CouponAPI: Missing code or points')
             return NextResponse.json({ error: 'Code and points are required' }, { status: 400 })
         }
 
-        console.log('[CouponAPI] Calling couponService.createCoupon...')
+        logger.api.info('CouponAPI: Calling couponService.createCoupon...')
         const result = await couponService.createCoupon(userEmail, {
             code,
             points: Number(points),
             max_uses: max_uses ? Number(max_uses) : undefined,
             expires_at
         })
-        console.log('[CouponAPI] Service result:', result)
+        logger.api.info('CouponAPI: Service result', { detail: result })
 
         if (!result.success) {
-            console.log('[CouponAPI] Creation failed:', result.error)
+            logger.api.info('CouponAPI: Creation failed', { error: result.error })
             return NextResponse.json({ error: result.error }, { status: 400 })
         }
 
-        console.log('[CouponAPI] Coupon created successfully')
+        logger.api.info('CouponAPI: Coupon created successfully')
         return NextResponse.json({ coupon: result.coupon })
     } catch (error) {
-        console.error('[CouponAPI] Exception:', error)
+        logger.api.error('CouponAPI: Exception', { error: error instanceof Error ? error.message : String(error) })
         const message = error instanceof Error ? error.message : 'Invalid request'
         return NextResponse.json({ error: message }, { status: 400 })
     }
@@ -116,7 +117,7 @@ export async function DELETE(request: NextRequest) {
 
         return NextResponse.json({ success: true })
     } catch (error) {
-        console.error('[CouponAPI] Delete exception:', error)
+        logger.api.error('CouponAPI: Delete exception', { error: error instanceof Error ? error.message : String(error) })
         const message = error instanceof Error ? error.message : 'Failed to delete coupon'
         return NextResponse.json({ error: message }, { status: 400 })
     }

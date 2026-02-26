@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 // ElevenLabs voice options
 const ELEVENLABS_VOICES: Record<string, string> = {
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     const { user } = auth
     userId = user.id
 
-    console.log(`[Storybook API] synthesize (ElevenLabs TTS) called by user ${user.id}`)
+    logger.api.info('Storybook API: synthesize (ElevenLabs TTS) called by user', { user: user.id })
 
     const body: SynthesizeRequest = await request.json()
     const { text, voiceId = 'rachel', projectId, pageNumber } = body
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
     // Get voice ID - warn if falling back to default
     const elevenLabsVoiceId = ELEVENLABS_VOICES[voiceId]
     if (!elevenLabsVoiceId) {
-      console.warn(`[storybook/synthesize] Unknown voice ID "${voiceId}", falling back to "rachel"`)
+      logger.api.warn('storybook/synthesize: Unknown voice ID', { voiceId })
     }
     const finalVoiceId = elevenLabsVoiceId || ELEVENLABS_VOICES.rachel
 
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const error = await response.text()
-      console.error('ElevenLabs API error:', error)
+      logger.api.error('ElevenLabs API error', { error })
 
       // Log ElevenLabs integration failure
       lognog.warn(`elevenlabs FAIL ${Date.now() - elevenLabsStart}ms`, {
@@ -161,7 +162,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Log detailed error for debugging in production
-        console.error('[storybook/synthesize] Supabase storage FAILED:', {
+        logger.api.error('storybook/synthesize: Supabase storage FAILED', {
           error: uploadError.message,
           hasUrl: !!supabaseUrl,
           hasKey: !!supabaseKey,
@@ -169,7 +170,7 @@ export async function POST(request: NextRequest) {
           fileName,
         })
       } else {
-        console.warn('[storybook/synthesize] Missing Supabase env vars:', {
+        logger.api.warn('storybook/synthesize: Missing Supabase env vars', {
           hasUrl: !!supabaseUrl,
           hasKey: !!supabaseKey,
           projectId,
@@ -182,7 +183,7 @@ export async function POST(request: NextRequest) {
     const MAX_BASE64_SIZE = 500 * 1024 // 500KB limit for base64 fallback
 
     if (audioBuffer.byteLength > MAX_BASE64_SIZE) {
-      console.error('[storybook/synthesize] Audio too large for base64 fallback:', {
+      logger.api.error('storybook/synthesize: Audio too large for base64 fallback', {
         size: audioBuffer.byteLength,
         maxSize: MAX_BASE64_SIZE,
         projectId,
@@ -194,7 +195,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Return audio as base64 data URL for small files only
-    console.warn('[storybook/synthesize] Using base64 fallback (storage unavailable):', {
+    logger.api.warn('storybook/synthesize: Using base64 fallback (storage unavailable)', {
       size: audioBuffer.byteLength,
       projectId,
     })
@@ -207,7 +208,7 @@ export async function POST(request: NextRequest) {
     } as SynthesizeResponse & { isBase64Fallback?: boolean })
 
   } catch (error) {
-    console.error('Error in synthesize:', error)
+    logger.api.error('Error in synthesize', { error: error instanceof Error ? error.message : String(error) })
 
     // Log error
     lognog.error(error instanceof Error ? error.message : 'TTS synthesis failed', {

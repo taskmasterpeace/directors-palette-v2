@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { adminService } from '@/features/admin'
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
 /**
  * POST /api/admin/grant-credits
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
             message: `Granted ${amount} credits ($${(amount / 100).toFixed(2)}) to user`
         })
     } catch (error) {
-        console.error('Error granting credits:', error)
+        logger.api.error('Error granting credits', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

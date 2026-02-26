@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { adminService } from '@/features/admin'
 import { generationEventsService } from '@/features/admin/services/generation-events.service'
+import { logger } from '@/lib/logger'
 
 /**
  * GET /api/admin/generations/stats
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json(stats)
     } catch (error) {
-        console.error('Error fetching generation stats:', error)
+        logger.api.error('Error fetching generation stats', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

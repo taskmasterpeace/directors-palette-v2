@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getClient } from '@/lib/db/client'
 import { AdhubBrandService } from '@/features/adhub/services/adhub-brand.service'
+import { logger } from '@/lib/logger'
 
 interface RouteContext {
   params: Promise<{ brandId: string }>
@@ -33,7 +34,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     return NextResponse.json(result)
   } catch (error) {
-    console.error('Error fetching brand:', error)
+    logger.api.error('Error fetching brand', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to fetch brand' }, { status: 500 })
   }
 }
@@ -60,7 +61,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ brand })
   } catch (error) {
-    console.error('Error updating brand:', error)
+    logger.api.error('Error updating brand', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to update brand' }, { status: 500 })
   }
 }
@@ -79,7 +80,7 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
     await AdhubBrandService.deleteBrand(brandId, user.id)
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting brand:', error)
+    logger.api.error('Error deleting brand', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to delete brand' }, { status: 500 })
   }
 }

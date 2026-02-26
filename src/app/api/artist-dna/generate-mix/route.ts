@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
+import { logger } from '@/lib/logger'
 
 const MODEL = 'openai/gpt-4.1-mini'
 
@@ -187,7 +188,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const error = await response.text()
-      console.error('OpenRouter error:', error)
+      logger.api.error('OpenRouter error', { error })
       return NextResponse.json({ error: 'Mix generation failed' }, { status: 500 })
     }
 
@@ -196,7 +197,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ lyricsTemplate })
   } catch (error) {
-    console.error('Mix generation error:', error)
+    logger.api.error('Mix generation error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

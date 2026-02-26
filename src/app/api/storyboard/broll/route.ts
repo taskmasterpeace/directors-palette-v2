@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOpenRouterService } from '@/features/storyboard/services/openrouter.service'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
     try {
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ prompts })
     } catch (error) {
-        console.error('B-Roll generation error:', error)
+        logger.api.error('B-Roll generation error', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json(
             { error: error instanceof Error ? error.message : 'B-Roll generation failed' },
             { status: 500 }

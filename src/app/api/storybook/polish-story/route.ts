@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 interface PolishStoryRequest {
   storyText: string
@@ -133,7 +134,7 @@ export async function POST(request: NextRequest) {
     userId = user.id
     userEmail = user.email
 
-    console.log(`[Storybook API] polish-story called by user ${user.id}`)
+    logger.api.info('Storybook API: polish-story called by user', { user: user.id })
 
     const body: PolishStoryRequest = await request.json()
     const { storyText, targetAge, pageCount, keepExactWords } = body
@@ -180,7 +181,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const error = await response.text()
-      console.error('OpenRouter API error:', error)
+      logger.api.error('OpenRouter API error', { error })
 
       lognog.warn(`openrouter FAIL ${Date.now() - openRouterStart}ms`, {
         type: 'integration',
@@ -214,7 +215,7 @@ export async function POST(request: NextRequest) {
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0]
 
     if (!toolCall) {
-      console.error('No tool call in response:', data)
+      logger.api.error('No tool call in response', { detail: data })
       return NextResponse.json(
         { error: 'Failed to parse story response' },
         { status: 500 }
@@ -238,14 +239,14 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(result)
     } catch (parseError) {
-      console.error('Failed to parse tool call arguments:', parseError)
+      logger.api.error('Failed to parse tool call arguments', { error: parseError instanceof Error ? parseError.message : String(parseError) })
       return NextResponse.json(
         { error: 'Failed to parse polished story' },
         { status: 500 }
       )
     }
   } catch (error) {
-    console.error('Error in polish-story:', error)
+    logger.api.error('Error in polish-story', { error: error instanceof Error ? error.message : String(error) })
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 

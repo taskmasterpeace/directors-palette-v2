@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import Replicate from 'replicate'
+import { logger } from '@/lib/logger'
 
 const DEMUCS_MODEL = 'cjwbw/demucs:25a173108cff36ef9f80f854c162d01df9e6528be175794b81571f87f7e83f5e'
 
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
             success: true
         })
     } catch (error) {
-        console.error('Demucs error:', error)
+        logger.api.error('Demucs error', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json({ error: 'Stem separation failed' }, { status: 500 })
     }
 }

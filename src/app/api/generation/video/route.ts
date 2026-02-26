@@ -7,6 +7,7 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { creditsService } from '@/features/credits';
 import { isAdminEmail } from '@/features/admin/types/admin.types';
 import { lognog } from '@/lib/lognog';
+import { logger } from '@/lib/logger'
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -174,7 +175,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (galleryError || !gallery) {
-      console.error('Gallery creation error:', galleryError);
+      logger.api.error('Gallery creation error', { error: galleryError instanceof Error ? galleryError.message : String(galleryError) });
       return NextResponse.json(
         { error: 'Failed to create gallery entry' },
         { status: 500 }
@@ -201,7 +202,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Video generation error:', error);
+    logger.api.error('Video generation error', { error: error instanceof Error ? error.message : String(error) });
 
     // Log error
     lognog.error(error instanceof Error ? error.message : 'Video generation failed', {

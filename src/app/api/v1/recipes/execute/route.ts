@@ -15,6 +15,7 @@ import { StorageService } from '@/features/generation/services/storage.service'
 import { getModelConfig } from '@/config'
 import type { ImageModel, ImageModelSettings } from '@/features/shot-creator/types/image-generation.types'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -127,7 +128,7 @@ async function processReferenceImages(
       const uploadedFile = await replicateClient.files.create(file)
       processed.push(uploadedFile.urls.get)
     } catch (error) {
-      console.error('[API v1] Failed to process reference image:', error)
+      logger.api.error('API v1: Failed to process reference image', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -354,7 +355,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<RecipeExe
       requestId: `recipe_${Date.now()}`,
     })
   } catch (error) {
-    console.error('[API v1] Recipe execution error:', error)
+    logger.api.error('API v1: Recipe execution error', { error: error instanceof Error ? error.message : String(error) })
 
     // Log failed request
     if (validatedKey) {

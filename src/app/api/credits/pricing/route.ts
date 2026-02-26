@@ -5,6 +5,7 @@
 
 import { NextResponse } from 'next/server'
 import { creditsService } from '@/features/credits/services/credits.service'
+import { logger } from '@/lib/logger'
 
 /**
  * GET /api/credits/pricing
@@ -53,7 +54,7 @@ export async function GET() {
             by_type: grouped
         })
     } catch (error) {
-        console.error('Error fetching model pricing:', error)
+        logger.api.error('Error fetching model pricing', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }

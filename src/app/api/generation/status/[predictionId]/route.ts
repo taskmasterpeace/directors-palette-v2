@@ -3,6 +3,7 @@ import Replicate from 'replicate';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { StorageService } from '@/features/generation/services/storage.service';
 import { getAPIClient } from '@/lib/db/client';
+import { logger } from '@/lib/logger'
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -117,7 +118,7 @@ export async function GET(
       } catch (uploadError) {
         // Log detailed error for debugging in production
         const errorMessage = uploadError instanceof Error ? uploadError.message : 'Unknown error';
-        console.error('[generation/status] Supabase storage FAILED:', {
+        logger.api.error('generation/status: Supabase storage FAILED', {
           error: errorMessage,
           hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
           hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -147,7 +148,7 @@ export async function GET(
       completedAt: prediction.completed_at,
     });
   } catch (error) {
-    console.error('Error fetching prediction status:', error);
+    logger.api.error('Error fetching prediction status', { error: error instanceof Error ? error.message : String(error) });
 
     // Check if it's a "not found" error from Replicate
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

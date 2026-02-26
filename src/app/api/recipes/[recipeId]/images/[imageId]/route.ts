@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { getAuthenticatedUser } from '@/lib/auth/api-auth';
+import { logger } from '@/lib/logger'
 
 const STORAGE_BUCKET = 'directors-palette';
 
@@ -40,7 +41,7 @@ export async function DELETE(
       .list(`recipe-images/${recipeId}`);
 
     if (listError) {
-      console.error('[recipe-image-delete] List error:', listError);
+      logger.api.error('recipe-image-delete: List error', { error: listError instanceof Error ? listError.message : String(listError) });
       return NextResponse.json(
         { error: 'Failed to find image' },
         { status: 500 }
@@ -65,7 +66,7 @@ export async function DELETE(
         .remove(possiblePaths);
 
       if (deleteError) {
-        console.error('[recipe-image-delete] Delete error:', deleteError);
+        logger.api.error('recipe-image-delete: Delete error', { error: deleteError instanceof Error ? deleteError.message : String(deleteError) });
       }
 
       // Return success anyway - image might already be deleted
@@ -79,7 +80,7 @@ export async function DELETE(
       .remove([storagePath]);
 
     if (deleteError) {
-      console.error('[recipe-image-delete] Delete error:', deleteError);
+      logger.api.error('recipe-image-delete: Delete error', { error: deleteError instanceof Error ? deleteError.message : String(deleteError) });
       return NextResponse.json(
         { error: 'Failed to delete image' },
         { status: 500 }
@@ -93,7 +94,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error('Recipe image delete error:', error);
+    logger.api.error('Recipe image delete error', { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json(
       { error: 'Failed to delete image' },
       { status: 500 }

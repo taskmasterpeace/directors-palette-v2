@@ -4,6 +4,7 @@ import type {
   CommunityItemType,
   CommunityFilters,
 } from '@/features/community/types/community.types'
+import { logger } from '@/lib/logger'
 /**
  * GET /api/community
  * List approved community items with optional filters
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query
 
     if (error) {
-      console.error('Error fetching community items:', error)
+      logger.api.error('Error fetching community items', { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: 'Failed to fetch community items' },
         { status: 500 }
@@ -98,7 +99,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ items })
   } catch (error) {
-    console.error('Community GET error:', error)
+    logger.api.error('Community GET error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -147,7 +148,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error('Error submitting community item:', error)
+      logger.api.error('Error submitting community item', { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: 'Failed to submit item' },
         { status: 500 }
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
       message: 'Item submitted for review',
     })
   } catch (error) {
-    console.error('Community POST error:', error)
+    logger.api.error('Community POST error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

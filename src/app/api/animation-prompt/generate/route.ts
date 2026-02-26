@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 const PRIMARY_MODEL = 'google/gemini-2.0-flash-exp:free'
 const FALLBACK_MODEL = 'google/gemini-2.0-flash-001'
@@ -205,7 +206,7 @@ async function callOpenRouter(
 
     if (!response.ok) {
         const error = await response.text()
-        console.error(`OpenRouter error (${model}):`, error)
+        logger.api.error('OpenRouter error', { model, error })
         lognog.warn(`openrouter FAIL ${latency}ms`, {
             type: 'integration',
             integration: 'openrouter',
@@ -347,7 +348,7 @@ export async function POST(request: NextRequest) {
             mode,
         })
     } catch (error) {
-        console.error('Animation prompt generation error:', error)
+        logger.api.error('Animation prompt generation error', { error: error instanceof Error ? error.message : String(error) })
 
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 

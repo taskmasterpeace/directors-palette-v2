@@ -14,6 +14,7 @@ import {
   exportStorybookCover,
   mergePDFs,
 } from '@/features/storybook/services/pdf-export.service'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('PDF export error:', error)
+    logger.api.error('PDF export error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       {
         error: 'Failed to generate PDF',

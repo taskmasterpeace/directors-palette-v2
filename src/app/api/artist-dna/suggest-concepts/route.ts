@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
+import { logger } from '@/lib/logger'
 
 const MODEL = 'openai/gpt-4.1-mini'
 
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const error = await response.text()
-      console.error('OpenRouter error:', error)
+      logger.api.error('OpenRouter error', { error })
       return NextResponse.json({ error: 'Suggestion failed' }, { status: 500 })
     }
 
@@ -91,13 +92,13 @@ export async function POST(request: NextRequest) {
       const cleaned = raw.replace(/```json?\s*/g, '').replace(/```\s*/g, '').trim()
       concepts = JSON.parse(cleaned)
     } catch {
-      console.error('Failed to parse concepts JSON:', raw.substring(0, 300))
+      logger.api.error('Failed to parse concepts JSON', { detail: raw.substring(0, 300) })
       return NextResponse.json({ error: 'Failed to parse suggestions' }, { status: 500 })
     }
 
     return NextResponse.json({ concepts })
   } catch (error) {
-    console.error('Suggest concepts error:', error)
+    logger.api.error('Suggest concepts error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

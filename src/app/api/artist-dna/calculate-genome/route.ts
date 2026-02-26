@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import type { CatalogGenome, CatalogSongAnalysis } from '@/features/music-lab/types/artist-dna.types'
+import { logger } from '@/lib/logger'
 
 const MODEL = 'openai/gpt-4.1-mini'
 
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const error = await response.text()
-      console.error('OpenRouter error:', error)
+      logger.api.error('OpenRouter error', { error })
       return NextResponse.json({ error: 'Genome calculation failed' }, { status: 500 })
     }
 
@@ -139,13 +140,13 @@ export async function POST(request: NextRequest) {
         calculatedAt: new Date().toISOString(),
       }
     } catch {
-      console.error('Failed to parse genome JSON:', raw.substring(0, 500))
+      logger.api.error('Failed to parse genome JSON', { detail: raw.substring(0, 500) })
       return NextResponse.json({ error: 'Failed to parse genome result' }, { status: 500 })
     }
 
     return NextResponse.json({ genome })
   } catch (error) {
-    console.error('Genome calculation error:', error)
+    logger.api.error('Genome calculation error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOpenRouterService } from '@/features/storyboard/services/openrouter.service'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
     try {
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json(result)
     } catch (error) {
-        console.error('Extraction error:', error)
+        logger.api.error('Extraction error', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json(
             { error: error instanceof Error ? error.message : 'Extraction failed' },
             { status: 500 }

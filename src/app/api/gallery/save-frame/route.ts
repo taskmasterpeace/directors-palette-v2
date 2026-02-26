@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { logger } from '@/lib/logger'
 
 const STORAGE_BUCKET = 'directors-palette'
 
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
       })
 
     if (uploadError) {
-      console.error('Storage upload error:', uploadError)
+      logger.api.error('Storage upload error', { error: uploadError instanceof Error ? uploadError.message : String(uploadError) })
       return NextResponse.json(
         { error: 'Failed to upload image' },
         { status: 500 }
@@ -110,7 +111,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (galleryError) {
-      console.error('Gallery insert error:', galleryError)
+      logger.api.error('Gallery insert error', { error: galleryError instanceof Error ? galleryError.message : String(galleryError) })
       // Try to clean up the uploaded file
       await supabase.storage.from(STORAGE_BUCKET).remove([storagePath])
       return NextResponse.json(
@@ -126,7 +127,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Save frame error:', error)
+    logger.api.error('Save frame error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Failed to save frame' },
       { status: 500 }

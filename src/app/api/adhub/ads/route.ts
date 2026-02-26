@@ -10,6 +10,7 @@ import {
   AdhubAdRow,
   adFromRow,
 } from '@/features/adhub/types/adhub.types'
+import { logger } from '@/lib/logger'
 
 // GET - List all ads for user
 export async function GET() {
@@ -35,14 +36,14 @@ export async function GET() {
       .limit(50)
 
     if (error) {
-      console.error('Error fetching ads:', error)
+      logger.api.error('Error fetching ads', { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json({ error: 'Failed to fetch ads' }, { status: 500 })
     }
 
     const ads = (data || []).map((row: AdhubAdRow) => adFromRow(row))
     return NextResponse.json({ ads })
   } catch (error) {
-    console.error('Error fetching ads:', error)
+    logger.api.error('Error fetching ads', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to fetch ads' }, { status: 500 })
   }
 }

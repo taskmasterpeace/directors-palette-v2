@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { creditsService } from '@/features/credits/services/credits.service'
+import { logger } from '@/lib/logger'
 
 const GENERATION_MODEL = 'openai/gpt-4.1'
 const REFINEMENT_MODEL = 'perplexity/sonar-pro'
@@ -198,7 +199,7 @@ export async function POST(request: NextRequest) {
 
     if (!pass1Response.ok) {
       const error = await pass1Response.text()
-      console.error('Pass 1 error:', error)
+      logger.api.error('Pass 1 error', { error })
       return NextResponse.json({ error: 'Failed to generate artist profile' }, { status: 500 })
     }
 
@@ -214,7 +215,7 @@ export async function POST(request: NextRequest) {
       const cleaned = pass1Content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
       dna = JSON.parse(cleaned)
     } catch {
-      console.error('Failed to parse Pass 1 DNA:', pass1Content.substring(0, 500))
+      logger.api.error('Failed to parse Pass 1 DNA', { detail: pass1Content.substring(0, 500) })
       return NextResponse.json({ error: 'Failed to parse artist profile' }, { status: 500 })
     }
 
@@ -294,23 +295,23 @@ export async function POST(request: NextRequest) {
             }
             dna.lowConfidenceFields = [...new Set(lcf)]
 
-            console.log(`Pass 2 refinement for "${trimmedName}": ${refinement.notes || 'no notes'}`)
+            logger.api.info('Pass 2 refinement', { artist: trimmedName, notes: refinement.notes || 'no notes' })
           } catch (e) {
             // Pass 2 parse failed — still return Pass 1 result
-            console.warn('Pass 2 parse failed, using Pass 1 result:', e)
+            logger.api.warn('Pass 2 parse failed, using Pass 1 result', { error: e instanceof Error ? e.message : String(e) })
           }
         }
       } else {
-        console.warn('Pass 2 request failed, using Pass 1 result')
+        logger.api.warn('Pass 2 request failed, using Pass 1 result')
       }
     } catch (e) {
       // Pass 2 entirely failed — still return Pass 1 result
-      console.warn('Pass 2 failed, using Pass 1 result:', e)
+      logger.api.warn('Pass 2 failed, using Pass 1 result', { error: e instanceof Error ? e.message : String(e) })
     }
 
     return NextResponse.json({ dna, seededFrom: trimmedName })
   } catch (error) {
-    console.error('Seed error:', error)
+    logger.api.error('Seed error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

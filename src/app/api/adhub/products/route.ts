@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getClient } from '@/lib/db/client'
 import { AdhubProductService } from '@/features/adhub/services/adhub-product.service'
+import { logger } from '@/lib/logger'
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
     const products = await AdhubProductService.listProducts(brandId, user.id)
     return NextResponse.json({ products })
   } catch (error) {
-    console.error('Error listing products:', error)
+    logger.api.error('Error listing products', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to list products' }, { status: 500 })
   }
 }
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ product })
   } catch (error) {
-    console.error('Error creating product:', error)
+    logger.api.error('Error creating product', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })
   }
 }

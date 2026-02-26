@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 const MODEL = 'openai/gpt-4o-mini'
 
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest) {
 
         if (!response.ok) {
             const error = await response.text()
-            console.error('OpenRouter error:', error)
+            logger.api.error('OpenRouter error', { error })
 
             lognog.warn(`openrouter FAIL ${Date.now() - openRouterStart}ms`, {
                 type: 'integration',
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
             director: director || 'none'
         })
     } catch (error) {
-        console.error('Prompt expansion error:', error)
+        logger.api.error('Prompt expansion error', { error: error instanceof Error ? error.message : String(error) })
 
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 

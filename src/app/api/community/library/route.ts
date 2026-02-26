@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { logger } from '@/lib/logger'
 
 /**
  * GET /api/community/library
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
       const { data, error } = await query
 
       if (error) {
-        console.error('Error fetching library IDs:', error)
+        logger.api.error('Error fetching library IDs', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json(
           { error: 'Failed to fetch library' },
           { status: 500 }
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query
 
     if (error) {
-      console.error('Error fetching library:', error)
+      logger.api.error('Error fetching library', { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: 'Failed to fetch library' },
         { status: 500 }
@@ -78,7 +79,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ items })
   } catch (error) {
-    console.error('Community library error:', error)
+    logger.api.error('Community library error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -113,7 +114,7 @@ export async function DELETE(request: NextRequest) {
       .eq('user_id', user.id)
 
     if (error) {
-      console.error('Error removing from library:', error)
+      logger.api.error('Error removing from library', { error: error instanceof Error ? error.message : String(error) })
       return NextResponse.json(
         { error: 'Failed to remove from library' },
         { status: 500 }
@@ -122,7 +123,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ message: 'Item removed from library' })
   } catch (error) {
-    console.error('Community library DELETE error:', error)
+    logger.api.error('Community library DELETE error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

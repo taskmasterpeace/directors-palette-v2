@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import Replicate from 'replicate'
+import { logger } from '@/lib/logger'
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Character sheet generation failed' }, { status: 500 })
   } catch (error) {
-    console.error('Character sheet generation error:', error)
+    logger.api.error('Character sheet generation error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

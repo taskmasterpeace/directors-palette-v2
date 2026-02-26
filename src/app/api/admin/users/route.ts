@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { adminService } from '@/features/admin'
+import { logger } from '@/lib/logger'
 
 /**
  * GET /api/admin/users
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
             pageSize
         })
     } catch (error) {
-        console.error('Error fetching users:', error)
+        logger.api.error('Error fetching users', { error: error instanceof Error ? error.message : String(error) })
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }
