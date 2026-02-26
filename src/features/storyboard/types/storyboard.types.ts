@@ -859,7 +859,7 @@ export interface OpenRouterModel {
 }
 
 export const DEFAULT_OPENROUTER_MODELS: OpenRouterModel[] = [
-    // OpenAI Models (all support tool calling)
+    // OpenAI Models
     {
         id: 'openai/gpt-4.1-mini',
         name: 'GPT-4.1 Mini',
@@ -874,36 +874,29 @@ export const DEFAULT_OPENROUTER_MODELS: OpenRouterModel[] = [
         description: 'Most capable OpenAI model',
         costPer1M: { input: 2.50, output: 10.00 }
     },
+    // Anthropic Models
     {
-        id: 'openai/gpt-4-turbo',
-        name: 'GPT-4 Turbo',
-        contextWindow: 128000,
-        description: 'Previous flagship, reliable',
-        costPer1M: { input: 10.00, output: 30.00 }
-    },
-    // Anthropic Models (all support tool calling)
-    {
-        id: 'anthropic/claude-3.5-sonnet',
-        name: 'Claude 3.5 Sonnet',
+        id: 'anthropic/claude-sonnet-4',
+        name: 'Claude Sonnet 4',
         contextWindow: 200000,
         description: 'Best balance of speed and capability',
         costPer1M: { input: 3.00, output: 15.00 }
     },
     {
-        id: 'anthropic/claude-3-haiku',
-        name: 'Claude 3 Haiku',
+        id: 'anthropic/claude-haiku-4-5',
+        name: 'Claude Haiku 4.5',
         contextWindow: 200000,
         description: 'Fastest Claude, very cheap',
-        costPer1M: { input: 0.25, output: 1.25 }
+        costPer1M: { input: 0.80, output: 4.00 }
     },
     {
-        id: 'anthropic/claude-3-opus',
-        name: 'Claude 3 Opus',
+        id: 'anthropic/claude-opus-4',
+        name: 'Claude Opus 4',
         contextWindow: 200000,
         description: 'Most capable Claude',
         costPer1M: { input: 15.00, output: 75.00 }
     },
-    // Google Models (support tool calling)
+    // Google Models
     {
         id: 'google/gemini-2.0-flash-exp',
         name: 'Gemini 2.0 Flash',
@@ -912,48 +905,41 @@ export const DEFAULT_OPENROUTER_MODELS: OpenRouterModel[] = [
         costPer1M: { input: 0.10, output: 0.40 }
     },
     {
-        id: 'google/gemini-1.5-pro',
-        name: 'Gemini 1.5 Pro',
+        id: 'google/gemini-2.5-pro',
+        name: 'Gemini 2.5 Pro',
         contextWindow: 1000000,
         description: '1M context, most capable Gemini',
-        costPer1M: { input: 2.50, output: 10.00 }
+        costPer1M: { input: 1.25, output: 10.00 }
     },
     {
-        id: 'google/gemini-1.5-flash',
-        name: 'Gemini 1.5 Flash',
+        id: 'google/gemini-2.5-flash',
+        name: 'Gemini 2.5 Flash',
         contextWindow: 1000000,
         description: '1M context, fast and cheap',
-        costPer1M: { input: 0.075, output: 0.30 }
+        costPer1M: { input: 0.15, output: 0.60 }
     },
-    // Meta Llama Models (support tool calling)
+    // Meta Llama Models
     {
-        id: 'meta-llama/llama-3.1-70b-instruct',
-        name: 'Llama 3.1 70B',
+        id: 'meta-llama/llama-4-maverick',
+        name: 'Llama 4 Maverick',
         contextWindow: 128000,
         description: 'Open source, very capable',
-        costPer1M: { input: 0.52, output: 0.75 }
+        costPer1M: { input: 0.50, output: 0.70 }
     },
     {
-        id: 'meta-llama/llama-3.1-8b-instruct',
-        name: 'Llama 3.1 8B',
+        id: 'meta-llama/llama-4-scout',
+        name: 'Llama 4 Scout',
         contextWindow: 128000,
         description: 'Open source, fast and cheap',
-        costPer1M: { input: 0.055, output: 0.055 }
+        costPer1M: { input: 0.15, output: 0.15 }
     },
-    // Qwen Models (support tool calling, very affordable)
+    // Qwen Models
     {
         id: 'qwen/qwen-2.5-72b-instruct',
         name: 'Qwen 2.5 72B',
         contextWindow: 128000,
         description: 'Alibaba flagship, very capable',
         costPer1M: { input: 0.35, output: 0.40 }
-    },
-    {
-        id: 'qwen/qwen-2.5-32b-instruct',
-        name: 'Qwen 2.5 32B',
-        contextWindow: 128000,
-        description: 'Balanced Qwen model',
-        costPer1M: { input: 0.20, output: 0.20 }
     }
 ]
 
