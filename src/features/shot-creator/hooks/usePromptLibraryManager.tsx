@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast'
 import { SavedPrompt, usePromptLibraryStore } from "../store/prompt-library-store"
 import { getClient } from "@/lib/db/client"
 import { clipboardManager } from '@/utils/clipboard-manager'
+import { logger } from '@/lib/logger'
 
 export interface NewPromptData {
     title: string
@@ -54,7 +55,7 @@ export function usePromptLibraryManager(onSelectPrompt?: (prompt: string) => voi
                     await loadUserPrompts('guest')
                 }
             } catch (error) {
-                console.warn('Prompt Library: Failed to check auth status, working offline:', error)
+                logger.shotCreator.warn('Prompt Library: Failed to check auth status, working offline', { error: error instanceof Error ? error.message : String(error) })
                 await loadUserPrompts('guest')
             }
         }
@@ -113,7 +114,7 @@ export function usePromptLibraryManager(onSelectPrompt?: (prompt: string) => voi
             toast({ title: 'Success', description: 'Prompt added to library' })
             return true
         } catch (error) {
-            console.error('Failed to add prompt:', error)
+            logger.shotCreator.error('Failed to add prompt', { error: error instanceof Error ? error.message : String(error) })
             toast({ title: 'Error', description: 'Failed to add prompt', variant: 'destructive' })
             return false
         }
@@ -128,7 +129,7 @@ export function usePromptLibraryManager(onSelectPrompt?: (prompt: string) => voi
             toast({ title: 'Success', description: 'Prompt updated successfully' })
             return true
         } catch (error) {
-            console.error('Failed to update prompt:', error)
+            logger.shotCreator.error('Failed to update prompt', { error: error instanceof Error ? error.message : String(error) })
             toast({ title: 'Error', description: 'Failed to update prompt', variant: 'destructive' })
             return false
         }
@@ -140,7 +141,7 @@ export function usePromptLibraryManager(onSelectPrompt?: (prompt: string) => voi
             await clipboardManager.writeText(prompt)
             toast({ title: 'Copied', description: 'Prompt copied to clipboard' })
         } catch (error) {
-            console.error('Copy failed:', error)
+            logger.shotCreator.error('Copy failed', { error: error instanceof Error ? error.message : String(error) })
             toast({ title: 'Copy Failed', description: 'Unable to copy prompt', variant: 'destructive' })
         }
     }
@@ -222,7 +223,7 @@ export function usePromptLibraryManager(onSelectPrompt?: (prompt: string) => voi
             URL.revokeObjectURL(url)
             toast({ title: 'Export Successful', description: `Exported ${prompts.length} prompts` })
         } catch (error) {
-            console.error('Prompt Library: Failed to export prompts:', error)
+            logger.shotCreator.error('Prompt Library: Failed to export prompts', { error: error instanceof Error ? error.message : String(error) })
             toast({ title: 'Export Failed', description: 'Failed to export prompts', variant: 'destructive' })
         }
     }
@@ -271,7 +272,7 @@ export function usePromptLibraryManager(onSelectPrompt?: (prompt: string) => voi
                     })
                     importedCount++
                 } catch (error) {
-                    console.warn(`Failed to import prompt "${p.title}":`, error)
+                    logger.shotCreator.warn('Failed to import prompt "[title]"', { title: p.title, error: error instanceof Error ? error.message : String(error) })
                     skippedCount++
                 }
             }
@@ -297,7 +298,7 @@ export function usePromptLibraryManager(onSelectPrompt?: (prompt: string) => voi
             await updateCategory(id, updates)
             toast({ title: 'Success', description: 'Category updated' })
         } catch (error) {
-            console.error('Failed to update category:', error)
+            logger.shotCreator.error('Failed to update category', { error: error instanceof Error ? error.message : String(error) })
             toast({ title: 'Error', description: 'Failed to update category', variant: 'destructive' })
         }
     }
@@ -308,7 +309,7 @@ export function usePromptLibraryManager(onSelectPrompt?: (prompt: string) => voi
             await deleteCategory(id)
             toast({ title: 'Success', description: 'Category deleted' })
         } catch (error) {
-            console.error('Failed to delete category:', error)
+            logger.shotCreator.error('Failed to delete category', { error: error instanceof Error ? error.message : String(error) })
             toast({ title: 'Error', description: 'Failed to delete category', variant: 'destructive' })
         }
     }

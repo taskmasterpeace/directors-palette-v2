@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { useStorybookStore } from '../store/storybook.store'
 import { usePersistenceStore } from '../store/persistence.store'
+import { logger } from '@/lib/logger'
 
 /**
  * Auto-save hook - saves project every 30 seconds
@@ -26,7 +27,7 @@ export function useAutoSave() {
       const currentProjectString = JSON.stringify(project)
 
       if (currentProjectString !== lastSavedRef.current && !isSaving) {
-        console.log('[Auto-Save] Saving project...', new Date().toLocaleTimeString())
+        logger.storybook.info('[Auto-Save] Saving project...', { detail: new Date().toLocaleTimeString() })
         saveProject()
         lastSavedRef.current = currentProjectString
       }
@@ -47,7 +48,7 @@ export function useAutoSave() {
         // Synchronous save attempt (best effort)
         const currentProjectString = JSON.stringify(project)
         if (currentProjectString !== lastSavedRef.current) {
-          console.log('[Auto-Save] Saving on page close...')
+          logger.storybook.info('[Auto-Save] Saving on page close...')
           saveProject()
         }
       }

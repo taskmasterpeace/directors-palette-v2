@@ -16,7 +16,10 @@ import {
   initializeCropRegions,
   FrameExtractionResult
 } from '../../types/frame-extractor.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Layout')
 interface FrameExtractorProps {
   imageUrl: string
   onClose: () => void
@@ -403,7 +406,7 @@ export function FrameExtractor({ imageUrl, onClose, onExtract }: FrameExtractorP
           successCount++
         }
       } catch (error) {
-        console.error(`Failed to save frame ${i + 1}:`, error)
+        log.error('Failed to save frame [detail]', { detail: i + 1, error: error instanceof Error ? error.message : String(error) })
       }
     }
 

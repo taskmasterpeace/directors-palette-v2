@@ -25,7 +25,10 @@ import {
 import * as fabric from 'fabric'
 import { clipboardManager } from '@/utils/clipboard-manager'
 import { cn } from '@/utils/utils'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Layout')
 type ImageImportMode = 'fit' | 'fill'
 type CanvasMode = 'canvas' | 'photo'
 
@@ -732,17 +735,17 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
 
       // Photo Mode: Image becomes canvas background, canvas resizes to fit
       if (canvasMode === 'photo') {
-        console.log('[FabricCanvas] Photo Mode - importing as background')
+        log.info('[FabricCanvas] Photo Mode - importing as background')
         const imgWidth = img.width!
         const imgHeight = img.height!
-        console.log('[FabricCanvas] Image dimensions:', imgWidth, 'x', imgHeight)
+        log.info('[FabricCanvas] Image dimensions', { imgWidth, detail: 'x', imgHeight })
 
         // Notify parent of new canvas size
         if (onCanvasSizeChange) {
-          console.log('[FabricCanvas] Calling onCanvasSizeChange:', imgWidth, imgHeight)
+          log.info('[FabricCanvas] Calling onCanvasSizeChange', { imgWidth, imgHeight })
           onCanvasSizeChange(imgWidth, imgHeight)
         } else {
-          console.log('[FabricCanvas] WARNING: onCanvasSizeChange not provided!')
+          log.info('[FabricCanvas] WARNING: onCanvasSizeChange not provided!')
         }
 
         // Set image as canvas background
@@ -801,7 +804,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
       canvas.renderAll()
       saveStateRef.current()
     }).catch((error) => {
-      console.error('Failed to load image:', error)
+      log.error('Failed to load image', { error: error })
     })
   }, [imageImportMode, canvasMode, onCanvasSizeChange])
 
@@ -951,7 +954,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
             canvas.renderAll()
           }
         }).catch(err => {
-          console.log('Clipboard paste failed:', err)
+          log.info('Clipboard paste failed', { err: err })
         })
       }
     }
@@ -1093,7 +1096,7 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
     const canvas = fabricRef.current
     if (!canvas) return
 
-    console.log('[FabricCanvas] Updating dimensions/scale:', { width: canvasWidth * scale, height: canvasHeight * scale, scale })
+    log.info('[FabricCanvas] Updating dimensions/scale', { width: canvasWidth * scale, height: canvasHeight * scale, scale })
     canvas.setZoom(scale)
     canvas.setDimensions({
       width: canvasWidth * scale,

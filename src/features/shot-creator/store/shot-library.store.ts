@@ -8,6 +8,7 @@ import {
     getReferencesPaginated
 } from "../services/reference-library.service";
 import { Category } from "../components/CategorySelectDialog";
+import { logger } from '@/lib/logger'
 
 export type LibraryCategory = 'all' | 'people' | 'places' | 'props' | 'unorganized';
 export interface ShotLibraryStore {
@@ -92,7 +93,7 @@ export const useLibraryStore = create<ShotLibraryStore>()((set, get) => ({
                 totalItems: total
             })
         } catch (error) {
-            console.error('Failed to load library:', error)
+            logger.shotCreator.error('Failed to load library', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Library Error",
                 description: "Failed to load reference library",
@@ -123,7 +124,7 @@ export const useLibraryStore = create<ShotLibraryStore>()((set, get) => ({
                 description: `Item moved to ${newCategory}`
             })
         } catch (error) {
-            console.error('Failed to update category:', error)
+            logger.shotCreator.error('Failed to update category', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Update Failed",
                 description: "Failed to update category",
@@ -148,7 +149,7 @@ export const useLibraryStore = create<ShotLibraryStore>()((set, get) => ({
                 description: "Reference removed from library"
             })
         } catch (error) {
-            console.error('Failed to delete item:', error)
+            logger.shotCreator.error('Failed to delete item', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Delete Failed",
                 description: "Failed to remove reference",
@@ -177,7 +178,7 @@ export const useLibraryStore = create<ShotLibraryStore>()((set, get) => ({
                 description: "Reference tags have been updated"
             })
         } catch (error) {
-            console.error('Failed to update tags:', error)
+            logger.shotCreator.error('Failed to update tags', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Update Failed",
                 description: "Failed to update tags",

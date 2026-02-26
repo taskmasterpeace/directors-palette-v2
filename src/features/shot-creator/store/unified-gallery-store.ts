@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { GalleryService } from '../services/gallery.service'
 import { FolderService } from '@/lib/services/folder.service'
 import type { FolderWithCount, CreateFolderInput, UpdateFolderInput } from '../types/folder.types'
+import { logger } from '@/lib/logger'
 
 export type GenerationStatus = 'pending' | 'processing' | 'completed' | 'failed'
 
@@ -200,17 +201,9 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
 
     // Log persistence status for monitoring
     if (newImage.persistence.isPermanent) {
-      console.log('✅ Gallery: Added permanently stored image', {
-        id: newImage.id,
-        url: newImage.url,
-        size: newImage.persistence.fileSize
-      });
+      logger.shotCreator.info('✅ Gallery: Added permanently stored image', { id: newImage.id, url: newImage.url, size: newImage.persistence.fileSize })
     } else {
-      console.warn('⚠️ Gallery: Added temporary image (will expire)', {
-        id: newImage.id,
-        temporaryUrl: newImage.url,
-        error: newImage.persistence.error
-      });
+      logger.shotCreator.warn('⚠️ Gallery: Added temporary image (will expire)', { id: newImage.id, temporaryUrl: newImage.url, error: newImage.persistence.error })
     }
   },
 
@@ -253,7 +246,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
     const image = state.images.find(img => img.id === imageIdOrUrl || img.url === imageIdOrUrl)
 
     if (!image) {
-      console.warn('Image not found in local state:', imageIdOrUrl)
+      logger.shotCreator.warn('Image not found in local state', { imageIdOrUrl: imageIdOrUrl })
       return false
     }
 
@@ -278,7 +271,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       const result = await GalleryService.deleteImage(image.id)
 
       if (!result.success) {
-        console.warn('Failed to delete image from Supabase (already removed locally):', result.error)
+        logger.shotCreator.warn('Failed to delete image from Supabase (already removed locally)', { error: result.error })
         // Image is already removed from local state — don't restore it
       }
     }
@@ -297,7 +290,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       const result = await GalleryService.updateReference(imageId, '')
 
       if (!result.success) {
-        console.error('Failed to clear reference in database:', result.error)
+        logger.shotCreator.error('Failed to clear reference in database', { error: result.error })
       }
 
       // Clear from local store AND fullscreen image
@@ -321,7 +314,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
     const result = await GalleryService.updateReference(imageId, normalizedReference)
 
     if (!result.success) {
-      console.error('Failed to persist reference to database:', result.error)
+      logger.shotCreator.error('Failed to persist reference to database', { error: result.error })
       // Continue with local update anyway
     }
 
@@ -402,7 +395,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       const folders = await FolderService.getUserFolders()
       set({ folders, isFoldersLoading: false })
     } catch (error) {
-      console.error('Failed to load folders:', error)
+      logger.shotCreator.error('Failed to load folders', { error: error instanceof Error ? error.message : String(error) })
       set({ isFoldersLoading: false })
     }
   },
@@ -534,7 +527,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
         set({ hasMore: false, isLoadingMore: false })
       }
     } catch (error) {
-      console.error('Failed to load more images:', error)
+      logger.shotCreator.error('Failed to load more images', { error: error instanceof Error ? error.message : String(error) })
       set({ isLoadingMore: false })
     }
   },
@@ -592,7 +585,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
         infiniteScrollPage: 1
       })
     } catch (error) {
-      console.error('Failed to refresh gallery:', error)
+      logger.shotCreator.error('Failed to refresh gallery', { error: error instanceof Error ? error.message : String(error) })
     }
   },
 
@@ -626,7 +619,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       recentImages: [pendingImage, ...state.recentImages.slice(0, 9)]
     }))
 
-    console.log('⏳ Gallery: Added pending placeholder', { galleryId, prompt: prompt.slice(0, 50) })
+    logger.shotCreator.info('⏳ Gallery: Added pending placeholder', { galleryId, prompt: prompt.slice(0, 50) })
   },
 
   updatePendingImage: (galleryId, updates) => {

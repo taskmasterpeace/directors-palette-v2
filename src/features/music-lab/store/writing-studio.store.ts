@@ -14,6 +14,7 @@ import type {
   IdeaTag,
 } from '../types/writing-studio.types'
 import { DEFAULT_TONE } from '../types/writing-studio.types'
+import { logger } from '@/lib/logger'
 
 interface WritingStudioState {
   // Song structure
@@ -154,7 +155,7 @@ export const useWritingStudioStore = create<WritingStudioState>()(
             set({ draftOptions: data.options || [] })
           }
         } catch (error) {
-          console.error('Failed to generate options:', error)
+          logger.musicLab.error('Failed to generate options', { error: error instanceof Error ? error.message : String(error) })
         } finally {
           set({ isGenerating: false })
         }

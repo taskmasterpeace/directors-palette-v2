@@ -19,7 +19,10 @@ import { FabricCanvasRef } from "../canvas-board"
 import { ShotCreatorReferenceImage } from "@/features/shot-creator"
 import { EXPORT_FORMATS, SCALE_PRESETS } from "../../constants"
 import { clipboardManager } from '@/utils/clipboard-manager'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Layout')
 const gcd = (a: number, b: number): number => b ? gcd(b, a % b) : a
 
 interface CanvasExporterProps {
@@ -91,7 +94,7 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
                 description: `Canvas exported as ${exportSettings.format.toUpperCase()}`
             })
         } catch (error) {
-            console.error('Export failed:', error)
+            log.error('Export failed', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Export Failed",
                 description: "Failed to export canvas",
@@ -123,7 +126,7 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
                 description: "Canvas image copied successfully"
             })
         } catch (error) {
-            console.error('Copy failed:', error)
+            log.error('Copy failed', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Copy Failed",
                 description: "Failed to copy canvas to clipboard",
@@ -161,7 +164,7 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
                 description: "Canvas saved to your image gallery"
             })
         } catch (error) {
-            console.error('Send to gallery failed:', error)
+            log.error('Send to gallery failed', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Failed to Save",
                 description: "Could not save canvas to gallery",
@@ -261,7 +264,7 @@ export function CanvasExporter({ canvasRef, onExport, setActiveTab }: CanvasExpo
                 })
             }
         } catch (error) {
-            console.error('Send to tab failed:', error)
+            log.error('Send to tab failed', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Failed to Send",
                 description: `Could not send canvas to ${targetTab}`,

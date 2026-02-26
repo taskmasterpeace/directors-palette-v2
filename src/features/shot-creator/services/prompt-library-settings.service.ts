@@ -2,6 +2,7 @@
 
 import { SupabaseSettingsRepository } from "@/lib/db/repositories/settings.repository";
 import { PromptCategory, SavedPrompt } from "../store/prompt-library-store";
+import { logger } from '@/lib/logger'
 
 /**
  * Prompt Library Settings
@@ -52,7 +53,7 @@ export class PromptLibrarySettingsService {
                 quickPrompts
             };
         } catch (error) {
-            console.error('Failed to load prompt library settings:', error);
+            logger.shotCreator.error('Failed to load prompt library settings', { error: error instanceof Error ? error.message : String(error) })
             return null;
         }
     }
@@ -69,7 +70,7 @@ export class PromptLibrarySettingsService {
                 }
             });
         } catch (error) {
-            console.error('Failed to save prompt library settings:', error);
+            logger.shotCreator.error('Failed to save prompt library settings', { error: error instanceof Error ? error.message : String(error) })
             throw error;
         }
     }
@@ -93,7 +94,7 @@ export class PromptLibrarySettingsService {
 
             await this.saveSettings(userId, mergedSettings);
         } catch (error) {
-            console.error('Failed to update prompt library settings:', error);
+            logger.shotCreator.error('Failed to update prompt library settings', { error: error instanceof Error ? error.message : String(error) })
             throw error;
         }
     }

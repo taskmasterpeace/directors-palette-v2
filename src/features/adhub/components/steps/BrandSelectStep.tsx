@@ -11,7 +11,10 @@ import { useAdhubStore } from '../../store/adhub.store'
 import { getClient } from '@/lib/db/client'
 import type { AdhubBrand } from '../../types/adhub.types'
 import { BrandInfoTip, AdhubFlowGuide } from '../InfoTip'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('AdHub')
 export function BrandSelectStep() {
   const {
     brands,
@@ -84,7 +87,7 @@ export function BrandSelectStep() {
 
       setLogoUrl(publicUrl)
     } catch (error) {
-      console.error('Failed to upload logo:', error)
+      log.error('Failed to upload logo', { error: error instanceof Error ? error.message : String(error) })
       alert('Failed to upload logo. Please try again.')
       setLogoPreview(null)
     } finally {
@@ -110,7 +113,7 @@ export function BrandSelectStep() {
           setBrands(data.brands || [])
         }
       } catch (error) {
-        console.error('Failed to fetch brands:', error)
+        log.error('Failed to fetch brands', { error: error instanceof Error ? error.message : String(error) })
       } finally {
         setIsLoading(false)
       }
@@ -173,7 +176,7 @@ export function BrandSelectStep() {
         resetForm()
       }
     } catch (error) {
-      console.error('Failed to save brand:', error)
+      log.error('Failed to save brand', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setIsCreating(false)
     }
@@ -194,7 +197,7 @@ export function BrandSelectStep() {
         }
       }
     } catch (error) {
-      console.error('Failed to delete brand:', error)
+      log.error('Failed to delete brand', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 

@@ -26,6 +26,7 @@ import { GalleryGridView } from './GalleryGridView'
 import { GalleryListView } from './GalleryListView'
 import { GalleryCarouselView } from './GalleryCarouselView'
 import { DocumentaryTimeline } from './DocumentaryTimeline'
+import { logger } from '@/lib/logger'
 
 interface StoryboardGalleryProps {
     chapterIndex?: number
@@ -289,7 +290,7 @@ export function StoryboardGallery({ chapterIndex = 0 }: StoryboardGalleryProps) 
             URL.revokeObjectURL(link.href)
             toast.success(`Downloaded ${added} shots as ZIP`)
         } catch (error) {
-            console.error('ZIP download error:', error)
+            logger.storyboard.error('ZIP download error', { error: error instanceof Error ? error.message : String(error) })
             toast.error('Failed to create ZIP download')
         } finally {
             setIsDownloadingAll(false)
@@ -352,7 +353,7 @@ The color temperature, lighting direction, and overall mood must match across al
 
             toast.success('B-Roll Grid Generated!', { description: "Use 'Extract to Gallery' to split into individual shots." })
         } catch (error) {
-            console.error('B-Roll grid generation error:', error)
+            logger.storyboard.error('B-Roll grid generation error', { error: error instanceof Error ? error.message : String(error) })
             toast.error('Generation Failed', { description: error instanceof Error ? error.message : 'An error occurred' })
         } finally {
             setGeneratingBRollId(null)

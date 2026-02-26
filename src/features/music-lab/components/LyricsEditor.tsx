@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { useMusicLabStore } from '../store/music-lab.store'
+import { logger } from '@/lib/logger'
 
 interface LyricsEditorProps {
     onAnalyze?: () => void
@@ -57,7 +58,7 @@ export function LyricsEditor({ onAnalyze, showTranscribeButton = true }: LyricsE
                     audioToTranscribe = vocalsUrl
                     setStatus('Vocals isolated, transcribing...')
                 } else {
-                    console.warn('Demucs failed, using original audio')
+                    logger.musicLab.warn('Demucs failed, using original audio')
                     setStatus('Vocal isolation failed, using original audio...')
                 }
             }
@@ -116,12 +117,12 @@ export function LyricsEditor({ onAnalyze, showTranscribeButton = true }: LyricsE
                 setStatus('Done!')
                 onAnalyze?.()
             } else {
-                console.warn('Section detection failed, lyrics still saved')
+                logger.musicLab.warn('Section detection failed, lyrics still saved')
                 setStatus('Transcribed (section detection failed)')
             }
 
         } catch (error) {
-            console.error('Transcription error:', error)
+            logger.musicLab.error('Transcription error', { error: error instanceof Error ? error.message : String(error) })
             setStatus('Error - check console')
         } finally {
             setIsTranscribing(false)
@@ -169,7 +170,7 @@ export function LyricsEditor({ onAnalyze, showTranscribeButton = true }: LyricsE
                 throw new Error(err.error || 'Analysis failed')
             }
         } catch (error) {
-            console.error('Analysis error:', error)
+            logger.musicLab.error('Analysis error', { error: error instanceof Error ? error.message : String(error) })
             setStatus('Analysis failed')
         } finally {
             setIsAnalyzing(false)

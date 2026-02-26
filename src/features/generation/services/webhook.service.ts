@@ -9,6 +9,7 @@ import { LipSyncGenerationService } from '@/features/lip-sync/services/lip-sync-
 import type { LipSyncModel, LipSyncResolution } from '@/features/lip-sync/types/lip-sync.types';
 import type { Database } from '../../../../supabase/database.types';
 import { getModelCost, type ModelId } from '@/config';
+import { logger } from '@/lib/logger'
 
 // Lazy-load Supabase client to avoid build-time errors when env vars aren't available
 let _supabase: SupabaseClient | null = null;
@@ -77,7 +78,7 @@ export class WebhookService {
       .single();
 
     if (findError || !galleryEntry) {
-      console.error(`No gallery entry found for prediction ${id}:`, findError);
+      logger.generation.error('No gallery entry found for prediction [id]', { id, findError })
       return;
     }
 
@@ -102,7 +103,7 @@ export class WebhookService {
 
       // Handle failed status
       if (status === 'failed') {
-        console.error(`Prediction ${id} failed:`, error);
+        logger.generation.error('Prediction [id] failed', { id, error })
         await this.updateGalleryWithError(
           id,
           galleryEntry,
@@ -119,7 +120,7 @@ export class WebhookService {
 
       // Handle succeeded with no output (edge case)
       if (status === 'succeeded' && !output) {
-        console.error(`Prediction ${id} succeeded but has no output`);
+        logger.generation.error('Prediction succeeded but has no output', { id })
         await this.updateGalleryWithError(
           id,
           galleryEntry,
@@ -129,7 +130,7 @@ export class WebhookService {
       }
     } catch (processingError) {
       // If any processing step fails (download, upload, etc.), mark as failed
-      console.error(`Error processing prediction ${id}:`, processingError);
+      logger.generation.error('Error processing prediction [id]', { id, processingError })
       const errorMessage = processingError instanceof Error
         ? processingError.message
         : 'Failed to process prediction results';
@@ -196,13 +197,13 @@ export class WebhookService {
       .eq('prediction_id', galleryEntry.prediction_id);
 
     if (updateError) {
-      console.error('Error updating gallery record:', updateError);
+      logger.generation.error('Error updating gallery record', { updateError: updateError })
       throw new Error(`Failed to update gallery: ${updateError.message}`);
     }
 
     // Process additional images (output[1..n]) — insert new gallery rows
     if (outputUrls.length > 1) {
-      console.log(`Multi-image output: processing ${outputUrls.length - 1} additional images`);
+      logger.generation.info('Multi-image output: processing additional images', { additionalCount: outputUrls.length - 1 })
 
       for (let i = 1; i < outputUrls.length; i++) {
         const extraUrl = outputUrls[i];
@@ -249,12 +250,12 @@ export class WebhookService {
             });
 
           if (insertError) {
-            console.error(`Error inserting gallery row for image ${i}:`, insertError);
+            logger.generation.error('Error inserting gallery row for image [i]', { i, insertError })
           } else {
-            console.log(`Saved additional image ${i}/${outputUrls.length - 1}: ${extraPublicUrl}`);
+            logger.generation.info('Saved additional image', { index: i, total: outputUrls.length - 1, url: extraPublicUrl })
           }
         } catch (imgError) {
-          console.error(`Failed to process additional image ${i}:`, imgError);
+          logger.generation.error('Failed to process additional image [i]', { i, imgError })
           // Continue with remaining images
         }
       }
@@ -290,7 +291,7 @@ export class WebhookService {
             audioDuration,
             resolution
           );
-          console.log(`Lip-sync cost calculated: ${model} @ ${resolution} for ${audioDuration}s = ${overrideAmount} pts`);
+          logger.generation.info('Lip-sync cost calculated', { model, resolution, audioDuration, cost: overrideAmount })
         } else {
           // Regular video: calculate based on duration and resolution
           const duration = (currentMetadata.duration as number) || 5;
@@ -300,7 +301,7 @@ export class WebhookService {
             duration,
             resolution
           );
-          console.log(`Video cost calculated: ${model} @ ${resolution} for ${duration}s = ${overrideAmount} pts`);
+          logger.generation.info('Video cost calculated', { model, resolution, duration, cost: overrideAmount })
         }
       } else {
         // Image: use resolution-based pricing (e.g., nano-banana-pro tiered pricing)
@@ -308,7 +309,7 @@ export class WebhookService {
         const imageResolution = modelSettings?.resolution as string | undefined;
         const imageCost = getModelCost(model as ModelId, imageResolution);
         overrideAmount = Math.round(imageCost * 100); // Convert to cents/points
-        console.log(`Image cost calculated: ${model}${imageResolution ? ` @ ${imageResolution}` : ''} = ${overrideAmount} pts`);
+        logger.generation.info('Image cost calculated', { model, resolution: imageResolution, cost: overrideAmount })
       }
 
       const deductResult = await creditsService.deductCredits(galleryEntry.user_id, model, {
@@ -320,10 +321,10 @@ export class WebhookService {
       });
 
       if (!deductResult.success) {
-        console.error(`Failed to deduct credits after successful ${generationType} generation:`, deductResult.error);
+        logger.generation.error('Failed to deduct credits after successful [generationType] generation', { generationType, error: deductResult.error })
         // Don't fail the whole process - the asset was generated successfully
       } else {
-        console.log(`Credits deducted for user ${galleryEntry.user_id}. New balance: ${deductResult.newBalance}`);
+        logger.generation.info('Credits deducted', { userId: galleryEntry.user_id, newBalance: deductResult.newBalance })
       }
     }
 

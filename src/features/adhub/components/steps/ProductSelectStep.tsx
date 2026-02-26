@@ -20,7 +20,10 @@ import { cn } from '@/utils/utils'
 import { toast } from 'sonner'
 import { useAdhubStore } from '../../store/adhub.store'
 import type { AdhubProduct, AdhubExtractedCopy } from '../../types/adhub.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('AdHub')
 const EMPTY_COPY: AdhubExtractedCopy = {
   headline: '',
   tagline: '',
@@ -66,7 +69,7 @@ export function ProductSelectStep() {
           setProducts(data.products || [])
         }
       } catch (error) {
-        console.error('Failed to fetch products:', error)
+        log.error('Failed to fetch products', { error: error instanceof Error ? error.message : String(error) })
       } finally {
         setIsLoading(false)
       }
@@ -126,7 +129,7 @@ export function ProductSelectStep() {
 
       toast.success('Ad copy extracted successfully!')
     } catch (error) {
-      console.error('Extract copy error:', error)
+      log.error('Extract copy error', { error: error instanceof Error ? error.message : String(error) })
       toast.error(error instanceof Error ? error.message : 'Failed to extract copy')
     } finally {
       setIsExtracting(false)
@@ -173,7 +176,7 @@ export function ProductSelectStep() {
         toast.success(editingProduct ? 'Product updated' : 'Product created')
       }
     } catch (error) {
-      console.error('Failed to save product:', error)
+      log.error('Failed to save product', { error: error instanceof Error ? error.message : String(error) })
       toast.error('Failed to save product')
     } finally {
       setIsSaving(false)
@@ -195,7 +198,7 @@ export function ProductSelectStep() {
         }
       }
     } catch (error) {
-      console.error('Failed to delete product:', error)
+      log.error('Failed to delete product', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 

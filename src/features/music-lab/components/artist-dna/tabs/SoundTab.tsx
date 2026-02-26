@@ -10,6 +10,7 @@ import { TagInput } from '../TagInput'
 import { MagicWandField } from '../MagicWandField'
 import { MelodyBiasSlider } from '../MelodyBiasSlider'
 import { useArtistDnaStore } from '../../../store/artist-dna.store'
+import { logger } from '@/lib/logger'
 
 export function SoundTab() {
   const { draft, updateDraft, suggestionCache, setSuggestions, consumeSuggestion, dismissSuggestion } =
@@ -40,7 +41,7 @@ export function SoundTab() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch suggestions:', error)
+      logger.musicLab.error('Failed to fetch suggestions', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setLoadingField(null)
     }

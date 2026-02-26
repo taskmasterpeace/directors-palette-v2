@@ -44,7 +44,10 @@ import {
   calculateLipSyncCost,
 } from '@/features/lip-sync/config/lip-sync-models.config'
 import { formatCost } from '@/features/lip-sync/services/lip-sync-generation.service'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('AdHub')
 export function PresetGenerateStep() {
   const [isGeneratingTts, setIsGeneratingTts] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -98,7 +101,7 @@ export function PresetGenerateStep() {
           setBrandImages(data.images || [])
         }
       } catch (error) {
-        console.error('Failed to fetch brand images:', error)
+        log.error('Failed to fetch brand images', { error: error instanceof Error ? error.message : String(error) })
       } finally {
         setIsLoadingImages(false)
       }
@@ -160,7 +163,7 @@ export function PresetGenerateStep() {
       setGeneratedTtsAudio(result.audioUrl, result.durationSeconds)
       toast.success('Audio generated successfully!')
     } catch (error) {
-      console.error('TTS generation error:', error)
+      log.error('TTS generation error', { error: error instanceof Error ? error.message : String(error) })
       toast.error(error instanceof Error ? error.message : 'Failed to generate audio')
     } finally {
       setIsGeneratingTts(false)
@@ -274,7 +277,7 @@ export function PresetGenerateStep() {
 
       setGenerationResult(imageResult)
     } catch (error) {
-      console.error('Generation failed:', error)
+      log.error('Generation failed', { error: error instanceof Error ? error.message : String(error) })
       setError(error instanceof Error ? error.message : 'Failed to generate ad')
       toast.error(error instanceof Error ? error.message : 'Failed to generate ad')
     } finally {

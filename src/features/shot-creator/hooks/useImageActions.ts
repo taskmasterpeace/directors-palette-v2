@@ -1,6 +1,7 @@
 import { useToast } from '@/hooks/use-toast'
 import { useCallback } from 'react'
 import { clipboardManager } from '@/utils/clipboard-manager'
+import { logger } from '@/lib/logger'
 
 /**
  * Custom hook for image-related actions
@@ -18,7 +19,7 @@ export function useImageActions() {
           description: "The prompt has been copied to your clipboard"
         })
       } catch (error) {
-        console.error("Copy prompt failed", error)
+        logger.shotCreator.error('Copy prompt failed', { error: error instanceof Error ? error.message : String(error) })
         toast({
           title: "Copy Failed",
           description: "Unable to copy prompt to clipboard",
@@ -77,7 +78,7 @@ export function useImageActions() {
         description: "Image copied to clipboard"
       })
     } catch (error) {
-      console.error("Copy failed", error)
+      logger.shotCreator.error('Copy failed', { error: error instanceof Error ? error.message : String(error) })
       // Fallback: try to copy URL instead
       try {
         await clipboardManager.writeText(url)

@@ -24,6 +24,7 @@ import AdvancedSettings from "./AdvancedSettings"
 import BasicSettings from "./BasicSettings"
 import { PromptActions } from "./PromptActions"
 import { PromptBrowser } from "./PromptBrowser"
+import { logger } from '@/lib/logger'
 
 const CreatorPromptSettings = ({ compact, showResizeControls = true }: { compact?: boolean; showResizeControls?: boolean }) => {
     const [showAdvanced, setShowAdvanced] = useState(false)
@@ -63,7 +64,7 @@ const CreatorPromptSettings = ({ compact, showResizeControls = true }: { compact
             const settingsText = JSON.stringify(shotCreatorSettings, null, 2)
             await clipboardManager.writeText(settingsText)
         } catch (error) {
-            console.error('Copy settings failed:', error)
+            logger.shotCreator.error('Copy settings failed', { error: error instanceof Error ? error.message : String(error) })
         }
     }, [shotCreatorSettings])
 

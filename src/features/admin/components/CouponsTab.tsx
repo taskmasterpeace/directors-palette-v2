@@ -11,7 +11,10 @@ import { Label } from "@/components/ui/label"
 import { Plus, RefreshCw, Ticket, Trash2 } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { toast } from "sonner"
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Admin')
 interface Coupon {
     id: string
     code: string
@@ -37,7 +40,7 @@ export function CouponsTab() {
                 setCoupons(data.coupons || [])
             }
         } catch (error) {
-            console.error('Error fetching coupons:', error)
+            log.error('Error fetching coupons', { error: error instanceof Error ? error.message : String(error) })
         } finally {
             setLoading(false)
         }

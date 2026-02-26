@@ -21,6 +21,7 @@ import {
   buildMusicStylePrompt,
   buildCombinedPrompt,
 } from '../services/suno-prompt-builder'
+import { logger } from '@/lib/logger'
 
 interface ArtistDnaState {
   // Server data
@@ -122,7 +123,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           const artists = await artistDnaService.getArtists(userId)
           set({ artists, isInitialized: true, currentUserId: userId, isLoading: false })
         } catch (error) {
-          console.error('Error initializing artist DNA store:', error)
+          logger.musicLab.error('Error initializing artist DNA store', { error: error instanceof Error ? error.message : String(error) })
           set({ isLoading: false })
         }
       },
@@ -276,7 +277,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           })
           return true
         } catch (error) {
-          console.error('Error seeding from artist:', error)
+          logger.musicLab.error('Error seeding from artist', { error: error instanceof Error ? error.message : String(error) })
           set({ isSeedingFromArtist: false })
           return false
         }
@@ -412,7 +413,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             get().recalculateGenome()
           }, 2000)
         } catch (error) {
-          console.error('Song analysis error:', error)
+          logger.musicLab.error('Song analysis error', { error: error instanceof Error ? error.message : String(error) })
           set((state) => ({
             draft: {
               ...state.draft,
@@ -466,7 +467,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             isDirty: true,
           }))
         } catch (error) {
-          console.error('Genome calculation error:', error)
+          logger.musicLab.error('Genome calculation error', { error: error instanceof Error ? error.message : String(error) })
           set((state) => ({
             draft: {
               ...state.draft,
@@ -556,7 +557,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             lyricsTemplate = data.lyricsTemplate || ''
           }
         } catch (error) {
-          console.error('Error generating lyrics template:', error)
+          logger.musicLab.error('Error generating lyrics template', { error: error instanceof Error ? error.message : String(error) })
         }
 
         const output: SunoPromptOutput = {

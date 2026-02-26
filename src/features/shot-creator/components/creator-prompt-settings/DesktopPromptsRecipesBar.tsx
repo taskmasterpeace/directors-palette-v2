@@ -14,6 +14,7 @@ import { useRecipeStore } from '../../store/recipe.store'
 import { usePromptLibraryStore } from '../../store/prompt-library-store'
 import { PROMPT_CATEGORIES } from '../../constants/prompt-library-presets'
 import { AddPromptDialog } from '../prompt-library/dialogs/AddPromptDialog'
+import { logger } from '@/lib/logger'
 
 type ActiveTab = 'prompts' | 'recipes'
 type PromptView = 'categories' | 'prompts'
@@ -175,7 +176,7 @@ export function DesktopPromptsRecipesBar({
             })
             setShowAddPromptDialog(false)
         } catch (error) {
-            console.error('Failed to add prompt:', error)
+            logger.shotCreator.error('Failed to add prompt', { error: error instanceof Error ? error.message : String(error) })
         }
     }
 

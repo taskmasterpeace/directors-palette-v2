@@ -19,6 +19,7 @@ import { Pagination } from "@/features/shot-creator/components/unified-gallery/P
 import { VideoGalleryService } from "../services/gallery.service"
 import type { GeneratedVideo } from "../types"
 import { toast } from 'sonner'
+import { logger } from '@/lib/logger'
 
 type ViewMode = 'grid' | 'list'
 
@@ -49,7 +50,7 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
                 setVideos(result.videos)
                 setTotalPages(result.totalPages)
             } catch (error) {
-                console.error('Failed to load videos:', error)
+                logger.shotCreator.error('Failed to load videos', { error: error instanceof Error ? error.message : String(error) })
             } finally {
                 setIsLoading(false)
             }
@@ -105,7 +106,7 @@ const VideoPreviewsModal = ({ isOpen, onClose }: VideoPreviewsModalProps) => {
 
             URL.revokeObjectURL(blobUrl)
         } catch (error) {
-            console.error('Failed to download video:', error)
+            logger.shotCreator.error('Failed to download video', { error: error instanceof Error ? error.message : String(error) })
             toast.error('Could not download video. Please try again.')
         }
     }

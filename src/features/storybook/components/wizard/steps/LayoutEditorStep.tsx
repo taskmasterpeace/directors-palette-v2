@@ -25,6 +25,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { cn } from "@/utils/utils"
 import Image from "next/image"
 import type { SpreadTextPosition, BookSpread } from "../../../types/storybook.types"
+import { logger } from '@/lib/logger'
 
 /**
  * LayoutEditorStep
@@ -87,7 +88,7 @@ export function LayoutEditorStep() {
         markSpreadGenerated(currentSpread.id, result.imageUrl, result.rightImageUrl)
       }
     } catch (err) {
-      console.error("Failed to generate spread:", err)
+      logger.storybook.error('Failed to generate spread', { error: err instanceof Error ? err.message : String(err) })
     } finally {
       setSpreadGenerating(currentSpread.id, false)
     }

@@ -24,7 +24,10 @@ import { PromptTemplateEditor } from '@/features/prompt-templates'
 // Cost per image generation in cents (matches FALLBACK_PRICING.image.price_cents)
 const COST_PER_GENERATION = 20
 import type { UserWithCredits, AdminStatsResponse } from '../types/admin.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Admin')
 interface AdminDashboardProps {
     currentUserEmail: string
 }
@@ -50,7 +53,7 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
             const data = await res.json()
             setUsers(data.users || [])
         } catch (error) {
-            console.error('Error fetching users:', error)
+            log.error('Error fetching users', { error: error instanceof Error ? error.message : String(error) })
         }
     }, [searchQuery])
 
@@ -61,7 +64,7 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
             const data = await res.json()
             setStats(data)
         } catch (error) {
-            console.error('Error fetching stats:', error)
+            log.error('Error fetching stats', { error: error instanceof Error ? error.message : String(error) })
         }
     }, [])
 
@@ -109,7 +112,7 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
             setSelectedUser(null)
             await fetchUsers()
         } catch (error) {
-            console.error('Error granting credits:', error)
+            log.error('Error granting credits', { error: error instanceof Error ? error.message : String(error) })
             alert(error instanceof Error ? error.message : 'Failed to grant credits')
         } finally {
             setGranting(false)

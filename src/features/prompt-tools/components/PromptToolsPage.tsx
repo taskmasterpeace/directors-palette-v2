@@ -12,7 +12,10 @@ import { useRecipeStore } from '@/features/shot-creator/store/recipe.store'
 import { useWildCardStore } from '@/features/shot-creator/store/wildcard.store'
 import { usePromptLibraryStore } from '@/features/shot-creator/store/prompt-library-store'
 import { useShotCreatorStore } from '@/features/shot-creator/store/shot-creator.store'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('PromptTools')
 export function PromptToolsPage() {
   const [activeTab, setActiveTab] = useState('recipes')
   const { setShotCreatorPrompt } = useShotCreatorStore()
@@ -28,7 +31,7 @@ export function PromptToolsPage() {
 
   // Handle selecting a recipe (just logs for now, actual use is in Shot Creator)
   const handleSelectRecipe = (recipeId: string) => {
-    console.log('Recipe selected:', recipeId)
+    log.info('Recipe selected', { recipeId: recipeId })
   }
 
   return (

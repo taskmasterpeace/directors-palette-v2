@@ -10,6 +10,7 @@
  */
 
 import { getClient } from '@/lib/db/client'
+import { logger } from '@/lib/logger'
 
 export type StorybookAssetType =
   | 'style-guide'
@@ -73,7 +74,7 @@ export async function getOrCreateStorybookFolder(
     .single()
 
   if (error) {
-    console.error('Failed to create storybook folder:', error)
+    logger.storybook.error('Failed to create storybook folder', { error: error })
     return null
   }
 
@@ -125,7 +126,7 @@ export async function assignToStorybookFolder(
     .eq('id', galleryItemId)
 
   if (error) {
-    console.error('Failed to assign gallery item to storybook folder:', error)
+    logger.storybook.error('Failed to assign gallery item to storybook folder', { error: error })
     return false
   }
 
@@ -149,7 +150,7 @@ export async function getStorybookGalleryItems(
     .order('created_at', { ascending: true })
 
   if (error) {
-    console.error('Failed to get storybook gallery items:', error)
+    logger.storybook.error('Failed to get storybook gallery items', { error: error })
     return []
   }
 

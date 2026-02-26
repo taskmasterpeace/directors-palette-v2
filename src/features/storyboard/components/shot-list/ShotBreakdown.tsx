@@ -20,6 +20,7 @@ import { EditableShot } from './EditableShot'
 import { toast } from 'sonner'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
 import type { GeneratedShotPrompt } from '../../types/storyboard.types'
+import { logger } from '@/lib/logger'
 
 interface ShotBreakdownProps {
     chapterIndex?: number
@@ -70,7 +71,7 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
             openBRollModal(sequence, imageData.imageUrl)
         } else {
             // If no image, try to use character reference or alert user
-            console.warn('No generated image for shot', sequence)
+            logger.storyboard.warn('No generated image for shot', { sequence: sequence })
         }
     }
 
@@ -136,7 +137,7 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
             setGeneratedPrompts(merged)
             toast.success(`Refined ${data.shots.length} prompts with location and character details`)
         } catch (error) {
-            console.error('Refinement error:', error)
+            logger.storyboard.error('Refinement error', { error: error instanceof Error ? error.message : String(error) })
             toast.error('Prompt refinement failed', {
                 description: error instanceof Error ? error.message : 'Unknown error'
             })
@@ -296,7 +297,7 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                     .filter((shot): shot is { sequence: number; prompt: string; shotType?: string } => {
                         // Filter out malformed shots from LLM
                         if (!shot || typeof shot.sequence !== 'number' || !shot.prompt) {
-                            console.warn('Skipping malformed shot from LLM:', shot)
+                            logger.storyboard.warn('Skipping malformed shot from LLM', { shot: shot })
                             return false
                         }
                         return true

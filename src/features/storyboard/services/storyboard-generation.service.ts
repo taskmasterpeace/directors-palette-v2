@@ -7,6 +7,7 @@ import { imageGenerationService, ImageGenerationService } from '@/features/shot-
 import type { ModelId } from '@/config'
 import type { ShotBreakdownSegment, StyleGuide, StoryboardCharacter, StoryboardLocation, GeneratedShotPrompt, PresetStyle } from '../types/storyboard.types'
 import { EquipmentTranslationService } from './equipment-translation.service'
+import { logger } from '@/lib/logger'
 
 interface GenerationConfig {
     model: ModelId
@@ -281,9 +282,9 @@ export class StoryboardGenerationService {
                     if (charRef.reference_image_url && isValidImageUrl(charRef.reference_image_url)) {
                         referenceImages.push(charRef.reference_image_url)
                     } else if (charRef.reference_image_url) {
-                        console.warn(`[StoryboardGeneration] Invalid character reference URL for ${charRef.name}: ${charRef.reference_image_url}`)
+                        logger.storyboard.warn('Invalid character reference URL', { name: charRef.name, url: charRef.reference_image_url })
                     } else if (charRef.has_reference && !charRef.reference_image_url) {
-                        console.warn(`[StoryboardGeneration] Character "${charRef.name}" has has_reference=true but no reference_image_url`)
+                        logger.storyboard.warn('Character has has_reference=true but no reference_image_url', { name: charRef.name })
                     }
                 }
 
@@ -292,7 +293,7 @@ export class StoryboardGenerationService {
                     if (isValidImageUrl(shot.locationRef.reference_image_url)) {
                         referenceImages.push(shot.locationRef.reference_image_url)
                     } else {
-                        console.warn(`[StoryboardGeneration] Invalid location reference URL: ${shot.locationRef.reference_image_url}`)
+                        logger.storyboard.warn('Invalid location reference URL', { url: shot.locationRef.reference_image_url })
                     }
                 }
 

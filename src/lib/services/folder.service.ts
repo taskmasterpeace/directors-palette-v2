@@ -12,7 +12,10 @@ import type {
   UpdateFolderInput,
   FolderRow,
 } from '@/features/shot-creator/types/folder.types';
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Lib')
 interface ServiceResult<T> {
   data: T | null;
   error: string | null;
@@ -48,7 +51,7 @@ export class FolderService {
         error: authError,
       } = await supabase.auth.getUser();
       if (authError || !user) {
-        console.warn('User not authenticated, cannot load folders');
+        log.warn('User not authenticated, cannot load folders')
         return [];
       }
 
@@ -56,7 +59,7 @@ export class FolderService {
       const result = await repository.getFoldersByUser(user.id);
 
       if (result.error) {
-        console.error('Error fetching folders:', result.error);
+        log.error('Error fetching folders', { error: result.error })
         return [];
       }
 
@@ -71,7 +74,7 @@ export class FolderService {
         imageCount: folder.image_count,
       }));
     } catch (error) {
-      console.error('Failed to load folders:', error);
+      log.error('Failed to load folders', { error: error instanceof Error ? error.message : String(error) })
       return [];
     }
   }
@@ -130,7 +133,7 @@ export class FolderService {
         error: null,
       };
     } catch (error) {
-      console.error('Failed to create folder:', error);
+      log.error('Failed to create folder', { error: error instanceof Error ? error.message : String(error) })
       return { data: null, error: 'An unexpected error occurred' };
     }
   }
@@ -192,7 +195,7 @@ export class FolderService {
         error: null,
       };
     } catch (error) {
-      console.error('Failed to update folder:', error);
+      log.error('Failed to update folder', { error: error instanceof Error ? error.message : String(error) })
       return { data: null, error: 'An unexpected error occurred' };
     }
   }
@@ -225,7 +228,7 @@ export class FolderService {
 
       return { data: true, error: null };
     } catch (error) {
-      console.error('Failed to delete folder:', error);
+      log.error('Failed to delete folder', { error: error instanceof Error ? error.message : String(error) })
       return { data: null, error: 'An unexpected error occurred' };
     }
   }
@@ -249,7 +252,7 @@ export class FolderService {
 
       return { data: true, error: null };
     } catch (error) {
-      console.error('Failed to move image:', error);
+      log.error('Failed to move image', { error: error instanceof Error ? error.message : String(error) })
       return { data: null, error: 'An unexpected error occurred' };
     }
   }
@@ -277,7 +280,7 @@ export class FolderService {
 
       return { data: true, error: null };
     } catch (error) {
-      console.error('Failed to bulk move images:', error);
+      log.error('Failed to bulk move images', { error: error instanceof Error ? error.message : String(error) })
       return { data: null, error: 'An unexpected error occurred' };
     }
   }

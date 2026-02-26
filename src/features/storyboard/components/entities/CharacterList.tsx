@@ -16,6 +16,7 @@ import { GalleryImagePicker } from './GalleryImagePicker'
 import CategorySelectionDialog from '@/features/shot-creator/components/CategorySelectDialog'
 import { GalleryService } from '@/lib/services/gallery.service'
 import { useStyleAnalysisStore } from '../../hooks/useStyleAnalysis'
+import { logger } from '@/lib/logger'
 
 interface CharacterCardProps {
     character: StoryboardCharacter
@@ -131,7 +132,7 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe,
             setPendingGalleryId(galleryId)
             setCategoryDialogOpen(true)
         } catch (err) {
-            console.error('Failed to prepare image for library:', err)
+            logger.storyboard.error('Failed to prepare image for library', { error: err instanceof Error ? err.message : String(err) })
         } finally {
             setIsSavingToLibrary(false)
         }
@@ -149,10 +150,10 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe,
             if (result.success) {
                 onSaveToLibrary(character.id, tag, pendingGalleryId)
             } else {
-                console.error('Failed to save reference:', result.error)
+                logger.storyboard.error('Failed to save reference', { error: result.error })
             }
         } catch (err) {
-            console.error('Failed to update reference:', err)
+            logger.storyboard.error('Failed to update reference', { error: err instanceof Error ? err.message : String(err) })
         } finally {
             setPendingGalleryId(null)
         }
@@ -168,7 +169,7 @@ function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe,
                 onRemoveFromLibrary(character.id, galleryId)
             }
         } catch (err) {
-            console.error('Failed to remove from library:', err)
+            logger.storyboard.error('Failed to remove from library', { error: err instanceof Error ? err.message : String(err) })
         }
     }
 

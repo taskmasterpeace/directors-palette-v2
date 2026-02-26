@@ -4,7 +4,10 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Storage')
 const IMAGE_LIMIT = 500
 const IMAGE_WARNING_THRESHOLD = 400
 const VIDEO_EXPIRATION_DAYS = 7
@@ -45,7 +48,7 @@ export class StorageLimitsService {
       .eq('status', 'completed')
 
     if (error) {
-      console.error('Error getting image count:', error)
+      log.error('Error getting image count', { error: error })
       // Return safe defaults on error
       return {
         imageCount: 0,
@@ -96,7 +99,7 @@ export class StorageLimitsService {
       .lt('expires_at', new Date().toISOString()) as { data: { id: string; storage_path: string | null }[] | null; error: unknown }
 
     if (fetchError) {
-      console.error('Error fetching expired content:', fetchError)
+      log.error('Error fetching expired content', { fetchError: fetchError })
       return 0
     }
 
@@ -115,7 +118,7 @@ export class StorageLimitsService {
         .remove(storagePaths)
 
       if (storageError) {
-        console.error('Error deleting storage files:', storageError)
+        log.error('Error deleting storage files', { storageError: storageError })
         // Continue anyway to delete database entries
       }
     }
@@ -124,7 +127,7 @@ export class StorageLimitsService {
     const { data, error } = await supabase.rpc('delete_expired_content')
 
     if (error) {
-      console.error('Error deleting expired database entries:', error)
+      log.error('Error deleting expired database entries', { error: error })
       return 0
     }
 

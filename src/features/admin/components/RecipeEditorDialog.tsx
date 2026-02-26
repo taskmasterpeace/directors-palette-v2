@@ -16,7 +16,10 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import type { Recipe, RecipeCategory, RecipeField, RecipeStageType, RecipeToolId } from "@/features/shot-creator/types/recipe.types"
 import { parseStageTemplate, RECIPE_TOOLS } from "@/features/shot-creator/types/recipe.types"
 import { compressImage } from "@/utils/image-compression"
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Admin')
 interface RecipeEditorDialogProps {
     recipe: Recipe | null
     categories: RecipeCategory[]
@@ -207,7 +210,7 @@ export function RecipeEditorDialog({
                     const errorData = await response.json()
                     throw new Error(errorData.error || `Upload failed (HTTP ${response.status})`)
                 } else {
-                    console.error('[RecipeEditorDialog] Non-JSON error response:', response.status, uploadUrl)
+                    log.error('[RecipeEditorDialog] Non-JSON error response', { status: response.status, uploadUrl })
                     throw new Error(`Upload failed (HTTP ${response.status}). Recipe ID: ${recipe?.id || 'new'}`)
                 }
             }
@@ -215,7 +218,7 @@ export function RecipeEditorDialog({
             // Verify response is JSON before parsing
             const contentType = response.headers.get('content-type')
             if (!contentType?.includes('application/json')) {
-                console.error('[RecipeEditorDialog] Unexpected response type:', contentType, uploadUrl)
+                log.error('[RecipeEditorDialog] Unexpected response type', { contentType, uploadUrl })
                 throw new Error(`Server returned unexpected response type: ${contentType}`)
             }
 
@@ -241,7 +244,7 @@ export function RecipeEditorDialog({
                 return newStages
             })
         } catch (err) {
-            console.error('Error uploading image:', err)
+            log.error('Error uploading image', { error: err instanceof Error ? err.message : String(err) })
             alert('Upload failed. Try a smaller image.')
         } finally {
             setUploadingStageIndex(null)
@@ -282,17 +285,17 @@ export function RecipeEditorDialog({
                     method: 'DELETE',
                 })
             } catch (err) {
-                console.error('Failed to delete image from storage:', err)
+                log.error('Failed to delete image from storage', { error: err instanceof Error ? err.message : String(err) })
                 // Image is already removed from UI, storage cleanup is best-effort
             }
         }
     }, [recipe?.id])
 
     const handleSave = async () => {
-        console.log('[RecipeEditorDialog] handleSave called', { name, categoryId, stageCount: stages.length })
+        log.info('[RecipeEditorDialog] handleSave called', { name, categoryId, stageCount: stages.length })
 
         if (!name.trim()) {
-            console.warn('[RecipeEditorDialog] Save aborted: empty name')
+            log.warn('[RecipeEditorDialog] Save aborted: empty name')
             return
         }
 
@@ -318,11 +321,11 @@ export function RecipeEditorDialog({
                 })),
             }
 
-            console.log('[RecipeEditorDialog] Calling onSave with updates:', updates)
+            log.info('[RecipeEditorDialog] Calling onSave with updates', { updates: updates })
             await onSave(updates)
-            console.log('[RecipeEditorDialog] onSave completed successfully')
+            log.info('[RecipeEditorDialog] onSave completed successfully')
         } catch (error) {
-            console.error('[RecipeEditorDialog] Save failed:', error)
+            log.error('[RecipeEditorDialog] Save failed', { error: error instanceof Error ? error.message : String(error) })
             // Re-throw so parent can handle
             throw error
         } finally {
@@ -643,16 +646,12 @@ Example: A portrait of <<CHARACTER_NAME:name!>> in <<STYLE:text>> style."
                                                                     alt={img.name}
                                                                     className="w-8 h-8 object-cover rounded"
                                                                     onError={(e) => {
-                                                                        console.error('[RecipeEditorDialog] Failed to load image:', {
-                                                                            url: img.url,
-                                                                            name: img.name,
-                                                                            imageId: img.id,
-                                                                        });
+                                                                        log.error('[RecipeEditorDialog] Failed to load image', { url: img.url, name: img.name, imageId: img.id, })
                                                                         // Show broken image indicator
                                                                         e.currentTarget.classList.add('opacity-30');
                                                                     }}
                                                                     onLoad={() => {
-                                                                        console.log('[RecipeEditorDialog] Image loaded successfully:', img.url);
+                                                                        log.info('[RecipeEditorDialog] Image loaded successfully', { url: img.url })
                                                                     }}
                                                                 />
                                                             )}

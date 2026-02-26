@@ -36,6 +36,7 @@ import { Palette, X, Plus, Trash2, Upload, Pencil, Sparkles } from 'lucide-react
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import { toast } from '@/hooks/use-toast'
+import { logger } from '@/lib/logger'
 
 interface StyleSelectorProps {
     compact?: boolean
@@ -147,7 +148,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                 description: 'Style details have been auto-filled. You can edit them before saving.'
             })
         } catch (error) {
-            console.error('AI analysis error:', error)
+            logger.shotCreator.error('AI analysis error', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: 'Analysis Failed',
                 description: error instanceof Error ? error.message : 'Failed to analyze image',

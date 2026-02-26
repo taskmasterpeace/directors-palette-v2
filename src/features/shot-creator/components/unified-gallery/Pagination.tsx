@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { logger } from '@/lib/logger'
 
 interface PaginationProps {
   currentPage: number
@@ -10,7 +11,7 @@ interface PaginationProps {
 }
 
 export function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) {
-  console.log(`[Pagination] Rendering with currentPage=${currentPage}, totalPages=${totalPages}`)
+  logger.shotCreator.info('Pagination rendering', { currentPage, totalPages })
 
   // Always show pagination info, even on single page
   if (totalPages <= 0) {
@@ -30,7 +31,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
           variant="outline"
           size="sm"
           onClick={() => {
-            console.log(`[Pagination] Previous clicked: ${currentPage} -> ${currentPage - 1}`)
+            logger.shotCreator.info('Previous page clicked', { from: currentPage, to: currentPage - 1 })
             onPageChange(currentPage - 1)
           }}
           disabled={currentPage === 1}
@@ -54,7 +55,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
                   size="sm"
                   className={`min-h-[44px] min-w-[44px] ${page === currentPage ? 'bg-primary hover:bg-primary/90' : ''}`}
                   onClick={() => {
-                    console.log(`[Pagination] Page ${page} clicked`)
+                    logger.shotCreator.info('Page clicked', { page })
                     onPageChange(page)
                   }}
                 >
@@ -80,7 +81,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
           variant="outline"
           size="sm"
           onClick={() => {
-            console.log(`[Pagination] Next clicked: ${currentPage} -> ${currentPage + 1}`)
+            logger.shotCreator.info('Next page clicked', { from: currentPage, to: currentPage + 1 })
             onPageChange(currentPage + 1)
           }}
           disabled={currentPage === totalPages}

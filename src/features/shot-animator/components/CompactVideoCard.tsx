@@ -18,6 +18,7 @@ import useEmblaCarousel from 'embla-carousel-react'
 import { toast } from 'sonner'
 import { ShotGeneratedVideo } from '../types'
 import { FullscreenVideoModal } from './FullscreenVideoModal'
+import { logger } from '@/lib/logger'
 
 interface CompactVideoCardProps {
   videos: ShotGeneratedVideo[]
@@ -154,7 +155,7 @@ const CompactVideoCardComponent = ({
       // Clean up the blob URL
       URL.revokeObjectURL(blobUrl)
     } catch (error) {
-      console.error('Failed to download video:', error)
+      logger.shotCreator.error('Failed to download video', { error: error instanceof Error ? error.message : String(error) })
       toast.error('Could not download video. Please try again.')
     }
   }

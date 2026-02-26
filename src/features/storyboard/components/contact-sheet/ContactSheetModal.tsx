@@ -24,6 +24,7 @@ import {
     ANGLE_NAMES,
     CONTACT_SHEET_TEMPLATE_PATH
 } from '../../services/contact-sheet.service'
+import { logger } from '@/lib/logger'
 
 const ANGLE_LABELS: Record<CinematicAngle, string> = ANGLE_NAMES
 
@@ -140,7 +141,7 @@ export function ContactSheetModal({
 
             setContactSheetVariants(storeVariants)
         } catch (error) {
-            console.error('Contact sheet generation failed:', error)
+            logger.storyboard.error('Contact sheet generation failed', { error: error instanceof Error ? error.message : String(error) })
         } finally {
             setIsGenerating(false)
         }

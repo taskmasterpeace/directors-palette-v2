@@ -14,6 +14,7 @@ import type {
     TransactionType,
     GenerationType
 } from '../types/credits.types'
+import { logger } from '@/lib/logger'
 
 // Helper to get an untyped client for credits tables (not in main DB types yet)
 // Uses anon key - respects RLS (for user-facing operations)
@@ -66,7 +67,7 @@ class CreditsService {
             .single()
 
         if (error && error.code !== 'PGRST116') {
-            console.error('Error fetching user credits:', error)
+            logger.credits.error('Error fetching user credits', { error: error })
             return null
         }
 
@@ -84,11 +85,11 @@ class CreditsService {
                 .single()
 
             if (insertError) {
-                console.error('Error creating user credits record:', insertError)
+                logger.credits.error('Error creating user credits record', { insertError: insertError })
                 return null
             }
 
-            console.log(`🎁 New user ${userId} received ${INITIAL_CREDITS_FOR_NEW_USERS} free credits (5 generations)`)
+            logger.credits.info('New user received free credits', { userId, credits: INITIAL_CREDITS_FOR_NEW_USERS, generations: 5 })
             return newRecord as UserCredits
         }
 
@@ -109,7 +110,7 @@ class CreditsService {
             .single()
 
         if (error) {
-            console.warn(`No pricing found for model ${modelId}, using fallback`)
+            logger.credits.warn('No pricing found for model, using fallback', { modelId })
             return null
         }
 
@@ -238,7 +239,7 @@ class CreditsService {
 
         // Fallback to non-atomic method if RPC fails (e.g., function doesn't exist yet)
         if (rpcError) {
-            console.warn('Atomic deduction unavailable, falling back to standard method:', rpcError.message)
+            logger.credits.warn('Atomic deduction unavailable, falling back to standard method', { message: rpcError.message })
         }
 
         // FALLBACK: Standard non-atomic deduction (for backwards compatibility)
@@ -278,7 +279,7 @@ class CreditsService {
             .eq('user_id', userId)
 
         if (updateError) {
-            console.error('Error updating balance:', updateError)
+            logger.credits.error('Error updating balance', { updateError: updateError })
             return { success: false, error: 'Failed to update balance' }
         }
 
@@ -299,7 +300,7 @@ class CreditsService {
             .single()
 
         if (txError) {
-            console.error('Error creating transaction:', txError)
+            logger.credits.error('Error creating transaction', { txError: txError })
             // Balance was already deducted, so still return success
         }
 
@@ -347,7 +348,7 @@ class CreditsService {
             .eq('user_id', userId)
 
         if (updateError) {
-            console.error('Error updating balance:', updateError)
+            logger.credits.error('Error updating balance', { updateError: updateError })
             return { success: false, error: 'Failed to update balance' }
         }
 
@@ -368,7 +369,7 @@ class CreditsService {
             .single()
 
         if (txError) {
-            console.error('Error creating transaction:', txError)
+            logger.credits.error('Error creating transaction', { txError: txError })
         }
 
         return {
@@ -417,14 +418,14 @@ class CreditsService {
                 .single()
 
             if (insertError) {
-                console.error('Error creating user credits record (admin):', insertError)
+                logger.credits.error('Error creating user credits record (admin)', { insertError: insertError })
                 return { success: false, error: 'Failed to create user credits record' }
             }
 
             balance = newRecord as UserCredits
-            console.log(`Created new credits record for user ${userId}`)
+            logger.credits.info('Created new credits record for user', { userId })
         } else if (fetchError) {
-            console.error('Error fetching user credits (admin):', fetchError)
+            logger.credits.error('Error fetching user credits (admin)', { fetchError: fetchError })
             return { success: false, error: 'Unable to fetch user balance' }
         } else {
             balance = existingBalance as UserCredits
@@ -445,7 +446,7 @@ class CreditsService {
             .eq('user_id', userId)
 
         if (updateError) {
-            console.error('Error updating balance (admin):', updateError)
+            logger.credits.error('Error updating balance (admin)', { updateError: updateError })
             return { success: false, error: 'Failed to update balance' }
         }
 
@@ -466,11 +467,11 @@ class CreditsService {
             .single()
 
         if (txError) {
-            console.error('Error creating transaction (admin):', txError)
+            logger.credits.error('Error creating transaction (admin)', { txError: txError })
             // Balance was already updated, so still return success
         }
 
-        console.log(`✅ Admin: Added ${amount} credits to user ${userId}. New balance: ${newBalance}`)
+        logger.credits.info('Admin added credits', { userId, amount, newBalance })
 
         return {
             success: true,
@@ -497,7 +498,7 @@ class CreditsService {
             .range(offset, offset + limit - 1)
 
         if (error) {
-            console.error('Error fetching transactions:', error)
+            logger.credits.error('Error fetching transactions', { error: error })
             return []
         }
 
@@ -517,7 +518,7 @@ class CreditsService {
             .order('sort_order', { ascending: true })
 
         if (error) {
-            console.error('Error fetching credit packages:', error)
+            logger.credits.error('Error fetching credit packages', { error: error })
             return []
         }
 
@@ -537,7 +538,7 @@ class CreditsService {
             .order('generation_type', { ascending: true })
 
         if (error) {
-            console.error('Error fetching model pricing:', error)
+            logger.credits.error('Error fetching model pricing', { error: error })
             return []
         }
 
@@ -562,7 +563,7 @@ class CreditsService {
             })
 
             if (error) {
-                console.warn('Abuse check failed, allowing credits:', error.message)
+                logger.credits.warn('Abuse check failed, allowing credits', { message: error.message })
                 // If the function doesn't exist yet, allow full credits
                 return {
                     isSuspicious: false,
@@ -598,7 +599,7 @@ class CreditsService {
                 creditsToGrant
             }
         } catch (err) {
-            console.error('Error checking IP for abuse:', err)
+            logger.credits.error('Error checking IP for abuse', { error: err instanceof Error ? err.message : String(err) })
             // On error, allow full credits (fail open)
             return {
                 isSuspicious: false,
@@ -630,19 +631,19 @@ class CreditsService {
             })
 
             if (error) {
-                console.warn('Failed to record signup IP:', error.message)
+                logger.credits.warn('Failed to record signup IP', { message: error.message })
                 return { success: false, flagged: false }
             }
 
             const result = data as { recorded: boolean; is_suspicious: boolean }
-            console.log(`📍 Recorded signup IP for user ${userId}: ${ipAddress} (flagged: ${result?.is_suspicious || false})`)
+            logger.credits.info('Recorded signup IP', { userId, ipAddress, flagged: result?.is_suspicious || false })
 
             return {
                 success: result?.recorded || true,
                 flagged: result?.is_suspicious || false
             }
         } catch (err) {
-            console.error('Error recording signup IP:', err)
+            logger.credits.error('Error recording signup IP', { error: err instanceof Error ? err.message : String(err) })
             return { success: false, flagged: false }
         }
     }
@@ -666,7 +667,7 @@ class CreditsService {
             .single()
 
         if (error && error.code !== 'PGRST116') {
-            console.error('Error fetching user credits:', error)
+            logger.credits.error('Error fetching user credits', { error: error })
             return null
         }
 
@@ -684,10 +685,7 @@ class CreditsService {
             creditsToGrant = abuseCheck.creditsToGrant
 
             if (abuseCheck.isSuspicious) {
-                console.warn(`⚠️ Suspicious signup detected for user ${userId} from IP ${ipAddress}`)
-                console.warn(`   Previous users from this IP: ${abuseCheck.existingUsers}`)
-                console.warn(`   Recommendation: ${abuseCheck.recommendation}`)
-                console.warn(`   Credits granted: ${creditsToGrant} (instead of ${INITIAL_CREDITS_FOR_NEW_USERS})`)
+                logger.credits.warn('Suspicious signup detected', { userId, ipAddress, existingUsers: abuseCheck.existingUsers, recommendation: abuseCheck.recommendation, creditsToGrant, normalCredits: INITIAL_CREDITS_FOR_NEW_USERS })
             }
         }
 
@@ -704,7 +702,7 @@ class CreditsService {
             .single()
 
         if (insertError) {
-            console.error('Error creating user credits record:', insertError)
+            logger.credits.error('Error creating user credits record', { insertError: insertError })
             return null
         }
 
@@ -714,9 +712,9 @@ class CreditsService {
         }
 
         if (creditsToGrant > 0) {
-            console.log(`🎁 New user ${userId} received ${creditsToGrant} free credits (${creditsToGrant / 20} generations)`)
+            logger.credits.info('New user received free credits', { userId, credits: creditsToGrant, generations: creditsToGrant / 20 })
         } else {
-            console.log(`🚫 New user ${userId} received 0 free credits (abuse prevention)`)
+            logger.credits.info('New user received 0 credits due to abuse prevention', { userId })
         }
 
         return newRecord as UserCredits
@@ -738,7 +736,7 @@ class CreditsService {
             const { data, error } = await supabase.rpc('get_abuse_summary')
 
             if (error) {
-                console.error('Error fetching abuse summary:', error)
+                logger.credits.error('Error fetching abuse summary', { error: error })
                 return null
             }
 
@@ -761,7 +759,7 @@ class CreditsService {
                 recentFlags: result.recent_flags || []
             }
         } catch (err) {
-            console.error('Error fetching abuse summary:', err)
+            logger.credits.error('Error fetching abuse summary', { error: err instanceof Error ? err.message : String(err) })
             return null
         }
     }

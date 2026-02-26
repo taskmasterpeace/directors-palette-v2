@@ -1,3 +1,6 @@
+import { createLogger } from '@/lib/logger'
+const log = createLogger('StoryCreator')
+
 /**
  * Queue Recovery Service
  * Manages checkpointing and recovery of generation queues using localStorage
@@ -26,9 +29,9 @@ export class QueueRecoveryService {
                 timestamp: Date.now()
             }
             localStorage.setItem(CHECKPOINT_KEY, JSON.stringify(checkpointWithTimestamp))
-            console.log('📍 Queue checkpoint saved:', checkpoint)
+            log.info('📍 Queue checkpoint saved', { checkpoint: checkpoint })
         } catch (error) {
-            console.error('Failed to save queue checkpoint:', error)
+            log.error('Failed to save queue checkpoint', { error: error instanceof Error ? error.message : String(error) })
         }
     }
 
@@ -46,14 +49,14 @@ export class QueueRecoveryService {
             // Check if checkpoint is stale
             const age = Date.now() - checkpoint.timestamp
             if (age > STALE_THRESHOLD_MS) {
-                console.log('⏰ Checkpoint is stale, ignoring')
+                log.info('⏰ Checkpoint is stale, ignoring')
                 this.clearCheckpoint()
                 return null
             }
 
             return checkpoint
         } catch (error) {
-            console.error('Failed to load queue checkpoint:', error)
+            log.error('Failed to load queue checkpoint', { error: error instanceof Error ? error.message : String(error) })
             return null
         }
     }
@@ -64,9 +67,9 @@ export class QueueRecoveryService {
     static clearCheckpoint(): void {
         try {
             localStorage.removeItem(CHECKPOINT_KEY)
-            console.log('🧹 Queue checkpoint cleared')
+            log.info('🧹 Queue checkpoint cleared')
         } catch (error) {
-            console.error('Failed to clear queue checkpoint:', error)
+            log.error('Failed to clear queue checkpoint', { error: error instanceof Error ? error.message : String(error) })
         }
     }
 

@@ -2,6 +2,9 @@ import { createBrowserClient, createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { ConfigurationError } from "@/lib/errors"
 import { Database } from "./types"
+import { createLogger } from '@/lib/logger'
+
+const log = createLogger('Lib')
 
 // Export typed Supabase client type
 export type TypedSupabaseClient = ReturnType<typeof createBrowserClient<Database>>
@@ -58,7 +61,7 @@ export async function getClient() {
                 },
             })
         } catch (error) {
-            console.error('Failed to create server Supabase client:', error)
+            log.error('Failed to create server Supabase client', { error: error instanceof Error ? error.message : String(error) })
             throw new ConfigurationError(
                 'Failed to create server Supabase client. This might be due to missing Next.js context.',
                 'SUPABASE_SERVER_CLIENT'

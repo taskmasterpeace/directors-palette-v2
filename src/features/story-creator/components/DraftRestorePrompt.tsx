@@ -12,7 +12,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { Clock, Trash2 } from 'lucide-react'
 import { loadDraft, clearDraft, type DraftData } from '../hooks/useDraftAutosave'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('StoryCreator')
 interface DraftRestorePromptProps {
     onRestore: (draft: DraftData) => void
 }
@@ -51,7 +54,7 @@ function markDraftPromptShown(timestamp: number): void {
             sessionStorage.setItem(SHOWN_DRAFTS_KEY, JSON.stringify(shownTimestamps))
         }
     } catch (error) {
-        console.error('Failed to track shown draft:', error)
+        log.error('Failed to track shown draft', { error: error instanceof Error ? error.message : String(error) })
     }
 }
 
@@ -74,7 +77,7 @@ function clearDraftPromptTracking(timestamp: number): void {
             sessionStorage.removeItem(SHOWN_DRAFTS_KEY)
         }
     } catch (error) {
-        console.error('Failed to clear draft tracking:', error)
+        log.error('Failed to clear draft tracking', { error: error instanceof Error ? error.message : String(error) })
     }
 }
 

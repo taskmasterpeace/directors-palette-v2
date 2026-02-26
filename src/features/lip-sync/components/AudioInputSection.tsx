@@ -17,7 +17,10 @@ import {
 import { ELEVENLABS_VOICES, isAudioFormatSupported, getSupportedAudioFormatsDisplay } from '../config/lip-sync-models.config'
 import { LipSyncGenerationService, formatDuration, getAudioDuration } from '../services/lip-sync-generation.service'
 import type { AdhubAudioSource } from '../types/lip-sync.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('LipSync')
 interface AudioInputSectionProps {
   audioSource: AdhubAudioSource
   onAudioSourceChange: (source: AdhubAudioSource) => void
@@ -62,7 +65,7 @@ export function AudioInputSection({
     const handleEnded = () => setIsPlaying(false)
     const handleError = () => {
       setIsPlaying(false)
-      console.error('Audio playback error')
+      log.error('Audio playback error')
     }
 
     audio.addEventListener('ended', handleEnded)
@@ -170,7 +173,7 @@ export function AudioInputSection({
         setIsPlaying(true)
       }
     } catch (error) {
-      console.error('Audio playback failed:', error)
+      log.error('Audio playback failed', { error: error instanceof Error ? error.message : String(error) })
       setIsPlaying(false)
     }
   }, [audioUrl, isPlaying])

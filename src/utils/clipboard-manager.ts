@@ -11,7 +11,10 @@
 
 import { Clipboard } from '@capacitor/clipboard'
 import { Capacitor } from '@capacitor/core'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Utils')
 export interface ClipboardError {
   message: string
   code: 'PERMISSION_DENIED' | 'NOT_SUPPORTED' | 'EMPTY_CLIPBOARD' | 'UNKNOWN'
@@ -61,7 +64,7 @@ class ClipboardManager {
         return await navigator.clipboard.readText()
       }
     } catch (error: unknown) {
-      console.error('Clipboard readText error:', error)
+      log.error('Clipboard readText error', { error: error })
       throw this.formatError(error)
     }
   }
@@ -82,7 +85,7 @@ class ClipboardManager {
         await navigator.clipboard.writeText(text)
       }
     } catch (error: unknown) {
-      console.error('Clipboard writeText error:', error)
+      log.error('Clipboard writeText error', { error: error })
       throw this.formatError(error)
     }
   }
@@ -129,7 +132,7 @@ class ClipboardManager {
         return null
       }
     } catch (error: unknown) {
-      console.error('Clipboard readImage error:', error)
+      log.error('Clipboard readImage error', { error: error })
       // Don't throw on image read failures - just return null
       // This allows graceful degradation when clipboard is empty
       return null
@@ -157,7 +160,7 @@ class ClipboardManager {
         ])
       }
     } catch (error: unknown) {
-      console.error('Clipboard writeImage error:', error)
+      log.error('Clipboard writeImage error', { error: error })
       throw this.formatError(error)
     }
   }
@@ -181,7 +184,7 @@ class ClipboardManager {
         )
       }
     } catch (error) {
-      console.error('Clipboard hasImage error:', error)
+      log.error('Clipboard hasImage error', { error: error instanceof Error ? error.message : String(error) })
       return false
     }
   }
@@ -205,7 +208,7 @@ class ClipboardManager {
         )
       }
     } catch (error) {
-      console.error('Clipboard hasText error:', error)
+      log.error('Clipboard hasText error', { error: error instanceof Error ? error.message : String(error) })
       return false
     }
   }

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { logger } from '@/lib/logger'
 
 interface CreditsState {
     balance: number
@@ -93,7 +94,7 @@ export const useCreditsStore = create<CreditsStore>((set, get) => ({
                 lastFetched: Date.now(),
             })
         } catch (error) {
-            console.error('Error fetching credits:', error)
+            logger.credits.error('Error fetching credits', { error: error instanceof Error ? error.message : String(error) })
             set({
                 loading: false,
                 error: error instanceof Error ? error.message : 'Failed to fetch credits',

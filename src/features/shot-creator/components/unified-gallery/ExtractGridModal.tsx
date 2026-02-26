@@ -8,6 +8,7 @@ import { Download, ImagePlus, CheckSquare, Square } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useToast } from '@/hooks/use-toast'
 import { useUnifiedGalleryStore } from '../../store/unified-gallery-store'
+import { logger } from '@/lib/logger'
 
 interface ExtractGridModalProps {
     open: boolean
@@ -115,7 +116,7 @@ export function ExtractGridModal({
                     setIsSlicing(false)
                 })
                 .catch((error) => {
-                    console.error('Failed to slice grid:', error)
+                    logger.shotCreator.error('Failed to slice grid', { error: error })
                     setSliceError('Failed to extract cells from grid. The image may have CORS restrictions.')
                     setIsSlicing(false)
                 })
@@ -172,7 +173,7 @@ export function ExtractGridModal({
                 description: `Downloaded ${selectedCount} cell${selectedCount > 1 ? 's' : ''}`
             })
         } catch (error) {
-            console.error('Download error:', error)
+            logger.shotCreator.error('Download error', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: 'Download Failed',
                 description: 'An error occurred while downloading',
@@ -220,7 +221,7 @@ export function ExtractGridModal({
                     savedCount++
                 } else {
                     const errorData = await saveResponse.json().catch(() => ({}))
-                    console.warn(`Failed to save cell ${cell.index + 1}:`, errorData.error || saveResponse.statusText)
+                    logger.shotCreator.warn('Failed to save cell', { cellIndex: cell.index + 1, error: errorData.error || saveResponse.statusText })
                 }
             }
 
@@ -244,7 +245,7 @@ export function ExtractGridModal({
 
             onOpenChange(false)
         } catch (error) {
-            console.error('Save to gallery error:', error)
+            logger.shotCreator.error('Save to gallery error', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: 'Save Failed',
                 description: 'An error occurred while saving to gallery',

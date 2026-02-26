@@ -2,7 +2,10 @@ import type { Node, Edge } from '@xyflow/react'
 import type { WorkflowExecutionResult } from '../types/workflow.types'
 // TODO: Import actual image generation service when implemented
 // import { imageGenerationService } from '@/features/shared/services/image-generation.service'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Workflow')
 class WorkflowExecutionService {
   /**
    * Execute a workflow by running nodes in topological order
@@ -32,7 +35,7 @@ class WorkflowExecutionService {
           const result = await this.executeNode(node, inputs)
           results.set(node.id, result)
         } catch (error) {
-          console.error(`Error executing node ${node.id}:`, error)
+          log.error('Error executing node [id]', { id: node.id, error: error instanceof Error ? error.message : String(error) })
           errors.push({
             nodeId: node.id,
             error: error instanceof Error ? error.message : 'Unknown error'
@@ -46,7 +49,7 @@ class WorkflowExecutionService {
         errors: errors.length > 0 ? errors : undefined
       }
     } catch (error) {
-      console.error('Workflow execution failed:', error)
+      log.error('Workflow execution failed', { error: error instanceof Error ? error.message : String(error) })
       return {
         success: false,
         outputs: results,
@@ -83,14 +86,7 @@ class WorkflowExecutionService {
         // TODO: Implement actual image generation
         // For now, return a placeholder URL
         const genData = node.data as { model?: string; aspectRatio?: string; outputFormat?: string; negative?: string }
-        console.log('Generation node would generate with:', {
-          prompt: promptInput.value,
-          model: genData.model || 'nano-banana-pro',
-          referenceImage: imageInput?.value,
-          aspectRatio: genData.aspectRatio || '16:9',
-          outputFormat: genData.outputFormat || 'png',
-          negative: genData.negative
-        })
+        log.info('Generation node would generate with', { prompt: promptInput.value, model: genData.model || 'nano-banana-pro', referenceImage: imageInput?.value, aspectRatio: genData.aspectRatio || '16:9', outputFormat: genData.outputFormat || 'png', negative: genData.negative })
 
         return 'https://via.placeholder.com/800x450?text=Generated+Image'
       }
@@ -104,7 +100,7 @@ class WorkflowExecutionService {
 
         // TODO: Implement tool execution
         const toolData = node.data as { toolId?: string }
-        console.log(`Tool ${toolData.toolId} would process:`, imageInput.value)
+        log.info('Tool [toolId] would process', { toolId: toolData.toolId, value: imageInput.value })
         return imageInput.value
       }
 

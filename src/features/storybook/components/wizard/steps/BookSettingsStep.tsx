@@ -18,6 +18,7 @@ import {
   type SentencesPerPage
 } from "../../../types/education.types"
 import { BOOK_FORMATS, type BookFormat } from "../../../types/storybook.types"
+import { logger } from '@/lib/logger'
 
 // Preset story settings/locations
 const PRESET_SETTINGS = [
@@ -169,7 +170,7 @@ export function BookSettingsStep() {
       setStoryIdeas(data.ideas)
       nextStep()
     } catch (err) {
-      console.error("Error generating ideas:", err)
+      logger.storybook.error('Error generating ideas', { error: err instanceof Error ? err.message : String(err) })
       setError("Failed to generate story ideas. Please try again.")
     } finally {
       setIsGenerating(false)

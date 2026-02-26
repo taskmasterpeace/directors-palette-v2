@@ -1,7 +1,10 @@
 import { SettingsConfig, ShotCreatorSettings } from '@/features/settings/types/setting.types'
 import { defaultSettings } from '@/features/settings/constants'
 import { SupabaseSettingsRepository } from "@/lib/db/repositories/settings.repository"
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Settings')
 export interface SettingsService {
   getByUserId(userId: string): Promise<SettingsConfig>
   upsert(userId: string, config: Partial<SettingsConfig>): Promise<SettingsConfig>
@@ -23,7 +26,7 @@ export class SettingsServiceImpl implements SettingsService {
       const userConfig = result.data.config as Partial<SettingsConfig>
       return this.mergeWithDefaults(userConfig)
     } catch (error) {
-      console.error('Error getting settings:', error)
+      log.error('Error getting settings', { error: error instanceof Error ? error.message : String(error) })
       // Return default settings on error
       return defaultSettings
     }
@@ -54,7 +57,7 @@ export class SettingsServiceImpl implements SettingsService {
       const finalConfig = result.data.config as unknown as SettingsConfig
       return finalConfig
     } catch (error) {
-      console.error('Error upserting settings:', error)
+      log.error('Error upserting settings', { error: error instanceof Error ? error.message : String(error) })
       throw error
     }
   }

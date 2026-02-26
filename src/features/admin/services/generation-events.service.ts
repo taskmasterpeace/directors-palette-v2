@@ -15,7 +15,10 @@ import type {
     LogNogEvent,
     GenerationEventsFilters
 } from '../types/generation-events.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Admin')
 class GenerationEventsService {
     /**
      * Log a new generation event
@@ -45,13 +48,13 @@ class GenerationEventsService {
                 .single()
 
             if (error) {
-                console.error('[GenerationEvents] Failed to log generation:', error)
+                log.error('[GenerationEvents] Failed to log generation', { error: error })
                 return null
             }
 
             return data
         } catch (error) {
-            console.error('[GenerationEvents] Error logging generation:', error)
+            log.error('[GenerationEvents] Error logging generation', { error: error instanceof Error ? error.message : String(error) })
             return null
         }
     }
@@ -89,13 +92,13 @@ class GenerationEventsService {
                 .eq('prediction_id', predictionId)
 
             if (error) {
-                console.error('[GenerationEvents] Failed to update status:', error)
+                log.error('[GenerationEvents] Failed to update status', { error: error })
                 return false
             }
 
             return true
         } catch (error) {
-            console.error('[GenerationEvents] Error updating status:', error)
+            log.error('[GenerationEvents] Error updating status', { error: error instanceof Error ? error.message : String(error) })
             return false
         }
     }
@@ -144,7 +147,7 @@ class GenerationEventsService {
             const { data, count, error } = await query
 
             if (error) {
-                console.error('[GenerationEvents] Failed to get events:', error)
+                log.error('[GenerationEvents] Failed to get events', { error: error })
                 return {
                     generations: [],
                     total: 0,
@@ -164,7 +167,7 @@ class GenerationEventsService {
                 hasMore: offset + pageSize < total
             }
         } catch (error) {
-            console.error('[GenerationEvents] Error getting events:', error)
+            log.error('[GenerationEvents] Error getting events', { error: error instanceof Error ? error.message : String(error) })
             return {
                 generations: [],
                 total: 0,
@@ -286,7 +289,7 @@ class GenerationEventsService {
                 topUsers
             }
         } catch (error) {
-            console.error('[GenerationEvents] Error getting stats:', error)
+            log.error('[GenerationEvents] Error getting stats', { error: error instanceof Error ? error.message : String(error) })
             return {
                 total: 0,
                 today: 0,
@@ -345,7 +348,7 @@ class GenerationEventsService {
                 .sort((a, b) => b.generation_count - a.generation_count)
                 .slice(0, limit)
         } catch (error) {
-            console.error('[GenerationEvents] Error getting leaderboard:', error)
+            log.error('[GenerationEvents] Error getting leaderboard', { error: error instanceof Error ? error.message : String(error) })
             return []
         }
     }
@@ -365,7 +368,7 @@ class GenerationEventsService {
                 .order('created_at', { ascending: true })
 
             if (error || !data) {
-                console.error('[GenerationEvents] Failed to export:', error)
+                log.error('[GenerationEvents] Failed to export', { error: error })
                 return []
             }
 
@@ -385,7 +388,7 @@ class GenerationEventsService {
                 prompt_preview: row.prompt?.slice(0, 100) || null
             }))
         } catch (error) {
-            console.error('[GenerationEvents] Error exporting:', error)
+            log.error('[GenerationEvents] Error exporting', { error: error instanceof Error ? error.message : String(error) })
             return []
         }
     }

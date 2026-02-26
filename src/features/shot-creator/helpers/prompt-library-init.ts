@@ -3,6 +3,7 @@
 // once per application lifecycle, not per component render.
 
 import { clearAllPromptDuplicates } from "@/features/shot-creator/components/creator-prompt-settings/NanoBananaPromptLoader"
+import { logger } from '@/lib/logger'
 
 
 // Module-level initialization flag
@@ -27,7 +28,7 @@ async function initializePromptLibrary(): Promise<void> {
     moduleInitialized = true
 
   } catch (error) {
-    console.error('❌ Prompt Library module initialization failed:', error)
+    logger.shotCreator.error('❌ Prompt Library module initialization failed', { error: error instanceof Error ? error.message : String(error) })
     // Reset flag so it can be retried
     moduleInitialized = false
   }
@@ -35,7 +36,7 @@ async function initializePromptLibrary(): Promise<void> {
 
 // Auto-initialize when this module is imported (only in browser)
 if (typeof window !== 'undefined') {
-  initializePromptLibrary().catch(console.error)
+  initializePromptLibrary().catch((err: unknown) => logger.shotCreator.error('Prompt library init failed', { error: err instanceof Error ? err.message : String(err) }))
 }
 
 // Export function for manual re-initialization if needed

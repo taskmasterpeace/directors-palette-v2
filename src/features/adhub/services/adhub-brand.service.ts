@@ -14,7 +14,10 @@ import {
   brandFromRow,
   brandImageFromRow,
 } from '../types/adhub.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('AdHub')
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getAdhubClient(): Promise<any> {
   return await getAPIClient()
@@ -39,7 +42,7 @@ export class AdhubBrandService {
       .order('updated_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching brands:', error)
+      log.error('Error fetching brands', { error: error })
       throw new Error(`Failed to fetch brands: ${error.message}`)
     }
 
@@ -60,7 +63,7 @@ export class AdhubBrandService {
       .maybeSingle()
 
     if (error) {
-      console.error('Error fetching brand:', error)
+      log.error('Error fetching brand', { error: error })
       throw new Error(`Failed to fetch brand: ${error.message}`)
     }
 
@@ -86,7 +89,7 @@ export class AdhubBrandService {
       .single()
 
     if (error) {
-      console.error('Error creating brand:', error)
+      log.error('Error creating brand', { error: error })
       throw new Error(`Failed to create brand: ${error.message}`)
     }
 
@@ -115,7 +118,7 @@ export class AdhubBrandService {
       .single()
 
     if (error) {
-      console.error('Error updating brand:', error)
+      log.error('Error updating brand', { error: error })
       throw new Error(`Failed to update brand: ${error.message}`)
     }
 
@@ -135,7 +138,7 @@ export class AdhubBrandService {
       .eq('user_id', userId)
 
     if (error) {
-      console.error('Error deleting brand:', error)
+      log.error('Error deleting brand', { error: error })
       throw new Error(`Failed to delete brand: ${error.message}`)
     }
   }
@@ -153,7 +156,7 @@ export class AdhubBrandService {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching brand images:', error)
+      log.error('Error fetching brand images', { error: error })
       throw new Error(`Failed to fetch brand images: ${error.message}`)
     }
 
@@ -177,7 +180,7 @@ export class AdhubBrandService {
       .single()
 
     if (error) {
-      console.error('Error adding brand image:', error)
+      log.error('Error adding brand image', { error: error })
       throw new Error(`Failed to add brand image: ${error.message}`)
     }
 
@@ -198,7 +201,7 @@ export class AdhubBrandService {
       .single()
 
     if (error) {
-      console.error('Error updating brand image:', error)
+      log.error('Error updating brand image', { error: error })
       throw new Error(`Failed to update brand image: ${error.message}`)
     }
 
@@ -217,7 +220,7 @@ export class AdhubBrandService {
       .eq('id', imageId)
 
     if (error) {
-      console.error('Error removing brand image:', error)
+      log.error('Error removing brand image', { error: error })
       throw new Error(`Failed to remove brand image: ${error.message}`)
     }
   }
@@ -235,7 +238,7 @@ export class AdhubBrandService {
       .maybeSingle()
 
     if (brandError) {
-      console.error('Error fetching brand:', brandError)
+      log.error('Error fetching brand', { brandError: brandError })
       throw new Error(`Failed to fetch brand: ${brandError.message}`)
     }
 
@@ -248,7 +251,7 @@ export class AdhubBrandService {
       .order('created_at', { ascending: false })
 
     if (imagesError) {
-      console.error('Error fetching brand images:', imagesError)
+      log.error('Error fetching brand images', { imagesError: imagesError })
       throw new Error(`Failed to fetch brand images: ${imagesError.message}`)
     }
 

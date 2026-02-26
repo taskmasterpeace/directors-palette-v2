@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 // import { cn } from "@/utils/utils"
+import { logger } from '@/lib/logger'
 
 // Voice options
 const VOICES = [
@@ -77,7 +78,7 @@ export function AudioPlayer({
           try {
             await audioRef.current.play()
           } catch (error) {
-            console.error('Audio playback failed on page change:', error)
+            logger.storybook.error('Audio playback failed on page change', { error: error instanceof Error ? error.message : String(error) })
             setIsPlaying(false)
           }
         }
@@ -104,7 +105,7 @@ export function AudioPlayer({
 
     const handleError = (e: Event) => {
       const target = e.target as HTMLAudioElement
-      console.error('Audio error:', target.error?.message || 'Unknown audio error')
+      logger.storybook.error('Audio error', { detail: target.error?.message || 'Unknown audio error' })
       setIsPlaying(false)
     }
 
@@ -146,7 +147,7 @@ export function AudioPlayer({
         await audioRef.current.play()
         setIsPlaying(true)
       } catch (error) {
-        console.error('Audio playback failed:', error)
+        logger.storybook.error('Audio playback failed', { error: error instanceof Error ? error.message : String(error) })
         setIsPlaying(false)
       }
     }
@@ -210,13 +211,13 @@ export function AudioPlayer({
           await audioRef.current.play()
           setIsPlaying(true)
         } catch (playError) {
-          console.error('Audio playback failed:', playError)
+          logger.storybook.error('Audio playback failed', { playError: playError })
           // Still mark as ready even if autoplay fails
           setIsPlaying(false)
         }
       }
     } catch (error) {
-      console.error('Error generating narration:', error)
+      logger.storybook.error('Error generating narration', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setIsGenerating(false)
       setGeneratingPageId(null)
@@ -252,17 +253,17 @@ export function AudioPlayer({
           successCount++
         } else {
           failedPages.push(i + 1)
-          console.error(`Failed to generate narration for page ${i + 1}: ${response.statusText}`)
+          logger.storybook.error('Failed to generate narration', { page: i + 1, status: response.statusText })
         }
       } catch (error) {
         failedPages.push(i + 1)
-        console.error(`Error generating narration for page ${i + 1}:`, error)
+        logger.storybook.error('Error generating narration for page [detail]', { detail: i + 1, error: error instanceof Error ? error.message : String(error) })
       }
     }
 
     // Log summary of generation results
     if (failedPages.length > 0) {
-      console.warn(`Narration generation complete: ${successCount} succeeded, ${failedPages.length} failed (pages: ${failedPages.join(', ')})`)
+      logger.storybook.warn('Narration generation complete with failures', { successCount, failedCount: failedPages.length, failedPages })
     }
 
     setIsGenerating(false)

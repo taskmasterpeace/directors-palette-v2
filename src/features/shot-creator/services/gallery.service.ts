@@ -7,6 +7,7 @@ import { GalleryService as UnifiedGalleryService } from '@/lib/services/gallery.
 import type { GeneratedImage, GenerationStatus } from '../store/unified-gallery-store'
 import { GalleryMetadata } from "@/features/generation/services/webhook.service"
 import type { GalleryRow } from '@/lib/db/types'
+import { logger } from '@/lib/logger'
 
 export class GalleryService {
     /**
@@ -19,7 +20,7 @@ export class GalleryService {
             // Check for pending items
             const pendingCount = await UnifiedGalleryService.getPendingCount('image')
             if (pendingCount > 0) {
-                console.log(`📊 Found ${pendingCount} pending images (no public_url yet)`)
+                logger.shotCreator.info('Found pending images', { count: pendingCount })
             }
 
             // Transform database records to GeneratedImage format
@@ -27,7 +28,7 @@ export class GalleryService {
 
             return images
         } catch (error) {
-            console.error('Failed to load gallery:', error)
+            logger.shotCreator.error('Failed to load gallery', { error: error instanceof Error ? error.message : String(error) })
             return []
         }
     }
@@ -91,7 +92,7 @@ export class GalleryService {
                 totalPages: result.totalPages
             }
         } catch (error) {
-            console.error('Failed to load gallery:', error)
+            logger.shotCreator.error('Failed to load gallery', { error: error instanceof Error ? error.message : String(error) })
             return { images: [], total: 0, totalPages: 0 }
         }
     }

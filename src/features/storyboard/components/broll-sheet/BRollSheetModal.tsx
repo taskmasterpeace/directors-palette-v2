@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Film, CheckCircle, AlertCircle, Maximize2, Layers } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { logger } from '@/lib/logger'
 import { BROLL_NAMES } from '../../types/storyboard.types'
 import {
     brollSheetService,
@@ -77,7 +78,7 @@ export function BRollSheetModal({
                 setGridImageUrl(result.gridImageUrl)
             }
         } catch (error) {
-            console.error('B-Roll sheet generation failed:', error)
+            logger.storyboard.error('B-Roll sheet generation failed', { error: error instanceof Error ? error.message : String(error) })
         } finally {
             setIsGenerating(false)
         }

@@ -9,6 +9,7 @@ import { Upload } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useWildCardStore } from '../../store/wildcard.store';
 import { parseTextFile, validateWildCardName, validateWildCardContent } from '../../services/wildcard.service';
+import { logger } from '@/lib/logger'
 
 interface WildCardCreateDialogProps {
     open: boolean;
@@ -46,7 +47,7 @@ export function WildCardCreateDialog({ open, onOpenChange }: WildCardCreateDialo
                 description: `Found ${lineCount} prompts in ${file.name}`
             });
         } catch (error) {
-            console.error('Error reading file:', error);
+            logger.shotCreator.error('Error reading file', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: 'Error',
                 description: 'Failed to read file',

@@ -7,6 +7,7 @@ import { create } from 'zustand'
 import { useStorybookStore } from './storybook.store'
 import { useGenerationStateStore } from './generation.store'
 import type { StorybookProject } from '../types/storybook.types'
+import { logger } from '@/lib/logger'
 
 // Saved project summary type (from API)
 export interface SavedProjectSummary {
@@ -129,14 +130,14 @@ export const usePersistenceStore = create<PersistenceState>()(
         const response = await fetch('/api/storybook/projects')
 
         if (!response.ok) {
-          console.error('Failed to fetch saved projects')
+          logger.storybook.error('Failed to fetch saved projects')
           return
         }
 
         const data = await response.json()
         set({ savedProjects: data.projects || [] })
       } catch (error) {
-        console.error('Error fetching saved projects:', error)
+        logger.storybook.error('Error fetching saved projects', { error: error instanceof Error ? error.message : String(error) })
       }
     },
 

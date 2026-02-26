@@ -6,6 +6,7 @@
 import { getClient } from '@/lib/db/client'
 import type { ArtistDNA, DbArtistProfile, UserArtistProfile } from '../types/artist-dna.types'
 import { createEmptyDNA } from '../types/artist-dna.types'
+import { logger } from '@/lib/logger'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getArtistClient(): Promise<any> {
@@ -53,7 +54,7 @@ class ArtistDnaService {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching artist profiles:', error)
+      logger.musicLab.error('Error fetching artist profiles', { error: error })
       return []
     }
 
@@ -72,7 +73,7 @@ class ArtistDnaService {
       .single()
 
     if (error) {
-      console.error('Error fetching artist profile:', error)
+      logger.musicLab.error('Error fetching artist profile', { error: error })
       return null
     }
 
@@ -94,7 +95,7 @@ class ArtistDnaService {
       .single()
 
     if (error) {
-      console.error('Error creating artist profile:', error)
+      logger.musicLab.error('Error creating artist profile', { error: error })
       return null
     }
 
@@ -118,7 +119,7 @@ class ArtistDnaService {
       .single()
 
     if (error) {
-      console.error('Error updating artist profile:', error)
+      logger.musicLab.error('Error updating artist profile', { error: error })
       return null
     }
 
@@ -136,7 +137,7 @@ class ArtistDnaService {
       .eq('user_id', userId)
 
     if (error) {
-      console.error('Error deleting artist profile:', error)
+      logger.musicLab.error('Error deleting artist profile', { error: error })
       return false
     }
 

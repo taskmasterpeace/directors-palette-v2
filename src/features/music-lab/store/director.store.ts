@@ -7,6 +7,7 @@ import { create } from 'zustand'
 import type { DirectorFingerprint } from '../types/director.types'
 import { directorService, UserDirector } from '../services/director.service'
 import { DIRECTORS } from '../data/directors.data'
+import { logger } from '@/lib/logger'
 
 interface DirectorState {
   // User directors from database
@@ -66,7 +67,7 @@ export const useDirectorStore = create<DirectorState>()((set, get) => ({
         isLoading: false,
       })
     } catch (error) {
-      console.error('Error initializing director store:', error)
+      logger.musicLab.error('Error initializing director store', { error: error instanceof Error ? error.message : String(error) })
       set({ isLoading: false })
     }
   },
@@ -82,7 +83,7 @@ export const useDirectorStore = create<DirectorState>()((set, get) => ({
       const userDirectors = await directorService.getUserDirectors(currentUserId)
       set({ userDirectors, isLoading: false })
     } catch (error) {
-      console.error('Error refreshing directors:', error)
+      logger.musicLab.error('Error refreshing directors', { error: error instanceof Error ? error.message : String(error) })
       set({ isLoading: false })
     }
   },

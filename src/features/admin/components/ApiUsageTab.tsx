@@ -11,7 +11,10 @@ import { Label } from '@/components/ui/label'
 import { Key, Copy, RefreshCw, Activity, Clock, Zap, AlertCircle, Check, Eye, EyeOff } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Admin')
 interface ApiKey {
   id: string
   keyPrefix: string
@@ -77,7 +80,7 @@ export function ApiUsageTab() {
         setError('Only admins can manage API keys')
       }
     } catch (err) {
-      console.error('Error fetching API data:', err)
+      log.error('Error fetching API data', { error: err instanceof Error ? err.message : String(err) })
       setError('Failed to load API data')
     } finally {
       setLoading(false)

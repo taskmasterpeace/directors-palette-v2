@@ -9,7 +9,10 @@ import { useUnifiedGalleryStore } from '@/features/shot-creator/store/unified-ga
 import { useState } from 'react'
 import { GalleryService } from '@/features/shot-creator/services/gallery.service'
 import { toast } from '@/hooks/use-toast'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('StoryCreator')
 interface ReferenceSelectionModalProps {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -62,7 +65,7 @@ export function ReferenceSelectionModal({
             onOpenChange(false)
             setSelectedImageId(null)
         } catch (error) {
-            console.error('Error assigning reference:', error)
+            log.error('Error assigning reference', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: 'Assignment Failed',
                 description: error instanceof Error ? error.message : 'Unknown error',

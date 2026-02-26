@@ -10,6 +10,7 @@ import { clipboardManager } from '@/utils/clipboard-manager'
 import { useToast } from '@/hooks/use-toast'
 import { useState } from 'react'
 import { ReferenceEditor, ReferenceEditorExport } from './reference-editor'
+import { logger } from '@/lib/logger'
 
 interface FullscreenImageModalProps {
     open: boolean
@@ -55,7 +56,7 @@ export default function FullscreenImageModal({
             document.body.removeChild(link)
             URL.revokeObjectURL(blobUrl)
         } catch (error) {
-            console.error('Failed to download image:', error)
+            logger.shotCreator.error('Failed to download image', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: 'Download failed',
                 description: 'Could not download image.',
@@ -69,7 +70,7 @@ export default function FullscreenImageModal({
             await clipboardManager.writeText(fullscreenImage.imageData)
             toast({ title: 'Copied', description: 'Image URL copied to clipboard' })
         } catch (error) {
-            console.error('Failed to copy:', error)
+            logger.shotCreator.error('Failed to copy', { error: error instanceof Error ? error.message : String(error) })
             toast({ title: 'Copy failed', variant: 'destructive' })
         }
     }

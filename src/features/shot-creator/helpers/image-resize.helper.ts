@@ -1,5 +1,6 @@
 import imageCompression from 'browser-image-compression';
 import { ASPECT_RATIO_SIZES } from '@/config';
+import { logger } from '@/lib/logger'
 
 // Constants
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -98,7 +99,7 @@ export async function resizeImage(
     const compressedFile = await imageCompression(file, options);
     return compressedFile;
   } catch (error) {
-    console.error('Error resizing image:', error);
+    logger.shotCreator.error('Error resizing image', { error: error instanceof Error ? error.message : String(error) })
     throw new Error('Failed to resize image. Please try again.');
   }
 }

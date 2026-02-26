@@ -25,6 +25,7 @@ import { HighlightedPrompt } from '../shared'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
 import { useGenerationOrchestration } from '../../hooks/useGenerationOrchestration'
 import { getAvailableModels, getModelCost, type ModelId } from '@/config'
+import { logger } from '@/lib/logger'
 
 interface GenerationQueueProps {
     chapterIndex?: number
@@ -142,7 +143,7 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                 const { wildcards: loadedWildcards } = await getAvailableWildcards()
                 setWildcards(loadedWildcards)
             } catch (error) {
-                console.error('Failed to initialize wildcards:', error)
+                logger.storyboard.error('Failed to initialize wildcards', { error: error instanceof Error ? error.message : String(error) })
             } finally {
                 setWildcardsLoading(false)
                 setWildcardsInitialized(true)

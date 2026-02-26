@@ -6,7 +6,10 @@ import type {
   ToolNodeData,
   OutputNodeData as _OutputNodeData
 } from '../types/workflow.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Workflow')
 // Node execution result
 interface NodeResult {
   nodeId: string
@@ -51,7 +54,7 @@ export class WorkflowExecutor {
     const results: NodeResult[] = []
 
     for (const node of sortedNodes) {
-      console.log(`Executing node: ${node.id} (${node.type})`)
+      log.info('Executing node', { id: node.id, type: node.type })
 
       try {
         const result = await this.executeNode(node)
@@ -59,11 +62,11 @@ export class WorkflowExecutor {
         this.context.results.set(node.id, result)
 
         if (!result.success) {
-          console.error(`Node ${node.id} failed:`, result.data?.error)
+          log.error('Node [id] failed', { id: node.id, detail: result.data?.error })
           // Continue execution even if one node fails
         }
       } catch (error) {
-        console.error(`Error executing node ${node.id}:`, error)
+        log.error('Error executing node [id]', { id: node.id, error: error instanceof Error ? error.message : String(error) })
         results.push({
           nodeId: node.id,
           success: false,

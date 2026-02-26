@@ -6,6 +6,7 @@
  */
 
 import type { StructuredPrompt, ParseResult, DetectedReference } from '../types/prompt-organizer.types'
+import { logger } from '@/lib/logger'
 
 class PromptParserService {
     /**
@@ -37,7 +38,7 @@ class PromptParserService {
                 confidence: data.confidence || 0.8
             }
         } catch (error) {
-            console.error('Parse error:', error)
+            logger.shotCreator.error('Parse error', { error: error instanceof Error ? error.message : String(error) })
             // Return basic fallback parse
             return this.fallbackParse(prompt, references)
         }

@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger'
+
 /**
  * Slot Machine Service
  *
@@ -170,7 +172,7 @@ export async function expandSlotMachine(
         }
 
     } catch (error) {
-        console.error('Slot machine expansion error:', error)
+        logger.shotCreator.error('Slot machine expansion error', { error: error instanceof Error ? error.message : String(error) })
         return {
             success: false,
             expandedPrompt: prompt,

@@ -3,6 +3,7 @@
 import { NANO_BANANA_PROMPTS } from "@/features/shot-creator/constants/prompt-library-presets"
 import { useEffect } from 'react'
 import { usePromptLibraryStore } from "../../store/prompt-library-store"
+import { logger } from '@/lib/logger'
 
 // Module-level singleton pattern with Promise-based initialization
 class PromptLoaderSingleton {
@@ -48,12 +49,12 @@ class PromptLoaderSingleton {
       // ONLY seed defaults if user has NO prompts (fresh account)
       // This ensures deleted prompts stay deleted
       if (existingPrompts.length > 0) {
-        console.log('📚 User has existing prompts, skipping default seeding')
+        logger.shotCreator.info('📚 User has existing prompts, skipping default seeding')
         this.hasInitialized = true
         return
       }
 
-      console.log('📚 First time user - seeding default prompts...')
+      logger.shotCreator.info('📚 First time user - seeding default prompts...')
 
       // Add all default prompts for new users
       for (const preset of NANO_BANANA_PROMPTS) {
@@ -72,11 +73,11 @@ class PromptLoaderSingleton {
             id: `prompt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
           })
         } catch (error) {
-          console.log('Note: Prompt added locally (Supabase save may have failed)', error)
+          logger.shotCreator.info('Note: Prompt added locally (Supabase save may have failed)', { error: error instanceof Error ? error.message : String(error) })
         }
       }
 
-      console.log(`📚 Seeded ${NANO_BANANA_PROMPTS.length} default prompts`)
+      logger.shotCreator.info('Seeded default prompts', { count: NANO_BANANA_PROMPTS.length })
       this.hasInitialized = true
 
     } catch (error) {
@@ -94,7 +95,7 @@ export function NanoBananaPromptLoader() {
   useEffect(() => {
     // Initialize the singleton - this will only run once across all component instances
     promptLoaderSingleton.initialize().catch(error => {
-      console.error('Failed to initialize prompt loader:', error)
+      logger.shotCreator.error('Failed to initialize prompt loader', { error: error instanceof Error ? error.message : String(error) })
     })
   }, []) // Empty dependency array - only run once on mount
 
@@ -111,7 +112,7 @@ export async function clearAllPromptDuplicates(): Promise<void> {
     const store = usePromptLibraryStore.getState()
     store.deduplicatePrompts()
   } catch (error) {
-    console.error('❌ Error clearing prompt duplicates:', error)
+    logger.shotCreator.error('❌ Error clearing prompt duplicates', { error: error instanceof Error ? error.message : String(error) })
     throw error
   }
 }

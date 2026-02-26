@@ -18,7 +18,10 @@ import GenerationQueueSection from '../sections/GenerationQueueSection'
 import { MissingReferencesWarning } from '../MissingReferencesWarning'
 import { DraftRestorePrompt } from '../DraftRestorePrompt'
 import type { GeneratedShot } from '@/features/story-creator/services/shot-augmentation.service'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('StoryCreator')
 /**
  * Story Creator Desktop View
  * Tabbed workflow for story processing
@@ -84,7 +87,7 @@ export default function StoryCreatorDesktop() {
             // Try LLM extraction first if configured
             if (LLMService.isConfigured()) {
                 try {
-                    console.log('🤖 Using LLM for scene extraction...')
+                    log.info('🤖 Using LLM for scene extraction...')
 
                     // Extract scenes and entities with AI
                     const [scenes, entities] = await Promise.all([
@@ -92,7 +95,7 @@ export default function StoryCreatorDesktop() {
                         LLMService.extractEntities(storyText)
                     ])
 
-                    console.log(`📝 Extracted ${scenes.length} scenes, ${entities.characters.length} characters, ${entities.locations.length} locations`)
+                    log.info('Extracted scenes and entities', { scenes: scenes.length, characters: entities.characters.length, locations: entities.locations.length })
 
                     // Store entities in zustand for later use
                     const extractedEntities = [
@@ -118,13 +121,13 @@ export default function StoryCreatorDesktop() {
                         }
                     }))
                 } catch (llmError) {
-                    console.warn('LLM extraction failed, falling back to basic extraction:', llmError)
+                    log.warn('LLM extraction failed, falling back to basic extraction', { llmError: llmError })
                 }
             }
 
             // Fallback to basic extraction if LLM not configured or failed
             if (shotInputs.length === 0) {
-                console.log('📝 Using basic text extraction...')
+                log.info('📝 Using basic text extraction...')
 
                 const scenes = PromptGeneratorService.extractScenes(storyText)
                 const characters = PromptGeneratorService.extractCharacters(storyText)
@@ -167,7 +170,7 @@ export default function StoryCreatorDesktop() {
             // Clear any existing draft when starting fresh
             clearDraft()
         } catch (error) {
-            console.error('Error extracting shots:', error)
+            log.error('Error extracting shots', { error: error instanceof Error ? error.message : String(error) })
         } finally {
             setIsExtracting(false)
         }
@@ -209,7 +212,7 @@ export default function StoryCreatorDesktop() {
                 description: `Added ${newShots.length} shots with bracket variations`,
             })
         } catch (error) {
-            console.error('Error adding shots:', error)
+            log.error('Error adding shots', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: 'Failed to Add Shots',
                 description: error instanceof Error ? error.message : 'Unknown error',
@@ -278,7 +281,7 @@ export default function StoryCreatorDesktop() {
             setCurrentQueue(queue)
             setInternalTab('queue')
         } catch (error) {
-            console.error('Error creating queue:', error)
+            log.error('Error creating queue', { error: error instanceof Error ? error.message : String(error) })
         } finally {
             setIsGenerating(false)
         }

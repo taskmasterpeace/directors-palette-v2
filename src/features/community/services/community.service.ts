@@ -16,7 +16,10 @@ import type {
   WildcardContent,
   DirectorContent,
 } from '../types/community.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Community')
 function getSupabaseClient() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -82,7 +85,7 @@ class CommunityService {
       // Schema cache errors are expected when tables haven't been loaded yet
       const isSchemaError = error.code === 'PGRST205' || error.message?.includes('schema cache')
       if (!isSchemaError) {
-        console.error('Error fetching community items:', JSON.stringify(error, null, 2))
+        log.error('Error fetching community items', { detail: JSON.stringify(error, null, 2) })
       }
       const errorMessage = error.message || error.code || 'Unknown database error'
       throw new Error(errorMessage)
@@ -125,7 +128,7 @@ class CommunityService {
 
     if (error) {
       if (error.code === 'PGRST116') return null // Not found
-      console.error('Error fetching community item:', error)
+      log.error('Error fetching community item', { error: error })
       throw error
     }
 
@@ -176,7 +179,7 @@ class CommunityService {
       .single()
 
     if (error) {
-      console.error('Error submitting community item:', error)
+      log.error('Error submitting community item', { error: error })
       throw error
     }
 
@@ -217,7 +220,7 @@ class CommunityService {
       .order('submitted_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching user submissions:', error)
+      log.error('Error fetching user submissions', { error: error })
       throw error
     }
 
@@ -279,7 +282,7 @@ class CommunityService {
       .single()
 
     if (error) {
-      console.error('Error adding to library:', error)
+      log.error('Error adding to library', { error: error })
       throw error
     }
 
@@ -320,7 +323,7 @@ class CommunityService {
         })
 
       if (recipeError) {
-        console.error('Error adding recipe to user_recipes:', recipeError)
+        log.error('Error adding recipe to user_recipes', { recipeError: recipeError })
       }
     }
 
@@ -343,7 +346,7 @@ class CommunityService {
         })
 
       if (wildcardError) {
-        console.error('Error adding wildcard to wildcards table:', wildcardError)
+        log.error('Error adding wildcard to wildcards table', { wildcardError: wildcardError })
       }
     }
 
@@ -369,7 +372,7 @@ class CommunityService {
         })
 
       if (directorError) {
-        console.error('Error adding director to user_directors table:', directorError)
+        log.error('Error adding director to user_directors table', { directorError: directorError })
       }
     }
 
@@ -405,7 +408,7 @@ class CommunityService {
       .maybeSingle()
 
     if (error) {
-      console.error('Error checking library:', error)
+      log.error('Error checking library', { error: error })
       return false
     }
 
@@ -429,7 +432,7 @@ class CommunityService {
     const { data, error } = await query
 
     if (error) {
-      console.error('Error fetching library items:', error)
+      log.error('Error fetching library items', { error: error })
       throw error
     }
 
@@ -462,7 +465,7 @@ class CommunityService {
       // Silent fail for schema cache errors - these are expected when tables aren't loaded
       const isSchemaError = error.code === 'PGRST205' || error.message?.includes('schema cache')
       if (!isSchemaError) {
-        console.error('Error fetching library item IDs:', error)
+        log.error('Error fetching library item IDs', { error: error })
       }
       return new Set()
     }
@@ -481,7 +484,7 @@ class CommunityService {
       .eq('user_id', userId)
 
     if (error) {
-      console.error('Error removing from library:', error)
+      log.error('Error removing from library', { error: error })
       throw error
     }
   }
@@ -509,7 +512,7 @@ class CommunityService {
       })
 
     if (error) {
-      console.error('Error rating item:', error)
+      log.error('Error rating item', { error: error })
       throw error
     }
   }
@@ -526,7 +529,7 @@ class CommunityService {
       .maybeSingle()
 
     if (error) {
-      console.error('Error fetching user rating:', error)
+      log.error('Error fetching user rating', { error: error })
       return null
     }
 
@@ -546,7 +549,7 @@ class CommunityService {
       // Silent fail for schema cache errors
       const isSchemaError = error.code === 'PGRST205' || error.message?.includes('schema cache')
       if (!isSchemaError) {
-        console.error('Error fetching user ratings:', error)
+        log.error('Error fetching user ratings', { error: error })
       }
       return new Map()
     }
@@ -569,7 +572,7 @@ class CommunityService {
       .eq('user_id', userId)
 
     if (error) {
-      console.error('Error deleting rating:', error)
+      log.error('Error deleting rating', { error: error })
       throw error
     }
   }
@@ -589,7 +592,7 @@ class CommunityService {
       .order('submitted_at', { ascending: true })
 
     if (error) {
-      console.error('Error fetching pending submissions:', error)
+      log.error('Error fetching pending submissions', { error: error })
       throw error
     }
 
@@ -632,7 +635,7 @@ class CommunityService {
       .eq('id', itemId)
 
     if (error) {
-      console.error('Error approving submission:', error)
+      log.error('Error approving submission', { error: error })
       throw error
     }
   }
@@ -652,7 +655,7 @@ class CommunityService {
       .eq('id', itemId)
 
     if (error) {
-      console.error('Error rejecting submission:', error)
+      log.error('Error rejecting submission', { error: error })
       throw error
     }
   }
@@ -676,7 +679,7 @@ class CommunityService {
       .eq('id', itemId)
 
     if (error) {
-      console.error('Error editing submission:', error)
+      log.error('Error editing submission', { error: error })
       throw error
     }
   }
@@ -691,7 +694,7 @@ class CommunityService {
       .eq('id', itemId)
 
     if (error) {
-      console.error('Error deleting item:', error)
+      log.error('Error deleting item', { error: error })
       throw error
     }
   }

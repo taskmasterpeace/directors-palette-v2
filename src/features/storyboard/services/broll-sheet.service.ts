@@ -20,6 +20,7 @@ import {
     DEFAULT_BROLL_CONFIG,
     BROLL_NAMES
 } from '../types/storyboard.types'
+import { logger } from '@/lib/logger'
 
 export interface BRollSheetConfig {
     aspectRatio: string
@@ -271,7 +272,7 @@ export class BRollSheetService {
             } catch (error) {
                 // If slicing fails (CORS issue), still mark as completed with grid URL
                 // The full grid is available even if we can't slice it
-                console.warn('Grid slicing failed (likely CORS), using full grid:', error)
+                logger.storyboard.warn('Grid slicing failed (likely CORS), using full grid', { error: error instanceof Error ? error.message : String(error) })
                 variants.forEach((v) => {
                     // Use the full grid URL - user can see the grid even if not sliced
                     v.imageUrl = gridImageUrl

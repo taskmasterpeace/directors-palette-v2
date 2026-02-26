@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { useTimelineStore } from '../store/timeline.store'
 import { cn } from '@/utils/utils'
+import { logger } from '@/lib/logger'
 
 interface TimelineProps {
     className?: string
@@ -62,7 +63,7 @@ export function Timeline({ className }: TimelineProps) {
 
         if (isPlaying) {
             audioRef.current.play().catch((error) => {
-                console.error('Audio playback failed:', error)
+                logger.musicLab.error('Audio playback failed', { error: error })
                 setPlaying(false)
             })
         } else {
@@ -80,7 +81,7 @@ export function Timeline({ className }: TimelineProps) {
         const handleEnded = () => setPlaying(false)
         const handleError = (e: Event) => {
             const target = e.target as HTMLAudioElement
-            console.error('Timeline audio error:', target.error?.message || 'Unknown audio error')
+            logger.musicLab.error('Timeline audio error', { detail: target.error?.message || 'Unknown audio error' })
             setPlaying(false)
         }
 

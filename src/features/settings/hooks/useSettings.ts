@@ -4,7 +4,10 @@ import { useSettingStore } from '@/features/settings/store/setting.store'
 import { SettingsConfig } from '@/features/settings/types/setting.types'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useToast } from "@/hooks/use-toast"
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Settings')
 export const useSettings = () => {
   const { user } = useAuth()
   const { toast } = useToast()
@@ -78,7 +81,7 @@ export const useSettings = () => {
         description: "Shot creator settings reset to defaults.",
       })
     } catch (error) {
-      console.error('Failed to reset shot creator settings:', error)
+      log.error('Failed to reset shot creator settings', { error: error instanceof Error ? error.message : String(error) })
       toast({
         variant: "destructive",
         title: "Error",
@@ -106,7 +109,7 @@ export const useSettings = () => {
         description: "Shot animator settings reset to defaults.",
       })
     } catch (error) {
-      console.error('Failed to reset shot animator settings:', error)
+      log.error('Failed to reset shot animator settings', { error: error instanceof Error ? error.message : String(error) })
       toast({
         variant: "destructive",
         title: "Error",

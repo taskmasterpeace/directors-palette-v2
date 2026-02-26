@@ -15,7 +15,10 @@ import { useRecipeStore } from "@/features/shot-creator/store/recipe.store"
 import { useAuth } from "@/features/auth/hooks/useAuth"
 import type { Recipe } from "@/features/shot-creator/types/recipe.types"
 import { RecipeEditorDialog } from "./RecipeEditorDialog"
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Admin')
 export function RecipesTab() {
     const { user } = useAuth()
     const {
@@ -104,12 +107,12 @@ export function RecipesTab() {
     }
 
     const handleSaveEdit = async (updates: Partial<Recipe>) => {
-        console.log('[RecipesTab] handleSaveEdit called', { editMode: !!editingRecipe, updates })
+        log.info('[RecipesTab] handleSaveEdit called', { editMode: !!editingRecipe, updates })
 
         try {
             if (editingRecipe) {
                 // Edit mode - use admin API endpoint for system recipes
-                console.log('[RecipesTab] Updating recipe via API:', editingRecipe.id)
+                log.info('[RecipesTab] Updating recipe via API', { id: editingRecipe.id })
                 const response = await fetch(`/api/recipes/${editingRecipe.id}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
@@ -122,16 +125,16 @@ export function RecipesTab() {
                         const errorData = await response.json()
                         throw new Error(errorData.error || 'Failed to update recipe')
                     } else {
-                        console.error('[RecipesTab] Non-JSON error response:', response.status, response.statusText)
+                        log.error('[RecipesTab] Non-JSON error response', { status: response.status, statusText: response.statusText })
                         throw new Error(`Failed to update recipe (HTTP ${response.status})`)
                     }
                 }
                 await refreshRecipes() // Refresh store from DB
-                console.log('[RecipesTab] Recipe updated successfully')
+                log.info('[RecipesTab] Recipe updated successfully')
                 toast.success(`Recipe "${editingRecipe.name}" updated`)
             } else {
                 // Create mode
-                console.log('[RecipesTab] Creating new recipe')
+                log.info('[RecipesTab] Creating new recipe')
                 const newRecipe = await addRecipe({
                     name: updates.name || 'New Recipe',
                     description: updates.description,
@@ -154,15 +157,15 @@ export function RecipesTab() {
                     isSystemOnly: updates.isSystemOnly || false,
                 })
                 if (newRecipe) {
-                    console.log('[RecipesTab] Recipe created successfully:', newRecipe.id)
+                    log.info('[RecipesTab] Recipe created successfully', { id: newRecipe.id })
                     toast.success(`Recipe "${newRecipe.name}" created`)
                 }
             }
-            console.log('[RecipesTab] Closing dialog')
+            log.info('[RecipesTab] Closing dialog')
             setEditDialogOpen(false)
             setEditingRecipe(null)
         } catch (error) {
-            console.error('[RecipesTab] Save error:', error)
+            log.error('[RecipesTab] Save error', { error: error instanceof Error ? error.message : String(error) })
             toast.error(error instanceof Error ? error.message : "Failed to save recipe")
         }
     }

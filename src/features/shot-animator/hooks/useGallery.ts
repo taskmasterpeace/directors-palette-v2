@@ -9,6 +9,7 @@ import { GalleryService } from '@/lib/services/gallery.service'
 import { VideoGalleryService } from '../services/gallery.service'
 import type { GeneratedVideo } from '../types'
 import { GalleryRow } from '@/lib/db/types'
+import { logger } from '@/lib/logger'
 
 const GALLERY_POLL_INTERVAL_MS = 30_000 // 30 seconds
 
@@ -50,7 +51,7 @@ export function useGallery(enablePagination = false, itemsPerPage = 12): UseGall
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load videos'
       setError(errorMessage)
-      console.error('Video gallery loading error:', err)
+      logger.shotCreator.error('Video gallery loading error', { error: err instanceof Error ? err.message : String(err) })
     }
   }, [])
 
@@ -75,7 +76,7 @@ export function useGallery(enablePagination = false, itemsPerPage = 12): UseGall
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load images'
       setError(errorMessage)
-      console.error('Image gallery loading error:', err)
+      logger.shotCreator.error('Image gallery loading error', { error: err instanceof Error ? err.message : String(err) })
     }
   }, [enablePagination, pageSize])
 
@@ -108,7 +109,7 @@ export function useGallery(enablePagination = false, itemsPerPage = 12): UseGall
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete video'
       setError(errorMessage)
-      console.error('Delete video error:', err)
+      logger.shotCreator.error('Delete video error', { error: err instanceof Error ? err.message : String(err) })
       return false
     }
   }, [])
@@ -152,7 +153,7 @@ export function useGallery(enablePagination = false, itemsPerPage = 12): UseGall
                   filter: `user_id=eq.${user.id}`,
                 },
                 async (payload) => {
-                  console.log('Gallery change detected:', payload)
+                  logger.shotCreator.info('Gallery change detected', { payload: payload })
 
                   if (mounted) {
                     await loadVideos()
@@ -167,7 +168,7 @@ export function useGallery(enablePagination = false, itemsPerPage = 12): UseGall
 
         const errorMessage = err instanceof Error ? err.message : 'Failed to initialize gallery'
         setError(errorMessage)
-        console.error('Gallery initialization error:', err)
+        logger.shotCreator.error('Gallery initialization error', { error: err instanceof Error ? err.message : String(err) })
       } finally {
         if (mounted) {
           setIsLoading(false)
@@ -204,7 +205,7 @@ export function useGallery(enablePagination = false, itemsPerPage = 12): UseGall
 
         if (pendingCount > 0 && !pollingRef.current) {
           // Start polling -- there are processing items the subscription may miss
-          console.log(`[useGallery] ${pendingCount} pending video(s) detected, starting poll fallback`)
+          logger.shotCreator.info('Pending videos detected, starting poll fallback', { pendingCount })
 
           pollingRef.current = setInterval(async () => {
             if (!mounted) return
@@ -216,7 +217,7 @@ export function useGallery(enablePagination = false, itemsPerPage = 12): UseGall
 
               if (stillPending === 0) {
                 // Nothing left to wait for -- stop polling
-                console.log('[useGallery] no more pending videos, stopping poll fallback')
+                logger.shotCreator.info('[useGallery] no more pending videos, stopping poll fallback')
                 if (pollingRef.current) {
                   clearInterval(pollingRef.current)
                   pollingRef.current = null

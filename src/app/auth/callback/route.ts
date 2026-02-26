@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { lognog } from '@/lib/lognog'
+import { logger } from '@/lib/logger'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -69,7 +70,7 @@ export async function GET(request: Request) {
     }
 
     if (error) {
-      console.error('Auth callback error:', error)
+      logger.auth.error('Auth callback error', { error: error })
       lognog.warn('OAuth login failed', {
         error_message: error.message,
         route: '/auth/callback',

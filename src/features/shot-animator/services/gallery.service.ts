@@ -6,6 +6,7 @@
 import { GalleryService } from '@/lib/services/gallery.service'
 import type { GalleryRow } from '@/lib/db/types'
 import type { GeneratedVideo } from '../types'
+import { logger } from '@/lib/logger'
 
 export class VideoGalleryService {
   /**
@@ -22,7 +23,7 @@ export class VideoGalleryService {
 
       return videos
     } catch (error) {
-      console.error('Failed to load video gallery:', error)
+      logger.shotCreator.error('Failed to load video gallery', { error: error instanceof Error ? error.message : String(error) })
       return []
     }
   }
@@ -48,7 +49,7 @@ export class VideoGalleryService {
         totalPages: result.totalPages,
       }
     } catch (error) {
-      console.error('Failed to load paginated video gallery:', error)
+      logger.shotCreator.error('Failed to load paginated video gallery', { error: error instanceof Error ? error.message : String(error) })
       return { videos: [], total: 0, totalPages: 0 }
     }
   }
@@ -61,7 +62,7 @@ export class VideoGalleryService {
       const items = await GalleryService.loadUserGallery('image')
       return items
     } catch (error) {
-      console.error('Failed to load image gallery:', error)
+      logger.shotCreator.error('Failed to load image gallery', { error: error instanceof Error ? error.message : String(error) })
       return []
     }
   }
@@ -76,7 +77,7 @@ export class VideoGalleryService {
     try {
       return await GalleryService.loadUserGalleryPaginated('image', page, pageSize)
     } catch (error) {
-      console.error('Failed to load paginated image gallery:', error)
+      logger.shotCreator.error('Failed to load paginated image gallery', { error: error instanceof Error ? error.message : String(error) })
       return { items: [], total: 0, totalPages: 0 }
     }
   }
@@ -112,7 +113,7 @@ export class VideoGalleryService {
         progress: undefined,
       }
     } catch (error) {
-      console.error('Error transforming gallery item:', error)
+      logger.shotCreator.error('Error transforming gallery item', { error: error instanceof Error ? error.message : String(error) })
       return null
     }
   }
@@ -130,7 +131,7 @@ export class VideoGalleryService {
 
       return this.transformToGeneratedVideo(item)
     } catch (error) {
-      console.error('Failed to get video by ID:', error)
+      logger.shotCreator.error('Failed to get video by ID', { error: error instanceof Error ? error.message : String(error) })
       return null
     }
   }

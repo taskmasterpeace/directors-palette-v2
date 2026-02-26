@@ -20,6 +20,7 @@ import { getModelIcon } from '@/features/shot-creator/constants/model-icons'
 import { toast } from '@/hooks/use-toast'
 import type { ReferenceEditorExport } from '@/features/shot-creator/components/reference-editor'
 import { ALLOWED_IMAGE_TYPES, GALLERY_IMAGE_MIME_TYPE } from '../constants/drag-drop.constants'
+import { logger } from '@/lib/logger'
 
 interface CompactShotCardProps {
   config: ShotAnimationConfig
@@ -201,7 +202,7 @@ const CompactShotCardComponent = ({
           : 'Your prompt has been enhanced.',
       })
     } catch (error) {
-      console.error('Failed to generate animation prompt:', error)
+      logger.shotCreator.error('Failed to generate animation prompt', { error: error instanceof Error ? error.message : String(error) })
       toast({
         title: 'Generation Failed',
         description: error instanceof Error ? error.message : 'Could not generate animation prompt.',
@@ -235,7 +236,7 @@ const CompactShotCardComponent = ({
         })
       }
     } catch (error) {
-      console.error('Error deleting video:', error)
+      logger.shotCreator.error('Error deleting video', { error: error instanceof Error ? error.message : String(error) })
       toast({
         title: 'Delete Error',
         description: 'An unexpected error occurred while deleting the video.',

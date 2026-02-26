@@ -18,7 +18,10 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Copy, Check, X, Plus, Ban } from 'lucide-react'
 import type { Token, PromptTemplate } from '../types/prompt-template.types'
 import { PromptBuilderService } from '../services/prompt-builder.service'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Templates')
 interface TemplatePreviewProps {
   template: PromptTemplate | null
   tokens: Token[]
@@ -92,7 +95,7 @@ export function TemplatePreview({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
-      console.error('Failed to copy:', err)
+      log.error('Failed to copy', { error: err instanceof Error ? err.message : String(err) })
     }
   }
 

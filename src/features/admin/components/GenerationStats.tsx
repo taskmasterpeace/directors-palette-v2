@@ -5,7 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Image as ImageIcon, Sparkles, TrendingUp, Users } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import type { GenerationStatsResponse } from '../types/generation-events.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Admin')
 export function GenerationStats() {
     const [stats, setStats] = useState<GenerationStatsResponse | null>(null)
     const [loading, setLoading] = useState(true)
@@ -18,7 +21,7 @@ export function GenerationStats() {
                 const data = await res.json()
                 setStats(data)
             } catch (error) {
-                console.error('Error fetching generation stats:', error)
+                log.error('Error fetching generation stats', { error: error instanceof Error ? error.message : String(error) })
             } finally {
                 setLoading(false)
             }

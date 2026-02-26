@@ -10,7 +10,10 @@ import StoryInputSection from '../sections/StoryInputSection'
 import ShotsReviewSection from '../sections/ShotsReviewSection'
 import GenerationQueueSection from '../sections/GenerationQueueSection'
 import type { GeneratedShot } from '../../services/shot-augmentation.service'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('StoryCreator')
 /**
  * Story Creator Mobile View
  * Touch-optimized tabbed workflow
@@ -84,7 +87,7 @@ export default function StoryCreatorMobile() {
             setShots(createdShots)
             setActiveTab('review')
         } catch (error) {
-            console.error('Error extracting shots:', error)
+            log.error('Error extracting shots', { error: error instanceof Error ? error.message : String(error) })
         } finally {
             setIsExtracting(false)
         }
@@ -119,7 +122,7 @@ export default function StoryCreatorMobile() {
 
             setShots([...shots, ...newShots])
         } catch (error) {
-            console.error('Error adding shots:', error)
+            log.error('Error adding shots', { error: error instanceof Error ? error.message : String(error) })
         }
     }
 
@@ -141,7 +144,7 @@ export default function StoryCreatorMobile() {
             setCurrentQueue(queue)
             setActiveTab('queue')
         } catch (error) {
-            console.error('Error creating queue:', error)
+            log.error('Error creating queue', { error: error instanceof Error ? error.message : String(error) })
         } finally {
             setIsGenerating(false)
         }

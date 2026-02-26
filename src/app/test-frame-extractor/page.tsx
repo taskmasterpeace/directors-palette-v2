@@ -3,7 +3,10 @@
 import { useState, useCallback } from 'react'
 import { FrameExtractor } from '@/features/layout-annotation/components/frame-extractor'
 import type { FrameExtractionResult } from '@/features/layout-annotation/types/frame-extractor.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('App')
 export default function TestFrameExtractorPage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [showExtractor, setShowExtractor] = useState(false)
@@ -27,7 +30,7 @@ export default function TestFrameExtractorPage() {
   }, [imageUrl])
 
   const handleExtract = useCallback((frames: FrameExtractionResult[]) => {
-    console.log('Extracted frames:', frames)
+    log.info('Extracted frames', { frames: frames })
     setResults(frames)
 
     // Download each frame

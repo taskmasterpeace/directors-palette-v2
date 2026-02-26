@@ -6,7 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { useUnifiedGalleryStore } from '@/features/shot-creator/store/unified-gallery-store'
 import { toast } from 'sonner'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Workflow')
 interface InputNodeModalProps {
   isOpen: boolean
   onClose: () => void
@@ -62,7 +65,7 @@ export function InputNodeModal({
       toast.success('Image added to node')
       onClose()
     } catch (error) {
-      console.error('Upload failed:', error)
+      log.error('Upload failed', { error: error instanceof Error ? error.message : String(error) })
       toast.error('Failed to add image')
     } finally {
       setUploading(false)

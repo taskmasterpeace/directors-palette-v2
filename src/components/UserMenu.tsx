@@ -12,7 +12,10 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { createBrowserClient } from "@supabase/ssr"
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('UI')
 export function UserMenu() {
     const [email, setEmail] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(false)
@@ -37,7 +40,7 @@ export function UserMenu() {
             await supabase.auth.signOut()
             window.location.href = "/auth/signin"
         } catch (error) {
-            console.error("Sign out error:", error)
+            log.error('Sign out error', { error: error instanceof Error ? error.message : String(error) })
         } finally {
             setIsLoading(false)
         }

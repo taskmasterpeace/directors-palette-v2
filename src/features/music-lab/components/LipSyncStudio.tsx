@@ -43,6 +43,7 @@ import {
 } from '@/features/lip-sync/config/lip-sync-models.config'
 import { formatDuration, formatCost } from '@/features/lip-sync/services/lip-sync-generation.service'
 import type { LipSyncModel, LipSyncResolution } from '@/features/lip-sync/types/lip-sync.types'
+import { logger } from '@/lib/logger'
 
 interface LipSyncStudioProps {
   className?: string
@@ -183,7 +184,7 @@ export function LipSyncStudio({ className }: LipSyncStudioProps) {
 
       toast.success('All lip-sync videos queued for generation!')
     } catch (error) {
-      console.error('Lip-sync generation error:', error)
+      logger.musicLab.error('Lip-sync generation error', { error: error instanceof Error ? error.message : String(error) })
       toast.error('Failed to start lip-sync generation')
     } finally {
       setIsGenerating(false)

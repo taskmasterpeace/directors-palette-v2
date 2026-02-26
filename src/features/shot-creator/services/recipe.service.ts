@@ -7,6 +7,7 @@
 import { getClient, getAPIClient } from '@/lib/db/client'
 import type { Recipe, RecipeStage, RecipeReferenceImage } from '../types/recipe.types'
 import { parseStageTemplate, SAMPLE_RECIPES } from '../types/recipe.types'
+import { logger } from '@/lib/logger'
 
 // Helper to get an untyped client for recipe tables (not in main DB types yet)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -115,7 +116,7 @@ class RecipeService {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching recipes:', error)
+      logger.shotCreator.error('Error fetching recipes', { error: error })
       return []
     }
 
@@ -136,7 +137,7 @@ class RecipeService {
       .single()
 
     if (error) {
-      console.error('Error fetching recipe:', error)
+      logger.shotCreator.error('Error fetching recipe', { error: error })
       return null
     }
 
@@ -157,7 +158,7 @@ class RecipeService {
       .single()
 
     if (error) {
-      console.error('Error fetching recipe by name:', error)
+      logger.shotCreator.error('Error fetching recipe by name', { error: error })
       return null
     }
 
@@ -182,7 +183,7 @@ class RecipeService {
       .single()
 
     if (error) {
-      console.error('Error creating recipe:', error)
+      logger.shotCreator.error('Error creating recipe', { error: error })
       return null
     }
 
@@ -257,7 +258,7 @@ class RecipeService {
     const { data, error } = await query.select().single()
 
     if (error) {
-      console.error('Error updating recipe:', error)
+      logger.shotCreator.error('Error updating recipe', { error: error })
       return null
     }
 
@@ -287,11 +288,11 @@ class RecipeService {
       if (files && files.length > 0) {
         const paths = files.map((f: { name: string }) => `recipe-images/${recipeId}/${f.name}`)
         await supabase.storage.from('directors-palette').remove(paths)
-        console.log(`[RecipeService] Deleted ${paths.length} images for recipe ${recipeId}`)
+        logger.shotCreator.info('Deleted recipe images', { count: paths.length, recipeId })
       }
     } catch (storageError) {
       // Log but don't fail - images cleanup is best-effort
-      console.error('[RecipeService] Error deleting recipe images:', storageError)
+      logger.shotCreator.error('[RecipeService] Error deleting recipe images', { storageError: storageError })
     }
 
     // Build query - admin client can delete any recipe, regular client only user's own
@@ -307,7 +308,7 @@ class RecipeService {
     const { error } = await query
 
     if (error) {
-      console.error('Error deleting recipe:', error)
+      logger.shotCreator.error('Error deleting recipe', { error: error })
       return false
     }
 
@@ -389,7 +390,7 @@ class RecipeService {
       .order('display_order', { ascending: true })
 
     if (error) {
-      console.error('Error fetching quick access items:', error)
+      logger.shotCreator.error('Error fetching quick access items', { error: error })
       return []
     }
 
@@ -409,13 +410,13 @@ class RecipeService {
     // Get current max order
     const items = await this.getQuickAccessItems(userId)
     if (items.length >= 9) {
-      console.warn('Quick access is full (max 9 items)')
+      logger.shotCreator.warn('Quick access is full (max 9 items)')
       return null
     }
 
     // Check if already exists
     if (items.some(item => item.recipe_id === recipeId)) {
-      console.warn('Recipe already in quick access')
+      logger.shotCreator.warn('Recipe already in quick access')
       return null
     }
 
@@ -433,7 +434,7 @@ class RecipeService {
       .single()
 
     if (error) {
-      console.error('Error adding to quick access:', error)
+      logger.shotCreator.error('Error adding to quick access', { error: error })
       return null
     }
 
@@ -453,7 +454,7 @@ class RecipeService {
       .eq('user_id', userId)
 
     if (error) {
-      console.error('Error removing from quick access:', error)
+      logger.shotCreator.error('Error removing from quick access', { error: error })
       return false
     }
 
@@ -477,7 +478,7 @@ class RecipeService {
       .eq('user_id', userId)
 
     if (error) {
-      console.error('Error updating quick access label:', error)
+      logger.shotCreator.error('Error updating quick access label', { error: error })
       return false
     }
 
@@ -502,7 +503,7 @@ class RecipeService {
         .eq('user_id', userId)
 
       if (error) {
-        console.error('Error reordering quick access:', error)
+        logger.shotCreator.error('Error reordering quick access', { error: error })
         return false
       }
     }
@@ -529,11 +530,11 @@ class RecipeService {
       .limit(1)
 
     if (existing && existing.length > 0) {
-      console.log('System recipes already initialized')
+      logger.shotCreator.info('System recipes already initialized')
       return
     }
 
-    console.log('Initializing system recipes...')
+    logger.shotCreator.info('Initializing system recipes...')
 
     // Insert sample recipes as system recipes (no user_id)
     for (const sample of SAMPLE_RECIPES) {
@@ -563,13 +564,13 @@ class RecipeService {
         .insert(dbRecipe)
 
       if (error) {
-        console.error(`Error inserting system recipe "${sample.name}":`, error)
+        logger.shotCreator.error('Error inserting system recipe "[name]"', { name: sample.name, error })
       } else {
-        console.log(`✓ Inserted system recipe: ${sample.name}`)
+        logger.shotCreator.info('Inserted system recipe', { name: sample.name })
       }
     }
 
-    console.log('System recipes initialization complete')
+    logger.shotCreator.info('System recipes initialization complete')
   }
 }
 

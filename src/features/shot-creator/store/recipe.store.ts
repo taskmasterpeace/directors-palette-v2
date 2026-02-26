@@ -14,6 +14,7 @@ import {
   validateRecipe,
 } from '../types/recipe.types'
 import { recipeService, DbQuickAccessItem } from '../services/recipe.service'
+import { logger } from '@/lib/logger'
 
 interface RecipeState {
   // Recipes
@@ -128,9 +129,9 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
         isAdmin: isAdmin ?? false,
       })
 
-      console.log(`📚 Loaded ${recipes.length} recipes for user`)
+      logger.shotCreator.info('Loaded recipes', { count: recipes.length })
     } catch (error) {
-      console.error('Error initializing recipe store:', error)
+      logger.shotCreator.error('Error initializing recipe store', { error: error instanceof Error ? error.message : String(error) })
       set({ isLoading: false })
     }
   },
@@ -183,7 +184,7 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
         isLoading: false,
       })
     } catch (error) {
-      console.error('Error refreshing recipes:', error)
+      logger.shotCreator.error('Error refreshing recipes', { error: error instanceof Error ? error.message : String(error) })
       set({ isLoading: false })
     }
   },
@@ -192,7 +193,7 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
   addRecipe: async (recipeData) => {
     const userId = get().currentUserId
     if (!userId) {
-      console.error('Cannot add recipe: No user ID')
+      logger.shotCreator.error('Cannot add recipe: No user ID')
       return null
     }
 
@@ -208,7 +209,7 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
     // Create in database
     const newRecipe = await recipeService.createRecipe(recipeWithStages, userId)
     if (!newRecipe) {
-      console.error('Failed to create recipe in database')
+      logger.shotCreator.error('Failed to create recipe in database')
       return null
     }
 
@@ -293,13 +294,13 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
   duplicateRecipe: async (recipeId, newName) => {
     const userId = get().currentUserId
     if (!userId) {
-      console.error('Cannot duplicate recipe: No user ID')
+      logger.shotCreator.error('Cannot duplicate recipe: No user ID')
       return null
     }
 
     const recipe = get().getRecipe(recipeId)
     if (!recipe) {
-      console.error('Cannot duplicate recipe: Recipe not found')
+      logger.shotCreator.error('Cannot duplicate recipe: Recipe not found')
       return null
     }
 
@@ -326,7 +327,7 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
     // Create in database
     const newRecipe = await recipeService.createRecipe(duplicated, userId)
     if (!newRecipe) {
-      console.error('Failed to duplicate recipe in database')
+      logger.shotCreator.error('Failed to duplicate recipe in database')
       return null
     }
 
@@ -365,13 +366,13 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
             // Update the recipe with new image URLs
             await recipeService.updateRecipe(newRecipe.id, { stages: updatedStages }, userId)
             newRecipe.stages = updatedStages
-            console.log(`📷 Copied ${copies.length} images to duplicated recipe`)
+            logger.shotCreator.info('Copied images to duplicated recipe', { count: copies.length })
           }
         } else {
-          console.warn('Failed to copy images during duplication:', await response.text())
+          logger.shotCreator.warn('Failed to copy images during duplication', { detail: await response.text() })
         }
       } catch (copyError) {
-        console.error('Error copying images during duplication:', copyError)
+        logger.shotCreator.error('Error copying images during duplication', { copyError: copyError })
         // Continue anyway - recipe is created, just without copied images
       }
     }
@@ -381,7 +382,7 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
       recipes: [newRecipe, ...state.recipes],
     }))
 
-    console.log(`📋 Duplicated recipe: ${recipe.name} → ${newRecipe.name}`)
+    logger.shotCreator.info('Duplicated recipe', { from: recipe.name, to: newRecipe.name })
     return newRecipe
   },
 

@@ -17,6 +17,7 @@ import type {
   RiverflowProSettings,
 } from '../types/image-generation.types'
 import { ASPECT_RATIO_SIZES } from '@/config'
+import { logger } from '@/lib/logger'
 
 export class ImageGenerationService {
   private baseUrl = '/api'
@@ -437,7 +438,7 @@ export class ImageGenerationService {
 
       return await response.json()
     } catch (error) {
-      console.error('Image generation error:', error)
+      logger.shotCreator.error('Image generation error', { error: error instanceof Error ? error.message : String(error) })
       throw error
     }
   }

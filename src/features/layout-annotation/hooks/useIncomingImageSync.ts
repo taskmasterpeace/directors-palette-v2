@@ -7,7 +7,10 @@
 import { useEffect, RefObject } from 'react'
 import { useLayoutAnnotationStore } from '../store'
 import type { FabricCanvasRef } from '../components/canvas-board'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Layout')
 const STORAGE_KEY = 'directors-palette-layout-input'
 
 interface IncomingImageSyncProps {
@@ -69,18 +72,18 @@ export function useIncomingImageSync({ canvasRef }: IncomingImageSyncProps) {
       return
     }
 
-    console.log('[Layout Annotation] Processing incoming images:', incomingImages)
+    log.info('[Layout Annotation] Processing incoming images', { incomingImages: incomingImages })
 
     const processImages = () => {
       const canvasApi = canvasRef.current
       if (!canvasApi?.importImage) {
-        console.log('[Layout Annotation] Canvas not ready yet, retrying...')
+        log.info('[Layout Annotation] Canvas not ready yet, retrying...')
         setTimeout(processImages, 100)
         return
       }
-      console.log('[Layout Annotation] Importing images to canvas')
+      log.info('[Layout Annotation] Importing images to canvas')
       incomingImages.forEach((url) => {
-        console.log('[Layout Annotation] Importing image:', url)
+        log.info('[Layout Annotation] Importing image', { url: url })
         canvasApi.importImage(url)
       })
       setIncomingImages([])

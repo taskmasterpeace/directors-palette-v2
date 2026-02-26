@@ -15,6 +15,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { cn } from "@/utils/utils"
 import { BOOK_FORMATS, type BookFormat } from "../../../types/storybook.types"
 import Image from "next/image"
+import { logger } from '@/lib/logger'
 
 // Example images for each book format
 const FORMAT_EXAMPLES: Record<BookFormat, string> = {
@@ -175,7 +176,7 @@ export function StoryInputStep() {
         setShowPages(true)
       }, 100)
     } catch (error) {
-      console.error('Error polishing story:', error)
+      logger.storybook.error('Error polishing story', { error: error instanceof Error ? error.message : String(error) })
       setPolishError(error instanceof Error ? error.message : 'Failed to polish story')
       // Fallback to local splitting
       const pageTexts = splitIntoPages(storyText, pageCount === 'auto' ? 'auto' : targetPages)

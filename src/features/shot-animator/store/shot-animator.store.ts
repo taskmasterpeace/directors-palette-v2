@@ -14,6 +14,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { ShotAnimationConfig } from '../types'
+import { logger } from '@/lib/logger'
 
 interface ShotAnimatorStore {
   // State
@@ -86,7 +87,7 @@ export const useShotAnimatorStore = create<ShotAnimatorStore>()(
           } catch {
             // localStorage quota exceeded — silently ignore.
             // In-memory state still works, just won't survive refresh.
-            console.warn('[shot-animator-store] localStorage quota exceeded, state not persisted')
+            logger.shotCreator.warn('[shot-animator-store] localStorage quota exceeded, state not persisted')
           }
         },
         removeItem: (name) => {

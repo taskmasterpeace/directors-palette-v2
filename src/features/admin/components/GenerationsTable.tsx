@@ -10,7 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, RefreshCw, CheckCircle, XCircle, Clock, Download } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import type { GenerationEvent, GenerationEventsListResponse } from '../types/generation-events.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Admin')
 interface GenerationsTableProps {
     onExportLogs?: () => void
 }
@@ -39,7 +42,7 @@ export function GenerationsTable({ onExportLogs }: GenerationsTableProps) {
             setGenerations(data.generations)
             setTotal(data.total)
         } catch (error) {
-            console.error('Error fetching generations:', error)
+            log.error('Error fetching generations', { error: error instanceof Error ? error.message : String(error) })
         } finally {
             setLoading(false)
         }

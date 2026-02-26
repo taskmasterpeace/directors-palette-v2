@@ -9,6 +9,7 @@ import { useCreditsStore } from '@/features/credits/store/credits.store'
 import { toast } from 'sonner'
 import type { WildCard } from '@/features/shot-creator/helpers/wildcard/parser'
 import { getModelCost, type ModelId } from '@/config'
+import { logger } from '@/lib/logger'
 
 interface GenerationResult {
     shotNumber: number
@@ -187,7 +188,7 @@ export function useGenerationOrchestration({
             if (error instanceof Error && error.name === 'AbortError') {
                 toast.info('Generation was cancelled')
             } else {
-                console.error('Generation failed:', error)
+                logger.storyboard.error('Generation failed', { error: error instanceof Error ? error.message : String(error) })
                 toast.error('Generation failed. Please try again.')
             }
         } finally {

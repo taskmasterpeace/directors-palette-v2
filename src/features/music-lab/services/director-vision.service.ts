@@ -1,6 +1,7 @@
 import { DirectorFingerprint } from '../types/director.types'
 import { imageGenerationService } from '@/features/shot-creator/services/image-generation.service'
 import type { ZImageTurboSettings, ImageGenerationRequest } from '@/features/shot-creator/types/image-generation.types'
+import { logger } from '@/lib/logger'
 
 /**
  * Result type for director vision generation
@@ -75,7 +76,7 @@ export class DirectorVisionService {
 
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-            console.error('Director Vision Generation Failed:', error)
+            logger.musicLab.error('Director Vision Generation Failed', { error: error instanceof Error ? error.message : String(error) })
             return { status: 'failed', error: errorMessage }
         }
     }

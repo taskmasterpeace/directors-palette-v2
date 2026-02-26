@@ -23,7 +23,10 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { CommunityItem, CommunityItemType } from '@/features/community/types/community.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Admin')
 const TYPE_LABELS: Record<CommunityItemType, string> = {
   wildcard: 'Wildcard',
   recipe: 'Recipe',
@@ -78,7 +81,7 @@ export function CommunityModerationTab() {
       const data = await res.json()
       setItems(data.items || [])
     } catch (error) {
-      console.error('Error fetching community items:', error)
+      log.error('Error fetching community items', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setLoading(false)
     }
@@ -104,7 +107,7 @@ export function CommunityModerationTab() {
 
       await fetchItems()
     } catch (error) {
-      console.error('Error performing action:', error)
+      log.error('Error performing action', { error: error instanceof Error ? error.message : String(error) })
       alert(error instanceof Error ? error.message : 'Action failed')
     } finally {
       setActionLoading(null)

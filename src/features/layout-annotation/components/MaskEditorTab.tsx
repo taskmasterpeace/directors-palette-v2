@@ -20,7 +20,10 @@ import {
     ZoomIn, ZoomOut, Maximize
 } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Layout')
 type ModelType = 'nano-banana' | 'nano-banana-pro'
 type ToolType = 'mask' | 'draw' | 'arrow' | 'text' | 'image'
 
@@ -348,7 +351,7 @@ export function MaskEditorTab({ className }: MaskEditorTabProps) {
             resultImg.src = result.url
 
         } catch (error: unknown) {
-            console.error("Inpaint error:", error)
+            log.error('Inpaint error', { error: error })
             const message = error instanceof Error ? error.message : 'Unknown error'
             toast({
                 title: "Generation Failed",

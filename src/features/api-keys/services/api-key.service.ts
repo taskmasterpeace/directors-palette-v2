@@ -17,7 +17,10 @@ import {
   rowToApiKey,
   rowToApiUsage,
 } from '../types/api-key.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('ApiKeys')
 class ApiKeyService {
   private getServiceClient() {
     return createClient(
@@ -63,7 +66,7 @@ class ApiKeyService {
       .single()
 
     if (error) {
-      console.error('Error generating API key:', error)
+      log.error('Error generating API key', { error: error })
       return null
     }
 
@@ -148,7 +151,7 @@ class ApiKeyService {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching API keys:', error)
+      log.error('Error fetching API keys', { error: error })
       return []
     }
 
@@ -168,7 +171,7 @@ class ApiKeyService {
       .eq('user_id', userId)
 
     if (error) {
-      console.error('Error revoking API key:', error)
+      log.error('Error revoking API key', { error: error })
       return false
     }
 
@@ -255,7 +258,7 @@ class ApiKeyService {
       .limit(limit)
 
     if (error) {
-      console.error('Error fetching API usage:', error)
+      log.error('Error fetching API usage', { error: error })
       return []
     }
 

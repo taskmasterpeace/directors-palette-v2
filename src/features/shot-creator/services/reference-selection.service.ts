@@ -6,6 +6,7 @@
 import { getClient } from '@/lib/db/client'
 import type { ReferenceCategory } from '../types/autocomplete.types'
 import type { GeneratedImage } from '../store/unified-gallery-store'
+import { logger } from '@/lib/logger'
 
 /**
  * Get a random image from a specific category in the reference library
@@ -16,13 +17,13 @@ export async function getRandomFromCategory(
   try {
     const supabase = await getClient()
     if (!supabase) {
-      console.error('Supabase client not available')
+      logger.shotCreator.error('Supabase client not available')
       return null
     }
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      console.error('User not authenticated')
+      logger.shotCreator.error('User not authenticated')
       return null
     }
 
@@ -48,12 +49,12 @@ export async function getRandomFromCategory(
       .not('gallery.public_url', 'is', null) // Only items with completed images
 
     if (error) {
-      console.error('Error fetching from category:', error)
+      logger.shotCreator.error('Error fetching from category', { error: error })
       return null
     }
 
     if (!data || data.length === 0) {
-      console.warn(`No images found in category: ${category}`)
+      logger.shotCreator.warn('No images found in category', { category })
       return null
     }
 
@@ -64,7 +65,7 @@ export async function getRandomFromCategory(
     // Extract gallery data
     const galleryData = randomItem.gallery as Record<string, unknown> | null
     if (!galleryData) {
-      console.error('No gallery data found for reference')
+      logger.shotCreator.error('No gallery data found for reference')
       return null
     }
 
@@ -99,10 +100,10 @@ export async function getRandomFromCategory(
       }
     }
 
-    console.log(`🎲 Random selection from ${category}:`, reference || image.id)
+    logger.shotCreator.info('🎲 Random selection from [category]', { category, detail: reference || image.id })
     return image
   } catch (error) {
-    console.error('Error in getRandomFromCategory:', error)
+    logger.shotCreator.error('Error in getRandomFromCategory', { error: error instanceof Error ? error.message : String(error) })
     return null
   }
 }
@@ -199,7 +200,7 @@ export async function getRandomReferences(
 
     return images
   } catch (error) {
-    console.error('Error in getRandomReferences:', error)
+    logger.shotCreator.error('Error in getRandomReferences', { error: error instanceof Error ? error.message : String(error) })
     return []
   }
 }
@@ -242,7 +243,7 @@ export async function getCategoryCounts(): Promise<Record<ReferenceCategory, num
 
     return counts
   } catch (error) {
-    console.error('Error getting category counts:', error)
+    logger.shotCreator.error('Error getting category counts', { error: error instanceof Error ? error.message : String(error) })
     return { people: 0, places: 0, props: 0, layouts: 0 }
   }
 }

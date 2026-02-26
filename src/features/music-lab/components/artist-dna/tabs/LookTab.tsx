@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Palette, User, Loader2, Upload, Sparkles } from 'lucide-react'
 import { MagicWandField } from '../MagicWandField'
 import { useArtistDnaStore } from '../../../store/artist-dna.store'
+import { logger } from '@/lib/logger'
 
 export function LookTab() {
   const { draft, updateDraft } = useArtistDnaStore()
@@ -39,7 +40,7 @@ export function LookTab() {
         }
       }
     } catch (error) {
-      console.error('Failed to generate portrait:', error)
+      logger.musicLab.error('Failed to generate portrait', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setGeneratingPortrait(false)
     }
@@ -65,7 +66,7 @@ export function LookTab() {
         }
       }
     } catch (error) {
-      console.error('Failed to upload portrait:', error)
+      logger.musicLab.error('Failed to upload portrait', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -99,7 +100,7 @@ export function LookTab() {
         }
       }
     } catch (error) {
-      console.error('Failed to generate character sheet:', error)
+      logger.musicLab.error('Failed to generate character sheet', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setGeneratingSheet(false)
     }
@@ -127,7 +128,7 @@ export function LookTab() {
         }
       }
     } catch (error) {
-      console.error('Failed to generate portrait:', error)
+      logger.musicLab.error('Failed to generate portrait', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setGeneratingPortrait(false)
     }

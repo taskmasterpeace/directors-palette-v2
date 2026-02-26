@@ -9,6 +9,7 @@ import { useShotCreatorStore } from "../store/shot-creator.store"
 import { clipboardManager } from "@/utils/clipboard-manager"
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera'
 import { Capacitor } from '@capacitor/core'
+import { logger } from '@/lib/logger'
 
 export function useReferenceImageManager(maxImages: number = 3) {
     const { toast } = useToast()
@@ -42,7 +43,7 @@ export function useReferenceImageManager(maxImages: number = 3) {
                 // const saved = ''; //TODO: get saved images from supabase
                 // if (saved?.length) setShotCreatorReferenceImages(saved)
             } catch (err) {
-                console.error("Failed to load reference images:", err)
+                logger.shotCreator.error('Failed to load reference images', { error: err instanceof Error ? err.message : String(err) })
                 toast({ title: "Load Error", description: "Could not load saved reference images", variant: "destructive" })
             }
         }
@@ -58,7 +59,7 @@ export function useReferenceImageManager(maxImages: number = 3) {
                     //TODO: clear images from supabase clear remove
                 }
             } catch (err) {
-                console.error("Failed to save reference images:", err)
+                logger.shotCreator.error('Failed to save reference images', { error: err instanceof Error ? err.message : String(err) })
                 toast({ title: "Save Error", description: "Could not save reference images", variant: "destructive" })
             }
         }
@@ -115,7 +116,7 @@ export function useReferenceImageManager(maxImages: number = 3) {
                 description: `Added ${file.name} (${dimensions.aspectRatio})`
             })
         } catch (err) {
-            console.error("Upload error:", err)
+            logger.shotCreator.error('Upload error', { error: err instanceof Error ? err.message : String(err) })
             toast({
                 title: "Upload Failed",
                 description: err instanceof Error ? err.message : "Failed to upload reference image",
@@ -162,7 +163,7 @@ export function useReferenceImageManager(maxImages: number = 3) {
                     return
                 }
             } catch (textError) {
-                console.error("Text read error:", textError)
+                logger.shotCreator.error('Text read error', { textError: textError })
             }
 
             // No image or URL found
@@ -172,7 +173,7 @@ export function useReferenceImageManager(maxImages: number = 3) {
                 variant: "destructive"
             })
         } catch (err: unknown) {
-            console.error("Paste error:", err)
+            logger.shotCreator.error('Paste error', { error: err instanceof Error ? err.message : String(err) })
             toast({
                 title: "Paste Failed",
                 description: err instanceof Error ? err.message : "Unable to paste image",
@@ -219,7 +220,7 @@ export function useReferenceImageManager(maxImages: number = 3) {
                 // User cancelled, don't show error
                 return
             }
-            console.error("Camera capture error:", err)
+            logger.shotCreator.error('Camera capture error', { err: err })
             toast({
                 title: "Camera Error",
                 description: err instanceof Error ? err.message : "Failed to capture photo from camera",

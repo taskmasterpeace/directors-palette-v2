@@ -5,6 +5,7 @@
 
 import { getClient } from '@/lib/db/client'
 import type { DirectorFingerprint } from '../types/director.types'
+import { logger } from '@/lib/logger'
 
 // Database director type (matches Supabase schema)
 export interface DbUserDirector {
@@ -71,7 +72,7 @@ class DirectorService {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching user directors:', error)
+      logger.musicLab.error('Error fetching user directors', { error: error })
       return []
     }
 
@@ -93,7 +94,7 @@ class DirectorService {
       .single()
 
     if (error) {
-      console.error('Error fetching director:', error)
+      logger.musicLab.error('Error fetching director', { error: error })
       return null
     }
 
@@ -127,7 +128,7 @@ class DirectorService {
       .single()
 
     if (error) {
-      console.error('Error adding director:', error)
+      logger.musicLab.error('Error adding director', { error: error })
       return null
     }
 
@@ -169,7 +170,7 @@ class DirectorService {
       .single()
 
     if (error) {
-      console.error('Error updating director:', error)
+      logger.musicLab.error('Error updating director', { error: error })
       return null
     }
 
@@ -190,7 +191,7 @@ class DirectorService {
       .eq('user_id', userId)
 
     if (error) {
-      console.error('Error deleting director:', error)
+      logger.musicLab.error('Error deleting director', { error: error })
       return false
     }
 

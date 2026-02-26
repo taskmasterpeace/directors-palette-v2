@@ -12,7 +12,10 @@ import { Badge } from '@/components/ui/badge'
 import { Palette, Plus, Pencil, Trash2, RefreshCw, Image as ImageIcon } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { createBrowserClient } from '@supabase/ssr'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Admin')
 interface StyleSheet {
   id: string
   name: string
@@ -57,7 +60,7 @@ export function StyleSheetsTab() {
       const data = await res.json()
       setStyles(data.styles || [])
     } catch (error) {
-      console.error('Error fetching styles:', error)
+      log.error('Error fetching styles', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setLoading(false)
     }
@@ -120,7 +123,7 @@ export function StyleSheetsTab() {
       resetForm()
       fetchStyles()
     } catch (error) {
-      console.error('Error saving style:', error)
+      log.error('Error saving style', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setSaving(false)
     }
@@ -147,7 +150,7 @@ export function StyleSheetsTab() {
       if (!res.ok) throw new Error('Failed to delete')
       fetchStyles()
     } catch (error) {
-      console.error('Error deleting style:', error)
+      log.error('Error deleting style', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setDeleting(null)
     }

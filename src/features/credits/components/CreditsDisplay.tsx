@@ -21,6 +21,7 @@ import { Coins, Plus, Sparkles, Zap, Star, Crown, Image as ImageIcon, Gift, Vide
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { cn } from '@/utils/utils'
 import { RedeemUsageDialog } from './RedeemUsageDialog'
+import { logger } from '@/lib/logger'
 
 interface CreditPackage {
     id: string
@@ -140,7 +141,7 @@ export function CreditsDisplay() {
                 setPackages(uniquePackages)
             }
         } catch (error) {
-            console.error('Error loading packages:', error)
+            logger.credits.error('Error loading packages', { error: error instanceof Error ? error.message : String(error) })
         } finally {
             setLoadingPackages(false)
         }
@@ -173,7 +174,7 @@ export function CreditsDisplay() {
                 throw new Error(data.error || 'Failed to create checkout')
             }
         } catch (error) {
-            console.error('Checkout error:', error)
+            logger.credits.error('Checkout error', { error: error instanceof Error ? error.message : String(error) })
             alert('Payment system not configured yet. Contact admin for points.')
         } finally {
             setPurchasingId(null)

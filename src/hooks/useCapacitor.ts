@@ -4,7 +4,10 @@ import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Hooks')
 /**
  * Hook to configure Capacitor native features
  * Handles status bar styling and splash screen
@@ -36,12 +39,12 @@ export function useCapacitor() {
           }, { once: true });
         }
       } catch (error) {
-        console.error('Error setting up native features:', error);
+        log.error('Error setting up native features', { error: error instanceof Error ? error.message : String(error) })
         // Ensure splash screen is hidden even if there's an error
         try {
           await SplashScreen.hide();
         } catch (e) {
-          console.error('Failed to hide splash screen:', e);
+          log.error('Failed to hide splash screen', { error: e instanceof Error ? e.message : String(e) })
         }
       }
     };

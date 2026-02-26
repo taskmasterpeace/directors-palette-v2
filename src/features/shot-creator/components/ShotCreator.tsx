@@ -24,6 +24,7 @@ import {
     ResizablePanel,
     ResizableHandle,
 } from '@/components/ui/resizable'
+import { logger } from '@/lib/logger'
 
 const ShotCreator = () => {
     const { setActiveTab } = useLayoutStore()
@@ -152,10 +153,10 @@ const ShotCreator = () => {
 
             // Refresh gallery
             setTimeout(() => {
-                useUnifiedGalleryStore.getState().refreshGallery().catch(console.error)
+                useUnifiedGalleryStore.getState().refreshGallery().catch((err: unknown) => logger.shotCreator.error('Gallery refresh failed', { error: err instanceof Error ? err.message : String(err) }))
             }, 500)
         } catch (error) {
-            console.error('Background removal error:', error)
+            logger.shotCreator.error('Background removal error', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Remove Background Failed",
                 description: error instanceof Error ? error.message : "An error occurred",
@@ -208,10 +209,10 @@ const ShotCreator = () => {
             })
 
             setTimeout(() => {
-                useUnifiedGalleryStore.getState().refreshGallery().catch(console.error)
+                useUnifiedGalleryStore.getState().refreshGallery().catch((err: unknown) => logger.shotCreator.error('Gallery refresh failed', { error: err instanceof Error ? err.message : String(err) }))
             }, 500)
         } catch (error) {
-            console.error('Save to gallery error:', error)
+            logger.shotCreator.error('Save to gallery error', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Save Failed",
                 description: error instanceof Error ? error.message : "An error occurred",

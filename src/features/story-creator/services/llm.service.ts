@@ -1,3 +1,6 @@
+import { createLogger } from '@/lib/logger'
+const log = createLogger('StoryCreator')
+
 /**
  * LLM Service for Story Creator
  * Uses server-side API route to proxy LLM requests (keeps API key secure)
@@ -141,7 +144,7 @@ Extract 8-15 shots with good variety. Return ONLY valid JSON, no markdown.`
                 // Parse JSON from response
                 const jsonMatch = response.match(/\[[\s\S]*\]/)
                 if (!jsonMatch) {
-                    console.warn(`No JSON found in segment ${i + 1}, skipping...`)
+                    log.warn('No JSON found in segment, skipping', { segment: i + 1 })
                     continue
                 }
 
@@ -157,14 +160,14 @@ Extract 8-15 shots with good variety. Return ONLY valid JSON, no markdown.`
                 })
 
                 allScenes.push(...scenes)
-                console.log(`  ✓ Extracted ${scenes.length} shots from ${segment.chapter || `segment ${i + 1}`}`)
+                log.info('Extracted shots from segment', { shotCount: scenes.length, chapter: segment.chapter || `segment ${i + 1}` })
             } catch (error) {
-                console.error(`Scene extraction failed for segment ${i + 1}:`, error)
+                log.error('Scene extraction failed for segment [detail]', { detail: i + 1, error: error instanceof Error ? error.message : String(error) })
                 // Continue with other segments
             }
         }
 
-        console.log(`🎬 Total shots extracted: ${allScenes.length}`)
+        log.info('Total shots extracted', { count: allScenes.length })
 
         // Validation: Ensure reasonable shot count
         const MIN_SHOTS = 3
@@ -175,11 +178,11 @@ Extract 8-15 shots with good variety. Return ONLY valid JSON, no markdown.`
         }
 
         if (allScenes.length < MIN_SHOTS) {
-            console.warn(`⚠️  Only ${allScenes.length} shots extracted (minimum recommended: ${MIN_SHOTS})`)
+            log.warn('Few shots extracted', { count: allScenes.length, minimum: MIN_SHOTS })
         }
 
         if (allScenes.length > MAX_SHOTS) {
-            console.warn(`⚠️  Extracted ${allScenes.length} shots (max ${MAX_SHOTS}). Truncating...`)
+            log.warn('Too many shots extracted, truncating', { count: allScenes.length, max: MAX_SHOTS })
             allScenes.splice(MAX_SHOTS)
         }
 
@@ -208,7 +211,7 @@ Extract 8-15 shots with good variety. Return ONLY valid JSON, no markdown.`
 
         // If we found chapters, split by them
         if (matches.length > 1) {
-            console.log(`📚 Found ${matches.length} chapters, processing separately...`)
+            log.info('Found chapters, processing separately', { count: matches.length })
 
             for (let i = 0; i < matches.length; i++) {
                 const start = matches[i].index
@@ -228,7 +231,7 @@ Extract 8-15 shots with good variety. Return ONLY valid JSON, no markdown.`
         }
 
         // No chapters found - create intelligent segments
-        console.log('📄 No chapters detected, creating intelligent segments...')
+        log.info('📄 No chapters detected, creating intelligent segments...')
 
         const targetSize = 8000 // Characters per segment
         const minSize = 500
@@ -256,7 +259,7 @@ Extract 8-15 shots with good variety. Return ONLY valid JSON, no markdown.`
             segments.push({ text: currentSegment.trim() })
         }
 
-        console.log(`📄 Created ${segments.length} intelligent segments`)
+        log.info('Created intelligent segments', { count: segments.length })
         return segments
     }
 
@@ -284,7 +287,7 @@ For locations:
 
         const entityMessage = `Extracting characters & locations from ${segments.length} ${segments.length === 1 ? 'segment' : 'segments'}...`
         onProgress?.({ type: 'entities', message: entityMessage })
-        console.log(`👥 ${entityMessage}`)
+        log.info(entityMessage)
 
         for (let i = 0; i < segments.length; i++) {
             const segment = segments[i]
@@ -323,16 +326,16 @@ Return ONLY valid JSON, no markdown.`
                 // Parse JSON from response
                 const jsonMatch = response.match(/\{[\s\S]*\}/)
                 if (!jsonMatch) {
-                    console.warn(`No JSON found for entities in segment ${i + 1}, skipping...`)
+                    log.warn('No JSON found for entities in segment, skipping', { segment: i + 1 })
                     continue
                 }
 
                 const entities: ExtractedEntities = JSON.parse(jsonMatch[0])
                 allCharacters.push(...entities.characters)
                 allLocations.push(...entities.locations)
-                console.log(`  ✓ Found ${entities.characters.length} characters, ${entities.locations.length} locations`)
+                log.info('Found entities', { characters: entities.characters.length, locations: entities.locations.length })
             } catch (error) {
-                console.error(`Entity extraction failed for segment ${i + 1}:`, error)
+                log.error('Entity extraction failed for segment [detail]', { detail: i + 1, error: error instanceof Error ? error.message : String(error) })
                 // Continue with other segments
             }
         }
@@ -350,7 +353,7 @@ Return ONLY valid JSON, no markdown.`
             ).values()
         )
 
-        console.log(`👥 Total unique entities: ${uniqueCharacters.length} characters, ${uniqueLocations.length} locations`)
+        log.info('Total unique entities', { characters: uniqueCharacters.length, locations: uniqueLocations.length })
 
         // Validation: Ensure at least some entities were extracted
         const MAX_ENTITIES_PER_TYPE = 50
@@ -360,12 +363,12 @@ Return ONLY valid JSON, no markdown.`
         }
 
         if (uniqueCharacters.length > MAX_ENTITIES_PER_TYPE) {
-            console.warn(`⚠️  Extracted ${uniqueCharacters.length} characters (max ${MAX_ENTITIES_PER_TYPE}). Truncating...`)
+            log.warn('Too many characters extracted, truncating', { count: uniqueCharacters.length, max: MAX_ENTITIES_PER_TYPE })
             uniqueCharacters.splice(MAX_ENTITIES_PER_TYPE)
         }
 
         if (uniqueLocations.length > MAX_ENTITIES_PER_TYPE) {
-            console.warn(`⚠️  Extracted ${uniqueLocations.length} locations (max ${MAX_ENTITIES_PER_TYPE}). Truncating...`)
+            log.warn('Too many locations extracted, truncating', { count: uniqueLocations.length, max: MAX_ENTITIES_PER_TYPE })
             uniqueLocations.splice(MAX_ENTITIES_PER_TYPE)
         }
 

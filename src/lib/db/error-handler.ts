@@ -1,5 +1,8 @@
 import { PostgrestError } from '@supabase/supabase-js';
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Lib')
 export interface DatabaseError {
   message: string;
   code?: string;
@@ -54,7 +57,7 @@ export class DatabaseErrorHandler {
 
     // Log unknown error types (but don't spam console in production)
     if (process.env.NODE_ENV === 'development') {
-      console.error('[DatabaseErrorHandler] Unknown error type:', typeof error, JSON.stringify(error, null, 2));
+      log.error('Unknown error type', { errorType: typeof error, raw: JSON.stringify(error, null, 2) })
     }
 
     return {

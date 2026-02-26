@@ -1,7 +1,10 @@
 
 import { getAPIClient } from '@/lib/db/client'
 import { adminService } from '@/features/admin/services/admin.service'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Coupons')
 export interface Coupon {
     id: string
     code: string
@@ -34,11 +37,11 @@ export class CouponService {
             expires_at?: string
         }
     ): Promise<{ success: boolean; coupon?: Coupon; error?: string }> {
-        console.log('[CouponService] Creating coupon:', { adminEmail, data })
+        log.info('[CouponService] Creating coupon', { adminEmail, data })
 
         // Double check admin permission
         const isAdmin = await adminService.checkAdminEmailAsync(adminEmail)
-        console.log('[CouponService] Admin check:', { adminEmail, isAdmin })
+        log.info('[CouponService] Admin check', { adminEmail, isAdmin })
 
         if (!isAdmin) {
             return { success: false, error: 'Unauthorized: Not an admin' }
@@ -47,7 +50,7 @@ export class CouponService {
         const supabase = await getAPIClient()
 
         try {
-            console.log('[CouponService] Inserting into coupons table...')
+            log.info('[CouponService] Inserting into coupons table...')
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data: coupon, error } = await (supabase as any)
@@ -62,19 +65,19 @@ export class CouponService {
                 .select()
                 .single()
 
-            console.log('[CouponService] Insert result:', { coupon, error })
+            log.info('[CouponService] Insert result', { coupon, error })
 
             if (error) {
                 if (error.code === '23505') {
                     return { success: false, error: 'Coupon code already exists' }
                 }
-                console.error('[CouponService] Database error:', error)
+                log.error('[CouponService] Database error', { error: error })
                 return { success: false, error: error.message || 'Database error' }
             }
 
             return { success: true, coupon: coupon as Coupon }
         } catch (error) {
-            console.error('[CouponService] Error creating coupon:', error)
+            log.error('[CouponService] Error creating coupon', { error: error instanceof Error ? error.message : String(error) })
             const message = error instanceof Error ? error.message : 'Failed to create coupon'
             return { success: false, error: message }
         }
@@ -97,7 +100,7 @@ export class CouponService {
             .order('created_at', { ascending: false })
 
         if (error) {
-            console.error('Error listings coupons:', error)
+            log.error('Error listings coupons', { error: error })
             return []
         }
 
@@ -127,13 +130,13 @@ export class CouponService {
                 .eq('id', couponId)
 
             if (error) {
-                console.error('[CouponService] Delete error:', error)
+                log.error('[CouponService] Delete error', { error: error })
                 return { success: false, error: error.message || 'Failed to delete coupon' }
             }
 
             return { success: true }
         } catch (error) {
-            console.error('[CouponService] Error deleting coupon:', error)
+            log.error('[CouponService] Error deleting coupon', { error: error instanceof Error ? error.message : String(error) })
             const message = error instanceof Error ? error.message : 'Failed to delete coupon'
             return { success: false, error: message }
         }
@@ -176,7 +179,7 @@ export class CouponService {
                 return { success: false, error: result.error || 'Redemption failed' }
             }
         } catch (error) {
-            console.error('Error redeeming coupon:', error)
+            log.error('Error redeeming coupon', { error: error instanceof Error ? error.message : String(error) })
             return { success: false, error: 'Failed to redeem coupon' }
         }
     }

@@ -22,6 +22,7 @@ import { ImageCard } from './ImageCard'
 import FullscreenModal from './FullScreenModal'
 import { useReferenceNamePrompt } from '@/components/providers/PromptProvider'
 import Link from 'next/link'
+import { logger } from '@/lib/logger'
 
 type FilterTab = 'all' | 'tagged' | 'untagged'
 
@@ -49,16 +50,16 @@ export function ExpandedGallery() {
 
   // Load gallery images
   const loadGallery = useCallback(async (page: number) => {
-    console.log(`[ExpandedGallery] Loading gallery page ${page}`)
+    logger.shotCreator.info('Loading gallery page', { page })
     setIsLoading(true)
     try {
       const result = await GalleryService.loadUserGalleryPaginated(page, PAGE_SIZE)
-      console.log(`[ExpandedGallery] Loaded ${result.images.length} images, total: ${result.total}, totalPages: ${result.totalPages}`)
+      logger.shotCreator.info('Loaded gallery', { count: result.images.length, total: result.total, totalPages: result.totalPages })
       loadImagesPaginated(result.images, result.total, result.totalPages)
       setTotalPages(result.totalPages)
       setTotalItems(result.total)
     } catch (error) {
-      console.error('Failed to load gallery:', error)
+      logger.shotCreator.error('Failed to load gallery', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setIsLoading(false)
     }
@@ -89,7 +90,7 @@ export function ExpandedGallery() {
   })
 
   const handlePageChange = (page: number) => {
-    console.log(`[ExpandedGallery] Page change requested: ${page}, current: ${currentPage}, total: ${totalPages}`)
+    logger.shotCreator.info('Page change requested', { page, currentPage, totalPages })
     setCurrentPage(page)
     setSelectedImages([]) // Clear selection when changing pages
   }
@@ -147,7 +148,7 @@ export function ExpandedGallery() {
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('Failed to download image:', error)
+      logger.shotCreator.error('Failed to download image', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 

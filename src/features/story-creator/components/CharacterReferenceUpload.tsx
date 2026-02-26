@@ -9,7 +9,10 @@ import { toast } from '@/hooks/use-toast'
 import { getClient } from '@/lib/db/client'
 import { useUnifiedGalleryStore } from '@/features/shot-creator/store/unified-gallery-store'
 import { DropZone, type DropZoneRef } from '@/components/ui/drop-zone'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('StoryCreator')
 interface CharacterReferenceUploadProps {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -157,7 +160,7 @@ export function CharacterReferenceUpload({
             setPreviewUrl(null)
             setSelectedFile(null)
         } catch (error) {
-            console.error('Error uploading reference:', error)
+            log.error('Error uploading reference', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: 'Upload Failed',
                 description: error instanceof Error ? error.message : 'Unknown error',

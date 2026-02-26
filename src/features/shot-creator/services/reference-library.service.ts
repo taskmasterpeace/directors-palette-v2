@@ -5,6 +5,7 @@
 
 import { getClient } from "@/lib/db/client"
 import { toError } from "../helpers"
+import { logger } from '@/lib/logger'
 
 export interface ReferenceData {
     id?: string;
@@ -54,7 +55,7 @@ export async function createReference(
 
         return { data, error: null };
     } catch (error) {
-        console.error('Error creating reference:', error);
+        logger.shotCreator.error('Error creating reference', { error: error instanceof Error ? error.message : String(error) })
         return { data: null, error: toError(error) };
     }
 }
@@ -76,7 +77,7 @@ export async function getReferences(
         const { data: { user }, error: authError } = await supabase.auth.getUser();
 
         if (authError) {
-            console.error('Authentication error in getReferences:', authError);
+            logger.shotCreator.error('Authentication error in getReferences', { authError: authError })
             throw new Error(`Authentication failed: ${authError.message}`);
         }
 
@@ -113,7 +114,7 @@ export async function getReferences(
 
         return { data: data as ReferenceWithGallery[], error: null };
     } catch (error) {
-        console.error('Error fetching references:', error);
+        logger.shotCreator.error('Error fetching references', { error: error instanceof Error ? error.message : String(error) })
         return { data: null, error: toError(error) };
     }
 }
@@ -137,7 +138,7 @@ export async function getReferencesPaginated(
         const { data: { user }, error: authError } = await supabase.auth.getUser();
 
         if (authError) {
-            console.error('Authentication error in getReferencesPaginated:', authError);
+            logger.shotCreator.error('Authentication error in getReferencesPaginated', { authError: authError })
             throw new Error(`Authentication failed: ${authError.message}`);
         }
 
@@ -189,12 +190,12 @@ export async function getReferencesPaginated(
         ]);
 
         if (dataError) {
-            console.error('Data query error:', dataError);
+            logger.shotCreator.error('Data query error', { dataError: dataError })
             throw new Error(`Failed to fetch references: ${dataError.message}`);
         }
 
         if (countError) {
-            console.error('Count query error:', countError);
+            logger.shotCreator.error('Count query error', { countError: countError })
             throw new Error(`Failed to count references: ${countError.message}`);
         }
 
@@ -209,13 +210,7 @@ export async function getReferencesPaginated(
         };
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        console.error('Error fetching paginated references:', {
-            message: errorMessage,
-            error,
-            page,
-            pageSize,
-            category
-        });
+        logger.shotCreator.error('Error fetching paginated references', { message: errorMessage, error, page, pageSize, category })
 
         // Return error details
         return {
@@ -248,7 +243,7 @@ export async function updateReferenceCategory(
 
         return { data, error: null };
     } catch (error) {
-        console.error('Error updating reference category:', error);
+        logger.shotCreator.error('Error updating reference category', { error: error instanceof Error ? error.message : String(error) })
         return { data: null, error: toError(error) };
     }
 }
@@ -274,7 +269,7 @@ export async function updateReferenceTags(
 
         return { data, error: null };
     } catch (error) {
-        console.error('Error updating reference tags:', error);
+        logger.shotCreator.error('Error updating reference tags', { error: error instanceof Error ? error.message : String(error) })
         return { data: null, error: toError(error) };
     }
 }
@@ -297,7 +292,7 @@ export async function deleteReference(
 
         return { error: null };
     } catch (error) {
-        console.error('Error deleting reference:', error);
+        logger.shotCreator.error('Error deleting reference', { error: error instanceof Error ? error.message : String(error) })
         return { error: toError(error) };
     }
 }
@@ -325,7 +320,7 @@ export async function isInReferenceLibrary(
             error: null
         };
     } catch (error) {
-        console.error('Error checking reference existence:', error);
+        logger.shotCreator.error('Error checking reference existence', { error: error instanceof Error ? error.message : String(error) })
         return { exists: false, error: toError(error) };
     }
 }

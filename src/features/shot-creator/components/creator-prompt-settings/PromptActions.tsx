@@ -40,6 +40,7 @@ import type { Recipe } from "../../types/recipe.types"
 import { toast } from "sonner"
 import { RiverflowOptionsPanel, type RiverflowState } from "../RiverflowOptionsPanel"
 import { SlotMachinePanel } from "../slot-machine"
+import { logger } from '@/lib/logger'
 
 /**
  * Check if a recipe has any tool stages that require special execution
@@ -847,7 +848,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
 
                 } catch (error) {
                     failCount++
-                    console.error(`Failed to transform image ${i + 1}:`, error)
+                    logger.shotCreator.error('Failed to transform image [detail]', { detail: i + 1, error: error instanceof Error ? error.message : String(error) })
                     toast.error(`Transform failed: ${inputName}`)
 
                     results.push({
@@ -879,14 +880,14 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
         if (activeRecipe) {
             // Validate recipe fields
             if (!validation?.isValid) {
-                console.warn('Recipe validation failed:', validation?.missingFields)
+                logger.shotCreator.warn('Recipe validation failed', { detail: validation?.missingFields })
                 return
             }
 
             // Build prompts from recipe fields
             const result = buildActivePrompts()
             if (!result || result.prompts.length === 0) {
-                console.error('Failed to build prompts from recipe')
+                logger.shotCreator.error('Failed to build prompts from recipe')
                 return
             }
 
@@ -1104,7 +1105,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                         return [...prev, newReference];
                     });
                 } catch (error) {
-                    console.error('Error creating file from URL:', error);
+                    logger.shotCreator.error('Error creating file from URL', { error: error instanceof Error ? error.message : String(error) })
                 }
             }
         }

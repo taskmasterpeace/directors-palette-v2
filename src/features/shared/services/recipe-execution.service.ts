@@ -19,7 +19,10 @@ import {
 import { imageGenerationService } from '@/features/shot-creator/services/image-generation.service'
 import { uploadImageToStorage } from '@/features/shot-creator/helpers/image-resize.helper'
 import type { ImageModel, ImageModelSettings, ImageGenerationRequest } from '@/features/shot-creator/types/image-generation.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Shared')
 export interface RecipeExecutionOptions {
   recipe: Recipe
   fieldValues: RecipeFieldValues
@@ -95,11 +98,11 @@ async function waitForImageCompletion(
             error.code === ''
 
           if (isNetworkError) {
-            console.warn('Network error in polling (will retry):', error.message)
+            log.warn('Network error in polling (will retry)', { message: error.message })
             return
           }
 
-          console.error('Error checking gallery status:', error)
+          log.error('Error checking gallery status', { error: error })
           return
         }
 
@@ -111,7 +114,7 @@ async function waitForImageCompletion(
             resolve(data.public_url)
             return
           } else {
-            console.log('[Recipe Execution] Found temporary Replicate URL, waiting for Supabase upload...')
+            log.info('[Recipe Execution] Found temporary Replicate URL, waiting for Supabase upload...')
           }
         }
 
@@ -130,7 +133,7 @@ async function waitForImageCompletion(
           return
         }
       } catch (err) {
-        console.error('Error in polling:', err)
+        log.error('Error in polling', { error: err instanceof Error ? err.message : String(err) })
       }
     }
 
@@ -201,12 +204,12 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
       try {
         const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
         const fullUrl = `${baseUrl}${imageUrl}`
-        console.log(`[Recipe Execution] Fetching local asset: ${fullUrl}`)
+        log.info('Fetching local asset', { url: fullUrl })
 
         // Fetch the local asset
         const response = await fetch(fullUrl)
         if (!response.ok) {
-          console.error(`[Recipe Execution] Failed to fetch local asset: ${fullUrl}`)
+          log.error('Failed to fetch local asset', { url: fullUrl })
           continue
         }
 
@@ -217,9 +220,9 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
         // Upload to Supabase for permanent storage (via /api/upload-file)
         const httpsUrl = await uploadImageToStorage(file)
         uploadedUrls.push(httpsUrl)
-        console.log(`[Recipe Execution] Uploaded local asset to Supabase: ${imageUrl} -> ${httpsUrl}`)
+        log.info('Uploaded local asset to Supabase', { from: imageUrl, to: httpsUrl })
       } catch (error) {
-        console.error(`[Recipe Execution] Failed to upload local asset: ${imageUrl}`, error)
+        log.error('[Recipe Execution] Failed to upload local asset: [imageUrl]', { imageUrl, error: error instanceof Error ? error.message : String(error) })
       }
       continue
     }
@@ -238,7 +241,7 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
         const httpsUrl = await uploadImageToStorage(file)
         uploadedUrls.push(httpsUrl)
       } catch (error) {
-        console.error('Failed to upload reference image:', error)
+        log.error('Failed to upload reference image', { error: error instanceof Error ? error.message : String(error) })
         // Skip failed uploads rather than failing the entire operation
       }
     }
@@ -267,7 +270,7 @@ async function executeToolStage(
   }
 
   onProgress?.(`Running ${tool.name}...`)
-  console.log(`[Recipe Execution] Executing tool: ${tool.name} on ${inputImageUrl}`)
+  log.info('Executing tool', { tool: tool.name, inputImageUrl })
 
   // Call the tool API
   const response = await fetch(tool.endpoint, {
@@ -285,21 +288,21 @@ async function executeToolStage(
 
   // Handle multi-output tools (like grid-split that returns imageUrls array)
   if (data.imageUrls && Array.isArray(data.imageUrls)) {
-    console.log(`[Recipe Execution] Tool completed with ${data.imageUrls.length} outputs`)
+    log.info('Tool completed with multiple outputs', { outputCount: data.imageUrls.length })
     return data.imageUrls
   }
 
   // Tool returns either direct URL or prediction ID to poll
   if (data.imageUrl) {
-    console.log(`[Recipe Execution] Tool completed immediately:`, data.imageUrl)
+    log.info('[Recipe Execution] Tool completed immediately', { imageUrl: data.imageUrl })
     return data.imageUrl
   }
 
   if (data.predictionId) {
     // Need to poll for completion
-    console.log(`[Recipe Execution] Tool started, polling for completion...`)
+    log.info('[Recipe Execution] Tool started, polling for completion...')
     const resultUrl = await pollToolCompletion(data.predictionId)
-    console.log(`[Recipe Execution] Tool completed:`, resultUrl)
+    log.info('[Recipe Execution] Tool completed', { resultUrl })
     return resultUrl
   }
 
@@ -373,7 +376,7 @@ async function executeAnalysisStage(
   }
 
   onProgress?.(`Analyzing image(s) with ${analysis.name}...`)
-  console.log(`[Recipe Execution] Executing analysis: ${analysis.name} on ${inputImageUrls.length} image(s)`)
+  log.info('Executing analysis', { analysis: analysis.name, imageCount: inputImageUrls.length })
 
   // For style analysis, we need to convert URLs to base64 or use the API properly
   // The /api/styles/analyze endpoint expects a base64 data URL
@@ -395,7 +398,7 @@ async function executeAnalysisStage(
       const mimeType = blob.type || 'image/jpeg'
       imageData = `data:${mimeType};base64,${base64}`
     } catch (fetchError) {
-      console.error('[Recipe Execution] Failed to fetch image for analysis:', fetchError)
+      log.error('[Recipe Execution] Failed to fetch image for analysis', { fetchError: fetchError })
       throw new Error(`Failed to fetch image for analysis: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`)
     }
   }
@@ -413,7 +416,7 @@ async function executeAnalysisStage(
   }
 
   const data = await safeJsonParse<Record<string, string>>(response)
-  console.log(`[Recipe Execution] Analysis completed:`, data)
+  log.info('[Recipe Execution] Analysis completed', { data })
 
   // Map response to output variables based on analysis type
   const variables: AnalysisVariables = {}
@@ -478,14 +481,8 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
       return { success: false, imageUrls: [], error: 'Recipe has no stages' }
     }
 
-    console.log(`[Recipe Execution] Starting ${totalStages}-stage recipe: ${recipe.name}`)
-    console.log(`[Recipe Execution] Stages:`, recipe.stages.map(s => ({
-      id: s.id,
-      type: s.type,
-      toolId: s.toolId,
-      analysisId: s.analysisId,
-      order: s.order
-    })))
+    log.info('Starting recipe execution', { totalStages, recipeName: recipe.name })
+    log.info('[Recipe Execution] Stages', { detail: recipe.stages.map(s => ({ id: s.id, type: s.type, toolId: s.toolId, analysisId: s.analysisId, order: s.order })) })
 
     const imageUrls: string[] = []
     let previousImageUrl: string | undefined = undefined
@@ -504,7 +501,7 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
       // Substitute analysis variables in the prompt
       if (Object.keys(analysisVariables).length > 0 && stagePrompt) {
         stagePrompt = substituteAnalysisVariables(stagePrompt, analysisVariables)
-        console.log(`[Recipe Execution] Substituted analysis variables in prompt`)
+        log.info('[Recipe Execution] Substituted analysis variables in prompt')
       }
 
       onProgress?.(i, totalStages, `Processing stage ${i + 1}...`)
@@ -517,9 +514,9 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
       if (rawStageRefs.length > 0) {
         try {
           preparedStageRefs = await prepareReferenceImagesForAPI(rawStageRefs)
-          console.log(`[Recipe Execution] Stage ${i} refs prepared: ${preparedStageRefs.length} images`)
+          log.info('Stage refs prepared', { stage: i, imageCount: preparedStageRefs.length })
         } catch (uploadError) {
-          console.error(`[Recipe Execution] Failed to prepare stage ${i} refs:`, uploadError)
+          log.error('[Recipe Execution] Failed to prepare stage [i] refs', { i, uploadError })
         }
       }
 
@@ -541,16 +538,7 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
         inputImages = refs.length > 0 ? refs : undefined
       }
 
-      console.log(`[Recipe Execution] Stage ${i + 1}/${totalStages}:`, {
-        type: isAnalysisStage ? 'analysis' : isToolStage ? 'tool' : 'generation',
-        toolId: stage.toolId || '(none)',
-        analysisId: stage.analysisId || '(none)',
-        isFirstStage,
-        previousImageUrl: previousImageUrl || '(none)',
-        preparedStageRefs: preparedStageRefs.length ? `${preparedStageRefs.length} ref(s)` : '(none)',
-        inputImages: inputImages?.length ? `${inputImages.length} image(s)` : '(none)',
-        prompt: isToolStage || isAnalysisStage ? `(${stage.type} stage)` : stagePrompt.slice(0, 50) + '...'
-      })
+      log.info("Executing recipe stage", { stage: i + 1, totalStages, type: isAnalysisStage ? "analysis" : isToolStage ? "tool" : "generation", toolId: stage.toolId || "(none)", analysisId: stage.analysisId || "(none)", isFirstStage, refCount: preparedStageRefs.length, inputCount: inputImages?.length || 0 })
 
       // Handle analysis stages - extract info from images for use in later stages
       if (isAnalysisStage) {
@@ -568,7 +556,7 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
 
           // Merge new variables with existing ones
           analysisVariables = { ...analysisVariables, ...newVariables }
-          console.log(`[Recipe Execution] Stage ${i + 1} (analysis) completed. Variables:`, Object.keys(analysisVariables))
+          log.info('Analysis stage completed', { stage: i + 1, variables: Object.keys(analysisVariables) })
 
           // Analysis stages don't produce images, so continue to next stage
           continue
@@ -598,12 +586,12 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
             imageUrls.push(...toolOutput)
             previousImageUrl = undefined // Reset single output
             previousImageUrls = toolOutput // Track multi-output for next stage
-            console.log(`[Recipe Execution] Stage ${i + 1} (tool) completed with ${toolOutput.length} outputs`)
+            log.info('Tool stage completed with multiple outputs', { stage: i + 1, outputCount: toolOutput.length })
           } else {
             imageUrls.push(toolOutput)
             previousImageUrl = toolOutput
             previousImageUrls = undefined // Reset multi-output
-            console.log(`[Recipe Execution] Stage ${i + 1} (tool) completed:`, toolOutput)
+            log.info('[Recipe Execution] Stage [detail] (tool) completed', { detail: i + 1, toolOutput })
           }
         } catch (toolError) {
           const errorMsg = toolError instanceof Error ? toolError.message : 'Unknown error'
@@ -643,7 +631,7 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
           imageUrls.push(imageUrl)
           previousImageUrl = imageUrl
           previousImageUrls = undefined // Reset multi-output (generation stages produce single output)
-          console.log(`[Recipe Execution] Stage ${i + 1} completed:`, imageUrl)
+          log.info('[Recipe Execution] Stage [detail] completed', { detail: i + 1, imageUrl })
         } catch (waitError) {
           const errorMsg = waitError instanceof Error ? waitError.message : 'Unknown error'
           throw new Error(`Stage ${i + 1} failed: ${errorMsg}`)
@@ -666,7 +654,7 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Recipe execution failed'
-    console.error('[Recipe Execution] Error:', errorMessage)
+    log.error('[Recipe Execution] Error', { errorMessage: errorMessage })
     return {
       success: false,
       imageUrls: [],

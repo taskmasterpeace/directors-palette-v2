@@ -28,7 +28,10 @@ import {
 } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import type { FinancialStatsResponse, TimePeriod } from '../types/financials.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Admin')
 export function FinancialsTab() {
     const [loading, setLoading] = useState(true)
     const [stats, setStats] = useState<FinancialStatsResponse | null>(null)
@@ -49,7 +52,7 @@ export function FinancialsTab() {
                 setStats(data)
             }
         } catch (error) {
-            console.error('Error fetching financials:', error)
+            log.error('Error fetching financials', { error: error instanceof Error ? error.message : String(error) })
         } finally {
             setLoading(false)
         }

@@ -24,7 +24,10 @@ import OutputNode from './nodes/OutputNode'
 import { Play, Save, FolderOpen, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { WorkflowExecutor } from '../services/workflow-executor.service'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Workflow')
 export default function NodeWorkflowCanvas() {
   const {
     nodes,
@@ -53,9 +56,9 @@ export default function NodeWorkflowCanvas() {
   // Handle new connections
   const onConnect: OnConnect = useCallback(
     (connection: Connection) => {
-      console.log('🔗 Connection created:', connection)
+      log.info('🔗 Connection created', { connection: connection })
       setEdges(addEdge(connection, edges))
-      console.log('📊 Total edges:', edges.length + 1)
+      log.info('📊 Total edges', { detail: edges.length + 1 })
     },
     [edges, setEdges]
   )
@@ -102,16 +105,16 @@ export default function NodeWorkflowCanvas() {
         toast.error(`Workflow completed with ${failedNodes.length} errors`, {
           id: 'workflow-execution'
         })
-        console.error('Failed nodes:', failedNodes)
+        log.error('Failed nodes', { failedNodes: failedNodes })
       } else {
         toast.success('Workflow executed successfully!', {
           id: 'workflow-execution'
         })
       }
 
-      console.log('Execution results:', results)
+      log.info('Execution results', { results: results })
     } catch (error) {
-      console.error('Workflow execution error:', error)
+      log.error('Workflow execution error', { error: error instanceof Error ? error.message : String(error) })
       toast.error(
         error instanceof Error ? error.message : 'Workflow execution failed',
         { id: 'workflow-execution' }
@@ -123,12 +126,12 @@ export default function NodeWorkflowCanvas() {
 
   const handleSave = () => {
     // TODO: Implement save workflow
-    console.log('Save workflow')
+    log.info('Save workflow')
   }
 
   const handleLoad = () => {
     // TODO: Implement load workflow
-    console.log('Load workflow')
+    log.info('Load workflow')
   }
 
   return (

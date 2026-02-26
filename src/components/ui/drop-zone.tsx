@@ -6,7 +6,10 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { Upload, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react'
 
 import { cn } from '@/utils/utils'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('UI')
 /**
  * Generates a human-readable string of accepted file types from the accept prop
  */
@@ -353,7 +356,7 @@ const DropZone = React.forwardRef<DropZoneRef, DropZoneProps>(
 
     // Debug: log when the dropzone is clicked
     const _handleClick = React.useCallback((_e: React.MouseEvent) => {
-      console.log('[DropZone] Clicked, noClick:', noClick, 'disabled:', disabled)
+      log.info('[DropZone] Clicked, noClick', { noClick, detail: 'disabled:', disabled })
       if (!noClick && !disabled) {
         open()
       }
@@ -579,7 +582,7 @@ const DropZone = React.forwardRef<DropZoneRef, DropZoneProps>(
         {...rootProps}
         {...props}
         onClick={(e) => {
-          console.log('[DropZone] Click event triggered, noClick:', noClick)
+          log.info('[DropZone] Click event triggered, noClick', { noClick: noClick })
           // Call the original onClick from rootProps if it exists
           rootProps.onClick?.(e)
           // Also call the onClick from props if passed

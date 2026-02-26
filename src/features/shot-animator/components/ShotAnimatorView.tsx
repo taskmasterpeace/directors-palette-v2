@@ -54,6 +54,7 @@ import VideoPreviewsModal from "./VideoPreviewsModal"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { ALLOWED_IMAGE_TYPES, GALLERY_IMAGE_MIME_TYPE, GalleryImageDragPayload } from '../constants/drag-drop.constants'
+import { logger } from '@/lib/logger'
 
 /** Convert an array of image Files into ShotAnimationConfig objects (base64). */
 function filesToShotConfigs(files: File[]): Promise<ShotAnimationConfig[]> {
@@ -592,12 +593,12 @@ export function ShotAnimatorView() {
     }
 
     // Log results for debugging
-    console.log('Generation results:', results)
+    logger.shotCreator.info('Generation results', { results: results })
   }
 
   const handleGenerateAll = async () => {
     if (!user?.id) {
-      console.error('User not authenticated')
+      logger.shotCreator.error('User not authenticated')
       return
     }
 
@@ -642,14 +643,14 @@ export function ShotAnimatorView() {
 
   const handleRetryVideo = async (shotConfigId: string, galleryId: string) => {
     if (!user?.id) {
-      console.error('User not authenticated')
+      logger.shotCreator.error('User not authenticated')
       return
     }
 
     // Find the shot config
     const shotConfig = shotConfigs.find((c) => c.id === shotConfigId)
     if (!shotConfig) {
-      console.error('Shot config not found')
+      logger.shotCreator.error('Shot config not found')
       return
     }
 

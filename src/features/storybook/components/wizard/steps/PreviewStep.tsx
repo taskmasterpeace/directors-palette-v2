@@ -28,6 +28,7 @@ import { KDPPageValidator } from "../../KDPPageValidator"
 import { PaperTypeSelector } from "../../PaperTypeSelector"
 import { PrintGuidesLegend } from "../../PrintGuidesOverlay"
 import type { KDPPaperType } from "../../../types/storybook.types"
+import { logger } from '@/lib/logger'
 
 export function PreviewStep() {
   const {
@@ -166,7 +167,7 @@ export function PreviewStep() {
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
     } catch (error) {
-      console.error('PDF export error:', error)
+      logger.storybook.error('PDF export error', { error: error instanceof Error ? error.message : String(error) })
       setPdfExportError(error instanceof Error ? error.message : 'Failed to export PDF')
     } finally {
       setIsExportingPDF(null)

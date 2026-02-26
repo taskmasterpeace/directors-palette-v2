@@ -10,7 +10,10 @@ import {
   AdhubProductRow,
   productFromRow,
 } from '../types/adhub.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('AdHub')
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getAdhubClient(): Promise<any> {
   return await getAPIClient()
@@ -36,7 +39,7 @@ export class AdhubProductService {
       .order('updated_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching products:', error)
+      log.error('Error fetching products', { error: error })
       throw new Error(`Failed to fetch products: ${error.message}`)
     }
 
@@ -57,7 +60,7 @@ export class AdhubProductService {
       .maybeSingle()
 
     if (error) {
-      console.error('Error fetching product:', error)
+      log.error('Error fetching product', { error: error })
       throw new Error(`Failed to fetch product: ${error.message}`)
     }
 
@@ -78,7 +81,7 @@ export class AdhubProductService {
       .maybeSingle()
 
     if (error) {
-      console.error('Error fetching product:', error)
+      log.error('Error fetching product', { error: error })
       throw new Error(`Failed to fetch product: ${error.message}`)
     }
 
@@ -105,7 +108,7 @@ export class AdhubProductService {
       .single()
 
     if (error) {
-      console.error('Error creating product:', error)
+      log.error('Error creating product', { error: error })
       throw new Error(`Failed to create product: ${error.message}`)
     }
 
@@ -134,7 +137,7 @@ export class AdhubProductService {
       .single()
 
     if (error) {
-      console.error('Error updating product:', error)
+      log.error('Error updating product', { error: error })
       throw new Error(`Failed to update product: ${error.message}`)
     }
 
@@ -154,7 +157,7 @@ export class AdhubProductService {
       .eq('user_id', userId)
 
     if (error) {
-      console.error('Error deleting product:', error)
+      log.error('Error deleting product', { error: error })
       throw new Error(`Failed to delete product: ${error.message}`)
     }
   }
@@ -172,7 +175,7 @@ export class AdhubProductService {
       .order('updated_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching products:', error)
+      log.error('Error fetching products', { error: error })
       throw new Error(`Failed to fetch products: ${error.message}`)
     }
 

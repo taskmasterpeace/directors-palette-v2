@@ -2,7 +2,10 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, RepositoryResult, RepositoryListResult } from '../types';
 import { DatabaseErrorHandler } from '../error-handler';
 import type { FolderRow } from '@/features/shot-creator/types/folder.types';
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Lib')
 /**
  * Input type for creating a folder
  */
@@ -218,13 +221,13 @@ export class FolderRepository {
 
       if (error && error.code !== 'PGRST116') {
         // PGRST116 = no rows returned (which is what we want)
-        console.error('Error checking folder name:', error);
+        log.error('Error checking folder name', { error: error })
         return false;
       }
 
       return !!data;
     } catch (error) {
-      console.error('Error checking folder name:', error);
+      log.error('Error checking folder name', { error: error instanceof Error ? error.message : String(error) })
       return false;
     }
   }
@@ -240,13 +243,13 @@ export class FolderRepository {
         .eq('user_id', userId);
 
       if (error) {
-        console.error('Error counting folders:', error);
+        log.error('Error counting folders', { error: error })
         return 0;
       }
 
       return count || 0;
     } catch (error) {
-      console.error('Error counting folders:', error);
+      log.error('Error counting folders', { error: error instanceof Error ? error.message : String(error) })
       return 0;
     }
   }

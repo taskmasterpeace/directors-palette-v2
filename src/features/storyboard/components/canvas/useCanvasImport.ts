@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { useStoryboardStore } from '../../store'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
 import { toast } from 'sonner'
+import { logger } from '@/lib/logger'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
@@ -75,7 +76,7 @@ export function useCanvasImport() {
 
             toast.success(`Imported ${file.name}`)
         } catch (err) {
-            console.error('Import failed:', err)
+            logger.storyboard.error('Import failed', { error: err instanceof Error ? err.message : String(err) })
             toast.error(err instanceof Error ? err.message : 'Failed to import image')
         } finally {
             setIsImporting(false)

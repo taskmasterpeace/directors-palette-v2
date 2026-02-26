@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { ReferenceEditor, ReferenceEditorExport } from '@/features/shot-creator/components/reference-editor'
 import { useToast } from '@/hooks/use-toast'
+import { logger } from '@/lib/logger'
 
 interface FullscreenImageViewModalProps {
   imageUrl: string
@@ -39,7 +40,7 @@ export function FullscreenImageViewModal({
       document.body.removeChild(link)
       URL.revokeObjectURL(blobUrl)
     } catch (error) {
-      console.error('Failed to download image:', error)
+      logger.shotCreator.error('Failed to download image', { error: error instanceof Error ? error.message : String(error) })
       toast({
         title: 'Download failed',
         description: 'Could not download image.',

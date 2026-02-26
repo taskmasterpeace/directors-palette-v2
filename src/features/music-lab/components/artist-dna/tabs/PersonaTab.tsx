@@ -7,6 +7,7 @@ import { Drama } from 'lucide-react'
 import { TagInput } from '../TagInput'
 import { MagicWandField } from '../MagicWandField'
 import { useArtistDnaStore } from '../../../store/artist-dna.store'
+import { logger } from '@/lib/logger'
 
 export function PersonaTab() {
   const { draft, updateDraft, suggestionCache, setSuggestions, consumeSuggestion, dismissSuggestion } =
@@ -36,7 +37,7 @@ export function PersonaTab() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch suggestions:', error)
+      logger.musicLab.error('Failed to fetch suggestions', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setLoadingField(null)
     }

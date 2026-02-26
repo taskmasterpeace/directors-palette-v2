@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react'
 import type { StoryShot } from '../types/story.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('StoryCreator')
 const AUTOSAVE_KEY = 'story-creator-draft'
 const AUTOSAVE_INTERVAL = 30000 // 30 seconds
 
@@ -55,9 +58,9 @@ export function useDraftAutosave(projectId: string | null, shots: StoryShot[]) {
             try {
                 localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(draftData))
                 lastSavedRef.current = currentSnapshot
-                console.log('💾 Draft autosaved')
+                log.info('💾 Draft autosaved')
             } catch (error) {
-                console.error('Failed to autosave draft:', error)
+                log.error('Failed to autosave draft', { error: error instanceof Error ? error.message : String(error) })
             }
         }, AUTOSAVE_INTERVAL)
 
@@ -91,7 +94,7 @@ export function loadDraft(): DraftData | null {
 
         return draft
     } catch (error) {
-        console.error('Failed to load draft:', error)
+        log.error('Failed to load draft', { error: error instanceof Error ? error.message : String(error) })
         return null
     }
 }
@@ -102,9 +105,9 @@ export function loadDraft(): DraftData | null {
 export function clearDraft(): void {
     try {
         localStorage.removeItem(AUTOSAVE_KEY)
-        console.log('🗑️ Draft cleared')
+        log.info('🗑️ Draft cleared')
     } catch (error) {
-        console.error('Failed to clear draft:', error)
+        log.error('Failed to clear draft', { error: error instanceof Error ? error.message : String(error) })
     }
 }
 

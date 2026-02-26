@@ -9,7 +9,10 @@ import type {
   CommunityFilters,
 } from '../types/community.types'
 import { communityService } from '../services/community.service'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Community')
 interface CommunityState {
   // Data
   items: CommunityItem[]
@@ -72,7 +75,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       const libraryItemIds = await communityService.getLibraryItemIds(userId)
       set({ libraryItemIds })
     } catch (error) {
-      console.error('Error fetching library item IDs:', error)
+      log.error('Error fetching library item IDs', { error: error instanceof Error ? error.message : String(error) })
     }
   },
 
@@ -81,7 +84,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       const userRatings = await communityService.getUserRatings(userId)
       set({ userRatings })
     } catch (error) {
-      console.error('Error fetching user ratings:', error)
+      log.error('Error fetching user ratings', { error: error instanceof Error ? error.message : String(error) })
     }
   },
 
@@ -103,7 +106,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       set({ libraryItemIds: newLibraryIds, items: updatedItems })
       return true
     } catch (error) {
-      console.error('Error adding to library:', error)
+      log.error('Error adding to library', { error: error instanceof Error ? error.message : String(error) })
       set({ error: 'Failed to add to library' })
       return false
     }
@@ -138,7 +141,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       set({ userRatings: newRatings, items: updatedItems })
       return true
     } catch (error) {
-      console.error('Error rating item:', error)
+      log.error('Error rating item', { error: error instanceof Error ? error.message : String(error) })
       set({ error: 'Failed to rate item' })
       return false
     }
@@ -166,7 +169,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       const pendingSubmissions = await communityService.getPendingSubmissions()
       set({ pendingSubmissions, isLoading: false })
     } catch (error) {
-      console.error('Error fetching pending submissions:', error)
+      log.error('Error fetching pending submissions', { error: error instanceof Error ? error.message : String(error) })
       set({ error: 'Failed to load pending submissions', isLoading: false })
     }
   },
@@ -181,7 +184,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       })
       return true
     } catch (error) {
-      console.error('Error approving submission:', error)
+      log.error('Error approving submission', { error: error instanceof Error ? error.message : String(error) })
       set({ error: 'Failed to approve submission' })
       return false
     }
@@ -197,7 +200,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       })
       return true
     } catch (error) {
-      console.error('Error rejecting submission:', error)
+      log.error('Error rejecting submission', { error: error instanceof Error ? error.message : String(error) })
       set({ error: 'Failed to reject submission' })
       return false
     }

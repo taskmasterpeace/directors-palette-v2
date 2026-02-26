@@ -8,6 +8,7 @@ import { Gift, Check } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useCreditsStore } from "@/features/credits/store/credits.store"
 import { toast } from "sonner"
+import { logger } from '@/lib/logger'
 
 export function RedeemUsageDialog({ children }: { children?: React.ReactNode }) {
     const [open, setOpen] = useState(false)
@@ -43,7 +44,7 @@ export function RedeemUsageDialog({ children }: { children?: React.ReactNode }) 
             // Clear input after a delay or close?
             // Let user see the success message first
         } catch (error) {
-            console.error(error)
+            logger.credits.error('value', { data: error })
             toast.error(error instanceof Error ? error.message : "Failed to redeem code")
         } finally {
             setLoading(false)

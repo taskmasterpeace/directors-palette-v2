@@ -18,6 +18,7 @@
 import { useEffect, useRef } from 'react'
 import { getClient } from '@/lib/db/client'
 import type { ShotAnimationConfig } from '../types'
+import { logger } from '@/lib/logger'
 
 const POLL_INTERVAL_MS = 30_000 // 30 seconds
 
@@ -85,7 +86,7 @@ export function useVideoPolling({
           .in('id', galleryIds)
 
         if (error) {
-          console.warn('[useVideoPolling] query error:', error.message)
+          logger.shotCreator.warn('[useVideoPolling] query error', { message: error.message })
           return
         }
         if (!data || data.length === 0) return
@@ -147,12 +148,12 @@ export function useVideoPolling({
         })
 
         if (hasChanges) {
-          console.log('[useVideoPolling] detected status changes via poll, updating store')
+          logger.shotCreator.info('[useVideoPolling] detected status changes via poll, updating store')
           setShotConfigsRef.current(updatedConfigs)
         }
       } catch (err) {
         // Non-fatal -- we'll retry on the next tick.
-        console.warn('[useVideoPolling] poll error:', err)
+        logger.shotCreator.warn('[useVideoPolling] poll error', { error: err instanceof Error ? err.message : String(err) })
       }
     }
 

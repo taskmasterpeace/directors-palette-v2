@@ -47,6 +47,7 @@ import {
 import { SavedPrompt, usePromptLibraryStore } from "../../store/prompt-library-store"
 import { getClient } from "@/lib/db/client"
 import { AddPromptDialog } from '../prompt-library/dialogs/AddPromptDialog'
+import { logger } from '@/lib/logger'
 
 interface TablePromptLibraryProps {
   onSelectPrompt?: (prompt: string) => void
@@ -98,7 +99,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
           await loadUserPrompts('guest')
         }
       } catch (error) {
-        console.warn('Prompt Library: Failed to check auth status, working offline:', error)
+        logger.shotCreator.warn('Prompt Library: Failed to check auth status, working offline', { error: error instanceof Error ? error.message : String(error) })
         await loadUserPrompts('guest')
       }
     }
@@ -269,7 +270,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
 
       setIsAddPromptOpen(false)
     } catch (error) {
-      console.error('Failed to add prompt:', error)
+      logger.shotCreator.error('Failed to add prompt', { error: error instanceof Error ? error.message : String(error) })
       toast({
         title: 'Error',
         description: 'Failed to add prompt',
@@ -326,7 +327,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
         description: 'Prompt copied to clipboard'
       })
     } catch (error) {
-      console.error('Copy failed:', error)
+      logger.shotCreator.error('Copy failed', { error: error instanceof Error ? error.message : String(error) })
       toast({
         title: 'Copy Failed',
         description: 'Unable to copy prompt',

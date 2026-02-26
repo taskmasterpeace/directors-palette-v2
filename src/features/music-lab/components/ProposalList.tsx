@@ -14,6 +14,7 @@ import { ProposalCard } from './ProposalCard'
 import { getAllDirectors } from '../data/directors.data'
 import { directorProposalService, type DirectorProposal, type ProposalInput } from '../services/director-proposal.service'
 import { useMusicLabStore } from '../store/music-lab.store'
+import { logger } from '@/lib/logger'
 
 interface ProposalListProps {
     onComplete?: (proposals: DirectorProposal[]) => void
@@ -55,7 +56,7 @@ export function ProposalList({ onComplete, onSelectProposal }: ProposalListProps
             setProposals(generatedProposals)
             onComplete?.(generatedProposals)
         } catch (err) {
-            console.error('Generation error:', err)
+            logger.musicLab.error('Generation error', { error: err instanceof Error ? err.message : String(err) })
             setError('Failed to generate proposals. Please try again.')
         } finally {
             setIsGenerating(false)

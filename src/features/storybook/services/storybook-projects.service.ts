@@ -4,6 +4,7 @@
  */
 
 import { getAPIClient } from '@/lib/db/client'
+import { logger } from '@/lib/logger'
 
 // Database project type (matches Supabase schema)
 export interface DbStorybookProject {
@@ -52,7 +53,7 @@ export class StorybookProjectsService {
       .order('updated_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching storybook projects:', error)
+      logger.storybook.error('Error fetching storybook projects', { error: error })
       throw new Error(`Failed to fetch projects: ${error.message}`)
     }
 
@@ -79,7 +80,7 @@ export class StorybookProjectsService {
       .maybeSingle()
 
     if (error) {
-      console.error('Error fetching storybook project:', error)
+      logger.storybook.error('Error fetching storybook project', { error: error })
       throw new Error(`Failed to fetch project: ${error.message}`)
     }
 
@@ -121,7 +122,7 @@ export class StorybookProjectsService {
       .single()
 
     if (error) {
-      console.error('Error creating storybook project:', error)
+      logger.storybook.error('Error creating storybook project', { error: error })
       throw new Error(`Failed to create project: ${error.message}`)
     }
 
@@ -169,7 +170,7 @@ export class StorybookProjectsService {
       if (error.code === 'PGRST116') {
         throw new Error('Project not found')
       }
-      console.error('Error updating storybook project:', error)
+      logger.storybook.error('Error updating storybook project', { error: error })
       throw new Error(`Failed to update project: ${error.message}`)
     }
 
@@ -196,7 +197,7 @@ export class StorybookProjectsService {
       .eq('user_id', userId)
 
     if (error) {
-      console.error('Error deleting storybook project:', error)
+      logger.storybook.error('Error deleting storybook project', { error: error })
       throw new Error(`Failed to delete project: ${error.message}`)
     }
   }

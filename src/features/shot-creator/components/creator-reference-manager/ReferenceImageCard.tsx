@@ -19,6 +19,7 @@ import { Capacitor } from '@capacitor/core'
 import { cn } from "@/utils/utils"
 import { useShotCreatorStore } from "../../store/shot-creator.store"
 import { shotImageToLibraryReference } from "../../helpers/type-adapters"
+import { logger } from '@/lib/logger'
 
 // Accepted image file types for reference images
 const IMAGE_ACCEPT = {
@@ -115,7 +116,7 @@ export function ReferenceImageCard({
                     accept={IMAGE_ACCEPT}
                     multiple={true}
                     onDropAccepted={(files) => {
-                        console.log('[ReferenceImageCard] Files dropped:', files.length)
+                        logger.shotCreator.info('[ReferenceImageCard] Files dropped', { length: files.length })
                         handleDropAccepted(files)
                     }}
                     idleText={`Tap to add Reference ${index + 1}`}

@@ -15,7 +15,10 @@ import { StoryProjectService } from '../services/story-project.service'
 import { QueueRecoveryService } from '../services/queue-recovery.service'
 import type { ImageGenerationRequest, ImageModel, ImageModelSettings } from '@/features/shot-creator/types/image-generation.types'
 import type { StoryShot } from '../types/story.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('StoryCreator')
 export interface StoryGenerationProgress {
     status: 'idle' | 'processing' | 'paused' | 'completed' | 'failed'
     currentShotIndex: number
@@ -48,11 +51,11 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
                 const httpsUrl = await uploadImageToStorage(file)
                 uploadedUrls.push(httpsUrl)
             } catch (error) {
-                console.error('Failed to upload reference image:', error)
+                log.error('Failed to upload reference image', { error: error instanceof Error ? error.message : String(error) })
                 throw new Error(`Failed to upload reference image: ${error instanceof Error ? error.message : 'Unknown error'}`)
             }
         } else {
-            console.warn('Unknown image URL format:', imageUrl)
+            log.warn('Unknown image URL format', { imageUrl: imageUrl })
         }
     }
 
@@ -103,7 +106,7 @@ export function useStoryGeneration() {
                     const missingTags = parsedRefs.specificReferences.filter(
                         tag => !specificImages.some(img => img.reference?.toLowerCase() === tag.toLowerCase())
                     )
-                    console.warn('Missing reference tags:', missingTags)
+                    log.warn('Missing reference tags', { missingTags: missingTags })
                 }
             }
 
@@ -188,7 +191,7 @@ export function useStoryGeneration() {
                 totalVariations
             }
         } catch (error) {
-            console.error('Shot generation failed:', error)
+            log.error('Shot generation failed', { error: error instanceof Error ? error.message : String(error) })
             const errorMessage = error instanceof Error ? error.message : 'Failed to generate image'
 
             // Update shot status to failed
@@ -214,7 +217,7 @@ export function useStoryGeneration() {
         modelSettings: ImageModelSettings = {}
     ) => {
         if (!currentQueue || currentQueue.status !== 'pending') {
-            console.warn('No active queue to process')
+            log.warn('No active queue to process')
             return
         }
 
@@ -328,7 +331,7 @@ export function useStoryGeneration() {
                     }
                 } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-                    console.error(`Shot ${i + 1} failed:`, errorMessage)
+                    log.error('Shot [detail] failed', { detail: i + 1, errorMessage })
 
                     toast({
                         title: `Shot ${i + 1} Failed`,
@@ -373,7 +376,7 @@ export function useStoryGeneration() {
                 description: `Generated ${totalImages} images from ${shots.length} shots. Check the gallery!`,
             })
         } catch (error) {
-            console.error('Queue processing failed:', error)
+            log.error('Queue processing failed', { error: error instanceof Error ? error.message : String(error) })
             const errorMessage = error instanceof Error ? error.message : 'Queue processing failed'
 
             setProgress(prev => ({

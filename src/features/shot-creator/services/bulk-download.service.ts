@@ -1,4 +1,5 @@
 import JSZip from 'jszip'
+import { logger } from '@/lib/logger'
 
 export interface DownloadProgress {
   current: number
@@ -40,7 +41,7 @@ export class BulkDownloadService {
           // Fetch image as blob
           const response = await fetch(image.url)
           if (!response.ok) {
-            console.warn(`Failed to fetch image ${image.id}: ${response.statusText}`)
+            logger.shotCreator.warn('Failed to fetch image', { imageId: image.id, status: response.statusText })
             continue // Skip failed images
           }
 
@@ -52,7 +53,7 @@ export class BulkDownloadService {
           // Add to ZIP
           zip.file(filename, blob)
         } catch (error) {
-          console.warn(`Error downloading image ${image.id}:`, error)
+          logger.shotCreator.warn('Error downloading image [id]', { id: image.id, error: error instanceof Error ? error.message : String(error) })
           // Continue with other images
         }
       }

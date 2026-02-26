@@ -33,7 +33,10 @@ import { PRESET_STYLES } from '@/features/storyboard/types/storyboard.types'
 import { getDirectorById } from '@/features/music-lab/data/directors.data'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useArtistDnaStore } from '@/features/music-lab/store/artist-dna.store'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('App')
 export default function MusicLabPage() {
     const { project, setStyle, setStatus, setGenre, setManualLyrics } = useMusicLabStore()
     const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -72,7 +75,7 @@ export default function MusicLabPage() {
             // Full analysis will be triggered when we have the API integrated
             setStatus('confirming')
         } catch (error) {
-            console.error('Analysis error:', error)
+            log.error('Analysis error', { error: error instanceof Error ? error.message : String(error) })
             setStatus('setup')
         } finally {
             setIsAnalyzing(false)

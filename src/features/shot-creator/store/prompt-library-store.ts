@@ -2,6 +2,7 @@ import { getClient } from "@/lib/db/client"
 import { create } from 'zustand'
 import { DEFAULT_CATEGORIES } from "../constants"
 import { promptLibrarySettingsService } from "../services/prompt-library-settings.service"
+import { logger } from '@/lib/logger'
 
 export interface PromptCategory {
   id: string
@@ -282,7 +283,7 @@ export const usePromptLibraryStore = create<PromptLibraryState>()((set, get) => 
             set({ isLoading: false })
           }
         } catch (error) {
-          console.warn('Prompt Library: Working in offline mode due to:', error instanceof Error ? error.message : error)
+          logger.shotCreator.warn('Prompt Library: Working in offline mode due to', { detail: error instanceof Error ? error.message : error })
           // Don't set error state, just work offline
           set({ isLoading: false })
         }
@@ -304,7 +305,7 @@ export const usePromptLibraryStore = create<PromptLibraryState>()((set, get) => 
             quickPrompts: state.quickPrompts
           })
         } catch (error) {
-          console.warn('Failed to save to settings (will retry later):', error instanceof Error ? error.message : error)
+          logger.shotCreator.warn('Failed to save to settings (will retry later)', { detail: error instanceof Error ? error.message : error })
           // Don't throw - just log and continue
         }
       },
@@ -407,7 +408,7 @@ async function getCurrentUserId(): Promise<string> {
     const { data: { user } } = await supabase.auth.getUser()
     return user?.id || ''
   } catch (error) {
-    console.error('Failed to get user ID:', error)
+    logger.shotCreator.error('Failed to get user ID', { error: error instanceof Error ? error.message : String(error) })
     return ''
   }
 }

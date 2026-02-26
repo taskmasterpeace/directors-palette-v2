@@ -23,7 +23,10 @@ import { CanvasToolbar } from "./canvas-settings/CanvasToolbar"
 import { CanvasSettings } from "./canvas-settings/CanvasSettings"
 import type { FrameExtractionResult } from "../types/frame-extractor.types"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Layout')
 // Accepted image types for canvas import
 const IMAGE_ACCEPT = {
     'image/*': ['.png', '.jpg', '.jpeg', '.webp', '.gif']
@@ -266,7 +269,7 @@ The final image should look natural as if the edits were always part of the orig
                 })
             }
         } catch (error) {
-            console.error("Nano Banana error:", error)
+            log.error('Nano Banana error', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Generation Failed",
                 description: error instanceof Error ? error.message : "Unknown error",

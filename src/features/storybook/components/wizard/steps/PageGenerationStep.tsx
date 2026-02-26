@@ -31,6 +31,7 @@ import { cn } from "@/utils/utils"
 import Image from "next/image"
 import type { TextPosition, PageLayout } from "../../../types/storybook.types"
 import { PAGE_LAYOUTS } from "../../../types/storybook.types"
+import { logger } from '@/lib/logger'
 
 export function PageGenerationStep() {
   const {
@@ -108,7 +109,7 @@ export function PageGenerationStep() {
     try {
       const result = await generatePage(currentPage.id)
       if (!result.success) {
-        console.error('Generation failed:', result.error)
+        logger.storybook.error('Generation failed', { error: result.error })
       }
     } finally {
       setGeneratingPageId(null)
@@ -131,7 +132,7 @@ export function PageGenerationStep() {
       setRegeneratingProgress(`Regenerated ${result.succeeded} pages (${result.failed} failed)`)
       setTimeout(() => setRegeneratingProgress(''), 3000)
     } catch (err) {
-      console.error('Error regenerating all pages:', err)
+      logger.storybook.error('Error regenerating all pages', { error: err instanceof Error ? err.message : String(err) })
       setRegeneratingProgress('Error during regeneration')
       setTimeout(() => setRegeneratingProgress(''), 3000)
     } finally {
@@ -167,7 +168,7 @@ export function PageGenerationStep() {
       setRegeneratingProgress(msg)
       setTimeout(() => setRegeneratingProgress(''), 3000)
     } catch (err) {
-      console.error('Error generating all pages:', err)
+      logger.storybook.error('Error generating all pages', { error: err instanceof Error ? err.message : String(err) })
       setRegeneratingProgress('Error during generation')
       setTimeout(() => setRegeneratingProgress(''), 3000)
     } finally {

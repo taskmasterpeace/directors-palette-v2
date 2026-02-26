@@ -12,6 +12,7 @@ import { useReferenceImageManager } from "../../hooks/useReferenceImageManager"
 import { ReferenceImageCard, type ShotImage } from "./ReferenceImageCard"
 import { useToast } from "@/hooks/use-toast"
 import { useUnifiedGalleryStore } from "../../store/unified-gallery-store"
+import { logger } from '@/lib/logger'
 
 interface CreatorReferenceManagerProps {
   compact?: boolean
@@ -75,7 +76,7 @@ export function CreatorReferenceManager({
         await useUnifiedGalleryStore.getState().refreshGallery()
       }, 500)
     } catch (error) {
-      console.error('Background removal error:', error)
+      logger.shotCreator.error('Background removal error', { error: error instanceof Error ? error.message : String(error) })
       toast({
         title: "Remove Background Failed",
         description: error instanceof Error ? error.message : "An error occurred",
@@ -140,7 +141,7 @@ export function CreatorReferenceManager({
         await useUnifiedGalleryStore.getState().refreshGallery()
       }, 500)
     } catch (error) {
-      console.error('Save to gallery error:', error)
+      logger.shotCreator.error('Save to gallery error', { error: error instanceof Error ? error.message : String(error) })
       toast({
         title: "Save Failed",
         description: error instanceof Error ? error.message : "An error occurred",

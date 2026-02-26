@@ -21,6 +21,7 @@ import { StoryCharacter, BookCharacter } from "../../../types/storybook.types"
 import { ErrorDialog } from "../ErrorDialog"
 import { validateCharacterDescription } from "../../../utils/validation"
 import { safeJsonParse } from "@/features/shared/utils/safe-fetch"
+import { logger } from '@/lib/logger'
 
 export function CharacterStep() {
   const {
@@ -135,10 +136,10 @@ export function CharacterStep() {
           updateCharacter(characterId, { description: expandedDescription })
         }
       } else {
-        console.error('Failed to enhance description')
+        logger.storybook.error('Failed to enhance description')
       }
     } catch (err) {
-      console.error('Error enhancing description:', err)
+      logger.storybook.error('Error enhancing description', { error: err instanceof Error ? err.message : String(err) })
     } finally {
       setIsEnhancing(false)
       setEnhancingCharacterId(null)
@@ -154,7 +155,7 @@ export function CharacterStep() {
       // FALLBACK: If storyText is empty but generatedStory exists, convert it
       if ((!textToAnalyze || textToAnalyze.trim() === '') && project?.generatedStory) {
         textToAnalyze = project.generatedStory.pages.map(p => p.text).join('\n\n')
-        console.warn('[CharacterStep] storyText was empty, using generatedStory.pages')
+        logger.storybook.warn('[CharacterStep] storyText was empty, using generatedStory.pages')
       }
 
       if (textToAnalyze && project?.characters.length === 0 && !isDetecting) {
@@ -172,7 +173,7 @@ export function CharacterStep() {
             }
           }
         } catch (err) {
-          console.error('Error detecting characters:', err)
+          logger.storybook.error('Error detecting characters', { error: err instanceof Error ? err.message : String(err) })
           // Fallback to regex-based detection
           detectCharacters()
         } finally {
@@ -234,7 +235,7 @@ export function CharacterStep() {
         sourcePhotoUrls: updatedPhotos,
       })
     } catch (err) {
-      console.error('Upload error:', err)
+      logger.storybook.error('Upload error', { error: err instanceof Error ? err.message : String(err) })
       setErrorDialog({
         open: true,
         title: 'Upload Failed',
@@ -265,13 +266,13 @@ export function CharacterStep() {
     // Find character in unified list (AFTER delay to get latest state)
     const unifiedChar = allCharacters.find(c => c.id === characterId)
     if (!unifiedChar) {
-      console.error('Character not found:', characterId)
+      logger.storybook.error('Character not found', { characterId: characterId })
       return
     }
 
     // Ensure recipes are loaded BEFORE setting generating state
     if (!recipesInitialized) {
-      console.error('[CharacterStep] Recipe store not initialized yet')
+      logger.storybook.error('[CharacterStep] Recipe store not initialized yet')
       setErrorDialog({
         open: true,
         title: 'System Loading',
@@ -292,7 +293,7 @@ export function CharacterStep() {
     })
 
     if (!hasPhoto && !hasDescription) {
-      console.error('[CharacterStep] Cannot generate without photo(s) or description')
+      logger.storybook.error('[CharacterStep] Cannot generate without photo(s) or description')
       setDescriptionErrors(prev => ({
         ...prev,
         [characterId]: 'Description cannot be empty',
@@ -322,12 +323,12 @@ export function CharacterStep() {
     try {
 
       const systemRecipes = getSystemOnlyRecipes()
-      console.log(`[CharacterStep] Found ${systemRecipes.length} system-only recipes`)
+      logger.storybook.info('Found system-only recipes', { count: systemRecipes.length })
 
       const styleGuideUrl = project?.style?.styleGuideUrl
 
       if (!styleGuideUrl) {
-        console.error('[CharacterStep] Style guide is required for character sheet generation')
+        logger.storybook.error('[CharacterStep] Style guide is required for character sheet generation')
         setErrorDialog({
           open: true,
           title: 'Style Guide Required',
@@ -348,7 +349,7 @@ export function CharacterStep() {
 
       const recipe = systemRecipes.find(r => r.name === recipeName)
       if (!recipe) {
-        console.error(`[CharacterStep] Recipe not found: ${recipeName}`)
+        logger.storybook.error('Recipe not found', { recipeName })
         setErrorDialog({
           open: true,
           title: 'Recipe Not Found',
@@ -362,7 +363,7 @@ export function CharacterStep() {
       let characterDescription = unifiedChar.description || ''
       if (!hasPhoto && !characterDescription) {
         // Extract description from story text
-        console.log('[CharacterStep] Extracting character description from story...')
+        logger.storybook.info('[CharacterStep] Extracting character description from story...')
         try {
           const storyText = project?.storyText || project?.generatedStory?.pages.map(p => p.text).join('\n\n') || ''
           const response = await fetch('/api/storybook/extract-character-description', {
@@ -377,10 +378,10 @@ export function CharacterStep() {
           if (response.ok) {
             const data = await safeJsonParse<{ description?: string }>(response)
             characterDescription = data.description || `A ${unifiedChar.characterRole || unifiedChar.role || 'character'} named ${unifiedChar.name}`
-            console.log('[CharacterStep] Extracted description:', characterDescription)
+            logger.storybook.info('[CharacterStep] Extracted description', { characterDescription: characterDescription })
           }
         } catch (err) {
-          console.error('Error extracting character description:', err)
+          logger.storybook.error('Error extracting character description', { error: err instanceof Error ? err.message : String(err) })
           characterDescription = `A ${unifiedChar.characterRole || unifiedChar.role || 'character'} named ${unifiedChar.name}`
         }
       }
@@ -424,14 +425,7 @@ export function CharacterStep() {
         ]
       }
 
-      console.log('[CharacterStep] Recipe execution:', {
-        recipeName: recipe.name,
-        hasPhotos,
-        photoCount: photoUrls.length,
-        outfitDescription: unifiedChar.outfitDescription || '(none)',
-        fieldValues,
-        stageRefs: stageReferenceImages.map((refs, i) => `Stage ${i}: ${refs.length} refs`),
-      })
+      logger.storybook.info('[CharacterStep] Recipe execution', { recipeName: recipe.name, hasPhotos, photoCount: photoUrls.length, outfitDescription: unifiedChar.outfitDescription || '(none)', fieldValues, stageRefs: stageReferenceImages.map((refs, i) => `Stage ${i}: ${refs.length} refs`), })
 
       const result = await executeSystemRecipe(
         recipeName,
@@ -450,9 +444,9 @@ export function CharacterStep() {
         } else {
           updateCharacter(characterId, { characterSheetUrl: result.finalImageUrl })
         }
-        console.log('[CharacterStep] Recipe generation succeeded:', result.finalImageUrl)
+        logger.storybook.info('[CharacterStep] Recipe generation succeeded', { finalImageUrl: result.finalImageUrl })
       } else {
-        console.error('[CharacterStep] Recipe generation failed:', result.error)
+        logger.storybook.error('[CharacterStep] Recipe generation failed', { error: result.error })
         setErrorDialog({
           open: true,
           title: 'Generation Failed',
@@ -485,7 +479,7 @@ export function CharacterStep() {
                 }
               }
             } catch (err) {
-              console.error('Error detecting characters:', err)
+              logger.storybook.error('Error detecting characters', { error: err instanceof Error ? err.message : String(err) })
               detectCharacters() // Fallback
             } finally {
               setIsDetecting(false)

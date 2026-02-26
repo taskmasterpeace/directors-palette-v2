@@ -12,6 +12,7 @@ import {
   getTopicById,
   type StoryIdea
 } from "../../../types/education.types"
+import { logger } from '@/lib/logger'
 
 export function StoryApproachStep() {
   const {
@@ -103,7 +104,7 @@ export function StoryApproachStep() {
 
       nextStep()
     } catch (err) {
-      console.error("Error generating story:", err)
+      logger.storybook.error('Error generating story', { error: err instanceof Error ? err.message : String(err) })
       setError("Failed to generate story. Please try again.")
       setSelectedId(null)
     } finally {
@@ -146,7 +147,7 @@ export function StoryApproachStep() {
       setStoryIdeas(data.ideas)
       setSelectedId(null)
     } catch (err) {
-      console.error("Error regenerating ideas:", err)
+      logger.storybook.error('Error regenerating ideas', { error: err instanceof Error ? err.message : String(err) })
       setError("Failed to regenerate ideas. Please try again.")
     } finally {
       setIsRegenerating(false)

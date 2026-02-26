@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { getClient } from '@/lib/db/client'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Admin')
 interface AdminAuthState {
     loading: boolean
     isAuthenticated: boolean
@@ -58,7 +61,7 @@ export function useAdminAuth(): AdminAuthState {
                     error: admin ? null : 'Not authorized as admin'
                 })
             } catch (error) {
-                console.error('Auth check failed:', error)
+                log.error('Auth check failed', { error: error instanceof Error ? error.message : String(error) })
                 setState({
                     loading: false,
                     isAuthenticated: false,

@@ -3,6 +3,7 @@ import { ShotCreatorGeneration, ShotCreatorReferenceImage, ShotCreatorSettings }
 import { toast } from "@/hooks/use-toast";
 import { getImageDimensions } from "@/features/shot-creator/helpers/short-creator.helper";
 import { LibraryImageReference } from "../types/shot-library.types";
+import { logger } from '@/lib/logger'
 
 export const DEFAULT_SETTINGS: ShotCreatorSettings = {
     aspectRatio: "16:9",
@@ -160,7 +161,7 @@ export const useShotCreatorStore = create<ShotCreatorStore>()((set) => ({
                 description: "Image added to reference slots"
             });
         } catch (error) {
-            console.error('Error adding reference image:', error);
+            logger.shotCreator.error('Error adding reference image', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Error",
                 description: "Failed to add image as reference",
@@ -195,7 +196,7 @@ export const useShotCreatorStore = create<ShotCreatorStore>()((set) => ({
                 description: "The image has been added to the Shot Animator",
             });
         } catch (error) {
-            console.error('Failed to save animator reference:', error);
+            logger.shotCreator.error('Failed to save animator reference', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Error",
                 description: "Failed to send image to Shot Animator",

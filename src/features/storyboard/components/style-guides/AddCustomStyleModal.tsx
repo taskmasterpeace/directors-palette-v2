@@ -9,6 +9,7 @@ import { Upload, ImageIcon, AlertCircle, ChevronDown } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useCustomStylesStore } from '@/features/shot-creator/store/custom-styles.store'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
+import { logger } from '@/lib/logger'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB client-side limit
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -120,7 +121,7 @@ export function AddCustomStyleModal({ open, onOpenChange, onStyleAdded }: AddCus
             onOpenChange(false)
             onStyleAdded?.(styleId)
         } catch (err) {
-            console.error('Failed to upload style image:', err)
+            logger.storyboard.error('Failed to upload style image', { error: err instanceof Error ? err.message : String(err) })
             setError(err instanceof Error ? err.message : 'Failed to upload image')
         } finally {
             setIsUploading(false)

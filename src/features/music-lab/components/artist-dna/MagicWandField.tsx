@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { X } from 'lucide-react'
 import { useArtistDnaStore } from '../../store/artist-dna.store'
+import { logger } from '@/lib/logger'
 
 interface MagicWandFieldProps {
   field: string
@@ -72,7 +73,7 @@ export function MagicWandField({
         }
       }
     } catch (error) {
-      console.error('Failed to fetch suggestions:', error)
+      logger.musicLab.error('Failed to fetch suggestions', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setIsLoading(false)
     }

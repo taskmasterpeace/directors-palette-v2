@@ -6,6 +6,7 @@
 import { getClient } from "@/lib/db/client"
 import { WildCard } from "../helpers/wildcard/parser"
 import { toError } from "../helpers"
+import { logger } from '@/lib/logger'
 
 export interface CreateWildCardInput {
     name: string;
@@ -98,7 +99,7 @@ export async function createWildCard(
 
         return { data: data as WildCard, error: null };
     } catch (error) {
-        console.error('Error creating wildcard:', error);
+        logger.shotCreator.error('Error creating wildcard', { error: error instanceof Error ? error.message : String(error) })
         return { data: null, error: toError(error) };
     }
 }
@@ -134,7 +135,7 @@ export async function getWildCards(
 
         return { data: data as WildCard[], error: null };
     } catch (error) {
-        console.error('Error fetching wildcards:', error);
+        logger.shotCreator.error('Error fetching wildcards', { error: error instanceof Error ? error.message : String(error) })
         return { data: null, error: toError(error) };
     }
 }
@@ -158,7 +159,7 @@ export async function getWildCardById(
 
         return { data: data as WildCard, error: null };
     } catch (error) {
-        console.error('Error fetching wildcard:', error);
+        logger.shotCreator.error('Error fetching wildcard', { error: error instanceof Error ? error.message : String(error) })
         return { data: null, error: toError(error) };
     }
 }
@@ -188,7 +189,7 @@ export async function getWildCardByName(
 
         return { data: data as WildCard | null, error: null };
     } catch (error) {
-        console.error('Error fetching wildcard by name:', error);
+        logger.shotCreator.error('Error fetching wildcard by name', { error: error instanceof Error ? error.message : String(error) })
         return { data: null, error: toError(error) };
     }
 }
@@ -230,7 +231,7 @@ export async function updateWildCard(
 
         return { data: data as WildCard, error: null };
     } catch (error) {
-        console.error('Error updating wildcard:', error);
+        logger.shotCreator.error('Error updating wildcard', { error: error instanceof Error ? error.message : String(error) })
         return { data: null, error: toError(error) };
     }
 }
@@ -253,7 +254,7 @@ export async function deleteWildCard(
 
         return { error: null };
     } catch (error) {
-        console.error('Error deleting wildcard:', error);
+        logger.shotCreator.error('Error deleting wildcard', { error: error instanceof Error ? error.message : String(error) })
         return { error: toError(error) };
     }
 }
@@ -303,7 +304,7 @@ export async function getWildCardStats(): Promise<{
             error: null
         };
     } catch (error) {
-        console.error('Error getting wildcard stats:', error);
+        logger.shotCreator.error('Error getting wildcard stats', { error: error instanceof Error ? error.message : String(error) })
         return { total: 0, byCategory: {}, error: toError(error) };
     }
 }

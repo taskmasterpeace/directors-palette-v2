@@ -16,6 +16,7 @@ import { ImageGenerationRequest, ImageModel, ImageModelSettings } from "../types
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { useCustomStylesStore } from '../store/custom-styles.store'
 import { getModelConfig } from '@/config'
+import { logger } from '@/lib/logger'
 
 export interface GenerationProgress {
     status: 'idle' | 'starting' | 'processing' | 'waiting' | 'succeeded' | 'failed'
@@ -84,11 +85,11 @@ async function waitForImageCompletion(
 
                     if (isNetworkError) {
                         // Log but don't fail - realtime subscription will continue
-                        console.warn('Network error in polling (will retry):', error.message)
+                        logger.shotCreator.warn('Network error in polling (will retry)', { message: error.message })
                         return
                     }
 
-                    console.error('Error checking gallery status:', error)
+                    logger.shotCreator.error('Error checking gallery status', { error: error })
                     return
                 }
 
@@ -102,7 +103,7 @@ async function waitForImageCompletion(
                         return
                     } else {
                         // Replicate URL found - keep waiting for Supabase upload to complete
-                        console.log('[Pipe Chain] Found temporary Replicate URL, waiting for Supabase upload...')
+                        logger.shotCreator.info('[Pipe Chain] Found temporary Replicate URL, waiting for Supabase upload...')
                     }
                 }
 
@@ -121,7 +122,7 @@ async function waitForImageCompletion(
                     return
                 }
             } catch (err) {
-                console.error('Error in polling:', err)
+                logger.shotCreator.error('Error in polling', { error: err instanceof Error ? err.message : String(err) })
             }
         }
 
@@ -198,12 +199,12 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
                 const httpsUrl = await uploadImageToStorage(file)
                 uploadedUrls.push(httpsUrl)
             } catch (error) {
-                console.error('Failed to upload reference image:', error)
+                logger.shotCreator.error('Failed to upload reference image', { error: error instanceof Error ? error.message : String(error) })
                 throw new Error(`Failed to upload reference image: ${error instanceof Error ? error.message : 'Unknown error'}`)
             }
         } else {
             // Unknown format, skip it
-            console.warn('Unknown image URL format:', imageUrl)
+            logger.shotCreator.warn('Unknown image URL format', { imageUrl: imageUrl })
         }
     }
 
@@ -237,7 +238,7 @@ export function useImageGeneration() {
         const setupSubscription = async () => {
             const supabase = await getClient()
             if (!supabase) {
-                console.warn('Supabase client not available for subscription')
+                logger.shotCreator.warn('Supabase client not available for subscription')
                 return
             }
             subscription = supabase
@@ -344,7 +345,7 @@ export function useImageGeneration() {
 
             const { data: { user }, error: authError } = await supabase.auth.getUser()
             if (authError) {
-                console.error('Authentication error:', authError)
+                logger.shotCreator.error('Authentication error', { authError: authError })
                 throw new Error(`Authentication failed: ${authError.message}`)
             }
             if (!user) {
@@ -370,15 +371,15 @@ export function useImageGeneration() {
                     }
                 }
 
-                console.log(`🏷️ Found ${parsedRefs.specificReferences.length} specific reference(s):`, parsedRefs.specificReferences)
-                console.log(`📸 Auto-attached ${specificImages.length} image(s) from specific tags`)
+                logger.shotCreator.info('🏷️ Found [length] specific reference(s)', { length: parsedRefs.specificReferences.length, specificReferences: parsedRefs.specificReferences })
+                logger.shotCreator.info('Auto-attached images from specific tags', { count: specificImages.length })
 
                 // Warn about missing specific references
                 if (specificImages.length < parsedRefs.specificReferences.length) {
                     const missingTags = parsedRefs.specificReferences.filter(
                         tag => !specificImages.some(img => img.reference?.toLowerCase() === tag.toLowerCase())
                     )
-                    console.warn(`⚠️ No images found for tag(s):`, missingTags)
+                    logger.shotCreator.warn('⚠️ No images found for tag(s)', { missingTags })
                     toast({
                         title: 'Some references not found',
                         description: `Could not find images for: ${missingTags.join(', ')}`,
@@ -389,7 +390,7 @@ export function useImageGeneration() {
 
             // 2. Handle category references (e.g., @people, @places) - random selection
             if (parsedRefs.categoryReferences.length > 0) {
-                console.log(`🎲 Found ${parsedRefs.categoryReferences.length} category reference(s):`, parsedRefs.categoryReferences)
+                logger.shotCreator.info('🎲 Found [length] category reference(s)', { length: parsedRefs.categoryReferences.length, categoryReferences: parsedRefs.categoryReferences })
 
                 for (const category of parsedRefs.categoryReferences) {
                     const randomImage = await getRandomFromCategory(category)
@@ -398,9 +399,9 @@ export function useImageGeneration() {
                         autoReferencedImages.push(randomImage.url)
                         // Map category tag to its resolved URL
                         tagToUrlMap.set(`@${category}`, randomImage.url)
-                        console.log(`✅ Random selection from ${category}:`, randomImage.reference || randomImage.id)
+                        logger.shotCreator.info('✅ Random selection from [category]', { category, detail: randomImage.reference || randomImage.id })
                     } else {
-                        console.warn(`⚠️ No images found in category: ${category}`)
+                        logger.shotCreator.warn('No images found in category', { category })
                         toast({
                             title: `No ${category} found`,
                             description: `Add images to the "${category}" category in your reference library first.`,
@@ -421,8 +422,7 @@ export function useImageGeneration() {
 
             // Log summary
             if (parsedRefs.allReferences.length > 0) {
-                console.log(`📊 Total references processed: ${parsedRefs.allReferences.length}`)
-                console.log(`🖼️ Total images attached: ${uniqueReferenceImages.length}`)
+                logger.shotCreator.info('References processed', { totalRefs: parsedRefs.allReferences.length, totalImages: uniqueReferenceImages.length })
             }
 
             // ✅ STYLE INJECTION: Check for selected style (preset or custom)
@@ -445,10 +445,7 @@ export function useImageGeneration() {
                         uniqueReferenceImages = [fullStyleUrl, ...uniqueReferenceImages]
                     }
 
-                    const isCustom = 'isCustom' in selectedStyle && selectedStyle.isCustom
-                    console.log(`🎨 Style applied: ${selectedStyle.name}${isCustom ? ' (custom)' : ''}`)
-                    console.log(`📝 Style prompt injected: "${selectedStyle.stylePrompt}"`)
-                    console.log(`🖼️ Style reference added: ${styleImageUrl.startsWith('data:') ? '[data URL]' : styleImageUrl}`)
+                    logger.shotCreator.info('Style applied', { style: selectedStyle.name, prompt: selectedStyle.stylePrompt, reference: styleImageUrl.startsWith('data:') ? '[data URL]' : styleImageUrl })
                 }
             }
 
@@ -475,7 +472,7 @@ export function useImageGeneration() {
 
             if (settings.rawPromptMode) {
                 // Raw mode: send prompt as-is without any processing
-                console.log('🔤 Raw Prompt Mode: Bypassing syntax parsing')
+                logger.shotCreator.info('🔤 Raw Prompt Mode: Bypassing syntax parsing')
                 variations = [promptWithStyle]
                 totalVariations = 1
                 isPipeChaining = false
@@ -486,10 +483,10 @@ export function useImageGeneration() {
                 const freshStageRefs = useShotCreatorStore.getState().stageReferenceImages
                 const isRecipeMode = freshStageRefs && freshStageRefs.length > 0
                 if (isRecipeMode) {
-                    console.log('🍳 Recipe mode detected - forcing pipe syntax enabled')
-                    console.log(`   Stage refs found: ${freshStageRefs.length} stages`)
+                    logger.shotCreator.info('🍳 Recipe mode detected - forcing pipe syntax enabled')
+                    logger.shotCreator.info('Stage refs found', { stages: freshStageRefs.length })
                 }
-                console.log(`🎲 Parsing prompt with ${wildcards.length} available wildcards`)
+                logger.shotCreator.info('Parsing prompt with wildcards', { wildcardCount: wildcards.length })
                 const promptResult = parseDynamicPrompt(promptWithStyle, {
                     disablePipeSyntax: isRecipeMode ? false : settings.disablePipeSyntax,
                     disableBracketSyntax: settings.disableBracketSyntax,
@@ -517,9 +514,9 @@ export function useImageGeneration() {
 
                 // Log wildcard usage
                 if (promptResult.hasWildCards) {
-                    console.log(`🎲 Wildcard expansion: ${promptResult.wildCardNames?.join(', ')} → ${totalVariations} variations`)
+                    logger.shotCreator.info('Wildcard expansion', { names: promptResult.wildCardNames, totalVariations })
                     if (promptResult.warnings && promptResult.warnings.length > 0) {
-                        promptResult.warnings.forEach(warning => console.warn(`⚠️ ${warning}`))
+                        promptResult.warnings.forEach(warning => logger.shotCreator.warn(warning))
                     }
                 }
             }
@@ -541,15 +538,15 @@ export function useImageGeneration() {
                     }
                     return rewritten
                 })
-                console.log(`🔗 Prompt rewritten with reference tokens:`)
-                console.log(`   Sample: ${variations[0]?.slice(0, 120)}`)
+                logger.shotCreator.info('🔗 Prompt rewritten with reference tokens')
+                logger.shotCreator.info('Prompt rewritten sample', { sample: variations[0]?.slice(0, 120) })
             }
 
             // Strip reference images for text-only models (e.g., Z-Image Turbo)
             // Style injection may have added refs that the model can't accept
             const modelConfig = getModelConfig(model)
             if (modelConfig && modelConfig.maxReferenceImages === 0 && uniqueReferenceImages.length > 0) {
-                console.log(`🚫 ${modelConfig.displayName} is text-only — stripping ${uniqueReferenceImages.length} reference image(s)`)
+                logger.shotCreator.info('Text-only model, stripping reference images', { model: modelConfig.displayName, strippedCount: uniqueReferenceImages.length })
                 uniqueReferenceImages = []
             }
 
@@ -612,9 +609,9 @@ export function useImageGeneration() {
                 if (stageRefs.length > 0) {
                     try {
                         preparedStageRefs = await prepareReferenceImagesForAPI(stageRefs)
-                        console.log(`[Pipe Chain] Stage ${i} refs prepared: ${preparedStageRefs.length} images uploaded`)
+                        logger.shotCreator.info('Pipe chain stage refs prepared', { stage: i, uploadedCount: preparedStageRefs.length })
                     } catch (uploadError) {
-                        console.error(`[Pipe Chain] Failed to prepare stage ${i} refs:`, uploadError)
+                        logger.shotCreator.error('[Pipe Chain] Failed to prepare stage [i] refs', { i, uploadError })
                         // Continue without stage refs rather than failing entirely
                     }
                 }
@@ -642,14 +639,7 @@ export function useImageGeneration() {
 
                 // Debug logging for pipe chaining
                 if (isPipeChaining) {
-                    console.log(`[Pipe Chain] Step ${i + 1}/${variations.length}:`, {
-                        isFirstStep,
-                        previousImageUrl: previousImageUrl || '(none)',
-                        rawStageRefs: stageRefs.length ? `${stageRefs.length} raw ref(s)` : '(none)',
-                        preparedStageRefs: preparedStageRefs.length ? `${preparedStageRefs.length} prepared ref(s)` : '(none)',
-                        inputImages: inputImages?.length ? `${inputImages.length} image(s)` : '(none)',
-                        prompt: variationPrompt.slice(0, 50)
-                    })
+                    logger.shotCreator.info("Pipe chain step", { step: i + 1, total: variations.length, isFirstStep, rawStageRefs: stageRefs.length, preparedStageRefs: preparedStageRefs.length, inputImages: inputImages?.length || 0 })
                 }
 
                 // Use current model settings (pipe chaining doesn't use img2img for Nano Banana models)
@@ -692,7 +682,7 @@ export function useImageGeneration() {
                 // If the API returned multiple images (Seedream sequential_image_generation),
                 // refresh gallery so additional DB rows appear immediately
                 if (response.imageCount && response.imageCount > 1) {
-                    console.log(`[Multi-Image] ${response.imageCount} images returned, refreshing gallery`)
+                    logger.shotCreator.info('Multi-image response, refreshing gallery', { imageCount: response.imageCount })
                     useUnifiedGalleryStore.getState().refreshGallery()
                 }
 
@@ -707,14 +697,14 @@ export function useImageGeneration() {
                     try {
                         const imageUrl = await waitForImageCompletion(supabase, response.galleryId)
                         previousImageUrl = imageUrl
-                        console.log(`[Pipe Chain] Step ${i + 1} completed. Setting previousImageUrl to:`, imageUrl)
+                        logger.shotCreator.info('[Pipe Chain] Step [detail] completed. Setting previousImageUrl to', { detail: i + 1, imageUrl })
                         toast({
                             title: `Step ${i + 1}/${totalVariations} Complete`,
                             description: isLastStep ? 'All images saved to gallery!' : 'Moving to next step...',
                         })
                     } catch (waitError) {
                         const errorMsg = waitError instanceof Error ? waitError.message : 'Unknown error'
-                        console.error(`Step ${i + 1} failed:`, errorMsg)
+                        logger.shotCreator.error('Step [detail] failed', { detail: i + 1, errorMsg })
                         throw new Error(`Step ${i + 1} failed: ${errorMsg}`)
                     }
                 }
@@ -751,7 +741,7 @@ export function useImageGeneration() {
                 totalVariations,
             }
         } catch (error) {
-            console.error('Image generation failed:', error)
+            logger.shotCreator.error('Image generation failed', { error: error instanceof Error ? error.message : String(error) })
 
             // Check if this is an insufficient credits error
             const isCreditsError = error && typeof error === 'object' && 'isInsufficientCredits' in error

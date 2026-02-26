@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { BookOpen } from 'lucide-react'
 import { TagInput } from '../TagInput'
 import { useArtistDnaStore } from '../../../store/artist-dna.store'
+import { logger } from '@/lib/logger'
 
 export function LexiconTab() {
   const { draft, updateDraft, suggestionCache, setSuggestions, consumeSuggestion, dismissSuggestion } =
@@ -35,7 +36,7 @@ export function LexiconTab() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch suggestions:', error)
+      logger.musicLab.error('Failed to fetch suggestions', { error: error instanceof Error ? error.message : String(error) })
     } finally {
       setLoadingField(null)
     }

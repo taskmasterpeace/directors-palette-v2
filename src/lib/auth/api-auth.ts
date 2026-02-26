@@ -7,6 +7,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import type { Database } from '@/lib/db/types'
+import { logger } from '@/lib/logger'
 
 export interface AuthenticatedContext {
   user: {
@@ -76,7 +77,7 @@ export async function getAuthenticatedUser(
       supabase,
     }
   } catch (error) {
-    console.error('Authentication error:', error)
+    logger.auth.error('Authentication error', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       {
         error: 'Authentication failed',

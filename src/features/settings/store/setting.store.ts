@@ -2,7 +2,10 @@ import { create } from 'zustand'
 import { SettingsConfig } from '@/features/settings/types/setting.types'
 import { defaultSettings } from '@/features/settings/constants'
 import { settingsService } from '@/features/settings/services/settings.service'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Settings')
 type ResetKey = 'all' | 'shotCreator' | 'shotAnimator'
 
 interface SettingStore {
@@ -37,7 +40,7 @@ export const useSettingStore = create<SettingStore>()(
         const config = await settingsService.getByUserId(userId)
         set({ config, isLoading: false })
       } catch (error) {
-        console.error('Failed to get settings:', error)
+        log.error('Failed to get settings', { error: error instanceof Error ? error.message : String(error) })
         set({
           error: 'Failed to load settings',
           isLoading: false,
@@ -54,7 +57,7 @@ export const useSettingStore = create<SettingStore>()(
         const updatedConfig = await settingsService.upsert(userId, configUpdate)
         set({ config: updatedConfig, isLoading: false })
       } catch (error) {
-        console.error('Failed to update settings:', error)
+        log.error('Failed to update settings', { error: error instanceof Error ? error.message : String(error) })
         set({ error: 'Failed to update settings', isLoading: false })
       }
     },
@@ -83,7 +86,7 @@ export const useSettingStore = create<SettingStore>()(
         const updatedConfig = await settingsService.upsert(userId, resetConfig)
         set({ config: updatedConfig, isLoading: false })
       } catch (error) {
-        console.error(`Failed to reset ${key} settings:`, error)
+        log.error('Failed to reset [key] settings', { key, error: error instanceof Error ? error.message : String(error) })
         set({ error: `Failed to reset ${key} settings`, isLoading: false })
         throw error
       }

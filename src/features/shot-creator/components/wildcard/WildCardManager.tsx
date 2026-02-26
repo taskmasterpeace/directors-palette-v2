@@ -23,6 +23,7 @@ import {
     autoUpdate,
     FloatingPortal,
 } from '@floating-ui/react';
+import { logger } from '@/lib/logger'
 
 // Individual wildcard card with floating preview
 function WildCardCard({
@@ -250,7 +251,7 @@ export function WildCardManager() {
                 description: `Loaded ${content.split('\n').filter(l => l.trim()).length} lines from ${file.name}`
             });
         } catch (error) {
-            console.error('Error reading file:', error);
+            logger.shotCreator.error('Error reading file', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: 'Error Reading File',
                 description: 'Failed to read file content',

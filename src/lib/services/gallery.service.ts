@@ -7,6 +7,7 @@ import { getClient } from '@/lib/db/client'
 import { GalleryRepository } from '@/lib/db/repositories/gallery.repository'
 import type { GalleryRow } from '@/lib/db/types'
 import type { Json as _Json } from '../../../supabase/database.types'
+import { logger } from '@/lib/logger'
 
 export type GenerationType = 'image' | 'video'
 
@@ -33,7 +34,7 @@ export class GalleryService {
 
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError || !user) {
-        console.warn('User not authenticated, cannot load gallery')
+        logger.gallery.warn('User not authenticated, cannot load gallery')
         return []
       }
 
@@ -46,7 +47,7 @@ export class GalleryService {
       })
 
       if (result.error) {
-        console.error(`Error fetching ${generationType} gallery:`, result.error)
+        logger.gallery.error('Error fetching [generationType] gallery', { generationType, error: result.error })
         return []
       }
 
@@ -61,7 +62,7 @@ export class GalleryService {
 
       return items
     } catch (error) {
-      console.error(`Failed to load ${generationType} gallery:`, error)
+      logger.gallery.error('Failed to load [generationType] gallery', { generationType, error: error instanceof Error ? error.message : String(error) })
       return []
     }
   }
@@ -78,7 +79,7 @@ export class GalleryService {
 
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError || !user) {
-        console.warn('User not authenticated, cannot count gallery items')
+        logger.gallery.warn('User not authenticated, cannot count gallery items')
         return 0
       }
 
@@ -90,13 +91,13 @@ export class GalleryService {
         .not('public_url', 'is', null)
 
       if (error) {
-        console.error(`Error counting ${generationType} gallery items:`, error)
+        logger.gallery.error('Error counting [generationType] gallery items', { generationType, error })
         return 0
       }
 
       return count || 0
     } catch (error) {
-      console.error(`Failed to count ${generationType} gallery items:`, error)
+      logger.gallery.error('Failed to count [generationType] gallery items', { generationType, error: error instanceof Error ? error.message : String(error) })
       return 0
     }
   }
@@ -124,11 +125,11 @@ export class GalleryService {
 
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError) {
-        console.error('Authentication error:', authError)
+        logger.gallery.error('Authentication error', { authError: authError })
         throw new Error(`Authentication failed: ${authError.message}`)
       }
       if (!user) {
-        console.warn('User not authenticated, cannot load gallery')
+        logger.gallery.warn('User not authenticated, cannot load gallery')
         return { items: [], total: 0, totalPages: 0 }
       }
 
@@ -165,7 +166,7 @@ export class GalleryService {
       })
 
       if (result.error) {
-        console.error(`Error fetching ${generationType} gallery:`, result.error)
+        logger.gallery.error('Error fetching [generationType] gallery', { generationType, error: result.error })
         throw new Error(`Database query failed: ${result.error}`)
       }
 
@@ -185,11 +186,11 @@ export class GalleryService {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      console.error(`Failed to load ${generationType} gallery:`, errorMessage, error)
+      logger.gallery.error('Failed to load [generationType] gallery', { generationType, errorMessage, error: error instanceof Error ? error.message : String(error) })
       if (errorMessage.includes('Failed to fetch')) {
-        console.error('Network error detected. Possible causes:')
-        console.error('1. Supabase credentials missing or invalid')
-        console.error('2. Network connectivity issues')
+        logger.gallery.error('Network error detected. Possible causes')
+        logger.gallery.error('1. Supabase credentials missing or invalid')
+        logger.gallery.error('2. Network connectivity issues')
       }
       return { items: [], total: 0, totalPages: 0 }
     }
@@ -235,7 +236,7 @@ export class GalleryService {
         .eq('gallery_id', itemId)
 
       if (refDeleteError) {
-        console.warn('Error deleting associated references:', refDeleteError)
+        logger.gallery.warn('Error deleting associated references', { refDeleteError: refDeleteError })
         // Proceed anyway, as they might not exist or it might be a non-blocking error
       }
 
@@ -246,7 +247,7 @@ export class GalleryService {
           .remove([galleryItem.storage_path])
 
         if (storageError) {
-          console.error('Error deleting from storage:', storageError)
+          logger.gallery.error('Error deleting from storage', { storageError: storageError })
           // Continue with database deletion even if storage deletion fails
         }
       }
@@ -261,7 +262,7 @@ export class GalleryService {
       return { success: true }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete item'
-      console.error('Delete gallery item error:', error)
+      logger.gallery.error('Delete gallery item error', { error: error instanceof Error ? error.message : String(error) })
       return { success: false, error: errorMessage }
     }
   }
@@ -302,7 +303,7 @@ export class GalleryService {
 
       return result.data[0]
     } catch (error) {
-      console.error('Failed to get gallery item by ID:', error)
+      logger.gallery.error('Failed to get gallery item by ID', { error: error instanceof Error ? error.message : String(error) })
       return null
     }
   }
@@ -404,7 +405,7 @@ export class GalleryService {
       return { success: true }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update reference'
-      console.error('Update reference error:', error)
+      logger.gallery.error('Update reference error', { error: error instanceof Error ? error.message : String(error) })
       return { success: false, error: errorMessage }
     }
   }
@@ -432,13 +433,13 @@ export class GalleryService {
         .is('public_url', null)
 
       if (error) {
-        console.error('Error getting pending count:', error)
+        logger.gallery.error('Error getting pending count', { error: error })
         return 0
       }
 
       return data?.length || 0
     } catch (error) {
-      console.error('Failed to get pending count:', error)
+      logger.gallery.error('Failed to get pending count', { error: error instanceof Error ? error.message : String(error) })
       return 0
     }
   }

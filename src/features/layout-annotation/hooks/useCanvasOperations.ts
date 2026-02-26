@@ -7,7 +7,10 @@
 import { useCallback, RefObject } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import type { FabricCanvasRef } from '../components/canvas-board'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Layout')
 interface CanvasOperationsProps {
   canvasRef: RefObject<FabricCanvasRef | null>
 }
@@ -40,7 +43,7 @@ export function useCanvasOperations({ canvasRef }: CanvasOperationsProps) {
   const handleSaveCanvas = useCallback(() => {
     if (canvasRef.current?.exportCanvas) {
       const dataUrl = canvasRef.current.exportCanvas('image/png')
-      console.log("dataUrl", dataUrl)
+      log.info('dataUrl', { dataUrl: dataUrl })
       // Here you would typically save to your backend/storage
       toast({
         title: "Canvas Saved",

@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger'
 
 const STORAGE_BUCKET = 'directors-palette';
 
@@ -16,7 +17,7 @@ function getSupabase(): SupabaseClient {
       throw new Error(`StorageService: Missing required env vars: ${missing.join(', ')}`);
     }
 
-    console.log('[StorageService] Initializing Supabase client');
+    logger.generation.info('[StorageService] Initializing Supabase client')
     _supabase = createClient(url, key);
   }
   return _supabase;

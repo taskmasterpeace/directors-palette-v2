@@ -2,7 +2,10 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 
 import { getClient } from '@/lib/db/client'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Admin')
 // Define the shape of User with Stats
 export interface UserWithStats {
     id: string
@@ -30,7 +33,7 @@ export class AdminService {
             if (!user?.email) return false
             return this.checkAdminEmailAsync(user.email)
         } catch (error) {
-            console.error('Error checking admin status:', error)
+            log.error('Error checking admin status', { error: error instanceof Error ? error.message : String(error) })
             return false
         }
     }
@@ -49,7 +52,7 @@ export class AdminService {
                 .maybeSingle()
             return !!data
         } catch (error) {
-            console.error('Error checking admin email:', error)
+            log.error('Error checking admin email', { error: error instanceof Error ? error.message : String(error) })
             return false
         }
     }
@@ -96,7 +99,7 @@ export class AdminService {
                 total_revenue_cents: totalPurchased // Assuming 1 credit = 1 cent for now
             }
         } catch (error) {
-            console.error('Error fetching stats:', error)
+            log.error('Error fetching stats', { error: error instanceof Error ? error.message : String(error) })
             return {
                 total_users: 0,
                 total_credits_purchased: 0,
@@ -132,7 +135,7 @@ export class AdminService {
             .range(from, to)
 
         if (error) {
-            console.error('Error fetching user_credits:', error)
+            log.error('Error fetching user_credits', { error: error })
             return { users: [], total: 0 }
         }
 
@@ -215,7 +218,7 @@ export class AdminService {
                 .maybeSingle()
 
             if (fetchError) {
-                console.error('Error fetching user credits:', fetchError)
+                log.error('Error fetching user credits', { fetchError: fetchError })
                 return { success: false, error: 'Failed to fetch user credits' }
             }
 
@@ -233,15 +236,15 @@ export class AdminService {
                 }, { onConflict: 'user_id' })
 
             if (updateError) {
-                console.error('Error granting credits:', updateError)
+                log.error('Error granting credits', { updateError: updateError })
                 return { success: false, error: 'Failed to grant credits' }
             }
 
-            console.log(`Admin ${adminEmail} granted ${amount} credits to user ${userId}. Reason: ${description || 'N/A'}`)
+            log.info('Admin granted credits', { adminEmail, amount, userId, description: description || 'N/A' })
 
             return { success: true, newBalance }
         } catch (error) {
-            console.error('Error in grantCredits:', error)
+            log.error('Error in grantCredits', { error: error instanceof Error ? error.message : String(error) })
             return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
         }
     }

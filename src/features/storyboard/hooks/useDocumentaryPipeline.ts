@@ -7,6 +7,7 @@ import { createTitleCards } from '../services/title-card.service'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
 import { toast } from 'sonner'
 import type { ClassifiedSegment, DocumentaryChapter, BRollPoolCategory } from '../types/storyboard.types'
+import { logger } from '@/lib/logger'
 
 export function useDocumentaryPipeline() {
     const {
@@ -139,7 +140,7 @@ export function useDocumentaryPipeline() {
                     const poolResult = await safeJsonParse<{ categories: BRollPoolCategory[] }>(poolRes)
                     brollCategories = poolResult.categories || []
                 } catch {
-                    console.error(`B-roll pool generation failed for chapter ${i}`)
+                    logger.storyboard.error('B-roll pool generation failed', { chapter: i })
                 }
 
                 // Apply B-roll assignments to classified segments
@@ -177,7 +178,7 @@ export function useDocumentaryPipeline() {
             const totalBroll = documentaryChapters.reduce((sum, ch) => sum + ch.brollPool.length, 0)
             toast.success(`Documentary pipeline complete: ${documentaryChapters.length} chapters, ${totalBroll} B-roll categories`)
         } catch (err) {
-            console.error('Documentary pipeline error:', err)
+            logger.storyboard.error('Documentary pipeline error', { error: err instanceof Error ? err.message : String(err) })
             toast.error(err instanceof Error ? err.message : 'Documentary pipeline failed')
             setIsClassifyingSegments(false)
             setIsGeneratingBrollPool(false)

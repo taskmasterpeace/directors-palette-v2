@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { WildCard } from "../helpers/wildcard/parser";
 import * as WildCardService from "../services/wildcard.service";
 import { toast } from "@/hooks/use-toast";
+import { logger } from '@/lib/logger'
 
 export interface WildCardStore {
     // ---- State ----
@@ -34,7 +35,7 @@ export const useWildCardStore = create<WildCardStore>()((set, get) => ({
             const { data, error } = await WildCardService.getWildCards();
 
             if (error) {
-                console.error('Error loading wildcards:', error);
+                logger.shotCreator.error('Error loading wildcards', { error: error })
                 toast({
                     title: "Error Loading Wildcards",
                     description: error.message,
@@ -46,7 +47,7 @@ export const useWildCardStore = create<WildCardStore>()((set, get) => ({
 
             set({ wildcards: data || [], isLoading: false });
         } catch (error) {
-            console.error('Error loading wildcards:', error);
+            logger.shotCreator.error('Error loading wildcards', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Error Loading Wildcards",
                 description: "Failed to load wildcards",
@@ -72,7 +73,7 @@ export const useWildCardStore = create<WildCardStore>()((set, get) => ({
             const { data, error } = await WildCardService.createWildCard(input);
 
             if (error) {
-                console.error('Error creating wildcard:', error);
+                logger.shotCreator.error('Error creating wildcard', { error: error })
                 toast({
                     title: "Error Creating Wildcard",
                     description: error.message,
@@ -93,7 +94,7 @@ export const useWildCardStore = create<WildCardStore>()((set, get) => ({
 
             return { success: true, wildcard: data! };
         } catch (error) {
-            console.error('Error creating wildcard:', error);
+            logger.shotCreator.error('Error creating wildcard', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Error Creating Wildcard",
                 description: "Failed to create wildcard",
@@ -108,7 +109,7 @@ export const useWildCardStore = create<WildCardStore>()((set, get) => ({
             const { data, error } = await WildCardService.updateWildCard(id, input);
 
             if (error) {
-                console.error('Error updating wildcard:', error);
+                logger.shotCreator.error('Error updating wildcard', { error: error })
                 toast({
                     title: "Error Updating Wildcard",
                     description: error.message,
@@ -129,7 +130,7 @@ export const useWildCardStore = create<WildCardStore>()((set, get) => ({
 
             return { success: true };
         } catch (error) {
-            console.error('Error updating wildcard:', error);
+            logger.shotCreator.error('Error updating wildcard', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Error Updating Wildcard",
                 description: "Failed to update wildcard",
@@ -144,7 +145,7 @@ export const useWildCardStore = create<WildCardStore>()((set, get) => ({
             const { error } = await WildCardService.deleteWildCard(id);
 
             if (error) {
-                console.error('Error deleting wildcard:', error);
+                logger.shotCreator.error('Error deleting wildcard', { error: error })
                 toast({
                     title: "Error Deleting Wildcard",
                     description: error.message,
@@ -165,7 +166,7 @@ export const useWildCardStore = create<WildCardStore>()((set, get) => ({
 
             return { success: true };
         } catch (error) {
-            console.error('Error deleting wildcard:', error);
+            logger.shotCreator.error('Error deleting wildcard', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Error Deleting Wildcard",
                 description: "Failed to delete wildcard",

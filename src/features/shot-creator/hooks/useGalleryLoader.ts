@@ -6,6 +6,7 @@ import { useEffect, useState, useRef } from 'react'
 import { GalleryService } from '../services/gallery.service'
 import { useUnifiedGalleryStore } from '../store/unified-gallery-store'
 import { getClient } from '@/lib/db/client'
+import { logger } from '@/lib/logger'
 
 /**
  * Retry a function with exponential backoff
@@ -32,7 +33,7 @@ async function retryWithBackoff<T>(
             // Only retry on network errors
             if (errorMessage.includes('Failed to fetch') || errorMessage.includes('ERR_NETWORK')) {
                 const delay = baseDelay * Math.pow(2, i)
-                console.log(`Retrying gallery load (${i + 1}/${maxRetries}) after ${delay}ms...`)
+                logger.shotCreator.info('Retrying gallery load', { attempt: i + 1, maxRetries, delay })
                 await new Promise(resolve => setTimeout(resolve, delay))
                 continue
             }
@@ -89,7 +90,7 @@ export function useGalleryLoader() {
                 if (!mounted) return
 
                 const { images, total, totalPages } = paginatedResult
-                console.log(`[useGalleryLoader] Loaded ${images.length} images, total: ${total}, totalPages: ${totalPages}, totalCount: ${totalCount}`)
+                logger.shotCreator.info('Loaded gallery images', { count: images.length, total, totalPages, totalCount })
                 setTotalDatabaseCount(totalCount)
                 loadImagesPaginated(images, total, totalPages)
 
@@ -124,7 +125,7 @@ export function useGalleryLoader() {
                                         }
                                     } catch (realtimeError) {
                                         // Silently handle realtime update errors to prevent UI disruption
-                                        console.warn('Realtime gallery update failed (non-critical):', realtimeError)
+                                        logger.shotCreator.warn('Realtime gallery update failed (non-critical)', { realtimeError: realtimeError })
                                     }
                                 }
                             )
@@ -136,7 +137,7 @@ export function useGalleryLoader() {
 
                 const errorMessage = err instanceof Error ? err.message : 'Failed to load gallery'
                 setError(errorMessage)
-                console.error('Gallery loading error:', err)
+                logger.shotCreator.error('Gallery loading error', { error: err instanceof Error ? err.message : String(err) })
             } finally {
                 isLoadingRef.current = false
                 if (mounted) {

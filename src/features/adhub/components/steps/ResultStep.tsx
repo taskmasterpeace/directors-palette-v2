@@ -16,7 +16,10 @@ import {
 import { cn } from '@/utils/utils'
 import { Button } from '@/components/ui/button'
 import { useAdhubStore } from '../../store/adhub.store'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('AdHub')
 type VideoStatus = 'pending' | 'processing' | 'succeeded' | 'failed' | 'unknown'
 
 export function ResultStep() {
@@ -72,7 +75,7 @@ export function ResultStep() {
 
       return false
     } catch (error) {
-      console.error('Video status poll error:', error)
+      log.error('Video status poll error', { error: error instanceof Error ? error.message : String(error) })
       return false
     }
   }, [videoAdConfig.lipSyncGalleryId, setLipSyncResult])
@@ -163,7 +166,7 @@ export function ResultStep() {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('Failed to download:', error)
+      log.error('Failed to download', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -181,7 +184,7 @@ export function ResultStep() {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('Failed to download video:', error)
+      log.error('Failed to download video', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 

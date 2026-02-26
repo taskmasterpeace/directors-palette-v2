@@ -1,5 +1,6 @@
 import { SupabaseSettingsRepository } from "@/lib/db/repositories/settings.repository";
 import { ShotCreatorSettings } from "../types";
+import { logger } from '@/lib/logger'
 
 /**
  * Settings Service for Shot Creator
@@ -37,7 +38,7 @@ export class ShotCreatorSettingsService {
         ...shotCreatorConfig
       };
     } catch (error) {
-      console.error('Failed to load shot creator settings:', error);
+      logger.shotCreator.error('Failed to load shot creator settings', { error: error instanceof Error ? error.message : String(error) })
       return null;
     }
   }
@@ -54,7 +55,7 @@ export class ShotCreatorSettingsService {
         }
       });
     } catch (error) {
-      console.error('Failed to save shot creator settings:', error);
+      logger.shotCreator.error('Failed to save shot creator settings', { error: error instanceof Error ? error.message : String(error) })
       throw error;
     }
   }
@@ -69,7 +70,7 @@ export class ShotCreatorSettingsService {
       try {
         currentSettings = await this.loadSettings(userId);
       } catch (error) {
-        console.warn('Failed to load current settings, using defaults:', error);
+        logger.shotCreator.warn('Failed to load current settings, using defaults', { error: error instanceof Error ? error.message : String(error) })
       }
 
       // Merge with new settings
@@ -81,7 +82,7 @@ export class ShotCreatorSettingsService {
 
       await this.saveSettings(userId, mergedSettings);
     } catch (error) {
-      console.error('Failed to update shot creator settings:', error);
+      logger.shotCreator.error('Failed to update shot creator settings', { error: error instanceof Error ? error.message : String(error) })
       throw error;
     }
   }

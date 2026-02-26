@@ -3,6 +3,7 @@ import { shotCreatorSettingsService } from '../services';
 import { ShotCreatorSettings } from '../types';
 import { getClient } from "@/lib/db/client";
 import { DEFAULT_SETTINGS, useShotCreatorStore } from "../store";
+import { logger } from '@/lib/logger'
 /**
  * Custom hook for managing shot creator settings with Supabase
  * Settings are persisted to Supabase only
@@ -19,7 +20,7 @@ export function useShotCreatorSettings() {
       try {
         const supabase = await getClient()
         if (!supabase) {
-          console.warn('Supabase client not available, using default settings');
+          logger.shotCreator.warn('Supabase client not available, using default settings')
           setIsInitialized(true);
           return;
         }
@@ -27,7 +28,7 @@ export function useShotCreatorSettings() {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
 
         if (authError) {
-          console.error('Auth error loading settings:', authError);
+          logger.shotCreator.error('Auth error loading settings', { authError: authError })
           setIsInitialized(true);
           return;
         }
@@ -43,7 +44,7 @@ export function useShotCreatorSettings() {
           setSettings(mergedSettings);
         }
       } catch (error) {
-        console.error('Failed to load settings from Supabase:', error);
+        logger.shotCreator.error('Failed to load settings from Supabase', { error: error instanceof Error ? error.message : String(error) })
       } finally {
         setIsInitialized(true);
       }
@@ -64,14 +65,14 @@ export function useShotCreatorSettings() {
       getClient()
         .then(async (supabase) => {
           if (!supabase) {
-            console.warn('Supabase client not available, settings not persisted');
+            logger.shotCreator.warn('Supabase client not available, settings not persisted')
             return;
           }
 
           const { data: { user }, error: authError } = await supabase.auth.getUser();
 
           if (authError) {
-            console.error('Auth error saving settings:', authError);
+            logger.shotCreator.error('Auth error saving settings', { authError: authError })
             return;
           }
 
@@ -80,7 +81,7 @@ export function useShotCreatorSettings() {
           }
         })
         .catch(error => {
-          console.error('Failed to save settings to Supabase:', error);
+          logger.shotCreator.error('Failed to save settings to Supabase', { error: error })
         });
 
       return newSettings;

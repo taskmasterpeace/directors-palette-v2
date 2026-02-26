@@ -2,7 +2,10 @@ import { DatabaseError } from "@/lib/errors"
 import { ISettingsRepository, UpsertSettingsInput } from "./interfaces/settings.interface"
 import { Json, Tables } from "../../../../supabase/database.types"
 import { getClient, TypedSupabaseClient } from "../client"
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Lib')
 type SettingsRepositoryResult = {
   id: string
   data: Tables<'settings'>
@@ -33,7 +36,7 @@ export class SupabaseSettingsRepository implements ISettingsRepository {
         existing = await this.findByUserId(input.user_id)
       } catch (error) {
         // If findByUserId fails, log and continue with new config only
-        console.warn('Failed to load existing settings, will create new:', error)
+        log.warn('Failed to load existing settings, will create new', { error: error instanceof Error ? error.message : String(error) })
       }
 
       // Merge existing config with new config (new config overrides old)

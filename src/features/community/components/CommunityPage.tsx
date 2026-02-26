@@ -28,7 +28,10 @@ import { cn } from '@/utils/utils'
 import { useRecipeStore } from '@/features/shot-creator/store/recipe.store'
 import { useWildCardStore } from '@/features/shot-creator/store/wildcard.store'
 import { useDirectorStore } from '@/features/music-lab/store/director.store'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Community')
 const TYPE_LABELS: Record<CommunityItemType, string> = {
   wildcard: 'Wildcard',
   recipe: 'Recipe',
@@ -111,7 +114,7 @@ export function CommunityPage() {
             // prompts use settings JSON - handled separately
           }
         } catch (e) {
-          console.error('Failed to refresh store after add:', e)
+          log.error('Failed to refresh store after add', { error: e instanceof Error ? e.message : String(e) })
         }
       }
       toast({

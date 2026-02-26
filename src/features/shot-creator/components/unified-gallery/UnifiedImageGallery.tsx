@@ -22,6 +22,7 @@ import { BulkDownloadModal } from "./BulkDownloadModal"
 import { BulkActionsToolbar } from "./BulkActionsToolbar"
 import { useFolderManager } from "../../hooks/useFolderManager"
 import { GeneratedImage, useUnifiedGalleryStore, GridSize } from '../../store/unified-gallery-store'
+import { logger } from '@/lib/logger'
 
 export interface UnifiedImageGalleryProps {
     currentTab?: 'shot-creator' | 'shot-animator' | 'layout-annotation' | 'gallery' | 'story-creator'
@@ -166,7 +167,7 @@ export function UnifiedImageGallery({
                 await useUnifiedGalleryStore.getState().refreshGallery()
             }, 500)
         } catch (error) {
-            console.error('Background removal error:', error)
+            logger.shotCreator.error('Background removal error', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Remove Background Failed",
                 description: error instanceof Error ? error.message : "An error occurred",
@@ -263,7 +264,7 @@ RULES:
                 await useUnifiedGalleryStore.getState().refreshGallery()
             }, 1000)
         } catch (error) {
-            console.error('Cinematic grid generation error:', error)
+            logger.shotCreator.error('Cinematic grid generation error', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Generation Failed",
                 description: error instanceof Error ? error.message : "An error occurred",
@@ -340,7 +341,7 @@ The color temperature, lighting direction, and overall mood must match across al
                 await useUnifiedGalleryStore.getState().refreshGallery()
             }, 1000)
         } catch (error) {
-            console.error('B-Roll grid generation error:', error)
+            logger.shotCreator.error('B-Roll grid generation error', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Generation Failed",
                 description: error instanceof Error ? error.message : "An error occurred",
@@ -426,7 +427,7 @@ The color temperature, lighting direction, and overall mood must match across al
                 description: `Successfully extracted ${result.frames.length} frames (gutter: ${result.detectedGutter}px)`
             })
         } catch (error) {
-            console.error('Frame extraction error:', error)
+            logger.shotCreator.error('Frame extraction error', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Extraction Failed",
                 description: "An error occurred during frame extraction.",
@@ -487,7 +488,7 @@ The color temperature, lighting direction, and overall mood must match across al
                         savedCount++
                     }
                 } catch (err) {
-                    console.error('Failed to save frame:', err)
+                    logger.shotCreator.error('Failed to save frame', { error: err instanceof Error ? err.message : String(err) })
                 }
             }
 
@@ -513,7 +514,7 @@ The color temperature, lighting direction, and overall mood must match across al
                 })
             }
         } catch (error) {
-            console.error('Frame extraction error:', error)
+            logger.shotCreator.error('Frame extraction error', { error: error instanceof Error ? error.message : String(error) })
             toast({
                 title: "Extraction Failed",
                 description: "An error occurred during frame extraction.",

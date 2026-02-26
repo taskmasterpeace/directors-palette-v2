@@ -39,6 +39,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
+import { logger } from '@/lib/logger'
 
 interface PromptBrowserProps {
     onSelectPrompt?: (prompt: string) => void
@@ -136,11 +137,7 @@ export function PromptBrowser({ onSelectPrompt }: PromptBrowserProps) {
 
         // TODO: Implement actual save to database
         toast.info('Prompt editing will be saved to database (coming soon)')
-        console.log('Would save prompt:', {
-            id: editingPrompt.id,
-            originalPrompt: editingPrompt.prompt,
-            newPrompt: editedText
-        })
+        logger.shotCreator.info('Would save prompt', { id: editingPrompt.id, originalPrompt: editingPrompt.prompt, newPrompt: editedText })
         setEditingPrompt(null)
     }
 
@@ -179,7 +176,7 @@ export function PromptBrowser({ onSelectPrompt }: PromptBrowserProps) {
                 })
                 toast.success(`Added "${preset.title}" to Quick Presets`)
             } catch (error) {
-                console.error('Failed to add prompt:', error)
+                logger.shotCreator.error('Failed to add prompt', { error: error instanceof Error ? error.message : String(error) })
                 toast.error('Failed to add to Quick Presets')
             }
         }

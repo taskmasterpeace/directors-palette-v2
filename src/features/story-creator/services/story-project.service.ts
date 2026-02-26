@@ -20,7 +20,10 @@ import type {
     CreateGenerationQueueInput,
     QueueProgressUpdate
 } from '../types/story.types'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('StoryCreator')
 export class StoryProjectService {
     // ==================== PROJECT OPERATIONS ====================
 
@@ -40,7 +43,7 @@ export class StoryProjectService {
 
             return { data: data as StoryProject[], error: null }
         } catch (error) {
-            console.error('Error fetching projects:', error)
+            log.error('Error fetching projects', { error: error instanceof Error ? error.message : String(error) })
             return { data: null, error }
         }
     }
@@ -61,7 +64,7 @@ export class StoryProjectService {
 
             return { data: data as StoryProject, error: null }
         } catch (error) {
-            console.error('Error fetching project:', error)
+            log.error('Error fetching project', { error: error instanceof Error ? error.message : String(error) })
             return { data: null, error }
         }
     }
@@ -91,7 +94,7 @@ export class StoryProjectService {
 
             return { data: data as StoryProject, error: null }
         } catch (error) {
-            console.error('Error creating project:', error)
+            log.error('Error creating project', { error: error instanceof Error ? error.message : String(error) })
             return { data: null, error }
         }
     }
@@ -113,7 +116,7 @@ export class StoryProjectService {
 
             return { data: data as StoryProject, error: null }
         } catch (error) {
-            console.error('Error updating project:', error)
+            log.error('Error updating project', { error: error instanceof Error ? error.message : String(error) })
             return { data: null, error }
         }
     }
@@ -133,7 +136,7 @@ export class StoryProjectService {
 
             return { error: null }
         } catch (error) {
-            console.error('Error deleting project:', error)
+            log.error('Error deleting project', { error: error instanceof Error ? error.message : String(error) })
             return { error }
         }
     }
@@ -156,7 +159,7 @@ export class StoryProjectService {
 
             return { data: data as StoryShot[], error: null }
         } catch (error) {
-            console.error('Error fetching shots:', error)
+            log.error('Error fetching shots', { error: error instanceof Error ? error.message : String(error) })
             return { data: null, error }
         }
     }
@@ -177,7 +180,7 @@ export class StoryProjectService {
 
             return { data: data as StoryShot, error: null }
         } catch (error) {
-            console.error('Error fetching shot:', error)
+            log.error('Error fetching shot', { error: error instanceof Error ? error.message : String(error) })
             return { data: null, error }
         }
     }
@@ -197,7 +200,7 @@ export class StoryProjectService {
 
             return { data: data as StoryShot[], error: null }
         } catch (error) {
-            console.error('Error creating shots:', error)
+            log.error('Error creating shots', { error: error instanceof Error ? error.message : String(error) })
             return { data: null, error }
         }
     }
@@ -226,7 +229,7 @@ export class StoryProjectService {
 
             return { data: data as StoryShot, error: null }
         } catch (error) {
-            console.error('Error creating shot:', error)
+            log.error('Error creating shot', { error: error instanceof Error ? error.message : String(error) })
             return { data: null, error }
         }
     }
@@ -248,7 +251,7 @@ export class StoryProjectService {
 
             return { data: data as StoryShot, error: null }
         } catch (error) {
-            console.error('Error updating shot:', error)
+            log.error('Error updating shot', { error: error instanceof Error ? error.message : String(error) })
             return { data: null, error }
         }
     }
@@ -268,7 +271,7 @@ export class StoryProjectService {
 
             return { error: null }
         } catch (error) {
-            console.error('Error deleting shot:', error)
+            log.error('Error deleting shot', { error: error instanceof Error ? error.message : String(error) })
             return { error }
         }
     }
@@ -288,7 +291,7 @@ export class StoryProjectService {
 
             return { error: null }
         } catch (error) {
-            console.error('Error deleting shots:', error)
+            log.error('Error deleting shots', { error: error instanceof Error ? error.message : String(error) })
             return { error }
         }
     }
@@ -321,7 +324,7 @@ export class StoryProjectService {
 
             return { data: data as GenerationQueue, error: null }
         } catch (error) {
-            console.error('Error creating queue:', error)
+            log.error('Error creating queue', { error: error instanceof Error ? error.message : String(error) })
             return { data: null, error }
         }
     }
@@ -342,7 +345,7 @@ export class StoryProjectService {
 
             return { data: data as GenerationQueue, error: null }
         } catch (error) {
-            console.error('Error fetching queue:', error)
+            log.error('Error fetching queue', { error: error instanceof Error ? error.message : String(error) })
             return { data: null, error }
         }
     }
@@ -364,7 +367,7 @@ export class StoryProjectService {
 
             return { data: data as GenerationQueue, error: null }
         } catch (error) {
-            console.error('Error updating queue:', error)
+            log.error('Error updating queue', { error: error instanceof Error ? error.message : String(error) })
             return { data: null, error }
         }
     }
@@ -384,7 +387,7 @@ export class StoryProjectService {
 
             return { error: null }
         } catch (error) {
-            console.error('Error deleting queue:', error)
+            log.error('Error deleting queue', { error: error instanceof Error ? error.message : String(error) })
             return { error }
         }
     }
@@ -406,7 +409,7 @@ export class StoryProjectService {
 
             return { data: data as GenerationQueue[], error: null }
         } catch (error) {
-            console.error('Error fetching active queues:', error)
+            log.error('Error fetching active queues', { error: error instanceof Error ? error.message : String(error) })
             return { data: null, error }
         }
     }

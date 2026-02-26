@@ -11,6 +11,7 @@ import {
   type StorybookAssetType,
 } from '../services/storybook-folder.service'
 import { getModelCost } from '@/config'
+import { logger } from '@/lib/logger'
 
 // Cost constants for storybook generations (nano-banana-pro)
 export const STORYBOOK_MODEL = 'nano-banana-pro'
@@ -102,12 +103,12 @@ export function useRecipeLookup() {
     if (configRecipeId) {
       const recipe = recipes.find(r => r.id === configRecipeId)
       if (recipe) return recipe.name
-      console.warn(`[useStorybookGeneration] Configured recipe ID "${configRecipeId}" not found, falling back to default`)
+      logger.storybook.warn('Configured recipe ID not found, falling back to default', { configRecipeId })
     }
 
     const defaultRecipe = recipes.find(r => r.name === defaultName)
     if (!defaultRecipe) {
-      console.warn(`[useStorybookGeneration] Default recipe "${defaultName}" not found in ${recipes.length} available recipes`)
+      logger.storybook.warn('Default recipe not found', { defaultName, availableCount: recipes.length })
     }
 
     return defaultName

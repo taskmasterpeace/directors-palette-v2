@@ -22,6 +22,7 @@ import type {
 } from "../types/storyboard.types";
 import type { StoryChapter, ChapterDetectionResult } from "../services/chapter-detection.service";
 import type { ModelId } from "@/config";
+import { logger } from '@/lib/logger'
 
 export type StoryboardTab = 'input' | 'style' | 'directors' | 'entities' | 'shots' | 'generation' | 'gallery'
 
@@ -808,7 +809,7 @@ export const useStoryboardStore = create<StoryboardStore>()(
                     (oldText.length > 100 && text.length > 100 && lengthChange > oldText.length * 0.5)
 
                 if (isSignificantChange) {
-                    console.log('Significant story change detected, clearing old extraction data')
+                    logger.storyboard.info('Significant story change detected, clearing old extraction data')
                     return {
                         storyText: text,
                         // Clear extraction-related data
@@ -972,7 +973,7 @@ export const useStoryboardStore = create<StoryboardStore>()(
                         const str = localStorage.getItem(name)
                         return str ? JSON.parse(str) : null
                     } catch (e) {
-                        console.warn('Failed to read from localStorage:', e)
+                        logger.storyboard.warn('Failed to read from localStorage', { error: e instanceof Error ? e.message : String(e) })
                         return null
                     }
                 },
@@ -985,7 +986,7 @@ export const useStoryboardStore = create<StoryboardStore>()(
                     } catch (e) {
                         // QuotaExceededError - selective cleanup, preserve user's core work
                         if (e instanceof Error && e.name === 'QuotaExceededError') {
-                            console.warn('localStorage quota exceeded, attempting selective cleanup')
+                            logger.storyboard.warn('localStorage quota exceeded, attempting selective cleanup')
 
                             try {
                                 // Get the current value being saved (it's the state object)
@@ -1030,10 +1031,10 @@ export const useStoryboardStore = create<StoryboardStore>()(
                                         }
                                     }))
                                 }
-                                console.warn('Storage limit reached. Cleared regenerable data to preserve user work.')
+                                logger.storyboard.warn('Storage limit reached. Cleared regenerable data to preserve user work.')
                             } catch (retryError) {
                                 // Last resort: try to clear completely and save minimal
-                                console.error('Failed to save even after selective cleanup:', retryError)
+                                logger.storyboard.error('Failed to save even after selective cleanup', { retryError: retryError })
                                 try {
                                     localStorage.removeItem(name)
                                     // Dispatch error event
@@ -1050,7 +1051,7 @@ export const useStoryboardStore = create<StoryboardStore>()(
                                 }
                             }
                         } else {
-                            console.warn('Failed to write to localStorage:', e)
+                            logger.storyboard.warn('Failed to write to localStorage', { e: e })
                         }
                     }
                 },
@@ -1059,7 +1060,7 @@ export const useStoryboardStore = create<StoryboardStore>()(
                         if (typeof window === 'undefined') return
                         localStorage.removeItem(name)
                     } catch (e) {
-                        console.warn('Failed to remove from localStorage:', e)
+                        logger.storyboard.warn('Failed to remove from localStorage', { error: e instanceof Error ? e.message : String(e) })
                     }
                 }
             }

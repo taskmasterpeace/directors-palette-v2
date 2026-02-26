@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger'
+
 export interface WildCard {
     id: string
     user_id: string
@@ -70,7 +72,7 @@ export function generateRandomSelection(
     wildCardNames.forEach(name => {
         const entries = wildCardMap.get(name) || []
         if (entries.length === 0) {
-            console.warn(`Wild card '_${name}_' not found or empty`)
+            logger.shotCreator.warn('Wild card not found or empty', { name })
             return
         }
 
@@ -102,7 +104,7 @@ export function generateCombinations(
     const allEntries: string[][] = wildCardNames.map(name => {
         const entries = wildCardMap.get(name) || []
         if (entries.length === 0) {
-            console.warn(`Wild card '_${name}_' not found or empty`)
+            logger.shotCreator.warn('Wild card not found or empty', { name })
             return [name] // Fallback to original name
         }
         return entries

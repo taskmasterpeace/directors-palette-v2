@@ -16,6 +16,7 @@ import Image from "next/image"
 import { compressImage } from "@/utils/image-compression"
 import { ErrorDialog } from "../ErrorDialog"
 import { safeJsonParse } from "@/features/shared/utils/safe-fetch"
+import { logger } from '@/lib/logger'
 
 interface ExpandedStyle {
   originalStyle: string
@@ -140,7 +141,7 @@ export function StyleSelectionStep() {
         setCustomStyleDescription(data.expandedStyle)
       }
     } catch (err) {
-      console.error('Error expanding style:', err)
+      logger.storybook.error('Error expanding style', { error: err instanceof Error ? err.message : String(err) })
       setExpandError('Network error. Please check your connection and try again.')
     } finally {
       setIsExpanding(false)
@@ -179,7 +180,7 @@ export function StyleSelectionStep() {
       const data = await safeJsonParse<{ url: string }>(response)
       setReferenceImageUrl(data.url)
     } catch (err) {
-      console.error('Upload error:', err)
+      logger.storybook.error('Upload error', { error: err instanceof Error ? err.message : String(err) })
       setErrorDialog({
         open: true,
         title: 'Upload Failed',

@@ -7,6 +7,7 @@ import { clipboardManager } from '@/utils/clipboard-manager'
 import { haptics } from '@/utils/haptics'
 import { BulkDownloadService, DownloadProgress } from '../services/bulk-download.service'
 import { useGallerySelection } from './useGallerySelection'
+import { logger } from '@/lib/logger'
 
 export type ViewMode = 'grid'
 
@@ -187,7 +188,7 @@ export function useGalleryLogic(
         description: "Image copied to clipboard"
       })
     } catch (error) {
-      console.error("Copy failed", error)
+      logger.shotCreator.error('Copy failed', { error: error instanceof Error ? error.message : String(error) })
       // Fallback: try to copy URL instead
       try {
         await clipboardManager.writeText(url)
@@ -230,7 +231,7 @@ export function useGalleryLogic(
         description: "Your image is downloading"
       })
     } catch (err) {
-      console.error("Download failed", err)
+      logger.shotCreator.error('Download failed', { error: err instanceof Error ? err.message : String(err) })
       toast({
         title: "Download failed",
         description: "Could not download image",
@@ -314,7 +315,7 @@ export function useGalleryLogic(
         description: `Image reference set to ${reference.startsWith('@') ? reference : `@${reference}`}`
       })
     } catch (error) {
-      console.error('Failed to update reference:', error)
+      logger.shotCreator.error('Failed to update reference', { error: error instanceof Error ? error.message : String(error) })
       // Error haptic for mobile
       haptics.error()
       toast({
@@ -341,7 +342,7 @@ export function useGalleryLogic(
         (progress) => setDownloadProgress(progress)
       )
     } catch (error) {
-      console.error('Bulk download failed:', error)
+      logger.shotCreator.error('Bulk download failed', { error: error instanceof Error ? error.message : String(error) })
       toast({
         title: 'Download Failed',
         description: error instanceof Error ? error.message : 'Failed to download images',

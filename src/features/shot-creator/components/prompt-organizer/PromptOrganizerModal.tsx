@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/collapsible'
 import { promptParserService } from '../../services/prompt-parser.service'
 import type { StructuredPrompt, DetectedReference } from '../../types/prompt-organizer.types'
+import { logger } from '@/lib/logger'
 
 interface PromptOrganizerModalProps {
     open: boolean
@@ -150,7 +151,7 @@ export function PromptOrganizerModal({
             setStructured(result.structured)
             setReferences(result.references)
         } catch (error) {
-            console.error('Parse error:', error)
+            logger.shotCreator.error('Parse error', { error: error instanceof Error ? error.message : String(error) })
         } finally {
             setIsParsing(false)
         }

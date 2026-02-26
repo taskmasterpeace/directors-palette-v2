@@ -1,13 +1,16 @@
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics'
 import { Capacitor } from '@capacitor/core'
+import { createLogger } from '@/lib/logger'
 
+
+const log = createLogger('Utils')
 export const haptics = {
   light: async () => {
     if (Capacitor.isNativePlatform()) {
       try {
         await Haptics.impact({ style: ImpactStyle.Light })
       } catch (e) {
-        console.warn('Haptics not available:', e)
+        log.warn('Haptics not available', { error: e instanceof Error ? e.message : String(e) })
       }
     }
   },
@@ -16,7 +19,7 @@ export const haptics = {
       try {
         await Haptics.impact({ style: ImpactStyle.Medium })
       } catch (e) {
-        console.warn('Haptics not available:', e)
+        log.warn('Haptics not available', { error: e instanceof Error ? e.message : String(e) })
       }
     }
   },
@@ -25,7 +28,7 @@ export const haptics = {
       try {
         await Haptics.impact({ style: ImpactStyle.Heavy })
       } catch (e) {
-        console.warn('Haptics not available:', e)
+        log.warn('Haptics not available', { error: e instanceof Error ? e.message : String(e) })
       }
     }
   },
@@ -34,7 +37,7 @@ export const haptics = {
       try {
         await Haptics.notification({ type: NotificationType.Warning })
       } catch (e) {
-        console.warn('Haptics not available:', e)
+        log.warn('Haptics not available', { error: e instanceof Error ? e.message : String(e) })
       }
     }
   },
@@ -43,7 +46,7 @@ export const haptics = {
       try {
         await Haptics.notification({ type: NotificationType.Success })
       } catch (e) {
-        console.warn('Haptics not available:', e)
+        log.warn('Haptics not available', { error: e instanceof Error ? e.message : String(e) })
       }
     }
   },
@@ -52,7 +55,7 @@ export const haptics = {
       try {
         await Haptics.notification({ type: NotificationType.Error })
       } catch (e) {
-        console.warn('Haptics not available:', e)
+        log.warn('Haptics not available', { error: e instanceof Error ? e.message : String(e) })
       }
     }
   }

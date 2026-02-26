@@ -20,6 +20,7 @@ import {
   type PaperType,
 } from '../utils/kdp-dimensions'
 import { generateCopyrightText, type CopyrightInfo } from '../utils/copyright-generator'
+import { logger } from '@/lib/logger'
 
 export interface PDFExportOptions {
   includeBleed: boolean
@@ -116,7 +117,7 @@ export async function generateInteriorPDF(
 
       titlePage.drawImage(image, { x, y, width: scaledWidth, height: scaledHeight })
     } catch (error) {
-      console.error('Failed to embed title page image:', error)
+      logger.storybook.error('Failed to embed title page image', { error: error instanceof Error ? error.message : String(error) })
     }
   }
 
@@ -217,7 +218,7 @@ export async function generateInteriorPDF(
           height: scaledHeight,
         })
       } catch (error) {
-        console.error(`Failed to embed image for page ${page.pageNumber}:`, error)
+        logger.storybook.error('Failed to embed image for page [pageNumber]', { pageNumber: page.pageNumber, error: error instanceof Error ? error.message : String(error) })
         // Draw placeholder rectangle
         pdfPage.drawRectangle({
           x: 0,
@@ -357,7 +358,7 @@ export async function generateCoverWrapPDF(
         height: backHeight,
       })
     } catch (error) {
-      console.error('Failed to embed back cover image:', error)
+      logger.storybook.error('Failed to embed back cover image', { error: error instanceof Error ? error.message : String(error) })
     }
   } else {
     // Draw solid color back cover
@@ -460,7 +461,7 @@ export async function generateCoverWrapPDF(
       height: frontHeight,
     })
   } catch (error) {
-    console.error('Failed to embed front cover image:', error)
+    logger.storybook.error('Failed to embed front cover image', { error: error instanceof Error ? error.message : String(error) })
     // Draw placeholder
     coverPage.drawRectangle({
       x: frontCoverX,
@@ -694,7 +695,7 @@ export async function generateInteriorFromSpreads(
 
         leftPage.drawImage(image, { x, y, width: scaledWidth, height: scaledHeight })
       } catch (error) {
-        console.error(`Failed to embed left image for spread ${spread.spreadNumber}:`, error)
+        logger.storybook.error('Failed to embed left image for spread [spreadNumber]', { spreadNumber: spread.spreadNumber, error: error instanceof Error ? error.message : String(error) })
         leftPage.drawRectangle({ x: 0, y: 0, width: pdfWidth, height: pdfHeight, color: rgb(0.9, 0.9, 0.9) })
       }
     }
@@ -732,7 +733,7 @@ export async function generateInteriorFromSpreads(
 
         rightPage.drawImage(image, { x, y, width: scaledWidth, height: scaledHeight })
       } catch (error) {
-        console.error(`Failed to embed right image for spread ${spread.spreadNumber}:`, error)
+        logger.storybook.error('Failed to embed right image for spread [spreadNumber]', { spreadNumber: spread.spreadNumber, error: error instanceof Error ? error.message : String(error) })
         rightPage.drawRectangle({ x: 0, y: 0, width: pdfWidth, height: pdfHeight, color: rgb(0.9, 0.9, 0.9) })
       }
     }

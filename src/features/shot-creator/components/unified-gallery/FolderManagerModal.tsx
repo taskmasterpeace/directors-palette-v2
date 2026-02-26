@@ -25,6 +25,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from '@/hooks/use-toast'
 import { FOLDER_COLORS } from '../../types/folder.types'
 import type { Folder } from '../../types/folder.types'
+import { logger } from '@/lib/logger'
 
 type FolderMode = 'create' | 'edit' | 'delete'
 
@@ -104,7 +105,7 @@ export function FolderManagerModal({
         })
       }
     } catch (error) {
-      console.error(`Error ${mode}ing folder:`, error)
+      logger.shotCreator.error('Error [mode]ing folder', { mode, error: error instanceof Error ? error.message : String(error) })
       toast({
         title: 'Error',
         description: 'An unexpected error occurred',
@@ -137,7 +138,7 @@ export function FolderManagerModal({
         })
       }
     } catch (error) {
-      console.error('Error deleting folder:', error)
+      logger.shotCreator.error('Error deleting folder', { error: error instanceof Error ? error.message : String(error) })
       toast({
         title: 'Error',
         description: 'An unexpected error occurred',

@@ -8,6 +8,7 @@ import { GeneratedImage } from "../../store/unified-gallery-store"
 import { useIsMobile } from '@/hooks/useMediaQuery'
 import { clipboardManager } from '@/utils/clipboard-manager'
 import { ExtractGridModal } from './ExtractGridModal'
+import { logger } from '@/lib/logger'
 
 interface FullscreenModalProps {
     fullscreenImage: GeneratedImage | null
@@ -351,7 +352,7 @@ function FullscreenModal({
                                                     description: "Prompt copied to clipboard"
                                                 })
                                             } catch (error) {
-                                                console.error('Copy failed:', error)
+                                                logger.shotCreator.error('Copy failed', { error: error instanceof Error ? error.message : String(error) })
                                                 toast({
                                                     title: "Copy Failed",
                                                     description: "Unable to copy prompt",
@@ -378,7 +379,7 @@ function FullscreenModal({
                                                 description: "Image URL copied to clipboard"
                                             })
                                         } catch (error) {
-                                            console.error('Copy failed:', error)
+                                            logger.shotCreator.error('Copy failed', { error: error instanceof Error ? error.message : String(error) })
                                             toast({
                                                 title: "Copy Failed",
                                                 description: "Unable to copy URL",

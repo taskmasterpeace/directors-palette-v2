@@ -7,6 +7,7 @@ import { User } from 'lucide-react'
 import { MagicWandField } from '../MagicWandField'
 import { TagInput } from '../TagInput'
 import { useArtistDnaStore } from '../../../store/artist-dna.store'
+import { logger } from '@/lib/logger'
 
 export function IdentityTab() {
   const { draft, updateDraft } = useArtistDnaStore()
@@ -117,7 +118,7 @@ export function IdentityTab() {
                     useArtistDnaStore.getState().setSuggestions('significantEvents', d.suggestions)
                   }
                 })
-                .catch(console.error)
+                .catch((err: unknown) => logger.musicLab.error('Identity suggestion fetch failed', { error: err instanceof Error ? err.message : String(err) }))
             }}
             suggestions={useArtistDnaStore.getState().suggestionCache['significantEvents']?.suggestions?.slice(0, 5) ?? []}
             onSuggestionClick={(val) => {

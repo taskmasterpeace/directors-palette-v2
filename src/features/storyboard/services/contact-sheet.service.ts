@@ -16,6 +16,7 @@ import {
     GeneratedShotPrompt,
     StyleGuide
 } from '../types/storyboard.types'
+import { logger } from '@/lib/logger'
 
 // Path to the contact sheet template reference image
 export const CONTACT_SHEET_TEMPLATE_PATH = '/storyboard-assets/templates/contact-sheet-grid.png'
@@ -510,7 +511,7 @@ export class ContactSheetServiceV2 {
                     v.status = 'failed'
                     v.error = 'Failed to slice grid image'
                 })
-                console.error('Grid slicing error:', error)
+                logger.storyboard.error('Grid slicing error', { error: error instanceof Error ? error.message : String(error) })
             }
         } else {
             variants.forEach(v => {

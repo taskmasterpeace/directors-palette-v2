@@ -12,6 +12,7 @@ import type {
   VideoGenerationError,
 } from '../types'
 import { ANIMATION_MODELS } from '../config/models.config'
+import { logger } from '@/lib/logger'
 
 interface GenerationResult {
   shotId: string
@@ -162,7 +163,7 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
         predictionId: data.predictionId,
       }
     } catch (error) {
-      console.error(`Failed to generate video for shot ${shot.id}:`, error)
+      logger.shotCreator.error('Failed to generate video for shot [id]', { id: shot.id, error: error instanceof Error ? error.message : String(error) })
       return {
         shotId: shot.id,
         success: false,
@@ -237,7 +238,7 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
 
       return results
     } catch (error) {
-      console.error('Batch generation error:', error)
+      logger.shotCreator.error('Batch generation error', { error: error instanceof Error ? error.message : String(error) })
       toast({
         title: 'Generation Error',
         description: error instanceof Error ? error.message : 'Failed to generate videos',
@@ -281,7 +282,7 @@ export function useVideoGeneration(): UseVideoGenerationReturn {
 
       return result
     } catch (error) {
-      console.error('Retry generation error:', error)
+      logger.shotCreator.error('Retry generation error', { error: error instanceof Error ? error.message : String(error) })
       toast({
         title: 'Retry Error',
         description: error instanceof Error ? error.message : 'Failed to retry video generation',
