@@ -261,7 +261,8 @@ export function useImageGeneration() {
                             setShotCreatorProcessing(false)
                             setActiveGalleryId(null)
 
-                            // Refresh gallery to update the pending placeholder with the completed image
+                            // Remove the pending placeholder first, then refresh to load the completed image from DB
+                            useUnifiedGalleryStore.getState().removePendingByGalleryId(activeGalleryId)
                             useUnifiedGalleryStore.getState().refreshGallery()
 
                             toast({
@@ -704,23 +705,35 @@ export function useImageGeneration() {
                 }
             }
 
-            // Mark as waiting and stop the loader after API calls succeed
-            setProgress({
-                status: isPipeChaining ? 'succeeded' : 'waiting',
-                predictionId: results[results.length - 1].predictionId,
-                galleryId: results[results.length - 1].galleryId,
-            })
-            setShotCreatorProcessing(false)
-            setIsPipeChaining(false) // Always reset pipe chaining state
-
-            toast({
-                title: isPipeChaining ? 'Chain Complete!' : 'Generation Started!',
-                description: isPipeChaining
-                    ? `All ${totalVariations} images saved to gallery!`
-                    : totalVariations > 1
+            // For pipe chaining: all steps are done, mark as succeeded and stop spinner
+            // For regular generation: keep spinner going until real-time subscription confirms image is ready
+            if (isPipeChaining) {
+                setProgress({
+                    status: 'succeeded',
+                    predictionId: results[results.length - 1].predictionId,
+                    galleryId: results[results.length - 1].galleryId,
+                })
+                setShotCreatorProcessing(false)
+                toast({
+                    title: 'Chain Complete!',
+                    description: `All ${totalVariations} images saved to gallery!`,
+                })
+            } else {
+                setProgress({
+                    status: 'waiting',
+                    predictionId: results[results.length - 1].predictionId,
+                    galleryId: results[results.length - 1].galleryId,
+                })
+                // Don't clear processing here — the real-time subscription will clear it
+                // when the webhook confirms the image is ready (line ~261)
+                toast({
+                    title: 'Generation Started!',
+                    description: totalVariations > 1
                         ? `${totalVariations} images will appear in the gallery when ready.`
                         : 'Your image will appear in the gallery when ready.',
-            })
+                })
+            }
+            setIsPipeChaining(false) // Always reset pipe chaining state
 
             // Refresh credits balance to show deduction
             void fetchBalance(true)

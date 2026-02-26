@@ -220,14 +220,32 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       index === self.findIndex(img => img.id === image.id)
     )
 
+    // Preserve pending/processing placeholders — these only exist in local state
+    // and would be lost if we replace the array with DB data.
+    // BUT: if the DB now has a completed version of a pending image (same ID),
+    // use the DB version instead (the webhook has finished processing).
+    const currentImages = get().images
+    const dbImageMap = new Map(uniqueImages.map(img => [img.id, img]))
+    const pendingImages = currentImages.filter(
+      img => (img.status === 'pending' || img.status === 'processing')
+        && !dbImageMap.has(img.id) // Only keep pending if DB doesn't have it yet
+    )
+
+    // Merge: remaining pending placeholders first, then DB images
+    const pendingIds = new Set(pendingImages.map(img => img.id))
+    const merged = [
+      ...pendingImages,
+      ...uniqueImages.filter(img => !pendingIds.has(img.id))
+    ]
+
     set({
-      images: uniqueImages,
-      recentImages: uniqueImages.slice(0, 10),
+      images: merged,
+      recentImages: merged.slice(0, 10),
       totalItems: total,
       totalPages: totalPages,
       // Set offset to the number of loaded images for infinite scroll
       offset: uniqueImages.length,
-      // hasMore if we loaded less than the total 
+      // hasMore if we loaded less than the total
       hasMore: uniqueImages.length < total
     })
   },
@@ -549,12 +567,6 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       // Import GalleryService dynamically to avoid circular dependency
       const { GalleryService } = await import('../services/gallery.service')
 
-      // Preserve pending/processing placeholders — these only exist in local state
-      // and would be lost if we replace the array with DB data
-      const pendingImages = state.images.filter(
-        img => img.status === 'pending' || img.status === 'processing'
-      )
-
       // Fetch fresh data for the current page/folder with optional search query and source filter
       const result = await GalleryService.loadUserGalleryPaginated(
         1, // Always load first page on refresh
@@ -568,7 +580,16 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
         index === self.findIndex(img => img.id === image.id)
       )
 
-      // Merge: pending placeholders first, then DB images (excluding any that share an ID with pending)
+      // Preserve pending/processing placeholders — these only exist in local state
+      // and would be lost if we replace the array with DB data.
+      // BUT: if the DB now has a completed version (same ID), use the DB version instead.
+      const dbImageMap = new Map(uniqueDbImages.map(img => [img.id, img]))
+      const pendingImages = state.images.filter(
+        img => (img.status === 'pending' || img.status === 'processing')
+          && !dbImageMap.has(img.id) // Only keep pending if DB doesn't have it yet
+      )
+
+      // Merge: remaining pending placeholders first, then DB images
       const pendingIds = new Set(pendingImages.map(img => img.id))
       const merged = [
         ...pendingImages,
