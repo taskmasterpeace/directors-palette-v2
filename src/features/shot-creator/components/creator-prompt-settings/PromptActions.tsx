@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useRef, useCallback } from "react"
+import React, { Fragment, useState, useRef, useCallback, useEffect } from "react"
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { HighlightedPromptEditor } from '../prompt-editor/HighlightedPromptEditor'
@@ -37,6 +37,7 @@ import { SlotMachinePanel } from "../slot-machine"
 import { logger } from '@/lib/logger'
 import { useTextareaResize } from "../../hooks/useTextareaResize"
 import { usePromptGeneration } from "../../hooks/usePromptGeneration"
+import { getModelConfig, type ModelId } from "@/config"
 
 const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef: React.RefObject<HTMLTextAreaElement | null>; showResizeControls?: boolean }) => {
     const {
@@ -66,6 +67,23 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
         isGenerating,
         cancelGeneration,
     } = usePromptGeneration()
+
+    // ── Generation countdown timer ─────────────────────────────────────
+    const [countdown, setCountdown] = useState<number | null>(null)
+    useEffect(() => {
+        if (!isGenerating) {
+            setCountdown(null)
+            return
+        }
+        const modelConfig = getModelConfig((shotCreatorSettings.model || 'nano-banana-2') as ModelId)
+        const estimated = modelConfig?.estimatedSeconds
+        if (!estimated) return
+        setCountdown(estimated)
+        const interval = setInterval(() => {
+            setCountdown(prev => (prev !== null && prev > 0) ? prev - 1 : 0)
+        }, 1000)
+        return () => clearInterval(interval)
+    }, [isGenerating, shotCreatorSettings.model])
 
     // ── Autocomplete state ─────────────────────────────────────────────
     const [showAutocomplete, setShowAutocomplete] = useState(false)
@@ -505,7 +523,9 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                     {isGenerating ? (
                         <>
                             <LoadingSpinner />
-                            Generating...
+                            {countdown !== null && countdown > 0
+                                ? `Generating... ~${countdown}s`
+                                : 'Generating...'}
                         </>
                     ) : (
                         <>

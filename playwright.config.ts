@@ -110,11 +110,14 @@ export default defineConfig({
     // },
   ],
 
-  /* Run your local dev server before starting the tests */
+  /* Run production server before starting the tests.
+   * Uses `next build && next start` instead of `next dev --turbopack` to avoid
+   * the Turbopack "React Client Manifest" bug that causes random render failures.
+   */
   webServer: {
-    command: 'npm run dev -- --port 3007',
+    command: 'npm run test:server',
     url: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3007',
     reuseExistingServer: true,
-    timeout: 120 * 1000,
+    timeout: 180 * 1000, // Build + start takes longer than dev
   },
 })

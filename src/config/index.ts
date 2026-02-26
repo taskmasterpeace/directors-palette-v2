@@ -53,6 +53,7 @@ export interface ModelConfig {
     parameters: Record<string, ModelParameter>
     maxReferenceImages?: number
     requiresInputImage?: boolean
+    estimatedSeconds?: number // Estimated generation time in seconds (shown as countdown timer)
 }
 
 export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
@@ -214,7 +215,8 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             safetyFilterLevel: MODEL_PARAMETERS.nanoBanana2SafetyFilter,
             personGeneration: MODEL_PARAMETERS.personGeneration
         },
-        maxReferenceImages: 1 // nano-banana-2 accepts single `image` input
+        maxReferenceImages: 1, // nano-banana-2 accepts single `image` input
+        estimatedSeconds: 25,
     },
     'z-image-turbo': {
         id: 'z-image-turbo',
@@ -235,7 +237,8 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             numInferenceSteps: MODEL_PARAMETERS.numInferenceSteps,
             guidanceScale: MODEL_PARAMETERS.guidanceScale
         },
-        maxReferenceImages: 0 // Text-to-image only - no image input support
+        maxReferenceImages: 0, // Text-to-image only - no image input support
+        estimatedSeconds: 8,
     },
     'seedream-5-lite': {
         id: 'seedream-5-lite',
@@ -257,7 +260,8 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             sequentialGeneration: MODEL_PARAMETERS.sequentialGeneration,
             outputFormat: MODEL_PARAMETERS.outputFormat
         },
-        maxReferenceImages: 14
+        maxReferenceImages: 14,
+        estimatedSeconds: 15,
     },
     'nano-banana-pro': {
         id: 'nano-banana-pro',
@@ -283,7 +287,8 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             resolution: MODEL_PARAMETERS.nanoBananaProResolution,
             safetyFilterLevel: MODEL_PARAMETERS.safetyFilterLevel
         },
-        maxReferenceImages: 14
+        maxReferenceImages: 14,
+        estimatedSeconds: 45,
     }
 }
 

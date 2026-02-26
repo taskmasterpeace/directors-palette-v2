@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "playwright test",
+    "test:server": "next build --turbopack && next start --port 3007",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:ui": "playwright test --ui",
