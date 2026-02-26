@@ -68,9 +68,9 @@ export class ImageGenerationService {
     const errors: string[] = []
     const settings = input.modelSettings as NanoBanana2Settings
 
-    // nano-banana-2 supports only a single image input
-    if (input.referenceImages && input.referenceImages.length > 1) {
-      errors.push('Nano Banana 2 supports maximum 1 reference image')
+    // nano-banana-2 supports up to 14 reference images
+    if (input.referenceImages && input.referenceImages.length > 14) {
+      errors.push('Nano Banana 2 supports maximum 14 reference images')
     }
 
     // match_input_image requires a reference image
@@ -144,12 +144,16 @@ export class ImageGenerationService {
       replicateInput.person_generation = settings.personGeneration
     }
 
-    // nano-banana-2 accepts a single `image` input (not array)
+    // nano-banana-2: single image uses `image`, multiple uses `reference_images`
     if (input.referenceImages && input.referenceImages.length > 0) {
-      const url = typeof input.referenceImages[0] === 'string'
-        ? input.referenceImages[0]
-        : (input.referenceImages[0] as { url: string }).url
-      replicateInput.image = url
+      if (input.referenceImages.length === 1) {
+        const url = typeof input.referenceImages[0] === 'string'
+          ? input.referenceImages[0]
+          : (input.referenceImages[0] as { url: string }).url
+        replicateInput.image = url
+      } else {
+        replicateInput.reference_images = this.normalizeReferenceImages(input.referenceImages)
+      }
     }
 
     // Note: nano-banana-2 output is always WebP, no output_format param
