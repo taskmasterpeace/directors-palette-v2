@@ -64,8 +64,9 @@ export class GalleryService {
                 }
             )
 
-            // Transform ALL items (including pending/failed) to show loading/error states
-            // Only filter out items that have been pending for too long (> 10 minutes)
+            // Filter items: show completed + recent pending, exclude failed.
+            // Failed gallery records are now deleted by the webhook, but filter
+            // here as a safety net for any legacy failed records still in the DB.
             const tenMinutesAgo = Date.now() - 10 * 60 * 1000
             const validItems = result.items.filter(item => {
                 // Always include completed items with valid URLs
@@ -77,10 +78,7 @@ export class GalleryService {
                     const createdAt = new Date(item.created_at).getTime()
                     return createdAt > tenMinutesAgo
                 }
-                // Include failed items to show error state
-                if (item.status === 'failed') {
-                    return true
-                }
+                // Exclude failed items — they have no image and clutter the gallery
                 return false
             })
 

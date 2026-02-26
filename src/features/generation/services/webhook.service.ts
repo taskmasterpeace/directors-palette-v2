@@ -335,29 +335,23 @@ export class WebhookService {
   }
 
   /**
-   * Update gallery with error status and message
+   * Handle failed gallery entry: delete the record instead of keeping it.
+   * Failed entries have no image and clutter the gallery. The generation_events
+   * table still records the failure for auditing purposes.
    */
   private static async updateGalleryWithError(
     predictionId: string,
-    galleryEntry: GalleryRow,
+    _galleryEntry: GalleryRow,
     errorMessage: string
   ): Promise<void> {
-    const currentMetadata = (galleryEntry.metadata as Record<string, unknown>) || {};
-
+    // Delete the gallery record — failed entries have no image and no value to keep.
+    // Users were seeing deleted failed items reappear on gallery refresh.
     await getSupabase()
       .from('gallery')
-      .update({
-        status: 'failed' as GalleryStatus,
-        error_message: errorMessage,
-        metadata: {
-          ...currentMetadata,
-          error: errorMessage,
-          failed_at: new Date().toISOString(),
-        },
-      })
+      .delete()
       .eq('prediction_id', predictionId);
 
-    // Update generation event status
+    // Update generation event status (this is the audit trail)
     await generationEventsService.updateStatus(predictionId, {
       status: 'failed',
       completed_at: new Date().toISOString(),

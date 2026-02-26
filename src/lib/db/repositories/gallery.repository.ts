@@ -95,8 +95,9 @@ export class GalleryRepository {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      // Build count query
+      // Build count query — exclude failed records (they have no image and are deleted by webhook)
       let countQuery = this.client.from('gallery').select('*', { count: 'exact', head: true });
+      countQuery = countQuery.neq('status', 'failed');
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined) {
           if (value === null) {
@@ -128,8 +129,9 @@ export class GalleryRepository {
         countQuery = countQuery.eq('metadata->>type', metadataTypeFilter);
       }
 
-      // Build data query
+      // Build data query — exclude failed records
       let dataQuery = this.client.from('gallery').select('*');
+      dataQuery = dataQuery.neq('status', 'failed');
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined) {
           if (value === null) {
