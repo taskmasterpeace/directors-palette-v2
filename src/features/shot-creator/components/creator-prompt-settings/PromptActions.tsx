@@ -246,8 +246,15 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
 
     const hasSuggestions = flatSuggestions.length > 0
 
-    // Handle keyboard navigation in autocomplete
+    // Handle keyboard navigation in autocomplete + Ctrl+Enter to generate
     const handleAutocompleteKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        // Ctrl+Enter or Cmd+Enter to generate
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault()
+            if (canGenerate && !isGenerating) handleGenerate()
+            return
+        }
+
         if (!showAutocomplete || !hasSuggestions) return
 
         if (e.key === 'ArrowDown') {
@@ -267,7 +274,7 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
             e.preventDefault()
             setShowAutocomplete(false)
         }
-    }, [showAutocomplete, hasSuggestions, flatSuggestions, autocompleteSelectedIndex, selectAutocompleteSuggestion, selectAutocompleteIndex])
+    }, [showAutocomplete, hasSuggestions, flatSuggestions, autocompleteSelectedIndex, selectAutocompleteSuggestion, selectAutocompleteIndex, canGenerate, isGenerating, handleGenerate])
 
     // Calculate dropdown position based on cursor
     const calculateDropdownPosition = useCallback(() => {
