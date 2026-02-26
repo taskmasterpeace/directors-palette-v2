@@ -17,11 +17,8 @@ import {
 } from 'lucide-react'
 import { useShotCreatorStore } from "@/features/shot-creator/store/shot-creator.store"
 import { useCustomStylesStore } from "../../store/custom-styles.store"
-import { getModelConfig, getModelCost } from "@/config"
 import { useShotCreatorSettings } from "../../hooks"
-import { useImageGeneration } from "../../hooks/useImageGeneration"
 import { PromptSyntaxFeedback } from "./PromptSyntaxFeedback"
-import { parseDynamicPrompt, detectAnchorTransform, stripAnchorSyntax } from "../../helpers/prompt-syntax-feedback"
 import { useWildCardStore } from "../../store/wildcard.store"
 import { RecipeFormFields } from "../recipe"
 import { OrganizeButton } from "../prompt-organizer"
@@ -35,21 +32,12 @@ import { useLibraryStore } from "../../store/shot-library.store"
 import { useRecipeStore } from "../../store/recipe.store"
 import { cn } from "@/utils/utils"
 import { Category } from "../CategorySelectDialog"
-import { executeRecipe } from "@/features/shared/services/recipe-execution.service"
-import type { Recipe } from "../../types/recipe.types"
 import { toast } from "sonner"
-import { RiverflowOptionsPanel, type RiverflowState } from "../RiverflowOptionsPanel"
+import { RiverflowOptionsPanel } from "../RiverflowOptionsPanel"
 import { SlotMachinePanel } from "../slot-machine"
 import { logger } from '@/lib/logger'
-
-/**
- * Check if a recipe has any tool stages that require special execution
- */
-function hasToolStages(recipe: Recipe): boolean {
-    return recipe.stages.some(stage => stage.type === 'tool' || stage.type === 'analysis')
-}
-
-type TextareaSize = 'small' | 'large'
+import { useTextareaResize } from "../../hooks/useTextareaResize"
+import { usePromptGeneration } from "../../hooks/usePromptGeneration"
 
 const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef: React.RefObject<HTMLTextAreaElement | null>; showResizeControls?: boolean }) => {
     const {
@@ -57,197 +45,48 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
         shotCreatorReferenceImages,
         setShotCreatorPrompt,
         setShotCreatorReferenceImages,
-        setStageReferenceImages,
     } = useShotCreatorStore()
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
-    const { generateImage, isGenerating, cancelGeneration } = useImageGeneration()
     const { libraryItems } = useLibraryStore()
-    const { wildcards } = useWildCardStore()
-    const { activeRecipeId, activeFieldValues, setActiveRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts } = useRecipeStore()
+    const { wildcards: _wildcards } = useWildCardStore()
+    const { activeRecipeId, setActiveRecipe, getActiveRecipe } = useRecipeStore()
 
-    // Riverflow state (tracked locally, passed to generation)
-    // Must be declared before useMemo that depends on it
-    const [riverflowState, setRiverflowState] = useState<RiverflowState | null>(null)
+    // ── Extracted hooks ────────────────────────────────────────────────
+    const {
+        customHeight,
+        textareaSize,
+        getTextareaHeight,
+        handleResizeMouseDown,
+        toggleSize,
+    } = useTextareaResize()
 
-    // Calculate generation cost
-    const generationCost = React.useMemo(() => {
-        const model = shotCreatorSettings.model || 'nano-banana'
-        const modelConfig = getModelConfig(model)
+    const {
+        handleGenerate,
+        canGenerate,
+        generationCost,
+        isGenerating,
+        cancelGeneration,
+        setRiverflowState,
+    } = usePromptGeneration()
 
-        // For Riverflow, use resolution-based pricing
-        let costPerImage = modelConfig.costPerImage
-        if (model === 'riverflow-2-pro' && riverflowState) {
-            costPerImage = getModelCost('riverflow-2-pro', riverflowState.resolution)
-        }
-
-        // Check for anchor transform mode (toggle button)
-        const isAnchorMode = shotCreatorSettings.enableAnchorTransform
-
-        let imageCount: number
-
-        if (isAnchorMode) {
-            // Calculate based on inputs (total - 1 anchor)
-            const totalImages = shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)
-            imageCount = Math.max(totalImages - 1, 0)
-        } else {
-            // Normal mode: parse the prompt to get image count
-            const parsedPrompt = parseDynamicPrompt(shotCreatorPrompt, {
-                disablePipeSyntax: shotCreatorSettings.disablePipeSyntax,
-                disableBracketSyntax: shotCreatorSettings.disableBracketSyntax,
-                disableWildcardSyntax: shotCreatorSettings.disableWildcardSyntax
-            }, wildcards)
-            imageCount = parsedPrompt.totalCount || 1
-        }
-
-        let totalCost = imageCount * costPerImage
-
-        // Add font costs for Riverflow (5 pts = $0.05 per font)
-        let fontCost = 0
-        const riverflowFontCount = riverflowState?.fontUrls?.length ?? 0
-        if (model === 'riverflow-2-pro' && riverflowFontCount > 0) {
-            fontCost = riverflowFontCount * 0.05
-            totalCost += fontCost
-        }
-
-        // Convert dollar cost to tokens (1 token = $0.01)
-        const tokenCost = Math.ceil(totalCost * 100)
-
-        return {
-            imageCount,
-            totalCost,
-            tokenCost,
-            costPerImage,
-            isAnchorMode,
-            fontCost
-        }
-    }, [shotCreatorPrompt, shotCreatorSettings, wildcards, shotCreatorReferenceImages.length, riverflowState])
-
-    // Autocomplete state
+    // ── Autocomplete state ─────────────────────────────────────────────
     const [showAutocomplete, setShowAutocomplete] = useState(false)
     const [autocompleteSearch, setAutocompleteSearch] = useState('')
     const [autocompleteCursorPos, setAutocompleteCursorPos] = useState(0)
     const autocompleteRef = useRef<HTMLDivElement>(null)
 
-    // Textarea size state
-    const [textareaSize, setTextareaSize] = useState<TextareaSize>('small')
-
-    // Drag resize state
-    const [customHeight, setCustomHeight] = useState<number | null>(null)
-    const isDraggingRef = useRef(false)
-    const dragStartYRef = useRef(0)
-    const dragStartHeightRef = useRef(0)
-
-    // Track last used recipe for generation metadata
-    const [lastUsedRecipe, setLastUsedRecipe] = useState<{ recipeId: string; recipeName: string } | null>(null)
-
-    // Auto-enable Anchor Transform when @! is detected in prompt
-    // Track if we've shown the anchor notification to avoid spamming
-    const [shownAnchorNotification, setShownAnchorNotification] = React.useState(false)
-
-    React.useEffect(() => {
-        const hasAnchorSyntax = detectAnchorTransform(shotCreatorPrompt)
-        const totalImages = shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)
-
-        if (hasAnchorSyntax && !shotCreatorSettings.enableAnchorTransform) {
-            // Auto-enable when @! is typed (regardless of image count)
-            updateSettings({ enableAnchorTransform: true })
-
-            // Show helpful notification
-            if (!shownAnchorNotification) {
-                setShownAnchorNotification(true)
-                if (totalImages < 2) {
-                    toast.info(
-                        '🎨 Anchor Transform activated! Add 2+ images: first = style anchor, rest = images to transform.',
-                        { duration: 5000 }
-                    )
-                } else {
-                    const transforms = totalImages - 1
-                    toast.success(
-                        `🎨 Anchor Transform: ${transforms} image${transforms !== 1 ? 's' : ''} will be transformed using the first image as style reference.`,
-                        { duration: 4000 }
-                    )
-                }
-            }
-        } else if (!hasAnchorSyntax && shotCreatorSettings.enableAnchorTransform) {
-            // Auto-disable when @! is removed from prompt
-            updateSettings({ enableAnchorTransform: false })
-            setShownAnchorNotification(false) // Reset so notification shows again if re-added
-        }
-    }, [shotCreatorPrompt, shotCreatorSettings.enableAnchorTransform, shotCreatorSettings.selectedStyle, shotCreatorReferenceImages.length, updateSettings, shownAnchorNotification])
-
-    // Get textarea height class based on size
-    const getTextareaHeight = (size: TextareaSize) => {
-        if (customHeight !== null) return '' // custom height overrides preset
-        switch (size) {
-            case 'small': return 'min-h-[44px]'
-            case 'large': return 'min-h-[240px]'
-        }
-    }
-
-    const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
-        e.preventDefault()
-        isDraggingRef.current = true
-        dragStartYRef.current = e.clientY
-        const container = document.querySelector('[data-testid="prompt-textarea-container"]')
-        if (container) {
-            dragStartHeightRef.current = container.getBoundingClientRect().height
-        }
-
-        const handleMouseMove = (moveEvent: MouseEvent) => {
-            if (!isDraggingRef.current) return
-            const delta = moveEvent.clientY - dragStartYRef.current
-            const newHeight = Math.max(44, dragStartHeightRef.current + delta)
-            setCustomHeight(newHeight)
-        }
-
-        const handleMouseUp = () => {
-            isDraggingRef.current = false
-            document.removeEventListener('mousemove', handleMouseMove)
-            document.removeEventListener('mouseup', handleMouseUp)
-        }
-
-        document.addEventListener('mousemove', handleMouseMove)
-        document.addEventListener('mouseup', handleMouseUp)
-    }, [])
-
-    // Autocomplete for @references - destructure to avoid circular dependencies
     const autocomplete = usePromptAutocomplete()
     const {
         selectedIndex: autocompleteSelectedIndex,
-        selectedItem: _autocompleteSelectedItem,
         handleTextChange: handleAutocompleteTextChange,
-        insertItem: _insertAutocompleteItem,
-        close: _closeAutocomplete,
-        selectNext: _selectNextAutocomplete,
-        selectPrevious: _selectPreviousAutocomplete,
         selectIndex: selectAutocompleteIndex
     } = autocomplete
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
 
-    // Can generate: either regular mode (prompt + refs) OR recipe mode (valid recipe) OR quick mode
-    const canGenerate = React.useMemo(() => {
-        const activeRecipe = getActiveRecipe()
-        if (activeRecipe) {
-            const validation = getActiveValidation()
-            // Recipe mode: valid fields + has refs (user's OR recipe's built-in)
-            const hasRefs = shotCreatorReferenceImages.length > 0 ||
-                activeRecipe.stages.some(s => (s.referenceImages?.length || 0) > 0)
-            return (validation?.isValid ?? false) && hasRefs
-        }
-
-        // Style transfer quick mode: can generate with just a reference image
-        if (shotCreatorSettings.quickMode === 'style-transfer' && shotCreatorReferenceImages.length > 0) {
-            return true
-        }
-
-        // Character sheet quick mode: can generate with image OR description
-        if (shotCreatorSettings.quickMode === 'character-sheet') {
-            return shotCreatorReferenceImages.length > 0 || shotCreatorPrompt.trim().length > 0
-        }
-
-        // Regular mode: needs prompt only (reference images are optional for all models)
-        return shotCreatorPrompt.length > 0
-    }, [shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings.quickMode, getActiveRecipe, getActiveValidation])
+    // Handle selecting a recipe
+    const _handleSelectRecipe = useCallback((recipeId: string) => {
+        setActiveRecipe(recipeId)
+    }, [setActiveRecipe])
 
     // Get references grouped by category from library items
     const getReferencesGroupedByCategory = useCallback(() => {
@@ -279,7 +118,6 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
         const item = libraryItems.find(item =>
             item.tags?.some(t => t.toLowerCase() === tagWithoutAt.toLowerCase())
         )
-        // Use preview if available, otherwise use imageData (base64)
         return item?.preview || item?.imageData || null
     }, [libraryItems])
 
@@ -290,7 +128,6 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
             ? autocompleteSearch.toLowerCase()
             : '@' + autocompleteSearch.toLowerCase()
 
-        // Filter each category
         const filtered: Record<Category, string[]> = {
             people: autocompleteSearch
                 ? grouped.people.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
@@ -317,7 +154,6 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
         const beforeCursor = shotCreatorPrompt.substring(0, autocompleteCursorPos)
         const afterCursor = shotCreatorPrompt.substring(autocompleteCursorPos)
 
-        // Find the start of the @ mention
         const atIndex = beforeCursor.lastIndexOf('@')
         const before = shotCreatorPrompt.substring(0, atIndex)
         const newPrompt = before + suggestion + ' ' + afterCursor
@@ -332,10 +168,8 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
             item.tags?.some(tag => tag.toLowerCase() === tagWithoutAt.toLowerCase())
         )
 
-        // Get the image URL (prefer preview, fallback to imageData)
         const imageUrl = matchingItem?.preview || matchingItem?.imageData
         if (matchingItem && imageUrl) {
-            // Check if not already added
             const isAlreadyAdded = shotCreatorReferenceImages.some(
                 refImg => refImg.url === imageUrl
             )
@@ -353,7 +187,6 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
             }
         }
 
-        // Set cursor position after the inserted tag
         setTimeout(() => {
             const newPos = atIndex + suggestion.length + 1
             textarea.focus()
@@ -367,19 +200,16 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
         const cursorPos = textarea.selectionStart
         const textBeforeCursor = shotCreatorPrompt.substring(0, cursorPos)
 
-        // Find last @ symbol before cursor
         const lastAtIndex = textBeforeCursor.lastIndexOf('@')
 
         if (lastAtIndex !== -1) {
-            // Check if there's a space between @ and cursor (if so, close autocomplete)
             const textAfterAt = textBeforeCursor.substring(lastAtIndex)
             if (textAfterAt.includes(' ')) {
                 setShowAutocomplete(false)
                 return
             }
 
-            // Extract search term (everything after @)
-            const search = textAfterAt.substring(1) // Remove the @ symbol
+            const search = textAfterAt.substring(1)
             setAutocompleteSearch(search)
             setAutocompleteCursorPos(cursorPos)
             setShowAutocomplete(true)
@@ -398,7 +228,6 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
         return flat
     }, [autocompleteSuggestions])
 
-    // Check if we have any suggestions
     const hasSuggestions = flatSuggestions.length > 0
 
     // Handle keyboard navigation in autocomplete
@@ -424,598 +253,6 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
         }
     }, [showAutocomplete, hasSuggestions, flatSuggestions, autocompleteSelectedIndex, selectAutocompleteSuggestion, selectAutocompleteIndex])
 
-    // Build model settings from shotCreatorSettings
-    const buildModelSettings = useCallback(() => {
-        const model = shotCreatorSettings.model || 'nano-banana'
-
-        // Base settings
-        const baseSettings: Record<string, unknown> = {}
-
-        switch (model) {
-            case 'nano-banana':
-                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
-                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
-                break
-            case 'nano-banana-pro':
-                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
-                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
-                baseSettings.resolution = shotCreatorSettings.resolution
-                baseSettings.safetyFilterLevel = shotCreatorSettings.safetyFilterLevel || 'block_only_high'
-                break
-            case 'z-image-turbo':
-                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
-                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
-                // numInferenceSteps and guidanceScale use config defaults (8 and 0)
-                break
-            case 'seedream-5-lite':
-                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
-                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
-                baseSettings.resolution = shotCreatorSettings.resolution || '2K'
-                if (shotCreatorSettings.sequentialGeneration) {
-                    baseSettings.sequentialGeneration = true
-                    baseSettings.maxImages = shotCreatorSettings.maxImages || 3
-                }
-                break
-            case 'riverflow-2-pro':
-                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
-                // Riverflow-specific settings from panel state
-                if (riverflowState) {
-                    baseSettings.resolution = riverflowState.resolution
-                    baseSettings.transparency = riverflowState.transparency
-                    baseSettings.enhancePrompt = riverflowState.enhancePrompt
-                    baseSettings.maxIterations = riverflowState.maxIterations
-                    baseSettings.outputFormat = riverflowState.transparency ? 'png' : 'webp'
-                } else {
-                    // Defaults if panel hasn't been opened
-                    baseSettings.resolution = '2K'
-                    baseSettings.transparency = false
-                    baseSettings.enhancePrompt = true
-                    baseSettings.maxIterations = 3
-                    baseSettings.outputFormat = 'webp'
-                }
-                break
-        }
-
-        return baseSettings
-    }, [shotCreatorSettings, riverflowState])
-
-    // Handle generation - processes recipe at generation time (no separate Apply step)
-    const handleGenerate = useCallback(async () => {
-        if (!canGenerate || isGenerating) return
-
-        // ===== STYLE SHEET QUICK MODE =====
-        // Check if style-transfer quick mode is active
-        const isStyleTransferMode = shotCreatorSettings.quickMode === 'style-transfer'
-
-        if (isStyleTransferMode && shotCreatorReferenceImages.length > 0) {
-            // ALL reference images collectively define the style
-            // Whether 1 image or multiple, they all inform the 3x3 Style Sheet generation
-            // Parse style name from prompt (e.g., "Noir Grit:" or "Oxford Style:")
-            const promptText = shotCreatorPrompt.trim()
-            const styleNameMatch = promptText.match(/^([^:]+):/i)
-            const styleName = styleNameMatch ? styleNameMatch[1].trim() : 'Extracted Style'
-            const additionalNotes = styleNameMatch
-                ? promptText.slice(styleNameMatch[0].length).trim()
-                : promptText
-
-            const styleSheetPrompt = `Create a visual style guide as a 9-image grid (3 rows × 3 columns).
-
-TITLE BANNER (CRITICAL - DO NOT CUT OFF):
-- Reserve a dedicated horizontal banner area at the TOP of the image
-- Display the COMPLETE text "${styleName}" in large, readable font
-- The title must be FULLY VISIBLE - no cropping, no cutting off letters
-- Center the title text horizontally in the banner
-- Use a clean background behind the title for legibility
-
-GRID LAYOUT:
-Below the title banner, arrange 9 cells in a 3×3 grid.
-Separate each cell with SOLID BLACK LINES (4-6 pixels wide) for clean extraction.
-
-CRITICAL STYLE EXTRACTION (match the reference image(s) EXACTLY):
-Analyze ALL provided reference images collectively to extract the unified visual style:
-- Color palette, contrast, saturation, and color temperature
-- Rendering approach (painterly, photorealistic, illustrated, 3D, anime, claymation, etc.)
-- Line quality and edge treatment (sharp vs soft, clean vs textured)
-- Lighting style, shadow behavior, and mood
-- Texture and material rendering quality
-- Camera language (depth of field, lens feel, framing approach)
-
-CRITICAL: Generate ALL NEW characters and subjects. DO NOT replicate, copy, or reference any specific people, characters, or subjects from the reference images. This style guide demonstrates the STYLE can be applied to entirely different subjects.
-
-THE 9 TILES (3×3 grid):
-
-ROW 1 – PEOPLE & FACES:
-1. PORTRAIT CLOSE-UP: Dramatic headshot of a NEW person (not from reference), demonstrating how this style renders skin texture, facial features, emotion, and portrait lighting
-2. MEDIUM SHOT: Different person in relaxed 3/4 pose, showing body proportions, clothing materials, and natural posture in this style
-3. GROUP INTERACTION: 2-3 diverse people (different ethnicities, ages) in conversation or activity, showing how style handles multiple figures and interpersonal dynamics
-
-ROW 2 – ACTION & DETAIL:
-4. DYNAMIC ACTION: Figure in energetic motion (running, dancing, fighting), showing movement, energy, and how the style handles blur and dynamism
-5. EMOTIONAL MOMENT: Expressive close-up capturing strong emotion (joy, grief, determination, wonder), testing emotional range
-6. HANDS & FINE DETAIL: Close-up of hands interacting with an object (holding cup, turning page, crafting), showing fine detail rendering
-
-ROW 3 – WORLD & MATERIALS:
-7. INTERIOR SCENE: Atmospheric indoor environment with props, furniture, and lighting (cozy room, dramatic hall, cluttered workshop)
-8. EXTERIOR WIDE: Landscape or cityscape establishing shot showing depth, atmosphere, scale, and environmental mood
-9. MATERIAL STUDY: Still life of varied materials (metal, glass, fabric, wood, liquid, organic) demonstrating how the style renders different surfaces
-
-${additionalNotes ? `\nADDITIONAL STYLE NOTES: ${additionalNotes}` : ''}
-
-Every tile must feel like it belongs to the SAME visual world. Consistent style language across all 9 cells.
-NO style drift between tiles. NO text labels inside the 9 image cells. Black grid lines between all cells.
-REMINDER: Title "${styleName}" must be COMPLETE and FULLY READABLE at the top - never cropped or cut off.`
-
-            const model = shotCreatorSettings.model || 'nano-banana-pro'
-            const referenceUrls = shotCreatorReferenceImages
-                .map(ref => ref.url || ref.preview)
-                .filter((url): url is string => Boolean(url))
-            const modelSettings = buildModelSettings()
-
-            // Force 1:1 aspect ratio for 3x3 grid
-            const styleSheetSettings = {
-                ...modelSettings,
-                aspectRatio: '1:1'
-            }
-
-            await generateImage(
-                model,
-                styleSheetPrompt,
-                referenceUrls,
-                styleSheetSettings,
-                undefined
-            )
-            return
-        }
-
-        // ===== CHARACTER SHEET QUICK MODE =====
-        const isCharacterSheetMode = shotCreatorSettings.quickMode === 'character-sheet'
-
-        if (isCharacterSheetMode) {
-            const hasReferenceImages = shotCreatorReferenceImages.length > 0
-            const hasDescription = shotCreatorPrompt.trim().length > 0
-
-            // Must have either an image OR a description
-            if (!hasReferenceImages && !hasDescription) {
-                toast.error('Character Sheet needs either a reference image OR a character description')
-                return
-            }
-
-            const model = shotCreatorSettings.model || 'nano-banana-pro'
-            const modelSettings = buildModelSettings()
-
-            // Force 16:9 aspect ratio for character sheets
-            const characterSheetSettings = {
-                ...modelSettings,
-                aspectRatio: '16:9'
-            }
-
-            if (hasReferenceImages) {
-                // ===== IMAGE-BASED TURNAROUND =====
-                const turnaroundPrompt = `Create a professional character reference sheet based strictly on the uploaded reference image.
-
-Use a clean, neutral plain background and present the sheet as a technical model turnaround while matching the exact visual style of the reference (same realism level, rendering approach, texture, color treatment, and overall aesthetic).
-
-Arrange the composition into two horizontal rows:
-
-TOP ROW (4 full-body standing views, placed side-by-side):
-- Front view
-- Left profile view (facing left)
-- Right profile view (facing right)
-- Back view
-
-BOTTOM ROW (3 highly detailed close-up portraits, aligned beneath the full-body row):
-- Front portrait
-- Left profile portrait (facing left)
-- Right profile portrait (facing right)
-
-CRITICAL REQUIREMENTS:
-- Maintain PERFECT identity consistency across every panel
-- Keep the subject in a relaxed A-pose
-- Consistent scale and alignment between views
-- Accurate anatomy and clear silhouette
-- Even spacing and clean panel separation
-- Uniform framing and consistent head height across the full-body lineup
-- Consistent facial scale across the portraits
-- Lighting must be consistent across all panels (same direction, intensity, and softness)
-- Natural, controlled shadows that preserve detail without dramatic mood shifts
-
-Output a crisp, print-ready reference sheet look with sharp details.`
-
-                const referenceUrls = shotCreatorReferenceImages
-                    .map(ref => ref.url || ref.preview)
-                    .filter((url): url is string => Boolean(url))
-
-                toast.info('Creating character turnaround from reference image...')
-
-                await generateImage(
-                    model,
-                    turnaroundPrompt,
-                    referenceUrls,
-                    characterSheetSettings,
-                    { recipeId: 'character-turnaround', recipeName: 'Character Turnaround' }
-                )
-                return
-
-            } else {
-                // ===== DESCRIPTION-BASED TURNAROUND =====
-                // Parse character name from prompt
-                // Supports: "Marcus: description", "Marcus, description", "description named Marcus", "description called Marcus"
-                let characterName = ''
-                let characterDescription = shotCreatorPrompt.trim()
-
-                // Check for "Name: description" or "Name, description" format
-                const colonMatch = shotCreatorPrompt.match(/^([A-Z][a-zA-Z]+)\s*[:]\s*([\s\S]+)$/)
-                const commaMatch = shotCreatorPrompt.match(/^([A-Z][a-zA-Z]+)\s*[,]\s*([\s\S]+)$/)
-                // Check for "description named/called Name" format
-                const namedMatch = shotCreatorPrompt.match(/(.+?)\s+(?:named|called)\s+([A-Z][a-zA-Z]+)(?:\s|$|,)/i)
-
-                if (colonMatch) {
-                    characterName = colonMatch[1]
-                    characterDescription = colonMatch[2].trim()
-                } else if (commaMatch) {
-                    characterName = commaMatch[1]
-                    characterDescription = commaMatch[2].trim()
-                } else if (namedMatch) {
-                    characterName = namedMatch[2]
-                    characterDescription = namedMatch[1].trim()
-                }
-
-                // Format name for @tag (lowercase, underscores for spaces)
-                const nameTag = characterName
-                    ? `@${characterName.toLowerCase().replace(/\s+/g, '_')}`
-                    : ''
-
-                const characterHeader = characterName
-                    ? `CHARACTER: ${nameTag} (${characterName})\n\n`
-                    : ''
-
-                const turnaroundFromDescPrompt = `${characterHeader}Create a professional character reference sheet: ${characterDescription}
-
-IMPORTANT: Match the EXACT visual style specified in the description above (photorealistic, hand drawn, anime, cartoon, oil painting, 3D render, etc.). Every panel must use this same style consistently.
-
-Use a clean, neutral plain background and present the sheet as a technical model turnaround.
-${nameTag ? `\nLabel the sheet with the character tag: "${nameTag}"` : ''}
-
-Arrange the composition into two horizontal rows:
-
-TOP ROW (4 full-body standing views, placed side-by-side):
-- Front view
-- Left profile view (facing left)
-- Right profile view (facing right)
-- Back view
-
-BOTTOM ROW (3 highly detailed close-up portraits, aligned beneath the full-body row):
-- Front portrait
-- Left profile portrait (facing left)
-- Right profile portrait (facing right)
-
-CRITICAL REQUIREMENTS:
-- Maintain the EXACT visual style from the description across ALL panels
-- Maintain PERFECT identity consistency across every panel
-- Keep the subject in a relaxed A-pose
-- Consistent scale and alignment between views
-- Accurate anatomy and clear silhouette
-- Even spacing and clean panel separation
-- Uniform framing and consistent head height across the full-body lineup
-- Consistent facial scale across the portraits
-- Lighting must be consistent across all panels (same direction, intensity, and softness)
-- Natural, controlled shadows that preserve detail without dramatic mood shifts
-
-Output a crisp, print-ready reference sheet with the exact style specified.`
-
-                const toastMsg = characterName
-                    ? `Creating character sheet for ${characterName}...`
-                    : 'Creating character turnaround from description...'
-                toast.info(toastMsg)
-
-                await generateImage(
-                    model,
-                    turnaroundFromDescPrompt,
-                    [], // No reference images
-                    characterSheetSettings,
-                    { recipeId: 'character-turnaround-desc', recipeName: 'Character Turnaround (From Description)' }
-                )
-                return
-            }
-        }
-
-        // ===== ANCHOR TRANSFORM MODE (Toggle Button) =====
-        // Check if Anchor Transform is enabled via toggle
-        const isAnchorMode = shotCreatorSettings.enableAnchorTransform
-
-        if (isAnchorMode) {
-            // Calculate total images (reference images + style guide if selected)
-            const totalImages = shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)
-
-            // Validation: Need at least 2 images (1 anchor + 1 input)
-            if (totalImages < 2) {
-                toast.error('Anchor Transform requires at least 2 images (1 anchor + 1+ inputs)')
-                return
-            }
-
-            // Determine anchor and inputs
-            let anchorUrl: string | null = null
-            let _anchorName: string = '' // Used for potential future logging
-            let inputRefs: typeof shotCreatorReferenceImages = []
-
-            if (shotCreatorSettings.selectedStyle) {
-                // Style guide is the anchor
-                const selectedStyle = useCustomStylesStore.getState().getStyleById(shotCreatorSettings.selectedStyle)
-                if (!selectedStyle) {
-                    toast.error('Selected style not found')
-                    return
-                }
-
-                // Get style image URL
-                const styleImageUrl = selectedStyle.imagePath
-                anchorUrl = styleImageUrl.startsWith('data:') || styleImageUrl.startsWith('http')
-                    ? styleImageUrl
-                    : `${window.location.origin}${styleImageUrl}`
-
-                _anchorName = selectedStyle.name || 'Style Guide'
-
-                // ALL reference images are inputs
-                inputRefs = shotCreatorReferenceImages
-
-                if (inputRefs.length === 0) {
-                    toast.error('Anchor Transform with style guide requires at least 1 reference image to transform')
-                    return
-                }
-            } else {
-                // No style guide: First reference is anchor, rest are inputs
-                if (shotCreatorReferenceImages.length < 2) {
-                    toast.error('Anchor Transform requires at least 2 reference images (or 1 style + 1 image)')
-                    return
-                }
-
-                const [anchorRef, ...restRefs] = shotCreatorReferenceImages
-                anchorUrl = anchorRef.url || anchorRef.preview || null
-                _anchorName = anchorRef.file?.name || 'Image 1'
-                inputRefs = restRefs
-
-                if (!anchorUrl) {
-                    toast.error('The first reference image (anchor) is not valid')
-                    return
-                }
-            }
-
-            // Extract input URLs
-            const inputUrls = inputRefs
-                .map(ref => ref.url || ref.preview)
-                .filter((url): url is string => Boolean(url))
-
-            if (inputUrls.length === 0) {
-                toast.error('No valid input images to transform')
-                return
-            }
-
-            // Strip @! from prompt before sending to API
-            const cleanPrompt = stripAnchorSyntax(shotCreatorPrompt)
-
-            // ANCHOR TRANSFORM LIMIT: Max 15 transforms per batch
-            const ANCHOR_TRANSFORM_MAX = 15
-            if (inputUrls.length > ANCHOR_TRANSFORM_MAX) {
-                toast.error(`Anchor Transform is limited to ${ANCHOR_TRANSFORM_MAX} images per batch. You have ${inputUrls.length}. Please remove some images.`)
-                return
-            }
-
-            // Warn about larger batch sizes (5+ images)
-            if (inputUrls.length >= 5) {
-                const costEstimate = inputUrls.length * (generationCost.costPerImage || 20)
-                const confirmed = window.confirm(
-                    `Anchor Transform: ${inputUrls.length} images = ${inputUrls.length} generations.\n` +
-                    `Estimated cost: ${costEstimate} credits.\n\nContinue?`
-                )
-                if (!confirmed) return
-            }
-
-            const model = shotCreatorSettings.model || 'nano-banana'
-            const modelSettings = buildModelSettings()
-            const results = []
-            let successCount = 0
-            let failCount = 0
-
-            // Loop through input images
-            for (let i = 0; i < inputUrls.length; i++) {
-                const inputUrl = inputUrls[i]
-                const inputRef = inputRefs[i]
-                const inputName = inputRef.file?.name || `Image ${i + 1}`
-
-                try {
-                    toast.info(`Anchor Transform: ${i + 1} of ${inputUrls.length} - ${inputName}`)
-
-                    // Generate with anchor + current input
-                    // CRITICAL: If style is the anchor, don't send it in referenceImages
-                    // because useImageGeneration will auto-inject it at the front
-                    const refsToSend = shotCreatorSettings.selectedStyle
-                        ? [inputUrl]  // Style anchor: only send input (style auto-injected)
-                        : [anchorUrl, inputUrl]  // Ref anchor: send both explicitly
-
-                    await generateImage(
-                        model,
-                        cleanPrompt,
-                        refsToSend,
-                        modelSettings,
-                        undefined
-                    )
-
-                    successCount++
-                    results.push({
-                        success: true,
-                        inputName,
-                        index: i + 1
-                    })
-
-                } catch (error) {
-                    failCount++
-                    logger.shotCreator.error('Failed to transform image [detail]', { detail: i + 1, error: error instanceof Error ? error.message : String(error) })
-                    toast.error(`Transform failed: ${inputName}`)
-
-                    results.push({
-                        success: false,
-                        inputName,
-                        index: i + 1,
-                        error: error instanceof Error ? error.message : 'Unknown error'
-                    })
-
-                    // Continue with next image (don't fail entire batch)
-                }
-            }
-
-            // Final summary toast
-            if (failCount === 0) {
-                toast.success(`Anchor Transform complete: ${successCount}/${inputUrls.length} succeeded`)
-            } else {
-                toast.error(`Anchor Transform complete: ${successCount} succeeded, ${failCount} failed`)
-            }
-
-            return
-        }
-        // ===== END ANCHOR TRANSFORM MODE =====
-
-        const activeRecipe = getActiveRecipe()
-        const validation = getActiveValidation()
-
-        // Recipe mode: process recipe fields and generate
-        if (activeRecipe) {
-            // Validate recipe fields
-            if (!validation?.isValid) {
-                logger.shotCreator.warn('Recipe validation failed', { detail: validation?.missingFields })
-                return
-            }
-
-            // Build prompts from recipe fields
-            const result = buildActivePrompts()
-            if (!result || result.prompts.length === 0) {
-                logger.shotCreator.error('Failed to build prompts from recipe')
-                return
-            }
-
-            // Apply suggested settings from recipe
-            if (activeRecipe.suggestedModel) {
-                updateSettings({ model: activeRecipe.suggestedModel as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro' })
-            }
-            if (activeRecipe.suggestedAspectRatio) {
-                updateSettings({ aspectRatio: activeRecipe.suggestedAspectRatio })
-            }
-
-            // Combine user refs + recipe refs (deduplicated)
-            const userRefs = shotCreatorReferenceImages
-                .map(ref => ref.url || ref.preview)
-                .filter((url): url is string => Boolean(url))
-            const allRefs = [...new Set([...userRefs, ...result.referenceImages])]
-
-            // Check if recipe has tool stages - use full recipe execution service
-            const hasTool = hasToolStages(activeRecipe)
-
-            if (hasTool) {
-
-                // Build stage reference images array
-                // First stage uses user refs + recipe's first stage refs
-                // Subsequent stages use their own refs (tool outputs are handled by the service)
-                const stageReferenceImages: string[][] = result.stageReferenceImages || []
-
-                // Ensure first stage has user refs
-                if (stageReferenceImages.length === 0) {
-                    stageReferenceImages.push(allRefs)
-                } else {
-                    // Combine user refs with first stage refs
-                    stageReferenceImages[0] = [...new Set([...allRefs, ...stageReferenceImages[0]])]
-                }
-
-                const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-pro') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
-                const aspectRatio = shotCreatorSettings.aspectRatio || activeRecipe.suggestedAspectRatio || '16:9'
-
-                try {
-                    toast.info('Starting recipe with tool stages...')
-
-                    const executionResult = await executeRecipe({
-                        recipe: activeRecipe,
-                        fieldValues: activeFieldValues,
-                        stageReferenceImages,
-                        model,
-                        aspectRatio,
-                        onProgress: (stage, total, status) => {
-                            toast.info(`Stage ${stage + 1}/${total}: ${status}`)
-                        }
-                    })
-
-                    if (executionResult.success) {
-                        toast.success('Recipe completed successfully!')
-                    } else {
-                        toast.error(`Recipe failed: ${executionResult.error}`)
-                    }
-                } catch (error) {
-                    const errorMsg = error instanceof Error ? error.message : 'Unknown error'
-                    toast.error(`Recipe execution error: ${errorMsg}`)
-                }
-
-                // Keep recipe selected for re-generation
-                return
-            }
-
-            // No tool stages - use fast pipe-concatenation approach
-            // Build full prompt (pipe-separated for multi-stage execution)
-            const fullPrompt = result.prompts.join(' | ')
-
-            // Set stage-specific reference images for pipe chaining
-            if (result.stageReferenceImages && result.stageReferenceImages.length > 0) {
-                setStageReferenceImages(result.stageReferenceImages)
-            } else {
-                setStageReferenceImages([])
-            }
-
-            // Build model settings
-            const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
-            const modelSettings = buildModelSettings()
-
-            toast.info(`Generating with recipe: ${activeRecipe.name}`)
-
-            // Generate with recipe data
-            await generateImage(
-                model,
-                fullPrompt,
-                allRefs,
-                modelSettings,
-                { recipeId: activeRecipe.id, recipeName: activeRecipe.name }
-            )
-
-            // Keep recipe selected for re-generation (don't close form)
-            return
-        }
-
-        // Regular mode: use prompt and refs as-is
-        const model = shotCreatorSettings.model || 'nano-banana'
-        const referenceUrls = shotCreatorReferenceImages
-            .map(ref => ref.url || ref.preview)
-            .filter((url): url is string => Boolean(url))
-        const modelSettings = buildModelSettings()
-
-        // Build Riverflow inputs if using Riverflow model
-        const riverflowInputs = model === 'riverflow-2-pro' && riverflowState ? {
-            detailRefImages: riverflowState.detailRefs,
-            fontUrls: riverflowState.fontUrls,
-            fontTexts: riverflowState.fontTexts,
-        } : undefined
-
-        await generateImage(
-            model,
-            shotCreatorPrompt,
-            referenceUrls,
-            modelSettings,
-            lastUsedRecipe || undefined,
-            riverflowInputs
-        )
-
-        // Clear recipe tracking after generation
-        setLastUsedRecipe(null)
-    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages, activeFieldValues, generationCost, riverflowState])
-
-    // Handle selecting a recipe
-    const _handleSelectRecipe = useCallback((recipeId: string) => {
-        setActiveRecipe(recipeId)
-    }, [setActiveRecipe])
-
     // Calculate dropdown position based on cursor
     const calculateDropdownPosition = useCallback(() => {
         if (!textareaRef.current) return
@@ -1023,19 +260,14 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
         const textarea = textareaRef.current
         const rect = textarea.getBoundingClientRect()
 
-        // Check if mobile (viewport width < 768px)
         const isMobile = window.innerWidth < 768
 
         if (isMobile) {
-            // Position above textarea on mobile to avoid keyboard
-            // Use viewport coordinates directly (fixed positioning)
             setDropdownPosition({
-                top: Math.max(rect.top - 310, 10), // 300px height + 10px margin, min 10px from top
-                left: Math.max(rect.left, 10) // Min 10px from left edge
+                top: Math.max(rect.top - 310, 10),
+                left: Math.max(rect.left, 10)
             })
         } else {
-            // Desktop: position below textarea
-            // Use viewport coordinates directly (fixed positioning)
             setDropdownPosition({
                 top: rect.bottom + 4,
                 left: rect.left
@@ -1047,28 +279,22 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
     const handlePromptChange = useCallback(async (value: string) => {
         setShotCreatorPrompt(value);
 
-        // Trigger autocomplete
         if (textareaRef.current) {
             const cursorPosition = textareaRef.current.selectionStart
             handleAutocompleteTextChange(value, cursorPosition)
         }
 
-        // Extract @ references for auto-attaching images
         const references = extractAtTags(value);
         if (references.length === 0) {
             return;
         }
 
-        // Get all images from the gallery
         const allImages = useUnifiedGalleryStore.getState().images;
-        // Create a Set to track which references we've already processed
         const processedRefs = new Set();
 
-        // Process references one by one
         for (const ref of references) {
             const cleanRef = ref.startsWith('@') ? ref.substring(1) : ref;
 
-            // Skip if we've already processed this reference
             if (processedRefs.has(cleanRef.toLowerCase())) {
                 continue;
             }
@@ -1097,7 +323,6 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                         detectedAspectRatio: matchingImage.settings?.aspectRatio || '16:9'
                     };
                     setShotCreatorReferenceImages((prev: ShotCreatorReferenceImage[]): ShotCreatorReferenceImage[] => {
-                        // Check if this URL is already in the references
                         const exists = prev.some((ref: ShotCreatorReferenceImage) => ref.url === newReference.url);
                         if (exists) {
                             return prev;
@@ -1204,10 +429,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                             <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => {
-                                    setCustomHeight(null)
-                                    setTextareaSize(textareaSize === 'small' ? 'large' : 'small')
-                                }}
+                                onClick={toggleSize}
                                 title="Toggle prompt size"
                             >
                                 {textareaSize === 'small' && customHeight === null ? (
@@ -1338,7 +560,6 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                     const totalImages = shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)
                     const hasStyle = !!shotCreatorSettings.selectedStyle
 
-                    // Get anchor name (style or first ref image)
                     let anchorName = 'Image 1'
                     if (hasStyle) {
                         const selectedStyle = useCustomStylesStore.getState().getStyleById(shotCreatorSettings.selectedStyle!)
