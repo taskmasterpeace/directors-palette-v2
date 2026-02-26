@@ -48,6 +48,5 @@ export {
 } from '../recipe-utils';
 export type { RecipePromptResult, RecipeValidation } from '../recipe-utils';
 
-// Sample recipes (re-exported from main file for now)
-// Will be moved to separate file in future
-export { SAMPLE_RECIPES } from '../recipe.types';
+// Sample recipes
+export { SAMPLE_RECIPES } from '../../constants/recipe-samples';

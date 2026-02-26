@@ -24,6 +24,7 @@ export const DEFAULT_RECIPE_CATEGORIES: RecipeCategory[] = [
   { id: 'custom', name: 'Custom', icon: '✨', isDefault: true },
   // System-only categories (visible only to admin users)
   { id: 'storybook', name: 'Storybook', icon: '📖', isDefault: true, isSystemOnly: true },
+  { id: 'storyboard', name: 'Storyboard', icon: '🎬', isDefault: true, isSystemOnly: true },
 ];
 
 // Common select options for convenience
