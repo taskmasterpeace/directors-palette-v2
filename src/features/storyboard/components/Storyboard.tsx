@@ -25,6 +25,8 @@ import { ContactSheetModal } from "./contact-sheet/ContactSheetModal"
 import { BRollSheetModal } from "./broll-sheet/BRollSheetModal"
 import { CanvasView } from "./canvas/CanvasView"
 import { DirectorTab } from "./directors/DirectorTab"
+import { ProjectSelector } from "./ProjectSelector"
+import { useStoryboardPersistence } from "../hooks/useStoryboardPersistence"
 
 
 export function Storyboard() {
@@ -61,6 +63,9 @@ export function Storyboard() {
         // Reset
         resetStoryboard
     } = useStoryboardStore()
+
+    // Mount persistence hook for auto-save/restore via IndexedDB
+    useStoryboardPersistence()
 
     // Calculate tab completion states
     const tabStates = useMemo(() => ({
@@ -190,6 +195,7 @@ export function Storyboard() {
                         <span className="text-sm font-medium text-muted-foreground">
                             {sidebarTabs.find(t => t.id === internalTab)?.label}
                         </span>
+                        <ProjectSelector />
                         <Button
                             variant="ghost"
                             size="sm"
