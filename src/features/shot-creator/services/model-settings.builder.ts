@@ -6,17 +6,7 @@
  * and enable reuse across the application.
  */
 
-export interface ShotCreatorSettings {
-  model: string;
-  aspectRatio?: string;
-  outputFormat?: string;
-  resolution?: string;
-  safetyFilterLevel?: string;
-  sequentialGeneration?: boolean;
-  maxImages?: number;
-  // ... other settings may be added
-  [key: string]: unknown;
-}
+import type { ShotCreatorSettings } from '../types/shot-creator.types';
 
 export type ModelSettings = Record<string, unknown>;
 

@@ -15,6 +15,7 @@ import type {
     GenerationType
 } from '../types/credits.types'
 import { logger } from '@/lib/logger'
+import { MODEL_CONFIGS, type ModelId } from '@/config'
 
 // Helper to get an untyped client for credits tables (not in main DB types yet)
 // Uses anon key - respects RLS (for user-facing operations)
@@ -118,12 +119,17 @@ class CreditsService {
     }
 
     /**
-     * Get price for a model (with fallback)
+     * Get price for a model (with fallback to config, then generic fallback)
      */
     async getPriceForModel(modelId: string, generationType: GenerationType = 'image'): Promise<number> {
         const pricing = await this.getModelPricing(modelId)
         if (pricing) {
             return pricing.price_cents
+        }
+        // Fallback to config-defined costs for image models
+        if (generationType === 'image' && modelId in MODEL_CONFIGS) {
+            const config = MODEL_CONFIGS[modelId as ModelId]
+            return Math.round(config.costPerImage * 100) // Convert dollars to cents
         }
         return FALLBACK_PRICING[generationType].price_cents
     }

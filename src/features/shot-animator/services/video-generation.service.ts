@@ -3,125 +3,9 @@
  * Handles video model input validation, Replicate input building, and pricing calculations
  */
 
-import type { AnimationModel, ModelSettings, ModelConfig } from '../types'
+import type { AnimationModel, ModelSettings } from '../types'
 import { VIDEO_MODEL_PRICING } from '../types'
-
-// Model configurations
-export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
-  'wan-2.2-5b-fast': {
-    id: 'wan-2.2-5b-fast',
-    displayName: 'WAN 2.2 Fast',
-    description: 'Ultra budget - Quick previews (~4s)',
-    maxReferenceImages: 0,
-    supportsLastFrame: false,
-    defaultResolution: '720p',
-    maxDuration: 4,
-    supportedResolutions: ['480p', '720p'],
-    supportedAspectRatios: ['16:9', '9:16'],
-    pricingType: 'per-video',
-    promptStyle: 'specific',
-    restrictions: ['No last frame', 'Max 4 seconds', 'No 1080p'],
-  },
-  'wan-2.2-i2v-fast': {
-    id: 'wan-2.2-i2v-fast',
-    displayName: 'WAN 2.2 I2V',
-    description: 'Budget with last frame control (5s)',
-    maxReferenceImages: 0,
-    supportsLastFrame: true,
-    defaultResolution: '720p',
-    maxDuration: 5,
-    supportedResolutions: ['480p', '720p'],
-    supportedAspectRatios: ['16:9', '9:16'],
-    pricingType: 'per-video',
-    promptStyle: 'specific',
-    restrictions: ['Max 5 seconds', 'No 1080p'],
-  },
-  'seedance-pro-fast': {
-    id: 'seedance-pro-fast',
-    displayName: 'Seedance Fast',
-    description: 'Standard - Longer videos, fast generation',
-    maxReferenceImages: 0,
-    supportsLastFrame: false,
-    defaultResolution: '720p',
-    maxDuration: 12,
-    supportedResolutions: ['480p', '720p', '1080p'],
-    supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
-    pricingType: 'per-second',
-    promptStyle: 'reasoning',
-    restrictions: ['No last frame', 'No reference images'],
-  },
-  'seedance-lite': {
-    id: 'seedance-lite',
-    displayName: 'Seedance Lite',
-    description: 'Featured - Full control with reference images',
-    maxReferenceImages: 4,
-    supportsLastFrame: true,
-    defaultResolution: '720p',
-    maxDuration: 12,
-    supportedResolutions: ['480p', '720p', '1080p'],
-    supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
-    pricingType: 'per-second',
-    promptStyle: 'reasoning',
-    restrictions: ['Ref images not with 1080p or last frame'],
-  },
-  'seedance-1.5-pro': {
-    id: 'seedance-1.5-pro',
-    displayName: 'Seedance 1.5 Pro',
-    description: 'Pro - Joint audio-video generation with last frame control',
-    maxReferenceImages: 0,
-    supportsLastFrame: true,
-    supportsAudio: true,
-    defaultResolution: '480p',
-    maxDuration: 12,
-    supportedResolutions: ['480p', '720p'],
-    supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
-    pricingType: 'per-second',
-    promptStyle: 'reasoning',
-    restrictions: ['Last frame requires start frame image'],
-  },
-  'kling-2.5-turbo-pro': {
-    id: 'kling-2.5-turbo-pro',
-    displayName: 'Kling Premium',
-    description: 'Premium - Best motion quality',
-    maxReferenceImages: 0,
-    supportsLastFrame: false,
-    defaultResolution: '720p',
-    maxDuration: 10,
-    supportedResolutions: ['720p'],
-    supportedAspectRatios: ['16:9', '9:16', '1:1'],
-    pricingType: 'per-second',
-    promptStyle: 'specific',
-    restrictions: ['720p only', 'No last frame'],
-  },
-  'p-video': {
-    id: 'p-video',
-    displayName: 'P-Video',
-    description: 'Free - Fast video gen with audio input + draft mode',
-    maxReferenceImages: 0,
-    supportsLastFrame: false,
-    supportsAudio: true,
-    defaultResolution: '480p',
-    maxDuration: 10,
-    supportedResolutions: ['480p', '720p'],
-    supportedAspectRatios: ['16:9', '9:16', '1:1', '4:3', '3:4'],
-    pricingType: 'per-video',
-    promptStyle: 'specific',
-    restrictions: ['Max 10s', 'Max 720p'],
-  },
-  'seedance-pro': {
-    id: 'seedance-pro',
-    displayName: 'Seedance Pro (Legacy)',
-    description: 'High-quality video generation',
-    maxReferenceImages: 0,
-    supportsLastFrame: true,
-    defaultResolution: '1080p',
-    maxDuration: 12,
-    supportedResolutions: ['480p', '720p', '1080p'],
-    supportedAspectRatios: ['16:9', '4:3', '1:1', '3:4', '9:16', '21:9', '9:21'],
-    pricingType: 'per-second',
-    promptStyle: 'reasoning',
-  },
-}
+import { ANIMATION_MODELS } from '../config/models.config'
 
 export interface VideoGenerationInput {
   model: AnimationModel
@@ -166,7 +50,7 @@ export class VideoGenerationService {
     }
 
     // Model-specific validations
-    const config = VIDEO_MODEL_CONFIGS[input.model]
+    const config = ANIMATION_MODELS[input.model]
     if (!config) {
       errors.push(`Unknown model: ${input.model}`)
       return { valid: false, errors }
@@ -215,6 +99,17 @@ export class VideoGenerationService {
       // Duration constraint for p-video: only 5 or 10
       if (input.modelSettings.duration !== 5 && input.modelSettings.duration !== 10) {
         errors.push('P-Video supports only 5 or 10 second durations')
+      }
+      // Validate audioUrl if provided
+      if (input.modelSettings.audioUrl) {
+        try {
+          const parsed = new URL(input.modelSettings.audioUrl)
+          if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            errors.push('Audio URL must use http or https protocol')
+          }
+        } catch {
+          errors.push('Audio URL is not a valid URL')
+        }
       }
     }
 
@@ -350,7 +245,7 @@ export class VideoGenerationService {
     duration: number,
     resolution: '480p' | '720p' | '1080p'
   ): number {
-    const config = VIDEO_MODEL_CONFIGS[model]
+    const config = ANIMATION_MODELS[model]
     const pricing = VIDEO_MODEL_PRICING[model]
 
     // Get price for resolution (fallback to 720p if not supported)
@@ -363,22 +258,6 @@ export class VideoGenerationService {
 
     // Per-second models charge based on duration
     return pricePerUnit * duration
-  }
-
-  /**
-   * Get model configuration
-   */
-  static getModelConfig(model: AnimationModel): ModelConfig {
-    return VIDEO_MODEL_CONFIGS[model]
-  }
-
-  /**
-   * Get all available models
-   */
-  static getAvailableModels(): ModelConfig[] {
-    return Object.values(VIDEO_MODEL_CONFIGS).filter(
-      config => config.id !== 'seedance-pro' // Hide legacy model
-    )
   }
 
   /**

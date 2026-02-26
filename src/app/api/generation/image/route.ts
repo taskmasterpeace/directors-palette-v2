@@ -20,18 +20,30 @@ const replicate = new Replicate({
 
 /**
  * Check if a URL is accessible by Replicate (external, public URL)
+ * Blocks private/internal IPs to prevent SSRF
  */
 function isPublicUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
+    // Only allow http/https schemes
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+    const hostname = parsed.hostname.toLowerCase();
     // Replicate URLs are already accessible
-    if (parsed.hostname.includes('replicate.')) return true;
+    if (hostname.includes('replicate.')) return true;
     // Supabase storage URLs are accessible
-    if (parsed.hostname.includes('supabase.')) return true;
-    // Localhost URLs are NOT accessible to Replicate
-    if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') return false;
+    if (hostname.includes('supabase.')) return true;
+    // Block private/internal hostnames and IPs
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return false;
+    if (hostname === '0.0.0.0' || hostname.endsWith('.local') || hostname.endsWith('.internal')) return false;
+    // Block private IP ranges (10.x, 172.16-31.x, 192.168.x, 169.254.x)
+    if (/^10\./.test(hostname)) return false;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return false;
+    if (/^192\.168\./.test(hostname)) return false;
+    if (/^169\.254\./.test(hostname)) return false;
+    // Block metadata endpoints (cloud providers)
+    if (hostname === '169.254.169.254' || hostname === 'metadata.google.internal') return false;
     // Check for invalid/non-existent domains (hardcoded fallback domain)
-    if (parsed.hostname === 'directorspalette.app') return false;
+    if (hostname === 'directorspalette.app') return false;
     // Other external URLs are assumed to be accessible
     return true;
   } catch {

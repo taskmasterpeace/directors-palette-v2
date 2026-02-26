@@ -109,7 +109,7 @@ export const VIDEO_MODEL_PRICING: Record<AnimationModel, VideoPricing> = {
   'seedance-lite': { '480p': 3, '720p': 5, '1080p': 11 },      // Per second
   'seedance-1.5-pro': { '480p': 5, '720p': 8 },                // Per second
   'kling-2.5-turbo-pro': { '480p': 10, '720p': 10 },           // Per second
-  'p-video': { '480p': 0, '720p': 0 },                          // Free — update when pricing announced
+  'p-video': { '480p': 1, '720p': 2 },                          // Minimal cost to prevent abuse
   'seedance-pro': { '480p': 4, '720p': 6, '1080p': 15 },       // Per second (legacy)
 }
 

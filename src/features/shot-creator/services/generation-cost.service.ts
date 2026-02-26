@@ -28,7 +28,6 @@ export interface GenerationCostResult {
   tokenCost: number;
   costPerImage: number;
   isAnchorMode: boolean;
-  fontCost: number;
 }
 
 /**
@@ -71,7 +70,6 @@ export function calculateGenerationCost(input: GenerationCostInput): GenerationC
   }
 
   const totalCost = imageCount * costPerImage;
-  const fontCost = 0;
 
   // Convert dollar cost to tokens (1 token = $0.01)
   const tokenCost = Math.ceil(totalCost * 100);
@@ -82,7 +80,6 @@ export function calculateGenerationCost(input: GenerationCostInput): GenerationC
     tokenCost,
     costPerImage,
     isAnchorMode,
-    fontCost,
   };
 }
 

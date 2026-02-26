@@ -25,7 +25,6 @@ export interface GenerationCost {
     tokenCost: number
     costPerImage: number
     isAnchorMode: boolean | undefined
-    fontCost: number
 }
 
 /**
@@ -108,8 +107,6 @@ export function usePromptGeneration() {
 
         const totalCost = imageCount * costPerImage
 
-        const fontCost = 0
-
         const tokenCost = Math.ceil(totalCost * 100)
 
         return {
@@ -117,8 +114,7 @@ export function usePromptGeneration() {
             totalCost,
             tokenCost,
             costPerImage,
-            isAnchorMode,
-            fontCost
+            isAnchorMode
         }
     }, [shotCreatorPrompt, shotCreatorSettings, wildcards, shotCreatorReferenceImages.length])
 

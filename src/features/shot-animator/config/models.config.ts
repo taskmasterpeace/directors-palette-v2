@@ -263,7 +263,7 @@ export const MODEL_TIER_LABELS: Record<AnimationModel, string> = {
   'seedance-lite': 'Value',
   'seedance-1.5-pro': 'Featured',
   'kling-2.5-turbo-pro': 'Premium',
-  'p-video': 'Free',
+  'p-video': 'Budget',
   'seedance-pro': 'Legacy',
 }
 

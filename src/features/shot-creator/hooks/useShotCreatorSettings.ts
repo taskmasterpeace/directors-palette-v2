@@ -3,6 +3,8 @@ import { shotCreatorSettingsService } from '../services';
 import { ShotCreatorSettings } from '../types';
 import { getClient } from "@/lib/db/client";
 import { DEFAULT_SETTINGS, useShotCreatorStore } from "../store";
+import { migrateModelId } from '@/config';
+import type { ModelId } from '@/config';
 import { logger } from '@/lib/logger'
 /**
  * Custom hook for managing shot creator settings with Supabase
@@ -41,6 +43,10 @@ export function useShotCreatorSettings() {
         const loadedSettings = await shotCreatorSettingsService.loadSettings(user.id);
         if (loadedSettings) {
           const mergedSettings = { ...DEFAULT_SETTINGS, ...loadedSettings };
+          // Migrate deprecated model IDs (e.g., 'nano-banana' -> 'nano-banana-2')
+          if (mergedSettings.model) {
+            mergedSettings.model = migrateModelId(mergedSettings.model) as ModelId;
+          }
           setSettings(mergedSettings);
         }
       } catch (error) {

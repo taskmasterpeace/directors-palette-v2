@@ -107,14 +107,13 @@ export async function POST(request: NextRequest) {
         logger.api.info('Inpaint: Image uploaded', { detail: imageUrl.substring(0, 100) })
 
         // Build input for Replicate with uploaded image URL
-        // Nano Banana uses 'image_input' parameter (matches shot creator)
-        // Note: Don't include output_format - Nano Banana model handles it internally
+        // Nano Banana 2 uses single 'image' parameter (not 'image_input' array)
         const input: Record<string, unknown> = {
             prompt: fullPrompt,
-            image_input: [imageUrl], // Array of image URLs
+            image: imageUrl,
         }
 
-        logger.api.info('Inpaint: Calling Replicate model with input', { detail: JSON.stringify({ prompt: fullPrompt.substring(0, 100), image_input: 'uploaded' }) })
+        logger.api.info('Inpaint: Calling Replicate model with input', { detail: JSON.stringify({ prompt: fullPrompt.substring(0, 100), image: 'uploaded' }) })
 
         // Run the model
         const output = await replicate.run(modelId, { input })

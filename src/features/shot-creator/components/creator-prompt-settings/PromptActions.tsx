@@ -420,7 +420,6 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                     <div className="flex items-center justify-between text-sm">
                         <span className="text-slate-600 dark:text-slate-400">
                             Cost: {generationCost.imageCount} image{generationCost.imageCount !== 1 ? 's' : ''} × ${generationCost.costPerImage.toFixed(2)}
-                            {generationCost.fontCost > 0 && ` + $${generationCost.fontCost.toFixed(2)} fonts`}
                             {' = $'}{generationCost.totalCost.toFixed(2)} ({generationCost.tokenCost} pts)
                         </span>
                         {showResizeControls && (

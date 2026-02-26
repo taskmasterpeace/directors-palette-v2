@@ -15,21 +15,39 @@ import { StorageService } from '@/features/generation/services/storage.service'
 import { getModelConfig } from '@/config'
 import { GenerateImageRequest, GenerateImageResponse } from '@/features/api-keys/types/api-key.types'
 import type { ImageModel, ImageModelSettings } from '@/features/shot-creator/types/image-generation.types'
+import type { ModelId } from '@/config'
 import { logger } from '@/lib/logger'
+
+/** Valid image model IDs */
+const VALID_MODEL_IDS: ReadonlySet<string> = new Set(['nano-banana-2', 'nano-banana-pro', 'z-image-turbo', 'seedream-5-lite'])
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 })
 
 /**
- * Check if a URL is accessible by Replicate
+ * Check if a URL is accessible by Replicate and safe to fetch
+ * Blocks private/internal IPs to prevent SSRF
  */
 function isPublicUrl(url: string): boolean {
   try {
     const parsed = new URL(url)
-    if (parsed.hostname.includes('replicate.')) return true
-    if (parsed.hostname.includes('supabase.')) return true
-    if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') return false
+    // Only allow http/https schemes
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false
+    const hostname = parsed.hostname.toLowerCase()
+    // Allow known trusted hosts
+    if (hostname.includes('replicate.')) return true
+    if (hostname.includes('supabase.')) return true
+    // Block private/internal hostnames and IPs
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return false
+    if (hostname === '0.0.0.0' || hostname.endsWith('.local') || hostname.endsWith('.internal')) return false
+    // Block private IP ranges (10.x, 172.16-31.x, 192.168.x, 169.254.x)
+    if (/^10\./.test(hostname)) return false
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return false
+    if (/^192\.168\./.test(hostname)) return false
+    if (/^169\.254\./.test(hostname)) return false
+    // Block metadata endpoints (cloud providers)
+    if (hostname === '169.254.169.254' || hostname === 'metadata.google.internal') return false
     return true
   } catch {
     return false
@@ -129,11 +147,41 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
       )
     }
 
-    // Get model config
-    const modelConfig = getModelConfig(model as ImageModel)
-    if (!modelConfig) {
+    // Validate model ID at runtime (prevent arbitrary strings via `as ModelId` cast)
+    if (!VALID_MODEL_IDS.has(model)) {
       return NextResponse.json(
         { success: false, error: `Invalid model: ${model}. Use: nano-banana-2, z-image-turbo, seedream-5-lite, or nano-banana-pro` },
+        { status: 400 }
+      )
+    }
+
+    // Get model config
+    const modelConfig = getModelConfig(model as ModelId)
+
+    // Build model settings for validation
+    const validOutputFormat = outputFormat === 'webp' ? 'jpg' : outputFormat
+    const validationSettings: ImageModelSettings = {
+      aspectRatio,
+      outputFormat: validOutputFormat as 'jpg' | 'png',
+    }
+    if (resolution) (validationSettings as Record<string, unknown>).resolution = resolution
+    if (safetyFilterLevel) (validationSettings as Record<string, unknown>).safetyFilterLevel = safetyFilterLevel
+    if (numInferenceSteps) (validationSettings as Record<string, unknown>).numInferenceSteps = numInferenceSteps
+    if (guidanceScale) (validationSettings as Record<string, unknown>).guidanceScale = guidanceScale
+    if (seed !== undefined) (validationSettings as Record<string, unknown>).seed = seed
+
+    // Validate input using same service as internal route
+    const validation = ImageGenerationService.validateInput({
+      model: model as ImageModel,
+      prompt,
+      referenceImages,
+      modelSettings: validationSettings,
+      userId: validatedKey.userId,
+    })
+
+    if (!validation.valid) {
+      return NextResponse.json(
+        { success: false, error: 'Validation failed', details: validation.errors },
         { status: 400 }
       )
     }
@@ -179,8 +227,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
         )
       }
 
-      // Build model settings
-      const validOutputFormat = outputFormat === 'webp' ? 'jpg' : outputFormat
+      // Build model settings (reuse validOutputFormat from above)
       const modelSettings: ImageModelSettings = {
         aspectRatio,
         outputFormat: validOutputFormat as 'jpg' | 'png',
@@ -320,8 +367,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
       processedRefs = await processReferenceImages(referenceImages, replicate)
     }
 
-    // Build model settings - ensure outputFormat is valid
-    const validOutputFormat = outputFormat === 'webp' ? 'jpg' : outputFormat
+    // Build model settings
     const modelSettings: ImageModelSettings = {
       aspectRatio,
       outputFormat: validOutputFormat as 'jpg' | 'png',
@@ -490,10 +536,10 @@ export async function GET(): Promise<NextResponse> {
       },
     },
     modelCosts: {
-      'nano-banana-2': 'Free (0 points)',
-      'z-image-turbo': '5 points/image ($0.05)',
+      'nano-banana-2': '6 points/image ($0.06)',
+      'z-image-turbo': '3 points/image ($0.03)',
       'seedream-5-lite': '4 points/image ($0.04)',
-      'nano-banana-pro': '27 points/image ($0.27)',
+      'nano-banana-pro': '25-45 points/image ($0.25-$0.45, varies by resolution)',
     },
     modelCapabilities: {
       'nano-banana-2': {

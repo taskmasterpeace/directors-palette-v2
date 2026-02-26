@@ -73,41 +73,6 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
             { value: 'match_input_image', label: 'Match Input Image' }
         ]
     },
-    gen4AspectRatio: {
-        id: 'aspectRatio',
-        label: 'Aspect Ratio',
-        type: 'select',
-        default: '16:9',
-        options: [
-            { value: '16:9', label: '16:9 Landscape' },
-            { value: '9:16', label: '9:16 Portrait' },
-            { value: '1:1', label: '1:1 Square' },
-            { value: '4:3', label: '4:3 Classic' },
-            { value: '3:4', label: '3:4 Portrait' },
-            { value: '21:9', label: '21:9 Ultrawide' }
-        ]
-    },
-    resolution: {
-        id: 'resolution',
-        label: 'Resolution',
-        type: 'select',
-        default: '1080p',
-        options: [
-            { value: '720p', label: '720p' },
-            { value: '1080p', label: '1080p' }
-        ]
-    },
-    seedreamResolution: {
-        id: 'resolution',
-        label: 'Resolution',
-        type: 'select',
-        default: '2K',
-        options: [
-            { value: '2K', label: '2K (2048px) - Default quality' },
-            { value: '4K', label: '4K (4096px) - High quality' },
-            { value: 'custom', label: 'Custom dimensions' }
-        ]
-    },
     seedream5Resolution: {
         id: 'resolution',
         label: 'Resolution',
@@ -118,12 +83,6 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
             { value: '3K', label: '3K (3072px) - High quality' }
         ]
     },
-    seed: {
-        id: 'seed',
-        label: 'Seed (Optional)',
-        type: 'number',
-        description: 'Set a seed for reproducible results'
-    },
     maxImages: {
         id: 'maxImages',
         label: 'Number of Images',
@@ -132,22 +91,6 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         max: 15,
         default: 1,
         description: 'Generate multiple images (1-15)'
-    },
-    customWidth: {
-        id: 'customWidth',
-        label: 'Custom Width',
-        type: 'number',
-        min: 1024,
-        max: 4096,
-        default: 2048
-    },
-    customHeight: {
-        id: 'customHeight',
-        label: 'Custom Height',
-        type: 'number',
-        min: 1024,
-        max: 4096,
-        default: 2048
     },
     sequentialGeneration: {
         id: 'sequentialGeneration',
@@ -166,46 +109,6 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
             { value: 'jpg', label: 'JPG' },
             { value: 'png', label: 'PNG' }
         ]
-    },
-    outputQuality: {
-        id: 'outputQuality',
-        label: 'Output Quality',
-        type: 'slider',
-        min: 50,
-        max: 100,
-        default: 95,
-        description: 'Image quality (50-100)'
-    },
-    goFast: {
-        id: 'goFast',
-        label: 'Fast Mode',
-        type: 'boolean',
-        default: true,
-        description: 'Enable faster processing'
-    },
-    qwenGuidance: {
-        id: 'guidance',
-        label: 'Guidance',
-        type: 'slider',
-        min: 0,
-        max: 10,
-        default: 4,
-        description: 'Image generation guidance (0-10)'
-    },
-    qwenSteps: {
-        id: 'num_inference_steps',
-        label: 'Inference Steps',
-        type: 'slider',
-        min: 20,
-        max: 50,
-        default: 40,
-        description: 'Number of denoising steps (20-50)'
-    },
-    negativePrompt: {
-        id: 'negative_prompt',
-        label: 'Negative Prompt',
-        type: 'string',
-        description: 'Things to avoid in the image'
     },
     nanoBananaProResolution: {
         id: 'resolution',
@@ -290,61 +193,6 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         default: 0,
         description: 'Guidance scale. Use 0 for Turbo models.'
     },
-    // GPT Image specific parameters
-    gptImageAspectRatio: {
-        id: 'aspectRatio',
-        label: 'Aspect Ratio',
-        type: 'select',
-        default: '3:2',
-        options: [
-            { value: '1:1', label: '1:1 Square' },
-            { value: '3:2', label: '3:2 Landscape' },
-            { value: '2:3', label: '2:3 Portrait' }
-        ]
-    },
-    gptImageBackground: {
-        id: 'background',
-        label: 'Background',
-        type: 'select',
-        default: 'opaque',
-        options: [
-            { value: 'opaque', label: 'Opaque (Standard)' },
-            { value: 'transparent', label: 'Transparent (PNG only)' },
-            { value: 'auto', label: 'Auto' }
-        ],
-        description: 'Transparent backgrounds are only available with PNG format'
-    },
-    gptImageOutputFormat: {
-        id: 'outputFormat',
-        label: 'Output Format',
-        type: 'select',
-        default: 'webp',
-        options: [
-            { value: 'webp', label: 'WebP (Recommended)' },
-            { value: 'png', label: 'PNG (Supports transparency)' },
-            { value: 'jpeg', label: 'JPEG' }
-        ]
-    },
-    gptImageNumImages: {
-        id: 'numImages',
-        label: 'Number of Images',
-        type: 'slider',
-        min: 1,
-        max: 10,
-        default: 1,
-        description: 'Generate multiple images in one request (1-10). Cost multiplied by count.'
-    },
-    gptImageInputFidelity: {
-        id: 'inputFidelity',
-        label: 'Reference Matching',
-        type: 'select',
-        default: 'low',
-        options: [
-            { value: 'low', label: 'Low (More creative freedom)' },
-            { value: 'high', label: 'High (Match reference closely)' }
-        ],
-        description: 'How closely the model should match reference image features like faces'
-    },
 }
 
 export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
@@ -360,7 +208,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         textColor: 'text-green-300',
         endpoint: 'google/nano-banana-2',
         costPerImage: 0.06, // 6 pts = $0.06 (50% margin on $0.04 cost)
-        supportedParameters: ['nanoBanana2AspectRatio', 'nanoBanana2SafetyFilter', 'personGeneration'],
+        supportedParameters: ['aspectRatio', 'safetyFilterLevel', 'personGeneration'],
         parameters: {
             aspectRatio: MODEL_PARAMETERS.nanoBanana2AspectRatio,
             safetyFilterLevel: MODEL_PARAMETERS.nanoBanana2SafetyFilter,
@@ -401,7 +249,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         textColor: 'text-green-300',
         endpoint: 'bytedance/seedream-5-lite',
         costPerImage: 0.04, // 4 points = 4 cents ($0.035 cost, ~14% margin)
-        supportedParameters: ['aspectRatio', 'seedream5Resolution', 'maxImages', 'sequentialGeneration', 'outputFormat'],
+        supportedParameters: ['aspectRatio', 'resolution', 'maxImages', 'sequentialGeneration', 'outputFormat'],
         parameters: {
             aspectRatio: MODEL_PARAMETERS.aspectRatio,
             resolution: MODEL_PARAMETERS.seedream5Resolution,
@@ -439,6 +287,20 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
     }
 }
 
+/** Map deprecated model IDs to their current replacements */
+const DEPRECATED_MODEL_MAP: Record<string, ModelId> = {
+    'nano-banana': 'nano-banana-2',
+    'nano-banana-pro-exp': 'nano-banana-pro',
+    'riverflow-2-pro': 'nano-banana-pro',
+}
+
+/** Migrate a potentially deprecated model ID to its current equivalent */
+export function migrateModelId(modelId: string): ModelId {
+    if (modelId in MODEL_CONFIGS) return modelId as ModelId
+    if (modelId in DEPRECATED_MODEL_MAP) return DEPRECATED_MODEL_MAP[modelId]
+    return 'nano-banana-2' // Default fallback
+}
+
 export function getModelConfig(modelId: ModelId): ModelConfig {
     return MODEL_CONFIGS[modelId] || MODEL_CONFIGS['nano-banana-2']
 }
@@ -459,15 +321,6 @@ export function getModelCost(modelId: ModelId, resolution?: string): number {
 
     // Fall back to default cost
     return config.costPerImage
-}
-
-export function getModelsByType(type: ModelType): ModelConfig[] {
-    return Object.values(MODEL_CONFIGS).filter(model => model.type === type)
-}
-
-export function isParameterSupported(modelId: ModelId, parameterId: string): boolean {
-    const config = getModelConfig(modelId)
-    return config.supportedParameters.includes(parameterId)
 }
 
 export function getAvailableModels(): ModelConfig[] {
