@@ -316,7 +316,7 @@ export function CharacterSheetGenerator() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         prompt,
-                        model: 'nano-banana-pro',
+                        model: 'nano-banana-2',
                         modelSettings: {
                             aspectRatio: '16:9',
                             resolution: '2K'

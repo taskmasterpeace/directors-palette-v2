@@ -221,7 +221,7 @@ export class BRollSheetService {
 
         try {
             const response = await imageGenerationService.generateImage({
-                model: 'nano-banana-pro',
+                model: 'nano-banana-2',
                 prompt: gridPrompt,
                 modelSettings: {
                     aspectRatio: '16:9', // Widescreen for cinematic B-roll grid

@@ -461,7 +461,7 @@ export async function executeRecipe(options: RecipeExecutionOptions): Promise<Re
     recipe,
     fieldValues,
     stageReferenceImages,
-    model = 'nano-banana-pro' as ImageModel,
+    model = 'nano-banana-2' as ImageModel,
     aspectRatio = '21:9',
     onProgress,
     folderId,

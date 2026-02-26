@@ -20,6 +20,7 @@ export interface ShotAnimatorSettings {
         'seedance-lite': ModelSettingsEntry
         'seedance-1.5-pro': ModelSettingsEntry
         'kling-2.5-turbo-pro': ModelSettingsEntry
+        'p-video': ModelSettingsEntry
         'seedance-pro': ModelSettingsEntry  // Legacy
     }
 }
@@ -45,10 +46,12 @@ export interface ShotCreatorSettings {
     aspectRatio: string
     resolution: string
     seed?: number
-    model?: 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
+    model?: 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
     maxImages?: number
     sequentialGeneration?: boolean
     promptLibrary?: PromptLibrarySettings
+    safetyFilterLevel?: string
+    personGeneration?: string
 }
 
 export interface SettingsConfig {

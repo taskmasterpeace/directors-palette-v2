@@ -17,13 +17,13 @@ interface ModelOption {
 
 const MODEL_OPTIONS: ModelOption[] = [
   {
-    id: 'nano-banana-pro',
-    name: 'Nano Banana Pro',
-    icon: '🔥',
-    description: 'Best for general ads and compositions',
-    badge: 'Pro',
-    badgeColor: 'bg-amber-600',
-    capabilities: ['Text rendering', 'Up to 14 refs', '4K support'],
+    id: 'nano-banana-2',
+    name: 'Nano Banana 2',
+    icon: '🍌',
+    description: 'Latest model - fast, high quality, free',
+    badge: 'New',
+    badgeColor: 'bg-green-600',
+    capabilities: ['Text rendering', 'Fast generation', 'Free tier'],
   },
   {
     id: 'riverflow-2-pro',

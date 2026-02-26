@@ -252,7 +252,7 @@ describe('validateRecipeForImport', () => {
         stages: [createMockStage(0)],
         suggestedAspectRatio: '16:9',
         suggestedResolution: '1920x1080',
-        suggestedModel: 'nano-banana-pro',
+        suggestedModel: 'nano-banana-2',
         quickAccessLabel: 'Quick',
         isQuickAccess: true,
         categoryId: 'characters',
@@ -1056,14 +1056,14 @@ describe('sanitizeRecipeForImport', () => {
         stages: [createMockStage(0)],
         suggestedAspectRatio: '16:9',
         suggestedResolution: '1920x1080',
-        suggestedModel: 'nano-banana-pro',
+        suggestedModel: 'nano-banana-2',
       }
 
       const sanitized = recipeValidationService.sanitizeRecipeForImport(recipe)
 
       expect(sanitized.suggestedAspectRatio).toBe('16:9')
       expect(sanitized.suggestedResolution).toBe('1920x1080')
-      expect(sanitized.suggestedModel).toBe('nano-banana-pro')
+      expect(sanitized.suggestedModel).toBe('nano-banana-2')
     })
 
     it('should preserve quick access settings', () => {

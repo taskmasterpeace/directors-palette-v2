@@ -78,7 +78,7 @@ export async function getRandomFromCategory(
       url: galleryData.public_url as string,
       prompt: (metadata.prompt as string) || '',
       source: 'shot-creator',
-      model: (metadata.model as string) || 'nano-banana',
+      model: (metadata.model as string) || 'nano-banana-2',
       reference,
       settings: {
         aspectRatio: '16:9',
@@ -175,7 +175,7 @@ export async function getRandomReferences(
           url: galleryData.public_url as string,
           prompt: (metadata.prompt as string) || '',
           source: 'shot-creator' as const,
-          model: (metadata.model as string) || 'nano-banana',
+          model: (metadata.model as string) || 'nano-banana-2',
           reference,
           settings: {
             aspectRatio: '16:9',

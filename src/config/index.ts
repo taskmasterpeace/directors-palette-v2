@@ -8,7 +8,7 @@
  * Based on best practices for Replicate API
  */
 export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number }> = {
-    // nano-banana-pro supported ratios
+    // Standard aspect ratio sizes
     '1:1': { width: 1024, height: 1024 },   // Square page ✅
     '4:5': { width: 1024, height: 1280 },   // Portrait page ✅
     '5:4': { width: 1280, height: 1024 },
@@ -22,7 +22,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
+export type ModelId = 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
 
 export interface ModelParameter {
     id: string
@@ -235,6 +235,45 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         ],
         description: 'Content safety filtering level'
     },
+    nanoBanana2AspectRatio: {
+        id: 'aspectRatio',
+        label: 'Aspect Ratio',
+        type: 'select',
+        default: '16:9',
+        options: [
+            { value: '16:9', label: '16:9 Landscape' },
+            { value: '9:16', label: '9:16 Portrait' },
+            { value: '1:1', label: '1:1 Square' },
+            { value: '4:3', label: '4:3 Classic' },
+            { value: '3:4', label: '3:4 Portrait' },
+            { value: 'match_input_image', label: 'Match Input Image' }
+        ]
+    },
+    nanoBanana2SafetyFilter: {
+        id: 'safetyFilterLevel',
+        label: 'Safety Filter',
+        type: 'select',
+        default: 'block_only_high',
+        options: [
+            { value: 'block_low_and_above', label: 'Strict (Block low & above)' },
+            { value: 'block_medium_and_above', label: 'Moderate (Block medium & above)' },
+            { value: 'block_only_high', label: 'Minimal (Block only high)' },
+            { value: 'block_none', label: 'None (No filter)' }
+        ],
+        description: 'Content safety filtering level'
+    },
+    personGeneration: {
+        id: 'personGeneration',
+        label: 'Person Generation',
+        type: 'select',
+        default: 'allow_all',
+        options: [
+            { value: 'dont_allow', label: "Don't Allow" },
+            { value: 'allow_adult', label: 'Allow Adult Only' },
+            { value: 'allow_all', label: 'Allow All' }
+        ],
+        description: 'Control person generation in images'
+    },
     // Z-Image Turbo parameters (Replicate API: 1-50 steps, 0-20 guidance, defaults per API docs)
     numInferenceSteps: {
         id: 'numInferenceSteps',
@@ -367,50 +406,25 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
 }
 
 export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
-    'nano-banana': {
-        id: 'nano-banana',
-        name: 'nano-banana',
-        displayName: 'Nano Banana',
+    'nano-banana-2': {
+        id: 'nano-banana-2',
+        name: 'nano-banana-2',
+        displayName: 'Nano Banana 2',
         type: 'generation',
         icon: '🍌',
-        description: 'Fast generation, good for quick iterations. Great value.',
-        badge: 'Fast',
-        badgeColor: 'bg-yellow-600',
-        textColor: 'text-yellow-300',
-        endpoint: 'google/nano-banana',
-        costPerImage: 0.08, // 8 points = 8 cents (100% margin on $0.04 cost)
-        supportedParameters: ['outputFormat', 'aspectRatio'],
+        description: 'Latest generation model. Fast, high quality. Currently free.',
+        badge: 'New',
+        badgeColor: 'bg-green-600',
+        textColor: 'text-green-300',
+        endpoint: 'google/nano-banana-2',
+        costPerImage: 0, // Currently free — update when pricing announced
+        supportedParameters: ['nanoBanana2AspectRatio', 'nanoBanana2SafetyFilter', 'personGeneration'],
         parameters: {
-            outputFormat: MODEL_PARAMETERS.outputFormat,
-            aspectRatio: MODEL_PARAMETERS.aspectRatio
+            aspectRatio: MODEL_PARAMETERS.nanoBanana2AspectRatio,
+            safetyFilterLevel: MODEL_PARAMETERS.nanoBanana2SafetyFilter,
+            personGeneration: MODEL_PARAMETERS.personGeneration
         },
-        maxReferenceImages: 10
-    },
-    'nano-banana-pro': {
-        id: 'nano-banana-pro',
-        name: 'nano-banana-pro',
-        displayName: 'Nano Banana Pro',
-        type: 'generation',
-        icon: '🔥',
-        description: 'SOTA quality with accurate text rendering, 4K support, and advanced editing capabilities',
-        badge: 'Pro',
-        badgeColor: 'bg-amber-600',
-        textColor: 'text-amber-300',
-        endpoint: 'google/nano-banana-pro',
-        costPerImage: 0.25, // Default price (1K/2K) - 25 pts = $0.25
-        costByResolution: {
-            '1K': 0.25,  // 25 pts - Replicate cost $0.15 (66% margin)
-            '2K': 0.25,  // 25 pts - Replicate cost $0.15 (66% margin)
-            '4K': 0.45,  // 45 pts - Replicate cost $0.30 (50% margin)
-        },
-        supportedParameters: ['outputFormat', 'aspectRatio', 'resolution', 'safetyFilterLevel'],
-        parameters: {
-            outputFormat: MODEL_PARAMETERS.outputFormat,
-            aspectRatio: MODEL_PARAMETERS.aspectRatio,
-            resolution: MODEL_PARAMETERS.nanoBananaProResolution,
-            safetyFilterLevel: MODEL_PARAMETERS.safetyFilterLevel
-        },
-        maxReferenceImages: 14
+        maxReferenceImages: 1 // nano-banana-2 accepts single `image` input
     },
     'z-image-turbo': {
         id: 'z-image-turbo',
@@ -489,7 +503,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
 }
 
 export function getModelConfig(modelId: ModelId): ModelConfig {
-    return MODEL_CONFIGS[modelId] || MODEL_CONFIGS['nano-banana']
+    return MODEL_CONFIGS[modelId] || MODEL_CONFIGS['nano-banana-2']
 }
 
 /**

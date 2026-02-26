@@ -306,7 +306,7 @@ This is an INTERIOR page, not a cover. It should tease the story and build antic
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               prompt,
-              model: 'nano-banana-pro',
+              model: 'nano-banana-2',
               aspectRatio,
               referenceImages,
               folderId,
@@ -511,7 +511,7 @@ The design should prioritize readability with beautiful decorative framing.`
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               prompt,
-              model: 'nano-banana-pro',
+              model: 'nano-banana-2',
               aspectRatio,
               referenceImages,
               folderId,

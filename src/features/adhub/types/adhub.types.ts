@@ -7,7 +7,7 @@
 // MODEL TYPES
 // =============================================================================
 
-export type AdhubModel = 'nano-banana-pro' | 'riverflow-2-pro'
+export type AdhubModel = 'nano-banana-2' | 'riverflow-2-pro'
 
 export interface RiverflowInputs {
   sourceImages: string[]        // init_images (product photos)

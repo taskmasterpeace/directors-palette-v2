@@ -13,8 +13,8 @@ import {
 import { getModelCost } from '@/config'
 import { logger } from '@/lib/logger'
 
-// Cost constants for storybook generations (nano-banana-pro)
-export const STORYBOOK_MODEL = 'nano-banana-pro'
+// Cost constants for storybook generations (nano-banana-2)
+export const STORYBOOK_MODEL = 'nano-banana-2'
 export const STORYBOOK_COST_PER_IMAGE = getModelCost(STORYBOOK_MODEL) // $0.25 = 25 pts
 
 // Default system recipe names for storybook (used as fallbacks)

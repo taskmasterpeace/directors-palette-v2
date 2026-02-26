@@ -110,7 +110,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
     const body: GenerateImageRequest = await request.json()
     const {
       prompt,
-      model = 'nano-banana',
+      model = 'nano-banana-2',
       aspectRatio = '1:1',
       outputFormat = 'webp',
       referenceImages = [],
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
     const modelConfig = getModelConfig(model as ImageModel)
     if (!modelConfig) {
       return NextResponse.json(
-        { success: false, error: `Invalid model: ${model}. Use: nano-banana, nano-banana-pro, z-image-turbo, seedream-5-lite, or riverflow-2-pro` },
+        { success: false, error: `Invalid model: ${model}. Use: nano-banana-2, z-image-turbo, seedream-5-lite, or riverflow-2-pro` },
         { status: 400 }
       )
     }
@@ -186,7 +186,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
         outputFormat: validOutputFormat as 'jpg' | 'png',
       }
 
-      if (model === 'nano-banana-pro') {
+      if (model === 'nano-banana-2') {
         if (resolution) (modelSettings as Record<string, unknown>).resolution = resolution
         if (safetyFilterLevel) (modelSettings as Record<string, unknown>).safetyFilterLevel = safetyFilterLevel
       } else if (model === 'z-image-turbo') {
@@ -327,7 +327,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
       outputFormat: validOutputFormat as 'jpg' | 'png',
     }
 
-    if (model === 'nano-banana-pro') {
+    if (model === 'nano-banana-2') {
       if (resolution) (modelSettings as Record<string, unknown>).resolution = resolution
       if (safetyFilterLevel) (modelSettings as Record<string, unknown>).safetyFilterLevel = safetyFilterLevel
     } else if (model === 'z-image-turbo') {
@@ -460,8 +460,8 @@ export async function GET(): Promise<NextResponse> {
       model: {
         type: 'string',
         required: false,
-        default: 'nano-banana',
-        options: ['nano-banana', 'nano-banana-pro', 'z-image-turbo', 'seedream-5-lite', 'riverflow-2-pro'],
+        default: 'nano-banana-2',
+        options: ['nano-banana-2', 'z-image-turbo', 'seedream-5-lite', 'riverflow-2-pro'],
         description: 'Model to use for generation',
       },
       aspectRatio: {
@@ -490,23 +490,16 @@ export async function GET(): Promise<NextResponse> {
       },
     },
     modelCosts: {
-      'nano-banana': '8 points/image ($0.08)',
-      'nano-banana-pro': '40 points/image ($0.40)',
+      'nano-banana-2': 'Free (0 points)',
       'z-image-turbo': '5 points/image ($0.05)',
       'seedream-5-lite': '4 points/image ($0.04)',
       'riverflow-2-pro': '27 points/image ($0.27)',
     },
     modelCapabilities: {
-      'nano-banana': {
+      'nano-banana-2': {
         speed: 'Fast',
-        quality: 'Good',
-        referenceImages: 'Up to 10',
-        bestFor: 'Quick iterations, style matching with reference images',
-      },
-      'nano-banana-pro': {
-        speed: 'Medium',
-        quality: 'Excellent (SOTA)',
-        referenceImages: 'Up to 14',
+        quality: 'Excellent',
+        referenceImages: 'Up to 1',
         resolution: 'Up to 4K',
         bestFor: 'High-quality production images, accurate text rendering',
       },
@@ -542,7 +535,7 @@ export async function GET(): Promise<NextResponse> {
       example: {
         request: {
           prompt: 'Transform into claymation style',
-          model: 'nano-banana',
+          model: 'nano-banana-2',
           enableAnchorTransform: true,
           referenceImages: [
             'https://example.com/claymation-style.jpg',
@@ -569,11 +562,11 @@ export async function GET(): Promise<NextResponse> {
       curl: `curl -X POST https://directorspalette.app/api/v1/images/generate \\
   -H "Authorization: Bearer dp_your_api_key" \\
   -H "Content-Type: application/json" \\
-  -d '{"prompt": "A serene mountain landscape at sunset", "model": "nano-banana", "aspectRatio": "16:9"}'`,
+  -d '{"prompt": "A serene mountain landscape at sunset", "model": "nano-banana-2", "aspectRatio": "16:9"}'`,
       anchorTransform: `curl -X POST https://directorspalette.app/api/v1/images/generate \\
   -H "Authorization: Bearer dp_your_api_key" \\
   -H "Content-Type: application/json" \\
-  -d '{"prompt": "Transform to claymation", "model": "nano-banana", "enableAnchorTransform": true, "referenceImages": ["https://example.com/style.jpg", "https://example.com/input1.jpg", "https://example.com/input2.jpg"]}'`,
+  -d '{"prompt": "Transform to claymation", "model": "nano-banana-2", "enableAnchorTransform": true, "referenceImages": ["https://example.com/style.jpg", "https://example.com/input1.jpg", "https://example.com/input2.jpg"]}'`,
     },
   })
 }

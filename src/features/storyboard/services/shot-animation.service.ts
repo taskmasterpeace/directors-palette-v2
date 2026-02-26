@@ -11,7 +11,7 @@
 import type { ShotType } from '../types/storyboard.types'
 import type { DirectorFingerprint } from '@/features/music-lab/types/director.types'
 
-export type AnimationModel = 'seedance-lite' | 'seedance-pro'
+export type AnimationModel = 'seedance-lite' | 'seedance-pro' | 'p-video'
 
 /**
  * Motion bias token → video-model-friendly description

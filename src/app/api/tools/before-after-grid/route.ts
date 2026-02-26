@@ -215,7 +215,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        version: 'google/nano-banana-pro',
+        version: 'google/nano-banana-2',
         input: {
           prompt,
           image: referenceImageUrl,
@@ -268,7 +268,7 @@ export async function POST(request: NextRequest) {
     await supabase.from('generation_events').insert({
       user_id: user.id,
       type: 'before-after-grid',
-      model: 'nano-banana-pro',
+      model: 'nano-banana-2',
       credits_used: TOOL_COST,
       metadata: {
         transformation_type: transformationType,

@@ -198,7 +198,7 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
 
     // Calculate estimated cost in tokens based on actual model + resolution
     const estimatedCost = useMemo(() => {
-        const model = imageModel || 'nano-banana-pro'
+        const model = imageModel || 'nano-banana-2'
         const costDollars = getModelCost(model, resolution)
         const costPerImagePts = Math.ceil(costDollars * 100)
         return selectedShots.size * costPerImagePts
@@ -263,7 +263,7 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
         <div className="space-y-2">
             {/* Compact Settings Row */}
             <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border flex-wrap">
-                <Select value={imageModel || 'nano-banana-pro'} onValueChange={(v) => setGenerationSettings({ imageModel: v as ModelId })}>
+                <Select value={imageModel || 'nano-banana-2'} onValueChange={(v) => setGenerationSettings({ imageModel: v as ModelId })}>
                     <SelectTrigger className="h-7 w-[160px] text-xs">
                         <SelectValue />
                     </SelectTrigger>

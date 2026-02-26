@@ -95,7 +95,7 @@ export class ShotCreatorSettingsService {
       aspectRatio: "16:9",
       resolution: "2K",
       seed: undefined,
-      model: "nano-banana",
+      model: "nano-banana-2",
     };
   }
 }

@@ -175,7 +175,7 @@ export class ContactSheetService {
                 // Validate input
                 const validationResult = ImageGenerationService.validateInput({
                     prompt: variant.fullPrompt,
-                    model: 'nano-banana-pro',
+                    model: 'nano-banana-2',
                     modelSettings: {
                         aspectRatio: config.aspectRatio,
                         resolution: config.resolution
@@ -192,7 +192,7 @@ export class ContactSheetService {
 
                 // Generate the image
                 const response = await imageGenerationService.generateImage({
-                    model: 'nano-banana-pro',
+                    model: 'nano-banana-2',
                     prompt: variant.fullPrompt,
                     modelSettings: {
                         aspectRatio: config.aspectRatio,
@@ -263,7 +263,7 @@ export class ContactSheetService {
 
         try {
             const response = await imageGenerationService.generateImage({
-                model: 'nano-banana-pro',
+                model: 'nano-banana-2',
                 prompt: fullPrompt,
                 modelSettings: {
                     aspectRatio: config.aspectRatio,
@@ -451,7 +451,7 @@ export class ContactSheetServiceV2 {
         try {
             const validationResult = ImageGenerationService.validateInput({
                 prompt: gridPrompt,
-                model: 'nano-banana-pro',
+                model: 'nano-banana-2',
                 modelSettings: {
                     aspectRatio: '1:1', // Square for 3x3 grid
                     resolution: config.resolution
@@ -465,7 +465,7 @@ export class ContactSheetServiceV2 {
             }
 
             const response = await imageGenerationService.generateImage({
-                model: 'nano-banana-pro',
+                model: 'nano-banana-2',
                 prompt: gridPrompt,
                 modelSettings: {
                     aspectRatio: '1:1', // Square for 3x3 grid

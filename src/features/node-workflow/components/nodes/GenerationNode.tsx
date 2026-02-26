@@ -7,10 +7,11 @@ import type { GenerationNodeData } from '../../types/workflow.types'
 
 function GenerationNode({ data, selected }: NodeProps) {
   const typedData = data as unknown as GenerationNodeData
-  const modelLabels = {
-    'nano-banana': 'Nano Banana',
-    'nano-banana-pro': 'Nano Banana Pro',
-    'z-image-turbo': 'Z-Image Turbo'
+  const modelLabels: Record<string, string> = {
+    'nano-banana-2': 'Nano Banana 2',
+    'z-image-turbo': 'Z-Image Turbo',
+    'seedream-5-lite': 'SeeDream 5 Lite',
+    'riverflow-2-pro': 'Riverflow 2 Pro',
   }
 
   return (

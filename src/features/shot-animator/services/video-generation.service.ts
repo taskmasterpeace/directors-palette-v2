@@ -93,6 +93,21 @@ export const VIDEO_MODEL_CONFIGS: Record<AnimationModel, ModelConfig> = {
     promptStyle: 'specific',
     restrictions: ['720p only', 'No last frame'],
   },
+  'p-video': {
+    id: 'p-video',
+    displayName: 'P-Video',
+    description: 'Free - Fast video gen with audio input + draft mode',
+    maxReferenceImages: 0,
+    supportsLastFrame: false,
+    supportsAudio: true,
+    defaultResolution: '480p',
+    maxDuration: 10,
+    supportedResolutions: ['480p', '720p'],
+    supportedAspectRatios: ['16:9', '9:16', '1:1', '4:3', '3:4'],
+    pricingType: 'per-video',
+    promptStyle: 'specific',
+    restrictions: ['Max 10s', 'Max 720p'],
+  },
   'seedance-pro': {
     id: 'seedance-pro',
     displayName: 'Seedance Pro (Legacy)',
@@ -129,6 +144,8 @@ export interface ReplicateVideoInput {
   generate_audio?: boolean
   reference_images?: string[]
   last_frame_image?: string
+  draft_mode?: boolean
+  audio?: string
 }
 
 export class VideoGenerationService {
@@ -143,8 +160,8 @@ export class VideoGenerationService {
       errors.push('Prompt is required')
     }
 
-    // Image is required for all models except seedance-1.5-pro (supports text-to-video)
-    if (!input.image && input.model !== 'seedance-1.5-pro') {
+    // Image is required for all models except seedance-1.5-pro and p-video (support text-to-video)
+    if (!input.image && input.model !== 'seedance-1.5-pro' && input.model !== 'p-video') {
       errors.push('Base image is required for image-to-video generation')
     }
 
@@ -193,6 +210,11 @@ export class VideoGenerationService {
       // Last frame only works when start frame image is also provided
       if (input.lastFrameImage && !input.image) {
         errors.push('Last frame image requires a start frame image for Seedance 1.5 Pro')
+      }
+    } else if (input.model === 'p-video') {
+      // Duration constraint for p-video: only 5 or 10
+      if (input.modelSettings.duration !== 5 && input.modelSettings.duration !== 10) {
+        errors.push('P-Video supports only 5 or 10 second durations')
       }
     }
 
@@ -289,6 +311,16 @@ export class VideoGenerationService {
       replicateInput.last_frame_image = input.lastFrameImage
     }
 
+    // Add p-video specific params
+    if (input.model === 'p-video') {
+      if (input.modelSettings.draftMode) {
+        replicateInput.draft_mode = true
+      }
+      if (input.modelSettings.audioUrl) {
+        replicateInput.audio = input.modelSettings.audioUrl
+      }
+    }
+
     return replicateInput
   }
 
@@ -303,6 +335,7 @@ export class VideoGenerationService {
       'seedance-lite': 'bytedance/seedance-1-lite',
       'seedance-1.5-pro': 'bytedance/seedance-1.5-pro',
       'kling-2.5-turbo-pro': 'kwaivgi/kling-v2.5-turbo-pro',
+      'p-video': 'prunaai/p-video',
       'seedance-pro': 'bytedance/seedance-1-pro',
     }
 

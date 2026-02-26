@@ -138,7 +138,7 @@ export async function POST(
     ]
 
     // Determine model from modelSettings or recipe suggestion
-    const model = modelSettings.model || recipe.suggestedModel || 'nano-banana-pro'
+    const model = modelSettings.model || recipe.suggestedModel || 'nano-banana-2'
     const aspectRatio = modelSettings.aspectRatio || recipe.suggestedAspectRatio || '16:9'
     const outputFormat = modelSettings.outputFormat || 'png'
 

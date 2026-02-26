@@ -53,8 +53,9 @@ export interface ShotCreatorSettings {
     enableAnchorTransform?: boolean // Enable Anchor Transform: use first ref image to transform remaining images
     // Quick mode for one-click workflows
     quickMode?: QuickMode
-    // Nano-Banana-Pro specific settings
-    safetyFilterLevel?: 'block_low_and_above' | 'block_medium_and_above' | 'block_only_high'
+    // Nano-Banana-2 specific settings
+    safetyFilterLevel?: 'block_low_and_above' | 'block_medium_and_above' | 'block_only_high' | 'block_none'
+    personGeneration?: 'dont_allow' | 'allow_adult' | 'allow_all'
     // Output settings
     outputFormat?: string // webp, jpg, png
     // Style injection (supports preset IDs like 'claymation' or custom IDs like 'custom-123...')

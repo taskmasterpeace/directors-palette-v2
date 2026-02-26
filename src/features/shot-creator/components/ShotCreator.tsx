@@ -48,11 +48,11 @@ const ShotCreator = () => {
     // Load gallery from Supabase on mount
     const { isLoading: isGalleryLoading } = useGalleryLoader()
 
-    const modelConfig = getModelConfig((shotCreatorSettings.model || 'nano-banana') as ModelId)
+    const modelConfig = getModelConfig((shotCreatorSettings.model || 'nano-banana-2') as ModelId)
 
     // Fix resolution mismatch on initial render
     useEffect(() => {
-        const currentModel = shotCreatorSettings.model || 'nano-banana'
+        const currentModel = shotCreatorSettings.model || 'nano-banana-2'
         const config = getModelConfig(currentModel as ModelId)
         const currentResolution = shotCreatorSettings.resolution
 
@@ -240,7 +240,7 @@ const ShotCreator = () => {
                             maxImages={modelConfig?.maxReferenceImages || 3}
                             modelSelector={
                                 <ModelSelector
-                                    selectedModel={shotCreatorSettings.model || 'nano-banana'}
+                                    selectedModel={shotCreatorSettings.model || 'nano-banana-2'}
                                     onModelChange={(model: string) => {
                                         const newModel = model as ModelId
                                         const newModelConfig = getModelConfig(newModel)
@@ -330,7 +330,7 @@ const ShotCreator = () => {
                                         maxImages={modelConfig?.maxReferenceImages || 3}
                                         modelSelector={
                                             <ModelSelector
-                                                selectedModel={shotCreatorSettings.model || 'nano-banana'}
+                                                selectedModel={shotCreatorSettings.model || 'nano-banana-2'}
                                                 onModelChange={(model: string) => {
                                                     const newModel = model as ModelId
                                                     const newModelConfig = getModelConfig(newModel)

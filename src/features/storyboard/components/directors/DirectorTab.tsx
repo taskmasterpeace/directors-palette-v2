@@ -105,7 +105,7 @@ export function DirectorTab() {
             // For each candidate, generate both base and director-enhanced images
             const results = await Promise.all(candidates.map(async (shot, i) => {
                 const directorPrompt = enhanced[i]?.prompt || shot.prompt
-                const model = generationSettings.imageModel || 'nano-banana-pro'
+                const model = generationSettings.imageModel || 'nano-banana-2'
 
                 // Generate director-enhanced image
                 let directorImage: string | undefined

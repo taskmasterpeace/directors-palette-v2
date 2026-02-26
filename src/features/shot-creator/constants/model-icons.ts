@@ -3,8 +3,7 @@
  */
 
 export const MODEL_ICONS: Record<string, string> = {
-  'nano-banana': '🍌',
-  'nano-banana-pro': '🔥',
+  'nano-banana-2': '🍌',
   'z-image-turbo': '⚡',
   'seedream-5-lite': '🌿',
   'riverflow-2-pro': '🌊',

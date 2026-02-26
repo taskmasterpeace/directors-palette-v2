@@ -10,8 +10,8 @@ import Replicate from 'replicate'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { logger } from '@/lib/logger'
 
-// Use nano-banana-pro for clean wardrobe generation
-const IMAGE_MODEL = 'fofr/nano-banana-pro'
+// Use nano-banana-2 for clean wardrobe generation
+const IMAGE_MODEL = 'google/nano-banana-2'
 
 export async function POST(request: NextRequest) {
     try {

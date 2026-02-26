@@ -121,7 +121,7 @@ export async function GET(): Promise<NextResponse> {
         example: {
           template: 'A <<SHOT_TYPE:select(CU,MS,WS)!>> shot of <<CHARACTER:name!>> in a <<LOCATION:text>> setting',
           variables: { SHOT_TYPE: 'CU', CHARACTER: 'John', LOCATION: 'forest' },
-          model: 'nano-banana',
+          model: 'nano-banana-2',
           aspectRatio: '16:9',
         },
       },

@@ -213,7 +213,7 @@ export function useStoryGeneration() {
 
     const processQueue = useCallback(async (
         shots: StoryShot[],
-        model: ImageModel = 'nano-banana',
+        model: ImageModel = 'nano-banana-2',
         modelSettings: ImageModelSettings = {}
     ) => {
         if (!currentQueue || currentQueue.status !== 'pending') {

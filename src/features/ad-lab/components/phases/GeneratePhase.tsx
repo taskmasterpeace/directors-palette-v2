@@ -19,9 +19,9 @@ import { Button } from '@/components/ui/button'
 import { useAdLabStore } from '../../store/ad-lab.store'
 import type { AdPrompt, AdDuration, GenerationJob, GenerationJobStatus } from '../../types/ad-lab.types'
 
-const IMAGE_MODEL = 'nano-banana-pro'
+const IMAGE_MODEL = 'nano-banana-2'
 const VIDEO_MODEL = 'wan-2.2-i2v-fast'
-const IMAGE_COST_PTS = 25  // nano-banana-pro = $0.25 = 25 pts
+const IMAGE_COST_PTS = 0  // nano-banana-2 = free
 const VIDEO_COST_PTS = 16  // wan-2.2-i2v-fast = 16 pts/video
 const POLL_INTERVAL = 3000
 

@@ -229,7 +229,7 @@ RULES:
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: 'nano-banana-pro', // Use Nano Banana Pro for best quality
+                    model: 'nano-banana-2', // Use Nano Banana Pro for best quality
                     prompt: cinematicPrompt,
                     referenceImages: [
                         { url: image.url, weight: 0.8 },          // User's selected image
@@ -307,7 +307,7 @@ The color temperature, lighting direction, and overall mood must match across al
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: 'nano-banana-pro',
+                    model: 'nano-banana-2',
                     prompt: brollPrompt,
                     referenceImages: [
                         { url: image.url, weight: 0.8 } // User's selected image as reference

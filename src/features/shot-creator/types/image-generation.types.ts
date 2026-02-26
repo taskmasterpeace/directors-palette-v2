@@ -7,24 +7,17 @@ import type { ModelId } from '@/config'
 
 // Available image generation models
 export type ImageModel = Extract<ModelId,
-  | 'nano-banana'
-  | 'nano-banana-pro'
+  | 'nano-banana-2'
   | 'z-image-turbo'
   | 'seedream-5-lite'
   | 'riverflow-2-pro'
 >
 
 // Model-specific settings interfaces
-export interface NanoBananaSettings {
+export interface NanoBanana2Settings {
   aspectRatio?: string
-  outputFormat?: 'jpg' | 'png'
-}
-
-export interface NanoBananaProSettings {
-  aspectRatio?: string
-  outputFormat?: 'jpg' | 'png'
-  resolution?: '1K' | '2K' | '4K'
-  safetyFilterLevel?: 'block_low_and_above' | 'block_medium_and_above' | 'block_only_high'
+  safetyFilterLevel?: 'block_low_and_above' | 'block_medium_and_above' | 'block_only_high' | 'block_none'
+  personGeneration?: 'dont_allow' | 'allow_adult' | 'allow_all'
 }
 
 export interface ZImageTurboSettings {
@@ -56,8 +49,7 @@ export interface RiverflowProSettings {
 
 // Union type for all model settings
 export type ImageModelSettings =
-  | NanoBananaSettings
-  | NanoBananaProSettings
+  | NanoBanana2Settings
   | ZImageTurboSettings
   | SeedreamSettings
   | RiverflowProSettings
@@ -78,20 +70,12 @@ export interface ImageGenerationInput {
 }
 
 // Replicate API input schemas
-export interface NanoBananaInput {
+export interface NanoBanana2Input {
   prompt: string
-  image_input?: string[]
+  image?: string
   aspect_ratio?: string
-  output_format?: string
-}
-
-export interface NanoBananaProInput {
-  prompt: string
-  image_input?: string[]
-  aspect_ratio?: string
-  output_format?: string
-  resolution?: string
   safety_filter_level?: string
+  person_generation?: string
 }
 
 export interface ZImageTurboInput {
@@ -130,8 +114,7 @@ export interface RiverflowProInput {
 
 // Union type for all Replicate inputs
 export type ReplicateImageInput =
-  | NanoBananaInput
-  | NanoBananaProInput
+  | NanoBanana2Input
   | ZImageTurboInput
   | SeedreamInput
   | RiverflowProInput

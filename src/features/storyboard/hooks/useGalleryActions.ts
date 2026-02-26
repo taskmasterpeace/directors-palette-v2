@@ -186,7 +186,7 @@ The color temperature, lighting direction, and overall mood must match across al
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: generationSettings.imageModel || 'nano-banana-pro',
+          model: generationSettings.imageModel || 'nano-banana-2',
           prompt: brollPrompt,
           referenceImages: [{ url: imageUrl, weight: 0.8 }],
           modelSettings: {
@@ -292,7 +292,7 @@ The color temperature, lighting direction, and overall mood must match across al
       const results = await storyboardGenerationService.generateShotsFromPrompts(
         [shot],
         {
-          model: generationSettings.imageModel || 'nano-banana-pro',
+          model: generationSettings.imageModel || 'nano-banana-2',
           aspectRatio: generationSettings.aspectRatio,
           resolution: generationSettings.resolution
         },
@@ -345,7 +345,7 @@ The color temperature, lighting direction, and overall mood must match across al
       const results = await storyboardGenerationService.generateShotsFromPrompts(
         [modifiedShot],
         {
-          model: generationSettings.imageModel || 'nano-banana-pro',
+          model: generationSettings.imageModel || 'nano-banana-2',
           aspectRatio: generationSettings.aspectRatio,
           resolution: generationSettings.resolution
         },
@@ -411,7 +411,7 @@ The color temperature, lighting direction, and overall mood must match across al
         const results = await storyboardGenerationService.generateShotsFromPrompts(
           [shot],
           {
-            model: generationSettings.imageModel || 'nano-banana-pro',
+            model: generationSettings.imageModel || 'nano-banana-2',
             aspectRatio: generationSettings.aspectRatio,
             resolution: generationSettings.resolution
           },

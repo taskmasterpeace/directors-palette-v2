@@ -4,8 +4,7 @@ import { ClapperboardSpinner } from '@/features/shot-creator/components/unified-
 
 const TEST_MODELS = [
   { model: 'z-image-turbo', label: 'Z-Image Turbo (2s)' },
-  { model: 'nano-banana', label: 'Nano Banana (22s)' },
-  { model: 'nano-banana-pro', label: 'Nano Banana Pro (71s)' },
+  { model: 'nano-banana-2', label: 'Nano Banana 2 (10s)' },
   { model: 'seedream-5-lite', label: 'Seedream 5 Lite (49s)' },
   { model: 'riverflow-2-pro', label: 'Riverflow Pro (10min)' },
 ]

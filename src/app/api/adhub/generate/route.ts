@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // Build model settings
-      const selectedModel = model || 'nano-banana-pro'
+      const selectedModel = model || 'nano-banana-2'
       const isRiverflow = selectedModel === 'riverflow-2-pro'
 
       let modelSettings: Record<string, unknown> = {

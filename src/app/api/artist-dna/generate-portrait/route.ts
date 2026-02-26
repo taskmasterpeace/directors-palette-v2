@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     const prompt = buildPrompt(body)
 
     const prediction = await replicate.predictions.create({
-      model: 'google/nano-banana',
+      model: 'google/nano-banana-2',
       input: {
         prompt,
         aspect_ratio: '1:1',

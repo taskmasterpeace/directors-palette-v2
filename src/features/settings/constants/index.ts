@@ -12,7 +12,7 @@ export const defaultSettings: SettingsConfig = {
         aspectRatio: "16:9",
         resolution: "2K",
         seed: undefined,
-        model: "nano-banana",
+        model: "nano-banana-2",
         maxImages: 1,
         sequentialGeneration: false,
         promptLibrary: {

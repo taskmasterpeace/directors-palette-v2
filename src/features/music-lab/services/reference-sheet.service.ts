@@ -72,7 +72,7 @@ class ReferenceSheetService {
                     modelSettings: {
                         aspectRatio: '16:9',
                         outputFormat: 'png',
-                        model: 'nano-banana-pro'
+                        model: 'nano-banana-2'
                     }
                 })
             })
@@ -150,7 +150,7 @@ class ReferenceSheetService {
                     modelSettings: {
                         aspectRatio: '16:9',
                         outputFormat: 'png',
-                        model: 'nano-banana-pro'
+                        model: 'nano-banana-2'
                     }
                 })
             })
@@ -232,7 +232,7 @@ class ReferenceSheetService {
                     modelSettings: {
                         aspectRatio: '16:9',
                         outputFormat: 'png',
-                        model: 'nano-banana-pro'
+                        model: 'nano-banana-2'
                     }
                 })
             })

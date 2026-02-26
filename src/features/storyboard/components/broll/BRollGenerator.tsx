@@ -159,7 +159,7 @@ export function BRollGenerator() {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        model: 'nano-banana-pro',
+                        model: 'nano-banana-2',
                         prompt: finalPrompt,
                         modelSettings: { aspectRatio, resolution },
                         extraMetadata: {

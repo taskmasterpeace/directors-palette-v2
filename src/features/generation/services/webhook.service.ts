@@ -275,7 +275,7 @@ export class WebhookService {
     if (!userIsAdmin) {
       // Determine generation type from gallery entry
       const generationType = galleryEntry.generation_type === 'video' ? 'video' : 'image';
-      const defaultModel = generationType === 'video' ? 'seedance-lite' : 'nano-banana';
+      const defaultModel = generationType === 'video' ? 'seedance-lite' : 'nano-banana-2';
       const model = (currentMetadata.model as string) || defaultModel;
 
       // Calculate actual cost based on type-specific factors

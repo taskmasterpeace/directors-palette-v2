@@ -24,7 +24,7 @@ const replicate = new Replicate({
 interface RecipeExecuteRequest {
   template: string  // Recipe template with <<FIELD:type>> placeholders
   variables: Record<string, string>  // Values for placeholders
-  model?: 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
+  model?: 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
   aspectRatio?: string
   outputFormat?: 'webp' | 'jpg' | 'png'
   referenceImages?: string[]  // URLs
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<RecipeExe
     const {
       template,
       variables = {},
-      model = 'nano-banana',
+      model = 'nano-banana-2',
       aspectRatio = '1:1',
       outputFormat = 'webp',
       referenceImages = [],
@@ -407,8 +407,8 @@ export async function GET(): Promise<NextResponse> {
       model: {
         type: 'string',
         required: false,
-        default: 'nano-banana',
-        options: ['nano-banana', 'nano-banana-pro', 'z-image-turbo', 'seedream-5-lite', 'riverflow-2-pro'],
+        default: 'nano-banana-2',
+        options: ['nano-banana-2', 'z-image-turbo', 'seedream-5-lite', 'riverflow-2-pro'],
       },
       aspectRatio: {
         type: 'string',
@@ -442,7 +442,7 @@ export async function GET(): Promise<NextResponse> {
   -d '{
     "template": "A <<SHOT_TYPE:select(CU,MS,WS)!>> of <<CHARACTER:name!>>",
     "variables": {"SHOT_TYPE": "CU", "CHARACTER": "Maya"},
-    "model": "nano-banana",
+    "model": "nano-banana-2",
     "aspectRatio": "16:9"
   }'`,
     },

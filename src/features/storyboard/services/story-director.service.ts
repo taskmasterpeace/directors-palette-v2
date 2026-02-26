@@ -97,7 +97,7 @@ export class StoryDirectorService {
                 shotType
             )
             if (setup) {
-                const effectiveModelId = modelId || 'nano-banana-pro' as ModelId
+                const effectiveModelId = modelId || 'nano-banana-2' as ModelId
                 cameraFoundation = EquipmentTranslationService.buildCameraFoundation(
                     setup,
                     effectiveModelId,

@@ -16,7 +16,7 @@ export interface PromptNodeData extends BaseNodeData {
 }
 
 export interface GenerationNodeData extends BaseNodeData {
-  model: 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo'
+  model: 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
   aspectRatio?: string
   outputFormat?: string
   negative?: string

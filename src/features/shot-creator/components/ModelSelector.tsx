@@ -17,7 +17,6 @@ import {
 import {
   Sparkles,
   Info,
-  Flame,
   Zap,
   Image as ImageIcon,
   Type,
@@ -38,17 +37,11 @@ const MODEL_CAPABILITIES: Record<ModelId, {
     refImages: 'Up to 1',
     bestFor: ['Ultra-fast generation', 'Concept exploration', 'Budget work']
   },
-  'nano-banana': {
-    speed: '~8s (Moderate)',
-    textRendering: 'Good',
-    refImages: 'Up to 10',
-    bestFor: ['Multi-reference work', 'Character consistency', 'General use']
-  },
-  'nano-banana-pro': {
-    speed: '~15s (Moderate)',
+  'nano-banana-2': {
+    speed: '~8s (Fast)',
     textRendering: 'Excellent',
-    refImages: 'Up to 14',
-    bestFor: ['Text in images', 'Complex scenes', 'Multi-reference composites']
+    refImages: 'Up to 1',
+    bestFor: ['High quality', 'Fast generation', 'Free tier', 'General use']
   },
   'seedream-5-lite': {
     speed: '~10s (Moderate)',
@@ -94,8 +87,7 @@ export function ModelSelector({
 
   function getIconComponent(modelId: ModelId) {
     switch (modelId) {
-      case 'nano-banana': return Sparkles
-      case 'nano-banana-pro': return Flame
+      case 'nano-banana-2': return Sparkles
       default: return Sparkles
     }
   }

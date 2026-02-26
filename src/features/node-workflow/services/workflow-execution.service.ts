@@ -86,7 +86,7 @@ class WorkflowExecutionService {
         // TODO: Implement actual image generation
         // For now, return a placeholder URL
         const genData = node.data as { model?: string; aspectRatio?: string; outputFormat?: string; negative?: string }
-        log.info('Generation node would generate with', { prompt: promptInput.value, model: genData.model || 'nano-banana-pro', referenceImage: imageInput?.value, aspectRatio: genData.aspectRatio || '16:9', outputFormat: genData.outputFormat || 'png', negative: genData.negative })
+        log.info('Generation node would generate with', { prompt: promptInput.value, model: genData.model || 'nano-banana-2', referenceImage: imageInput?.value, aspectRatio: genData.aspectRatio || '16:9', outputFormat: genData.outputFormat || 'png', negative: genData.negative })
 
         return 'https://via.placeholder.com/800x450?text=Generated+Image'
       }

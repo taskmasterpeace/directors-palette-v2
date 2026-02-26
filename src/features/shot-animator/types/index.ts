@@ -10,6 +10,7 @@ export type AnimationModel =
   | 'seedance-lite'        // Featured, 12s max, start + last + ref images
   | 'seedance-1.5-pro'     // Pro, 480p, start + last frame
   | 'kling-2.5-turbo-pro'  // Premium, 10s max, best motion
+  | 'p-video'              // Fast video gen with audio + draft mode
   | 'seedance-pro'         // Legacy - keeping for backwards compatibility
 
 // Generated video entry for shot animator
@@ -46,6 +47,8 @@ export interface ModelSettings {
   cameraFixed: boolean
   seed?: number
   generateAudio?: boolean // Generate audio synced to video (seedance-1.5-pro)
+  draftMode?: boolean     // p-video: faster lower quality
+  audioUrl?: string       // p-video: audio file URI for sync
 }
 
 // Settings per model
@@ -56,6 +59,7 @@ export interface AnimatorSettings {
   'seedance-lite': ModelSettings
   'seedance-1.5-pro': ModelSettings
   'kling-2.5-turbo-pro': ModelSettings
+  'p-video': ModelSettings
   'seedance-pro': ModelSettings // Legacy
 }
 
@@ -105,6 +109,7 @@ export const VIDEO_MODEL_PRICING: Record<AnimationModel, VideoPricing> = {
   'seedance-lite': { '480p': 3, '720p': 5, '1080p': 11 },      // Per second
   'seedance-1.5-pro': { '480p': 5, '720p': 8 },                // Per second
   'kling-2.5-turbo-pro': { '480p': 10, '720p': 10 },           // Per second
+  'p-video': { '480p': 0, '720p': 0 },                          // Free — update when pricing announced
   'seedance-pro': { '480p': 4, '720p': 6, '1080p': 15 },       // Per second (legacy)
 }
 

@@ -18,7 +18,7 @@ import { Shuffle } from "lucide-react"
 
 const AdvancedSettings = () => {
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
-    const selectedModel = shotCreatorSettings.model || 'nano-banana'
+    const selectedModel = shotCreatorSettings.model || 'nano-banana-2'
     const modelConfig = useMemo(() => getModelConfig(selectedModel as ModelId), [selectedModel])
 
     // Generate random seed

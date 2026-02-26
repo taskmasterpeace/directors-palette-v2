@@ -10,10 +10,10 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 })
 
-// Model ID for image generation - Nano Banana Pro
-const NANO_BANANA_PRO_MODEL = 'google/nano-banana-pro'
+// Model ID for image generation - Nano Banana 2
+const NANO_BANANA_PRO_MODEL = 'google/nano-banana-2'
 
-// Cost: Same as nano-banana-pro standard generation
+// Cost: Free (nano-banana-2)
 const STYLE_GUIDE_GRID_COST_POINTS = 20
 
 /**

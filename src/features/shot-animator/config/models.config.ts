@@ -112,6 +112,25 @@ export const ANIMATION_MODELS: Record<AnimationModel, ModelConfig> = {
       'Higher cost - use for quality-critical videos'
     ]
   },
+  'p-video': {
+    id: 'p-video',
+    displayName: 'P-Video',
+    description: 'Fast video with audio input and draft mode. Text-to-video, image-to-video, audio-to-video.',
+    maxReferenceImages: 0,
+    supportsLastFrame: false,
+    supportsAudio: true,
+    defaultResolution: '480p',
+    maxDuration: 10,
+    supportedResolutions: ['480p', '720p'],
+    supportedAspectRatios: ['16:9', '9:16', '1:1', '4:3', '3:4'],
+    pricingType: 'per-video',
+    promptStyle: 'specific',
+    restrictions: [
+      'Max 10 seconds',
+      'Max 720p resolution',
+      'Draft mode available for faster iteration'
+    ]
+  },
   'seedance-pro': {
     id: 'seedance-pro',
     displayName: 'Seedance Pro (Legacy)',
@@ -176,6 +195,14 @@ export const DEFAULT_MODEL_SETTINGS: Record<AnimationModel, ModelSettings> = {
     fps: 24,
     cameraFixed: false
   },
+  'p-video': {
+    duration: 10,
+    resolution: '480p',
+    aspectRatio: '16:9',
+    fps: 24,
+    cameraFixed: false,
+    draftMode: false
+  },
   'seedance-pro': {
     duration: 5,
     resolution: '1080p',
@@ -222,6 +249,7 @@ export const ACTIVE_VIDEO_MODELS: AnimationModel[] = [
   'seedance-pro-fast',    // Standard - 4 pts/sec
   'seedance-lite',        // Value - 5 pts/sec (has last frame + ref images)
   'seedance-1.5-pro',     // Featured - last frame + high quality (DEFAULT)
+  'p-video',              // Free - fast video with audio input
   'kling-2.5-turbo-pro',  // Premium - 10 pts/sec
 ]
 
@@ -235,6 +263,7 @@ export const MODEL_TIER_LABELS: Record<AnimationModel, string> = {
   'seedance-lite': 'Value',
   'seedance-1.5-pro': 'Featured',
   'kling-2.5-turbo-pro': 'Premium',
+  'p-video': 'Free',
   'seedance-pro': 'Legacy',
 }
 
@@ -248,6 +277,7 @@ export const VIDEO_MODEL_ICONS: Record<AnimationModel, string> = {
   'seedance-lite': '🌱',
   'seedance-1.5-pro': '🎯',
   'kling-2.5-turbo-pro': '👑',
+  'p-video': '🎬',
   'seedance-pro': '🎬',
 }
 

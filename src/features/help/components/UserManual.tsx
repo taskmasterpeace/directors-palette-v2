@@ -1316,7 +1316,7 @@ export function UserManual() {
                                         <p className="text-green-400">curl -X POST https://directorspalette.com/api/v1/images/generate \</p>
                                         <p className="text-green-400 pl-4">-H &quot;Authorization: Bearer dp_your_key&quot; \</p>
                                         <p className="text-green-400 pl-4">-H &quot;Content-Type: application/json&quot; \</p>
-                                        <p className="text-green-400 pl-4">-d &apos;{'{"prompt": "A sunset over mountains", "model": "nano-banana"}'}&apos;</p>
+                                        <p className="text-green-400 pl-4">-d &apos;{'{"prompt": "A sunset over mountains", "model": "nano-banana-2"}'}&apos;</p>
                                     </div>
                                 </div>
 

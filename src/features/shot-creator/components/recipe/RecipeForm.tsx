@@ -162,8 +162,7 @@ export function RecipeForm({
               <SelectValue placeholder="Default" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="nano-banana">Nano Banana (fast)</SelectItem>
-              <SelectItem value="nano-banana-pro">Nano Banana Pro (quality)</SelectItem>
+              <SelectItem value="nano-banana-2">Nano Banana 2 (fast + free)</SelectItem>
               <SelectItem value="ideogram-v2">Ideogram v2 (text)</SelectItem>
             </SelectContent>
           </Select>

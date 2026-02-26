@@ -64,7 +64,7 @@ export class CharacterSheetService {
             // Validate input
             const validationResult = ImageGenerationService.validateInput({
                 prompt: finalPrompt,
-                model: 'nano-banana-pro',
+                model: 'nano-banana-2',
                 modelSettings: {
                     aspectRatio,
                     resolution: '2K'
@@ -82,7 +82,7 @@ export class CharacterSheetService {
 
             // Start generation
             const response = await imageGenerationService.generateImage({
-                model: 'nano-banana-pro',
+                model: 'nano-banana-2',
                 prompt: finalPrompt,
                 modelSettings: {
                     aspectRatio,

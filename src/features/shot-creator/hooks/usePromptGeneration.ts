@@ -90,7 +90,7 @@ export function usePromptGeneration() {
 
     // ── Cost calculation ───────────────────────────────────────────────
     const generationCost: GenerationCost = React.useMemo(() => {
-        const model = shotCreatorSettings.model || 'nano-banana'
+        const model = shotCreatorSettings.model || 'nano-banana-2'
         const modelConfig = getModelConfig(model)
 
         let costPerImage = modelConfig.costPerImage
@@ -158,19 +158,14 @@ export function usePromptGeneration() {
 
     // ── Build model settings from shotCreatorSettings ──────────────────
     const buildModelSettings = useCallback(() => {
-        const model = shotCreatorSettings.model || 'nano-banana'
+        const model = shotCreatorSettings.model || 'nano-banana-2'
         const baseSettings: Record<string, unknown> = {}
 
         switch (model) {
-            case 'nano-banana':
+            case 'nano-banana-2':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
-                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
-                break
-            case 'nano-banana-pro':
-                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
-                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
-                baseSettings.resolution = shotCreatorSettings.resolution
                 baseSettings.safetyFilterLevel = shotCreatorSettings.safetyFilterLevel || 'block_only_high'
+                baseSettings.personGeneration = shotCreatorSettings.personGeneration || 'allow_all'
                 break
             case 'z-image-turbo':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
@@ -268,7 +263,7 @@ Every tile must feel like it belongs to the SAME visual world. Consistent style 
 NO style drift between tiles. NO text labels inside the 9 image cells. Black grid lines between all cells.
 REMINDER: Title "${styleName}" must be COMPLETE and FULLY READABLE at the top - never cropped or cut off.`
 
-            const model = shotCreatorSettings.model || 'nano-banana-pro'
+            const model = shotCreatorSettings.model || 'nano-banana-2'
             const referenceUrls = shotCreatorReferenceImages
                 .map(ref => ref.url || ref.preview)
                 .filter((url): url is string => Boolean(url))
@@ -301,7 +296,7 @@ REMINDER: Title "${styleName}" must be COMPLETE and FULLY READABLE at the top - 
                 return
             }
 
-            const model = shotCreatorSettings.model || 'nano-banana-pro'
+            const model = shotCreatorSettings.model || 'nano-banana-2'
             const modelSettings = buildModelSettings()
 
             const characterSheetSettings = {
@@ -512,7 +507,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                 if (!confirmed) return
             }
 
-            const model = shotCreatorSettings.model || 'nano-banana'
+            const model = shotCreatorSettings.model || 'nano-banana-2'
             const modelSettings = buildModelSettings()
             const results = []
             let successCount = 0
@@ -586,7 +581,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
             }
 
             if (activeRecipe.suggestedModel) {
-                updateSettings({ model: activeRecipe.suggestedModel as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro' })
+                updateSettings({ model: activeRecipe.suggestedModel as 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro' })
             }
             if (activeRecipe.suggestedAspectRatio) {
                 updateSettings({ aspectRatio: activeRecipe.suggestedAspectRatio })
@@ -608,7 +603,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                     stageReferenceImages[0] = [...new Set([...allRefs, ...stageReferenceImages[0]])]
                 }
 
-                const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-pro') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
+                const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-2') as 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
                 const aspectRatio = shotCreatorSettings.aspectRatio || activeRecipe.suggestedAspectRatio || '16:9'
 
                 try {
@@ -647,7 +642,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                 setStageReferenceImages([])
             }
 
-            const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana') as 'nano-banana' | 'nano-banana-pro' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
+            const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-2') as 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
             const modelSettings = buildModelSettings()
 
             toast.info(`Generating with recipe: ${activeRecipe.name}`)
@@ -664,7 +659,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
         }
 
         // ===== Regular mode =====
-        const model = shotCreatorSettings.model || 'nano-banana'
+        const model = shotCreatorSettings.model || 'nano-banana-2'
         const referenceUrls = shotCreatorReferenceImages
             .map(ref => ref.url || ref.preview)
             .filter((url): url is string => Boolean(url))

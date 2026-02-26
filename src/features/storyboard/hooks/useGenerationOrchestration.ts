@@ -120,7 +120,7 @@ export function useGenerationOrchestration({
         }
 
         try {
-            const selectedModel: ModelId = imageModel || 'nano-banana-pro'
+            const selectedModel: ModelId = imageModel || 'nano-banana-2'
             const activeChapter = chapters[chapterIndex]
             const generationTimestamp = new Date().toISOString()
 

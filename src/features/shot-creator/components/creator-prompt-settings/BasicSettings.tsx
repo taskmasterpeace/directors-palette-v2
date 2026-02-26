@@ -14,7 +14,7 @@ import StyleSelector from './StyleSelector'
 
 const BasicSettings = () => {
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
-    const selectedModel = shotCreatorSettings.model || 'nano-banana'
+    const selectedModel = shotCreatorSettings.model || 'nano-banana-2'
     const modelConfig = useMemo(() => getModelConfig(selectedModel as ModelId), [selectedModel])
 
     // Get model-specific aspect ratios
@@ -28,20 +28,12 @@ const BasicSettings = () => {
 
     // Get model-specific resolution options
     const resolutionOptions = useMemo(() => {
-        // For nano-banana-pro, use resolution parameter
-        if (selectedModel === 'nano-banana-pro') {
-            const proParam = modelConfig.parameters.resolution
-            if (proParam?.options) {
-                return proParam.options
-            }
-        }
-
         const resolutionParam = modelConfig.parameters.resolution
         if (resolutionParam?.options) {
             return resolutionParam.options
         }
         return resolutions
-    }, [modelConfig, selectedModel])
+    }, [modelConfig])
 
     // Check if model supports each parameter
     const supportsAspectRatio = useMemo(() =>

@@ -116,7 +116,7 @@ export function ShotAnimatorView() {
   // Get model settings from settings store, merging with defaults per-model
   // so new models or new fields added after a user's settings were saved still work
   const modelSettings = useMemo(() => {
-    const saved = shotAnimator.modelSettings
+    const saved = shotAnimator.modelSettings as Partial<AnimatorSettings> | undefined
     if (!saved) return DEFAULT_MODEL_SETTINGS
     const merged = { ...DEFAULT_MODEL_SETTINGS } as AnimatorSettings
     for (const key of Object.keys(merged) as AnimationModel[]) {

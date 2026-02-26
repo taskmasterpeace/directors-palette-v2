@@ -41,7 +41,7 @@ export class StyleGeneratorService {
             // Validate input
             const validationResult = ImageGenerationService.validateInput({
                 prompt: finalPrompt,
-                model: 'nano-banana-pro',
+                model: 'nano-banana-2',
                 modelSettings: {
                     aspectRatio: config.aspectRatio || '21:9',
                     resolution: '2K'
@@ -59,7 +59,7 @@ export class StyleGeneratorService {
 
             // Start generation
             const response = await imageGenerationService.generateImage({
-                model: 'nano-banana-pro',
+                model: 'nano-banana-2',
                 prompt: finalPrompt,
                 modelSettings: {
                     aspectRatio: config.aspectRatio || '21:9',

@@ -48,8 +48,7 @@ The final image should look natural as if the edits were always part of the orig
 
 // Model IDs on Replicate
 const MODELS = {
-    'nano-banana': 'google/nano-banana' as const,
-    'nano-banana-pro': 'google/nano-banana-pro' as const,
+    'nano-banana-2': 'google/nano-banana-2' as const,
 }
 
 export async function POST(request: NextRequest) {
@@ -57,7 +56,7 @@ export async function POST(request: NextRequest) {
         const auth = await getAuthenticatedUser(request)
         if (auth instanceof NextResponse) return auth
 
-        const { image, prompt, model = 'nano-banana', systemPrompt } = await request.json()
+        const { image, prompt, model = 'nano-banana-2', systemPrompt } = await request.json()
 
         if (!image || !prompt) {
             return NextResponse.json({
@@ -72,7 +71,7 @@ export async function POST(request: NextRequest) {
             }, { status: 500 })
         }
 
-        const modelId = MODELS[model as keyof typeof MODELS] || MODELS['nano-banana']
+        const modelId = MODELS[model as keyof typeof MODELS] || MODELS['nano-banana-2']
 
         logger.api.info('Inpaint: Using model', { detail: modelId })
         logger.api.info('Inpaint: User prompt', { detail: prompt.substring(0, 100) })

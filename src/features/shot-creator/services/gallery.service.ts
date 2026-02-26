@@ -125,7 +125,7 @@ export class GalleryService {
     private static transformToGeneratedImage(item: GalleryRow): GeneratedImage {
         const metadata = item.metadata as GalleryMetadata || {}
         const modelSettings = (metadata as { modelSettings?: Record<string, unknown> }).modelSettings || {}
-        const model = (metadata.model as string) || 'nano-banana'
+        const model = (metadata.model as string) || 'nano-banana-2'
         const aspectRatio = (modelSettings.aspectRatio as string) ||
             (modelSettings.aspect_ratio as string) ||
             '16:9'

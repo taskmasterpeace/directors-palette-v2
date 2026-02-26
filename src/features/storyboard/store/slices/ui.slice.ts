@@ -32,7 +32,7 @@ export const uiInitialState = {
     generationSettings: {
         aspectRatio: '16:9',
         resolution: '2K' as const,
-        imageModel: 'nano-banana-pro' as ModelId
+        imageModel: 'nano-banana-2' as ModelId
     } as GenerationSettings,
     globalPromptPrefix: '',
     globalPromptSuffix: '',
@@ -205,7 +205,7 @@ export const createUiSlice = (set: Set, get: Get) => ({
         generationSettings: {
             aspectRatio: '16:9',
             resolution: '2K' as const,
-            imageModel: 'nano-banana-pro' as ModelId
+            imageModel: 'nano-banana-2' as ModelId
         },
         globalPromptPrefix: '',
         globalPromptSuffix: '',

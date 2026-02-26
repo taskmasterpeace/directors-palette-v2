@@ -24,7 +24,7 @@ import { createLogger } from '@/lib/logger'
 
 
 const log = createLogger('Layout')
-type ModelType = 'nano-banana' | 'nano-banana-pro'
+type ModelType = 'nano-banana-2'
 type ToolType = 'mask' | 'draw' | 'arrow' | 'text' | 'image'
 
 interface QueuedResult {
@@ -56,7 +56,7 @@ export function MaskEditorTab({ className }: MaskEditorTabProps) {
     const [color, _setColor] = useState("#00d2d3") // Cyan color for all annotations
     const [prompt, setPrompt] = useState("")
     const [isProcessing, setIsProcessing] = useState(false)
-    const [model, setModel] = useState<ModelType>('nano-banana')
+    const [model, setModel] = useState<ModelType>('nano-banana-2')
     const [_canvasSize, setCanvasSize] = useState({ width: 0, height: 0 })
     const [startPoint, setStartPoint] = useState<{ x: number, y: number } | null>(null)
     const [scale, setScale] = useState(1)
@@ -368,7 +368,7 @@ export function MaskEditorTab({ className }: MaskEditorTabProps) {
         if (!imageCanvasRef.current) return
         const link = document.createElement("a")
         link.href = imageCanvasRef.current.toDataURL("image/png")
-        link.download = "nano-banana-edit.png"
+        link.download = "nano-banana-2-edit.png"
         link.click()
     }
 
@@ -397,7 +397,7 @@ export function MaskEditorTab({ className }: MaskEditorTabProps) {
         // For now, just download the image
         const link = document.createElement("a")
         link.href = result.imageUrl
-        link.download = `nano-banana-${result.id.slice(0, 8)}.png`
+        link.download = `nano-banana-2-${result.id.slice(0, 8)}.png`
         link.click()
         toast({
             title: "Image Saved",
@@ -429,11 +429,8 @@ export function MaskEditorTab({ className }: MaskEditorTabProps) {
                                 <SelectValue placeholder="Select model" />
                             </SelectTrigger>
                             <SelectContent className="bg-card border-primary/30">
-                                <SelectItem value="nano-banana" className="text-foreground hover:bg-primary/20">
-                                    Nano Banana
-                                </SelectItem>
-                                <SelectItem value="nano-banana-pro" className="text-foreground hover:bg-primary/20">
-                                    Nano Banana Pro
+                                <SelectItem value="nano-banana-2" className="text-foreground hover:bg-primary/20">
+                                    Nano Banana 2
                                 </SelectItem>
                             </SelectContent>
                         </Select>

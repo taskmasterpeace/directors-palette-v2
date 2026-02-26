@@ -10,8 +10,7 @@ import type {
   ImageGenerationInput,
   ImageGenerationRequest,
   ImageGenerationResponse,
-  NanoBananaSettings,
-  NanoBananaProSettings,
+  NanoBanana2Settings,
   ZImageTurboSettings,
   SeedreamSettings,
   RiverflowProSettings,
@@ -37,16 +36,10 @@ export class ImageGenerationService {
       errors.push('Model selection is required')
     }
 
-    // Get model config
-    const modelConfig = getModelConfig(input.model)
-
     // Model-specific validations
     switch (input.model) {
-      case 'nano-banana':
-        errors.push(...this.validateNanoBanana(input, modelConfig?.maxReferenceImages || 10))
-        break
-      case 'nano-banana-pro':
-        errors.push(...this.validateNanoBananaPro(input, modelConfig?.maxReferenceImages || 14))
+      case 'nano-banana-2':
+        errors.push(...this.validateNanoBanana2(input))
         break
       case 'z-image-turbo':
         errors.push(...this.validateZImageTurbo(input))
@@ -69,26 +62,20 @@ export class ImageGenerationService {
   }
 
   /**
-   * Validate nano-banana specific constraints
+   * Validate nano-banana-2 specific constraints
    */
-  private static validateNanoBanana(input: ImageGenerationInput, maxRefs: number): string[] {
+  private static validateNanoBanana2(input: ImageGenerationInput): string[] {
     const errors: string[] = []
+    const settings = input.modelSettings as NanoBanana2Settings
 
-    if (input.referenceImages && input.referenceImages.length > maxRefs) {
-      errors.push(`Nano Banana supports maximum ${maxRefs} reference images`)
+    // nano-banana-2 supports only a single image input
+    if (input.referenceImages && input.referenceImages.length > 1) {
+      errors.push('Nano Banana 2 supports maximum 1 reference image')
     }
 
-    return errors
-  }
-
-  /**
-   * Validate nano-banana-pro specific constraints
-   */
-  private static validateNanoBananaPro(input: ImageGenerationInput, maxRefs: number): string[] {
-    const errors: string[] = []
-
-    if (input.referenceImages && input.referenceImages.length > maxRefs) {
-      errors.push(`Nano Banana Pro supports maximum ${maxRefs} reference images`)
+    // match_input_image requires a reference image
+    if (settings.aspectRatio === 'match_input_image' && (!input.referenceImages || input.referenceImages.length === 0)) {
+      errors.push('Match Input Image aspect ratio requires a reference image')
     }
 
     return errors
@@ -153,10 +140,8 @@ export class ImageGenerationService {
    */
   static buildReplicateInput(input: ImageGenerationInput): Record<string, unknown> {
     switch (input.model) {
-      case 'nano-banana':
-        return this.buildNanoBananaInput(input)
-      case 'nano-banana-pro':
-        return this.buildNanoBananaProInput(input)
+      case 'nano-banana-2':
+        return this.buildNanoBanana2Input(input)
       case 'z-image-turbo':
         return this.buildZImageTurboInput(input)
       case 'seedream-5-lite':
@@ -168,62 +153,33 @@ export class ImageGenerationService {
     }
   }
 
-  private static buildNanoBananaInput(input: ImageGenerationInput) {
-    const settings = input.modelSettings as NanoBananaSettings
+  private static buildNanoBanana2Input(input: ImageGenerationInput) {
+    const settings = input.modelSettings as NanoBanana2Settings
     const replicateInput: Record<string, unknown> = {
       prompt: input.prompt,
     }
 
     if (settings.aspectRatio) {
       replicateInput.aspect_ratio = settings.aspectRatio
-    }
-
-    if (settings.outputFormat) {
-      // nano-banana only supports jpg and png, not webp
-      // Runtime check since UI may send webp as default
-      const format = settings.outputFormat as string
-      replicateInput.output_format = format === 'webp' ? 'jpg' : settings.outputFormat
-    }
-
-    if (input.referenceImages && input.referenceImages.length > 0) {
-      // Normalize reference images to URL strings
-      // Can be either string[] or {url, weight}[]
-      replicateInput.image_input = this.normalizeReferenceImages(input.referenceImages)
-    }
-
-    return replicateInput
-  }
-
-  private static buildNanoBananaProInput(input: ImageGenerationInput) {
-    const settings = input.modelSettings as NanoBananaProSettings
-    const replicateInput: Record<string, unknown> = {
-      prompt: input.prompt,
-    }
-
-    if (settings.aspectRatio) {
-      replicateInput.aspect_ratio = settings.aspectRatio
-    }
-
-    if (settings.outputFormat) {
-      // nano-banana-pro only supports jpg and png, not webp
-      // Runtime check since UI may send webp as default
-      const format = settings.outputFormat as string
-      replicateInput.output_format = format === 'webp' ? 'jpg' : settings.outputFormat
-    }
-
-    if (settings.resolution) {
-      replicateInput.resolution = settings.resolution
     }
 
     if (settings.safetyFilterLevel) {
       replicateInput.safety_filter_level = settings.safetyFilterLevel
     }
 
-    if (input.referenceImages && input.referenceImages.length > 0) {
-      // Normalize reference images to URL strings
-      // Can be either string[] or {url, weight}[]
-      replicateInput.image_input = this.normalizeReferenceImages(input.referenceImages)
+    if (settings.personGeneration) {
+      replicateInput.person_generation = settings.personGeneration
     }
+
+    // nano-banana-2 accepts a single `image` input (not array)
+    if (input.referenceImages && input.referenceImages.length > 0) {
+      const url = typeof input.referenceImages[0] === 'string'
+        ? input.referenceImages[0]
+        : (input.referenceImages[0] as { url: string }).url
+      replicateInput.image = url
+    }
+
+    // Note: nano-banana-2 output is always WebP, no output_format param
 
     return replicateInput
   }

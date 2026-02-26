@@ -29,22 +29,16 @@ export function buildModelSettings(
   settings: ShotCreatorSettings,
   riverflowState?: RiverflowState | null
 ): ModelSettings {
-  const model = settings.model || 'nano-banana';
+  const model = settings.model || 'nano-banana-2';
 
   // Base settings
   const modelSettings: ModelSettings = {};
 
   switch (model) {
-    case 'nano-banana':
+    case 'nano-banana-2':
       modelSettings.aspectRatio = settings.aspectRatio;
-      modelSettings.outputFormat = settings.outputFormat || 'jpg';
-      break;
-
-    case 'nano-banana-pro':
-      modelSettings.aspectRatio = settings.aspectRatio;
-      modelSettings.outputFormat = settings.outputFormat || 'jpg';
-      modelSettings.resolution = settings.resolution;
       modelSettings.safetyFilterLevel = settings.safetyFilterLevel || 'block_only_high';
+      modelSettings.personGeneration = settings.personGeneration || 'allow_all';
       break;
 
     case 'z-image-turbo':
@@ -97,8 +91,8 @@ export function buildModelSettings(
  */
 export function getDefaultOutputFormat(model: string): string {
   switch (model) {
-    case 'nano-banana':
-    case 'nano-banana-pro':
+    case 'nano-banana-2':
+      return 'webp'; // nano-banana-2 always outputs WebP
     case 'z-image-turbo':
       return 'jpg';
     case 'seedream-5-lite':
@@ -106,7 +100,7 @@ export function getDefaultOutputFormat(model: string): string {
     case 'riverflow-2-pro':
       return 'webp';
     default:
-      return 'jpg';
+      return 'webp';
   }
 }
 
@@ -114,7 +108,7 @@ export function getDefaultOutputFormat(model: string): string {
  * Check if a model supports resolution settings
  */
 export function supportsResolution(model: string): boolean {
-  return ['nano-banana-pro', 'seedream-5-lite', 'riverflow-2-pro'].includes(model);
+  return ['seedream-5-lite', 'riverflow-2-pro'].includes(model);
 }
 
 /**

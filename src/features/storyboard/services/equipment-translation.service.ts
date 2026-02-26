@@ -11,8 +11,7 @@ import type { CameraSetup, MediumCategory, ShotType } from '../types/storyboard.
 
 // Image-only models that don't understand motion/equipment terms
 const IMAGE_ONLY_MODELS: ModelId[] = [
-    'nano-banana',
-    'nano-banana-pro',
+    'nano-banana-2',
     'z-image-turbo',
     'seedream-5-lite',
     'riverflow-2-pro'

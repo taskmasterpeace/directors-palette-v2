@@ -227,7 +227,7 @@ export function ArchitectureHelpModal() {
               <h4 className="font-semibold text-green-400 mb-2">3. Generation & Output</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <strong className="text-foreground">AI Model:</strong> nano-banana-pro or riverflow-2-pro
+                  <strong className="text-foreground">AI Model:</strong> nano-banana-2 or riverflow-2-pro
                 </li>
                 <li>
                   <strong className="text-foreground">Inputs:</strong> Composed prompt + reference images + aspect ratio

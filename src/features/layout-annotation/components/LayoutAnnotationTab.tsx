@@ -220,7 +220,7 @@ The final image should look natural as if the edits were always part of the orig
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        model: 'nano-banana-pro',
+                        model: 'nano-banana-2',
                         prompt: nanoBananaPrompt,
                         modelSettings: {
                             aspectRatio: canvasState.aspectRatio,
@@ -240,7 +240,7 @@ The final image should look natural as if the edits were always part of the orig
                     body: JSON.stringify({
                         image: canvasImage,
                         prompt: nanoBananaPrompt,
-                        model: 'nano-banana-pro',
+                        model: 'nano-banana-2',
                         systemPrompt: systemPrompt
                     })
                 })
@@ -260,7 +260,7 @@ The final image should look natural as if the edits were always part of the orig
                     imageUrl: result.imageUrl,
                     prompt: nanoBananaPrompt,
                     timestamp: Date.now(),
-                    model: 'nano-banana-pro'
+                    model: 'nano-banana-2'
                 }
                 setResultsQueue(prev => [...prev, queuedResult])
                 toast({

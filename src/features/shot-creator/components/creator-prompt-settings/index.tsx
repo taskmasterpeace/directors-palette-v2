@@ -33,7 +33,7 @@ const CreatorPromptSettings = ({ compact, showResizeControls = true }: { compact
     const { settings: shotCreatorSettings } = useShotCreatorSettings()
     const { quickPrompts, toggleQuickAccess } = usePromptLibraryStore()
 
-    const modelConfig = getModelConfig((shotCreatorSettings.model || 'nano-banana') as ModelId)
+    const modelConfig = getModelConfig((shotCreatorSettings.model || 'nano-banana-2') as ModelId)
 
     const referenceImagesCount = shotCreatorReferenceImages.length
     const hasNonPipelineImages = shotCreatorReferenceImages.some(img => img.url && !img.url.includes('pipeline'))

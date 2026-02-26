@@ -432,7 +432,7 @@ export function CharacterStep() {
         fieldValues,
         stageReferenceImages,
         {
-          model: 'nano-banana-pro',
+          model: 'nano-banana-2',
           aspectRatio: '21:9',
         }
       )

@@ -107,7 +107,7 @@ function createNode(
         type: 'generation',
         position,
         data: {
-          model: 'nano-banana-pro',
+          model: 'nano-banana-2',
           aspectRatio: '16:9',
           outputFormat: 'png'
         } as Record<string, unknown>
