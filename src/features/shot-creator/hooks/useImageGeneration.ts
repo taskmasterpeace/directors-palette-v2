@@ -330,11 +330,6 @@ export function useImageGeneration() {
         referenceImages: string[] = [],
         modelSettings: ImageModelSettings,
         recipeInfo?: { recipeId: string; recipeName: string },
-        riverflowInputs?: {
-            detailRefImages?: string[]
-            fontUrls?: string[]
-            fontTexts?: string[]
-        }
     ) => {
         try {
             // Get user ID from Supabase
@@ -653,10 +648,6 @@ export function useImageGeneration() {
                     recipeId: recipeInfo?.recipeId,
                     recipeName: recipeInfo?.recipeName,
                     // user_id removed - now extracted server-side from session cookie
-                    // Riverflow-specific inputs
-                    detailRefImages: riverflowInputs?.detailRefImages,
-                    fontUrls: riverflowInputs?.fontUrls,
-                    fontTexts: riverflowInputs?.fontTexts,
                 }
                 toast({
                     title: isPipeChaining ? `Step ${i + 1}/${totalVariations}` : 'Generating',

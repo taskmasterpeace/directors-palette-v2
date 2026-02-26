@@ -6,9 +6,8 @@
  * and enable reuse across the application.
  */
 
-import { getModelConfig, getModelCost, type ModelId } from '@/config';
+import { getModelConfig, type ModelId } from '@/config';
 import { parseDynamicPrompt } from '../helpers/prompt-syntax-feedback';
-import type { RiverflowState } from '../components/RiverflowOptionsPanel';
 import type { WildCard } from '../helpers/wildcard/parser';
 
 export interface GenerationCostInput {
@@ -21,7 +20,6 @@ export interface GenerationCostInput {
   disableBracketSyntax: boolean;
   disableWildcardSyntax: boolean;
   wildcards: WildCard[];
-  riverflowState?: RiverflowState | null;
 }
 
 export interface GenerationCostResult {
@@ -47,16 +45,11 @@ export function calculateGenerationCost(input: GenerationCostInput): GenerationC
     disableBracketSyntax,
     disableWildcardSyntax,
     wildcards,
-    riverflowState,
   } = input;
 
   const modelConfig = getModelConfig(model as ModelId);
 
-  // For Riverflow, use resolution-based pricing
-  let costPerImage = modelConfig?.costPerImage ?? 0;
-  if (model === 'riverflow-2-pro' && riverflowState) {
-    costPerImage = getModelCost('riverflow-2-pro', riverflowState.resolution);
-  }
+  const costPerImage = modelConfig?.costPerImage ?? 0;
 
   // Check for anchor transform mode
   const isAnchorMode = enableAnchorTransform;
@@ -77,15 +70,8 @@ export function calculateGenerationCost(input: GenerationCostInput): GenerationC
     imageCount = parsedPrompt.totalCount || 1;
   }
 
-  let totalCost = imageCount * costPerImage;
-
-  // Add font costs for Riverflow (5 pts = $0.05 per font)
-  let fontCost = 0;
-  const riverflowFontCount = riverflowState?.fontUrls?.length ?? 0;
-  if (model === 'riverflow-2-pro' && riverflowFontCount > 0) {
-    fontCost = riverflowFontCount * 0.05;
-    totalCost += fontCost;
-  }
+  const totalCost = imageCount * costPerImage;
+  const fontCost = 0;
 
   // Convert dollar cost to tokens (1 token = $0.01)
   const tokenCost = Math.ceil(totalCost * 100);

@@ -22,7 +22,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
+export type ModelId = 'nano-banana-2' | 'nano-banana-pro' | 'z-image-turbo' | 'seedream-5-lite'
 
 export interface ModelParameter {
     id: string
@@ -53,10 +53,6 @@ export interface ModelConfig {
     parameters: Record<string, ModelParameter>
     maxReferenceImages?: number
     requiresInputImage?: boolean
-    // Riverflow-specific limits
-    maxDetailRefs?: number // For logo cleanup refs
-    maxFonts?: number
-    fontCostPerFile?: number // Cost per font file in dollars
 }
 
 export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
@@ -349,60 +345,6 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         ],
         description: 'How closely the model should match reference image features like faces'
     },
-    // Riverflow 2.0 Pro parameters
-    riverflowResolution: {
-        id: 'resolution',
-        label: 'Resolution',
-        type: 'select',
-        default: '2K',
-        options: [
-            { value: '1K', label: '1K (1024px) - 27 pts' },
-            { value: '2K', label: '2K (2048px) - 27 pts' },
-            { value: '4K', label: '4K (4096px) - 60 pts' }
-        ],
-        description: 'Output resolution - 4K is premium quality'
-    },
-    riverflowTransparency: {
-        id: 'transparency',
-        label: 'Transparent Background',
-        type: 'boolean',
-        default: false,
-        description: 'Output PNG with transparent background'
-    },
-    riverflowEnhancePrompt: {
-        id: 'enhancePrompt',
-        label: 'AI Prompt Enhancement',
-        type: 'boolean',
-        default: true,
-        description: 'Let AI improve your prompt for better results'
-    },
-    riverflowMaxIterations: {
-        id: 'maxIterations',
-        label: 'Reasoning Depth',
-        type: 'select',
-        default: '3',
-        options: [
-            { value: '1', label: 'Quick (1 iteration)' },
-            { value: '2', label: 'Balanced (2 iterations)' },
-            { value: '3', label: 'Thorough (3 iterations)' }
-        ],
-        description: 'More iterations = better quality but slower'
-    },
-    riverflowAspectRatio: {
-        id: 'aspectRatio',
-        label: 'Aspect Ratio',
-        type: 'select',
-        default: '1:1',
-        options: [
-            { value: '1:1', label: '1:1 Square' },
-            { value: '4:3', label: '4:3 Classic' },
-            { value: '3:4', label: '3:4 Portrait' },
-            { value: '16:9', label: '16:9 Landscape' },
-            { value: '9:16', label: '9:16 Portrait' },
-            { value: '3:2', label: '3:2 Photo' },
-            { value: '2:3', label: '2:3 Photo Portrait' }
-        ]
-    }
 }
 
 export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
@@ -469,36 +411,31 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         },
         maxReferenceImages: 14
     },
-    'riverflow-2-pro': {
-        id: 'riverflow-2-pro',
-        name: 'riverflow-2-pro',
-        displayName: 'Riverflow Pro',
+    'nano-banana-pro': {
+        id: 'nano-banana-pro',
+        name: 'nano-banana-pro',
+        displayName: 'Nano Banana Pro',
         type: 'generation',
-        icon: '🌊',
-        description: 'Product photography with brand fonts, logo cleanup, and infographics. Upload custom fonts.',
-        badge: 'Fonts',
-        badgeColor: 'bg-blue-600',
-        textColor: 'text-blue-300',
-        endpoint: 'sourceful/riverflow-2.0-pro',
-        costPerImage: 0.27, // Default price (1K/2K) - 27 pts = $0.27
+        icon: '🔥',
+        description: 'SOTA quality with accurate text rendering, 4K support, and advanced editing capabilities',
+        badge: 'Pro',
+        badgeColor: 'bg-amber-600',
+        textColor: 'text-amber-300',
+        endpoint: 'google/nano-banana-pro',
+        costPerImage: 0.25, // Default price (1K/2K) - 25 pts = $0.25
         costByResolution: {
-            '1K': 0.27,  // 27 pts - Replicate cost $0.135 (100% margin)
-            '2K': 0.27,  // 27 pts - Replicate cost $0.135 (100% margin)
-            '4K': 0.60,  // 60 pts - Replicate cost $0.297 (~100% margin)
+            '1K': 0.25,  // 25 pts - Replicate cost $0.15 (66% margin)
+            '2K': 0.25,  // 25 pts - Replicate cost $0.15 (66% margin)
+            '4K': 0.45,  // 45 pts - Replicate cost $0.30 (50% margin)
         },
-        supportedParameters: ['riverflowAspectRatio', 'riverflowResolution', 'riverflowTransparency', 'riverflowEnhancePrompt', 'riverflowMaxIterations', 'outputFormat'],
+        supportedParameters: ['outputFormat', 'aspectRatio', 'resolution', 'safetyFilterLevel'],
         parameters: {
-            aspectRatio: MODEL_PARAMETERS.riverflowAspectRatio,
-            resolution: MODEL_PARAMETERS.riverflowResolution,
-            transparency: MODEL_PARAMETERS.riverflowTransparency,
-            enhancePrompt: MODEL_PARAMETERS.riverflowEnhancePrompt,
-            maxIterations: MODEL_PARAMETERS.riverflowMaxIterations,
-            outputFormat: MODEL_PARAMETERS.outputFormat
+            outputFormat: MODEL_PARAMETERS.outputFormat,
+            aspectRatio: MODEL_PARAMETERS.aspectRatio,
+            resolution: MODEL_PARAMETERS.nanoBananaProResolution,
+            safetyFilterLevel: MODEL_PARAMETERS.safetyFilterLevel
         },
-        maxReferenceImages: 10,  // init_images (product photos)
-        maxDetailRefs: 4,        // super_resolution_refs (logo cleanup)
-        maxFonts: 2,
-        fontCostPerFile: 0.05   // 5 pts per font file
+        maxReferenceImages: 14
     }
 }
 

@@ -11,7 +11,7 @@ function GenerationNode({ data, selected }: NodeProps) {
     'nano-banana-2': 'Nano Banana 2',
     'z-image-turbo': 'Z-Image Turbo',
     'seedream-5-lite': 'SeeDream 5 Lite',
-    'riverflow-2-pro': 'Riverflow 2 Pro',
+    'nano-banana-pro': 'Nano Banana Pro',
   }
 
   return (

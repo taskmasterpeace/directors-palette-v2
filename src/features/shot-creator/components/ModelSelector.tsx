@@ -49,11 +49,11 @@ const MODEL_CAPABILITIES: Record<ModelId, {
     refImages: 'Up to 14',
     bestFor: ['Deep thinking', 'Reasoning', 'Editing', 'Cheap']
   },
-  'riverflow-2-pro': {
-    speed: '~20s (Moderate)',
+  'nano-banana-pro': {
+    speed: 'Standard',
     textRendering: 'Excellent',
-    refImages: 'Up to 10 + 4 detail',
-    bestFor: ['Custom fonts', 'Logo cleanup', 'Infographics', 'Product shots']
+    refImages: 'Up to 14',
+    bestFor: ['Text rendering', '4K', 'Editing', 'SOTA quality']
   }
 }
 

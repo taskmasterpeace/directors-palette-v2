@@ -33,7 +33,6 @@ import { useRecipeStore } from "../../store/recipe.store"
 import { cn } from "@/utils/utils"
 import { Category } from "../CategorySelectDialog"
 import { toast } from "sonner"
-import { RiverflowOptionsPanel } from "../RiverflowOptionsPanel"
 import { SlotMachinePanel } from "../slot-machine"
 import { logger } from '@/lib/logger'
 import { useTextareaResize } from "../../hooks/useTextareaResize"
@@ -66,7 +65,6 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
         generationCost,
         isGenerating,
         cancelGeneration,
-        setRiverflowState,
     } = usePromptGeneration()
 
     // ── Autocomplete state ─────────────────────────────────────────────
@@ -496,14 +494,6 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                         </div>
                         <RecipeFormFields />
                     </div>
-                )}
-
-                {/* Riverflow Options Panel - shown when Riverflow model is selected */}
-                {shotCreatorSettings.model === 'riverflow-2-pro' && (
-                    <RiverflowOptionsPanel
-                        onChange={setRiverflowState}
-                        referenceImageCount={shotCreatorReferenceImages.length}
-                    />
                 )}
 
                 {/* Generate button */}

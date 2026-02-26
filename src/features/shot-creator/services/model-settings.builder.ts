@@ -6,8 +6,6 @@
  * and enable reuse across the application.
  */
 
-import type { RiverflowState } from '../components/RiverflowOptionsPanel';
-
 export interface ShotCreatorSettings {
   model: string;
   aspectRatio?: string;
@@ -27,7 +25,6 @@ export type ModelSettings = Record<string, unknown>;
  */
 export function buildModelSettings(
   settings: ShotCreatorSettings,
-  riverflowState?: RiverflowState | null
 ): ModelSettings {
   const model = settings.model || 'nano-banana-2';
 
@@ -58,23 +55,11 @@ export function buildModelSettings(
       }
       break;
 
-    case 'riverflow-2-pro':
+    case 'nano-banana-pro':
       modelSettings.aspectRatio = settings.aspectRatio;
-      // Riverflow-specific settings from panel state
-      if (riverflowState) {
-        modelSettings.resolution = riverflowState.resolution;
-        modelSettings.transparency = riverflowState.transparency;
-        modelSettings.enhancePrompt = riverflowState.enhancePrompt;
-        modelSettings.maxIterations = riverflowState.maxIterations;
-        modelSettings.outputFormat = riverflowState.transparency ? 'png' : 'webp';
-      } else {
-        // Defaults if panel hasn't been opened
-        modelSettings.resolution = '2K';
-        modelSettings.transparency = false;
-        modelSettings.enhancePrompt = true;
-        modelSettings.maxIterations = 3;
-        modelSettings.outputFormat = 'webp';
-      }
+      modelSettings.outputFormat = settings.outputFormat || 'jpg';
+      modelSettings.resolution = settings.resolution || '2K';
+      modelSettings.safetyFilterLevel = settings.safetyFilterLevel || 'block_only_high';
       break;
 
     default:
@@ -97,8 +82,8 @@ export function getDefaultOutputFormat(model: string): string {
       return 'jpg';
     case 'seedream-5-lite':
       return 'png';
-    case 'riverflow-2-pro':
-      return 'webp';
+    case 'nano-banana-pro':
+      return 'jpg';
     default:
       return 'webp';
   }
@@ -108,7 +93,7 @@ export function getDefaultOutputFormat(model: string): string {
  * Check if a model supports resolution settings
  */
 export function supportsResolution(model: string): boolean {
-  return ['seedream-5-lite', 'riverflow-2-pro'].includes(model);
+  return ['seedream-5-lite', 'nano-banana-pro'].includes(model);
 }
 
 /**

@@ -15,7 +15,6 @@ import type {
   AdhubGenerationResult,
   AdhubModel,
   AspectRatio,
-  RiverflowSettings,
   AdhubVideoAdConfig,
   AdhubVideoAudioSource,
   AdhubLipSyncModel,
@@ -33,13 +32,6 @@ interface AdhubState extends AdhubWizardState {
   // Generation settings
   aspectRatio: AspectRatio
   selectedModel: AdhubModel
-
-  // Riverflow-specific state
-  riverflowSourceImages: string[]
-  riverflowDetailRefs: string[]
-  riverflowFontUrls: string[]
-  riverflowFontTexts: string[]
-  riverflowSettings: RiverflowSettings
 
   // Actions - Navigation
   setStep: (step: AdhubStep) => void
@@ -66,19 +58,6 @@ interface AdhubState extends AdhubWizardState {
   // Actions - Generation Settings
   setAspectRatio: (ratio: AspectRatio) => void
   setSelectedModel: (model: AdhubModel) => void
-
-  // Actions - Riverflow
-  setRiverflowSourceImages: (images: string[]) => void
-  addRiverflowSourceImage: (url: string) => void
-  removeRiverflowSourceImage: (url: string) => void
-  setRiverflowDetailRefs: (refs: string[]) => void
-  addRiverflowDetailRef: (url: string) => void
-  removeRiverflowDetailRef: (url: string) => void
-  addRiverflowFont: (url: string, text: string) => void
-  removeRiverflowFont: (index: number) => void
-  updateRiverflowFontText: (index: number, text: string) => void
-  setRiverflowSettings: (settings: Partial<RiverflowSettings>) => void
-  clearRiverflowInputs: () => void
 
   // Actions - Generation
   setIsGenerating: (generating: boolean) => void
@@ -124,13 +103,6 @@ const getPreviousStep = (current: AdhubStep): AdhubStep | null => {
   return null
 }
 
-const DEFAULT_RIVERFLOW_SETTINGS: RiverflowSettings = {
-  resolution: '2K',
-  transparency: false,
-  enhancePrompt: true,
-  maxIterations: 3,
-}
-
 const DEFAULT_VIDEO_AD_CONFIG: AdhubVideoAdConfig = {
   enabled: false,
   spokespersonImageUrl: null,
@@ -160,10 +132,6 @@ const initialState: Omit<AdhubState,
   'selectPreset' |
   'toggleReferenceImage' | 'setSelectedReferenceImages' | 'clearSelectedReferenceImages' |
   'setAspectRatio' | 'setSelectedModel' |
-  'setRiverflowSourceImages' | 'addRiverflowSourceImage' | 'removeRiverflowSourceImage' |
-  'setRiverflowDetailRefs' | 'addRiverflowDetailRef' | 'removeRiverflowDetailRef' |
-  'addRiverflowFont' | 'removeRiverflowFont' | 'updateRiverflowFontText' |
-  'setRiverflowSettings' | 'clearRiverflowInputs' |
   'setIsGenerating' | 'setIsExtracting' | 'setGenerationResult' | 'setError' |
   'setVideoAdEnabled' | 'setSpokespersonImage' | 'setVideoAudioSource' |
   'setUploadedAudio' | 'setTtsScript' | 'setTtsVoiceId' |
@@ -186,13 +154,6 @@ const initialState: Omit<AdhubState,
   brands: [],
   selectedBrandImages: [],
   products: [],
-
-  // Riverflow state
-  riverflowSourceImages: [],
-  riverflowDetailRefs: [],
-  riverflowFontUrls: [],
-  riverflowFontTexts: [],
-  riverflowSettings: DEFAULT_RIVERFLOW_SETTINGS,
 
   // Video Ad (Lip-Sync) state
   videoAdConfig: DEFAULT_VIDEO_AD_CONFIG,
@@ -266,61 +227,6 @@ export const useAdhubStore = create<AdhubState>()(
       // Generation Settings
       setAspectRatio: (ratio) => set({ aspectRatio: ratio }),
       setSelectedModel: (model) => set({ selectedModel: model }),
-
-      // Riverflow actions
-      setRiverflowSourceImages: (images) => set({ riverflowSourceImages: images }),
-
-      addRiverflowSourceImage: (url) => set((state) => ({
-        riverflowSourceImages: state.riverflowSourceImages.length < 10
-          ? [...state.riverflowSourceImages, url]
-          : state.riverflowSourceImages,
-      })),
-
-      removeRiverflowSourceImage: (url) => set((state) => ({
-        riverflowSourceImages: state.riverflowSourceImages.filter((img) => img !== url),
-      })),
-
-      setRiverflowDetailRefs: (refs) => set({ riverflowDetailRefs: refs }),
-
-      addRiverflowDetailRef: (url) => set((state) => ({
-        riverflowDetailRefs: state.riverflowDetailRefs.length < 4
-          ? [...state.riverflowDetailRefs, url]
-          : state.riverflowDetailRefs,
-      })),
-
-      removeRiverflowDetailRef: (url) => set((state) => ({
-        riverflowDetailRefs: state.riverflowDetailRefs.filter((ref) => ref !== url),
-      })),
-
-      addRiverflowFont: (url, text) => set((state) => ({
-        riverflowFontUrls: state.riverflowFontUrls.length < 2
-          ? [...state.riverflowFontUrls, url]
-          : state.riverflowFontUrls,
-        riverflowFontTexts: state.riverflowFontTexts.length < 2
-          ? [...state.riverflowFontTexts, text]
-          : state.riverflowFontTexts,
-      })),
-
-      removeRiverflowFont: (index) => set((state) => ({
-        riverflowFontUrls: state.riverflowFontUrls.filter((_, i) => i !== index),
-        riverflowFontTexts: state.riverflowFontTexts.filter((_, i) => i !== index),
-      })),
-
-      updateRiverflowFontText: (index, text) => set((state) => ({
-        riverflowFontTexts: state.riverflowFontTexts.map((t, i) => i === index ? text : t),
-      })),
-
-      setRiverflowSettings: (settings) => set((state) => ({
-        riverflowSettings: { ...state.riverflowSettings, ...settings },
-      })),
-
-      clearRiverflowInputs: () => set({
-        riverflowSourceImages: [],
-        riverflowDetailRefs: [],
-        riverflowFontUrls: [],
-        riverflowFontTexts: [],
-        riverflowSettings: DEFAULT_RIVERFLOW_SETTINGS,
-      }),
 
       // Generation
       setIsGenerating: (generating) => set({ isGenerating: generating }),

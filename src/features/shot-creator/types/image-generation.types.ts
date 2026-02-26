@@ -8,9 +8,9 @@ import type { ModelId } from '@/config'
 // Available image generation models
 export type ImageModel = Extract<ModelId,
   | 'nano-banana-2'
+  | 'nano-banana-pro'
   | 'z-image-turbo'
   | 'seedream-5-lite'
-  | 'riverflow-2-pro'
 >
 
 // Model-specific settings interfaces
@@ -36,15 +36,11 @@ export interface SeedreamSettings {
   sequentialGeneration?: boolean
 }
 
-export interface RiverflowProSettings {
+export interface NanoBananaProSettings {
   aspectRatio?: string
+  outputFormat?: 'jpg' | 'png'
   resolution?: '1K' | '2K' | '4K'
-  outputFormat?: 'webp' | 'png'
-  transparency?: boolean
-  enhancePrompt?: boolean
-  maxIterations?: 1 | 2 | 3
-  // Riverflow-specific inputs (passed separately, not in modelSettings)
-  // These are tracked in store but passed as separate API params
+  safetyFilterLevel?: 'block_low_and_above' | 'block_medium_and_above' | 'block_only_high'
 }
 
 // Union type for all model settings
@@ -52,7 +48,7 @@ export type ImageModelSettings =
   | NanoBanana2Settings
   | ZImageTurboSettings
   | SeedreamSettings
-  | RiverflowProSettings
+  | NanoBananaProSettings
 
 // Input for image generation service
 export interface ImageGenerationInput {
@@ -63,10 +59,6 @@ export interface ImageGenerationInput {
   userId: string
   recipeId?: string
   recipeName?: string
-  // Riverflow-specific inputs
-  detailRefImages?: string[]    // For logo cleanup (super_resolution_refs)
-  fontUrls?: string[]           // Custom font file URLs
-  fontTexts?: string[]          // Text to render with each font
 }
 
 // Replicate API input schemas
@@ -98,18 +90,13 @@ export interface SeedreamInput {
   image_input?: string[]
 }
 
-export interface RiverflowProInput {
-  instruction: string           // Note: "instruction" not "prompt"
-  init_images?: string[]        // Up to 10 source/product images
-  super_resolution_refs?: string[] // Up to 4 logo/detail cleanup refs
-  font_urls?: string[]          // Up to 2 font file URLs
-  font_texts?: string[]         // Text to render with fonts (max 300 chars each)
-  resolution?: '1K' | '2K' | '4K'
+export interface NanoBananaProInput {
+  prompt: string
+  image_input?: string[]
   aspect_ratio?: string
-  output_format?: 'webp' | 'png'
-  transparency?: boolean
-  enhance_prompt?: boolean
-  max_iterations?: 1 | 2 | 3
+  output_format?: string
+  resolution?: string
+  safety_filter_level?: string
 }
 
 // Union type for all Replicate inputs
@@ -117,7 +104,7 @@ export type ReplicateImageInput =
   | NanoBanana2Input
   | ZImageTurboInput
   | SeedreamInput
-  | RiverflowProInput
+  | NanoBananaProInput
 
 // API Request/Response types
 export interface ImageGenerationRequest {
@@ -132,10 +119,6 @@ export interface ImageGenerationRequest {
   folderId?: string
   extraMetadata?: Record<string, unknown>
   // Note: user_id removed - now extracted from session cookie server-side
-  // Riverflow-specific inputs
-  detailRefImages?: string[]    // For logo cleanup (super_resolution_refs)
-  fontUrls?: string[]           // Custom font file URLs
-  fontTexts?: string[]          // Text to render with each font
   // Force server-side polling even when webhooks are configured (for storyboard batch generation)
   waitForResult?: boolean
 }

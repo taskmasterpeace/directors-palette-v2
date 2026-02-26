@@ -30,8 +30,6 @@ import { ADHUB_PRESETS } from '../../data/presets.data'
 import { ASPECT_RATIO_OPTIONS } from '../../types/adhub.types'
 import type { AdhubPreset, AdhubBrandImage, AdhubLipSyncModel, AdhubLipSyncResolution } from '../../types/adhub.types'
 import { AdhubModelSelector } from '../AdhubModelSelector'
-import { RiverflowInputPanel } from '../RiverflowInputPanel'
-import { RiverflowCostPreview } from '../RiverflowCostPreview'
 import { ReferenceImagesInfoTip } from '../InfoTip'
 
 import {
@@ -64,12 +62,6 @@ export function PresetGenerateStep() {
     aspectRatio,
     setAspectRatio,
     selectedModel,
-    // Riverflow state
-    riverflowSourceImages,
-    riverflowDetailRefs,
-    riverflowFontUrls,
-    riverflowFontTexts,
-    riverflowSettings,
     // Video config
     videoAdConfig,
     setVideoAdEnabled,
@@ -206,14 +198,6 @@ export function PresetGenerateStep() {
         model: selectedModel,
       }
 
-      if (selectedModel === 'riverflow-2-pro') {
-        requestBody.riverflowSourceImages = riverflowSourceImages
-        requestBody.riverflowDetailRefs = riverflowDetailRefs
-        requestBody.riverflowFontUrls = riverflowFontUrls
-        requestBody.riverflowFontTexts = riverflowFontTexts
-        requestBody.riverflowSettings = riverflowSettings
-      }
-
       toast.info('Generating your image ad...')
       const imageResponse = await fetch('/api/adhub/generate', {
         method: 'POST',
@@ -286,7 +270,6 @@ export function PresetGenerateStep() {
   }, [
     selectedBrand, selectedProduct, selectedPreset,
     selectedReferenceImages, aspectRatio, selectedModel,
-    riverflowSourceImages, riverflowDetailRefs, riverflowFontUrls, riverflowFontTexts, riverflowSettings,
     videoAdConfig, effectiveAudioUrl, estimatedCost,
     uploadFile, setError, setGenerationResult, setLipSyncResult,
   ])
@@ -333,9 +316,6 @@ export function PresetGenerateStep() {
         <>
           {/* Model Selector */}
           <AdhubModelSelector />
-
-          {/* Riverflow Panel */}
-          {selectedModel === 'riverflow-2-pro' && <RiverflowInputPanel />}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left Column: Aspect Ratio + Reference Images */}
@@ -458,8 +438,6 @@ export function PresetGenerateStep() {
                   </div>
                 </div>
               </div>
-
-              <RiverflowCostPreview />
 
               {/* Make It Talk Section (collapsed) */}
               <div className="space-y-4 rounded-lg border border-border/50 p-4">

@@ -133,7 +133,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
     const modelConfig = getModelConfig(model as ImageModel)
     if (!modelConfig) {
       return NextResponse.json(
-        { success: false, error: `Invalid model: ${model}. Use: nano-banana-2, z-image-turbo, seedream-5-lite, or riverflow-2-pro` },
+        { success: false, error: `Invalid model: ${model}. Use: nano-banana-2, z-image-turbo, seedream-5-lite, or nano-banana-pro` },
         { status: 400 }
       )
     }
@@ -461,7 +461,7 @@ export async function GET(): Promise<NextResponse> {
         type: 'string',
         required: false,
         default: 'nano-banana-2',
-        options: ['nano-banana-2', 'z-image-turbo', 'seedream-5-lite', 'riverflow-2-pro'],
+        options: ['nano-banana-2', 'z-image-turbo', 'seedream-5-lite', 'nano-banana-pro'],
         description: 'Model to use for generation',
       },
       aspectRatio: {
@@ -493,7 +493,7 @@ export async function GET(): Promise<NextResponse> {
       'nano-banana-2': 'Free (0 points)',
       'z-image-turbo': '5 points/image ($0.05)',
       'seedream-5-lite': '4 points/image ($0.04)',
-      'riverflow-2-pro': '27 points/image ($0.27)',
+      'nano-banana-pro': '27 points/image ($0.27)',
     },
     modelCapabilities: {
       'nano-banana-2': {
@@ -515,11 +515,11 @@ export async function GET(): Promise<NextResponse> {
         referenceImages: 'Up to 14',
         bestFor: 'Deep thinking, reasoning, editing, cheap',
       },
-      'riverflow-2-pro': {
-        speed: 'Medium',
-        quality: 'Excellent',
-        referenceImages: 'Up to 10 + 4 detail',
-        bestFor: 'Custom fonts, logo cleanup, infographics',
+      'nano-banana-pro': {
+        speed: 'Standard',
+        quality: 'SOTA',
+        referenceImages: 'Up to 14',
+        bestFor: 'Text rendering, 4K, editing',
       },
     },
     anchorTransform: {

@@ -29,12 +29,6 @@ export async function POST(request: NextRequest) {
       selectedReferenceImages,
       aspectRatio,
       model,
-      // Riverflow-specific inputs
-      riverflowSourceImages,
-      riverflowDetailRefs,
-      riverflowFontUrls,
-      riverflowFontTexts,
-      riverflowSettings,
     } = body
 
     // Validate required fields
@@ -128,32 +122,16 @@ export async function POST(request: NextRequest) {
     try {
       // Build model settings
       const selectedModel = model || 'nano-banana-2'
-      const isRiverflow = selectedModel === 'riverflow-2-pro'
 
-      let modelSettings: Record<string, unknown> = {
+      const modelSettings: Record<string, unknown> = {
         aspectRatio: aspectRatio || '1:1',
         outputFormat: 'png',
       }
 
-      if (isRiverflow && riverflowSettings) {
-        modelSettings = {
-          aspectRatio: aspectRatio || '1:1',
-          outputFormat: riverflowSettings.transparency ? 'png' : 'webp',
-          resolution: riverflowSettings.resolution || '2K',
-          transparency: riverflowSettings.transparency || false,
-          enhancePrompt: riverflowSettings.enhancePrompt !== false,
-          maxIterations: riverflowSettings.maxIterations || 3,
-        }
-      }
-
-      const refsToSend = isRiverflow && riverflowSourceImages?.length > 0
-        ? riverflowSourceImages
-        : referenceImages
-
       const genRequestBody: Record<string, unknown> = {
         prompt,
         model: selectedModel,
-        referenceImages: refsToSend,
+        referenceImages: referenceImages,
         modelSettings,
         extraMetadata: {
           source: 'adhub',
@@ -162,16 +140,6 @@ export async function POST(request: NextRequest) {
           productId,
           presetSlug,
         },
-      }
-
-      if (isRiverflow) {
-        if (riverflowDetailRefs?.length > 0) {
-          genRequestBody.detailRefImages = riverflowDetailRefs
-        }
-        if (riverflowFontUrls?.length > 0) {
-          genRequestBody.fontUrls = riverflowFontUrls
-          genRequestBody.fontTexts = riverflowFontTexts || []
-        }
       }
 
       // Call the internal image generation API

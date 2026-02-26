@@ -7,7 +7,7 @@ const MODEL_ESTIMATED_SECONDS: Record<string, number> = {
   'z-image-turbo': 2,
   'nano-banana-2': 10,
   'seedream-5-lite': 49,
-  'riverflow-2-pro': 600,
+  'nano-banana-pro': 30,
 }
 
 /** Map model ID to a short display name */
@@ -15,7 +15,7 @@ const MODEL_DISPLAY_NAMES: Record<string, string> = {
   'nano-banana-2': 'Nano Banana 2',
   'z-image-turbo': 'Z-Image Turbo',
   'seedream-5-lite': 'Seedream 5 Lite',
-  'riverflow-2-pro': 'Riverflow Pro',
+  'nano-banana-pro': 'Nano Banana Pro',
 }
 
 interface ClapperboardSpinnerProps {

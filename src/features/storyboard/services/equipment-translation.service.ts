@@ -14,7 +14,7 @@ const IMAGE_ONLY_MODELS: ModelId[] = [
     'nano-banana-2',
     'z-image-turbo',
     'seedream-5-lite',
-    'riverflow-2-pro'
+    'nano-banana-pro'
 ]
 
 // Motion terms that should be stripped for image models

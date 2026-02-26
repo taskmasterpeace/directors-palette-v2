@@ -26,24 +26,20 @@ const MODEL_OPTIONS: ModelOption[] = [
     capabilities: ['Text rendering', 'Fast generation', 'Free tier'],
   },
   {
-    id: 'riverflow-2-pro',
-    name: 'Riverflow Pro',
-    icon: '🌊',
-    description: 'Custom fonts, logo cleanup, product shots',
-    badge: 'Fonts',
-    badgeColor: 'bg-blue-600',
-    capabilities: ['Brand fonts', 'Logo cleanup', 'Infographics'],
+    id: 'nano-banana-pro',
+    name: 'Nano Banana Pro',
+    icon: '🔥',
+    description: 'SOTA quality, text rendering, 4K, editing',
+    badge: 'Pro',
+    badgeColor: 'bg-orange-600',
+    capabilities: ['Text rendering', '4K', 'Editing'],
   },
 ]
 
 export function AdhubModelSelector() {
-  const { selectedModel, setSelectedModel, clearRiverflowInputs } = useAdhubStore()
+  const { selectedModel, setSelectedModel } = useAdhubStore()
 
   const handleModelChange = (model: AdhubModel) => {
-    // Clear Riverflow inputs when switching away
-    if (selectedModel === 'riverflow-2-pro' && model !== 'riverflow-2-pro') {
-      clearRiverflowInputs()
-    }
     setSelectedModel(model)
   }
 

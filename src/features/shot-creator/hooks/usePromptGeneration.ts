@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react'
 import { useShotCreatorStore } from '@/features/shot-creator/store/shot-creator.store'
 import { useCustomStylesStore } from '../store/custom-styles.store'
-import { getModelConfig, getModelCost } from '@/config'
+import { getModelConfig } from '@/config'
 import { useShotCreatorSettings } from './useShotCreatorSettings'
 import { useImageGeneration } from './useImageGeneration'
 import { parseDynamicPrompt, detectAnchorTransform, stripAnchorSyntax } from '../helpers/prompt-syntax-feedback'
@@ -10,7 +10,6 @@ import { useRecipeStore } from '../store/recipe.store'
 import { executeRecipe } from '@/features/shared/services/recipe-execution.service'
 import type { Recipe } from '../types/recipe.types'
 import { toast } from 'sonner'
-import type { RiverflowState } from '../components/RiverflowOptionsPanel'
 import { logger } from '@/lib/logger'
 
 /**
@@ -35,7 +34,6 @@ export interface GenerationCost {
  * - canGenerate validation
  * - Model settings builder
  * - All generation modes (style-transfer, character-sheet, anchor-transform, recipe, regular)
- * - Riverflow state management
  * - Auto anchor-transform detection
  *
  * Extracted from PromptActions to keep the component focused on UI.
@@ -50,9 +48,6 @@ export function usePromptGeneration() {
     const { generateImage, isGenerating, cancelGeneration } = useImageGeneration()
     const { wildcards } = useWildCardStore()
     const { activeFieldValues, setActiveRecipe: _setActiveRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts } = useRecipeStore()
-
-    // Riverflow state (tracked locally, passed to generation)
-    const [riverflowState, setRiverflowState] = useState<RiverflowState | null>(null)
 
     // Track last used recipe for generation metadata
     const [lastUsedRecipe, setLastUsedRecipe] = useState<{ recipeId: string; recipeName: string } | null>(null)
@@ -93,10 +88,7 @@ export function usePromptGeneration() {
         const model = shotCreatorSettings.model || 'nano-banana-2'
         const modelConfig = getModelConfig(model)
 
-        let costPerImage = modelConfig.costPerImage
-        if (model === 'riverflow-2-pro' && riverflowState) {
-            costPerImage = getModelCost('riverflow-2-pro', riverflowState.resolution)
-        }
+        const costPerImage = modelConfig.costPerImage
 
         const isAnchorMode = shotCreatorSettings.enableAnchorTransform
 
@@ -114,14 +106,9 @@ export function usePromptGeneration() {
             imageCount = parsedPrompt.totalCount || 1
         }
 
-        let totalCost = imageCount * costPerImage
+        const totalCost = imageCount * costPerImage
 
-        let fontCost = 0
-        const riverflowFontCount = riverflowState?.fontUrls?.length ?? 0
-        if (model === 'riverflow-2-pro' && riverflowFontCount > 0) {
-            fontCost = riverflowFontCount * 0.05
-            totalCost += fontCost
-        }
+        const fontCost = 0
 
         const tokenCost = Math.ceil(totalCost * 100)
 
@@ -133,7 +120,7 @@ export function usePromptGeneration() {
             isAnchorMode,
             fontCost
         }
-    }, [shotCreatorPrompt, shotCreatorSettings, wildcards, shotCreatorReferenceImages.length, riverflowState])
+    }, [shotCreatorPrompt, shotCreatorSettings, wildcards, shotCreatorReferenceImages.length])
 
     // ── canGenerate validation ─────────────────────────────────────────
     const canGenerate = React.useMemo(() => {
@@ -180,26 +167,16 @@ export function usePromptGeneration() {
                     baseSettings.maxImages = shotCreatorSettings.maxImages || 3
                 }
                 break
-            case 'riverflow-2-pro':
+            case 'nano-banana-pro':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
-                if (riverflowState) {
-                    baseSettings.resolution = riverflowState.resolution
-                    baseSettings.transparency = riverflowState.transparency
-                    baseSettings.enhancePrompt = riverflowState.enhancePrompt
-                    baseSettings.maxIterations = riverflowState.maxIterations
-                    baseSettings.outputFormat = riverflowState.transparency ? 'png' : 'webp'
-                } else {
-                    baseSettings.resolution = '2K'
-                    baseSettings.transparency = false
-                    baseSettings.enhancePrompt = true
-                    baseSettings.maxIterations = 3
-                    baseSettings.outputFormat = 'webp'
-                }
+                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
+                baseSettings.resolution = shotCreatorSettings.resolution || '2K'
+                baseSettings.safetyFilterLevel = shotCreatorSettings.safetyFilterLevel || 'block_only_high'
                 break
         }
 
         return baseSettings
-    }, [shotCreatorSettings, riverflowState])
+    }, [shotCreatorSettings])
 
     // ── Main generation handler ────────────────────────────────────────
     const handleGenerate = useCallback(async () => {
@@ -581,7 +558,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
             }
 
             if (activeRecipe.suggestedModel) {
-                updateSettings({ model: activeRecipe.suggestedModel as 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro' })
+                updateSettings({ model: activeRecipe.suggestedModel as 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'nano-banana-pro' })
             }
             if (activeRecipe.suggestedAspectRatio) {
                 updateSettings({ aspectRatio: activeRecipe.suggestedAspectRatio })
@@ -603,7 +580,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                     stageReferenceImages[0] = [...new Set([...allRefs, ...stageReferenceImages[0]])]
                 }
 
-                const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-2') as 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
+                const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-2') as 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'nano-banana-pro'
                 const aspectRatio = shotCreatorSettings.aspectRatio || activeRecipe.suggestedAspectRatio || '16:9'
 
                 try {
@@ -642,7 +619,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                 setStageReferenceImages([])
             }
 
-            const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-2') as 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'riverflow-2-pro'
+            const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-2') as 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'nano-banana-pro'
             const modelSettings = buildModelSettings()
 
             toast.info(`Generating with recipe: ${activeRecipe.name}`)
@@ -665,23 +642,16 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
             .filter((url): url is string => Boolean(url))
         const modelSettings = buildModelSettings()
 
-        const riverflowInputs = model === 'riverflow-2-pro' && riverflowState ? {
-            detailRefImages: riverflowState.detailRefs,
-            fontUrls: riverflowState.fontUrls,
-            fontTexts: riverflowState.fontTexts,
-        } : undefined
-
         await generateImage(
             model,
             shotCreatorPrompt,
             referenceUrls,
             modelSettings,
             lastUsedRecipe || undefined,
-            riverflowInputs
         )
 
         setLastUsedRecipe(null)
-    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages, activeFieldValues, generationCost, riverflowState])
+    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages, activeFieldValues, generationCost])
 
     return {
         handleGenerate,
@@ -689,9 +659,6 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
         generationCost,
         isGenerating,
         cancelGeneration,
-        // Riverflow state management (component needs to pass onChange to panel)
-        riverflowState,
-        setRiverflowState,
         // Model settings builder (exposed in case component needs it)
         buildModelSettings,
     }

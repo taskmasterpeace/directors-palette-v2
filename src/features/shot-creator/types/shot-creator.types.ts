@@ -63,13 +63,6 @@ export interface ShotCreatorSettings {
     // Seedream-specific settings
     sequentialGeneration?: boolean // Enable sequential image generation mode
     maxImages?: number // Max images when sequential generation is enabled (1-15)
-    // Riverflow-specific settings
-    riverflowDetailRefs?: string[] // Logo cleanup references (super_resolution_refs)
-    riverflowFontUrls?: string[] // Custom font file URLs
-    riverflowFontTexts?: string[] // Text to render with each font
-    riverflowTransparency?: boolean
-    riverflowEnhancePrompt?: boolean
-    riverflowMaxIterations?: 1 | 2 | 3
     // Slot Machine syntax settings
     disableSlotMachineSyntax?: boolean // Treat {text} as literal, don't expand to variations
     slotMachineVariationCount?: number // Number of variations to generate (2-5, default 3)

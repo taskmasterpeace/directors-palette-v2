@@ -13,7 +13,7 @@ import type {
   NanoBanana2Settings,
   ZImageTurboSettings,
   SeedreamSettings,
-  RiverflowProSettings,
+  NanoBananaProSettings,
 } from '../types/image-generation.types'
 import { ASPECT_RATIO_SIZES } from '@/config'
 import { logger } from '@/lib/logger'
@@ -50,8 +50,8 @@ export class ImageGenerationService {
           errors.push('Seedream 5 Lite supports maximum 14 reference images')
         }
         break
-      case 'riverflow-2-pro':
-        errors.push(...this.validateRiverflowPro(input))
+      case 'nano-banana-pro':
+        errors.push(...this.validateNanoBananaPro(input))
         break
     }
 
@@ -96,40 +96,13 @@ export class ImageGenerationService {
   }
 
   /**
-   * Validate riverflow-2-pro specific constraints
+   * Validate nano-banana-pro specific constraints
    */
-  private static validateRiverflowPro(input: ImageGenerationInput): string[] {
+  private static validateNanoBananaPro(input: ImageGenerationInput): string[] {
     const errors: string[] = []
 
-    // Riverflow supports up to 10 init_images (source/product photos)
-    if (input.referenceImages && input.referenceImages.length > 10) {
-      errors.push('Riverflow Pro supports maximum 10 source images')
-    }
-
-    // Riverflow supports up to 4 super_resolution_refs (detail/logo cleanup)
-    if (input.detailRefImages && input.detailRefImages.length > 4) {
-      errors.push('Riverflow Pro supports maximum 4 detail reference images')
-    }
-
-    // Riverflow supports up to 2 fonts
-    if (input.fontUrls && input.fontUrls.length > 2) {
-      errors.push('Riverflow Pro supports maximum 2 custom fonts')
-    }
-
-    // Each font text must be <= 300 chars
-    if (input.fontTexts) {
-      for (let i = 0; i < input.fontTexts.length; i++) {
-        if (input.fontTexts[i] && input.fontTexts[i].length > 300) {
-          errors.push(`Font text ${i + 1} exceeds 300 character limit`)
-        }
-      }
-    }
-
-    // Font URLs and texts must match in count
-    if (input.fontUrls && input.fontTexts) {
-      if (input.fontUrls.length !== input.fontTexts.length) {
-        errors.push('Each font must have corresponding text')
-      }
+    if (input.referenceImages && input.referenceImages.length > 14) {
+      errors.push('Nano Banana Pro supports maximum 14 reference images')
     }
 
     return errors
@@ -146,8 +119,8 @@ export class ImageGenerationService {
         return this.buildZImageTurboInput(input)
       case 'seedream-5-lite':
         return this.buildSeedreamInput(input)
-      case 'riverflow-2-pro':
-        return this.buildRiverflowProInput(input)
+      case 'nano-banana-pro':
+        return this.buildNanoBananaProInput(input)
       default:
         throw new Error(`Unsupported model: ${input.model}`)
     }
@@ -256,63 +229,33 @@ export class ImageGenerationService {
   }
 
   /**
-   * Build Riverflow 2.0 Pro input
-   * Note: Riverflow uses "instruction" instead of "prompt"
+   * Build Nano Banana Pro input
    */
-  private static buildRiverflowProInput(input: ImageGenerationInput) {
-    const settings = input.modelSettings as RiverflowProSettings
+  private static buildNanoBananaProInput(input: ImageGenerationInput) {
+    const settings = input.modelSettings as NanoBananaProSettings
     const replicateInput: Record<string, unknown> = {
-      instruction: input.prompt, // Riverflow uses "instruction" not "prompt"
+      prompt: input.prompt,
     }
 
-    // Aspect ratio
     if (settings.aspectRatio) {
       replicateInput.aspect_ratio = settings.aspectRatio
     }
 
-    // Resolution (1K, 2K, 4K)
+    if (settings.outputFormat) {
+      const format = settings.outputFormat as string
+      replicateInput.output_format = format === 'webp' ? 'jpg' : settings.outputFormat
+    }
+
     if (settings.resolution) {
       replicateInput.resolution = settings.resolution
     }
 
-    // Output format (webp or png)
-    if (settings.outputFormat) {
-      replicateInput.output_format = settings.outputFormat
+    if (settings.safetyFilterLevel) {
+      replicateInput.safety_filter_level = settings.safetyFilterLevel
     }
 
-    // Transparency (PNG only)
-    if (settings.transparency !== undefined) {
-      replicateInput.transparency = settings.transparency
-    }
-
-    // AI prompt enhancement
-    if (settings.enhancePrompt !== undefined) {
-      replicateInput.enhance_prompt = settings.enhancePrompt
-    }
-
-    // Max iterations (reasoning depth)
-    if (settings.maxIterations !== undefined) {
-      replicateInput.max_iterations = settings.maxIterations
-    }
-
-    // Source/product images (init_images)
     if (input.referenceImages && input.referenceImages.length > 0) {
-      replicateInput.init_images = this.normalizeReferenceImages(input.referenceImages)
-    }
-
-    // Detail/logo cleanup references (super_resolution_refs)
-    if (input.detailRefImages && input.detailRefImages.length > 0) {
-      replicateInput.super_resolution_refs = input.detailRefImages
-    }
-
-    // Custom fonts
-    if (input.fontUrls && input.fontUrls.length > 0) {
-      replicateInput.font_urls = input.fontUrls
-    }
-
-    // Font texts to render
-    if (input.fontTexts && input.fontTexts.length > 0) {
-      replicateInput.font_texts = input.fontTexts
+      replicateInput.image_input = this.normalizeReferenceImages(input.referenceImages)
     }
 
     return replicateInput

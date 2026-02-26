@@ -6,7 +6,7 @@ export const MODEL_ICONS: Record<string, string> = {
   'nano-banana-2': '🍌',
   'z-image-turbo': '⚡',
   'seedream-5-lite': '🌿',
-  'riverflow-2-pro': '🌊',
+  'nano-banana-pro': '🔥',
 }
 
 export function getModelIcon(model?: string): string {
