@@ -215,7 +215,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             safetyFilterLevel: MODEL_PARAMETERS.nanoBanana2SafetyFilter,
             personGeneration: MODEL_PARAMETERS.personGeneration
         },
-        maxReferenceImages: 1, // nano-banana-2 accepts single `image` input
+        maxReferenceImages: 14,
         estimatedSeconds: 25,
     },
     'z-image-turbo': {
