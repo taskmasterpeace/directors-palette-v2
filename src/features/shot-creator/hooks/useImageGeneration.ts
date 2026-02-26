@@ -228,19 +228,70 @@ export function useImageGeneration() {
         void loadWildCards()
     }, [loadWildCards])
 
-    // Subscribe to real-time updates for the active gallery entry
+    // Subscribe to real-time updates AND poll for completion of the active gallery entry.
+    // Polling is essential because the Supabase subscription is set up async (after getClient + channel setup),
+    // so fast webhook completions can fire before the subscription is listening.
     useEffect(() => {
         if (!activeGalleryId) return
 
         let subscription: { unsubscribe: () => void } | null = null
         let timeoutId: NodeJS.Timeout | null = null
+        let pollIntervalId: NodeJS.Timeout | null = null
+        let resolved = false // Prevent double-handling from subscription + poll racing
 
-        const setupSubscription = async () => {
+        const handleCompletion = () => {
+            if (resolved) return
+            resolved = true
+
+            if (timeoutId) clearTimeout(timeoutId)
+            if (pollIntervalId) clearInterval(pollIntervalId)
+
+            setProgress({ status: 'succeeded' })
+            setShotCreatorProcessing(false)
+            setActiveGalleryId(null)
+
+            // Remove pending placeholder then refresh to load the completed image from DB
+            useUnifiedGalleryStore.getState().removePendingByGalleryId(activeGalleryId)
+            useUnifiedGalleryStore.getState().refreshGallery()
+
+            toast({
+                title: 'Image Ready!',
+                description: 'Your image has been saved to the gallery.',
+            })
+        }
+
+        const handleError = (errorMsg: string) => {
+            if (resolved) return
+            resolved = true
+
+            if (timeoutId) clearTimeout(timeoutId)
+            if (pollIntervalId) clearInterval(pollIntervalId)
+
+            setProgress({ status: 'failed', error: errorMsg })
+            setShotCreatorProcessing(false)
+
+            useUnifiedGalleryStore.getState().updatePendingImage(activeGalleryId, {
+                status: 'failed',
+                metadata: {
+                    createdAt: new Date().toISOString(),
+                    creditsUsed: 1,
+                    error: errorMsg
+                }
+            })
+            setActiveGalleryId(null)
+
+            toast({
+                title: 'Generation Failed',
+                description: errorMsg,
+                variant: 'destructive',
+            })
+        }
+
+        const setupSubscriptionAndPolling = async () => {
             const supabase = await getClient()
-            if (!supabase) {
-                logger.shotCreator.warn('Supabase client not available for subscription')
-                return
-            }
+            if (!supabase || resolved) return
+
+            // Set up real-time subscription
             subscription = supabase
                 .channel(`gallery-item-${activeGalleryId}`)
                 .on(
@@ -253,75 +304,80 @@ export function useImageGeneration() {
                     },
                     (payload) => {
                         const updatedRecord = payload.new
-
-                        // Check if the image has been processed by webhook
                         if (updatedRecord.public_url) {
-                            if (timeoutId) clearTimeout(timeoutId)
-                            setProgress({ status: 'succeeded' })
-                            setShotCreatorProcessing(false)
-                            setActiveGalleryId(null)
-
-                            // Remove the pending placeholder first, then refresh to load the completed image from DB
-                            useUnifiedGalleryStore.getState().removePendingByGalleryId(activeGalleryId)
-                            useUnifiedGalleryStore.getState().refreshGallery()
-
-                            toast({
-                                title: 'Image Ready!',
-                                description: 'Your image has been saved to the gallery.',
-                            })
+                            handleCompletion()
                         } else if (updatedRecord.metadata?.error) {
-                            if (timeoutId) clearTimeout(timeoutId)
-                            setProgress({
-                                status: 'failed',
-                                error: updatedRecord.metadata.error
-                            })
-                            setShotCreatorProcessing(false)
-
-                            // Update the pending placeholder to show failed state
-                            if (activeGalleryId) {
-                                useUnifiedGalleryStore.getState().updatePendingImage(activeGalleryId, {
-                                    status: 'failed',
-                                    metadata: {
-                                        createdAt: new Date().toISOString(),
-                                        creditsUsed: 1,
-                                        error: updatedRecord.metadata.error
-                                    }
-                                })
-                            }
-                            setActiveGalleryId(null)
-
-                            toast({
-                                title: 'Generation Failed',
-                                description: updatedRecord.metadata.error,
-                                variant: 'destructive',
-                            })
+                            handleError(updatedRecord.metadata.error)
                         }
                     }
                 )
                 .subscribe()
 
-            // Set timeout fallback (1 minute)
-            timeoutId = setTimeout(() => {
-                setProgress({ status: 'succeeded' })
-                setShotCreatorProcessing(false)
-                setActiveGalleryId(null)
+            // Poll DB every 3 seconds as fallback (catches events the subscription missed)
+            const pollCheck = async () => {
+                if (resolved) return
+                try {
+                    const { data } = await supabase
+                        .from('gallery')
+                        .select('public_url, status, error_message, metadata')
+                        .eq('id', activeGalleryId)
+                        .single()
 
-                toast({
-                    title: 'Processing...',
-                    description: 'Your image is still being generated. Check the gallery in a few moments.',
-                })
-            }, 60000) // 1 minute
+                    if (!data || resolved) return
+
+                    if (data.public_url) {
+                        logger.shotCreator.info('Poll detected completed image', { galleryId: activeGalleryId })
+                        handleCompletion()
+                    } else if (data.status === 'failed') {
+                        const errorMsg = data.error_message
+                            || (data.metadata as { error?: string })?.error
+                            || 'Generation failed'
+                        logger.shotCreator.info('Poll detected failed image', { galleryId: activeGalleryId, errorMsg })
+                        handleError(errorMsg)
+                    }
+                } catch {
+                    // Silently ignore polling errors — subscription or next poll will catch it
+                }
+            }
+
+            // Immediate check: image might already be done by the time we subscribed
+            await pollCheck()
+
+            // Then poll every 3 seconds
+            if (!resolved) {
+                pollIntervalId = setInterval(pollCheck, 3000)
+            }
+
+            // Timeout fallback (90 seconds)
+            if (!resolved) {
+                timeoutId = setTimeout(() => {
+                    if (resolved) return
+                    resolved = true
+                    if (pollIntervalId) clearInterval(pollIntervalId)
+
+                    setProgress({ status: 'succeeded' })
+                    setShotCreatorProcessing(false)
+                    setActiveGalleryId(null)
+
+                    // Final refresh to pick up any completed images
+                    useUnifiedGalleryStore.getState().removePendingByGalleryId(activeGalleryId)
+                    useUnifiedGalleryStore.getState().refreshGallery()
+
+                    toast({
+                        title: 'Processing...',
+                        description: 'Your image is still being generated. Check the gallery in a few moments.',
+                    })
+                }, 90000)
+            }
         }
 
-        setupSubscription()
+        setupSubscriptionAndPolling()
 
         return () => {
-            if (subscription) {
-                subscription.unsubscribe()
-            }
-            if (timeoutId) {
-                clearTimeout(timeoutId)
-            }
+            resolved = true
+            if (subscription) subscription.unsubscribe()
+            if (timeoutId) clearTimeout(timeoutId)
+            if (pollIntervalId) clearInterval(pollIntervalId)
         }
     }, [activeGalleryId, setShotCreatorProcessing, toast])
 
