@@ -246,7 +246,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             imageSearch: MODEL_PARAMETERS.imageSearch,
         },
         maxReferenceImages: 14,
-        estimatedSeconds: 25,
+        estimatedSeconds: 60,
     },
     'z-image-turbo': {
         id: 'z-image-turbo',

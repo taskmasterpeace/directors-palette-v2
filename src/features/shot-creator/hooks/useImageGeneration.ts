@@ -348,26 +348,15 @@ export function useImageGeneration() {
                 pollIntervalId = setInterval(pollCheck, 3000)
             }
 
-            // Timeout fallback (90 seconds)
+            // After initial fast polling (3s), slow down to 5s polling
+            // No hard timeout — keep polling until Replicate returns a terminal status
             if (!resolved) {
                 timeoutId = setTimeout(() => {
-                    if (resolved) return
-                    resolved = true
-                    if (pollIntervalId) clearInterval(pollIntervalId)
-
-                    setProgress({ status: 'succeeded' })
-                    setShotCreatorProcessing(false)
-                    setActiveGalleryId(null)
-
-                    // Final refresh to pick up any completed images
-                    useUnifiedGalleryStore.getState().removePendingByGalleryId(activeGalleryId)
-                    useUnifiedGalleryStore.getState().refreshGallery()
-
-                    toast({
-                        title: 'Processing...',
-                        description: 'Your image is still being generated. Check the gallery in a few moments.',
-                    })
-                }, 90000)
+                    if (resolved || !pollIntervalId) return
+                    // Switch from 3s to 5s polling after 60s
+                    clearInterval(pollIntervalId)
+                    pollIntervalId = setInterval(pollCheck, 5000)
+                }, 60000)
             }
         }
 

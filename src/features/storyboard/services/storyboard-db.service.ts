@@ -50,12 +50,33 @@ export interface StoredBreakdown {
   level: number
 }
 
+/** Full project state saved to IndexedDB (fields that were previously only in localStorage) */
+export interface StoredProjectState {
+  id?: number
+  projectId: number
+  storyText: string
+  breakdownLevel: number
+  characters: unknown[]
+  locations: unknown[]
+  selectedPresetStyle: string | null
+  currentStyleGuide: unknown | null
+  extractionResult: unknown | null
+  selectedModel: string
+  selectedDirectorId: string | null
+  generationSettings: unknown
+  globalPromptPrefix: string
+  globalPromptSuffix: string
+  shotNotes: Record<number, string>
+  isDocumentaryMode: boolean
+}
+
 class StoryboardDatabase extends Dexie {
   projects!: Table<StoryboardProject>
   prompts!: Table<StoredPrompts>
   images!: Table<StoredImages>
   chapters!: Table<StoredChapters>
   breakdowns!: Table<StoredBreakdown>
+  projectState!: Table<StoredProjectState>
 
   constructor() {
     super('storyboard-projects')
@@ -65,6 +86,14 @@ class StoryboardDatabase extends Dexie {
       images: '++id, projectId',
       chapters: '++id, projectId',
       breakdowns: '++id, projectId',
+    })
+    this.version(2).stores({
+      projects: '++id, name, updatedAt',
+      prompts: '++id, projectId',
+      images: '++id, projectId',
+      chapters: '++id, projectId',
+      breakdowns: '++id, projectId',
+      projectState: '++id, projectId',
     })
   }
 }
@@ -95,11 +124,12 @@ export async function renameProject(id: number, name: string): Promise<void> {
 }
 
 export async function deleteProject(id: number): Promise<void> {
-  await storyboardDb.transaction('rw', [storyboardDb.projects, storyboardDb.prompts, storyboardDb.images, storyboardDb.chapters, storyboardDb.breakdowns], async () => {
+  await storyboardDb.transaction('rw', [storyboardDb.projects, storyboardDb.prompts, storyboardDb.images, storyboardDb.chapters, storyboardDb.breakdowns, storyboardDb.projectState], async () => {
     await storyboardDb.prompts.where('projectId').equals(id).delete()
     await storyboardDb.images.where('projectId').equals(id).delete()
     await storyboardDb.chapters.where('projectId').equals(id).delete()
     await storyboardDb.breakdowns.where('projectId').equals(id).delete()
+    await storyboardDb.projectState.where('projectId').equals(id).delete()
     await storyboardDb.projects.delete(id)
   })
 }
@@ -164,4 +194,50 @@ export async function saveBreakdown(projectId: number, breakdown: unknown, level
 export async function loadBreakdown(projectId: number): Promise<{ breakdown: unknown; level: number } | null> {
   const record = await storyboardDb.breakdowns.where('projectId').equals(projectId).first()
   return record ? { breakdown: record.breakdown, level: record.level } : null
+}
+
+// ── Project State persistence ────────────────────────
+
+export async function saveProjectState(projectId: number, state: Omit<StoredProjectState, 'id' | 'projectId'>): Promise<void> {
+  const existing = await storyboardDb.projectState.where('projectId').equals(projectId).first()
+  if (existing?.id) {
+    await storyboardDb.projectState.update(existing.id, { ...state })
+  } else {
+    await storyboardDb.projectState.add({ projectId, ...state })
+  }
+}
+
+export async function loadProjectState(projectId: number): Promise<Omit<StoredProjectState, 'id' | 'projectId'> | null> {
+  const record = await storyboardDb.projectState.where('projectId').equals(projectId).first()
+  if (!record) return null
+  const {
+    storyText, breakdownLevel, characters, locations,
+    selectedPresetStyle, currentStyleGuide, extractionResult,
+    selectedModel, selectedDirectorId, generationSettings,
+    globalPromptPrefix, globalPromptSuffix, shotNotes, isDocumentaryMode,
+  } = record
+  return {
+    storyText, breakdownLevel, characters, locations,
+    selectedPresetStyle, currentStyleGuide, extractionResult,
+    selectedModel, selectedDirectorId, generationSettings,
+    globalPromptPrefix, globalPromptSuffix, shotNotes, isDocumentaryMode,
+  }
+}
+
+/** Estimate the size of a project's stored data in bytes */
+export async function estimateProjectSize(projectId: number): Promise<number> {
+  const [prompts, images, chapters, breakdowns, projectState] = await Promise.all([
+    storyboardDb.prompts.where('projectId').equals(projectId).first(),
+    storyboardDb.images.where('projectId').equals(projectId).first(),
+    storyboardDb.chapters.where('projectId').equals(projectId).first(),
+    storyboardDb.breakdowns.where('projectId').equals(projectId).first(),
+    storyboardDb.projectState.where('projectId').equals(projectId).first(),
+  ])
+  let size = 0
+  if (prompts) size += JSON.stringify(prompts).length
+  if (images) size += JSON.stringify(images).length
+  if (chapters) size += JSON.stringify(chapters).length
+  if (breakdowns) size += JSON.stringify(breakdowns).length
+  if (projectState) size += JSON.stringify(projectState).length
+  return size
 }

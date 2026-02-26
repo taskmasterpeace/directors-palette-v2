@@ -5,11 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Maximize2, Edit3, Users, MapPin, Package, ImageIcon, Layout, Trash2, Grid3x3, List } from "lucide-react"
+import { Maximize2, Edit3, Users, MapPin, Package, ImageIcon, Layout, Trash2, Grid3x3, List, Tag } from "lucide-react"
 import Image from "next/image"
 import { useShotCreatorStore } from "../../store"
 import { Pagination } from "../unified-gallery/Pagination"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import InlineTagEditor from "../creator-reference-manager/InlineTagEditor"
 
 const categoryConfig = {
     'all': { icon: ImageIcon, label: 'All', color: 'slate' },
@@ -29,12 +30,14 @@ const ShotReferenceLibrary = () => {
         loadLibraryItems,
         updateItemCategory,
         deleteItem,
+        updateItemTags,
         currentPage,
         totalPages,
         setCurrentPage
     } = useLibraryStore()
 
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+    const [editingTagsId, setEditingTagsId] = useState<string | null>(null)
 
     // Load library items on mount
     useEffect(() => {
@@ -128,13 +131,32 @@ const ShotReferenceLibrary = () => {
                                                     height={200}
                                                 />
 
-                                                {/* Tag pills - bottom left */}
-                                                {item.tags && item.tags.length > 0 && (
-                                                    <div className="absolute bottom-1 left-1 flex gap-1 max-w-[calc(100%-2rem)]">
+                                                {/* Tag pills - bottom left (click to edit) */}
+                                                {editingTagsId === item.id ? (
+                                                    <div className="absolute bottom-0 left-0 right-0 bg-black/90 p-1.5 rounded-b-md" onClick={(e) => e.stopPropagation()}>
+                                                        <InlineTagEditor
+                                                            initialTags={item.tags || []}
+                                                            onSave={(newTags) => {
+                                                                updateItemTags(item.id, newTags)
+                                                                setEditingTagsId(null)
+                                                            }}
+                                                            onCancel={() => setEditingTagsId(null)}
+                                                            autoFocus
+                                                        />
+                                                    </div>
+                                                ) : item.tags && item.tags.length > 0 ? (
+                                                    <div
+                                                        className="absolute bottom-1 left-1 flex gap-1 max-w-[calc(100%-2rem)] cursor-pointer"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setEditingTagsId(item.id)
+                                                        }}
+                                                        title="Click to edit tags"
+                                                    >
                                                         {item.tags.slice(0, 2).map((tag) => (
                                                             <span
                                                                 key={tag}
-                                                                className="bg-black/70 text-white text-[10px] leading-tight px-1.5 py-0.5 rounded-full truncate max-w-[5rem]"
+                                                                className="bg-black/70 text-white text-[10px] leading-tight px-1.5 py-0.5 rounded-full truncate max-w-[5rem] hover:bg-violet-500/70 transition-colors"
                                                             >
                                                                 {tag}
                                                             </span>
@@ -144,6 +166,19 @@ const ShotReferenceLibrary = () => {
                                                                 +{item.tags.length - 2}
                                                             </span>
                                                         )}
+                                                    </div>
+                                                ) : (
+                                                    <div
+                                                        className="absolute bottom-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setEditingTagsId(item.id)
+                                                        }}
+                                                    >
+                                                        <span className="bg-black/70 text-white/60 text-[10px] leading-tight px-1.5 py-0.5 rounded-full flex items-center gap-1 hover:text-white transition-colors">
+                                                            <Tag className="w-2.5 h-2.5" />
+                                                            + tag
+                                                        </span>
                                                     </div>
                                                 )}
 
@@ -235,17 +270,47 @@ const ShotReferenceLibrary = () => {
                                                 <p className="text-sm text-foreground truncate">{item.prompt || 'Untitled'}</p>
                                                 <div className="flex items-center gap-2 mt-0.5">
                                                     <p className="text-xs text-muted-foreground capitalize">{item.category || 'unorganized'}</p>
-                                                    {item.tags && item.tags.length > 0 && (
-                                                        <div className="flex gap-1 flex-wrap">
+                                                    {editingTagsId === item.id ? (
+                                                        <div onClick={(e) => e.stopPropagation()}>
+                                                            <InlineTagEditor
+                                                                initialTags={item.tags || []}
+                                                                onSave={(newTags) => {
+                                                                    updateItemTags(item.id, newTags)
+                                                                    setEditingTagsId(null)
+                                                                }}
+                                                                onCancel={() => setEditingTagsId(null)}
+                                                                autoFocus
+                                                            />
+                                                        </div>
+                                                    ) : item.tags && item.tags.length > 0 ? (
+                                                        <div
+                                                            className="flex gap-1 flex-wrap cursor-pointer"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                setEditingTagsId(item.id)
+                                                            }}
+                                                            title="Click to edit tags"
+                                                        >
                                                             {item.tags.map((tag) => (
                                                                 <span
                                                                     key={tag}
-                                                                    className="bg-violet-500/20 text-violet-300 text-[10px] leading-tight px-1.5 py-0.5 rounded-full"
+                                                                    className="bg-violet-500/20 text-violet-300 text-[10px] leading-tight px-1.5 py-0.5 rounded-full hover:bg-violet-500/30 transition-colors"
                                                                 >
                                                                     {tag}
                                                                 </span>
                                                             ))}
                                                         </div>
+                                                    ) : (
+                                                        <span
+                                                            className="text-[10px] text-muted-foreground cursor-pointer hover:text-violet-300 transition-colors flex items-center gap-1"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                setEditingTagsId(item.id)
+                                                            }}
+                                                        >
+                                                            <Tag className="w-2.5 h-2.5" />
+                                                            + tag
+                                                        </span>
                                                     )}
                                                 </div>
                                             </div>

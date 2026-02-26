@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react'
 /** Estimated generation time in seconds per model (measured averages) */
 const MODEL_ESTIMATED_SECONDS: Record<string, number> = {
   'z-image-turbo': 2,
-  'nano-banana-2': 10,
+  'nano-banana-2': 60,
   'seedream-5-lite': 49,
   'nano-banana-pro': 30,
 }

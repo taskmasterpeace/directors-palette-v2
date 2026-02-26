@@ -12,12 +12,13 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { useStoryboardStore } from '../store'
-import { listProjects, deleteProject, renameProject, type StoryboardProject } from '../services/storyboard-db.service'
+import { listProjects, deleteProject, renameProject, estimateProjectSize, type StoryboardProject } from '../services/storyboard-db.service'
 import { useStoryboardPersistence } from '../hooks/useStoryboardPersistence'
 import { toast } from 'sonner'
 
 export function ProjectSelector() {
   const [projects, setProjects] = useState<StoryboardProject[]>([])
+  const [projectSizes, setProjectSizes] = useState<Record<number, number>>({})
   const [open, setOpen] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editName, setEditName] = useState('')
@@ -31,6 +32,14 @@ export function ProjectSelector() {
     try {
       const list = await listProjects()
       setProjects(list)
+      // Estimate sizes in background
+      const sizes: Record<number, number> = {}
+      for (const p of list) {
+        if (p.id != null) {
+          sizes[p.id] = await estimateProjectSize(p.id)
+        }
+      }
+      setProjectSizes(sizes)
     } catch {
       // IndexedDB may not be available
     }
@@ -133,8 +142,15 @@ export function ProjectSelector() {
                 <>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm truncate">{project.name}</div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {project.updatedAt ? new Date(project.updatedAt).toLocaleDateString() : ''}
+                    <div className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+                      <span>{project.updatedAt ? new Date(project.updatedAt).toLocaleDateString() : ''}</span>
+                      {project.id != null && projectSizes[project.id] > 0 && (
+                        <span className="text-muted-foreground/60">
+                          {projectSizes[project.id] < 1024 ? `${projectSizes[project.id]}B` :
+                           projectSizes[project.id] < 1048576 ? `${Math.round(projectSizes[project.id] / 1024)}KB` :
+                           `${(projectSizes[project.id] / 1048576).toFixed(1)}MB`}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <button onClick={(e) => handleRenameStart(e, project)} className="p-1 hover:text-foreground text-muted-foreground opacity-0 group-hover:opacity-100">
