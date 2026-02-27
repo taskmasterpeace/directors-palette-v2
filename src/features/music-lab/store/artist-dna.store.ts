@@ -252,15 +252,23 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           }
           // Merge with defaults so any missing fields get sensible values
           const defaults = createEmptyDNA()
-          const sound = { ...defaults.sound, ...dna.sound }
-          if (!Array.isArray(sound.genreEvolution)) sound.genreEvolution = []
-          if (!Array.isArray(sound.keyCollaborators)) sound.keyCollaborators = []
+          // Ensure array fields from AI responses are actually arrays
+          const ensureArrays = <T extends Record<string, unknown>>(obj: T, def: T): T => {
+            const result = { ...obj }
+            for (const key of Object.keys(def)) {
+              if (Array.isArray(def[key]) && !Array.isArray(result[key])) {
+                (result as Record<string, unknown>)[key] = []
+              }
+            }
+            return result
+          }
+          const sound = ensureArrays({ ...defaults.sound, ...dna.sound }, defaults.sound)
           const merged: ArtistDNA = {
-            identity: { ...defaults.identity, ...dna.identity },
+            identity: ensureArrays({ ...defaults.identity, ...dna.identity }, defaults.identity),
             sound,
-            persona: { ...defaults.persona, ...dna.persona },
-            lexicon: { ...defaults.lexicon, ...dna.lexicon },
-            look: { ...defaults.look, ...dna.look },
+            persona: ensureArrays({ ...defaults.persona, ...dna.persona }, defaults.persona),
+            lexicon: ensureArrays({ ...defaults.lexicon, ...dna.lexicon }, defaults.lexicon),
+            look: ensureArrays({ ...defaults.look, ...dna.look }, defaults.look),
             catalog: { ...defaults.catalog, ...dna.catalog },
             lowConfidenceFields: Array.isArray(dna.lowConfidenceFields) ? dna.lowConfidenceFields : [],
           }

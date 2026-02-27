@@ -74,7 +74,7 @@ export function MobilePromptCard({
         {/* Expanded content */}
         {isExpanded && (
           <div className="px-4 pb-4 border-t border-border pt-4 bg-card/50">
-            {prompt.tags.length > 0 && (
+            {Array.isArray(prompt.tags) && prompt.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-3">
                 {prompt.tags.map((tag, idx) => (
                   <Badge key={idx} variant="secondary" className="text-xs bg-secondary text-foreground">

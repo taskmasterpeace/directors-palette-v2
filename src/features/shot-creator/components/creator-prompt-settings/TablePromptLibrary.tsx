@@ -116,7 +116,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
       filtered = filtered.filter(p =>
         p.title.toLowerCase().includes(query) ||
         p.prompt.toLowerCase().includes(query) ||
-        p.tags.some(tag => tag.toLowerCase().includes(query)) ||
+        (Array.isArray(p.tags) ? p.tags : []).some(tag => tag.toLowerCase().includes(query)) ||
         p.reference?.toLowerCase().includes(query)
       )
     }
@@ -603,10 +603,10 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                         ) : (
                           <div
                             className="cursor-pointer hover:bg-muted/50 p-1 rounded"
-                            onClick={() => handleEditStart(prompt.id, 'tags', prompt.tags.join(', '))}
+                            onClick={() => handleEditStart(prompt.id, 'tags', (Array.isArray(prompt.tags) ? prompt.tags : []).join(', '))}
                             title="Click to edit tags"
                           >
-                            {prompt.tags.length > 0 ? (
+                            {Array.isArray(prompt.tags) && prompt.tags.length > 0 ? (
                               <div className="flex flex-wrap gap-1">
                                 {prompt.tags.slice(0, 2).map((tag, idx) => (
                                   <Badge key={idx} variant="secondary" className="text-xs bg-secondary text-muted-foreground">
@@ -614,7 +614,7 @@ export function TablePromptLibrary({ onSelectPrompt, showQuickAccess = true, cla
                                     {tag}
                                   </Badge>
                                 ))}
-                                {prompt.tags.length > 2 && (
+                                {Array.isArray(prompt.tags) && prompt.tags.length > 2 && (
                                   <span className="text-xs text-muted-foreground">+{prompt.tags.length - 2}</span>
                                 )}
                               </div>

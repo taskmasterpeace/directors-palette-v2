@@ -12,9 +12,11 @@ import type { ArtistDNA } from '../types/artist-dna.types'
 export function buildVocalPrompt(dna: ArtistDNA): string {
   const parts: string[] = []
 
+  const sa = (val: unknown): string[] => Array.isArray(val) ? val : []
+
   // Vocal textures
-  if (dna.sound.vocalTextures.length > 0) {
-    parts.push(dna.sound.vocalTextures.join(', '))
+  if (sa(dna.sound.vocalTextures).length > 0) {
+    parts.push(sa(dna.sound.vocalTextures).join(', '))
   }
 
   // Melody bias interpretation
@@ -36,8 +38,8 @@ export function buildVocalPrompt(dna: ArtistDNA): string {
   }
 
   // Ad-libs
-  if (dna.lexicon.adLibs.length > 0) {
-    parts.push('ad-libs: ' + dna.lexicon.adLibs.slice(0, 3).join(', '))
+  if (sa(dna.lexicon.adLibs).length > 0) {
+    parts.push('ad-libs: ' + sa(dna.lexicon.adLibs).slice(0, 3).join(', '))
   }
 
   return parts.filter(Boolean).join(', ')
@@ -50,24 +52,26 @@ export function buildVocalPrompt(dna: ArtistDNA): string {
 export function buildMusicStylePrompt(dna: ArtistDNA): string {
   const tags: string[] = []
 
+  const sa = (val: unknown): string[] => Array.isArray(val) ? val : []
+
   // Genres (primary)
-  if (dna.sound.genres.length > 0) {
-    tags.push(...dna.sound.genres.slice(0, 2))
+  if (sa(dna.sound.genres).length > 0) {
+    tags.push(...sa(dna.sound.genres).slice(0, 2))
   }
 
   // Subgenres
-  if (dna.sound.subgenres.length > 0) {
-    tags.push(...dna.sound.subgenres.slice(0, 2))
+  if (sa(dna.sound.subgenres).length > 0) {
+    tags.push(...sa(dna.sound.subgenres).slice(0, 2))
   }
 
   // Production preferences
-  if (dna.sound.productionPreferences.length > 0) {
-    tags.push(...dna.sound.productionPreferences.slice(0, 2))
+  if (sa(dna.sound.productionPreferences).length > 0) {
+    tags.push(...sa(dna.sound.productionPreferences).slice(0, 2))
   }
 
   // Artist influences
-  if (dna.sound.artistInfluences.length > 0) {
-    tags.push(dna.sound.artistInfluences[0] + ' influenced')
+  if (sa(dna.sound.artistInfluences).length > 0) {
+    tags.push(sa(dna.sound.artistInfluences)[0] + ' influenced')
   }
 
   return tags.filter(Boolean).join(', ')

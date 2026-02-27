@@ -173,7 +173,7 @@ export const useStorybookStore = create<StorybookStore>()(
           // Migrate to bookCharacters if not present
           if (!state.project.bookCharacters) {
             state.project.bookCharacters = [
-              ...state.project.characters.map(c => ({
+              ...(Array.isArray(state.project.characters) ? state.project.characters : []).map(c => ({
                 id: c.id,
                 name: c.name,
                 tag: c.tag,

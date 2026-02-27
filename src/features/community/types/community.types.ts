@@ -284,7 +284,7 @@ export function rowToCommunityItem(row: CommunityItemRow): CommunityItem {
     name: row.name,
     description: row.description,
     category: row.category,
-    tags: row.tags,
+    tags: Array.isArray(row.tags) ? row.tags : [],
     submittedBy: row.submitted_by,
     submittedByName: row.submitted_by_name,
     submittedAt: row.submitted_at,

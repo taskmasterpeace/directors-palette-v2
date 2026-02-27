@@ -47,22 +47,22 @@ function buildProposalPrompt(
 ${director.description}
 
 ### Core Intent
-- Primary Focus: ${director.coreIntent.primaryFocus.join(', ')}
-- Emotional Temperature: ${director.coreIntent.emotionalTemperature}
-- Control Style: ${director.coreIntent.controlVsSpontaneity}
+- Primary Focus: ${(Array.isArray(director.coreIntent?.primaryFocus) ? director.coreIntent.primaryFocus : []).join(', ')}
+- Emotional Temperature: ${director.coreIntent?.emotionalTemperature || ''}
+- Control Style: ${director.coreIntent?.controlVsSpontaneity || ''}
 
 ### Story Interpretation
-You read for: ${director.storyInterpretation.readsFor.join(', ')}
-Theme Style: ${director.storyInterpretation.themeExtractionStyle}
+You read for: ${(Array.isArray(director.storyInterpretation?.readsFor) ? director.storyInterpretation.readsFor : []).join(', ')}
+Theme Style: ${director.storyInterpretation?.themeExtractionStyle || ''}
 
 ### Emotional Language
-Preferred States: ${director.emotionalLanguage.preferredEmotionalStates.join(', ')}
-Arc Bias: ${director.emotionalLanguage.emotionalArcBias}
+Preferred States: ${(Array.isArray(director.emotionalLanguage?.preferredEmotionalStates) ? director.emotionalLanguage.preferredEmotionalStates : []).join(', ')}
+Arc Bias: ${director.emotionalLanguage?.emotionalArcBias || ''}
 
 ### Camera Philosophy
-POV Bias: ${director.cameraPhilosophy.pointOfViewBias}
-Framing: ${director.cameraPhilosophy.framingInstinct.join(', ')}
-Distance: ${director.cameraPhilosophy.distanceBias}
+POV Bias: ${director.cameraPhilosophy?.pointOfViewBias || ''}
+Framing: ${(Array.isArray(director.cameraPhilosophy?.framingInstinct) ? director.cameraPhilosophy.framingInstinct : []).join(', ')}
+Distance: ${director.cameraPhilosophy?.distanceBias || ''}
 
 ### Rhythm & Pacing
 Baseline: ${director.rhythmAndPacing.baselinePacing}
@@ -71,9 +71,9 @@ Cut Motivation: ${director.rhythmAndPacing.cutMotivation}
 
 ### Spectacle & Signature Moments
 VFX Tolerance: ${director.spectacleProfile.vfxTolerance}
-Signature Moments: ${director.spectacleProfile.signatureMoments.join(', ')}
-Surreal Tendency: ${director.spectacleProfile.surrealTendency}
-Spectacle Types: ${director.spectacleProfile.spectacleTypes.join(', ')}
+Signature Moments: ${(Array.isArray(director.spectacleProfile?.signatureMoments) ? director.spectacleProfile.signatureMoments : []).join(', ')}
+Surreal Tendency: ${director.spectacleProfile?.surrealTendency || ''}
+Spectacle Types: ${(Array.isArray(director.spectacleProfile?.spectacleTypes) ? director.spectacleProfile.spectacleTypes : []).join(', ')}
 Budget Assumption: ${director.spectacleProfile.budgetAssumption}
 
 ---

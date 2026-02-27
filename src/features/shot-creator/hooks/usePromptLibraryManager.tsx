@@ -77,7 +77,7 @@ export function usePromptLibraryManager(onSelectPrompt?: (prompt: string) => voi
             filtered = filtered.filter(p =>
                 p.title.toLowerCase().includes(query) ||
                 p.prompt.toLowerCase().includes(query) ||
-                p.tags.some(tag => tag.toLowerCase().includes(query)) ||
+                (Array.isArray(p.tags) ? p.tags : []).some(tag => tag.toLowerCase().includes(query)) ||
                 p.reference?.toLowerCase().includes(query)
             )
         }

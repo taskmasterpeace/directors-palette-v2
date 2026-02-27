@@ -107,7 +107,7 @@ export class StoryDirectorService {
         }
 
         // 1. Camera/Framing (from cameraPhilosophy)
-        const framing = director.cameraPhilosophy.framingInstinct
+        const framing = Array.isArray(director.cameraPhilosophy?.framingInstinct) ? director.cameraPhilosophy.framingInstinct : []
         if (framing.length > 0) {
             const framingTerms = framing.map(f => {
                 switch (f) {
@@ -146,8 +146,8 @@ export class StoryDirectorService {
         }
 
         // 3. Emotional Tone (from emotionalLanguage)
-        const emotions = director.emotionalLanguage.preferredEmotionalStates
-        if (emotions && emotions.length > 0) {
+        const emotions = Array.isArray(director.emotionalLanguage?.preferredEmotionalStates) ? director.emotionalLanguage.preferredEmotionalStates : []
+        if (emotions.length > 0) {
             const primaryEmotion = emotions[0]
             visualModifiers.push(`evoking ${primaryEmotion}`)
         }
@@ -376,7 +376,7 @@ export class StoryDirectorService {
         const reasons: string[] = []
 
         // 1. Primary focus keywords (+20 per match, max 40)
-        const focusMatches = director.coreIntent.primaryFocus.filter(
+        const focusMatches = (Array.isArray(director.coreIntent?.primaryFocus) ? director.coreIntent.primaryFocus : []).filter(
             keyword => textLower.includes(keyword.toLowerCase())
         )
         const focusPoints = Math.min(focusMatches.length * 20, 40)
@@ -386,7 +386,7 @@ export class StoryDirectorService {
         }
 
         // 2. Preferred emotional states (+15 per match, max 30)
-        const emotionMatches = director.emotionalLanguage.preferredEmotionalStates.filter(
+        const emotionMatches = (Array.isArray(director.emotionalLanguage?.preferredEmotionalStates) ? director.emotionalLanguage.preferredEmotionalStates : []).filter(
             emotion => textLower.includes(emotion.toLowerCase())
         )
         const emotionPoints = Math.min(emotionMatches.length * 15, 30)
@@ -446,13 +446,15 @@ export class StoryDirectorService {
         const elements: string[] = []
 
         // Framing approach
-        if (director.cameraPhilosophy.framingInstinct.length > 0) {
-            elements.push(director.cameraPhilosophy.framingInstinct.slice(0, 2).join(' + ') + ' framing')
+        const framingArr = Array.isArray(director.cameraPhilosophy?.framingInstinct) ? director.cameraPhilosophy.framingInstinct : []
+        if (framingArr.length > 0) {
+            elements.push(framingArr.slice(0, 2).join(' + ') + ' framing')
         }
 
         // Emotional tone
-        if (director.emotionalLanguage.preferredEmotionalStates.length > 0) {
-            elements.push(director.emotionalLanguage.preferredEmotionalStates[0])
+        const emotionArr = Array.isArray(director.emotionalLanguage?.preferredEmotionalStates) ? director.emotionalLanguage.preferredEmotionalStates : []
+        if (emotionArr.length > 0) {
+            elements.push(emotionArr[0])
         }
 
         // Lighting

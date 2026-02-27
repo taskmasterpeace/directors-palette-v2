@@ -113,7 +113,7 @@ function GenomePanel() {
                 </div>
 
                 {/* Trait Badges */}
-                {genome.signatures.length > 0 && (
+                {Array.isArray(genome.signatures) && genome.signatures.length > 0 && (
                   <div>
                     <p className="text-[11px] font-medium text-muted-foreground mb-1 uppercase tracking-wider">
                       Signatures (80%+)
@@ -121,7 +121,7 @@ function GenomePanel() {
                     <TraitBadges traits={genome.signatures} variant="signature" />
                   </div>
                 )}
-                {genome.tendencies.length > 0 && (
+                {Array.isArray(genome.tendencies) && genome.tendencies.length > 0 && (
                   <div>
                     <p className="text-[11px] font-medium text-muted-foreground mb-1 uppercase tracking-wider">
                       Tendencies (40-79%)
@@ -129,7 +129,7 @@ function GenomePanel() {
                     <TraitBadges traits={genome.tendencies} variant="tendency" />
                   </div>
                 )}
-                {genome.experiments.length > 0 && (
+                {Array.isArray(genome.experiments) && genome.experiments.length > 0 && (
                   <div>
                     <p className="text-[11px] font-medium text-muted-foreground mb-1 uppercase tracking-wider">
                       Experiments (&lt;40%)
@@ -141,7 +141,7 @@ function GenomePanel() {
                 {/* Blueprint */}
                 {genome.blueprint && (
                   <div className="grid grid-cols-2 gap-2 text-[11px]">
-                    {genome.blueprint.mustInclude.length > 0 && (
+                    {Array.isArray(genome.blueprint.mustInclude) && genome.blueprint.mustInclude.length > 0 && (
                       <div>
                         <p className="font-medium text-emerald-400 mb-0.5">Must Include</p>
                         <ul className="text-muted-foreground space-y-0.5">
@@ -151,7 +151,7 @@ function GenomePanel() {
                         </ul>
                       </div>
                     )}
-                    {genome.blueprint.suggestExploring.length > 0 && (
+                    {Array.isArray(genome.blueprint.suggestExploring) && genome.blueprint.suggestExploring.length > 0 && (
                       <div>
                         <p className="font-medium text-purple-400 mb-0.5">Explore</p>
                         <ul className="text-muted-foreground space-y-0.5">
@@ -218,16 +218,16 @@ function SongAnalysisSummary({ entry }: { entry: CatalogEntry }) {
   return (
     <div className="mt-2 space-y-1.5 text-[11px] text-muted-foreground bg-muted/30 p-2 rounded">
       <div className="flex flex-wrap gap-1">
-        {a.themes.map((theme, i) => (
+        {(Array.isArray(a.themes) ? a.themes : []).map((theme, i) => (
           <Badge key={i} variant="secondary" className="text-[10px] px-1.5 py-0">
             {theme}
           </Badge>
         ))}
       </div>
       <p><span className="text-foreground/70 font-medium">Storytelling:</span> {a.storytellingApproach} · <span className="text-foreground/70 font-medium">Vocabulary:</span> {a.vocabularyLevel}</p>
-      <p><span className="text-foreground/70 font-medium">Rhyme:</span> {a.rhymeSchemes.join(', ')}</p>
+      <p><span className="text-foreground/70 font-medium">Rhyme:</span> {(Array.isArray(a.rhymeSchemes) ? a.rhymeSchemes : []).join(', ')}</p>
       <p><span className="text-foreground/70 font-medium">Mood:</span> {a.moodProgression}</p>
-      {a.notableDevices.length > 0 && (
+      {Array.isArray(a.notableDevices) && a.notableDevices.length > 0 && (
         <p><span className="text-foreground/70 font-medium">Devices:</span> {a.notableDevices.slice(0, 3).join('; ')}</p>
       )}
     </div>

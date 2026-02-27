@@ -158,7 +158,7 @@ export function IdeaBankDrawer() {
                   {idea.source === 'chopped' && (
                     <Scissors className="w-3 h-3 text-amber-400 opacity-50" />
                   )}
-                  {idea.tags.map((tag) => (
+                  {(Array.isArray(idea.tags) ? idea.tags : []).map((tag) => (
                     <Badge key={tag} variant="secondary" className="text-[9px] px-1 py-0">
                       {tag}
                     </Badge>

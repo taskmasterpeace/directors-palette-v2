@@ -157,7 +157,7 @@ export function CommunityCard({
         const content = item.content as DirectorContent
         return (
           <div className="flex flex-wrap gap-1">
-            {content.fingerprint.coreIntent.primaryFocus.slice(0, 3).map((focus) => (
+            {(Array.isArray(content.fingerprint?.coreIntent?.primaryFocus) ? content.fingerprint.coreIntent.primaryFocus : []).slice(0, 3).map((focus) => (
               <Badge key={focus} variant="outline" className="text-[10px] px-1.5 py-0">
                 {focus}
               </Badge>
@@ -296,7 +296,7 @@ export function CommunityCard({
       </div>
 
       {/* Tags */}
-      {item.tags.length > 0 && (
+      {Array.isArray(item.tags) && item.tags.length > 0 && (
         <div className="flex items-center gap-1 mt-2 flex-wrap">
           <Tag className="w-3 h-3 text-muted-foreground/50" />
           {item.tags.slice(0, 3).map((tag) => (
@@ -307,7 +307,7 @@ export function CommunityCard({
               {tag}
             </span>
           ))}
-          {item.tags.length > 3 && (
+          {Array.isArray(item.tags) && item.tags.length > 3 && (
             <span className="text-[10px] text-muted-foreground/50">
               +{item.tags.length - 3}
             </span>

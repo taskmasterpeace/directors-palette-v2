@@ -17,66 +17,70 @@ import type { ArtistDNA } from '../../types/artist-dna.types'
 import * as THREE from 'three'
 
 // Calculate how "filled" each DNA ring is (0-1)
+// Safe array helper - ensures we always get an array
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sa = <T = string>(val: unknown): T[] => Array.isArray(val) ? val as T[] : []
+
 function calculateRingFill(dna: ArtistDNA) {
   const sound =
-    (dna.sound.genres.length > 0 ? 0.2 : 0) +
-    (dna.sound.vocalTextures.length > 0 ? 0.2 : 0) +
-    (dna.sound.productionPreferences.length > 0 ? 0.2 : 0) +
-    (dna.sound.artistInfluences.length > 0 ? 0.2 : 0) +
+    (sa(dna.sound.genres).length > 0 ? 0.2 : 0) +
+    (sa(dna.sound.vocalTextures).length > 0 ? 0.2 : 0) +
+    (sa(dna.sound.productionPreferences).length > 0 ? 0.2 : 0) +
+    (sa(dna.sound.artistInfluences).length > 0 ? 0.2 : 0) +
     (dna.sound.soundDescription ? 0.2 : 0)
 
   const influences =
-    (dna.sound.artistInfluences.length > 0 ? 0.5 : 0) +
-    (dna.sound.genres.length > 0 ? 0.25 : 0) +
-    (dna.sound.subgenres.length > 0 ? 0.25 : 0)
+    (sa(dna.sound.artistInfluences).length > 0 ? 0.5 : 0) +
+    (sa(dna.sound.genres).length > 0 ? 0.25 : 0) +
+    (sa(dna.sound.subgenres).length > 0 ? 0.25 : 0)
 
   const persona =
-    (dna.persona.traits.length > 0 ? 0.25 : 0) +
-    (dna.persona.likes.length > 0 ? 0.25 : 0) +
+    (sa(dna.persona.traits).length > 0 ? 0.25 : 0) +
+    (sa(dna.persona.likes).length > 0 ? 0.25 : 0) +
     (dna.persona.attitude ? 0.25 : 0) +
     (dna.persona.worldview ? 0.25 : 0)
 
   const lexicon =
-    (dna.lexicon.signaturePhrases.length > 0 ? 0.25 : 0) +
-    (dna.lexicon.slang.length > 0 ? 0.25 : 0) +
-    (dna.lexicon.adLibs.length > 0 ? 0.25 : 0) +
-    (dna.lexicon.bannedWords.length > 0 ? 0.25 : 0)
+    (sa(dna.lexicon.signaturePhrases).length > 0 ? 0.25 : 0) +
+    (sa(dna.lexicon.slang).length > 0 ? 0.25 : 0) +
+    (sa(dna.lexicon.adLibs).length > 0 ? 0.25 : 0) +
+    (sa(dna.lexicon.bannedWords).length > 0 ? 0.25 : 0)
 
   const profile =
     (dna.identity.stageName || dna.identity.realName ? 0.2 : 0) +
     (dna.identity.backstory ? 0.2 : 0) +
     (dna.identity.city ? 0.2 : 0) +
     (dna.look.visualDescription ? 0.2 : 0) +
-    (dna.catalog.entries.length > 0 ? 0.2 : 0)
+    (Array.isArray(dna.catalog.entries) && dna.catalog.entries.length > 0 ? 0.2 : 0)
 
   return { sound, influences, persona, lexicon, profile }
 }
 
 // Count items per ring for dynamic node sizing
 function calculateRingCounts(dna: ArtistDNA) {
-  const sound = dna.sound.genres.length + dna.sound.vocalTextures.length +
-    dna.sound.productionPreferences.length + (dna.sound.soundDescription ? 1 : 0)
-  const influences = dna.sound.artistInfluences.length
-  const persona = dna.persona.traits.length + dna.persona.likes.length +
-    dna.persona.dislikes.length + (dna.persona.attitude ? 1 : 0) + (dna.persona.worldview ? 1 : 0)
-  const lexicon = dna.lexicon.signaturePhrases.length + dna.lexicon.slang.length +
-    dna.lexicon.adLibs.length + dna.lexicon.bannedWords.length
+  const sound = sa(dna.sound.genres).length + sa(dna.sound.vocalTextures).length +
+    sa(dna.sound.productionPreferences).length + (dna.sound.soundDescription ? 1 : 0)
+  const influences = sa(dna.sound.artistInfluences).length
+  const persona = sa(dna.persona.traits).length + sa(dna.persona.likes).length +
+    sa(dna.persona.dislikes).length + (dna.persona.attitude ? 1 : 0) + (dna.persona.worldview ? 1 : 0)
+  const lexicon = sa(dna.lexicon.signaturePhrases).length + sa(dna.lexicon.slang).length +
+    sa(dna.lexicon.adLibs).length + sa(dna.lexicon.bannedWords).length
   const profile = (dna.identity.stageName || dna.identity.realName ? 1 : 0) + (dna.identity.backstory ? 1 : 0) +
-    (dna.identity.city ? 1 : 0) + (dna.look.visualDescription ? 1 : 0) + dna.catalog.entries.length
+    (dna.identity.city ? 1 : 0) + (dna.look.visualDescription ? 1 : 0) + (Array.isArray(dna.catalog.entries) ? dna.catalog.entries.length : 0)
   return [sound, influences, persona, lexicon, profile]
 }
 
 // Total character length per ring for glow intensity
 function calculateRingGlow(dna: ArtistDNA) {
-  const sound = dna.sound.genres.join('').length + dna.sound.vocalTextures.join('').length +
-    dna.sound.productionPreferences.join('').length + dna.sound.soundDescription.length
-  const influences = dna.sound.artistInfluences.join('').length
-  const persona = dna.persona.traits.join('').length + dna.persona.likes.join('').length +
-    dna.persona.dislikes.join('').length + dna.persona.attitude.length + dna.persona.worldview.length
-  const lexicon = dna.lexicon.signaturePhrases.join('').length + dna.lexicon.slang.join('').length +
-    dna.lexicon.adLibs.join('').length + dna.lexicon.bannedWords.join('').length
-  const profile = (dna.identity.stageName?.length || 0) + (dna.identity.realName?.length || 0) + dna.identity.backstory.length +
-    dna.identity.city.length + dna.look.visualDescription.length
+  const sound = sa(dna.sound.genres).join('').length + sa(dna.sound.vocalTextures).join('').length +
+    sa(dna.sound.productionPreferences).join('').length + (dna.sound.soundDescription || '').length
+  const influences = sa(dna.sound.artistInfluences).join('').length
+  const persona = sa(dna.persona.traits).join('').length + sa(dna.persona.likes).join('').length +
+    sa(dna.persona.dislikes).join('').length + (dna.persona.attitude || '').length + (dna.persona.worldview || '').length
+  const lexicon = sa(dna.lexicon.signaturePhrases).join('').length + sa(dna.lexicon.slang).join('').length +
+    sa(dna.lexicon.adLibs).join('').length + sa(dna.lexicon.bannedWords).join('').length
+  const profile = (dna.identity.stageName?.length || 0) + (dna.identity.realName?.length || 0) + (dna.identity.backstory || '').length +
+    (dna.identity.city || '').length + (dna.look.visualDescription || '').length
   return [sound, influences, persona, lexicon, profile]
 }
 
@@ -553,7 +557,7 @@ export function ConstellationWidget() {
           </div>
 
           {/* Genome indicator */}
-          {draft.catalog.entries.length > 0 && (
+          {(Array.isArray(draft.catalog.entries) ? draft.catalog.entries : []).length > 0 && (
             <button
               onClick={() => setActiveTab('catalog')}
               className="border-t border-border/30 pt-2 mt-2 flex items-center gap-1.5 w-full hover:opacity-80 transition-opacity"
@@ -561,7 +565,7 @@ export function ConstellationWidget() {
               <Dna className="w-3 h-3 text-purple-400" />
               <span className="text-[11px] text-muted-foreground flex-1 text-left">Genome</span>
               <span className="text-[11px] tabular-nums text-purple-400 font-medium">
-                {draft.catalog.entries.filter((e) => e.analysis).length} song{draft.catalog.entries.filter((e) => e.analysis).length !== 1 ? 's' : ''}
+                {(Array.isArray(draft.catalog.entries) ? draft.catalog.entries : []).filter((e) => e.analysis).length} song{(Array.isArray(draft.catalog.entries) ? draft.catalog.entries : []).filter((e) => e.analysis).length !== 1 ? 's' : ''}
               </span>
               {draft.catalog.genome && (
                 <span className="text-emerald-400 text-[11px]">&#10003;</span>

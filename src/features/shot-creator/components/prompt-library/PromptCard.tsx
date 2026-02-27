@@ -28,7 +28,8 @@ export function PromptCard({
   processPromptReplacements
 }: PromptCardProps) {
   const showPreview = prompt.prompt.includes('@') && processPromptReplacements
-  const hasTagsToShow = prompt.tags.length > 0
+  const safeTags = Array.isArray(prompt.tags) ? prompt.tags : []
+  const hasTagsToShow = safeTags.length > 0
 
   return (
     <Card className="bg-background border-border hover:border-border transition-all shadow-md group">
@@ -100,7 +101,7 @@ export function PromptCard({
           </p>
         ) : hasTagsToShow ? (
           <div className="flex flex-wrap gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
-            {prompt.tags.slice(0, 3).map((tag, idx) => (
+            {safeTags.slice(0, 3).map((tag, idx) => (
               <Badge
                 key={idx}
                 variant="secondary"
@@ -109,8 +110,8 @@ export function PromptCard({
                 <Hash className="w-2 h-2 mr-0.5" />{tag}
               </Badge>
             ))}
-            {prompt.tags.length > 3 && (
-              <span className="text-[9px] text-muted-foreground">+{prompt.tags.length - 3}</span>
+            {safeTags.length > 3 && (
+              <span className="text-[9px] text-muted-foreground">+{safeTags.length - 3}</span>
             )}
           </div>
         ) : null}
