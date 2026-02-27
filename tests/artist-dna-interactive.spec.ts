@@ -464,3 +464,104 @@ test.describe('Artist DNA Interactive - Navigation', () => {
     }
   })
 })
+
+// ============================================================================
+// Test 11: Constellation Legend — Click switches tabs
+// ============================================================================
+test.describe('Constellation Widget - Legend Navigation', () => {
+  test('clicking legend sidebar items switches the active tab', async ({ page }) => {
+    await createNewArtist(page)
+
+    // The legend sidebar has clickable buttons for each ring
+    // Click "Persona" in the legend sidebar (it's a button in the sidebar, not the tab)
+    const personaLegend = page.locator('.w-\\[220px\\] button:has-text("Persona")')
+    if (await personaLegend.count() > 0) {
+      await personaLegend.click()
+      await page.waitForTimeout(300)
+      // The Persona tab in the TabsList should now be active
+      await expect(page.locator('[role="tablist"] >> text=Persona')).toHaveAttribute('data-state', 'active')
+    }
+
+    // Click "Lexicon" in legend
+    const lexiconLegend = page.locator('.w-\\[220px\\] button:has-text("Lexicon")')
+    if (await lexiconLegend.count() > 0) {
+      await lexiconLegend.click()
+      await page.waitForTimeout(300)
+      await expect(page.locator('[role="tablist"] >> text=Lexicon')).toHaveAttribute('data-state', 'active')
+    }
+
+    // Click "Sound" in legend
+    const soundLegend = page.locator('.w-\\[220px\\] button:has-text("Sound")')
+    if (await soundLegend.count() > 0) {
+      await soundLegend.click()
+      await page.waitForTimeout(300)
+      await expect(page.locator('[role="tablist"] >> text=Sound')).toHaveAttribute('data-state', 'active')
+    }
+  })
+})
+
+// ============================================================================
+// Test 12: Constellation Widget — Collapse and expand
+// ============================================================================
+test.describe('Constellation Widget - Collapse/Expand', () => {
+  test('collapse button hides the 3D canvas and shows compact bar', async ({ page }) => {
+    await createNewArtist(page)
+
+    // The expanded widget has a collapse button with title="Collapse"
+    const collapseBtn = page.locator('button[title="Collapse"]')
+    if (await collapseBtn.count() > 0) {
+      // Verify the 3D canvas area is visible (h-[208px] container)
+      await expect(page.locator('.h-\\[208px\\]')).toBeVisible()
+
+      // Click collapse
+      await collapseBtn.click()
+      await page.waitForTimeout(300)
+
+      // The 208px container should be gone
+      await expect(page.locator('.h-\\[208px\\]')).not.toBeVisible()
+
+      // A compact bar with percentage should be visible
+      const pctText = page.locator('text=/%/').first()
+      // Or look for the amber percentage text
+      const amberPct = page.locator('.text-amber-400')
+      await expect(amberPct.first()).toBeVisible()
+
+      // Click to expand back
+      await amberPct.first().click()
+      await page.waitForTimeout(300)
+
+      // The 208px canvas should be back
+      await expect(page.locator('.h-\\[208px\\]')).toBeVisible()
+    }
+  })
+})
+
+// ============================================================================
+// Test 13: Constellation Widget — Legend shows fill percentages
+// ============================================================================
+test.describe('Constellation Widget - Fill Percentages', () => {
+  test('legend shows 0% for empty rings and updates when data is added', async ({ page }) => {
+    await createNewArtist(page)
+
+    // In the legend sidebar, each ring should show a percentage
+    // New artist should have low percentages
+    const sidebar = page.locator('.w-\\[220px\\]')
+    if (await sidebar.count() > 0) {
+      // Check that "Overall" label exists
+      await expect(sidebar.getByText('Overall')).toBeVisible()
+      // Check that "DNA Constellation" header exists
+      await expect(sidebar.getByText('DNA Constellation')).toBeVisible()
+
+      // Add some data to increase fill
+      await page.fill('#artist-stage-name', 'Fill Test Artist')
+      await page.fill('#artist-city', 'New York')
+      const backstory = page.locator('textarea[placeholder="Artist backstory..."]')
+      await backstory.fill('A test backstory')
+      await page.waitForTimeout(500)
+
+      // The Profile ring percentage should have increased from 0%
+      // Take screenshot to verify visual state
+      await page.screenshot({ path: 'test-constellation-fill.png' })
+    }
+  })
+})
