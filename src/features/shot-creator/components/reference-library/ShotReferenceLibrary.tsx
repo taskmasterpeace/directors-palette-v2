@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Maximize2, Edit3, Users, MapPin, Package, ImageIcon, Layout, Trash2, Grid3x3, List, Tag } from "lucide-react"
+import { Maximize2, Edit3, Users, MapPin, Package, ImageIcon, Layout, Trash2, Grid3x3, List, Tag, Palette, Brush } from "lucide-react"
 import Image from "next/image"
 import { useShotCreatorStore } from "../../store"
 import { Pagination } from "../unified-gallery/Pagination"
@@ -17,7 +17,9 @@ const categoryConfig = {
     'people': { icon: Users, label: 'People', color: 'blue' },
     'places': { icon: MapPin, label: 'Places', color: 'green' },
     'props': { icon: Package, label: 'Props', color: 'orange' },
-    'layouts': { icon: Layout, label: 'Layouts', color: 'red' }
+    'layouts': { icon: Layout, label: 'Layouts', color: 'red' },
+    'styles': { icon: Brush, label: 'Styles', color: 'purple' },
+    'unorganized': { icon: Palette, label: 'Unorganized', color: 'gray' },
 }
 
 const ShotReferenceLibrary = () => {
@@ -187,6 +189,8 @@ const ShotReferenceLibrary = () => {
                                                     {item.category === 'people' && <Users className="w-3 h-3 text-accent" />}
                                                     {item.category === 'places' && <MapPin className="w-3 h-3 text-emerald-400" />}
                                                     {item.category === 'props' && <Package className="w-3 h-3 text-orange-400" />}
+                                                    {item.category === 'layouts' && <Layout className="w-3 h-3 text-red-400" />}
+                                                    {item.category === 'styles' && <Brush className="w-3 h-3 text-purple-400" />}
                                                     {(!item.category || item.category === 'unorganized') && <ImageIcon className="w-3 h-3 text-muted-foreground" />}
                                                 </div>
 
@@ -225,6 +229,12 @@ const ShotReferenceLibrary = () => {
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem onSelect={() => onCategoryChange(item.id, 'props')}>
                                                                 <Package className="w-4 h-4 mr-2" /> Props
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onSelect={() => onCategoryChange(item.id, 'layouts')}>
+                                                                <Layout className="w-4 h-4 mr-2" /> Layouts
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onSelect={() => onCategoryChange(item.id, 'styles')}>
+                                                                <Brush className="w-4 h-4 mr-2" /> Styles
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem onSelect={() => onCategoryChange(item.id, 'unorganized')}>
                                                                 <ImageIcon className="w-4 h-4 mr-2" /> Unorganized
@@ -349,6 +359,12 @@ const ShotReferenceLibrary = () => {
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem onSelect={() => onCategoryChange(item.id, 'props')}>
                                                             <Package className="w-4 h-4 mr-2" /> Props
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onSelect={() => onCategoryChange(item.id, 'layouts')}>
+                                                            <Layout className="w-4 h-4 mr-2" /> Layouts
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onSelect={() => onCategoryChange(item.id, 'styles')}>
+                                                            <Brush className="w-4 h-4 mr-2" /> Styles
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem onSelect={() => onCategoryChange(item.id, 'unorganized')}>
                                                             <ImageIcon className="w-4 h-4 mr-2" /> Unorganized

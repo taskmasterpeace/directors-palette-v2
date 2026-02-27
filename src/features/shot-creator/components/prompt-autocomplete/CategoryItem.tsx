@@ -6,21 +6,23 @@
 'use client'
 
 import { CommandItem } from '@/components/ui/command'
-import { Users, MapPin, Package, Layout, Sparkles } from 'lucide-react'
+import { Users, MapPin, Package, Layout, Brush, Sparkles } from 'lucide-react'
 import type { CategoryAutocompleteItem, ReferenceCategory } from '../../types/autocomplete.types'
 
 const CATEGORY_ICONS: Record<ReferenceCategory, React.ComponentType<{ className?: string }>> = {
   people: Users,
   places: MapPin,
   props: Package,
-  layouts: Layout
+  layouts: Layout,
+  styles: Brush,
 }
 
 const CATEGORY_COLORS: Record<ReferenceCategory, string> = {
   people: 'text-blue-600',
   places: 'text-green-600',
   props: 'text-orange-600',
-  layouts: 'text-purple-600'
+  layouts: 'text-purple-600',
+  styles: 'text-pink-600',
 }
 
 interface CategoryItemProps {

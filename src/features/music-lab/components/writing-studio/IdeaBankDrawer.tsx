@@ -10,8 +10,9 @@ import type { IdeaTag } from '../../types/writing-studio.types'
 import { IDEA_TAGS } from '../../types/writing-studio.types'
 
 export function IdeaBankDrawer() {
-  const { ideaBank, ideaBankOpen, toggleIdeaBank, addToIdeaBank, removeFromIdeaBank } =
+  const { getIdeaBank, ideaBankOpen, toggleIdeaBank, addToIdeaBank, removeFromIdeaBank } =
     useWritingStudioStore()
+  const ideaBank = getIdeaBank()
   const [newIdea, setNewIdea] = useState('')
   const [filterTag, setFilterTag] = useState<IdeaTag | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)

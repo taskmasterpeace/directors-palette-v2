@@ -110,6 +110,8 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
             people: [],
             places: [],
             props: [],
+            layouts: [],
+            styles: [],
             unorganized: []
         }
 
@@ -144,19 +146,18 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
             ? autocompleteSearch.toLowerCase()
             : '@' + autocompleteSearch.toLowerCase()
 
+        const filterCategory = (items: string[]) =>
+            autocompleteSearch
+                ? items.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
+                : items
+
         const filtered: Record<Category, string[]> = {
-            people: autocompleteSearch
-                ? grouped.people.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
-                : grouped.people,
-            places: autocompleteSearch
-                ? grouped.places.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
-                : grouped.places,
-            props: autocompleteSearch
-                ? grouped.props.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
-                : grouped.props,
-            unorganized: autocompleteSearch
-                ? grouped.unorganized.filter(ref => ref.toLowerCase().startsWith(searchWithAt))
-                : grouped.unorganized
+            people: filterCategory(grouped.people),
+            places: filterCategory(grouped.places),
+            props: filterCategory(grouped.props),
+            layouts: filterCategory(grouped.layouts),
+            styles: filterCategory(grouped.styles),
+            unorganized: filterCategory(grouped.unorganized),
         }
 
         return filtered

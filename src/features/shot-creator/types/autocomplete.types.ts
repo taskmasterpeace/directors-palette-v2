@@ -12,7 +12,7 @@ export type AutocompleteItemType = 'reference' | 'category'
 /**
  * Category types for random selection
  */
-export type ReferenceCategory = 'people' | 'places' | 'props' | 'layouts'
+export type ReferenceCategory = 'people' | 'places' | 'props' | 'layouts' | 'styles'
 
 /**
  * Base autocomplete item interface

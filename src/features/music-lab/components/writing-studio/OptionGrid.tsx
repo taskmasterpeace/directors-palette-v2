@@ -1,32 +1,56 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Check, Scissors, Trash2, Pencil, X } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Check, Scissors, Trash2, X } from 'lucide-react'
 import { useWritingStudioStore } from '../../store/writing-studio.store'
 import type { DraftOption, IdeaTag } from '../../types/writing-studio.types'
 import { IDEA_TAGS } from '../../types/writing-studio.types'
 
 function DraftCard({ draft }: { draft: DraftOption }) {
-  const { activeSectionId, keepDraft, chopDraft, tossDraft, editDraft } =
+  const { activeSectionId, keepDraft, addToIdeaBank, tossDraft, editDraft } =
     useWritingStudioStore()
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(draft.content)
+  const [selectedLines, setSelectedLines] = useState<Set<number>>(new Set())
   const [showChopTags, setShowChopTags] = useState(false)
+
+  const lines = useMemo(() => draft.content.split('\n').filter(l => l.trim()), [draft.content])
 
   const handleKeep = () => {
     if (activeSectionId) keepDraft(activeSectionId, draft)
   }
 
-  const handleChop = (tags: IdeaTag[]) => {
-    chopDraft(draft, tags)
-    setShowChopTags(false)
-  }
-
   const handleSaveEdit = () => {
     editDraft(draft.id, editText)
     setIsEditing(false)
+  }
+
+  const toggleLine = (idx: number) => {
+    setSelectedLines(prev => {
+      const next = new Set(prev)
+      if (next.has(idx)) next.delete(idx)
+      else next.add(idx)
+      return next
+    })
+  }
+
+  const handleChopSelected = (tags: IdeaTag[]) => {
+    const text = selectedLines.size > 0
+      ? [...selectedLines].sort((a, b) => a - b).map(i => lines[i]).join('\n')
+      : draft.content
+    addToIdeaBank(text, tags, 'chopped')
+    setSelectedLines(new Set())
+    setShowChopTags(false)
+    setIsEditing(false)
+  }
+
+  const openEditMode = () => {
+    setEditText(draft.content)
+    setSelectedLines(new Set())
+    setIsEditing(true)
   }
 
   return (
@@ -37,46 +61,76 @@ function DraftCard({ draft }: { draft: DraftOption }) {
 
       {isEditing ? (
         <div className="space-y-2">
+          {/* Text editing area */}
           <Textarea
             value={editText}
             onChange={(e) => setEditText(e.target.value)}
-            className="text-sm min-h-[80px] resize-none"
+            className="text-sm min-h-[120px] resize-y"
           />
-          <div className="flex gap-1">
-            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={handleSaveEdit}>
-              Save
-            </Button>
-            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setIsEditing(false)}>
-              Cancel
-            </Button>
+
+          {/* Line selection for Idea Bank */}
+          <div className="border border-border/30 rounded-md p-2 space-y-1">
+            <p className="text-[10px] text-muted-foreground mb-1">Select lines for Idea Bank:</p>
+            {lines.map((line, idx) => (
+              <label key={idx} className="flex items-start gap-2 cursor-pointer hover:bg-accent/30 rounded px-1 py-0.5">
+                <Checkbox
+                  checked={selectedLines.has(idx)}
+                  onCheckedChange={() => toggleLine(idx)}
+                  className="mt-0.5 h-3.5 w-3.5"
+                />
+                <span className="text-xs leading-snug">{line}</span>
+              </label>
+            ))}
           </div>
+
+          {showChopTags ? (
+            <div className="space-y-1.5">
+              <p className="text-[10px] text-muted-foreground">
+                Tag {selectedLines.size > 0 ? `${selectedLines.size} line${selectedLines.size > 1 ? 's' : ''}` : 'all'} for Idea Bank:
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {IDEA_TAGS.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => handleChopSelected([tag])}
+                    className="px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+              <button
+                className="text-[10px] text-muted-foreground hover:text-foreground"
+                onClick={() => setShowChopTags(false)}
+              >
+                <X className="w-3 h-3 inline" /> Cancel
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-1">
+              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={handleSaveEdit}>
+                Save
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
+                onClick={() => setShowChopTags(true)}
+              >
+                <Scissors className="w-3 h-3 mr-1" />
+                {selectedLines.size > 0 ? `Chop ${selectedLines.size}` : 'Chop All'}
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setIsEditing(false)}>
+                Cancel
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
         <p className="text-sm whitespace-pre-wrap flex-1 min-h-[60px]">{draft.content}</p>
       )}
 
-      {showChopTags ? (
-        <div className="space-y-1.5">
-          <p className="text-[10px] text-muted-foreground">Tag this idea:</p>
-          <div className="flex flex-wrap gap-1">
-            {IDEA_TAGS.map((tag) => (
-              <button
-                key={tag}
-                onClick={() => handleChop([tag])}
-                className="px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
-          <button
-            className="text-[10px] text-muted-foreground hover:text-foreground"
-            onClick={() => setShowChopTags(false)}
-          >
-            <X className="w-3 h-3 inline" /> Cancel
-          </button>
-        </div>
-      ) : (
+      {!isEditing && (
         <div className="flex gap-1">
           <Button
             size="sm"
@@ -90,9 +144,9 @@ function DraftCard({ draft }: { draft: DraftOption }) {
             size="sm"
             variant="ghost"
             className="h-7 text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
-            onClick={() => setShowChopTags(true)}
+            onClick={openEditMode}
           >
-            <Scissors className="w-3 h-3 mr-1" /> Chop
+            <Scissors className="w-3 h-3 mr-1" /> Edit
           </Button>
           <Button
             size="sm"
@@ -101,14 +155,6 @@ function DraftCard({ draft }: { draft: DraftOption }) {
             onClick={() => tossDraft(draft.id)}
           >
             <Trash2 className="w-3 h-3 mr-1" /> Toss
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 text-xs"
-            onClick={() => { setEditText(draft.content); setIsEditing(true) }}
-          >
-            <Pencil className="w-3 h-3" />
           </Button>
         </div>
       )}

@@ -31,7 +31,7 @@ const REFERENCE_LIBRARY_CATEGORIES = new Set([
   '@layouts',
 ])
 
-export type ReferenceCategory = 'people' | 'places' | 'props' | 'layouts'
+export type ReferenceCategory = 'people' | 'places' | 'props' | 'layouts' | 'styles'
 
 export interface ParsedReferences {
   specificReferences: string[]  // e.g., ["@hero", "@villain"]
@@ -114,7 +114,7 @@ export function isCategoryReference(tag: string): boolean {
  */
 export function getCategoryFromTag(tag: string): ReferenceCategory | null {
   const normalized = tag.toLowerCase().replace('@', '')
-  if (['people', 'places', 'props', 'layouts'].includes(normalized)) {
+  if (['people', 'places', 'props', 'layouts', 'styles'].includes(normalized)) {
     return normalized as ReferenceCategory
   }
   return null

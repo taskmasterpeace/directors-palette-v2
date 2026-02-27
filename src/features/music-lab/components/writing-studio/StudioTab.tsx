@@ -1,8 +1,10 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Sparkles, PenTool, RotateCcw } from 'lucide-react'
 import { useWritingStudioStore } from '../../store/writing-studio.store'
 import { useArtistDnaStore } from '../../store/artist-dna.store'
@@ -20,17 +22,34 @@ export function StudioTab() {
     concept,
     setConcept,
     isGenerating,
+    draftOptions,
     generateOptions,
     resetStudio,
+    setActiveArtistId,
   } = useWritingStudioStore()
 
-  const { draft: artistDna } = useArtistDnaStore()
+  const { draft: artistDna, activeArtistId } = useArtistDnaStore()
+  const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false)
+
+  // Sync active artist to writing studio for per-artist Idea Bank
+  useEffect(() => {
+    setActiveArtistId(activeArtistId)
+  }, [activeArtistId, setActiveArtistId])
 
   const activeSection = sections.find((s) => s.id === activeSectionId)
 
-  const handleGenerate = () => {
+  const doGenerate = () => {
     if (!activeSectionId) return
     generateOptions(activeSectionId, artistDna, sections)
+  }
+
+  const handleGenerate = () => {
+    if (!activeSectionId) return
+    if (draftOptions.length > 0) {
+      setShowRegenerateConfirm(true)
+    } else {
+      doGenerate()
+    }
   }
 
   return (
@@ -114,6 +133,25 @@ export function StudioTab() {
           </div>
         </div>
       </CardContent>
+
+      {/* Regenerate confirmation dialog */}
+      <AlertDialog open={showRegenerateConfirm} onOpenChange={setShowRegenerateConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Replace existing drafts?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have {draftOptions.length} unsaved draft option{draftOptions.length !== 1 ? 's' : ''}.
+              Generating new ones will replace them.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setShowRegenerateConfirm(false); doGenerate() }}>
+              Generate New
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   )
 }

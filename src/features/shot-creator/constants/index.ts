@@ -52,13 +52,17 @@ export const categories = [
     { value: 'people', label: 'People', description: 'Characters, portraits, persons' },
     { value: 'places', label: 'Places', description: 'Locations, environments, settings' },
     { value: 'props', label: 'Props', description: 'Objects, items, things' },
+    { value: 'layouts', label: 'Layouts', description: 'Compositions, layouts, framing references' },
+    { value: 'styles', label: 'Styles', description: 'Visual styles, aesthetics, art directions' },
     { value: 'unorganized', label: 'Unorganized', description: 'General or uncategorized' }
 ]
 
-export const suggestedTags = {
+export const suggestedTags: Record<string, string[]> = {
     people: ['portrait', 'character', 'person', 'face', 'human'],
     places: ['landscape', 'environment', 'location', 'scene', 'background'],
     props: ['object', 'item', 'thing', 'prop', 'accessory'],
+    layouts: ['composition', 'framing', 'layout', 'arrangement', 'grid'],
+    styles: ['aesthetic', 'mood', 'tone', 'style', 'visual'],
     unorganized: ['generated', 'art', 'design', 'concept', 'abstract']
 }
 

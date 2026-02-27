@@ -33,7 +33,7 @@ interface CategorySelectionDialogProps {
     imageUrl?: string
 }
 
-export type Category = 'people' | 'places' | 'props' | 'unorganized'
+export type Category = 'people' | 'places' | 'props' | 'layouts' | 'styles' | 'unorganized'
 
 export default function CategorySelectionDialog({
     open,

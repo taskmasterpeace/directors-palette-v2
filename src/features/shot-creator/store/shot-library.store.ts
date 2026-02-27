@@ -10,7 +10,7 @@ import {
 import { Category } from "../components/CategorySelectDialog";
 import { logger } from '@/lib/logger'
 
-export type LibraryCategory = 'all' | 'people' | 'places' | 'props' | 'unorganized';
+export type LibraryCategory = 'all' | 'people' | 'places' | 'props' | 'layouts' | 'styles' | 'unorganized';
 export interface ShotLibraryStore {
     // ---- State ----
     libraryCategory: LibraryCategory;

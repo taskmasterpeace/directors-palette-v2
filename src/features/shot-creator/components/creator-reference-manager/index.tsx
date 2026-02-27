@@ -12,6 +12,7 @@ import { useReferenceImageManager } from "../../hooks/useReferenceImageManager"
 import { ReferenceImageCard, type ShotImage } from "./ReferenceImageCard"
 import { useToast } from "@/hooks/use-toast"
 import { useUnifiedGalleryStore } from "../../store/unified-gallery-store"
+import { createReference } from "../../services/reference-library.service"
 import { logger } from '@/lib/logger'
 
 interface CreatorReferenceManagerProps {
@@ -131,9 +132,20 @@ export function CreatorReferenceManager({
         throw new Error(result.error || 'Failed to save to gallery')
       }
 
+      // Auto-add to reference library if image has tags
+      if (image.tags && image.tags.length > 0 && result.galleryId) {
+        const { error: refError } = await createReference(result.galleryId, 'unorganized', image.tags)
+        if (refError) {
+          logger.shotCreator.error('Auto-add to reference library failed', { error: refError.message })
+        }
+      }
+
+      const addedToLibrary = image.tags && image.tags.length > 0 && result.galleryId
       toast({
         title: "Saved to Gallery!",
-        description: "Reference image added to your gallery."
+        description: addedToLibrary
+          ? "Image added to gallery and reference library."
+          : "Reference image added to your gallery."
       })
 
       // Refresh gallery to show the new image

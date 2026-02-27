@@ -13,19 +13,26 @@ async function getArtistClient(): Promise<any> {
   return await getClient()
 }
 
+/** Ensure all array fields in a section default to [] if null/undefined */
+function safeArrays<T extends Record<string, unknown>>(obj: T, defaults: T): T {
+  const result = { ...obj }
+  for (const key of Object.keys(defaults)) {
+    if (Array.isArray(defaults[key]) && !Array.isArray(result[key])) {
+      (result as Record<string, unknown>)[key] = []
+    }
+  }
+  return result
+}
+
 /** Merge raw DB dna with defaults so old records don't crash on missing fields */
 function safeDna(raw: ArtistDNA): ArtistDNA {
   const d = createEmptyDNA()
-  const sound = { ...d.sound, ...raw.sound }
-  // Ensure new array fields aren't null (spread of { ...defaults, ...{ field: null } } yields null)
-  if (!Array.isArray(sound.genreEvolution)) sound.genreEvolution = []
-  if (!Array.isArray(sound.keyCollaborators)) sound.keyCollaborators = []
   return {
-    identity: { ...d.identity, ...raw.identity },
-    sound,
-    persona: { ...d.persona, ...raw.persona },
-    lexicon: { ...d.lexicon, ...raw.lexicon },
-    look: { ...d.look, ...raw.look },
+    identity: safeArrays({ ...d.identity, ...raw.identity }, d.identity),
+    sound: safeArrays({ ...d.sound, ...raw.sound }, d.sound),
+    persona: safeArrays({ ...d.persona, ...raw.persona }, d.persona),
+    lexicon: safeArrays({ ...d.lexicon, ...raw.lexicon }, d.lexicon),
+    look: safeArrays({ ...d.look, ...raw.look }, d.look),
     catalog: { ...d.catalog, ...raw.catalog },
     lowConfidenceFields: Array.isArray(raw.lowConfidenceFields) ? raw.lowConfidenceFields : [],
   }

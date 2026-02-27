@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { X, Sparkles } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -32,26 +32,28 @@ export function TagInput({
 }: TagInputProps) {
   const [inputValue, setInputValue] = useState('')
 
+  const safeTags = useMemo(() => tags ?? [], [tags])
+
   const addTag = useCallback((value: string) => {
     const trimmed = value.trim()
     if (!trimmed) return
-    if (tags.includes(trimmed)) return
-    if (maxTags && tags.length >= maxTags) return
-    onTagsChange([...tags, trimmed])
+    if (safeTags.includes(trimmed)) return
+    if (maxTags && safeTags.length >= maxTags) return
+    onTagsChange([...safeTags, trimmed])
     setInputValue('')
-  }, [tags, onTagsChange, maxTags])
+  }, [safeTags, onTagsChange, maxTags])
 
   const removeTag = useCallback((index: number) => {
-    onTagsChange(tags.filter((_, i) => i !== index))
-  }, [tags, onTagsChange])
+    onTagsChange(safeTags.filter((_, i) => i !== index))
+  }, [safeTags, onTagsChange])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault()
       addTag(inputValue)
     }
-    if (e.key === 'Backspace' && !inputValue && tags.length > 0) {
-      removeTag(tags.length - 1)
+    if (e.key === 'Backspace' && !inputValue && safeTags.length > 0) {
+      removeTag(safeTags.length - 1)
     }
   }
 
@@ -63,7 +65,7 @@ export function TagInput({
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap gap-1.5 p-2 border rounded-md min-h-[42px] bg-background">
-        {tags.map((tag, i) => (
+        {safeTags.map((tag, i) => (
           <Badge key={`${tag}-${i}`} variant="secondary" className="gap-1 pr-1">
             {tag}
             <button
@@ -136,7 +138,7 @@ export function TagInput({
       )}
 
       {maxTags && (
-        <p className="text-xs text-muted-foreground">{tags.length}/{maxTags}</p>
+        <p className="text-xs text-muted-foreground">{safeTags.length}/{maxTags}</p>
       )}
     </div>
   )

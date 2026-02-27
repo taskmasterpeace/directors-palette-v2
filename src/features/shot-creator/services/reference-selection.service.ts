@@ -208,27 +208,24 @@ export async function getRandomReferences(
 /**
  * Get count of images in each category
  */
+const ZERO_COUNTS: Record<ReferenceCategory, number> = { people: 0, places: 0, props: 0, layouts: 0, styles: 0 }
+
 export async function getCategoryCounts(): Promise<Record<ReferenceCategory, number>> {
   try {
     const supabase = await getClient()
     if (!supabase) {
-      return { people: 0, places: 0, props: 0, layouts: 0 }
+      return { ...ZERO_COUNTS }
     }
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      return { people: 0, places: 0, props: 0, layouts: 0 }
+      return { ...ZERO_COUNTS }
     }
 
-    const counts: Record<ReferenceCategory, number> = {
-      people: 0,
-      places: 0,
-      props: 0,
-      layouts: 0
-    }
+    const counts: Record<ReferenceCategory, number> = { ...ZERO_COUNTS }
 
     // Get counts for each category
-    const categories: ReferenceCategory[] = ['people', 'places', 'props', 'layouts']
+    const categories: ReferenceCategory[] = ['people', 'places', 'props', 'layouts', 'styles']
 
     await Promise.all(
       categories.map(async (category) => {
@@ -244,6 +241,6 @@ export async function getCategoryCounts(): Promise<Record<ReferenceCategory, num
     return counts
   } catch (error) {
     logger.shotCreator.error('Error getting category counts', { error: error instanceof Error ? error.message : String(error) })
-    return { people: 0, places: 0, props: 0, layouts: 0 }
+    return { ...ZERO_COUNTS }
   }
 }
