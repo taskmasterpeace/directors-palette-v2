@@ -48,6 +48,12 @@ export class ShotPromptService {
                 characterDescriptions[atName] = char.description || ''
             }
 
+            // Build location descriptions map
+            const locationDescriptions: Record<string, string> = {}
+            for (const loc of config.locations) {
+                locationDescriptions[loc.name] = loc.description || ''
+            }
+
             // Prepare segments for API call
             const segmentInputs = config.segments.map(s => ({
                 text: s.text,
@@ -59,7 +65,8 @@ export class ShotPromptService {
                 segmentInputs,
                 config.styleGuide?.style_prompt,
                 characterDescriptions,
-                config.storyText
+                config.storyText,
+                locationDescriptions
             )
 
             // Enrich prompts with character refs and location detection
@@ -160,9 +167,6 @@ export class ShotPromptService {
         const combinedText = `${prompt} ${originalText}`.toLowerCase()
 
         for (const loc of locations) {
-            // Only include locations with reference images
-            if (!loc.has_reference) continue
-
             // Check if location name or tag appears
             const nameLower = loc.name.toLowerCase()
             const tagLower = loc.tag.toLowerCase().replace('@', '')

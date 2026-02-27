@@ -27,7 +27,7 @@ import {
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 import { HighlightedPrompt } from '../shared'
-import type { ShotBreakdownSegment, GeneratedShotPrompt, StoryboardCharacter } from '../../types/storyboard.types'
+import type { ShotBreakdownSegment, GeneratedShotPrompt, StoryboardCharacter, StoryboardLocation } from '../../types/storyboard.types'
 import { useStoryboardStore } from '../../store'
 
 export interface EditableShotProps {
@@ -41,6 +41,7 @@ export interface EditableShotProps {
     onGeneratedPromptChange?: (sequence: number, newPrompt: string) => void
     onNoteChange?: (sequence: number, note: string) => void
     onCharacterRefsChange?: (sequence: number, characterRefs: StoryboardCharacter[]) => void
+    onLocationRefChange?: (sequence: number, locationRef: StoryboardLocation | undefined) => void
     onGetAngles?: (sequence: number) => void
     onGetBRoll?: (sequence: number) => void
 }
@@ -67,6 +68,7 @@ export function EditableShot({
     onGeneratedPromptChange,
     onNoteChange,
     onCharacterRefsChange,
+    onLocationRefChange,
     onGetAngles,
     onGetBRoll,
 }: EditableShotProps) {
@@ -83,8 +85,9 @@ export function EditableShot({
         setTimeout(() => setCopied(false), 2000)
     }
 
-    // Get full character data from store for thumbnails and role colors
+    // Get full character and location data from store
     const storeCharacters = useStoryboardStore(s => s.characters)
+    const storeLocations = useStoryboardStore(s => s.locations)
 
     // Find mentioned characters and locations in original text
     const mentionedCharacters = characters.filter(c =>
@@ -457,23 +460,91 @@ export function EditableShot({
                                 </div>
                             )}
 
-                            {/* Location Reference */}
-                            {generatedPrompt?.locationRef && (
+                            {/* Location Reference + Change/Add */}
+                            {generatedPrompt && (
                                 <div>
-                                    <Label className="text-xs text-muted-foreground">Location Reference:</Label>
-                                    <div className="flex items-center gap-2 mt-1 p-1.5 rounded bg-muted/50 border w-fit">
-                                        {generatedPrompt.locationRef.reference_image_url ? (
-                                            <img
-                                                src={generatedPrompt.locationRef.reference_image_url}
-                                                alt={generatedPrompt.locationRef.name}
-                                                className="w-8 h-8 rounded object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">
-                                                <MapPin className="w-4 h-4 text-muted-foreground" />
+                                    <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                                        <MapPin className="w-3 h-3" />
+                                        Location:
+                                    </Label>
+                                    <div className="flex gap-2 mt-1 flex-wrap items-center">
+                                        {generatedPrompt.locationRef ? (
+                                            <div className="flex items-center gap-2 p-1.5 rounded bg-muted/50 border group">
+                                                {generatedPrompt.locationRef.reference_image_url ? (
+                                                    <img
+                                                        src={generatedPrompt.locationRef.reference_image_url}
+                                                        alt={generatedPrompt.locationRef.name}
+                                                        className="w-8 h-8 rounded object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">
+                                                        <MapPin className="w-4 h-4 text-muted-foreground" />
+                                                    </div>
+                                                )}
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-medium">{generatedPrompt.locationRef.name}</span>
+                                                    {generatedPrompt.locationRef.description && (
+                                                        <span className="text-[10px] text-muted-foreground line-clamp-1">{generatedPrompt.locationRef.description}</span>
+                                                    )}
+                                                </div>
+                                                {onLocationRefChange && (
+                                                    <button
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            onLocationRefChange(segment.sequence, undefined)
+                                                        }}
+                                                        title="Remove location"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                )}
                                             </div>
-                                        )}
-                                        <span className="text-xs font-medium">{generatedPrompt.locationRef.name}</span>
+                                        ) : null}
+                                        {/* Change / Add location */}
+                                        {onLocationRefChange && (() => {
+                                            const currentLocId = generatedPrompt.locationRef?.id
+                                            const available = storeLocations.filter(l => l.id !== currentLocId)
+                                            if (available.length === 0 && !generatedPrompt.locationRef) return null
+                                            if (available.length === 0) return null
+                                            return (
+                                                <div className="relative group/loc">
+                                                    <button
+                                                        className="flex items-center gap-1.5 p-1.5 rounded border border-dashed border-muted-foreground/30 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <MapPin className="w-4 h-4" />
+                                                        <span className="text-xs">{generatedPrompt.locationRef ? 'Change' : 'Set Location'}</span>
+                                                    </button>
+                                                    <div className="absolute z-10 top-full left-0 mt-1 hidden group-hover/loc:block bg-popover border rounded-md shadow-md p-1 min-w-[220px]">
+                                                        {available.map(loc => (
+                                                            <button
+                                                                key={loc.id}
+                                                                className="w-full flex items-center gap-2 p-1.5 rounded text-xs hover:bg-muted transition-colors"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    onLocationRefChange(segment.sequence, loc)
+                                                                }}
+                                                            >
+                                                                {loc.reference_image_url ? (
+                                                                    <img src={loc.reference_image_url} alt={loc.name} className="w-6 h-6 rounded object-cover" />
+                                                                ) : (
+                                                                    <div className="w-6 h-6 rounded bg-muted flex items-center justify-center">
+                                                                        <MapPin className="w-3 h-3" />
+                                                                    </div>
+                                                                )}
+                                                                <div className="flex flex-col items-start">
+                                                                    <span className="font-medium">{loc.name}</span>
+                                                                    {loc.description && (
+                                                                        <span className="text-[10px] text-muted-foreground line-clamp-1">{loc.description}</span>
+                                                                    )}
+                                                                </div>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )
+                                        })()}
                                     </div>
                                 </div>
                             )}

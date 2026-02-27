@@ -19,7 +19,7 @@ import {
 import { EditableShot } from './EditableShot'
 import { toast } from 'sonner'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
-import type { GeneratedShotPrompt } from '../../types/storyboard.types'
+import type { GeneratedShotPrompt, StoryboardLocation } from '../../types/storyboard.types'
 import { logger } from '@/lib/logger'
 
 interface ShotBreakdownProps {
@@ -78,6 +78,10 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
 
     const handleCharacterRefsChange = (sequence: number, characterRefs: typeof characters) => {
         updateGeneratedShot(sequence, { characterRefs })
+    }
+
+    const handleLocationRefChange = (sequence: number, locationRef: StoryboardLocation | undefined) => {
+        updateGeneratedShot(sequence, { locationRef })
     }
 
     const [isRefining, setIsRefining] = useState(false)
@@ -639,6 +643,7 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                                     onGeneratedPromptChange={handleGeneratedPromptChange}
                                     onNoteChange={setShotNote}
                                     onCharacterRefsChange={handleCharacterRefsChange}
+                                    onLocationRefChange={handleLocationRefChange}
                                     onGetAngles={handleGetAngles}
                                     onGetBRoll={handleGetBRoll}
                                 />

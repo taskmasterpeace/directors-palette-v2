@@ -248,7 +248,8 @@ Generate exactly ${count} diverse B-roll shot descriptions.`
         segments: Array<{ text: string; sequence: number; directorNote?: string }>,
         stylePrompt?: string,
         characterDescriptions?: Record<string, string>,
-        storyContext?: string
+        storyContext?: string,
+        locationDescriptions?: Record<string, string>
     ): Promise<Array<{ sequence: number; prompt: string; shotType: string }>> {
         const characterContext = characterDescriptions && Object.keys(characterDescriptions).length > 0
             ? `\n\nCharacter references (IMPORTANT: Use the exact @name format when referring to characters):
@@ -257,6 +258,13 @@ ${Object.entries(characterDescriptions)
                   .join('\n')}
 
 When a character appears in a shot, use their @name (e.g., @marcus or @sarah_jones) in the prompt.`
+            : ''
+
+        const locationContext = locationDescriptions && Object.keys(locationDescriptions).length > 0
+            ? `\n\nLocation references (incorporate these environment details when the location appears in a scene):
+${Object.entries(locationDescriptions)
+                  .map(([name, desc]) => `- ${name}: ${desc || 'no description'}`)
+                  .join('\n')}`
             : ''
 
         const styleContext = stylePrompt
@@ -289,7 +297,7 @@ The shot type should be based on the content:
 - "wide" - for showing full environment with characters
 - "medium" - for character interactions, waist-up framing
 - "close-up" - for emotional moments, face/expression focus
-- "detail" - for specific objects, hands, symbolic elements${styleContext}${characterContext}${storyOverview}`
+- "detail" - for specific objects, hands, symbolic elements${styleContext}${characterContext}${locationContext}${storyOverview}`
             },
             {
                 role: 'user',
