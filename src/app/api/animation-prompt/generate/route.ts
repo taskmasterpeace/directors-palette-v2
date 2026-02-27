@@ -92,6 +92,41 @@ BAD:
 
 OUTPUT: Return ONLY the animation direction. No quotes, no explanation.`
 
+const SYSTEM_TWOFRAME_SPECIFIC = `You are a motion director. You are given TWO images: a START frame and an END frame from the same shot. Describe the animation that transitions from the first image to the second in under 30 words.
+
+FORMAT: "[Camera movement], [subject action and/or environment change]"
+
+RULES:
+1. Camera move FIRST
+2. Under 30 words, one sentence
+3. Focus ONLY on what changes between the frames — ignore what's static
+4. Include a pacing adverb (slowly, rapidly, gently, powerfully, deliberately)
+5. Present tense, active voice
+6. NEVER use negative phrasing
+7. Use standard film terminology
+
+OUTPUT: Return ONLY the animation direction. No quotes, no explanation.`
+
+const SYSTEM_TWOFRAME_REASONING = `You are a motion director. You are given TWO images: a START frame and an END frame from the same shot. Describe the animation that transitions from the first image to the second.
+
+Focus on:
+- What moves, changes, or transforms between the frames
+- Camera movement (push-in, pull-out, pan, tilt, track, orbit, crane, dolly)
+- Pacing and intensity of the motion (slowly, rapidly, gently, powerfully)
+- Environmental changes (lighting shifts, particles, atmosphere)
+
+RULES:
+1. 30-80 words
+2. Camera direction first, then subject action, then atmosphere
+3. Present tense, active voice
+4. Describe MOTION and CHANGE, not what's already there
+5. Include motion intensity adverbs — the model cannot infer speed
+6. NEVER use negative phrasing — only describe what DOES happen
+7. Use standard film terminology
+8. When appropriate, describe 2-3 sequential actions in chronological order
+
+OUTPUT: Return ONLY the animation direction. No quotes, no explanation.`
+
 const SYSTEM_ENHANCE_SPECIFIC = `You are a cinematic motion editor. The user has written an animation prompt for a video generation model. Your job is to REFINE it — fix grammar, add a missing camera move if needed, and make vague descriptions specific.
 
 RULES:
@@ -150,9 +185,12 @@ FORMAT: [Shot 1: subject + action + camera] → "camera switch" → [Shot 2: new
 type PromptMode = 'generate' | 'enhance'
 type PromptStyle = 'specific' | 'reasoning'
 
-function getSystemPrompt(mode: PromptMode, style: PromptStyle, options?: { audioEnabled?: boolean; multiShot?: boolean }): string {
+function getSystemPrompt(mode: PromptMode, style: PromptStyle, options?: { audioEnabled?: boolean; multiShot?: boolean; hasTwoFrames?: boolean }): string {
     let base: string
-    if (mode === 'generate' && style === 'specific') base = SYSTEM_GENERATE_SPECIFIC
+
+    if (options?.hasTwoFrames) {
+        base = style === 'specific' ? SYSTEM_TWOFRAME_SPECIFIC : SYSTEM_TWOFRAME_REASONING
+    } else if (mode === 'generate' && style === 'specific') base = SYSTEM_GENERATE_SPECIFIC
     else if (mode === 'generate' && style === 'reasoning') base = SYSTEM_GENERATE_REASONING
     else if (mode === 'enhance' && style === 'specific') base = SYSTEM_ENHANCE_SPECIFIC
     else base = SYSTEM_ENHANCE_REASONING
@@ -165,6 +203,7 @@ function getSystemPrompt(mode: PromptMode, style: PromptStyle, options?: { audio
 
 interface AnimationPromptRequest {
     imageUrl: string
+    lastFrameUrl?: string
     originalPrompt?: string
     existingPrompt?: string
     mode: PromptMode
@@ -247,7 +286,7 @@ export async function POST(request: NextRequest) {
         userEmail = auth.user.email
 
         const body: AnimationPromptRequest = await request.json()
-        const { imageUrl, originalPrompt, existingPrompt, mode, promptStyle, storyContext, directorMotion, audioEnabled, multiShot } = body
+        const { imageUrl, lastFrameUrl, originalPrompt, existingPrompt, mode, promptStyle, storyContext, directorMotion, audioEnabled, multiShot } = body
 
         if (!imageUrl) {
             return NextResponse.json({ error: 'No image URL provided' }, { status: 400 })
@@ -257,8 +296,13 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'No mode specified' }, { status: 400 })
         }
 
+        const hasTwoFrames = !!lastFrameUrl
         const effectiveStyle: PromptStyle = promptStyle || 'specific'
-        const systemPrompt = getSystemPrompt(mode, effectiveStyle, { audioEnabled, multiShot })
+        const systemPrompt = getSystemPrompt(
+            hasTwoFrames ? 'generate' : mode,
+            effectiveStyle,
+            { audioEnabled, multiShot, hasTwoFrames }
+        )
 
         // Build user message
         const textParts: string[] = []
@@ -279,7 +323,9 @@ export async function POST(request: NextRequest) {
             textParts.push(`Director's camera direction for this shot:\n"${directorMotion}"`)
         }
 
-        if (mode === 'generate') {
+        if (hasTwoFrames) {
+            textParts.push('You are given TWO images. The FIRST image is the START frame and the SECOND image is the END frame. Describe the transition between them.')
+        } else if (mode === 'generate') {
             textParts.push('Analyze the image and create an animation direction that feels natural for this scene.')
         } else {
             textParts.push('Analyze the image and enhance the user\'s animation prompt while keeping their core intent.')
@@ -296,6 +342,10 @@ export async function POST(request: NextRequest) {
             { type: 'text', text: textParts.join('\n\n') },
             { type: 'image_url', image_url: { url: imageUrl, detail: 'low' } }
         ]
+
+        if (lastFrameUrl) {
+            userContent.push({ type: 'image_url', image_url: { url: lastFrameUrl, detail: 'low' } })
+        }
 
         // Try primary model (free), fall back to paid model
         let content = await callOpenRouter(PRIMARY_MODEL, systemPrompt, userContent, userId, userEmail)

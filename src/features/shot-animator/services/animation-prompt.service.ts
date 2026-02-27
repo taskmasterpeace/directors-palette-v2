@@ -17,6 +17,7 @@ export interface AnimationPromptOptions {
     promptStyle?: 'specific' | 'reasoning'
     audioEnabled?: boolean
     multiShot?: boolean
+    lastFrameUrl?: string
 }
 
 export interface AnimationPromptRequest {
@@ -27,6 +28,7 @@ export interface AnimationPromptRequest {
     promptStyle?: 'specific' | 'reasoning'
     audioEnabled?: boolean
     multiShot?: boolean
+    lastFrameUrl?: string
 }
 
 export interface AnimationPromptResponse {
@@ -64,6 +66,7 @@ export async function generateAnimationPrompt(
             promptStyle: options.promptStyle,
             audioEnabled: options.audioEnabled,
             multiShot: options.multiShot,
+            lastFrameUrl: options.lastFrameUrl,
         }),
     })
 

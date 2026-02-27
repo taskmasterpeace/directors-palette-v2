@@ -193,6 +193,7 @@ const CompactShotCardComponent = ({
         promptStyle: modelConfig?.promptStyle,
         audioEnabled: !!audioEnabled,
         multiShot: multiShotMode,
+        lastFrameUrl: config.lastFrameImage,
       })
       onUpdate({ ...config, prompt: result.animationPrompt })
       toast({
