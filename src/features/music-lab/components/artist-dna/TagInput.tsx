@@ -32,7 +32,7 @@ export function TagInput({
 }: TagInputProps) {
   const [inputValue, setInputValue] = useState('')
 
-  const safeTags = useMemo(() => tags ?? [], [tags])
+  const safeTags = useMemo(() => Array.isArray(tags) ? tags : [], [tags])
 
   const addTag = useCallback((value: string) => {
     const trimmed = value.trim()
