@@ -195,8 +195,126 @@ export class StoryboardGenerationService {
     }
 
     /**
+     * Validate image URL format (accepts http/https URLs, local paths, and data URIs)
+     */
+    private isValidImageUrl(url: string): boolean {
+        if (url.startsWith('/')) return true
+        if (url.startsWith('data:image/')) return true
+        try {
+            const parsed = new URL(url)
+            return parsed.protocol === 'https:' || parsed.protocol === 'http:'
+        } catch {
+            return false
+        }
+    }
+
+    /**
+     * Prepare a single shot for generation: build prompt, collect references, validate
+     */
+    private prepareShotForGeneration(
+        shot: GeneratedShotPrompt,
+        config: GenerationConfig,
+        styleGuide?: StyleGuide,
+        presetStyle?: PresetStyle
+    ): { finalPrompt: string; referenceImages: string[] } | { error: string } {
+        let finalPrompt = shot.prompt
+
+        if (styleGuide?.style_prompt) {
+            finalPrompt = `${finalPrompt}, ${styleGuide.style_prompt}`
+        }
+
+        if (presetStyle?.technicalAttributes) {
+            const ta = presetStyle.technicalAttributes
+            finalPrompt = `${finalPrompt}, ${ta.colorPalette}, ${ta.texture}`
+        }
+
+        if (EquipmentTranslationService.isImageModel(config.model)) {
+            finalPrompt = EquipmentTranslationService.stripMotionTerms(finalPrompt)
+        }
+
+        const referenceImages: string[] = []
+
+        for (const charRef of shot.characterRefs) {
+            if (charRef.reference_image_url && this.isValidImageUrl(charRef.reference_image_url)) {
+                referenceImages.push(charRef.reference_image_url)
+            } else if (charRef.reference_image_url) {
+                logger.storyboard.warn('Invalid character reference URL', { name: charRef.name, url: charRef.reference_image_url })
+            } else if (charRef.has_reference && !charRef.reference_image_url) {
+                logger.storyboard.warn('Character has has_reference=true but no reference_image_url', { name: charRef.name })
+            }
+        }
+
+        if (shot.locationRef?.reference_image_url) {
+            if (this.isValidImageUrl(shot.locationRef.reference_image_url)) {
+                referenceImages.push(shot.locationRef.reference_image_url)
+            } else {
+                logger.storyboard.warn('Invalid location reference URL', { url: shot.locationRef.reference_image_url })
+            }
+        }
+
+        if (styleGuide?.reference_image_url && this.isValidImageUrl(styleGuide.reference_image_url)) {
+            referenceImages.push(styleGuide.reference_image_url)
+        }
+        if (presetStyle?.imagePath && this.isValidImageUrl(presetStyle.imagePath)) {
+            if (!referenceImages.includes(presetStyle.imagePath)) {
+                referenceImages.push(presetStyle.imagePath)
+            }
+        }
+
+        const validationResult = ImageGenerationService.validateInput({
+            prompt: finalPrompt,
+            model: config.model,
+            modelSettings: {
+                aspectRatio: config.aspectRatio,
+                resolution: config.resolution
+            },
+            referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
+            userId: ''
+        })
+
+        if (!validationResult.valid) {
+            return { error: validationResult.errors.join(', ') }
+        }
+
+        return { finalPrompt, referenceImages }
+    }
+
+    /**
+     * Generate a single shot image
+     */
+    private async generateSingleShot(
+        shot: GeneratedShotPrompt,
+        config: GenerationConfig,
+        styleGuide?: StyleGuide,
+        presetStyle?: PresetStyle
+    ): Promise<{ shotNumber: number; predictionId: string; imageUrl?: string; error?: string }> {
+        const prepared = this.prepareShotForGeneration(shot, config, styleGuide, presetStyle)
+
+        if ('error' in prepared) {
+            return { shotNumber: shot.sequence, predictionId: '', error: prepared.error }
+        }
+
+        const response = await imageGenerationService.generateImage({
+            model: config.model,
+            prompt: prepared.finalPrompt,
+            modelSettings: {
+                aspectRatio: config.aspectRatio,
+                resolution: config.resolution
+            },
+            referenceImages: prepared.referenceImages.length > 0 ? prepared.referenceImages : undefined,
+            waitForResult: true
+        })
+
+        return {
+            shotNumber: shot.sequence,
+            predictionId: response.predictionId,
+            imageUrl: response.imageUrl
+        }
+    }
+
+    /**
      * Generate images from pre-generated AI prompts
-     * This is the preferred method - uses prompts that have been transformed by AI
+     * Uses batched parallel generation (3 concurrent) for faster throughput
      */
     async generateShotsFromPrompts(
         prompts: GeneratedShotPrompt[],
@@ -210,6 +328,7 @@ export class StoryboardGenerationService {
         onShotComplete?: (result: { shotNumber: number; predictionId: string; imageUrl?: string; error?: string }) => void
     ): Promise<Array<{ shotNumber: number; predictionId: string; imageUrl?: string; error?: string }>> {
         const results: Array<{ shotNumber: number; predictionId: string; imageUrl?: string; error?: string }> = []
+        const BATCH_SIZE = 3
 
         this.updateProgress({
             total: prompts.length,
@@ -217,8 +336,8 @@ export class StoryboardGenerationService {
             status: 'generating'
         })
 
-        for (let i = 0; i < prompts.length; i++) {
-            // Check for abort before each shot
+        for (let batchStart = 0; batchStart < prompts.length; batchStart += BATCH_SIZE) {
+            // Check for abort before each batch
             if (abortSignal?.aborted) {
                 const abortError = new Error('Generation cancelled')
                 abortError.name = 'AbortError'
@@ -232,136 +351,43 @@ export class StoryboardGenerationService {
                 }
             }
 
-            const shot = prompts[i]
+            const batch = prompts.slice(batchStart, batchStart + BATCH_SIZE)
 
             this.updateProgress({
-                current: i + 1,
-                currentShotNumber: shot.sequence
+                current: batchStart + 1,
+                currentShotNumber: batch[0].sequence
             })
 
-            try {
-                // Use the AI-generated prompt directly (already enhanced with camera foundation from director)
-                let finalPrompt = shot.prompt
-
-                // Append style guide if present (prompt may already include style, but this ensures consistency)
-                if (styleGuide?.style_prompt) {
-                    finalPrompt = `${finalPrompt}, ${styleGuide.style_prompt}`
-                }
-
-                // Append technical attributes from preset style
-                if (presetStyle?.technicalAttributes) {
-                    const ta = presetStyle.technicalAttributes
-                    finalPrompt = `${finalPrompt}, ${ta.colorPalette}, ${ta.texture}`
-                }
-
-                // Strip motion terms for image models (preserves them in UI editor)
-                if (EquipmentTranslationService.isImageModel(config.model)) {
-                    finalPrompt = EquipmentTranslationService.stripMotionTerms(finalPrompt)
-                }
-
-                // Get reference images from the shot's characterRefs
-                const referenceImages: string[] = []
-
-                // Helper to validate image URL format (accepts http/https URLs and local paths)
-                const isValidImageUrl = (url: string): boolean => {
-                    // Accept local paths (e.g., /storyboard-assets/styles/claymation.png)
-                    // The API route handles uploading these to Replicate
-                    if (url.startsWith('/')) return true
-                    // Accept data URIs (base64 images)
-                    if (url.startsWith('data:image/')) return true
-                    try {
-                        const parsed = new URL(url)
-                        return parsed.protocol === 'https:' || parsed.protocol === 'http:'
-                    } catch {
-                        return false
-                    }
-                }
-
-                // Add character reference images (with URL validation)
-                for (const charRef of shot.characterRefs) {
-                    if (charRef.reference_image_url && isValidImageUrl(charRef.reference_image_url)) {
-                        referenceImages.push(charRef.reference_image_url)
-                    } else if (charRef.reference_image_url) {
-                        logger.storyboard.warn('Invalid character reference URL', { name: charRef.name, url: charRef.reference_image_url })
-                    } else if (charRef.has_reference && !charRef.reference_image_url) {
-                        logger.storyboard.warn('Character has has_reference=true but no reference_image_url', { name: charRef.name })
-                    }
-                }
-
-                // Add location reference image if present (with URL validation)
-                if (shot.locationRef?.reference_image_url) {
-                    if (isValidImageUrl(shot.locationRef.reference_image_url)) {
-                        referenceImages.push(shot.locationRef.reference_image_url)
-                    } else {
-                        logger.storyboard.warn('Invalid location reference URL', { url: shot.locationRef.reference_image_url })
-                    }
-                }
-
-                // Add style guide reference image (preset styles have local paths like /storyboard-assets/styles/claymation.png)
-                if (styleGuide?.reference_image_url && isValidImageUrl(styleGuide.reference_image_url)) {
-                    referenceImages.push(styleGuide.reference_image_url)
-                }
-                // Also check preset style imagePath (built-in styles store their ref image here)
-                if (presetStyle?.imagePath && isValidImageUrl(presetStyle.imagePath)) {
-                    // Avoid duplicating if styleGuide already added the same URL
-                    if (!referenceImages.includes(presetStyle.imagePath)) {
-                        referenceImages.push(presetStyle.imagePath)
-                    }
-                }
-
-                // Validate input
-                const validationResult = ImageGenerationService.validateInput({
-                    prompt: finalPrompt,
-                    model: config.model,
-                    modelSettings: {
-                        aspectRatio: config.aspectRatio,
-                        resolution: config.resolution
-                    },
-                    referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
-                    userId: '' // Validation doesn't require actual userId
-                })
-
-                if (!validationResult.valid) {
-                    results.push({
+            // Generate all shots in this batch concurrently
+            const batchPromises = batch.map(async (shot) => {
+                try {
+                    return await this.generateSingleShot(shot, config, styleGuide, presetStyle)
+                } catch (error) {
+                    return {
                         shotNumber: shot.sequence,
                         predictionId: '',
-                        error: validationResult.errors.join(', ')
-                    })
-                    continue
+                        error: error instanceof Error ? error.message : 'Generation failed'
+                    }
                 }
+            })
 
-                // Start generation with the AI-enhanced prompt
-                // waitForResult forces server-side polling so we always get imageUrl back
-                const response = await imageGenerationService.generateImage({
-                    model: config.model,
-                    prompt: finalPrompt,
-                    modelSettings: {
-                        aspectRatio: config.aspectRatio,
-                        resolution: config.resolution
-                    },
-                    referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
-                    waitForResult: true
-                })
+            const batchResults = await Promise.all(batchPromises)
 
-                const result = {
-                    shotNumber: shot.sequence,
-                    predictionId: response.predictionId,
-                    imageUrl: response.imageUrl // Include imageUrl from polling response
-                }
-                results.push(result)
-                onShotComplete?.(result)
-            } catch (error) {
-                const result = {
-                    shotNumber: shot.sequence,
-                    predictionId: '',
-                    error: error instanceof Error ? error.message : 'Generation failed'
-                }
+            for (const result of batchResults) {
                 results.push(result)
                 onShotComplete?.(result)
             }
 
-            // Small delay between requests to avoid rate limiting
-            await new Promise(resolve => setTimeout(resolve, 500))
+            // Update progress after batch completes
+            this.updateProgress({
+                current: Math.min(batchStart + BATCH_SIZE, prompts.length),
+                currentShotNumber: batch[batch.length - 1].sequence
+            })
+
+            // Small delay between batches to avoid rate limiting
+            if (batchStart + BATCH_SIZE < prompts.length) {
+                await new Promise(resolve => setTimeout(resolve, 300))
+            }
         }
 
         this.updateProgress({

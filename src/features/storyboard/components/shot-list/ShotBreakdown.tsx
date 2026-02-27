@@ -53,7 +53,8 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         setGeneratedPrompts,
         setIsGeneratingPrompts,
         clearGeneratedPrompts,
-        setShotNote
+        setShotNote,
+        updateGeneratedShot
     } = useStoryboardStore()
 
     const { runPipeline } = useDocumentaryPipeline()
@@ -73,6 +74,10 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
             // If no image, try to use character reference or alert user
             logger.storyboard.warn('No generated image for shot', { sequence: sequence })
         }
+    }
+
+    const handleCharacterRefsChange = (sequence: number, characterRefs: typeof characters) => {
+        updateGeneratedShot(sequence, { characterRefs })
     }
 
     const [isRefining, setIsRefining] = useState(false)
@@ -633,6 +638,7 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                                     onPromptChange={handlePromptChange}
                                     onGeneratedPromptChange={handleGeneratedPromptChange}
                                     onNoteChange={setShotNote}
+                                    onCharacterRefsChange={handleCharacterRefsChange}
                                     onGetAngles={handleGetAngles}
                                     onGetBRoll={handleGetBRoll}
                                 />

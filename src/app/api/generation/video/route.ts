@@ -202,12 +202,15 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.api.error('Video generation error', { error: error instanceof Error ? error.message : String(error) });
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorStack = error instanceof Error ? error.stack : undefined
 
-    // Log error
-    lognog.error(error instanceof Error ? error.message : 'Video generation failed', {
+    logger.api.error('Video generation error', { error: errorMessage, stack: errorStack });
+
+    // Log error with full context
+    lognog.error(errorMessage || 'Video generation failed', {
       type: 'error',
-      stack: error instanceof Error ? error.stack : undefined,
+      stack: errorStack,
       route: '/api/generation/video',
       user_id: userId,
     });
@@ -220,12 +223,13 @@ export async function POST(request: NextRequest) {
       status_code: 500,
       duration_ms: Date.now() - apiStart,
       user_id: userId,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: errorMessage,
       integration: 'replicate',
     });
 
+    // Return the actual error message so the client can display it
     return NextResponse.json(
-      { error: 'Failed to create video generation prediction' },
+      { error: errorMessage || 'Failed to create video generation prediction' },
       { status: 500 }
     );
   }

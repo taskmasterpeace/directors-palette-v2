@@ -21,7 +21,9 @@ import {
     Copy,
     MessageSquare,
     Grid3X3,
-    Film
+    Film,
+    UserPlus,
+    UserMinus
 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 import { HighlightedPrompt } from '../shared'
@@ -38,6 +40,7 @@ export interface EditableShotProps {
     onPromptChange?: (sequence: number, newPrompt: string) => void
     onGeneratedPromptChange?: (sequence: number, newPrompt: string) => void
     onNoteChange?: (sequence: number, note: string) => void
+    onCharacterRefsChange?: (sequence: number, characterRefs: StoryboardCharacter[]) => void
     onGetAngles?: (sequence: number) => void
     onGetBRoll?: (sequence: number) => void
 }
@@ -63,6 +66,7 @@ export function EditableShot({
     onPromptChange,
     onGeneratedPromptChange,
     onNoteChange,
+    onCharacterRefsChange,
     onGetAngles,
     onGetBRoll,
 }: EditableShotProps) {
@@ -371,13 +375,16 @@ export function EditableShot({
                                 )}
                             </div>
 
-                            {/* Character References (with images if available) */}
-                            {generatedPrompt?.characterRefs && generatedPrompt.characterRefs.length > 0 && (
+                            {/* Character References (with images if available) + Add/Remove */}
+                            {generatedPrompt && (
                                 <div>
-                                    <Label className="text-xs text-muted-foreground">Character References:</Label>
+                                    <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                                        <Users className="w-3 h-3" />
+                                        Characters in Shot:
+                                    </Label>
                                     <div className="flex gap-2 mt-1 flex-wrap">
                                         {generatedPrompt.characterRefs.map((char: StoryboardCharacter) => (
-                                            <div key={char.id} className="flex items-center gap-2 p-1.5 rounded bg-muted/50 border">
+                                            <div key={char.id} className="flex items-center gap-2 p-1.5 rounded bg-muted/50 border group">
                                                 {char.reference_image_url ? (
                                                     <img
                                                         src={char.reference_image_url}
@@ -390,8 +397,62 @@ export function EditableShot({
                                                     </div>
                                                 )}
                                                 <span className="text-xs font-medium">{char.name}</span>
+                                                {onCharacterRefsChange && (
+                                                    <button
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            const updated = generatedPrompt.characterRefs.filter(c => c.id !== char.id)
+                                                            onCharacterRefsChange(segment.sequence, updated)
+                                                        }}
+                                                        title={`Remove ${char.name}`}
+                                                    >
+                                                        <UserMinus className="w-3 h-3" />
+                                                    </button>
+                                                )}
                                             </div>
                                         ))}
+                                        {/* Add Character Button - show characters not yet in this shot */}
+                                        {onCharacterRefsChange && (() => {
+                                            const currentIds = new Set(generatedPrompt.characterRefs.map(c => c.id))
+                                            const available = storeCharacters.filter(c => !currentIds.has(c.id))
+                                            if (available.length === 0) return null
+                                            return (
+                                                <div className="relative group/add">
+                                                    <button
+                                                        className="flex items-center gap-1.5 p-1.5 rounded border border-dashed border-muted-foreground/30 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <UserPlus className="w-4 h-4" />
+                                                        <span className="text-xs">Add</span>
+                                                    </button>
+                                                    <div className="absolute z-10 top-full left-0 mt-1 hidden group-hover/add:block bg-popover border rounded-md shadow-md p-1 min-w-[180px]">
+                                                        {available.map(char => (
+                                                            <button
+                                                                key={char.id}
+                                                                className="w-full flex items-center gap-2 p-1.5 rounded text-xs hover:bg-muted transition-colors"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    onCharacterRefsChange(segment.sequence, [...generatedPrompt.characterRefs, char])
+                                                                }}
+                                                            >
+                                                                {char.reference_image_url ? (
+                                                                    <img src={char.reference_image_url} alt={char.name} className="w-6 h-6 rounded object-cover" />
+                                                                ) : (
+                                                                    <div className="w-6 h-6 rounded bg-muted flex items-center justify-center">
+                                                                        <Users className="w-3 h-3" />
+                                                                    </div>
+                                                                )}
+                                                                <span className="font-medium">{char.name}</span>
+                                                                {char.role && (
+                                                                    <Badge variant="secondary" className="text-[10px] py-0 px-1 ml-auto">{char.role}</Badge>
+                                                                )}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )
+                                        })()}
                                     </div>
                                 </div>
                             )}

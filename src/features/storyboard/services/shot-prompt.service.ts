@@ -40,12 +40,12 @@ export class ShotPromptService {
 
             // Build character descriptions map with @name format
             // Convert "Marcus Jones" to "@marcus_jones"
+            // Include ALL characters (not just those with reference images) so the LLM
+            // knows about every person in the story and can tag them in shots
             const characterDescriptions: Record<string, string> = {}
             for (const char of config.characters) {
-                if (char.has_reference) {
-                    const atName = this.formatCharacterName(char.name)
-                    characterDescriptions[atName] = char.description || ''
-                }
+                const atName = this.formatCharacterName(char.name)
+                characterDescriptions[atName] = char.description || ''
             }
 
             // Prepare segments for API call
@@ -136,9 +136,6 @@ export class ShotPromptService {
         const combinedText = `${prompt} ${originalText}`.toLowerCase()
 
         for (const char of characters) {
-            // Only include characters with reference images
-            if (!char.has_reference) continue
-
             // Check if character name appears in text (original format)
             const nameLower = char.name.toLowerCase()
             // Also check @name format

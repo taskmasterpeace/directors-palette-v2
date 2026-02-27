@@ -120,14 +120,7 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
         setSelectedShots(new Set())
     }, [chapterIndex]) // setSelectedShots is a stable zustand action
 
-    // Initialize selected shots on first load
-    useEffect(() => {
-        if (filteredPrompts.length > 0 && selectedShots.size === 0) {
-            // Select all shots by default
-            const initialSelection = new Set(filteredPrompts.map(p => p.sequence))
-            setSelectedShots(initialSelection)
-        }
-    }, [filteredPrompts.length]) // eslint-disable-line react-hooks/exhaustive-deps
+    // No auto-selection — user must explicitly select shots to generate
 
     // Initialize wildcards on mount (auto-create presets if needed)
     useEffect(() => {
