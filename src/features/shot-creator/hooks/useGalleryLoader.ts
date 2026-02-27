@@ -2,7 +2,7 @@
  * Hook to load gallery images from Supabase with real-time updates
  */
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { GalleryService } from '../services/gallery.service'
 import { useUnifiedGalleryStore } from '../store/unified-gallery-store'
 import { getClient } from '@/lib/db/client'
@@ -46,12 +46,19 @@ async function retryWithBackoff<T>(
     throw lastError
 }
 
+// Module-level flag to prevent duplicate subscriptions across multiple hook instances
+let activeSubscriptionId: string | null = null
+
 export function useGalleryLoader() {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
     // Ref to prevent concurrent loads (React Strict Mode calls useEffect twice)
     const isLoadingRef = useRef(false)
+    // Ref for debouncing real-time events
+    const realtimeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    // Ref for real-time reload guard
+    const isRealtimeReloadingRef = useRef(false)
 
     // Use direct selectors to ensure reactivity when store values change
     const loadImagesPaginated = useUnifiedGalleryStore(state => state.loadImagesPaginated)
@@ -62,10 +69,35 @@ export function useGalleryLoader() {
     const searchQuery = useUnifiedGalleryStore(state => state.searchQuery)
     const setTotalDatabaseCount = useUnifiedGalleryStore(state => state.setTotalDatabaseCount)
 
+    // Store latest values in refs so real-time callback always reads fresh values
+    const currentPageRef = useRef(currentPage)
+    const pageSizeRef = useRef(pageSize)
+    const currentFolderIdRef = useRef(currentFolderId)
+    const searchQueryRef = useRef(searchQuery)
+    currentPageRef.current = currentPage
+    pageSizeRef.current = pageSize
+    currentFolderIdRef.current = currentFolderId
+    searchQueryRef.current = searchQuery
+
+    // Stable reload function that reads from refs
+    const reloadGallery = useCallback(async () => {
+        const [updatedTotalCount, paginatedUpdate] = await Promise.all([
+            GalleryService.getTotalImageCount(),
+            GalleryService.loadUserGalleryPaginated(
+                currentPageRef.current,
+                pageSizeRef.current,
+                currentFolderIdRef.current,
+                { searchQuery: searchQueryRef.current || undefined }
+            )
+        ])
+        return { updatedTotalCount, paginatedUpdate }
+    }, [])
+
     // Load gallery on mount and subscribe to real-time updates
     useEffect(() => {
         let mounted = true
         let subscription: { unsubscribe: () => void } | null = null
+        const instanceId = Math.random().toString(36).slice(2)
 
         const loadGallery = async () => {
             // Prevent concurrent loads (React Strict Mode double-invokes effects)
@@ -94,42 +126,55 @@ export function useGalleryLoader() {
                 setTotalDatabaseCount(totalCount)
                 loadImagesPaginated(images, total, totalPages)
 
-                // Set up real-time subscription to gallery changes
-                const supabase = await getClient()
-                if (supabase) {
-                    const { data: { user } } = await supabase.auth.getUser()
-                    if (user) {
-                        subscription = supabase
-                            .channel('gallery-changes')
-                            .on(
-                                'postgres_changes',
-                                {
-                                    event: '*',
-                                    schema: 'public',
-                                    table: 'gallery',
-                                    filter: `user_id=eq.${user.id}`
-                                },
-                                async () => {
-                                    try {
-                                        // Reload gallery and total count when changes occur
-                                        const [updatedTotalCount, paginatedUpdate] = await Promise.all([
-                                            GalleryService.getTotalImageCount(),
-                                            GalleryService.loadUserGalleryPaginated(currentPage, pageSize, currentFolderId, { searchQuery: searchQuery || undefined })
-                                        ])
+                // Only set up real-time subscription if no other instance already has one
+                if (activeSubscriptionId === null) {
+                    activeSubscriptionId = instanceId
 
-                                        if (mounted) {
-                                            setTotalDatabaseCount(updatedTotalCount)
-                                            loadImagesPaginated(paginatedUpdate.images, paginatedUpdate.total, paginatedUpdate.totalPages)
-                                            // Reload folders to update counts
-                                            await loadFolders()
+                    const supabase = await getClient()
+                    if (supabase) {
+                        const { data: { user } } = await supabase.auth.getUser()
+                        if (user) {
+                            subscription = supabase
+                                .channel(`gallery-changes-${instanceId}`)
+                                .on(
+                                    'postgres_changes',
+                                    {
+                                        event: '*',
+                                        schema: 'public',
+                                        table: 'gallery',
+                                        filter: `user_id=eq.${user.id}`
+                                    },
+                                    () => {
+                                        // Debounce real-time events (multiple can fire in quick succession)
+                                        if (realtimeDebounceRef.current) {
+                                            clearTimeout(realtimeDebounceRef.current)
                                         }
-                                    } catch (realtimeError) {
-                                        // Silently handle realtime update errors to prevent UI disruption
-                                        logger.shotCreator.warn('Realtime gallery update failed (non-critical)', { realtimeError: realtimeError })
+                                        realtimeDebounceRef.current = setTimeout(async () => {
+                                            // Guard against concurrent real-time reloads
+                                            if (isRealtimeReloadingRef.current || !mounted) return
+                                            isRealtimeReloadingRef.current = true
+
+                                            try {
+                                                const { updatedTotalCount, paginatedUpdate } = await reloadGallery()
+
+                                                if (mounted) {
+                                                    setTotalDatabaseCount(updatedTotalCount)
+                                                    loadImagesPaginated(paginatedUpdate.images, paginatedUpdate.total, paginatedUpdate.totalPages)
+                                                    await loadFolders()
+                                                }
+                                            } catch (realtimeError) {
+                                                // Non-critical: real-time refresh failed, gallery still has last loaded data
+                                                logger.shotCreator.warn('Realtime gallery refresh skipped', {
+                                                    reason: realtimeError instanceof Error ? realtimeError.message : String(realtimeError)
+                                                })
+                                            } finally {
+                                                isRealtimeReloadingRef.current = false
+                                            }
+                                        }, 300)
                                     }
-                                }
-                            )
-                            .subscribe()
+                                )
+                                .subscribe()
+                        }
                     }
                 }
             } catch (err) {
@@ -151,11 +196,17 @@ export function useGalleryLoader() {
         return () => {
             mounted = false
             isLoadingRef.current = false
+            if (realtimeDebounceRef.current) {
+                clearTimeout(realtimeDebounceRef.current)
+            }
             if (subscription) {
                 subscription.unsubscribe()
             }
+            if (activeSubscriptionId === instanceId) {
+                activeSubscriptionId = null
+            }
         }
-    }, [loadImagesPaginated, loadFolders, currentPage, pageSize, currentFolderId, searchQuery, setTotalDatabaseCount])
+    }, [loadImagesPaginated, loadFolders, currentPage, pageSize, currentFolderId, searchQuery, setTotalDatabaseCount, reloadGallery])
 
     return {
         isLoading,

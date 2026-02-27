@@ -47,7 +47,7 @@ export class GalleryService {
       })
 
       if (result.error) {
-        logger.gallery.error('Error fetching [generationType] gallery', { generationType, error: result.error })
+        logger.gallery.error(`Error fetching ${generationType} gallery`, { generationType, error: result.error })
         return []
       }
 
@@ -62,7 +62,7 @@ export class GalleryService {
 
       return items
     } catch (error) {
-      logger.gallery.error('Failed to load [generationType] gallery', { generationType, error: error instanceof Error ? error.message : String(error) })
+      logger.gallery.error(`Failed to load ${generationType} gallery`, { generationType, error: error instanceof Error ? error.message : String(error) })
       return []
     }
   }
@@ -91,13 +91,13 @@ export class GalleryService {
         .not('public_url', 'is', null)
 
       if (error) {
-        logger.gallery.error('Error counting [generationType] gallery items', { generationType, error })
+        logger.gallery.error(`Error counting ${generationType} gallery items`, { generationType, error })
         return 0
       }
 
       return count || 0
     } catch (error) {
-      logger.gallery.error('Failed to count [generationType] gallery items', { generationType, error: error instanceof Error ? error.message : String(error) })
+      logger.gallery.error(`Failed to count ${generationType} gallery items`, { generationType, error: error instanceof Error ? error.message : String(error) })
       return 0
     }
   }
@@ -166,7 +166,7 @@ export class GalleryService {
       })
 
       if (result.error) {
-        logger.gallery.error('Error fetching [generationType] gallery', { generationType, error: result.error })
+        logger.gallery.error(`Error fetching ${generationType} gallery`, { generationType, error: result.error })
         throw new Error(`Database query failed: ${result.error}`)
       }
 
@@ -186,11 +186,9 @@ export class GalleryService {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      logger.gallery.error('Failed to load [generationType] gallery', { generationType, errorMessage, error: error instanceof Error ? error.message : String(error) })
+      logger.gallery.error(`Failed to load ${generationType} gallery`, { generationType, errorMessage, error: error instanceof Error ? error.message : String(error) })
       if (errorMessage.includes('Failed to fetch')) {
-        logger.gallery.error('Network error detected. Possible causes')
-        logger.gallery.error('1. Supabase credentials missing or invalid')
-        logger.gallery.error('2. Network connectivity issues')
+        logger.gallery.error('Network error detected. Possible causes: Supabase credentials missing/invalid, network connectivity issues')
       }
       return { items: [], total: 0, totalPages: 0 }
     }

@@ -321,7 +321,7 @@ export class WebhookService {
       });
 
       if (!deductResult.success) {
-        logger.generation.error('Failed to deduct credits after successful [generationType] generation', { generationType, error: deductResult.error })
+        logger.generation.error(`Failed to deduct credits after successful ${generationType} generation`, { generationType, error: deductResult.error })
         // Don't fail the whole process - the asset was generated successfully
       } else {
         logger.generation.info('Credits deducted', { userId: galleryEntry.user_id, newBalance: deductResult.newBalance })
