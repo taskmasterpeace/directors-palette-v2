@@ -1128,6 +1128,7 @@ export function ShotAnimatorView() {
           onSave={(image) => handleSaveLastFrame(currentLastFrameConfig.id, image)}
           initialImage={currentLastFrameConfig.lastFrameImage}
           imageName={currentLastFrameConfig.imageName}
+          startFrameUrl={currentLastFrameConfig.imageUrl}
         />
       )}
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
-import { Upload, X, ZoomIn } from 'lucide-react'
+import { Upload, X, ZoomIn, Wand2, Loader2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,7 @@ interface LastFrameModalProps {
   onSave: (imageUrl?: string) => void
   initialImage?: string
   imageName: string
+  startFrameUrl?: string
 }
 
 export function LastFrameModal({
@@ -29,15 +30,19 @@ export function LastFrameModal({
   onClose,
   onSave,
   initialImage,
-  imageName
+  imageName,
+  startFrameUrl
 }: LastFrameModalProps) {
   const [image, setImage] = useState<string | undefined>(initialImage)
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generationError, setGenerationError] = useState<string | null>(null)
   const dragCounterRef = useRef(0)
 
   useEffect(() => {
     setImage(initialImage)
+    setGenerationError(null)
   }, [initialImage, isOpen])
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,6 +114,43 @@ export function LastFrameModal({
     }
     reader.readAsDataURL(file)
   }, [])
+
+  const TEMPORAL_PROMPT = 'TEMPORAL UNIT ACTIVE. Input: reference image. Directive: render this scene as it appears 15 seconds later. Maintain all characters, style, lighting, and framing. Show realistic progression of motion, expression, and environment — nothing more, nothing less.'
+
+  const handleGenerateLastFrame = async () => {
+    if (!startFrameUrl) return
+    setIsGenerating(true)
+    setGenerationError(null)
+    try {
+      const response = await fetch('/api/generation/image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'nano-banana-2',
+          prompt: TEMPORAL_PROMPT,
+          referenceImages: [startFrameUrl],
+          modelSettings: { aspectRatio: '16:9', resolution: '1024x1024' },
+          waitForResult: true,
+        }),
+      })
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to generate final frame')
+      }
+      const result = await response.json()
+      if (result.status === 'completed' && result.imageUrl) {
+        setImage(result.imageUrl)
+      } else if (result.status === 'failed') {
+        throw new Error(result.error || 'Generation failed')
+      } else {
+        throw new Error('Generation did not complete')
+      }
+    } catch (err) {
+      setGenerationError(err instanceof Error ? err.message : 'Generation failed')
+    } finally {
+      setIsGenerating(false)
+    }
+  }
 
   return (
     <>
@@ -182,6 +224,36 @@ export function LastFrameModal({
                 </label>
               )}
             </div>
+
+            {/* AI Generation Section */}
+            {startFrameUrl && (
+              <div className="flex flex-col items-center gap-2 pt-2 border-t border-border">
+                <Button
+                  onClick={handleGenerateLastFrame}
+                  disabled={isGenerating}
+                  variant="outline"
+                  className="w-full max-w-sm bg-primary/10 hover:bg-primary/20 border-primary/30 text-primary min-h-[44px] touch-manipulation"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Generating final frame...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      Generate with AI
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  Uses AI to imagine this scene 15 seconds later
+                </p>
+                {generationError && (
+                  <p className="text-xs text-red-400 text-center">{generationError}</p>
+                )}
+              </div>
+            )}
           </div>
 
           <DialogFooter className="gap-2 px-4 sm:px-6">
