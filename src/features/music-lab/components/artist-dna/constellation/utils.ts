@@ -2,7 +2,6 @@ import type { ArtistDNA } from '../../../types/artist-dna.types'
 import type { NodeData, AtmospherePreset } from './types'
 import { GENRE_PALETTES, DEFAULT_PALETTE, ATTITUDE_SHIFTS } from './constants'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const sa = <T = string>(val: unknown): T[] => Array.isArray(val) ? val as T[] : []
 
 export function calculateRingFill(dna: ArtistDNA) {
