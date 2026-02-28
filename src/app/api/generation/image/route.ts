@@ -207,12 +207,13 @@ export async function POST(request: NextRequest) {
       model,
       prompt_length: prompt?.length || 0,
       reference_images_count: referenceImages?.length || 0,
-      reference_images_types: referenceImages?.map((r: string) => {
-        if (!r) return 'null'
-        if (r.startsWith('https://')) return 'https'
-        if (r.startsWith('data:')) return 'data-uri'
-        if (r.startsWith('blob:')) return 'blob'
-        return 'unknown:' + r.substring(0, 30)
+      reference_images_types: referenceImages?.map((r: string | { url: string; weight?: number }) => {
+        const url = typeof r === 'string' ? r : r?.url
+        if (!url) return 'null'
+        if (url.startsWith('https://')) return 'https'
+        if (url.startsWith('data:')) return 'data-uri'
+        if (url.startsWith('blob:')) return 'blob'
+        return 'unknown:' + url.substring(0, 30)
       }) || [],
     });
 
@@ -967,7 +968,11 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { error: 'Failed to create image generation prediction' },
+      {
+        error: 'Failed to create image generation prediction',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : String(error)) : undefined,
+      },
       { status: 500 }
     );
   }
