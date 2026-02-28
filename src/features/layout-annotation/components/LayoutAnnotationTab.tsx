@@ -232,16 +232,24 @@ The final image should look natural as if the edits were always part of the orig
                     })
                 })
             } else {
-                // Inpainting / Image-to-Image (Existing)
+                // Image-to-Image: send canvas as reference image
                 const canvasImage = canvasRef.current!.exportCanvas('png')
-                response = await fetch("/api/generation/inpaint", {
+                const fullPrompt = `${nanoBananaPrompt}. ${systemPrompt}`
+                response = await fetch("/api/generation/image", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        image: canvasImage,
-                        prompt: nanoBananaPrompt,
                         model: 'nano-banana-2',
-                        systemPrompt: systemPrompt
+                        prompt: fullPrompt,
+                        referenceImages: [canvasImage],
+                        modelSettings: {
+                            aspectRatio: canvasState.aspectRatio,
+                            outputFormat: "png"
+                        },
+                        extraMetadata: {
+                            source: 'layout-annotation',
+                        },
+                        waitForResult: true,
                     })
                 })
             }
