@@ -183,16 +183,16 @@ export const PRESET_STYLES: PresetStyle[] = [
     },
     {
         id: 'muppet',
-        name: 'Muppet',
-        description: 'Jim Henson-style puppets',
+        name: 'Puppet Theater',
+        description: 'Handcrafted felt puppets on practical miniature sets',
         imagePath: '/storyboard-assets/styles/muppet.webp',
-        stylePrompt: 'in the Muppet style of the reference image',
+        stylePrompt: 'handcrafted felt and foam puppet characters on a practical miniature set, physical puppetry photography with warm studio lighting, characters built from soft colorful felt fabric with visible stitching and seam lines and button eyes or simple glossy bead eyes, expressive open-mouth puppet faces with hinged jaws and arched felt eyebrows conveying emotion, bodies made of stuffed foam wrapped in dyed felt with simple mitten-like hands and no individual fingers, warm tungsten stage lighting with soft fill and gentle shadows on a detailed miniature practical set built from real wood and fabric and miniature props, shallow depth of field with the puppet sharp and background softly blurred, rich saturated color palette with warm amber tones and cozy theatrical atmosphere, every surface has tactile handmade texture you can almost feel, the scene looks like a real photograph of a physical puppet on a miniature stage set, NOT a cartoon NOT an illustration NOT animated NOT CGI NOT a drawing, do NOT depict real human people or realistic human skin or human faces, all characters must be clearly recognizable as physical hand-built fabric puppets, do NOT reference or depict any copyrighted puppet characters',
         technicalAttributes: {
-            cameraRenderType: 'Studio TV camera',
-            lensPerspective: 'Wide angle, low camera position',
-            stockMedium: 'Felt and foam puppet on practical set',
-            colorPalette: 'Bright saturated primary colors',
-            texture: 'Soft felt fabric, visible puppet seams',
+            cameraRenderType: 'Studio photography camera on practical puppet stage',
+            lensPerspective: 'Wide angle low camera position at puppet eye-level, shallow depth of field, warm soft fill lighting',
+            stockMedium: 'Felt and foam puppet on practical miniature set, real wood and fabric props, tangible handmade surfaces',
+            colorPalette: 'Warm saturated primaries, amber tungsten glow, cozy theatrical tones, rich dyed felt colors',
+            texture: 'Soft felt fabric with visible stitching and seams, stuffed foam bodies, button and bead eyes, miniature handcrafted set details',
             medium: 'puppetry'
         }
     },
