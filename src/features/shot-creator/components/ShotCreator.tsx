@@ -48,6 +48,11 @@ const ShotCreator = () => {
     // Load gallery from Supabase on mount
     const { isLoading: isGalleryLoading } = useGalleryLoader()
 
+    // Load reference library on mount so autocomplete has thumbnail data
+    useEffect(() => {
+        loadLibraryItems()
+    }, [loadLibraryItems])
+
     const modelConfig = getModelConfig((shotCreatorSettings.model || 'nano-banana-2') as ModelId)
 
     // Fix resolution mismatch on initial render
