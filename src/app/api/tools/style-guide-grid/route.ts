@@ -124,12 +124,12 @@ export async function POST(request: NextRequest) {
     logger.api.info('Style Guide Grid: Using Nano Banana Pro model')
     logger.api.info('Style Guide Grid: Prompt length', { length: gridPrompt.length })
 
-    // Call Replicate API using nano-banana-pro
+    // Call Replicate API using nano-banana-2
     // Using 16:9 for title banner + 3x3 grid layout
     const rawOutput = await replicate.run(NANO_BANANA_PRO_MODEL, {
       input: {
         prompt: gridPrompt,
-        reference_images: [imageUrl], // Reference image for style consistency
+        image_input: [imageUrl], // Reference image for style consistency
         aspect_ratio: '16:9', // 16:9 for title + 3x3 grid
       },
     })

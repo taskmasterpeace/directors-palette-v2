@@ -42,8 +42,6 @@ function isPublicUrl(url: string): boolean {
     if (/^169\.254\./.test(hostname)) return false;
     // Block metadata endpoints (cloud providers)
     if (hostname === '169.254.169.254' || hostname === 'metadata.google.internal') return false;
-    // Check for invalid/non-existent domains (hardcoded fallback domain)
-    if (hostname === 'directorspalette.app') return false;
     // Other external URLs are assumed to be accessible
     return true;
   } catch {

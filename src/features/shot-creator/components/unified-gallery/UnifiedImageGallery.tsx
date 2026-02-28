@@ -190,9 +190,8 @@ export function UnifiedImageGallery({
 
         try {
             // Template image for 9-shot cinematic layout
-            // Use NEXT_PUBLIC_SITE_URL for public access, fallback to production URL
-            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://directorspalette.app'
-            const cinematicTemplateUrl = `${siteUrl}/templates/cinematic-reference.png`
+            // Build URL from window.location so it works in both dev and production
+            const cinematicTemplateUrl = `${window.location.origin}/templates/cinematic-reference.png`
 
             // Cinematic 9-shot grid prompt - each cell MUST be a different camera angle
             const cinematicPrompt = `Create a 3x3 cinematic contact sheet grid showing the SAME SUBJECT from 9 COMPLETELY DIFFERENT camera angles. Each cell must be visually distinct - NO DUPLICATE ANGLES.

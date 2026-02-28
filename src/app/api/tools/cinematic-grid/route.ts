@@ -103,12 +103,12 @@ export async function POST(request: NextRequest) {
     logger.api.info('Cinematic Grid: Using Nano Banana Pro model')
     logger.api.info('Cinematic Grid: Prompt length', { length: gridPrompt.length })
 
-    // Call Replicate API using nano-banana-pro
-    // Nano Banana Pro accepts: prompt, reference_images (array), aspect_ratio
+    // Call Replicate API using nano-banana-2
+    // nano-banana-2 accepts: prompt, image_input (array), aspect_ratio
     const rawOutput = await replicate.run(NANO_BANANA_PRO_MODEL, {
       input: {
         prompt: gridPrompt,
-        reference_images: [imageUrl], // Reference image for character consistency
+        image_input: [imageUrl], // Reference image for character consistency
         aspect_ratio: '1:1', // Square for 3x3 grid
       },
     })
