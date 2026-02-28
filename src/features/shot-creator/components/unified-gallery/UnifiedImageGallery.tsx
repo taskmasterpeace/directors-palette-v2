@@ -293,14 +293,15 @@ RULES:
 
 IMPORTANT: Use the provided reference image to match the exact color palette, lighting conditions, and visual setting. All 9 cells should feel like they belong to the same scene.
 
-The grid layout is:
-TOP ROW (Environment): establishing wide shot with no people, foreground detail close-up, background element with depth
-MIDDLE ROW (Details): key object/prop extreme close-up, texture/material macro shot, hands or action insert
-BOTTOM ROW (Atmosphere): ambient background activity, symbolic/thematic element, architectural framing element
+The 9 cells show diverse scene elements: an establishing wide shot, a foreground detail close-up, a background element with depth, a key object or prop close-up, a texture or material macro shot, a hands or action insert, ambient background activity, a symbolic or thematic element, and an architectural framing element.
 
-Each cell shows a different element from the same visual world - not different angles of the same subject, but different subjects that share the same look and feel. Clear separation between cells with thin borders. Professional cinematography B-roll reference sheet style.
+Each cell shows a different element from the same visual world - not different angles of the same subject, but different subjects that share the same look and feel. Clear separation between cells with thin black borders.
 
-The color temperature, lighting direction, and overall mood must match across all 9 cells, creating a cohesive visual palette.`
+CRITICAL RULES:
+- ABSOLUTELY NO TEXT, labels, captions, titles, or overlays of any kind on the image
+- No words, letters, or descriptions rendered on any cell
+- Pure photographic/cinematic imagery only
+- The color temperature, lighting direction, and overall mood must match across all 9 cells`
 
             const response = await fetch('/api/generation/image', {
                 method: 'POST',
