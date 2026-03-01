@@ -8,8 +8,10 @@ import { persist } from 'zustand/middleware'
 import type {
   ArtistDNA,
   ArtistDnaTab,
+  ArtistGalleryItem,
   CatalogEntry,
   CatalogSongAnalysis,
+  GalleryItemType,
   SuggestionBatch,
   SunoPromptOutput,
   UserArtistProfile,
@@ -80,6 +82,10 @@ interface ArtistDnaState {
   consumeSuggestion: (field: string, value: string) => void
   dismissSuggestion: (field: string, index: number) => void
   clearSuggestions: (field: string) => void
+
+  // Actions - Gallery
+  addGalleryItem: (item: { url: string; type: GalleryItemType; category?: string; prompt?: string; aspectRatio: string }) => void
+  removeGalleryItem: (id: string) => void
 
   // Actions - Mix
   generateMix: () => Promise<void>
@@ -198,12 +204,14 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
           const sound = { ...defaults.sound, ...dna.sound }
           if (!Array.isArray(sound.genreEvolution)) sound.genreEvolution = []
           if (!Array.isArray(sound.keyCollaborators)) sound.keyCollaborators = []
+          const lookMerged = { ...defaults.look, ...dna.look }
+          if (!Array.isArray(lookMerged.gallery)) lookMerged.gallery = []
           const merged: ArtistDNA = {
             identity,
             sound,
             persona: { ...defaults.persona, ...dna.persona },
             lexicon: { ...defaults.lexicon, ...dna.lexicon },
-            look: { ...defaults.look, ...dna.look },
+            look: lookMerged,
             catalog: { ...defaults.catalog, ...dna.catalog },
             lowConfidenceFields: Array.isArray(dna.lowConfidenceFields) ? dna.lowConfidenceFields : [],
           }
@@ -546,6 +554,41 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
         })
       },
 
+      addGalleryItem: (item) => {
+        const newItem: ArtistGalleryItem = {
+          id: crypto.randomUUID(),
+          url: item.url,
+          type: item.type,
+          category: item.category,
+          prompt: item.prompt,
+          aspectRatio: item.aspectRatio,
+          createdAt: new Date().toISOString(),
+        }
+        set((state) => ({
+          draft: {
+            ...state.draft,
+            look: {
+              ...state.draft.look,
+              gallery: [...(Array.isArray(state.draft.look.gallery) ? state.draft.look.gallery : []), newItem],
+            },
+          },
+          isDirty: true,
+        }))
+      },
+
+      removeGalleryItem: (id) => {
+        set((state) => ({
+          draft: {
+            ...state.draft,
+            look: {
+              ...state.draft.look,
+              gallery: (Array.isArray(state.draft.look.gallery) ? state.draft.look.gallery : []).filter((g) => g.id !== id),
+            },
+          },
+          isDirty: true,
+        }))
+      },
+
       generateMix: async () => {
         const { draft, combineVocalAndStyle } = get()
 
@@ -637,7 +680,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             sound,
             persona: { ...defaults.persona, ...p.draft.persona },
             lexicon: { ...defaults.lexicon, ...p.draft.lexicon },
-            look: { ...defaults.look, ...p.draft.look },
+            look: { ...defaults.look, ...p.draft.look, gallery: Array.isArray(p.draft.look?.gallery) ? p.draft.look.gallery : [] },
             catalog: { ...defaults.catalog, ...p.draft.catalog },
             lowConfidenceFields: Array.isArray(p.draft.lowConfidenceFields) ? p.draft.lowConfidenceFields : [],
           }

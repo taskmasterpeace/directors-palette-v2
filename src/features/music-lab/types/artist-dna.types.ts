@@ -63,6 +63,19 @@ export interface ArtistLook {
   visualDescription: string
   portraitUrl: string
   characterSheetUrl: string
+  gallery: ArtistGalleryItem[]
+}
+
+export type GalleryItemType = 'character-sheet' | 'portrait' | 'photo-shoot'
+
+export interface ArtistGalleryItem {
+  id: string
+  url: string
+  type: GalleryItemType
+  category?: string
+  prompt?: string
+  aspectRatio: string
+  createdAt: string
 }
 
 // =============================================================================
@@ -267,6 +280,7 @@ export function createEmptyDNA(): ArtistDNA {
       visualDescription: '',
       portraitUrl: '',
       characterSheetUrl: '',
+      gallery: [],
     },
     catalog: {
       entries: [],
