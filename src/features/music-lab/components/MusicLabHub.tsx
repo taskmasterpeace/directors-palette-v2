@@ -1,10 +1,12 @@
 'use client'
 
-import { Dna, PenTool, Music } from 'lucide-react'
+import { Dna, PenTool, Music, MessageCircle, Headphones } from 'lucide-react'
 import { useLayoutStore } from '@/store/layout.store'
 import type { MusicLabSubTab } from '@/store/layout.store'
 import { ArtistDnaPage } from './artist-dna/ArtistDnaPage'
 import { WritingStudioPage } from './WritingStudioPage'
+import { ChatPage } from './artist-chat/ChatPage'
+import { SoundStudioPage } from './sound-studio/SoundStudioPage'
 import MusicVideoPage from '@/app/(app)/music-lab/page'
 import { cn } from '@/utils/utils'
 
@@ -14,7 +16,9 @@ interface MusicLabHubProps {
 
 const SUB_TABS: { id: MusicLabSubTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'artist-lab', label: 'Artist Lab', icon: Dna },
+  { id: 'artist-chat', label: 'Artist Chat', icon: MessageCircle },
   { id: 'writing-studio', label: 'Writing Studio', icon: PenTool },
+  { id: 'sound-studio', label: 'Sound Studio', icon: Headphones },
   { id: 'music-video', label: 'Music Video', icon: Music },
 ]
 
@@ -53,8 +57,14 @@ export function MusicLabHub({ userId }: MusicLabHubProps) {
             <ArtistDnaPage userId={userId} />
           </div>
         )}
+        {musicLabSubTab === 'artist-chat' && (
+          <ChatPage userId={userId} />
+        )}
         {musicLabSubTab === 'writing-studio' && (
           <WritingStudioPage userId={userId} />
+        )}
+        {musicLabSubTab === 'sound-studio' && (
+          <SoundStudioPage userId={userId} />
         )}
         {musicLabSubTab === 'music-video' && (
           <div className="h-full p-4 overflow-y-auto">
