@@ -39,6 +39,9 @@ interface ArtistDnaState {
   isDirty: boolean
   activeTab: ArtistDnaTab
 
+  // Personality print
+  personalityPrintStatus: 'idle' | 'generating' | 'done' | 'error'
+
   // Suggestion cache
   suggestionCache: Record<string, SuggestionBatch>
 
@@ -117,6 +120,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
       isSeedingFromArtist: false,
       seededFrom: null,
       isAnalyzingCatalog: false,
+      personalityPrintStatus: 'idle',
 
       clearSeededFrom: () => set({ seededFrom: null }),
 
@@ -147,6 +151,14 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             activeArtistId: result.id,
             isDirty: false,
           }))
+          // Fire async personality print generation (non-blocking)
+          set({ personalityPrintStatus: 'generating' })
+          fetch('/api/artist-dna/generate-personality-print', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ artistId: result.id, dna: draft }),
+          }).then(() => set({ personalityPrintStatus: 'done' }))
+            .catch(() => set({ personalityPrintStatus: 'error' }))
         }
 
         return result
@@ -165,6 +177,14 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
               artists: state.artists.map((a) => (a.id === activeArtistId ? result : a)),
               isDirty: false,
             }))
+            // Fire async personality print generation (non-blocking)
+            set({ personalityPrintStatus: 'generating' })
+            fetch('/api/artist-dna/generate-personality-print', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ artistId: activeArtistId, dna: draft }),
+            }).then(() => set({ personalityPrintStatus: 'done' }))
+              .catch(() => set({ personalityPrintStatus: 'error' }))
             return true
           }
           return false

@@ -1,0 +1,51 @@
+import type { MoodTag } from '../types/sound-studio.types'
+
+export const MOOD_TAGS: MoodTag[] = [
+  // Positive
+  { id: 'uplifting', label: 'Uplifting', valence: 'positive' },
+  { id: 'euphoric', label: 'Euphoric', valence: 'positive' },
+  { id: 'joyful', label: 'Joyful', valence: 'positive' },
+  { id: 'triumphant', label: 'Triumphant', valence: 'positive' },
+  { id: 'playful', label: 'Playful', valence: 'positive' },
+  { id: 'festive', label: 'Festive', valence: 'positive' },
+  { id: 'warm', label: 'Warm', valence: 'positive' },
+  { id: 'hopeful', label: 'Hopeful', valence: 'positive' },
+  { id: 'energetic', label: 'Energetic', valence: 'positive' },
+  { id: 'confident', label: 'Confident', valence: 'positive' },
+  { id: 'empowering', label: 'Empowering', valence: 'positive' },
+  { id: 'groovy', label: 'Groovy', valence: 'positive' },
+  { id: 'funky', label: 'Funky', valence: 'positive' },
+  { id: 'sexy', label: 'Sexy', valence: 'positive' },
+
+  // Neutral
+  { id: 'dreamy', label: 'Dreamy', valence: 'neutral' },
+  { id: 'nostalgic', label: 'Nostalgic', valence: 'neutral' },
+  { id: 'mysterious', label: 'Mysterious', valence: 'neutral' },
+  { id: 'intimate', label: 'Intimate', valence: 'neutral' },
+  { id: 'peaceful', label: 'Peaceful', valence: 'neutral' },
+  { id: 'bittersweet', label: 'Bittersweet', valence: 'neutral' },
+  { id: 'ethereal', label: 'Ethereal', valence: 'neutral' },
+  { id: 'meditative', label: 'Meditative', valence: 'neutral' },
+  { id: 'hypnotic', label: 'Hypnotic', valence: 'neutral' },
+  { id: 'atmospheric', label: 'Atmospheric', valence: 'neutral' },
+  { id: 'cinematic', label: 'Cinematic', valence: 'neutral' },
+  { id: 'spacey', label: 'Spacey', valence: 'neutral' },
+  { id: 'contemplative', label: 'Contemplative', valence: 'neutral' },
+  { id: 'chill', label: 'Chill', valence: 'neutral' },
+
+  // Dark
+  { id: 'haunting', label: 'Haunting', valence: 'dark' },
+  { id: 'melancholic', label: 'Melancholic', valence: 'dark' },
+  { id: 'dark', label: 'Dark', valence: 'dark' },
+  { id: 'anxious', label: 'Anxious', valence: 'dark' },
+  { id: 'aggressive', label: 'Aggressive', valence: 'dark' },
+  { id: 'intense', label: 'Intense', valence: 'dark' },
+  { id: 'menacing', label: 'Menacing', valence: 'dark' },
+  { id: 'eerie', label: 'Eerie', valence: 'dark' },
+  { id: 'brooding', label: 'Brooding', valence: 'dark' },
+  { id: 'ominous', label: 'Ominous', valence: 'dark' },
+  { id: 'gritty', label: 'Gritty', valence: 'dark' },
+  { id: 'raw', label: 'Raw', valence: 'dark' },
+  { id: 'somber', label: 'Somber', valence: 'dark' },
+  { id: 'tense', label: 'Tense', valence: 'dark' },
+]

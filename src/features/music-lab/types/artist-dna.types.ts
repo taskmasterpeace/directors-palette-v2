@@ -3,6 +3,8 @@
  * Virtual artist creator - profile sections + Suno prompt output
  */
 
+import type { ArtistSocialCircle, PhoneProfile } from './living-context.types'
+
 // =============================================================================
 // DNA SECTIONS
 // =============================================================================
@@ -66,7 +68,7 @@ export interface ArtistLook {
   gallery: ArtistGalleryItem[]
 }
 
-export type GalleryItemType = 'character-sheet' | 'portrait' | 'photo-shoot'
+export type GalleryItemType = 'character-sheet' | 'portrait' | 'photo-shoot' | 'chat-photo'
 
 export interface ArtistGalleryItem {
   id: string
@@ -76,6 +78,9 @@ export interface ArtistGalleryItem {
   prompt?: string
   aspectRatio: string
   createdAt: string
+  caption?: string      // what the artist said about the photo
+  context?: string      // "studio session, late night"
+  source?: 'editor' | 'chat' | 'photo-shoot'
 }
 
 // =============================================================================
@@ -161,6 +166,8 @@ export interface ArtistDNA {
   lexicon: ArtistLexicon
   look: ArtistLook
   catalog: ArtistCatalog
+  socialCircle?: ArtistSocialCircle
+  phone?: PhoneProfile
   lowConfidenceFields: string[]  // field paths where data may be inaccurate (e.g. "identity.realName", "lexicon.adLibs")
 }
 
@@ -285,6 +292,7 @@ export function createEmptyDNA(): ArtistDNA {
     catalog: {
       entries: [],
     },
+    socialCircle: { entourage: [], hangoutSpots: [], transportation: '' },
     lowConfidenceFields: [],
   }
 }
