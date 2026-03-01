@@ -32,7 +32,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Palette, X, Plus, Trash2, Upload, Pencil, Sparkles } from 'lucide-react'
+import { Palette, X, Plus, Trash2, Upload, Pencil, Sparkles, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import { toast } from '@/hooks/use-toast'
@@ -49,6 +49,9 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
         updateCustomStyle,
         deleteCustomStyle,
         hidePresetStyle,
+        setPresetOverride,
+        resetPresetOverride,
+        hasPresetOverride,
         getAllStyles,
         getStyleById
     } = useCustomStylesStore()
@@ -207,17 +210,15 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
         if (!selectedStyleId) return
 
         const style = getStyleById(selectedStyleId)
-        if (!style || !('isCustom' in style && style.isCustom)) {
-            toast({
-                title: 'Cannot edit',
-                description: 'Only custom styles can be edited',
-                variant: 'destructive'
-            })
-            return
-        }
+        if (!style) return
 
-        // Pre-fill form with current style values
-        setStyleToEdit(style as CustomStyle)
+        // Pre-fill form with current style values (works for both preset and custom)
+        if ('isCustom' in style && style.isCustom) {
+            setStyleToEdit(style as CustomStyle)
+        } else {
+            // For presets, use a sentinel so handleEditStyle knows it's a preset
+            setStyleToEdit(null)
+        }
         setNewStyleName(style.name)
         setNewStyleDescription(style.description || '')
         setNewStylePrompt(style.stylePrompt)
@@ -226,8 +227,6 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
     }
 
     const handleEditStyle = () => {
-        if (!styleToEdit) return
-
         if (!newStyleName.trim()) {
             toast({
                 title: 'Name required',
@@ -248,12 +247,23 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
 
         const stylePrompt = newStylePrompt.trim() || `in the ${newStyleName} style of the reference image`
 
-        updateCustomStyle(styleToEdit.id, {
-            name: newStyleName.trim(),
-            description: newStyleDescription.trim() || 'Custom style',
-            imagePath: newStyleImage,
-            stylePrompt
-        })
+        if (styleToEdit) {
+            // Editing a custom style
+            updateCustomStyle(styleToEdit.id, {
+                name: newStyleName.trim(),
+                description: newStyleDescription.trim() || 'Custom style',
+                imagePath: newStyleImage,
+                stylePrompt
+            })
+        } else if (selectedStyleId) {
+            // Editing a preset style — save as override
+            setPresetOverride(selectedStyleId as PresetStyleId, {
+                name: newStyleName.trim(),
+                description: newStyleDescription.trim(),
+                imagePath: newStyleImage,
+                stylePrompt
+            })
+        }
 
         // Reset form
         setNewStyleName('')
@@ -465,8 +475,8 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                 </Label>
                 {selectedStyleId && (
                     <div className="flex items-center gap-1">
-                        {/* Edit button - only for custom styles */}
-                        {currentStyle && 'isCustom' in currentStyle && currentStyle.isCustom && (
+                        {/* Edit button - works for all styles */}
+                        {currentStyle && (
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -475,6 +485,24 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                             >
                                 <Pencil className="w-3 h-3 mr-1" />
                                 Edit
+                            </Button>
+                        )}
+                        {/* Reset to Default button - only for overridden presets */}
+                        {currentStyle && !('isCustom' in currentStyle) && hasPresetOverride(selectedStyleId) && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    resetPresetOverride(selectedStyleId as PresetStyleId)
+                                    toast({
+                                        title: 'Reset to default',
+                                        description: `"${currentStyle.name}" restored to original settings`
+                                    })
+                                }}
+                                className="h-6 px-2 text-xs text-muted-foreground hover:text-blue-400 flex-shrink-0"
+                            >
+                                <RotateCcw className="w-3 h-3 mr-1" />
+                                Reset
                             </Button>
                         )}
                         <Button
@@ -580,6 +608,9 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                             {style.name}
                                             {isCustomStyle(style) && (
                                                 <span className="ml-1 text-xs text-amber-500">(custom)</span>
+                                            )}
+                                            {!isCustomStyle(style) && hasPresetOverride(style.id) && (
+                                                <span className="ml-1 text-xs text-blue-400">(edited)</span>
                                             )}
                                         </span>
                                         <span className="text-xs text-muted-foreground truncate">
@@ -742,10 +773,10 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                     <DialogHeader className="flex-shrink-0">
                         <DialogTitle className="text-white flex items-center gap-2">
                             <Pencil className="w-5 h-5 text-amber-500" />
-                            Edit Custom Style
+                            Edit Style
                         </DialogTitle>
                         <DialogDescription>
-                            Update your custom style
+                            {styleToEdit ? 'Update your custom style' : 'Customize this preset style (can reset to default anytime)'}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="flex-1 overflow-y-auto space-y-4 py-4">
@@ -791,6 +822,18 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                 className="hidden"
                                 onChange={handleImageUpload}
                             />
+                            {/* AI Analyze Button */}
+                            {newStyleImage && (
+                                <Button
+                                    type="button"
+                                    onClick={handleAiAnalyze}
+                                    disabled={aiAnalyzing}
+                                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white min-h-[44px]"
+                                >
+                                    <Sparkles className="w-4 h-4 mr-2" />
+                                    {aiAnalyzing ? 'Analyzing with AI...' : 'AI Analyze Style'}
+                                </Button>
+                            )}
                         </div>
 
                         {/* Style Name */}
@@ -835,7 +878,25 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                             </p>
                         </div>
                     </div>
-                    <DialogFooter className="flex-shrink-0 border-t border-zinc-800 pt-4">
+                    <DialogFooter className="flex-shrink-0 border-t border-zinc-800 pt-4 gap-2">
+                        {/* Reset to Default - only for preset styles with overrides */}
+                        {!styleToEdit && selectedStyleId && hasPresetOverride(selectedStyleId) && (
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    resetPresetOverride(selectedStyleId as PresetStyleId)
+                                    setEditDialogOpen(false)
+                                    toast({
+                                        title: 'Reset to default',
+                                        description: 'Style restored to original settings'
+                                    })
+                                }}
+                                className="min-h-[44px] mr-auto text-blue-400 border-blue-400/30 hover:bg-blue-500/10"
+                            >
+                                <RotateCcw className="w-4 h-4 mr-2" />
+                                Reset to Default
+                            </Button>
+                        )}
                         <Button
                             variant="outline"
                             onClick={() => setEditDialogOpen(false)}

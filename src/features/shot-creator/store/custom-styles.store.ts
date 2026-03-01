@@ -1,6 +1,6 @@
 /**
  * Custom Styles Store
- * Manages user-created styles with localStorage persistence
+ * Manages user-created styles and preset overrides with localStorage persistence
  */
 
 import { create } from 'zustand'
@@ -23,6 +23,7 @@ interface CustomStylesStore {
     // State
     customStyles: CustomStyle[]
     hiddenPresetIds: PresetStyleId[] // Preset styles that user has "deleted" (hidden)
+    presetOverrides: Record<string, Partial<PresetStyle>> // User overrides for preset styles
 
     // Actions
     addCustomStyle: (style: Omit<CustomStyle, 'id' | 'isCustom' | 'createdAt'>) => string
@@ -30,6 +31,9 @@ interface CustomStylesStore {
     deleteCustomStyle: (id: string) => void
     hidePresetStyle: (id: PresetStyleId) => void
     unhidePresetStyle: (id: PresetStyleId) => void
+    setPresetOverride: (id: PresetStyleId, overrides: Partial<PresetStyle>) => void
+    resetPresetOverride: (id: PresetStyleId) => void
+    hasPresetOverride: (id: string) => boolean
     resetToDefaults: () => void
 
     // Computed helpers
@@ -43,6 +47,7 @@ export const useCustomStylesStore = create<CustomStylesStore>()(
         (set, get) => ({
             customStyles: [],
             hiddenPresetIds: [],
+            presetOverrides: {},
 
             addCustomStyle: (styleData) => {
                 const id = `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -86,23 +91,47 @@ export const useCustomStylesStore = create<CustomStylesStore>()(
                 }))
             },
 
+            setPresetOverride: (id, overrides) => {
+                set((state) => ({
+                    presetOverrides: {
+                        ...state.presetOverrides,
+                        [id]: { ...state.presetOverrides[id], ...overrides }
+                    }
+                }))
+            },
+
+            resetPresetOverride: (id) => {
+                set((state) => {
+                    const { [id]: _, ...rest } = state.presetOverrides
+                    return { presetOverrides: rest }
+                })
+            },
+
+            hasPresetOverride: (id) => {
+                return id in get().presetOverrides
+            },
+
             resetToDefaults: () => {
                 set({
                     customStyles: [],
-                    hiddenPresetIds: []
+                    hiddenPresetIds: [],
+                    presetOverrides: {}
                 })
             },
 
             getAllStyles: () => {
-                const { customStyles, hiddenPresetIds } = get()
-                const visiblePresets = PRESET_STYLES.filter(
-                    (preset) => !hiddenPresetIds.includes(preset.id)
-                )
+                const { customStyles, hiddenPresetIds, presetOverrides } = get()
+                const visiblePresets = PRESET_STYLES
+                    .filter((preset) => !hiddenPresetIds.includes(preset.id))
+                    .map((preset) => {
+                        const override = presetOverrides[preset.id]
+                        return override ? { ...preset, ...override, id: preset.id } : preset
+                    })
                 return [...visiblePresets, ...customStyles]
             },
 
             getStyleById: (id) => {
-                const { customStyles, hiddenPresetIds } = get()
+                const { customStyles, hiddenPresetIds, presetOverrides } = get()
 
                 // Check custom styles first
                 const customStyle = customStyles.find((s) => s.id === id)
@@ -111,7 +140,8 @@ export const useCustomStylesStore = create<CustomStylesStore>()(
                 // Check preset styles (even hidden ones for lookup purposes)
                 const presetStyle = PRESET_STYLES.find((s) => s.id === id)
                 if (presetStyle && !hiddenPresetIds.includes(presetStyle.id)) {
-                    return presetStyle
+                    const override = presetOverrides[presetStyle.id]
+                    return override ? { ...presetStyle, ...override, id: presetStyle.id } : presetStyle
                 }
 
                 return undefined
@@ -124,7 +154,14 @@ export const useCustomStylesStore = create<CustomStylesStore>()(
         }),
         {
             name: 'directors-palette-custom-styles',
-            version: 1,
+            version: 2,
+            migrate: (persistedState: unknown, version: number) => {
+                const state = persistedState as Record<string, unknown>
+                if (version < 2) {
+                    return { ...state, presetOverrides: {} }
+                }
+                return state
+            }
         }
     )
 )
