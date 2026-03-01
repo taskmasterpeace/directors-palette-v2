@@ -54,6 +54,7 @@ export function GallerySubTab() {
       'character-sheet': 'Sheet',
       'portrait': 'Portrait',
       'photo-shoot': 'Photo',
+      'chat-photo': 'Chat',
     }
     return labels[type] || type
   }

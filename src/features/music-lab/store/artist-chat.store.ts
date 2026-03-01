@@ -80,7 +80,7 @@ export const useArtistChatStore = create<ArtistChatState>()(
       },
 
       closeChat: async (userId) => {
-        const { activeArtistId, messages, memory } = get()
+        const { activeArtistId, messages } = get()
         if (!activeArtistId || !messages.length) return
 
         // Extract memory updates before closing
@@ -88,7 +88,7 @@ export const useArtistChatStore = create<ArtistChatState>()(
         set({ activeArtistId: null, messages: [], livingContext: null, memory: null, personalityPrint: null })
       },
 
-      sendMessage: async (content, userId, dna) => {
+      sendMessage: async (content, _userId, dna) => {
         const { activeArtistId, personalityPrint, livingContext, memory, messages } = get()
         if (!activeArtistId || !personalityPrint) return
 
