@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      brands: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          logo_url: string | null
+          tagline: string | null
+          industry: string | null
+          audience_json: Json | null
+          voice_json: Json | null
+          visual_identity_json: Json | null
+          music_json: Json | null
+          visual_style_json: Json | null
+          brand_guide_image_url: string | null
+          raw_company_info: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          logo_url?: string | null
+          tagline?: string | null
+          industry?: string | null
+          audience_json?: Json | null
+          voice_json?: Json | null
+          visual_identity_json?: Json | null
+          music_json?: Json | null
+          visual_style_json?: Json | null
+          brand_guide_image_url?: string | null
+          raw_company_info?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          logo_url?: string | null
+          tagline?: string | null
+          industry?: string | null
+          audience_json?: Json | null
+          voice_json?: Json | null
+          visual_identity_json?: Json | null
+          music_json?: Json | null
+          visual_style_json?: Json | null
+          brand_guide_image_url?: string | null
+          raw_company_info?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       folders: {
         Row: {
           color: string | null

@@ -19,6 +19,7 @@ import { SectionHeader } from "@/components/SectionHeader"
 import { NodeWorkflow } from "@/features/node-workflow"
 import { AdhubWorkspace } from "@/features/adhub"
 import { AdLabWorkspace } from "@/features/ad-lab"
+import { BrandStudioLayout } from "@/features/brand-studio"
 import { useAuth } from "@/features/auth/hooks/useAuth"
 
 export default function Home() {
@@ -144,6 +145,16 @@ export default function Home() {
                   <SectionHeader section="adhub" />
                   <div className="flex-1 overflow-hidden">
                     <AdhubWorkspace />
+                  </div>
+                </PageTransition>
+              </TabsContent>
+            )}
+
+            {activeTab === 'brand-studio' && (
+              <TabsContent key="brand-studio" value="brand-studio" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
+                <PageTransition>
+                  <div className="flex-1 overflow-hidden">
+                    <BrandStudioLayout />
                   </div>
                 </PageTransition>
               </TabsContent>

@@ -24,7 +24,8 @@ import {
     Circle,
     ArrowRight,
     Megaphone,
-    Clapperboard
+    Clapperboard,
+    Brush
 } from 'lucide-react'
 import { useLayoutStore, TabValue } from '@/store/layout.store'
 import { useSidebarWizardSteps, useNavigateToWizardStep } from '@/features/storybook/hooks/useSidebarWizardSteps'
@@ -142,6 +143,13 @@ const NAV_SECTIONS: NavSection[] = [
                 icon: Megaphone,
                 banner: '/banners/adhub.webp',
                 tooltipExpanded: 'Create branded static ads'
+            },
+            {
+                id: 'brand-studio',
+                label: 'Brand Studio',
+                icon: Brush,
+                banner: '/banners/adhub.webp',
+                tooltipExpanded: 'Brand identity, content generation & campaigns'
             }
         ]
     },
