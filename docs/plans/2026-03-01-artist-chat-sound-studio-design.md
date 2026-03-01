@@ -311,6 +311,8 @@ Status bar shows: online indicator, location, time, activity one-liner.
 | **Lyrics** | Monospace, accent border, indented | "trust is a currency / spent it all on you" |
 | **Photo** | Image bubble, generated via Nano Banana 2 | Studio selfie, yacht party pic |
 | **Action Link** | Tappable button in chat | "Work on this hook", "Start a new song", "Check this beat" |
+| **Web Share** | Article/link card with thumbs up/down | "Check this out — [article title]" |
+| **Reactable** | Any creative content gets thumbs up/down overlay on hover | Lyrics, concepts, suggestions |
 
 ### Photo system
 
@@ -446,7 +448,43 @@ no vocals, no singing, no humming, no choir, no spoken words
 
 ---
 
-## Feature 6: Writing Studio Enhancement
+## Feature 6: Artist Web Awareness & Taste Feedback
+
+### Web Research (via OpenRouter)
+
+Artists can browse the internet for things they care about, driven by their `knowledge.expertise` and `conversationStyle.topicPreferences`. This happens organically in chat:
+
+- A sneaker-obsessed rapper pulls up the latest Jordan release: *"Yo did you see these? Fire. This could inspire a whole visual."*
+- A conscious artist finds an article about gentrification: *"Read this. I want to write about this block disappearing."*
+- A producer-type artist finds a viral beat breakdown: *"This mixing technique is crazy, we should try this."*
+
+The artist researches in the background (LLM with web search via OpenRouter) based on their interests, current events, and the time of year. Results appear as shared links/findings in the chat.
+
+### Thumbs Up / Thumbs Down System
+
+Every creative element the artist presents gets a quick reaction:
+
+| Reactable Content | Effect of Thumbs Up | Effect of Thumbs Down |
+|---|---|---|
+| Lyric/hook idea | Saved to idea bank, artist leans into this style | Artist adjusts, asks why (based on opinionStrength) |
+| Song concept | Bookmarked, can become a Writing Studio session | Noted, artist tries different angle |
+| Shared article/research | Saved to inspiration feed, more like this | Less of this topic, learned preference |
+| Photo | Saved to favorites, more shots like this | Fewer photos of this type |
+| Beat suggestion | Saved to Sound Studio presets | Different direction next time |
+
+**Taste profile builds over time:**
+- Thumbs up three dark hooks → artist leans darker
+- Thumbs down melodic suggestions repeatedly → they stop pushing melodies
+- Thumbs up articles about street culture → more of that, less fashion
+- Data feeds into `ArtistMemory.aboutUser.preferences` automatically
+
+### Inspiration Feed
+
+All thumbs-up'd content accumulates in an **Inspiration Feed** accessible from the artist's profile — a collection of articles, ideas, lyrics, images that the artist (and you) have curated together. This becomes source material for Writing Studio sessions.
+
+---
+
+## Feature 7: Writing Studio Enhancement
 
 ### Chat integration
 
@@ -533,6 +571,8 @@ sound_studio_presets (
 | `POST /api/artist-chat/generate-photo` | Generate photo via Nano Banana 2 |
 | `POST /api/artist-chat/update-memory` | Extract + save memory after session |
 | `POST /api/artist-dna/generate-personality-print` | Generate Personality Print from DNA |
+| `POST /api/artist-chat/web-research` | Artist researches topics via OpenRouter search |
+| `POST /api/artist-chat/react` | Thumbs up/down on creative content |
 | `POST /api/sound-studio/suggest` | Sound Assistant LLM suggestions |
 | `POST /api/sound-studio/build-prompt` | Build/refine Suno prompt |
 
@@ -566,6 +606,9 @@ src/features/music-lab/
       ChatPhotoMessage.tsx
       ChatActionLink.tsx
       ChatLyricsMessage.tsx
+      ChatWebShare.tsx
+      ChatReaction.tsx
+      InspirationFeed.tsx
     sound-studio/
       SoundStudioPage.tsx
       GenrePicker.tsx
@@ -589,6 +632,7 @@ src/features/music-lab/
 | Chat responses | gpt-4.1 | Artist conversation | Every message |
 | Photo prompt building | gpt-4.1-mini | Image prompt from context | On photo trigger |
 | Memory extraction | gpt-4.1-mini | Post-session memory update | On chat close/idle |
+| Web research | gpt-4.1-mini + search | Artist browses internet for interests | Periodic / on-demand |
 | Sound Assistant | gpt-4.1-mini | Quick suggestions | On user input |
 
 ### Image generation
