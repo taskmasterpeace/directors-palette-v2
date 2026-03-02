@@ -106,6 +106,9 @@ function buildSystemPrompt(body: GenerateOptionsBody): string {
   if (artistDna.sound?.vocalTextures?.length > 0) {
     parts.push(`Vocal texture: ${artistDna.sound.vocalTextures.join(', ')}`)
   }
+  if (artistDna.sound?.instruments?.length > 0) {
+    parts.push(`Preferred instruments: ${artistDna.sound.instruments.join(', ')}. Reference these instruments naturally in imagery or rhythm.`)
+  }
 
   // Persona
   if (artistDna.persona?.attitude) {

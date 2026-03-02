@@ -42,6 +42,9 @@ import { MultiSelectPills } from './MultiSelectPills'
 
 function ProductionTagsSection() {
   const { settings, updateSetting } = useSoundStudioStore()
+  const { artists, activeArtistId } = useArtistDnaStore()
+  const activeArtist = artists.find(a => a.id === activeArtistId)
+  const artistProdPrefs = activeArtist?.dna?.sound?.productionPreferences || []
 
   return (
     <div className="space-y-3">
@@ -60,6 +63,7 @@ function ProductionTagsSection() {
         onChange={(v) => updateSetting('productionTags', v)}
         color="amber"
         compact
+        artistPicks={artistProdPrefs}
       />
     </div>
   )

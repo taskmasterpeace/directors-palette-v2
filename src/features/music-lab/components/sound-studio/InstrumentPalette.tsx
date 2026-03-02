@@ -1,13 +1,17 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Search, X, Piano } from 'lucide-react'
+import { Search, X, Piano, ThumbsUp } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { INSTRUMENT_TAGS, INSTRUMENT_CATEGORIES } from '@/features/music-lab/data/instrument-tags.data'
 import { useSoundStudioStore } from '@/features/music-lab/store/sound-studio.store'
+import { useArtistDnaStore } from '@/features/music-lab/store/artist-dna.store'
 
 export function InstrumentPalette() {
   const { settings, updateSetting } = useSoundStudioStore()
+  const { artists, activeArtistId } = useArtistDnaStore()
+  const activeArtist = artists.find(a => a.id === activeArtistId)
+  const artistInstruments = activeArtist?.dna?.sound?.instruments || []
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
@@ -55,20 +59,24 @@ export function InstrumentPalette() {
       {/* Selected instruments as amber pills */}
       {selectedInstruments.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          {selectedInstruments.map((inst) => (
-            <span
-              key={inst}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30"
-            >
-              {inst}
-              <button
-                onClick={() => removeInstrument(inst)}
-                className="p-0.5 rounded-full hover:bg-amber-500/30 transition-colors"
+          {selectedInstruments.map((inst) => {
+            const isArtistPick = artistInstruments.includes(inst)
+            return (
+              <span
+                key={inst}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30"
               >
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
+                {isArtistPick && <ThumbsUp className="w-2.5 h-2.5 text-emerald-400" />}
+                {inst}
+                <button
+                  onClick={() => removeInstrument(inst)}
+                  className="p-0.5 rounded-full hover:bg-amber-500/30 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )
+          })}
         </div>
       )}
 
@@ -114,16 +122,18 @@ export function InstrumentPalette() {
       <div className="flex flex-wrap gap-1.5">
         {filteredTags.map((tag) => {
           const isSelected = selectedInstruments.includes(tag.label)
+          const isArtistPick = artistInstruments.includes(tag.label)
           return (
             <button
               key={tag.id}
               onClick={() => toggleInstrument(tag.label)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all inline-flex items-center gap-1 ${
                 isSelected
                   ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_8px_oklch(0.6_0.2_55/0.15)]'
                   : 'bg-muted/20 text-foreground/80 border border-border hover:border-border hover:text-foreground'
               }`}
             >
+              {isArtistPick && <ThumbsUp className="w-2.5 h-2.5 text-emerald-400" />}
               {tag.label}
             </button>
           )

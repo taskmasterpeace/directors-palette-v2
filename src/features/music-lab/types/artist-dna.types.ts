@@ -55,6 +55,7 @@ export interface ArtistSound {
   language: string
   secondaryLanguages: string[]
   soundDescription: string
+  instruments: string[]           // preferred instruments (Piano, 808, etc.)
   // Rhyming DNA
   rhymeTypes: RhymeType[]      // HOW they rhyme (multi-select)
   rhymePatterns: RhymePattern[] // WHERE they rhyme (multi-select)
@@ -284,6 +285,7 @@ export function createEmptyDNA(): ArtistDNA {
       language: 'English',
       secondaryLanguages: [],
       soundDescription: '',
+      instruments: [],
       rhymeTypes: [],
       rhymePatterns: [],
       rhymeDensity: 50,

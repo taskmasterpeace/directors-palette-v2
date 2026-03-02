@@ -182,6 +182,7 @@ export const useSoundStudioStore = create<SoundStudioState>()(
           subgenres: dna.sound.subgenres?.slice(0, 3) || [],
           microgenres: dna.sound.microgenres?.slice(0, 3) || [],
           productionTags: dna.sound.productionPreferences?.slice(0, 5) || [],
+          instruments: dna.sound.instruments?.slice(0, 10) || [],
         }
         const prompt = buildSunoPrompt(settings)
         set({

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Search, X } from 'lucide-react'
+import { Search, X, ThumbsUp } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
 // ─── Color Schemes ───────────────────────────────────────────────────────────
@@ -84,6 +84,7 @@ interface MultiSelectPillsProps {
   searchPlaceholder?: string
   grouped?: boolean
   compact?: boolean
+  artistPicks?: string[]  // items the artist prefers — shows green thumbs up
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -97,6 +98,7 @@ export function MultiSelectPills({
   searchPlaceholder = 'Search...',
   grouped = false,
   compact = false,
+  artistPicks,
 }: MultiSelectPillsProps) {
   const [search, setSearch] = useState('')
   const scheme = COLOR_SCHEMES[color]
@@ -177,14 +179,16 @@ export function MultiSelectPills({
               <div className="flex flex-wrap gap-1.5">
                 {groupItems.map((item) => {
                   const isSelected = selected.includes(item.label)
+                  const isArtistPick = artistPicks?.includes(item.label)
                   return (
                     <button
                       key={item.id}
                       onClick={() => toggle(item.label)}
-                      className={`${compact ? 'px-2 py-0.5 text-[11px]' : 'px-3 py-1.5 text-xs'} rounded-full font-medium transition-all border ${
+                      className={`${compact ? 'px-2 py-0.5 text-[11px]' : 'px-3 py-1.5 text-xs'} rounded-full font-medium transition-all border inline-flex items-center gap-1 ${
                         isSelected ? scheme.tagActive : scheme.tag
                       }`}
                     >
+                      {isArtistPick && <ThumbsUp className="w-2.5 h-2.5 text-emerald-400" />}
                       {item.label}
                     </button>
                   )
@@ -198,14 +202,16 @@ export function MultiSelectPills({
         <div className="flex flex-wrap gap-1.5">
           {filtered.map((item) => {
             const isSelected = selected.includes(item.label)
+            const isArtistPick = artistPicks?.includes(item.label)
             return (
               <button
                 key={item.id}
                 onClick={() => toggle(item.label)}
-                className={`${compact ? 'px-2 py-0.5 text-[11px]' : 'px-3 py-1.5 text-xs'} rounded-full font-medium transition-all border ${
+                className={`${compact ? 'px-2 py-0.5 text-[11px]' : 'px-3 py-1.5 text-xs'} rounded-full font-medium transition-all border inline-flex items-center gap-1 ${
                   isSelected ? scheme.tagActive : scheme.tag
                 }`}
               >
+                {isArtistPick && <ThumbsUp className="w-2.5 h-2.5 text-emerald-400" />}
                 {item.label}
               </button>
             )
