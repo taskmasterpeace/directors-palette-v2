@@ -156,12 +156,12 @@ export function ArtistEditor() {
           </div>
         )}
 
-        <TabsContent value="identity"><IdentityTab /></TabsContent>
-        <TabsContent value="sound"><SoundTab /></TabsContent>
-        <TabsContent value="persona"><PersonaTab /></TabsContent>
-        <TabsContent value="lexicon"><LexiconTab /></TabsContent>
-        <TabsContent value="look"><LookTab /></TabsContent>
-        <TabsContent value="catalog"><CatalogTab /></TabsContent>
+        <TabsContent value="identity"><div key={`identity-${activeTab}`} className="animate-tab-entrance"><IdentityTab /></div></TabsContent>
+        <TabsContent value="sound"><div key={`sound-${activeTab}`} className="animate-tab-entrance"><SoundTab /></div></TabsContent>
+        <TabsContent value="persona"><div key={`persona-${activeTab}`} className="animate-tab-entrance"><PersonaTab /></div></TabsContent>
+        <TabsContent value="lexicon"><div key={`lexicon-${activeTab}`} className="animate-tab-entrance"><LexiconTab /></div></TabsContent>
+        <TabsContent value="look"><div key={`look-${activeTab}`} className="animate-tab-entrance"><LookTab /></div></TabsContent>
+        <TabsContent value="catalog"><div key={`catalog-${activeTab}`} className="animate-tab-entrance"><CatalogTab /></div></TabsContent>
       </Tabs>
 
       {/* Sticky save bar — always visible */}
@@ -177,7 +177,7 @@ export function ArtistEditor() {
             <button
               onClick={handleSave}
               disabled={saveState === 'saving'}
-              className="inline-flex items-center gap-2 rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-black hover:bg-amber-400 disabled:opacity-60 transition-colors"
+              className="inline-flex items-center gap-2 rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-black hover:bg-amber-400 disabled:opacity-60 transition-all duration-200 hover-lift-sm"
             >
               {saveState === 'saving' ? (
                 <>

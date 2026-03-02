@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Lab Visual Upgrades — Playground</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #1a1a2e;
+    --surface: #222240;
+    --surface2: #2a2a4a;
+    --border: rgba(255,255,255,0.08);
+    --text: #e8e4df;
+    --text-muted: rgba(232,228,223,0.5);
+    --text-dim: rgba(232,228,223,0.3);
+    --accent-h: 75;
+    --accent-s: 0.16;
+    --accent: oklch(0.75 var(--accent-s) var(--accent-h));
+    --accent-glow: oklch(0.75 var(--accent-s) var(--accent-h) / 0.3);
+    --accent-dim: oklch(0.75 var(--accent-s) var(--accent-h) / 0.15);
+    --radius: 10px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOP BAR ── */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0,0,0,0.3);
+  }
+  .top-bar h1 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .top-bar h1 span { color: var(--accent); }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── CONTROLS PANEL ── */
+  .controls {
+    width: 320px;
+    min-width: 320px;
+    border-right: 1px solid var(--border);
+    background: rgba(0,0,0,0.2);
+    overflow-y: auto;
+    padding: 16px;
+  }
+  .control-group {
+    margin-bottom: 20px;
+  }
+  .control-group-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .toggle-row:hover { background: rgba(255,255,255,0.04); }
+  .toggle-row.active { background: rgba(255,255,255,0.06); }
+  .toggle-label {
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toggle-label .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .toggle-desc {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    padding-left: 26px;
+  }
+  /* Toggle switch */
+  .switch {
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.1);
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.2s;
+    cursor: pointer;
+  }
+  .switch.on { background: var(--accent); }
+  .switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    transition: transform 0.2s;
+  }
+  .switch.on::after { transform: translateX(16px); }
+
+  /* Genre selector */
+  .genre-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .genre-btn {
+    padding: 6px 4px;
+    font-size: 10px;
+    font-weight: 500;
+    text-align: center;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .genre-btn:hover { border-color: var(--accent); color: var(--text); }
+  .genre-btn.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Presets */
+  .preset-row {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .preset-btn {
+    padding: 5px 10px;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .preset-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  /* ── PREVIEW PANEL ── */
+  .preview-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .preview-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    position: relative;
+  }
+
+  /* ── MOCK MUSIC LAB ── */
+  .mock-lab {
+    max-width: 640px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Background effects layer */
+  .bg-effects {
+    position: fixed;
+    top: 0; left: 320px; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .bg-orb {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  .bg-orb.orb1 {
+    top: -200px;
+    right: -100px;
+    background: oklch(0.35 0.12 var(--accent-h));
+  }
+  .bg-orb.orb2 {
+    bottom: -200px;
+    left: -100px;
+    background: oklch(0.25 0.08 var(--accent-h));
+  }
+  .bg-noise {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 256px;
+  }
+
+  /* Artist Header */
+  .artist-header {
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+    transition: all 0.5s ease;
+  }
+  .artist-header.basic {
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .artist-header.immersive {
+    position: relative;
+    padding: 32px 24px;
+    background: linear-gradient(135deg, oklch(0.2 0.06 var(--accent-h)), oklch(0.12 0.03 var(--accent-h)));
+    border: 1px solid oklch(0.4 0.08 var(--accent-h) / 0.3);
+  }
+  .header-bg-img {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg,
+      oklch(0.25 0.1 var(--accent-h) / 0.6),
+      oklch(0.15 0.05 var(--accent-h) / 0.8)),
+      url("data:image/svg+xml,%3Csvg width='400' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='400' height='200' fill='%23333'/%3E%3Ccircle cx='200' cy='80' r='60' fill='%23444'/%3E%3Crect x='50' y='150' width='80' height='50' fill='%23555'/%3E%3Crect x='280' y='130' width='70' height='70' fill='%23555'/%3E%3C/svg%3E");
+    background-size: cover;
+    filter: blur(30px) saturate(1.2);
+    opacity: 0.4;
+  }
+  .header-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header-portrait {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+  .header-portrait.basic-style {
+    background: var(--accent-dim);
+    border: 2px solid var(--border);
+  }
+  .header-portrait.immersive-style {
+    background: linear-gradient(135deg, oklch(0.4 0.12 var(--accent-h)), oklch(0.3 0.08 var(--accent-h)));
+    border: 2px solid oklch(0.6 0.12 var(--accent-h) / 0.5);
+    box-shadow: 0 0 30px oklch(0.5 0.15 var(--accent-h) / 0.3);
+  }
+  .portrait-initials {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .header-info h2 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    transition: font-size 0.3s;
+  }
+  .header-info.immersive h2 {
+    font-size: 24px;
+  }
+  .header-meta {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    align-items: center;
+  }
+  .meta-tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    transition: all 0.3s;
+  }
+  .meta-tag.basic-style {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-muted);
+  }
+  .meta-tag.immersive-style {
+    background: oklch(0.5 0.1 var(--accent-h) / 0.2);
+    color: oklch(0.8 0.12 var(--accent-h));
+    border: 1px solid oklch(0.5 0.1 var(--accent-h) / 0.3);
+  }
+  .completion-ring {
+    width: 40px;
+    height: 40px;
+    margin-left: auto;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .completion-ring.visible { opacity: 1; }
+  .completion-ring svg { width: 100%; height: 100%; }
+
+  /* Tab bar */
+  .tab-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    padding: 4px;
+    border-radius: var(--radius);
+    transition: all 0.3s;
+  }
+  .tab-bar.basic-style {
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .tab-bar.glass-style {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 8px 4px;
+    font-size: 11px;
+    font-weight: 500;
+    text-align: center;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-muted);
+    background: transparent;
+  }
+  .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .tab-btn.active {
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+  .tab-btn.glass-active {
+    background: oklch(0.5 0.1 var(--accent-h) / 0.15);
+    box-shadow: 0 0 12px oklch(0.5 0.12 var(--accent-h) / 0.15);
+  }
+
+  /* Cards */
+  .card {
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.3s;
+  }
+  .card.basic-style {
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .card.glass-style {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .card.glass-style:hover {
+    border-color: oklch(0.4 0.06 var(--accent-h) / 0.4);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 20px oklch(0.4 0.1 var(--accent-h) / 0.08);
+  }
+  .card-title {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-title .icon {
+    color: var(--accent);
+    font-size: 14px;
+  }
+
+  /* Form fields inside cards */
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .field label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+  .field input, .field select {
+    padding: 6px 8px;
+    font-size: 11px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.03);
+    color: var(--text);
+    outline: none;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+  }
+  .field input.glass-input:focus {
+    box-shadow: 0 0 0 2px var(--accent-glow), 0 0 16px oklch(0.5 0.12 var(--accent-h) / 0.1);
+  }
+
+  /* Tags */
+  .tag-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .tag {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    transition: all 0.3s;
+  }
+  .tag.basic-style {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-muted);
+  }
+  .tag.accent-style {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid oklch(0.5 0.1 var(--accent-h) / 0.2);
+  }
+
+  /* Generate button */
+  .gen-btn {
+    width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .gen-btn.basic-style {
+    background: var(--accent);
+    color: #1a1a2e;
+  }
+  .gen-btn.glow-style {
+    background: var(--accent);
+    color: #1a1a2e;
+    box-shadow: 0 4px 16px oklch(0.5 0.15 var(--accent-h) / 0.4);
+  }
+  .gen-btn.glow-style:hover {
+    box-shadow: 0 6px 24px oklch(0.5 0.15 var(--accent-h) / 0.5);
+    transform: translateY(-1px);
+  }
+
+  /* Animation classes */
+  .animate-in .card { opacity: 0; transform: translateY(12px); }
+  .animate-in .card.animated {
+    animation: slideUp 0.35s ease forwards;
+  }
+  @keyframes slideUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 var(--accent-glow); }
+    70% { box-shadow: 0 0 0 10px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+  .pulse-ring { animation: pulse-ring 0.8s ease-out; }
+
+  /* Photo grid */
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .photo-thumb {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .photo-thumb:hover { transform: scale(1.03); }
+  .photo-thumb .inner {
+    width: 100%;
+    height: 100%;
+    transition: all 0.3s;
+  }
+
+  /* Save bar */
+  .save-bar {
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    transition: all 0.3s;
+  }
+  .save-bar.basic-style {
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .save-bar.glass-style {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .save-btn {
+    padding: 6px 16px;
+    border-radius: 6px;
+    border: none;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--accent);
+    color: #1a1a2e;
+    transition: all 0.2s;
+  }
+  .save-btn:hover { filter: brightness(1.1); }
+
+  /* ── PROMPT OUTPUT ── */
+  .prompt-area {
+    border-top: 1px solid var(--border);
+    padding: 16px 24px;
+    background: rgba(0,0,0,0.3);
+  }
+  .prompt-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .prompt-header span {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    font-weight: 700;
+  }
+  .copy-btn {
+    padding: 4px 12px;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--text); }
+  .copy-btn.copied { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+  .prompt-text {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    white-space: pre-wrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1><span>Music Lab</span> Visual Upgrades Playground</h1>
+</div>
+
+<div class="main">
+  <!-- ── CONTROLS ── -->
+  <div class="controls">
+
+    <div class="control-group">
+      <div class="control-group-title">Presets</div>
+      <div class="preset-row">
+        <button class="preset-btn" onclick="applyPreset('current')">Current</button>
+        <button class="preset-btn" onclick="applyPreset('subtle')">Subtle Polish</button>
+        <button class="preset-btn" onclick="applyPreset('premium')">Premium</button>
+        <button class="preset-btn" onclick="applyPreset('max')">Full Send</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="control-group-title">Visual Upgrades</div>
+
+      <div class="toggle-row" onclick="toggle('genreTheme')">
+        <div>
+          <div class="toggle-label"><span class="num">1</span> Genre-Reactive Theming</div>
+          <div class="toggle-desc">Accent color shifts per genre</div>
+        </div>
+        <div class="switch" id="sw-genreTheme"></div>
+      </div>
+
+      <div class="toggle-row" onclick="toggle('glass')">
+        <div>
+          <div class="toggle-label"><span class="num">2</span> Glassmorphism + Depth</div>
+          <div class="toggle-desc">Frosted glass cards, glow shadows</div>
+        </div>
+        <div class="switch" id="sw-glass"></div>
+      </div>
+
+      <div class="toggle-row" onclick="toggle('header')">
+        <div>
+          <div class="toggle-label"><span class="num">3</span> Immersive Artist Header</div>
+          <div class="toggle-desc">Cinematic hero with portrait glow</div>
+        </div>
+        <div class="switch" id="sw-header"></div>
+      </div>
+
+      <div class="toggle-row" onclick="toggle('animations')">
+        <div>
+          <div class="toggle-label"><span class="num">4</span> Animated Micro-Interactions</div>
+          <div class="toggle-desc">Staggered reveals, hover lifts</div>
+        </div>
+        <div class="switch" id="sw-animations"></div>
+      </div>
+
+      <div class="toggle-row" onclick="toggle('ambient')">
+        <div>
+          <div class="toggle-label"><span class="num">5</span> Ambient Background</div>
+          <div class="toggle-desc">Noise texture + drifting orbs</div>
+        </div>
+        <div class="switch" id="sw-ambient"></div>
+      </div>
+    </div>
+
+    <div class="control-group" id="genre-section" style="display:none">
+      <div class="control-group-title">Genre (for theming)</div>
+      <div class="genre-grid">
+        <button class="genre-btn active" onclick="setGenre('hiphop',this)">Hip-Hop</button>
+        <button class="genre-btn" onclick="setGenre('rnb',this)">R&B</button>
+        <button class="genre-btn" onclick="setGenre('rock',this)">Rock</button>
+        <button class="genre-btn" onclick="setGenre('pop',this)">Pop</button>
+        <button class="genre-btn" onclick="setGenre('electronic',this)">Electronic</button>
+        <button class="genre-btn" onclick="setGenre('jazz',this)">Jazz</button>
+        <button class="genre-btn" onclick="setGenre('country',this)">Country</button>
+        <button class="genre-btn" onclick="setGenre('latin',this)">Latin</button>
+        <button class="genre-btn" onclick="setGenre('indie',this)">Indie</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="control-group-title">How it works</div>
+      <p style="font-size:10px;color:var(--text-dim);line-height:1.6">
+        Toggle each upgrade on/off to see it applied to the mock Music Lab UI. Try the presets for curated combinations. Change the genre to see how colors shift.
+        <br><br>
+        The prompt at the bottom captures your selections for implementation.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── PREVIEW ── -->
+  <div class="preview-area">
+    <div class="preview-container" id="preview-container">
+
+      <div class="bg-effects" id="bg-effects">
+        <div class="bg-orb orb1" id="bg-orb1"></div>
+        <div class="bg-orb orb2" id="bg-orb2"></div>
+        <div class="bg-noise" id="bg-noise"></div>
+      </div>
+
+      <div class="mock-lab" id="mock-lab">
+
+        <!-- Artist Header -->
+        <div class="artist-header basic" id="artist-header">
+          <div class="header-bg-img" id="header-bg" style="display:none"></div>
+          <div class="header-content">
+            <div class="header-portrait basic-style" id="portrait">
+              <div class="portrait-initials">JC</div>
+            </div>
+            <div class="header-info" id="header-info">
+              <h2>Jay Carter</h2>
+              <div class="header-meta">
+                <span class="meta-tag basic-style" id="meta-genre">Hip-Hop</span>
+                <span class="meta-tag basic-style" id="meta-city">Miami, FL</span>
+              </div>
+            </div>
+            <div class="completion-ring" id="completion-ring">
+              <svg viewBox="0 0 40 40">
+                <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3"/>
+                <circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" stroke-width="3"
+                  stroke-dasharray="75 25" stroke-linecap="round" transform="rotate(-90 20 20)"
+                  style="color:var(--accent);transition:all 0.5s"/>
+              </svg>
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--accent)">75%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar basic-style" id="tab-bar">
+          <button class="tab-btn active" id="tab-identity">Identity</button>
+          <button class="tab-btn" id="tab-sound">Sound</button>
+          <button class="tab-btn" id="tab-persona">Persona</button>
+          <button class="tab-btn" id="tab-look">Look</button>
+          <button class="tab-btn" id="tab-catalog">Catalog</button>
+        </div>
+
+        <!-- Identity Card -->
+        <div class="card basic-style" id="card-identity" style="animation-delay:0ms">
+          <div class="card-title"><span class="icon">&#x1F464;</span> Identity</div>
+          <div class="field-row">
+            <div class="field">
+              <label>Stage Name</label>
+              <input type="text" value="Jay Carter" readonly>
+            </div>
+            <div class="field">
+              <label>Real Name</label>
+              <input type="text" value="James Carter III" readonly>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>City</label>
+              <input type="text" value="Miami" readonly>
+            </div>
+            <div class="field">
+              <label>Neighborhood</label>
+              <input type="text" value="Overtown" readonly>
+            </div>
+          </div>
+          <div class="field" style="margin-top:4px">
+            <label>Backstory</label>
+            <input type="text" value="Grew up in Overtown, started rapping at 14..." readonly style="width:100%">
+          </div>
+        </div>
+
+        <!-- Sound Card -->
+        <div class="card basic-style" id="card-sound" style="animation-delay:60ms">
+          <div class="card-title"><span class="icon">&#x1F3B5;</span> Sound</div>
+          <div class="field" style="margin-bottom:8px">
+            <label>Genres</label>
+            <div class="tag-list" id="tag-list-genres">
+              <span class="tag basic-style" id="tag1">Hip-Hop</span>
+              <span class="tag basic-style" id="tag2">Trap</span>
+              <span class="tag basic-style" id="tag3">R&B</span>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Flow Style</label>
+              <input type="text" value="Melodic trap with fast switches" readonly>
+            </div>
+            <div class="field">
+              <label>Vocal Texture</label>
+              <input type="text" value="Raspy, deep register" readonly>
+            </div>
+          </div>
+        </div>
+
+        <!-- Look Card with Photo Shoot preview -->
+        <div class="card basic-style" id="card-look" style="animation-delay:120ms">
+          <div class="card-title"><span class="icon">&#x1F3A8;</span> Look — Photo Shoots</div>
+          <div style="font-size:10px;color:var(--text-dim);margin-bottom:8px">Recent shots</div>
+          <div class="photo-grid">
+            <div class="photo-thumb"><div class="inner" style="background:linear-gradient(135deg,oklch(0.3 0.08 var(--accent-h)),oklch(0.2 0.05 200))"></div></div>
+            <div class="photo-thumb"><div class="inner" style="background:linear-gradient(135deg,oklch(0.25 0.06 250),oklch(0.35 0.1 var(--accent-h)))"></div></div>
+            <div class="photo-thumb"><div class="inner" style="background:linear-gradient(135deg,oklch(0.35 0.12 var(--accent-h)),oklch(0.2 0.04 300))"></div></div>
+            <div class="photo-thumb"><div class="inner" style="background:linear-gradient(135deg,oklch(0.2 0.04 180),oklch(0.3 0.1 var(--accent-h)))"></div></div>
+          </div>
+          <button class="gen-btn basic-style" id="gen-btn">
+            &#x2728; Generate &middot; 6 pts
+          </button>
+        </div>
+
+        <!-- Save Bar -->
+        <div class="save-bar basic-style" id="save-bar">
+          <span style="font-size:10px;color:var(--text-dim)">Unsaved changes</span>
+          <button class="save-btn">Save Artist</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Prompt output -->
+    <div class="prompt-area">
+      <div class="prompt-header">
+        <span>Implementation Prompt</span>
+        <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">Copy</button>
+      </div>
+      <div class="prompt-text" id="prompt-output"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const GENRE_COLORS = {
+  hiphop: { h: 175, name: 'Hip-Hop', desc: 'neon teal/green, gritty urban' },
+  rnb: { h: 40, name: 'R&B', desc: 'warm gold/amber, intimate' },
+  rock: { h: 25, name: 'Rock', desc: 'fiery red-orange, raw energy' },
+  pop: { h: 330, name: 'Pop', desc: 'bright magenta/pink, vibrant' },
+  electronic: { h: 270, name: 'Electronic', desc: 'electric purple/violet, futuristic' },
+  jazz: { h: 55, name: 'Jazz', desc: 'warm amber/honey, smoky' },
+  country: { h: 80, name: 'Country', desc: 'earthy golden-green, warm' },
+  latin: { h: 15, name: 'Latin', desc: 'warm crimson/orange, passionate' },
+  indie: { h: 220, name: 'Indie', desc: 'soft blue/periwinkle, dreamy' },
+};
+
+const state = {
+  genreTheme: false,
+  glass: false,
+  header: false,
+  animations: false,
+  ambient: false,
+  genre: 'hiphop',
+};
+
+const DEFAULTS = { ...state };
+
+function toggle(key) {
+  state[key] = !state[key];
+  updateAll();
+}
+
+function setGenre(g, el) {
+  state.genre = g;
+  document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  updateAll();
+}
+
+function applyPreset(name) {
+  if (name === 'current') {
+    state.genreTheme = false; state.glass = false; state.header = false;
+    state.animations = false; state.ambient = false;
+  } else if (name === 'subtle') {
+    state.genreTheme = true; state.glass = false; state.header = false;
+    state.animations = true; state.ambient = false;
+  } else if (name === 'premium') {
+    state.genreTheme = true; state.glass = true; state.header = true;
+    state.animations = false; state.ambient = false;
+  } else if (name === 'max') {
+    state.genreTheme = true; state.glass = true; state.header = true;
+    state.animations = true; state.ambient = true;
+  }
+  updateAll();
+}
+
+function updateAll() {
+  // Update switches
+  ['genreTheme','glass','header','animations','ambient'].forEach(k => {
+    const sw = document.getElementById('sw-' + k);
+    const row = sw.closest('.toggle-row');
+    sw.classList.toggle('on', state[k]);
+    row.classList.toggle('active', state[k]);
+  });
+
+  // Show/hide genre selector
+  document.getElementById('genre-section').style.display = state.genreTheme ? 'block' : 'none';
+
+  // Apply genre color
+  const gc = GENRE_COLORS[state.genre];
+  const h = state.genreTheme ? gc.h : 75; // 75 = default amber
+  document.documentElement.style.setProperty('--accent-h', h);
+
+  // Update genre display
+  document.getElementById('meta-genre').textContent = gc.name;
+
+  // Header style
+  const header = document.getElementById('artist-header');
+  const headerBg = document.getElementById('header-bg');
+  const portrait = document.getElementById('portrait');
+  const headerInfo = document.getElementById('header-info');
+  const ring = document.getElementById('completion-ring');
+  const metas = document.querySelectorAll('.meta-tag');
+
+  if (state.header) {
+    header.className = 'artist-header immersive';
+    headerBg.style.display = 'block';
+    portrait.className = 'header-portrait immersive-style';
+    headerInfo.className = 'header-info immersive';
+    ring.classList.add('visible');
+    metas.forEach(m => { m.className = 'meta-tag immersive-style'; });
+  } else {
+    header.className = 'artist-header basic';
+    headerBg.style.display = 'none';
+    portrait.className = 'header-portrait basic-style';
+    headerInfo.className = 'header-info';
+    ring.classList.remove('visible');
+    metas.forEach(m => { m.className = 'meta-tag basic-style'; });
+  }
+
+  // Glass style
+  const cardStyle = state.glass ? 'glass-style' : 'basic-style';
+  document.querySelectorAll('.card').forEach(c => {
+    c.classList.remove('basic-style', 'glass-style');
+    c.classList.add(cardStyle);
+  });
+  const tabBar = document.getElementById('tab-bar');
+  tabBar.classList.remove('basic-style', 'glass-style');
+  tabBar.classList.add(state.glass ? 'glass-style' : 'basic-style');
+
+  const activeTab = document.querySelector('.tab-btn.active');
+  if (activeTab) {
+    activeTab.classList.toggle('glass-active', state.glass);
+  }
+
+  const saveBar = document.getElementById('save-bar');
+  saveBar.classList.remove('basic-style', 'glass-style');
+  saveBar.classList.add(state.glass ? 'glass-style' : 'basic-style');
+
+  // Tags accent
+  const tagStyle = state.genreTheme ? 'accent-style' : 'basic-style';
+  document.querySelectorAll('.tag').forEach(t => {
+    t.classList.remove('basic-style', 'accent-style');
+    t.classList.add(tagStyle);
+  });
+
+  // Generate button glow
+  const genBtn = document.getElementById('gen-btn');
+  genBtn.classList.remove('basic-style', 'glow-style');
+  genBtn.classList.add(state.glass ? 'glow-style' : 'basic-style');
+
+  // Inputs glow
+  document.querySelectorAll('.field input').forEach(inp => {
+    inp.classList.toggle('glass-input', state.glass);
+  });
+
+  // Ambient background
+  const orb1 = document.getElementById('bg-orb1');
+  const orb2 = document.getElementById('bg-orb2');
+  const noise = document.getElementById('bg-noise');
+  orb1.style.opacity = state.ambient ? '0.25' : '0';
+  orb2.style.opacity = state.ambient ? '0.2' : '0';
+  noise.style.opacity = state.ambient ? '1' : '0';
+
+  // Animations
+  const lab = document.getElementById('mock-lab');
+  if (state.animations) {
+    lab.classList.add('animate-in');
+    document.querySelectorAll('.card').forEach((c, i) => {
+      c.classList.remove('animated');
+      void c.offsetWidth; // reflow
+      c.style.animationDelay = (i * 80) + 'ms';
+      c.classList.add('animated');
+    });
+  } else {
+    lab.classList.remove('animate-in');
+    document.querySelectorAll('.card').forEach(c => {
+      c.classList.remove('animated');
+      c.style.opacity = '1';
+      c.style.transform = 'none';
+    });
+  }
+
+  updatePrompt();
+}
+
+function updatePrompt() {
+  const active = [];
+  const gc = GENRE_COLORS[state.genre];
+
+  if (state.genreTheme) {
+    active.push(`Enable genre-reactive color theming. Map each genre to a distinct OKLCH hue for the accent color. Currently showing: ${gc.name} → hue ${gc.h} (${gc.desc}). Apply to: tab highlights, buttons, tag badges, border glows, portrait ring. The accent color should shift dynamically when the artist's primary genre changes.`);
+  }
+  if (state.glass) {
+    active.push(`Apply glassmorphism to all cards, tab bars, and the save bar. Use backdrop-filter: blur(16-20px), semi-transparent backgrounds (rgba 3-5% white), subtle inset top highlight (inset 0 1px 0 rgba(255,255,255,0.04)), and layered box-shadows. On hover, deepen shadows and add a faint accent-colored glow. Input fields get accent-colored focus glow rings.`);
+  }
+  if (state.header) {
+    active.push(`Replace the basic artist header with an immersive hero section. Show the artist's portrait in a glowing circle (box-shadow with accent color at 30% opacity). Add a blurred background image (use z-image-turbo to generate a city establishing shot based on the artist's city, $0.0025 per image). Overlay with gradient. Show genre + city as accent-colored pill badges. Add a DNA completion ring (SVG circle with stroke-dasharray showing percentage of filled fields). Artist name in larger bold text (24px, -0.03em tracking).`);
+  }
+  if (state.animations) {
+    active.push(`Add staggered entrance animations when switching tabs. Each card slides up 12px and fades in with 80ms stagger delay between cards. Use CSS @keyframes slideUp with ease timing. Also add: hover lift on generate button (translateY -1px), smooth color transitions (0.3s) on all interactive elements.`);
+  }
+  if (state.ambient) {
+    active.push(`Add ambient background effects to the preview area. Two large gradient orbs (600px, blur 120px) at 20-25% opacity using the current accent hue, positioned at opposite corners. Add a subtle noise texture overlay at 3-4% opacity using an SVG feTurbulence filter. The orbs should slowly drift (CSS animation, 30s cycle). Colors match the genre theme if enabled.`);
+  }
+
+  const output = document.getElementById('prompt-output');
+  if (active.length === 0) {
+    output.textContent = 'Toggle upgrades above to build an implementation prompt.';
+  } else {
+    output.textContent = `Apply the following visual upgrades to the Music Lab (src/features/music-lab/):\n\n${active.map((a, i) => `${i + 1}. ${a}`).join('\n\n')}`;
+  }
+}
+
+function copyPrompt() {
+  const text = document.getElementById('prompt-output').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+// Init
+updateAll();
+</script>
+</body>
+</html>

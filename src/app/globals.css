@@ -367,6 +367,91 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
+  /* ── Tab entrance animation ── */
+  @keyframes tab-slide-up {
+    0% {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-tab-entrance {
+    animation: tab-slide-up 0.35s ease forwards;
+  }
+
+  /* Staggered children — each child fades in with 80ms delay */
+  .stagger-children > * {
+    opacity: 0;
+    animation: tab-slide-up 0.35s ease forwards;
+  }
+  .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-children > *:nth-child(2) { animation-delay: 80ms; }
+  .stagger-children > *:nth-child(3) { animation-delay: 160ms; }
+  .stagger-children > *:nth-child(4) { animation-delay: 240ms; }
+  .stagger-children > *:nth-child(5) { animation-delay: 320ms; }
+  .stagger-children > *:nth-child(6) { animation-delay: 400ms; }
+
+  /* Hover lift — subtle version for buttons */
+  .hover-lift-sm {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .hover-lift-sm:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  .hover-lift-sm:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  /* ── Ambient background orbs ── */
+  @keyframes orb-drift-1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(40px, -30px) scale(1.05); }
+    50% { transform: translate(-20px, 20px) scale(0.95); }
+    75% { transform: translate(30px, 40px) scale(1.02); }
+  }
+  @keyframes orb-drift-2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(-30px, 40px) scale(0.97); }
+    50% { transform: translate(50px, -20px) scale(1.04); }
+    75% { transform: translate(-40px, -30px) scale(1); }
+  }
+
+  .ambient-orb {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+  }
+  .ambient-orb-1 {
+    top: -200px;
+    right: -100px;
+    background: oklch(0.35 0.1 75);
+    opacity: 0.2;
+    animation: orb-drift-1 30s ease-in-out infinite;
+  }
+  .ambient-orb-2 {
+    bottom: -200px;
+    left: -100px;
+    background: oklch(0.25 0.07 75);
+    opacity: 0.15;
+    animation: orb-drift-2 35s ease-in-out infinite;
+  }
+  .ambient-noise {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    background-size: 256px;
+  }
+
   /* Neon effects */
   .neon-blue {
     text-shadow: 0 0 5px rgba(59, 130, 246, 0.8), 0 0 10px rgba(59, 130, 246, 0.6), 0 0 15px rgba(59, 130, 246, 0.4);

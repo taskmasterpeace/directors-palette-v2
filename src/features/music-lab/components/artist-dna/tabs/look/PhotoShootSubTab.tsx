@@ -274,7 +274,7 @@ export function PhotoShootSubTab() {
                           size="sm"
                           onClick={() => handleGenerate(scene, sub)}
                           disabled={!!generatingId}
-                          className="h-7 text-xs w-full"
+                          className="h-7 text-xs w-full hover-lift-sm"
                         >
                           {generatingId === sub.id ? (
                             <>
