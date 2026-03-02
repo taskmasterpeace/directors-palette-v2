@@ -57,11 +57,11 @@ export function GenrePicker() {
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-1">
         <Music2 className="w-4 h-4 text-amber-400" />
-        <h3 className="text-sm font-semibold text-[oklch(0.88_0.02_55)] tracking-[-0.025em]">
+        <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Genre
         </h3>
         {settings.genres.length > 0 && (
-          <span className="text-xs text-[oklch(0.50_0.04_55)] ml-auto">
+          <span className="text-xs text-muted-foreground ml-auto">
             {settings.genres.length + settings.subgenres.length + settings.microgenres.length} selected
           </span>
         )}

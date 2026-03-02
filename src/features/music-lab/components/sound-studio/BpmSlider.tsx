@@ -36,14 +36,14 @@ export function BpmSlider() {
       {/* Header with prominent BPM */}
       <div className="flex items-center gap-2">
         <Gauge className="w-4 h-4 text-amber-400" />
-        <h3 className="text-sm font-semibold text-[oklch(0.88_0.02_55)] tracking-[-0.025em]">
+        <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Tempo
         </h3>
         <div className="ml-auto flex items-baseline gap-1">
           <span className={`text-2xl font-bold tabular-nums tracking-tight ${bpmColor}`}>
             {bpm}
           </span>
-          <span className="text-xs text-[oklch(0.50_0.04_55)]">BPM</span>
+          <span className="text-xs text-muted-foreground">BPM</span>
         </div>
       </div>
 
@@ -58,8 +58,8 @@ export function BpmSlider() {
           className="w-full [&_[role=slider]]:bg-amber-500 [&_[role=slider]]:border-amber-400 [&_[role=slider]]:shadow-[0_0_8px_oklch(0.6_0.2_55/0.3)] [&_[data-orientation=horizontal]>[data-role=range]]:bg-amber-500/60"
         />
         <div className="flex justify-between mt-1">
-          <span className="text-[10px] text-[oklch(0.40_0.03_55)]">40</span>
-          <span className="text-[10px] text-[oklch(0.40_0.03_55)]">200</span>
+          <span className="text-[10px] text-muted-foreground/60">40</span>
+          <span className="text-[10px] text-muted-foreground/60">200</span>
         </div>
       </div>
 
@@ -72,7 +72,7 @@ export function BpmSlider() {
             className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
               bpm === preset
                 ? 'bg-amber-500/25 text-amber-300 border border-amber-500/40'
-                : 'bg-[oklch(0.22_0.025_55)] text-[oklch(0.65_0.04_55)] border border-[oklch(0.30_0.03_55)] hover:border-[oklch(0.40_0.03_55)] hover:text-[oklch(0.80_0.02_55)]'
+                : 'bg-muted/20 text-muted-foreground border border-border hover:border-border hover:text-foreground'
             }`}
           >
             {preset}

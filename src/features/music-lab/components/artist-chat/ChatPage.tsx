@@ -54,31 +54,31 @@ function ChatHeader({
     .toUpperCase()
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 border-b border-[oklch(0.32_0.03_55)] bg-[oklch(0.20_0.025_55)]">
+    <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card">
       <button
         onClick={onBack}
-        className="p-1.5 rounded-lg hover:bg-[oklch(0.28_0.03_55)] transition-colors"
+        className="p-1.5 rounded-lg hover:bg-muted/40 transition-colors"
       >
-        <ArrowLeft className="w-4 h-4 text-[oklch(0.65_0.04_55)]" />
+        <ArrowLeft className="w-4 h-4 text-muted-foreground" />
       </button>
 
-      <div className="w-10 h-10 rounded-full ring-2 ring-amber-500/60 overflow-hidden flex-shrink-0 flex items-center justify-center bg-[oklch(0.25_0.03_55)]">
+      <div className="w-10 h-10 rounded-full ring-2 ring-primary/60 overflow-hidden flex-shrink-0 flex items-center justify-center bg-muted/30">
         {portraitUrl ? (
           <img src={portraitUrl} alt={artistName} className="w-full h-full object-cover" />
         ) : (
-          <span className="text-xs font-bold text-[oklch(0.65_0.04_55)]">{initials}</span>
+          <span className="text-xs font-bold text-muted-foreground">{initials}</span>
         )}
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm text-[oklch(0.92_0.02_55)]">{artistName}</p>
+        <p className="font-semibold text-sm text-foreground">{artistName}</p>
         {livingContext ? (
-          <div className="flex items-center gap-1.5 text-xs text-[oklch(0.55_0.04_55)]">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span>{livingContext.statusEmoji}</span>
             <span className="truncate">{livingContext.statusLine}</span>
           </div>
         ) : isLoadingContext ? (
-          <div className="flex items-center gap-1 text-xs text-[oklch(0.55_0.04_55)]">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Loader2 className="w-3 h-3 animate-spin" />
             <span>Loading context...</span>
           </div>
@@ -88,15 +88,15 @@ function ChatHeader({
       <button
         onClick={onRefresh}
         disabled={isLoadingContext}
-        className="p-2 rounded-lg hover:bg-[oklch(0.28_0.03_55)] transition-colors disabled:opacity-40"
+        className="p-2 rounded-lg hover:bg-muted/40 transition-colors disabled:opacity-40"
         title="Refresh status"
       >
-        <RefreshCw className={`w-4 h-4 text-[oklch(0.55_0.04_55)] ${isLoadingContext ? 'animate-spin' : ''}`} />
+        <RefreshCw className={`w-4 h-4 text-muted-foreground ${isLoadingContext ? 'animate-spin' : ''}`} />
       </button>
 
       <button
         onClick={onInspiration}
-        className="p-2 rounded-lg hover:bg-[oklch(0.28_0.03_55)] transition-colors"
+        className="p-2 rounded-lg hover:bg-muted/40 transition-colors"
         title="Inspiration feed"
       >
         <Sparkles className="w-4 h-4 text-amber-400" />
@@ -122,7 +122,7 @@ function ChatBubble({
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}>
       <div className={`max-w-[80%] ${isUser ? 'order-1' : 'order-1'}`}>
         {isPhoto && message.photoUrl ? (
-          <div className="rounded-2xl overflow-hidden border border-[oklch(0.32_0.03_55)]">
+          <div className="rounded-2xl overflow-hidden border border-border">
             <img
               src={message.photoUrl}
               alt="Shared photo"
@@ -137,8 +137,8 @@ function ChatBubble({
           <div
             className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
               isUser
-                ? 'bg-amber-500 text-[oklch(0.15_0.02_55)] rounded-br-md'
-                : 'bg-[oklch(0.25_0.03_55)] text-[oklch(0.88_0.02_55)] border border-[oklch(0.32_0.03_55)] rounded-bl-md'
+                ? 'bg-amber-500 text-background rounded-br-md'
+                : 'bg-muted/30 text-foreground border border-border rounded-bl-md'
             }`}
           >
             {message.content}
@@ -153,7 +153,7 @@ function ChatBubble({
               className={`p-1 rounded-md transition-colors ${
                 message.reaction === 'thumbs-up'
                   ? 'bg-amber-500/20 text-amber-400'
-                  : 'hover:bg-[oklch(0.28_0.03_55)] text-[oklch(0.45_0.03_55)]'
+                  : 'hover:bg-muted/40 text-muted-foreground/60'
               }`}
             >
               <ThumbsUp className="w-3 h-3" />
@@ -163,12 +163,12 @@ function ChatBubble({
               className={`p-1 rounded-md transition-colors ${
                 message.reaction === 'thumbs-down'
                   ? 'bg-red-500/20 text-red-400'
-                  : 'hover:bg-[oklch(0.28_0.03_55)] text-[oklch(0.45_0.03_55)]'
+                  : 'hover:bg-muted/40 text-muted-foreground/60'
               }`}
             >
               <ThumbsDown className="w-3 h-3" />
             </button>
-            <span className="text-[10px] text-[oklch(0.40_0.03_55)] ml-1">
+            <span className="text-[10px] text-muted-foreground/60 ml-1">
               {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
@@ -176,7 +176,7 @@ function ChatBubble({
 
         {isUser && (
           <div className="flex justify-end mt-0.5 mr-1">
-            <span className="text-[10px] text-[oklch(0.45_0.03_55)]">
+            <span className="text-[10px] text-muted-foreground/60">
               {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
@@ -208,13 +208,13 @@ function ChatMessageList({
   if (messages.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3">
-        <div className="w-16 h-16 rounded-full bg-[oklch(0.25_0.03_55)] flex items-center justify-center">
+        <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center">
           <MessageCircle className="w-7 h-7 text-amber-400/50" />
         </div>
-        <p className="text-[oklch(0.55_0.04_55)] text-sm">
+        <p className="text-muted-foreground text-sm">
           Start a conversation with your artist.
         </p>
-        <p className="text-[oklch(0.40_0.03_55)] text-xs max-w-[260px]">
+        <p className="text-muted-foreground/60 text-xs max-w-[260px]">
           Ask about their day, discuss music ideas, or share inspiration.
         </p>
       </div>
@@ -229,7 +229,7 @@ function ChatMessageList({
 
       {isSending && (
         <div className="flex justify-start mb-3">
-          <div className="px-4 py-3 rounded-2xl rounded-bl-md bg-[oklch(0.25_0.03_55)] border border-[oklch(0.32_0.03_55)]">
+          <div className="px-4 py-3 rounded-2xl rounded-bl-md bg-muted/30 border border-border">
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '0ms' }} />
               <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -270,14 +270,14 @@ function ChatInput({
   }
 
   return (
-    <div className="px-4 py-3 border-t border-[oklch(0.32_0.03_55)] bg-[oklch(0.18_0.02_55)]">
+    <div className="px-4 py-3 border-t border-border bg-background">
       <div className="flex items-center gap-2">
         <button
           onClick={onRequestPhoto}
-          className="p-2 rounded-lg hover:bg-[oklch(0.25_0.03_55)] transition-colors flex-shrink-0"
+          className="p-2 rounded-lg hover:bg-muted/30 transition-colors flex-shrink-0"
           title="Request photo"
         >
-          <Camera className="w-5 h-5 text-[oklch(0.55_0.04_55)]" />
+          <Camera className="w-5 h-5 text-muted-foreground" />
         </button>
 
         <Input
@@ -285,7 +285,7 @@ function ChatInput({
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type a message..."
-          className="flex-1 bg-[oklch(0.22_0.025_55)] border-[oklch(0.32_0.03_55)] text-[oklch(0.88_0.02_55)] placeholder:text-[oklch(0.45_0.03_55)] rounded-xl focus-visible:ring-amber-500/50"
+          className="flex-1 bg-muted/20 border-border text-foreground placeholder:text-muted-foreground/60 rounded-xl focus-visible:ring-amber-500/50"
           disabled={isSending}
         />
 
@@ -293,7 +293,7 @@ function ChatInput({
           onClick={handleSend}
           disabled={!text.trim() || isSending}
           size="icon"
-          className="rounded-xl bg-amber-500 hover:bg-amber-400 text-[oklch(0.15_0.02_55)] disabled:opacity-40 flex-shrink-0"
+          className="rounded-xl bg-amber-500 hover:bg-amber-400 text-background disabled:opacity-40 flex-shrink-0"
         >
           {isSending ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -310,17 +310,17 @@ function ChatInput({
 
 function LivingContextDrawer({ context }: { context: LivingContext }) {
   return (
-    <div className="px-4 py-3 border-b border-[oklch(0.32_0.03_55)] bg-[oklch(0.19_0.02_55)]">
+    <div className="px-4 py-3 border-b border-border bg-background">
       <div className="flex flex-wrap gap-3 text-xs">
-        <div className="flex items-center gap-1.5 text-[oklch(0.60_0.04_55)]">
+        <div className="flex items-center gap-1.5 text-muted-foreground">
           <Clock className="w-3.5 h-3.5" />
           <span>{context.timeOfDay} &middot; {context.dayOfWeek}</span>
         </div>
-        <div className="flex items-center gap-1.5 text-[oklch(0.60_0.04_55)]">
+        <div className="flex items-center gap-1.5 text-muted-foreground">
           <MapPin className="w-3.5 h-3.5" />
           <span>{context.currentLocation}</span>
         </div>
-        <div className="text-[oklch(0.55_0.04_55)]">
+        <div className="text-muted-foreground">
           {context.activityDescription}
         </div>
       </div>
@@ -419,15 +419,15 @@ export function ChatPage({ userId }: ChatPageProps) {
   // ── No artist selected: show artist picker ────────────────────────────────
   if (!activeArtistId || !activeArtist) {
     return (
-      <div className="flex flex-col h-full bg-[oklch(0.18_0.02_55)]">
-        <div className="px-4 py-3 border-b border-[oklch(0.32_0.03_55)] bg-[oklch(0.20_0.025_55)]">
-          <h2 className="font-semibold text-[oklch(0.92_0.02_55)] tracking-[-0.025em]">Artist Chat</h2>
-          <p className="text-xs text-[oklch(0.55_0.04_55)]">Choose an artist to start chatting</p>
+      <div className="flex flex-col h-full bg-background">
+        <div className="px-4 py-3 border-b border-border bg-card">
+          <h2 className="font-semibold text-foreground tracking-[-0.025em]">Artist Chat</h2>
+          <p className="text-xs text-muted-foreground">Choose an artist to start chatting</p>
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-6">
-          <div className="w-20 h-20 rounded-full bg-[oklch(0.22_0.025_55)] border-2 border-dashed border-[oklch(0.35_0.03_55)] flex items-center justify-center">
-            <User className="w-8 h-8 text-[oklch(0.45_0.03_55)]" />
+          <div className="w-20 h-20 rounded-full bg-muted/20 border-2 border-dashed border-border/60 flex items-center justify-center">
+            <User className="w-8 h-8 text-muted-foreground/60" />
           </div>
 
           {isInitialized && artists.length > 0 ? (
@@ -445,16 +445,16 @@ export function ChatPage({ userId }: ChatPageProps) {
                   <button
                     key={a.id}
                     onClick={() => handleSelectArtist(a.id)}
-                    className="flex flex-col items-center gap-2 p-4 rounded-[0.625rem] border border-[oklch(0.32_0.03_55)] bg-[oklch(0.22_0.025_55)] hover:border-amber-500/50 hover:bg-[oklch(0.25_0.03_55)] transition-all"
+                    className="flex flex-col items-center gap-2 p-4 rounded-[0.625rem] border border-border bg-muted/20 hover:border-amber-500/50 hover:bg-muted/30 transition-all"
                   >
-                    <div className="w-14 h-14 rounded-full ring-2 ring-[oklch(0.35_0.03_55)] overflow-hidden flex items-center justify-center bg-[oklch(0.28_0.03_55)]">
+                    <div className="w-14 h-14 rounded-full ring-2 ring-border/60 overflow-hidden flex items-center justify-center bg-muted/40">
                       {portrait ? (
                         <img src={portrait} alt={a.name} className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-sm font-bold text-[oklch(0.55_0.04_55)]">{initials}</span>
+                        <span className="text-sm font-bold text-muted-foreground">{initials}</span>
                       )}
                     </div>
-                    <span className="text-sm font-medium text-[oklch(0.85_0.02_55)] truncate max-w-full">
+                    <span className="text-sm font-medium text-foreground truncate max-w-full">
                       {a.name}
                     </span>
                   </button>
@@ -463,7 +463,7 @@ export function ChatPage({ userId }: ChatPageProps) {
             </div>
           ) : isInitialized ? (
             <div className="text-center space-y-3">
-              <p className="text-[oklch(0.55_0.04_55)] text-sm">No artists yet.</p>
+              <p className="text-muted-foreground text-sm">No artists yet.</p>
               <Button
                 variant="outline"
                 size="sm"
@@ -471,7 +471,7 @@ export function ChatPage({ userId }: ChatPageProps) {
                   setActiveTab('music-lab')
                   setMusicLabSubTab('artist-lab')
                 }}
-                className="border-[oklch(0.32_0.03_55)] text-[oklch(0.75_0.04_55)] hover:bg-[oklch(0.25_0.03_55)]"
+                className="border-border text-foreground/80 hover:bg-muted/30"
               >
                 <Plus className="w-4 h-4 mr-1" />
                 Create Artist
@@ -500,12 +500,12 @@ export function ChatPage({ userId }: ChatPageProps) {
   const portraitUrl = draft.look?.portraitUrl
 
   return (
-    <div className="flex flex-col h-full bg-[oklch(0.18_0.02_55)]">
+    <div className="flex flex-col h-full bg-background">
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-3">
             <Loader2 className="w-8 h-8 animate-spin text-amber-400 mx-auto" />
-            <p className="text-sm text-[oklch(0.55_0.04_55)]">Connecting to {artistName}...</p>
+            <p className="text-sm text-muted-foreground">Connecting to {artistName}...</p>
           </div>
         </div>
       ) : (
@@ -527,7 +527,7 @@ export function ChatPage({ userId }: ChatPageProps) {
           {livingContext && !showContext && (
             <button
               onClick={() => setShowContext(true)}
-              className="px-4 py-1.5 text-xs text-[oklch(0.50_0.04_55)] hover:text-[oklch(0.65_0.04_55)] bg-[oklch(0.19_0.02_55)] border-b border-[oklch(0.28_0.03_55)] transition-colors text-left"
+              className="px-4 py-1.5 text-xs text-muted-foreground hover:text-muted-foreground bg-background border-b border-border/60 transition-colors text-left"
             >
               {livingContext.currentActivity} &middot; tap for details
             </button>
@@ -536,7 +536,7 @@ export function ChatPage({ userId }: ChatPageProps) {
           {showContext && livingContext && (
             <button
               onClick={() => setShowContext(false)}
-              className="px-4 py-1 text-[10px] text-[oklch(0.40_0.03_55)] hover:text-[oklch(0.55_0.04_55)] transition-colors text-left"
+              className="px-4 py-1 text-[10px] text-muted-foreground/60 hover:text-muted-foreground transition-colors text-left"
             >
               Hide details
             </button>

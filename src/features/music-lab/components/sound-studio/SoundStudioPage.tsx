@@ -47,11 +47,11 @@ function ProductionTagsSection() {
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Tag className="w-4 h-4 text-amber-400" />
-        <h3 className="text-sm font-semibold text-[oklch(0.88_0.02_55)] tracking-[-0.025em]">
+        <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Production Style
         </h3>
         {settings.productionTags.length > 0 && (
-          <span className="text-xs text-[oklch(0.50_0.04_55)] ml-auto">{settings.productionTags.length}</span>
+          <span className="text-xs text-muted-foreground ml-auto">{settings.productionTags.length}</span>
         )}
       </div>
       <MultiSelectPills
@@ -91,7 +91,7 @@ function NegativeTagsInput() {
 
   return (
     <div className="space-y-2">
-      <p className="text-[11px] font-medium uppercase tracking-wider text-[oklch(0.50_0.04_55)]">
+      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
         Negative Tags (exclude from prompt)
       </p>
       <div className="flex flex-wrap gap-1.5">
@@ -116,14 +116,14 @@ function NegativeTagsInput() {
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Add negative tag..."
-          className="flex-1 bg-[oklch(0.22_0.025_55)] border-[oklch(0.32_0.03_55)] text-[oklch(0.88_0.02_55)] placeholder:text-[oklch(0.45_0.03_55)] rounded-[0.625rem] text-sm"
+          className="flex-1 bg-muted/20 border-border text-foreground placeholder:text-muted-foreground/60 rounded-[0.625rem] text-sm"
         />
         <Button
           onClick={() => addTag(inputValue)}
           disabled={!inputValue.trim()}
           size="sm"
           variant="outline"
-          className="border-[oklch(0.32_0.03_55)] text-[oklch(0.65_0.04_55)] hover:bg-[oklch(0.25_0.03_55)] rounded-[0.625rem]"
+          className="border-border text-muted-foreground hover:bg-muted/30 rounded-[0.625rem]"
         >
           <Plus className="w-4 h-4" />
         </Button>
@@ -136,7 +136,7 @@ function NegativeTagsInput() {
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <section className={`p-4 rounded-[0.625rem] border border-[oklch(0.28_0.03_55)] bg-[oklch(0.20_0.02_55)] ${className}`}>
+    <section className={`p-4 rounded-[0.625rem] border border-border/60 bg-card ${className}`}>
       {children}
     </section>
   )
@@ -190,15 +190,15 @@ export function SoundStudioPage({ userId }: SoundStudioPageProps) {
   }, [activeArtistId, activeArtist, loadFromArtist])
 
   return (
-    <div className="flex flex-col h-full bg-[oklch(0.18_0.02_55)]">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-[oklch(0.32_0.03_55)] bg-[oklch(0.20_0.025_55)]">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card">
         <Disc3 className="w-5 h-5 text-amber-400" />
         <div className="flex-1">
-          <h2 className="font-semibold text-[oklch(0.92_0.02_55)] tracking-[-0.025em]">
+          <h2 className="font-semibold text-foreground tracking-[-0.025em]">
             Sound Studio
           </h2>
-          <p className="text-xs text-[oklch(0.50_0.04_55)]">
+          <p className="text-xs text-muted-foreground">
             Build instrumental prompts for Suno
           </p>
         </div>
@@ -210,12 +210,12 @@ export function SoundStudioPage({ userId }: SoundStudioPageProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1.5 border-[oklch(0.32_0.03_55)] text-[oklch(0.75_0.04_55)] hover:bg-[oklch(0.25_0.03_55)] rounded-[0.625rem]"
+                className="gap-1.5 border-border text-foreground/80 hover:bg-muted/30 rounded-[0.625rem]"
               >
                 {activeArtist ? (
                   <span className="truncate max-w-[100px]">{activeArtist.name}</span>
                 ) : (
-                  <span className="text-[oklch(0.50_0.04_55)]">Standalone</span>
+                  <span className="text-muted-foreground">Standalone</span>
                 )}
                 <ChevronDown className="w-3 h-3" />
               </Button>
@@ -225,7 +225,7 @@ export function SoundStudioPage({ userId }: SoundStudioPageProps) {
                 onClick={() => {
                   resetToDefaults()
                 }}
-                className="text-[oklch(0.65_0.04_55)]"
+                className="text-muted-foreground"
               >
                 Standalone Mode
               </DropdownMenuItem>
@@ -248,7 +248,7 @@ export function SoundStudioPage({ userId }: SoundStudioPageProps) {
           variant="ghost"
           size="sm"
           onClick={activeArtist ? handleLoadFromActive : resetToDefaults}
-          className="text-[oklch(0.55_0.04_55)] hover:text-[oklch(0.75_0.04_55)] hover:bg-[oklch(0.25_0.03_55)]"
+          className="text-muted-foreground hover:text-foreground/80 hover:bg-muted/30"
           title={activeArtist ? 'Reset to artist defaults' : 'Reset to defaults'}
         >
           <RotateCcw className="w-4 h-4" />
@@ -350,7 +350,7 @@ export function SoundStudioPage({ userId }: SoundStudioPageProps) {
           </div>
 
           {/* RIGHT COLUMN — sticky prompt preview + assistant */}
-          <div className="hidden xl:flex xl:flex-col xl:h-full border-l border-[oklch(0.28_0.03_55)] bg-[oklch(0.19_0.02_55)]">
+          <div className="hidden xl:flex xl:flex-col xl:h-full border-l border-border/60 bg-background">
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <SunoPromptPreview />
               <SoundAssistant artistDna={artistDna} />

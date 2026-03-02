@@ -32,14 +32,14 @@ export function EnergySlider() {
       {/* Header */}
       <div className="flex items-center gap-2">
         <Zap className="w-4 h-4 text-amber-400" />
-        <h3 className="text-sm font-semibold text-[oklch(0.88_0.02_55)] tracking-[-0.025em]">
+        <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Energy
         </h3>
         <div className="ml-auto flex items-baseline gap-1.5">
           <span className={`text-lg font-bold tabular-nums tracking-tight ${energyColor}`}>
             {energy}
           </span>
-          <span className="text-[10px] text-[oklch(0.50_0.04_55)] uppercase">
+          <span className="text-[10px] text-muted-foreground uppercase">
             {energyToLabel(energy)}
           </span>
         </div>
@@ -57,7 +57,7 @@ export function EnergySlider() {
         />
         <div className="flex justify-between mt-1">
           <span className="text-[10px] text-blue-400/60">Calm</span>
-          <span className="text-[10px] text-[oklch(0.40_0.03_55)]">Medium</span>
+          <span className="text-[10px] text-muted-foreground/60">Medium</span>
           <span className="text-[10px] text-red-400/60">Intense</span>
         </div>
       </div>
@@ -71,7 +71,7 @@ export function EnergySlider() {
             className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
               energy === preset
                 ? 'bg-amber-500/25 text-amber-300 border border-amber-500/40'
-                : 'bg-[oklch(0.22_0.025_55)] text-[oklch(0.65_0.04_55)] border border-[oklch(0.30_0.03_55)] hover:border-[oklch(0.40_0.03_55)] hover:text-[oklch(0.80_0.02_55)]'
+                : 'bg-muted/20 text-muted-foreground border border-border hover:border-border hover:text-foreground'
             }`}
           >
             {preset}

@@ -12,11 +12,11 @@ export function EarCandyPanel() {
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Candy className="w-4 h-4 text-pink-400" />
-        <h3 className="text-sm font-semibold text-[oklch(0.88_0.02_55)] tracking-[-0.025em]">
+        <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Ear Candy
         </h3>
         {settings.earCandy.length > 0 && (
-          <span className="text-xs text-[oklch(0.50_0.04_55)] ml-auto">{settings.earCandy.length}</span>
+          <span className="text-xs text-muted-foreground ml-auto">{settings.earCandy.length}</span>
         )}
       </div>
       <MultiSelectPills

@@ -43,7 +43,7 @@ export function MoodSelector() {
       {/* Header */}
       <div className="flex items-center gap-2">
         <Heart className="w-4 h-4 text-amber-400" />
-        <h3 className="text-sm font-semibold text-[oklch(0.88_0.02_55)] tracking-[-0.025em]">
+        <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Mood
         </h3>
         {settings.moods.length > 0 && (

@@ -14,7 +14,7 @@ function SectionBadge({ label, items, color }: { label: string; items: string[];
         {items.map((item) => (
           <span
             key={item}
-            className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[oklch(0.22_0.025_55)] text-[oklch(0.70_0.03_55)] border border-[oklch(0.28_0.03_55)]"
+            className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-muted/20 text-foreground/80 border border-border/60"
           >
             {item}
           </span>
@@ -30,7 +30,7 @@ export function SunoPromptPreview() {
 
   const charColor =
     promptCharCount === 0
-      ? 'text-[oklch(0.45_0.03_55)]'
+      ? 'text-muted-foreground/60'
       : promptCharCount < 500
         ? 'text-emerald-400'
         : promptCharCount < 800
@@ -39,7 +39,7 @@ export function SunoPromptPreview() {
 
   const charBgColor =
     promptCharCount === 0
-      ? 'bg-[oklch(0.25_0.03_55)]'
+      ? 'bg-muted/30'
       : promptCharCount < 500
         ? 'bg-emerald-500/10'
         : promptCharCount < 800
@@ -85,7 +85,7 @@ export function SunoPromptPreview() {
       {/* Header */}
       <div className="flex items-center gap-2">
         <FileText className="w-4 h-4 text-amber-400" />
-        <h3 className="text-sm font-semibold text-[oklch(0.88_0.02_55)] tracking-[-0.025em]">
+        <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Suno Prompt
         </h3>
 
@@ -96,13 +96,13 @@ export function SunoPromptPreview() {
           <button
             onClick={handleCopy}
             disabled={!sunoPrompt}
-            className="p-1.5 rounded-lg hover:bg-[oklch(0.28_0.03_55)] transition-colors disabled:opacity-30"
+            className="p-1.5 rounded-lg hover:bg-muted/40 transition-colors disabled:opacity-30"
             title="Copy to clipboard"
           >
             {copied ? (
               <Check className="w-4 h-4 text-emerald-400" />
             ) : (
-              <Copy className="w-4 h-4 text-[oklch(0.55_0.04_55)]" />
+              <Copy className="w-4 h-4 text-muted-foreground" />
             )}
           </button>
         </div>
@@ -110,17 +110,17 @@ export function SunoPromptPreview() {
 
       {/* Section breakdown */}
       {hasBreakdown && (
-        <div className="p-3 rounded-[0.625rem] border border-[oklch(0.25_0.025_55)] bg-[oklch(0.17_0.015_55)] space-y-2">
+        <div className="p-3 rounded-[0.625rem] border border-border/60 bg-background space-y-2">
           <SectionBadge label="Genre" items={[...settings.genres, ...settings.subgenres, ...settings.microgenres]} color="text-amber-400/60" />
           {(settings.bpm || settings.key) && (
             <div className="flex gap-3">
               {settings.bpm && (
-                <span className="text-[10px] font-mono text-[oklch(0.60_0.04_55)]">{settings.bpm} BPM</span>
+                <span className="text-[10px] font-mono text-muted-foreground">{settings.bpm} BPM</span>
               )}
               {settings.key && (
                 <span className="text-[10px] font-mono text-cyan-400/70">{settings.key}</span>
               )}
-              <span className="text-[10px] font-mono text-[oklch(0.50_0.04_55)]">{energyToLabel(settings.energy)}</span>
+              <span className="text-[10px] font-mono text-muted-foreground">{energyToLabel(settings.energy)}</span>
             </div>
           )}
           <SectionBadge label="Mood" items={settings.moods} color="text-blue-400/60" />
@@ -132,33 +132,33 @@ export function SunoPromptPreview() {
           <SectionBadge label="Space/FX" items={settings.spaceFx} color="text-blue-400/60" />
           <SectionBadge label="Ear Candy" items={settings.earCandy} color="text-pink-400/60" />
           <SectionBadge label="Instruments" items={settings.instruments} color="text-amber-400/60" />
-          <SectionBadge label="Production" items={settings.productionTags} color="text-[oklch(0.55_0.04_55)]" />
+          <SectionBadge label="Production" items={settings.productionTags} color="text-muted-foreground" />
         </div>
       )}
 
       {/* Raw prompt */}
-      <div className="p-3 rounded-[0.625rem] border border-[oklch(0.30_0.03_55)] bg-[oklch(0.15_0.015_55)]">
+      <div className="p-3 rounded-[0.625rem] border border-border bg-background">
         {sunoPrompt ? (
-          <pre className="text-xs font-mono text-[oklch(0.78_0.02_55)] leading-relaxed whitespace-pre-wrap break-words">
+          <pre className="text-xs font-mono text-foreground/80 leading-relaxed whitespace-pre-wrap break-words">
             {sunoPrompt}
           </pre>
         ) : (
-          <p className="text-xs font-mono text-[oklch(0.40_0.03_55)] italic">
+          <p className="text-xs font-mono text-muted-foreground/60 italic">
             Configure settings to generate prompt...
           </p>
         )}
 
         {/* Negative tags */}
         {hasNegativeTags && (
-          <div className="mt-2 pt-2 border-t border-[oklch(0.25_0.025_55)]">
-            <p className="text-[9px] uppercase tracking-wider text-[oklch(0.40_0.03_55)] mb-1">
+          <div className="mt-2 pt-2 border-t border-border/60">
+            <p className="text-[9px] uppercase tracking-wider text-muted-foreground/60 mb-1">
               Negative tags
             </p>
             <div className="flex flex-wrap gap-1">
               {settings.negativeTags.map((tag) => (
                 <span
                   key={tag}
-                  className="px-1.5 py-0.5 rounded text-[10px] font-mono text-[oklch(0.50_0.03_55)] bg-[oklch(0.20_0.02_55)] border border-[oklch(0.25_0.025_55)]"
+                  className="px-1.5 py-0.5 rounded text-[10px] font-mono text-muted-foreground bg-card border border-border/60"
                 >
                   {tag}
                 </span>

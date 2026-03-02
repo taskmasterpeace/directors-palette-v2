@@ -41,16 +41,16 @@ export function SoundAssistant({ artistDna }: SoundAssistantProps) {
       {/* Header */}
       <div className="flex items-center gap-2">
         <Bot className="w-4 h-4 text-amber-400" />
-        <h3 className="text-sm font-semibold text-[oklch(0.88_0.02_55)] tracking-[-0.025em]">
+        <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Sound Assistant
         </h3>
         {assistantMessages.length > 0 && (
           <button
             onClick={clearAssistant}
-            className="ml-auto p-1 rounded-lg hover:bg-[oklch(0.25_0.03_55)] transition-colors"
+            className="ml-auto p-1 rounded-lg hover:bg-muted/30 transition-colors"
             title="Clear conversation"
           >
-            <Trash2 className="w-3.5 h-3.5 text-[oklch(0.45_0.03_55)]" />
+            <Trash2 className="w-3.5 h-3.5 text-muted-foreground/60" />
           </button>
         )}
       </div>
@@ -58,15 +58,15 @@ export function SoundAssistant({ artistDna }: SoundAssistantProps) {
       {/* Messages area */}
       <div
         ref={scrollRef}
-        className="rounded-[0.625rem] border border-[oklch(0.30_0.03_55)] bg-[oklch(0.17_0.015_55)] min-h-[120px] max-h-[280px] overflow-y-auto"
+        className="rounded-[0.625rem] border border-border bg-background min-h-[120px] max-h-[280px] overflow-y-auto"
       >
         {assistantMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-2">
-            <Bot className="w-6 h-6 text-[oklch(0.35_0.03_55)]" />
-            <p className="text-xs text-[oklch(0.45_0.03_55)]">
+            <Bot className="w-6 h-6 text-muted-foreground/60" />
+            <p className="text-xs text-muted-foreground/60">
               Ask for help with your sound design.
             </p>
-            <p className="text-[10px] text-[oklch(0.35_0.03_55)] max-w-[220px]">
+            <p className="text-[10px] text-muted-foreground/60 max-w-[220px]">
               Try &quot;Suggest instruments for a dark trap beat&quot; or &quot;What mood fits 140 BPM?&quot;
             </p>
           </div>
@@ -80,8 +80,8 @@ export function SoundAssistant({ artistDna }: SoundAssistantProps) {
                 <div
                   className={`max-w-[85%] px-3 py-2 rounded-2xl text-xs leading-relaxed ${
                     msg.role === 'user'
-                      ? 'bg-amber-500 text-[oklch(0.15_0.02_55)] rounded-br-md'
-                      : 'bg-[oklch(0.22_0.025_55)] text-[oklch(0.82_0.02_55)] border border-[oklch(0.28_0.03_55)] rounded-bl-md'
+                      ? 'bg-amber-500 text-background rounded-br-md'
+                      : 'bg-muted/20 text-foreground border border-border/60 rounded-bl-md'
                   }`}
                 >
                   {msg.content}
@@ -91,7 +91,7 @@ export function SoundAssistant({ artistDna }: SoundAssistantProps) {
 
             {isAssistantLoading && (
               <div className="flex justify-start">
-                <div className="px-3 py-2 rounded-2xl rounded-bl-md bg-[oklch(0.22_0.025_55)] border border-[oklch(0.28_0.03_55)]">
+                <div className="px-3 py-2 rounded-2xl rounded-bl-md bg-muted/20 border border-border/60">
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
                 </div>
               </div>
@@ -107,13 +107,13 @@ export function SoundAssistant({ artistDna }: SoundAssistantProps) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask about sound design..."
-          className="flex-1 bg-[oklch(0.22_0.025_55)] border-[oklch(0.32_0.03_55)] text-[oklch(0.88_0.02_55)] placeholder:text-[oklch(0.45_0.03_55)] rounded-xl text-sm"
+          className="flex-1 bg-muted/20 border-border text-foreground placeholder:text-muted-foreground/60 rounded-xl text-sm"
           disabled={isAssistantLoading}
         />
         <button
           onClick={handleSend}
           disabled={!input.trim() || isAssistantLoading}
-          className="p-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-[oklch(0.15_0.02_55)] disabled:opacity-40 transition-colors flex-shrink-0"
+          className="p-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-background disabled:opacity-40 transition-colors flex-shrink-0"
         >
           {isAssistantLoading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
