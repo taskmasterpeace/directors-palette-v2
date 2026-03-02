@@ -311,56 +311,172 @@ export const GENRE_TAXONOMY: GenreTaxonomyNode[] = [
   {
     name: 'R&B/Soul',
     children: [
-      { name: 'Neo-Soul', children: [{ name: 'Conscious Soul' }, { name: 'Nu Jazz Soul' }] },
+      {
+        name: 'Neo-Soul',
+        children: [
+          { name: 'Conscious Soul' }, { name: 'Nu Jazz Soul' }, { name: 'Organic Soul' },
+          { name: 'Bohemian Soul' }, { name: 'Live Band Neo-Soul' }, { name: 'Erykah Badu Style' },
+        ],
+      },
       {
         name: 'Contemporary R&B',
         children: [
           { name: 'PBR&B' }, { name: 'Early 2000s R&B' }, { name: 'Mid 2000s R&B' },
+          { name: '90s R&B' }, { name: '80s R&B' }, { name: 'Modern R&B' },
+          { name: 'Bedroom R&B' }, { name: 'Late Night R&B' },
         ],
       },
       {
         name: 'Alternative R&B',
         children: [
           { name: 'Dark R&B' }, { name: 'Electronic R&B' }, { name: 'Hip-Hop/R&B Crossover' },
+          { name: 'Experimental R&B' }, { name: 'Avant-R&B' }, { name: 'Indie R&B' },
+          { name: 'Art R&B' }, { name: 'Ambient R&B' },
         ],
       },
       {
         name: 'Trap Soul',
         children: [
           { name: 'Melodic Trap Soul' }, { name: 'Dark Trap Soul' }, { name: 'Gospel Trap Soul' },
+          { name: 'Bryson Tiller Style' }, { name: 'SZA Style' }, { name: 'Moody Trap Soul' },
         ],
       },
-      { name: 'Classic R&B', children: [{ name: 'Motown' }, { name: 'Quiet Storm' }] },
+      {
+        name: 'Classic R&B',
+        children: [
+          { name: 'Motown' }, { name: 'Quiet Storm' }, { name: 'Slow Jams' },
+          { name: 'R&B Ballads' }, { name: 'Lover Man R&B' }, { name: 'Baby-Making Music' },
+        ],
+      },
       {
         name: 'Funk',
         children: [
           { name: 'P-Funk' }, { name: 'Electro-Funk' }, { name: 'Nu-Funk' },
-          { name: 'Funk Metal' }, { name: 'Afro-Funk' },
+          { name: 'Funk Metal' }, { name: 'Afro-Funk' }, { name: 'Boogie Funk' },
+          { name: 'Synth Funk' }, { name: 'Deep Funk' }, { name: 'Go-Go Funk' },
+          { name: 'Sly Stone Style' }, { name: 'James Brown Style' },
         ],
       },
-      { name: 'Disco', children: [{ name: 'Eurodisco' }, { name: 'Nu-Disco' }] },
-      { name: 'Doo Wop', children: [{ name: 'Classic Doo Wop' }] },
+      {
+        name: 'Disco',
+        children: [
+          { name: 'Eurodisco' }, { name: 'Nu-Disco' }, { name: 'Philly Disco' },
+          { name: 'Space Disco' }, { name: 'Hi-NRG' }, { name: 'Italo Disco' },
+        ],
+      },
+      { name: 'Doo Wop', children: [{ name: 'Classic Doo Wop' }, { name: 'Street Corner' }] },
       {
         name: 'Classic Soul',
         children: [
           { name: 'Northern Soul' }, { name: 'Southern Soul' }, { name: 'Deep Soul' },
+          { name: 'Sweet Soul' }, { name: 'Blue-Eyed Soul' }, { name: 'Country Soul' },
         ],
       },
-      { name: 'Philadelphia Soul', children: [{ name: 'Philly Sound' }] },
-      { name: 'Memphis Soul', children: [{ name: 'Stax Sound' }] },
-      { name: 'Chicago Soul', children: [{ name: 'Chicago R&B' }] },
-      { name: 'Psychedelic Soul', children: [{ name: 'Funk Soul' }] },
+      {
+        name: 'Philadelphia Soul',
+        children: [
+          { name: 'Philly Sound' }, { name: 'TSOP Style' }, { name: 'Philly International' },
+        ],
+      },
+      {
+        name: 'Memphis Soul',
+        children: [
+          { name: 'Stax Sound' }, { name: 'Hi Records Style' }, { name: 'Al Green Style' },
+        ],
+      },
+      { name: 'Chicago Soul', children: [{ name: 'Chicago R&B' }, { name: 'Curtis Mayfield Style' }] },
+      {
+        name: 'Psychedelic Soul',
+        children: [
+          { name: 'Funk Soul' }, { name: 'Space Soul' }, { name: 'Acid Soul' },
+        ],
+      },
       {
         name: 'New Jack Swing',
         children: [
-          { name: 'Swing Beat' }, { name: 'Jack Swing Ballads' },
+          { name: 'Swing Beat' }, { name: 'Jack Swing Ballads' }, { name: 'Teddy Riley Style' },
+          { name: 'Guy Style' }, { name: 'Bobby Brown Style' },
         ],
       },
-      { name: 'Minneapolis Sound', children: [{ name: 'Purple Sound R&B' }] },
-      { name: 'Go-Go', children: [{ name: 'DC Go-Go' }, { name: 'Pocket Go-Go' }] },
-      { name: 'Afrofuturism Soul', children: [{ name: 'Space Soul' }] },
-      { name: 'Stadium R&B', children: [{ name: 'Arena R&B' }] },
-      { name: 'Southern Gothic R&B', children: [{ name: 'Gothic Soul' }] },
+      {
+        name: 'Minneapolis Sound',
+        children: [
+          { name: 'Purple Sound R&B' }, { name: 'Prince Style' }, { name: 'The Time Style' },
+          { name: 'Janet Jackson Style' }, { name: 'Jimmy Jam & Terry Lewis Style' },
+        ],
+      },
+      {
+        name: 'Go-Go',
+        children: [
+          { name: 'DC Go-Go' }, { name: 'Pocket Go-Go' }, { name: 'Raw Go-Go' },
+        ],
+      },
+      { name: 'Afrofuturism Soul', children: [{ name: 'Space Soul' }, { name: 'Cosmic Funk' }] },
+      { name: 'Stadium R&B', children: [{ name: 'Arena R&B' }, { name: 'Power Ballad R&B' }] },
+      { name: 'Southern Gothic R&B', children: [{ name: 'Gothic Soul' }, { name: 'Swamp R&B' }] },
+      {
+        name: 'UK R&B',
+        children: [
+          { name: 'UK Garage Soul' }, { name: 'British R&B' }, { name: 'UK Funky R&B' },
+          { name: 'Jorja Smith Style' }, { name: 'Craig David Style' },
+        ],
+      },
+      {
+        name: 'R&B Pop',
+        children: [
+          { name: 'Pop R&B' }, { name: 'Dance R&B' }, { name: 'Beyoncé Style' },
+          { name: 'Rihanna Style' }, { name: 'Usher Style' }, { name: 'Chris Brown Style' },
+        ],
+      },
+      {
+        name: 'Progressive R&B',
+        children: [
+          { name: 'Frank Ocean Style' }, { name: 'Solange Style' }, { name: 'Blood Orange Style' },
+          { name: 'Cinematic R&B' }, { name: 'Orchestral R&B' },
+        ],
+      },
+      {
+        name: 'Grown & Sexy',
+        children: [
+          { name: 'Adult Contemporary R&B' }, { name: 'Sophisticated Soul' },
+          { name: 'Babyface Style' }, { name: 'After 7 Style' }, { name: 'Keith Sweat Style' },
+        ],
+      },
+      {
+        name: 'Street R&B',
+        children: [
+          { name: 'Hood R&B' }, { name: 'Gangsta R&B' }, { name: 'Mary J. Blige Style' },
+          { name: 'Aaliyah Style' }, { name: 'Timbaland R&B' },
+        ],
+      },
+      {
+        name: 'Vocal R&B',
+        children: [
+          { name: 'Vocal Acrobatics' }, { name: 'Whitney Houston Style' }, { name: 'Mariah Carey Style' },
+          { name: 'Gospel-Influenced R&B' }, { name: 'Melismatic R&B' }, { name: 'Adlib-Heavy R&B' },
+        ],
+      },
+      {
+        name: 'Retro Soul',
+        children: [
+          { name: 'Vintage Soul Revival' }, { name: 'Throwback R&B' }, { name: 'Daptone Style' },
+          { name: 'Leon Bridges Style' }, { name: 'Anderson .Paak Style' },
+        ],
+      },
+      {
+        name: 'Afro R&B',
+        children: [
+          { name: 'Afrobeats R&B' }, { name: 'Afro Soul' }, { name: 'Afro Fusion R&B' },
+          { name: 'Tems Style' }, { name: 'Wizkid R&B' },
+        ],
+      },
+      {
+        name: 'Latin R&B',
+        children: [
+          { name: 'Reggaeton R&B' }, { name: 'Latin Soul' }, { name: 'Bachata R&B' },
+          { name: 'Spanish R&B' },
+        ],
+      },
     ],
   },
   {
