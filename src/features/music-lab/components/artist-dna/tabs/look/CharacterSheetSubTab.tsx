@@ -71,6 +71,8 @@ export function CharacterSheetSubTab() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          stageName: draft.identity.stageName,
+          realName: draft.identity.realName,
           skinTone: look.skinTone,
           hairStyle: look.hairStyle,
           fashionStyle: look.fashionStyle,

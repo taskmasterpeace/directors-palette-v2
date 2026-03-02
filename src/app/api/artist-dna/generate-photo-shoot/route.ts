@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import Replicate from 'replicate'
 import { logger } from '@/lib/logger'
+import { persistToLibrary } from '../persist-to-library'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
 import { buildPhotoShootPrompt } from '@/features/music-lab/services/photo-shoot.service'
 
@@ -61,10 +62,24 @@ export async function POST(request: NextRequest) {
     const completed = await replicate.wait(prediction, { interval: 1000 })
 
     if (completed.status === 'succeeded' && completed.output) {
-      const url = Array.isArray(completed.output)
+      const replicateUrl = Array.isArray(completed.output)
         ? completed.output[0]
         : completed.output
-      return NextResponse.json({ url, prompt: result.prompt, aspectRatio: result.aspectRatio })
+
+      // Persist to Supabase storage (permanent URL) but NOT to reference library
+      const artistName = body.dna.identity?.stageName || body.dna.identity?.realName || 'Artist'
+      const persisted = await persistToLibrary({
+        imageUrl: replicateUrl,
+        userId: auth.user.id,
+        artistName,
+        type: 'photo-shoot',
+        aspectRatio: result.aspectRatio,
+        prompt: result.prompt,
+        addToReferenceLibrary: false,
+      })
+
+      const url = persisted?.publicUrl || replicateUrl
+      return NextResponse.json({ url, prompt: result.prompt, aspectRatio: result.aspectRatio, galleryId: persisted?.galleryId })
     }
 
     return NextResponse.json({ error: 'Photo shoot generation failed' }, { status: 500 })
