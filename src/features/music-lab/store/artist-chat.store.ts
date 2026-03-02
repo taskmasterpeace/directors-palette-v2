@@ -36,7 +36,7 @@ interface ArtistChatState {
 
   // Actions
   openChat: (artistId: string, userId: string, dna: ArtistDNA) => Promise<void>
-  closeChat: (userId: string) => Promise<void>
+  closeChat: (userId: string) => void
   sendMessage: (content: string, userId: string, dna: ArtistDNA) => Promise<void>
   reactToMessage: (messageId: string, reaction: ChatReaction) => Promise<void>
   refreshStatus: (dna: ArtistDNA) => Promise<void>
@@ -79,13 +79,27 @@ export const useArtistChatStore = create<ArtistChatState>()(
         set({ isLoading: false })
       },
 
-      closeChat: async (userId) => {
+      closeChat: (userId) => {
         const { activeArtistId, messages } = get()
-        if (!activeArtistId || !messages.length) return
 
-        // Extract memory updates before closing
-        await get().updateMemory(userId)
+        // Always clear chat state immediately so the UI returns to picker
         set({ activeArtistId: null, messages: [], livingContext: null, memory: null, personalityPrint: null })
+
+        // Fire memory update in background (non-blocking) if there were messages
+        if (activeArtistId && messages.length) {
+          // Use the values captured before clearing state
+          fetch('/api/artist-chat/update-memory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              artistId: activeArtistId,
+              recentMessages: messages,
+              existingMemory: null,
+              artistName: 'Artist',
+            }),
+          }).catch(() => { /* best-effort */ })
+          void userId
+        }
       },
 
       sendMessage: async (content, _userId, dna) => {
@@ -96,6 +110,7 @@ export const useArtistChatStore = create<ArtistChatState>()(
 
         // If no personality print loaded, generate one on demand
         if (!personalityPrint) {
+          set({ isSending: true })
           try {
             const genRes = await fetch('/api/artist-dna/generate-personality-print', {
               method: 'POST',
@@ -113,7 +128,19 @@ export const useArtistChatStore = create<ArtistChatState>()(
             console.error('On-demand personality print generation failed:', e)
           }
 
-          if (!personalityPrint) return
+          if (!personalityPrint) {
+            // Show error as a system message instead of silently failing
+            const errorMsg: ChatMessage = {
+              id: `error-${Date.now()}`,
+              artistId: activeArtistId,
+              role: 'artist',
+              content: 'Still warming up... try sending your message again in a moment.',
+              messageType: 'text',
+              createdAt: new Date().toISOString(),
+            }
+            set(state => ({ messages: [...state.messages, errorMsg], isSending: false }))
+            return
+          }
         }
 
         set({ isSending: true })
@@ -350,9 +377,9 @@ export const useArtistChatStore = create<ArtistChatState>()(
     }),
     {
       name: 'artist-chat',
-      partialize: (state) => ({
-        activeArtistId: state.activeArtistId,
-      }),
+      // Don't persist activeArtistId — stale IDs cause broken state on reload
+      // Chat is ephemeral; user picks artist fresh each time
+      partialize: () => ({}),
     }
   )
 )

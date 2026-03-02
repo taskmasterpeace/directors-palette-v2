@@ -340,7 +340,7 @@ interface ChatPageProps {
 
 export function ChatPage({ userId }: ChatPageProps) {
   const {
-    activeArtistId: _chatArtistId,
+    activeArtistId: chatActiveArtistId,
     messages,
     isLoading,
     isSending,
@@ -356,7 +356,6 @@ export function ChatPage({ userId }: ChatPageProps) {
 
   const {
     artists,
-    activeArtistId: dnaActiveArtistId,
     draft,
     isInitialized,
     initialize,
@@ -373,8 +372,8 @@ export function ChatPage({ userId }: ChatPageProps) {
     initialize(userId)
   }, [userId, initialize])
 
-  // Open chat when an artist is selected in DNA store
-  const activeArtistId = dnaActiveArtistId
+  // Chat store's activeArtistId is the source of truth for chat view
+  const activeArtistId = chatActiveArtistId
   const activeArtist = artists.find((a) => a.id === activeArtistId)
 
   const handleSelectArtist = useCallback(
@@ -389,7 +388,7 @@ export function ChatPage({ userId }: ChatPageProps) {
   )
 
   const handleBack = useCallback(async () => {
-    await closeChat(userId)
+    closeChat(userId)
   }, [closeChat, userId])
 
   const handleSend = useCallback(
