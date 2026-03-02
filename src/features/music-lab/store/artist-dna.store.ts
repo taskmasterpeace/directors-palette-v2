@@ -25,6 +25,9 @@ import {
 } from '../services/suno-prompt-builder'
 import { logger } from '@/lib/logger'
 
+/** Sections of ArtistDNA that are objects (safe to spread in updateDraft) */
+type ArtistDNASection = 'identity' | 'sound' | 'persona' | 'lexicon' | 'look' | 'catalog'
+
 interface ArtistDnaState {
   // Server data
   artists: UserArtistProfile[]
@@ -67,7 +70,7 @@ interface ArtistDnaState {
 
   // Actions - Draft editing
   setActiveTab: (tab: ArtistDnaTab) => void
-  updateDraft: <S extends keyof ArtistDNA>(section: S, data: Partial<ArtistDNA[S]>) => void
+  updateDraft: <S extends ArtistDNASection>(section: S, data: Partial<ArtistDNA[S]>) => void
   setDraftName: (name: string) => void
 
   // Actions - Catalog
@@ -89,6 +92,10 @@ interface ArtistDnaState {
   // Actions - Gallery
   addGalleryItem: (item: { url: string; type: GalleryItemType; category?: string; prompt?: string; aspectRatio: string }) => void
   removeGalleryItem: (id: string) => void
+
+  // Actions - Header Background
+  generateHeaderBg: () => Promise<void>
+  isGeneratingHeaderBg: boolean
 
   // Actions - Mix
   generateMix: () => Promise<void>
@@ -120,6 +127,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
       isSeedingFromArtist: false,
       seededFrom: null,
       isAnalyzingCatalog: false,
+      isGeneratingHeaderBg: false,
       personalityPrintStatus: 'idle',
 
       clearSeededFrom: () => set({ seededFrom: null }),
@@ -233,6 +241,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             lexicon: { ...defaults.lexicon, ...dna.lexicon },
             look: lookMerged,
             catalog: { ...defaults.catalog, ...dna.catalog },
+            headerBackgroundUrl: dna.headerBackgroundUrl || '',
             lowConfidenceFields: Array.isArray(dna.lowConfidenceFields) ? dna.lowConfidenceFields : [],
           }
           set({
@@ -298,6 +307,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             lexicon: ensureArrays({ ...defaults.lexicon, ...dna.lexicon }, defaults.lexicon),
             look: ensureArrays({ ...defaults.look, ...dna.look }, defaults.look),
             catalog: { ...defaults.catalog, ...dna.catalog },
+            headerBackgroundUrl: '',
             lowConfidenceFields: Array.isArray(dna.lowConfidenceFields) ? dna.lowConfidenceFields : [],
           }
           set({
@@ -609,6 +619,29 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
         }))
       },
 
+      generateHeaderBg: async () => {
+        const { draft } = get()
+        set({ isGeneratingHeaderBg: true })
+        try {
+          const res = await fetch('/api/artist-dna/generate-header-bg', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dna: draft }),
+          })
+          if (res.ok) {
+            const { url } = await res.json()
+            set((state) => ({
+              draft: { ...state.draft, headerBackgroundUrl: url },
+              isDirty: true,
+            }))
+          }
+        } catch (error) {
+          logger.musicLab.error('Header bg generation error', { error: error instanceof Error ? error.message : String(error) })
+        } finally {
+          set({ isGeneratingHeaderBg: false })
+        }
+      },
+
       generateMix: async () => {
         const { draft, combineVocalAndStyle } = get()
 
@@ -702,6 +735,7 @@ export const useArtistDnaStore = create<ArtistDnaState>()(
             lexicon: { ...defaults.lexicon, ...p.draft.lexicon },
             look: { ...defaults.look, ...p.draft.look, gallery: Array.isArray(p.draft.look?.gallery) ? p.draft.look.gallery : [] },
             catalog: { ...defaults.catalog, ...p.draft.catalog },
+            headerBackgroundUrl: p.draft.headerBackgroundUrl || '',
             lowConfidenceFields: Array.isArray(p.draft.lowConfidenceFields) ? p.draft.lowConfidenceFields : [],
           }
         } else {

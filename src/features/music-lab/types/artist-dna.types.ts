@@ -189,6 +189,7 @@ export interface ArtistDNA {
   catalog: ArtistCatalog
   socialCircle?: ArtistSocialCircle
   phone?: PhoneProfile
+  headerBackgroundUrl: string  // z-image-turbo generated atmospheric background
   lowConfidenceFields: string[]  // field paths where data may be inaccurate (e.g. "identity.realName", "lexicon.adLibs")
 }
 
@@ -318,6 +319,7 @@ export function createEmptyDNA(): ArtistDNA {
       entries: [],
     },
     socialCircle: { entourage: [], hangoutSpots: [], transportation: '' },
+    headerBackgroundUrl: '',
     lowConfidenceFields: [],
   }
 }

@@ -29,7 +29,7 @@ export async function persistToLibrary(opts: {
   imageUrl: string
   userId: string
   artistName: string
-  type: 'character-sheet' | 'portrait' | 'photo-shoot'
+  type: 'character-sheet' | 'portrait' | 'photo-shoot' | 'header-bg'
   aspectRatio: string
   prompt?: string
   addToReferenceLibrary?: boolean
