@@ -81,7 +81,7 @@ export const GENRE_TAXONOMY: GenreTaxonomyNode[] = [
           { name: 'East Coast Boom Bap' }, { name: 'Jazz Rap' }, { name: 'Golden Age' },
           { name: 'Lo-Fi Boom Bap' }, { name: 'Underground Boom Bap' },
           { name: 'Neo Boom Bap' }, { name: 'Sample-Heavy Boom Bap' },
-          { name: 'Griselda Boom Bap' }, { name: 'Gritty East Coast' },
+          { name: 'Gritty Boom Bap' }, { name: 'Gritty East Coast' },
         ],
       },
       {
@@ -89,7 +89,7 @@ export const GENRE_TAXONOMY: GenreTaxonomyNode[] = [
         children: [
           { name: 'Horrorcore Memphis' }, { name: 'Crunk Memphis' },
           { name: 'Underground Memphis' }, { name: 'Memphis Trap' }, { name: 'Dark Memphis' },
-          { name: 'Three 6 Mafia Style' }, { name: 'Memphis Phonk' },
+          { name: 'Lo-Fi Memphis' }, { name: 'Memphis Phonk' },
         ],
       },
       {
@@ -120,7 +120,7 @@ export const GENRE_TAXONOMY: GenreTaxonomyNode[] = [
       {
         name: 'East Coast Hip-Hop',
         children: [
-          { name: 'New York Rap' }, { name: 'Griselda Style' }, { name: 'Mobb Deep Style' },
+          { name: 'New York Rap' }, { name: 'Gritty Buffalo Rap' }, { name: 'Hardcore East Coast' },
           { name: 'Lyrical Miracle' }, { name: 'NYC Underground' }, { name: 'DMV Rap' },
           { name: 'Philly Rap' }, { name: 'Buffalo Rap' },
         ],
@@ -315,7 +315,7 @@ export const GENRE_TAXONOMY: GenreTaxonomyNode[] = [
         name: 'Neo-Soul',
         children: [
           { name: 'Conscious Soul' }, { name: 'Nu Jazz Soul' }, { name: 'Organic Soul' },
-          { name: 'Bohemian Soul' }, { name: 'Live Band Neo-Soul' }, { name: 'Erykah Badu Style' },
+          { name: 'Bohemian Soul' }, { name: 'Live Band Neo-Soul' }, { name: 'Afrocentric Neo-Soul' },
         ],
       },
       {
@@ -338,7 +338,7 @@ export const GENRE_TAXONOMY: GenreTaxonomyNode[] = [
         name: 'Trap Soul',
         children: [
           { name: 'Melodic Trap Soul' }, { name: 'Dark Trap Soul' }, { name: 'Gospel Trap Soul' },
-          { name: 'Bryson Tiller Style' }, { name: 'SZA Style' }, { name: 'Moody Trap Soul' },
+          { name: 'Louisville Trap Soul' }, { name: 'Vulnerable Trap Soul' }, { name: 'Moody Trap Soul' },
         ],
       },
       {
@@ -354,7 +354,7 @@ export const GENRE_TAXONOMY: GenreTaxonomyNode[] = [
           { name: 'P-Funk' }, { name: 'Electro-Funk' }, { name: 'Nu-Funk' },
           { name: 'Funk Metal' }, { name: 'Afro-Funk' }, { name: 'Boogie Funk' },
           { name: 'Synth Funk' }, { name: 'Deep Funk' }, { name: 'Go-Go Funk' },
-          { name: 'Sly Stone Style' }, { name: 'James Brown Style' },
+          { name: 'Psychedelic Funk' }, { name: 'Hard Funk' },
         ],
       },
       {
@@ -375,16 +375,16 @@ export const GENRE_TAXONOMY: GenreTaxonomyNode[] = [
       {
         name: 'Philadelphia Soul',
         children: [
-          { name: 'Philly Sound' }, { name: 'TSOP Style' }, { name: 'Philly International' },
+          { name: 'Philly Sound' }, { name: 'Philly Orchestral Soul' }, { name: 'Philly International' },
         ],
       },
       {
         name: 'Memphis Soul',
         children: [
-          { name: 'Stax Sound' }, { name: 'Hi Records Style' }, { name: 'Al Green Style' },
+          { name: 'Stax Sound' }, { name: 'Hi Records Sound' }, { name: 'Smooth Memphis Soul' },
         ],
       },
-      { name: 'Chicago Soul', children: [{ name: 'Chicago R&B' }, { name: 'Curtis Mayfield Style' }] },
+      { name: 'Chicago Soul', children: [{ name: 'Chicago R&B' }, { name: 'Conscious Chicago Soul' }] },
       {
         name: 'Psychedelic Soul',
         children: [
@@ -394,15 +394,15 @@ export const GENRE_TAXONOMY: GenreTaxonomyNode[] = [
       {
         name: 'New Jack Swing',
         children: [
-          { name: 'Swing Beat' }, { name: 'Jack Swing Ballads' }, { name: 'Teddy Riley Style' },
-          { name: 'Guy Style' }, { name: 'Bobby Brown Style' },
+          { name: 'Swing Beat' }, { name: 'Jack Swing Ballads' }, { name: 'Harlem Swing' },
+          { name: 'Uptown Swing' }, { name: 'Hip-Hop Swing' },
         ],
       },
       {
         name: 'Minneapolis Sound',
         children: [
-          { name: 'Purple Sound R&B' }, { name: 'Prince Style' }, { name: 'The Time Style' },
-          { name: 'Janet Jackson Style' }, { name: 'Jimmy Jam & Terry Lewis Style' },
+          { name: 'Purple Sound R&B' }, { name: 'Synth-Funk R&B' }, { name: 'Electro-Soul' },
+          { name: 'Pop-Funk Crossover' }, { name: 'Minneapolis Synth R&B' },
         ],
       },
       {
@@ -418,20 +418,20 @@ export const GENRE_TAXONOMY: GenreTaxonomyNode[] = [
         name: 'UK R&B',
         children: [
           { name: 'UK Garage Soul' }, { name: 'British R&B' }, { name: 'UK Funky R&B' },
-          { name: 'Jorja Smith Style' }, { name: 'Craig David Style' },
+          { name: 'London Soul' }, { name: 'UK Garage Vocal' },
         ],
       },
       {
         name: 'R&B Pop',
         children: [
-          { name: 'Pop R&B' }, { name: 'Dance R&B' }, { name: 'Beyoncé Style' },
-          { name: 'Rihanna Style' }, { name: 'Usher Style' }, { name: 'Chris Brown Style' },
+          { name: 'Pop R&B' }, { name: 'Dance R&B' }, { name: 'Power Diva R&B' },
+          { name: 'Island Pop R&B' }, { name: 'Uptempo R&B' }, { name: 'Party R&B' },
         ],
       },
       {
         name: 'Progressive R&B',
         children: [
-          { name: 'Frank Ocean Style' }, { name: 'Solange Style' }, { name: 'Blood Orange Style' },
+          { name: 'Introspective R&B' }, { name: 'Art Soul' }, { name: 'Lo-Fi R&B' },
           { name: 'Cinematic R&B' }, { name: 'Orchestral R&B' },
         ],
       },
@@ -439,35 +439,35 @@ export const GENRE_TAXONOMY: GenreTaxonomyNode[] = [
         name: 'Grown & Sexy',
         children: [
           { name: 'Adult Contemporary R&B' }, { name: 'Sophisticated Soul' },
-          { name: 'Babyface Style' }, { name: 'After 7 Style' }, { name: 'Keith Sweat Style' },
+          { name: 'Smooth Ballad R&B' }, { name: 'Vocal Group R&B' }, { name: 'Bedroom Slow Jam' },
         ],
       },
       {
         name: 'Street R&B',
         children: [
-          { name: 'Hood R&B' }, { name: 'Gangsta R&B' }, { name: 'Mary J. Blige Style' },
-          { name: 'Aaliyah Style' }, { name: 'Timbaland R&B' },
+          { name: 'Hood R&B' }, { name: 'Gangsta R&B' }, { name: 'Hip-Hop Soul' },
+          { name: 'Futuristic R&B' }, { name: 'Choppy Beat R&B' },
         ],
       },
       {
         name: 'Vocal R&B',
         children: [
-          { name: 'Vocal Acrobatics' }, { name: 'Whitney Houston Style' }, { name: 'Mariah Carey Style' },
+          { name: 'Vocal Acrobatics' }, { name: 'Power Ballad Soul' }, { name: 'Whistle-Register R&B' },
           { name: 'Gospel-Influenced R&B' }, { name: 'Melismatic R&B' }, { name: 'Adlib-Heavy R&B' },
         ],
       },
       {
         name: 'Retro Soul',
         children: [
-          { name: 'Vintage Soul Revival' }, { name: 'Throwback R&B' }, { name: 'Daptone Style' },
-          { name: 'Leon Bridges Style' }, { name: 'Anderson .Paak Style' },
+          { name: 'Vintage Soul Revival' }, { name: 'Throwback R&B' }, { name: 'Analog Soul' },
+          { name: 'Texas Retro Soul' }, { name: 'Drum-Heavy Soul' },
         ],
       },
       {
         name: 'Afro R&B',
         children: [
           { name: 'Afrobeats R&B' }, { name: 'Afro Soul' }, { name: 'Afro Fusion R&B' },
-          { name: 'Tems Style' }, { name: 'Wizkid R&B' },
+          { name: 'Lagos R&B' }, { name: 'Afro-Pop Soul' },
         ],
       },
       {
