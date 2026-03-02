@@ -1,7 +1,8 @@
 /**
  * Artist DNA Generate Photo Shoot API
- * Takes a scene ID + artist DNA, builds the dynamic prompt, generates with nano-banana-2.
- * Uses the character sheet as reference image for identity lock.
+ * Accepts either a pre-built prompt + aspectRatio from the client,
+ * or a sceneId to build the prompt server-side from artist DNA.
+ * Generates with nano-banana-2. Uses the character sheet as reference image for identity lock.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -17,7 +18,9 @@ const replicate = new Replicate({
 })
 
 interface PhotoShootRequest {
-  sceneId: string
+  sceneId?: string          // Legacy: look up scene by ID
+  prompt?: string           // New: pre-built prompt from client
+  aspectRatio?: string      // New: comes with prompt
   dna: ArtistDNA
   characterSheetUrl?: string
 }
@@ -29,24 +32,41 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json() as PhotoShootRequest
 
-    if (!body.sceneId || !body.dna) {
+    if (!body.dna) {
       return NextResponse.json(
-        { error: 'sceneId and dna are required' },
+        { error: 'dna is required' },
         { status: 400 }
       )
     }
 
-    const result = buildPhotoShootPrompt(body.sceneId, body.dna)
-    if (!result) {
+    let finalPrompt: string
+    let finalAspectRatio: string
+
+    if (body.prompt && body.aspectRatio) {
+      // New path: prompt built client-side with recipe field values
+      finalPrompt = body.prompt
+      finalAspectRatio = body.aspectRatio
+    } else if (body.sceneId) {
+      // Legacy path: build prompt from scene ID
+      const result = buildPhotoShootPrompt(body.sceneId, body.dna)
+      if (!result) {
+        return NextResponse.json(
+          { error: `Unknown scene: ${body.sceneId}` },
+          { status: 400 }
+        )
+      }
+      finalPrompt = result.prompt
+      finalAspectRatio = result.aspectRatio
+    } else {
       return NextResponse.json(
-        { error: `Unknown scene: ${body.sceneId}` },
+        { error: 'prompt+aspectRatio or sceneId required' },
         { status: 400 }
       )
     }
 
     const input: Record<string, unknown> = {
-      prompt: result.prompt,
-      aspect_ratio: result.aspectRatio,
+      prompt: finalPrompt,
+      aspect_ratio: finalAspectRatio,
       output_format: 'jpg',
     }
 
@@ -73,13 +93,13 @@ export async function POST(request: NextRequest) {
         userId: auth.user.id,
         artistName,
         type: 'photo-shoot',
-        aspectRatio: result.aspectRatio,
-        prompt: result.prompt,
+        aspectRatio: finalAspectRatio,
+        prompt: finalPrompt,
         addToReferenceLibrary: false,
       })
 
       const url = persisted?.publicUrl || replicateUrl
-      return NextResponse.json({ url, prompt: result.prompt, aspectRatio: result.aspectRatio, galleryId: persisted?.galleryId })
+      return NextResponse.json({ url, prompt: finalPrompt, aspectRatio: finalAspectRatio, galleryId: persisted?.galleryId })
     }
 
     return NextResponse.json({ error: 'Photo shoot generation failed' }, { status: 500 })
