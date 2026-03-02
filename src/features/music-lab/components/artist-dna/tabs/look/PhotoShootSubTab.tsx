@@ -8,9 +8,8 @@ import { useArtistDnaStore } from '../../../../store/artist-dna.store'
 import {
   PHOTO_SHOOT_CATEGORIES,
   getScenesByCategory,
-  type PhotoShootCategory,
-  type PhotoShootScene,
 } from '../../../../services/photo-shoot.service'
+import type { PhotoShootCategory, PhotoShootScene } from '../../../../types/photo-shoot.types'
 import { logger } from '@/lib/logger'
 
 interface RecentPhoto {
@@ -140,7 +139,7 @@ export function PhotoShootSubTab() {
                   <p className="text-xs font-medium truncate">{scene.label}</p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">{scene.description}</p>
                   <span className="text-[10px] text-muted-foreground/60 mt-1 inline-block">
-                    {scene.aspectRatio}
+                    {scene.subScenes.length} shots
                   </span>
                 </div>
                 {isGenerating ? (
