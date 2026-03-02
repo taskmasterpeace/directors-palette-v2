@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { Music2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Music2, ChevronDown, ChevronUp, Mic } from 'lucide-react'
+import type { RhymeType, RhymePattern } from '../../../types/artist-dna.types'
 import { GenreCascade } from '../GenreCascade'
 import { TagInput } from '../TagInput'
 import { MagicWandField } from '../MagicWandField'
@@ -182,6 +183,114 @@ export function SoundTab() {
           value={sound.melodyBias}
           onChange={(melodyBias) => updateDraft('sound', { melodyBias })}
         />
+
+        {/* Rhyming DNA */}
+        <div className="space-y-3 rounded-lg border border-border/50 bg-muted/5 p-3">
+          <div className="flex items-center gap-2">
+            <Mic className="w-4 h-4 text-amber-400" />
+            <Label className="text-sm font-semibold">Rhyming DNA</Label>
+          </div>
+
+          {/* Rhyme Types — HOW they rhyme */}
+          <div className="space-y-1.5">
+            <p className="text-[11px] text-muted-foreground/70 font-medium uppercase tracking-wider">
+              Rhyme Types
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {([
+                { id: 'perfect' as RhymeType, label: 'Perfect', desc: 'cat / hat' },
+                { id: 'multi-syllable' as RhymeType, label: 'Multi-syllable', desc: 'demonstrate / hesitate' },
+                { id: 'slant' as RhymeType, label: 'Slant', desc: 'home / bone' },
+                { id: 'internal' as RhymeType, label: 'Internal', desc: 'within lines' },
+                { id: 'compound' as RhymeType, label: 'Compound', desc: 'door hinge / orange' },
+                { id: 'assonance' as RhymeType, label: 'Assonance', desc: 'lake / fate' },
+              ]).map(rt => {
+                const active = (sound.rhymeTypes || []).includes(rt.id)
+                return (
+                  <button
+                    key={rt.id}
+                    type="button"
+                    onClick={() => {
+                      const current = sound.rhymeTypes || []
+                      const next = active
+                        ? current.filter(t => t !== rt.id)
+                        : [...current, rt.id]
+                      updateDraft('sound', { rhymeTypes: next })
+                    }}
+                    title={rt.desc}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
+                      active
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                        : 'bg-muted/10 text-muted-foreground/70 border border-border/30 hover:border-border/60 hover:text-foreground'
+                    }`}
+                  >
+                    {rt.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Rhyme Patterns — WHERE they rhyme */}
+          <div className="space-y-1.5">
+            <p className="text-[11px] text-muted-foreground/70 font-medium uppercase tracking-wider">
+              Rhyme Patterns
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {([
+                { id: 'aabb' as RhymePattern, label: 'AABB', desc: 'couplets' },
+                { id: 'abab' as RhymePattern, label: 'ABAB', desc: 'alternating' },
+                { id: 'abcb' as RhymePattern, label: 'ABCB', desc: 'ballad' },
+                { id: 'abba' as RhymePattern, label: 'ABBA', desc: 'enclosed' },
+                { id: 'free' as RhymePattern, label: 'Free', desc: 'no fixed pattern' },
+                { id: 'chain' as RhymePattern, label: 'Chain', desc: 'end → middle' },
+              ]).map(rp => {
+                const active = (sound.rhymePatterns || []).includes(rp.id)
+                return (
+                  <button
+                    key={rp.id}
+                    type="button"
+                    onClick={() => {
+                      const current = sound.rhymePatterns || []
+                      const next = active
+                        ? current.filter(p => p !== rp.id)
+                        : [...current, rp.id]
+                      updateDraft('sound', { rhymePatterns: next })
+                    }}
+                    title={rp.desc}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
+                      active
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                        : 'bg-muted/10 text-muted-foreground/70 border border-border/30 hover:border-border/60 hover:text-foreground'
+                    }`}
+                  >
+                    {rp.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Rhyme Density slider */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] text-muted-foreground/70 font-medium uppercase tracking-wider">
+                Rhyme Density
+              </p>
+              <span className="text-[10px] text-muted-foreground/50 font-mono">
+                {(sound.rhymeDensity ?? 50) <= 25 ? 'Sparse' : (sound.rhymeDensity ?? 50) <= 50 ? 'Moderate' : (sound.rhymeDensity ?? 50) <= 75 ? 'Dense' : 'Every line'}
+              </span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={sound.rhymeDensity ?? 50}
+              onChange={(e) => updateDraft('sound', { rhymeDensity: Number(e.target.value) })}
+              className="w-full h-1.5 rounded-full appearance-none bg-muted/30 accent-amber-500"
+            />
+          </div>
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">

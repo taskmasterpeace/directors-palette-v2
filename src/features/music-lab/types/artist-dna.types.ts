@@ -25,6 +25,22 @@ export interface GenreEra {
   genres: string[]   // genres active in this era
 }
 
+export type RhymeType =
+  | 'perfect'        // cat/hat — exact ending sound
+  | 'multi-syllable' // demonstrate/hesitate — 2+ syllable matches
+  | 'slant'          // home/bone — close but not exact
+  | 'internal'       // rhymes within the line, not just at ends
+  | 'compound'       // "door hinge" / "orange" — multi-word rhymes
+  | 'assonance'      // lake/fate — vowel sound matches
+
+export type RhymePattern =
+  | 'aabb'   // couplets
+  | 'abab'   // alternating
+  | 'abcb'   // ballad / simple
+  | 'abba'   // enclosed
+  | 'free'   // no fixed pattern
+  | 'chain'  // end of one line → middle of next
+
 export interface ArtistSound {
   genres: string[]
   subgenres: string[]
@@ -39,6 +55,10 @@ export interface ArtistSound {
   language: string
   secondaryLanguages: string[]
   soundDescription: string
+  // Rhyming DNA
+  rhymeTypes: RhymeType[]      // HOW they rhyme (multi-select)
+  rhymePatterns: RhymePattern[] // WHERE they rhyme (multi-select)
+  rhymeDensity: number          // 0 = sparse, 100 = every line
 }
 
 export interface ArtistPersona {
@@ -264,6 +284,9 @@ export function createEmptyDNA(): ArtistDNA {
       language: 'English',
       secondaryLanguages: [],
       soundDescription: '',
+      rhymeTypes: [],
+      rhymePatterns: [],
+      rhymeDensity: 50,
     },
     persona: {
       traits: [],

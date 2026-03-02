@@ -172,11 +172,64 @@ function buildSystemPrompt(body: GenerateOptionsBody): string {
     })
   }
 
+  // Rhyming DNA
+  const rhymeTypes = artistDna.sound?.rhymeTypes
+  const rhymePatterns = artistDna.sound?.rhymePatterns
+  const rhymeDensity = artistDna.sound?.rhymeDensity
+
+  if (rhymeTypes?.length || rhymePatterns?.length || rhymeDensity !== undefined) {
+    parts.push('RHYMING STYLE:')
+
+    if (rhymeTypes?.length) {
+      const typeDescriptions: Record<string, string> = {
+        'perfect': 'Perfect rhymes (exact ending sounds: cat/hat, flow/know)',
+        'multi-syllable': 'Multi-syllable rhymes (demonstrate/hesitate, syllable/killable) — match 2+ syllables at the end',
+        'slant': 'Slant/near rhymes (home/bone, love/move) — close sounds, not exact',
+        'internal': 'Internal rhymes (rhymes within lines, not just at line endings)',
+        'compound': 'Compound/mosaic rhymes (multiple words rhyming together: "door hinge"/"orange", "lackin\' purpose"/"back on surface")',
+        'assonance': 'Assonance rhymes (matching vowel sounds: lake/fate, go/slow)',
+      }
+      const descs = rhymeTypes.map(t => typeDescriptions[t] || t)
+      parts.push(`Preferred rhyme types: ${descs.join('. ')}`)
+      if (rhymeTypes.includes('multi-syllable') || rhymeTypes.includes('compound')) {
+        parts.push('This artist favors COMPLEX rhyming — avoid simple single-syllable rhymes like "cat/hat". Aim for multi-word and multi-syllable matches.')
+      }
+    }
+
+    if (rhymePatterns?.length) {
+      const patternDescriptions: Record<string, string> = {
+        'aabb': 'AABB (couplets — lines 1-2 rhyme, lines 3-4 rhyme)',
+        'abab': 'ABAB (alternating — lines 1 and 3 rhyme, lines 2 and 4 rhyme)',
+        'abcb': 'ABCB (only lines 2 and 4 rhyme)',
+        'abba': 'ABBA (enclosed — lines 1 and 4 rhyme, lines 2 and 3 rhyme)',
+        'free': 'Free form (no fixed pattern, rhymes land where they feel natural)',
+        'chain': 'Chain rhyme (the end word of one line rhymes with a word in the middle of the next line)',
+      }
+      const descs = rhymePatterns.map(p => patternDescriptions[p] || p)
+      parts.push(`Preferred rhyme patterns: ${descs.join('. ')}`)
+      parts.push(`Distribute these patterns across the 4 options — each option can use a different pattern from the artist's preferences.`)
+    }
+
+    if (rhymeDensity !== undefined) {
+      if (rhymeDensity <= 25) {
+        parts.push('Rhyme density: SPARSE — only rhyme occasionally. Let some lines breathe without rhymes.')
+      } else if (rhymeDensity <= 50) {
+        parts.push('Rhyme density: MODERATE — rhyme naturally, don\'t force it on every line.')
+      } else if (rhymeDensity <= 75) {
+        parts.push('Rhyme density: DENSE — most lines should rhyme. Pack the bars.')
+      } else {
+        parts.push('Rhyme density: EVERY LINE — every line should rhyme with something. Maximum lyrical density.')
+      }
+    }
+  }
+
   // Variety directive
   parts.push('Make each of the 4 options DISTINCTLY different: different imagery, rhythm, opening lines, rhyme schemes.')
   parts.push(`NEVER use these AI-sounding words: ${BANNED_AI_PHRASES.join(', ')}`)
   parts.push('Write like a human songwriter, not an AI. Use concrete, specific imagery from the artist\'s world.')
-  parts.push('End-of-line rhymes should feel natural, not forced. Vary rhyme schemes across options (AABB, ABAB, ABCB).')
+  if (!rhymePatterns?.length) {
+    parts.push('End-of-line rhymes should feel natural, not forced. Vary rhyme schemes across options (AABB, ABAB, ABCB).')
+  }
 
   return parts.join('\n')
 }
