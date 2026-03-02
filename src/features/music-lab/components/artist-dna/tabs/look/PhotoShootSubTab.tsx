@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Loader2, Camera } from 'lucide-react'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Loader2, Camera, X, ShieldCheck } from 'lucide-react'
 import { useArtistDnaStore } from '../../../../store/artist-dna.store'
 import {
   PHOTO_SHOOT_CATEGORIES,
@@ -12,19 +13,27 @@ import {
 } from '../../../../services/photo-shoot.service'
 import { logger } from '@/lib/logger'
 
+interface RecentPhoto {
+  url: string
+  prompt: string
+  aspectRatio: string
+  sceneId: string
+  generatedAt: string
+}
+
 export function PhotoShootSubTab() {
   const { draft, addGalleryItem } = useArtistDnaStore()
   const look = draft.look
   const [activeCategory, setActiveCategory] = useState<PhotoShootCategory>('wardrobe')
   const [generatingId, setGeneratingId] = useState<string | null>(null)
-  const [lastGenerated, setLastGenerated] = useState<{ url: string; prompt: string; aspectRatio: string } | null>(null)
+  const [recentPhotos, setRecentPhotos] = useState<RecentPhoto[]>([])
+  const [fullscreenPhoto, setFullscreenPhoto] = useState<RecentPhoto | null>(null)
 
   const scenes = getScenesByCategory(activeCategory)
   const hasCharacterSheet = !!look.characterSheetUrl
 
   const handleGenerate = async (scene: PhotoShootScene) => {
     setGeneratingId(scene.id)
-    setLastGenerated(null)
     try {
       const res = await fetch('/api/artist-dna/generate-photo-shoot', {
         method: 'POST',
@@ -38,8 +47,14 @@ export function PhotoShootSubTab() {
       if (res.ok) {
         const data = await res.json()
         if (data.url) {
-          setLastGenerated({ url: data.url, prompt: data.prompt, aspectRatio: data.aspectRatio })
-          // Auto-save to gallery
+          const photo: RecentPhoto = {
+            url: data.url,
+            prompt: data.prompt,
+            aspectRatio: data.aspectRatio,
+            sceneId: scene.id,
+            generatedAt: new Date().toISOString(),
+          }
+          setRecentPhotos((prev) => [photo, ...prev].slice(0, 12))
           addGalleryItem({
             url: data.url,
             type: 'photo-shoot',
@@ -56,16 +71,42 @@ export function PhotoShootSubTab() {
     }
   }
 
-  return (
-    <div className="space-y-3">
-      {/* Warning if no character sheet */}
-      {!hasCharacterSheet && (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2">
-          <p className="text-xs text-amber-400">
-            Generate a character sheet first for best results. Photo shoots use it as the identity reference.
+  // Hard gate: no character sheet = disabled
+  if (!hasCharacterSheet) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-6 text-center space-y-3">
+          <ShieldCheck className="w-8 h-8 text-amber-400 mx-auto" />
+          <p className="text-sm font-medium text-amber-300">
+            Character sheet required
+          </p>
+          <p className="text-xs text-amber-400/80 max-w-xs mx-auto">
+            Generate a character sheet first — it&apos;s the identity anchor for all photo shoots. Tattoos, body type, and features stay consistent across every shot.
           </p>
         </div>
-      )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Character sheet confirmation */}
+      <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2">
+        <img
+          src={look.characterSheetUrl!}
+          alt="Character sheet"
+          className="w-10 h-10 rounded object-cover border border-border/40 shrink-0"
+        />
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium text-emerald-400 flex items-center gap-1">
+            <ShieldCheck className="w-3 h-3" />
+            Identity locked
+          </p>
+          <p className="text-[10px] text-muted-foreground/60 truncate">
+            Character sheet active — photos will match
+          </p>
+        </div>
+      </div>
 
       {/* Category tabs */}
       <div className="flex gap-1 flex-wrap">
@@ -74,10 +115,7 @@ export function PhotoShootSubTab() {
             key={cat.id}
             size="sm"
             variant={activeCategory === cat.id ? 'default' : 'outline'}
-            onClick={() => {
-              setActiveCategory(cat.id)
-              setLastGenerated(null)
-            }}
+            onClick={() => setActiveCategory(cat.id)}
             className="h-7 text-xs"
           >
             <span className="mr-1">{cat.icon}</span>
@@ -126,21 +164,62 @@ export function PhotoShootSubTab() {
         </div>
       )}
 
-      {/* Last generated result */}
-      {lastGenerated && !generatingId && (
+      {/* Recent photos gallery grid */}
+      {recentPhotos.length > 0 && (
         <div className="space-y-2">
-          <div className="rounded-lg overflow-hidden border border-border/40">
-            <img
-              src={lastGenerated.url}
-              alt="Photo shoot result"
-              className="w-full h-auto"
-            />
+          <p className="text-[11px] text-muted-foreground font-medium">Recent shots</p>
+          <div className="grid grid-cols-3 gap-2">
+            {recentPhotos.map((photo, i) => (
+              <div
+                key={`${photo.sceneId}-${photo.generatedAt}-${i}`}
+                className="relative group rounded-lg overflow-hidden border border-border/40 cursor-pointer bg-muted/10"
+                onClick={() => setFullscreenPhoto(photo)}
+              >
+                <img
+                  src={photo.url}
+                  alt="Photo shoot result"
+                  className="w-full aspect-square object-cover"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors" />
+              </div>
+            ))}
           </div>
-          <p className="text-[10px] text-muted-foreground/60 break-words">
-            Saved to Gallery
+          <p className="text-[10px] text-muted-foreground/60">
+            All photos saved to Gallery tab
           </p>
         </div>
       )}
+
+      {/* Fullscreen dialog */}
+      <Dialog open={!!fullscreenPhoto} onOpenChange={(open) => !open && setFullscreenPhoto(null)}>
+        <DialogContent
+          className="!w-screen !h-screen !max-w-none !max-h-none sm:!max-w-none p-0 bg-black border-none rounded-none overflow-hidden inset-0 translate-x-0 translate-y-0 top-0 left-0"
+          showCloseButton={false}
+        >
+          <DialogTitle className="sr-only">Photo Preview</DialogTitle>
+          {fullscreenPhoto && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="fixed top-4 right-4 text-white hover:bg-white/20 z-50 bg-black/50 backdrop-blur-sm rounded-full w-10 h-10 p-0"
+                onClick={() => setFullscreenPhoto(null)}
+              >
+                <X className="w-6 h-6" />
+              </Button>
+              <div className="flex flex-col w-full h-full">
+                <div className="relative flex-1 flex items-center justify-center bg-black min-h-0 overflow-hidden">
+                  <img
+                    src={fullscreenPhoto.url}
+                    alt="Photo shoot full view"
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

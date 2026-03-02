@@ -351,11 +351,13 @@ export function getScenesByCategory(category: PhotoShootCategory): PhotoShootSce
   return PHOTO_SHOOT_SCENES.filter(s => s.category === category)
 }
 
+const IDENTITY_LOCK_PREFIX = 'EXACT SAME PERSON as the reference image. Maintain identical: face structure, skin tone, body type, tattoo placement, hair style, all distinguishing features. '
+
 export function buildPhotoShootPrompt(sceneId: string, dna: ArtistDNA): { prompt: string; aspectRatio: string } | null {
   const scene = PHOTO_SHOOT_SCENES.find(s => s.id === sceneId)
   if (!scene) return null
   return {
-    prompt: scene.buildPrompt(dna),
+    prompt: IDENTITY_LOCK_PREFIX + scene.buildPrompt(dna),
     aspectRatio: scene.aspectRatio,
   }
 }

@@ -35,7 +35,8 @@ function buildPrompt(req: CharacterSheetRequest): string {
     : null
 
   const parts: string[] = [
-    `CHARACTER @${name}`,
+    `CHARACTER IDENTITY REFERENCE: @${name}`,
+    'EXACT SAME PERSON in every panel, consistent tattoo placement, identical physical features across all views.',
     '',
     'LAYOUT (Left to Right):',
     '',
@@ -55,14 +56,48 @@ function buildPrompt(req: CharacterSheetRequest): string {
 
   parts.push('- Side profile view, Back view')
 
+  // COLOR REFERENCE — exact physical colors
+  const colorRefs: string[] = []
+  if (req.skinTone) colorRefs.push(`Skin: ${req.skinTone}`)
+  if (req.hairStyle) colorRefs.push(`Hair: ${req.hairStyle}`)
+  if (colorRefs.length > 0) {
+    parts.push('')
+    parts.push('COLOR REFERENCE (must match in every panel):')
+    colorRefs.forEach(ref => parts.push(`- ${ref}`))
+  }
+
+  // BODY TYPE / BUILD from visual description
+  if (req.visualDescription) {
+    parts.push('')
+    parts.push('BODY TYPE / BUILD:')
+    parts.push(`- ${req.visualDescription}`)
+  }
+
+  // TATTOO MAP — explicit placement
+  if (req.tattoos) {
+    parts.push('')
+    parts.push('TATTOO MAP (must appear in every relevant view):')
+    parts.push(`- ${req.tattoos}`)
+    parts.push('- Show tattoos clearly in front, side, and back views with IDENTICAL placement')
+  }
+
+  // DISTINGUISHING MARKS — jewelry, piercings, unique features
+  const marks: string[] = []
+  if (req.jewelry) marks.push(req.jewelry)
+  if (marks.length > 0) {
+    parts.push('')
+    parts.push('DISTINGUISHING MARKS:')
+    marks.forEach(mark => parts.push(`- ${mark}`))
+  }
+
   parts.push('')
   parts.push('SECTION 2 - EXPRESSIONS & DETAILS:')
   parts.push(`- Header: "${name}"`)
   parts.push('- EXPRESSION GRID (2x3): Neutral | Performing | Intense | Relaxed | Laughing | Mysterious')
 
   const detailParts: string[] = []
-  if (req.jewelry) detailParts.push(`${req.jewelry} jewelry`)
-  if (req.tattoos) detailParts.push(`${req.tattoos} tattoos`)
+  if (req.jewelry) detailParts.push(`${req.jewelry} jewelry close-ups`)
+  if (req.tattoos) detailParts.push(`${req.tattoos} tattoo close-ups showing exact placement`)
   if (detailParts.length > 0) {
     parts.push(`- CLOSE-UP DETAILS: ${detailParts.join(', ')}`)
   }
@@ -73,13 +108,8 @@ function buildPrompt(req: CharacterSheetRequest): string {
   parts.push('- Stage performance pose, Studio recording pose, Music video glamour pose')
   parts.push('- WARDROBE VARIANTS: streetwear, stage outfit, casual')
 
-  if (req.visualDescription) {
-    parts.push('')
-    parts.push(req.visualDescription)
-  }
-
   parts.push('')
-  parts.push('STYLE: ultra realistic photograph, NOT illustration, NOT cartoon, NOT anime, NOT drawing, NOT painting. Photo quality, photorealistic, professional character reference sheet, studio photography, sharp focus, high detail, 8K resolution')
+  parts.push('STYLE: ultra realistic photograph, NOT illustration, NOT cartoon, NOT anime, NOT drawing, NOT painting. Photo quality, photorealistic, professional character reference sheet, studio photography, sharp focus, high detail, 8K resolution. EXACT SAME PERSON in every panel — identical face, body, skin tone, tattoos, and distinguishing features across all views.')
 
   return parts.join('\n')
 }
