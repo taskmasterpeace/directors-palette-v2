@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Loader2, Sparkles, Download } from 'lucide-react'
 import { useArtistDnaStore } from '../../../../store/artist-dna.store'
 import { logger } from '@/lib/logger'
+import { WARDROBE_STYLES } from '../../../../data/wardrobe-wildcards'
 
 export function CharacterSheetSubTab() {
   const { draft, updateDraft, addGalleryItem, saveArtist } = useArtistDnaStore()
@@ -33,6 +34,7 @@ export function CharacterSheetSubTab() {
           skinTone: look.skinTone,
           hairStyle: look.hairStyle,
           fashionStyle: look.fashionStyle,
+          wardrobeStyle: look.wardrobeStyle,
           jewelry: look.jewelry,
           tattoos: look.tattoos,
           visualDescription: look.visualDescription,
@@ -78,6 +80,7 @@ export function CharacterSheetSubTab() {
           skinTone: look.skinTone,
           hairStyle: look.hairStyle,
           fashionStyle: look.fashionStyle,
+          wardrobeStyle: look.wardrobeStyle,
           jewelry: look.jewelry,
           tattoos: look.tattoos,
           visualDescription: look.visualDescription,
@@ -138,7 +141,17 @@ export function CharacterSheetSubTab() {
             Full reference sheet + auto-portrait. Used as identity anchor for photo shoots.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <select
+            value={look.wardrobeStyle}
+            onChange={(e) => updateDraft('look', { wardrobeStyle: e.target.value })}
+            className="h-7 rounded-md border border-border/60 bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            <option value="">Wardrobe: Use Fashion Style</option>
+            {WARDROBE_STYLES.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
           {look.characterSheetUrl && !isGenerating && (
             <Button size="sm" variant="outline" onClick={handleDownload} className="h-7 text-xs">
               <Download className="w-3 h-3 mr-1" />Download

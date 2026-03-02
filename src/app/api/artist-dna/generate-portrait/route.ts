@@ -8,6 +8,7 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import Replicate from 'replicate'
 import { logger } from '@/lib/logger'
 import { persistToLibrary } from '../persist-to-library'
+import { pickRandomWardrobe } from '@/features/music-lab/data/wardrobe-wildcards'
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -17,6 +18,7 @@ interface PortraitRequest {
   skinTone: string
   hairStyle: string
   fashionStyle: string
+  wardrobeStyle?: string  // wardrobe wildcard category — overrides fashionStyle with random outfit
   jewelry: string
   tattoos: string
   visualDescription: string
@@ -36,8 +38,13 @@ function buildPrompt(req: PortraitRequest): string {
   if (req.skinTone) description += ` with ${req.skinTone} skin`
   if (req.hairStyle) description += `, ${req.hairStyle} hair`
 
+  // Resolve wardrobe: if wardrobeStyle is set, pick a random outfit; else fall back to fashionStyle
+  const outfit = req.wardrobeStyle
+    ? pickRandomWardrobe(req.wardrobeStyle) || req.fashionStyle
+    : req.fashionStyle
+
   const details: string[] = []
-  if (req.fashionStyle) details.push(`Wearing ${req.fashionStyle}`)
+  if (outfit) details.push(`Wearing ${outfit}`)
   if (req.jewelry) details.push(req.jewelry)
   if (req.tattoos) details.push(req.tattoos)
   if (req.visualDescription) details.push(req.visualDescription)

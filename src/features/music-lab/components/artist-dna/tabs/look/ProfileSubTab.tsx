@@ -27,6 +27,7 @@ export function ProfileSubTab() {
           skinTone: look.skinTone,
           hairStyle: look.hairStyle,
           fashionStyle: look.fashionStyle,
+          wardrobeStyle: look.wardrobeStyle,
           jewelry: look.jewelry,
           tattoos: look.tattoos,
           visualDescription: look.visualDescription,

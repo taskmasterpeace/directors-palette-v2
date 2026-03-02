@@ -81,6 +81,7 @@ export interface ArtistLook {
   skinTone: string
   hairStyle: string
   fashionStyle: string
+  wardrobeStyle: string  // wardrobe wildcard category: designer, streetwear, casual, etc.
   jewelry: string
   tattoos: string
   visualDescription: string
@@ -308,6 +309,7 @@ export function createEmptyDNA(): ArtistDNA {
       skinTone: '',
       hairStyle: '',
       fashionStyle: '',
+      wardrobeStyle: '',
       jewelry: '',
       tattoos: '',
       visualDescription: '',
