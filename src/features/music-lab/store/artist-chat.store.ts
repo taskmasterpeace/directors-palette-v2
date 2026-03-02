@@ -89,8 +89,32 @@ export const useArtistChatStore = create<ArtistChatState>()(
       },
 
       sendMessage: async (content, _userId, dna) => {
-        const { activeArtistId, personalityPrint, livingContext, memory, messages } = get()
-        if (!activeArtistId || !personalityPrint) return
+        const { activeArtistId, livingContext, memory, messages } = get()
+        if (!activeArtistId) return
+
+        let { personalityPrint } = get()
+
+        // If no personality print loaded, generate one on demand
+        if (!personalityPrint) {
+          try {
+            const genRes = await fetch('/api/artist-dna/generate-personality-print', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ artistId: activeArtistId, dna }),
+            })
+            if (genRes.ok) {
+              const genData = await genRes.json()
+              if (genData.print) {
+                personalityPrint = genData.print
+                set({ personalityPrint })
+              }
+            }
+          } catch (e) {
+            console.error('On-demand personality print generation failed:', e)
+          }
+
+          if (!personalityPrint) return
+        }
 
         set({ isSending: true })
 
@@ -241,13 +265,21 @@ export const useArtistChatStore = create<ArtistChatState>()(
         }
       },
 
-      loadPersonalityPrint: async (artistId, userId) => {
+      loadPersonalityPrint: async (artistId, _userId) => {
         try {
-          void artistId
-          void userId
-          // Print is loaded when opening chat; set from artist-dna store
-        } catch {
-          // Will be generated on demand
+          // Fetch existing print from DB
+          const res = await fetch(`/api/artist-chat/personality-print?artistId=${artistId}`)
+          if (res.ok) {
+            const data = await res.json()
+            if (data.print) {
+              set({ personalityPrint: data.print })
+              return
+            }
+          }
+          // No print found — it may not have been generated yet
+          // Leave as null; sendMessage will handle gracefully
+        } catch (e) {
+          console.error('Load personality print failed:', e)
         }
       },
 

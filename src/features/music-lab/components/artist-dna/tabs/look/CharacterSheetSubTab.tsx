@@ -7,16 +7,19 @@ import { useArtistDnaStore } from '../../../../store/artist-dna.store'
 import { logger } from '@/lib/logger'
 
 export function CharacterSheetSubTab() {
-  const { draft, updateDraft, addGalleryItem } = useArtistDnaStore()
+  const { draft, updateDraft, addGalleryItem, saveArtist } = useArtistDnaStore()
   const look = draft.look
   const [generatingSheet, setGeneratingSheet] = useState(false)
   const [generatingPortrait, setGeneratingPortrait] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const hasLookFields = look.skinTone || look.hairStyle || look.fashionStyle || look.visualDescription
   const hasNameAndLook = (draft.identity.stageName || draft.identity.realName) && hasLookFields
 
   const handleGenerate = async () => {
+    setError(null)
     setGeneratingSheet(true)
+    let sheetSuccess = false
     try {
       // Phase 1: Generate character sheet
       const sheetRes = await fetch('/api/artist-dna/generate-character-sheet', {
@@ -39,22 +42,29 @@ export function CharacterSheetSubTab() {
         const sheetData = await sheetRes.json()
         if (sheetData.url) {
           updateDraft('look', { characterSheetUrl: sheetData.url })
-          // Auto-save to gallery
           addGalleryItem({
             url: sheetData.url,
             type: 'character-sheet',
             prompt: sheetData.prompt,
             aspectRatio: '16:9',
           })
+          sheetSuccess = true
+        } else {
+          setError('Character sheet generation returned no image. Try again.')
         }
+      } else {
+        const errData = await sheetRes.json().catch(() => ({ error: 'Unknown error' }))
+        setError(`Character sheet failed: ${errData.error || sheetRes.statusText}`)
+        logger.musicLab.error('Character sheet API error', { status: sheetRes.status, error: errData })
       }
-    } catch (error) {
-      logger.musicLab.error('Failed to generate character sheet', { error: error instanceof Error ? error.message : String(error) })
+    } catch (err) {
+      setError('Character sheet generation failed. Check your connection and try again.')
+      logger.musicLab.error('Failed to generate character sheet', { error: err instanceof Error ? err.message : String(err) })
     } finally {
       setGeneratingSheet(false)
     }
 
-    // Phase 2: Auto-generate portrait
+    // Phase 2: Auto-generate portrait (only if sheet succeeded or we want portrait anyway)
     setGeneratingPortrait(true)
     try {
       const portraitRes = await fetch('/api/artist-dna/generate-portrait', {
@@ -81,10 +91,15 @@ export function CharacterSheetSubTab() {
           })
         }
       }
-    } catch (error) {
-      logger.musicLab.error('Failed to generate portrait', { error: error instanceof Error ? error.message : String(error) })
+    } catch (err) {
+      logger.musicLab.error('Failed to generate portrait', { error: err instanceof Error ? err.message : String(err) })
     } finally {
       setGeneratingPortrait(false)
+    }
+
+    // Auto-save to DB so portrait and character sheet persist across reloads
+    if (sheetSuccess) {
+      await saveArtist()
     }
   }
 
@@ -141,6 +156,13 @@ export function CharacterSheetSubTab() {
           </Button>
         </div>
       </div>
+
+      {/* Error display */}
+      {error && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2">
+          <p className="text-xs text-red-400">{error}</p>
+        </div>
+      )}
 
       {/* Character sheet display */}
       {look.characterSheetUrl && !generatingSheet && (

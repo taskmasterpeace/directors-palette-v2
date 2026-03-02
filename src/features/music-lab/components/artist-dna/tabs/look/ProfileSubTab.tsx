@@ -9,7 +9,7 @@ import { useArtistDnaStore } from '../../../../store/artist-dna.store'
 import { logger } from '@/lib/logger'
 
 export function ProfileSubTab() {
-  const { draft, updateDraft } = useArtistDnaStore()
+  const { draft, updateDraft, saveArtist, activeArtistId } = useArtistDnaStore()
   const look = draft.look
   const [uploading, setUploading] = useState(false)
   const [generatingPortrait, setGeneratingPortrait] = useState(false)
@@ -35,7 +35,13 @@ export function ProfileSubTab() {
       })
       if (res.ok) {
         const data = await res.json()
-        if (data.url) updateDraft('look', { portraitUrl: data.url })
+        if (data.url) {
+          updateDraft('look', { portraitUrl: data.url })
+          // Auto-save to DB so portrait persists across reloads
+          if (activeArtistId) {
+            setTimeout(() => saveArtist(), 100)
+          }
+        }
       }
     } catch (error) {
       logger.musicLab.error('Failed to generate portrait', { error: error instanceof Error ? error.message : String(error) })
@@ -58,7 +64,13 @@ export function ProfileSubTab() {
       const res = await fetch('/api/upload-file', { method: 'POST', body: formData })
       if (res.ok) {
         const data = await res.json()
-        if (data.url) updateDraft('look', { portraitUrl: data.url })
+        if (data.url) {
+          updateDraft('look', { portraitUrl: data.url })
+          // Auto-save to DB so portrait persists across reloads
+          if (activeArtistId) {
+            setTimeout(() => saveArtist(), 100)
+          }
+        }
       }
     } catch (error) {
       logger.musicLab.error('Failed to upload portrait', { error: error instanceof Error ? error.message : String(error) })

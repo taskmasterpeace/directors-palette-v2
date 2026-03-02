@@ -161,6 +161,25 @@ function detectMessageType(content: string): { type: ChatMessageType; actionData
   return { type: 'text', cleanContent: content }
 }
 
+export async function GET(request: NextRequest) {
+  try {
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+    const { user } = auth
+
+    const artistId = request.nextUrl.searchParams.get('artistId')
+    if (!artistId) {
+      return NextResponse.json({ error: 'artistId is required' }, { status: 400 })
+    }
+
+    const messages = await artistChatService.getMessages(artistId, user.id)
+    return NextResponse.json({ messages })
+  } catch (error) {
+    logger.api.error('Load messages error', { error: error instanceof Error ? error.message : String(error) })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const auth = await getAuthenticatedUser(request)
