@@ -81,6 +81,7 @@ export const GENRE_TAXONOMY: GenreTaxonomyNode[] = [
           { name: 'East Coast Boom Bap' }, { name: 'Jazz Rap' }, { name: 'Golden Age' },
           { name: 'Lo-Fi Boom Bap' }, { name: 'Underground Boom Bap' },
           { name: 'Neo Boom Bap' }, { name: 'Sample-Heavy Boom Bap' },
+          { name: 'Griselda Boom Bap' }, { name: 'Gritty East Coast' },
         ],
       },
       {
@@ -88,28 +89,73 @@ export const GENRE_TAXONOMY: GenreTaxonomyNode[] = [
         children: [
           { name: 'Horrorcore Memphis' }, { name: 'Crunk Memphis' },
           { name: 'Underground Memphis' }, { name: 'Memphis Trap' }, { name: 'Dark Memphis' },
+          { name: 'Three 6 Mafia Style' }, { name: 'Memphis Phonk' },
         ],
       },
-      { name: 'Rage Rap', children: [{ name: 'Rage Beat' }] },
-      { name: 'Jersey Club Rap', children: [{ name: 'Jersey Bounce Rap' }] },
-      { name: 'Lo-Fi Hip-Hop', children: [{ name: 'Chill Beats' }, { name: 'Study Beats' }] },
-      { name: 'Alternative Hip-Hop', children: [{ name: 'Abstract Hip-Hop' }, { name: 'Experimental Rap' }] },
       {
         name: 'Southern Hip-Hop',
         children: [
+          { name: 'Atlanta Rap' }, { name: 'ATL Trap' }, { name: 'Dirty South' },
           { name: 'Crunk' }, { name: 'Chopped & Screwed' }, { name: 'Swishahouse' },
           { name: 'Purple Sound' }, { name: 'Slowed & Reverb' },
+          { name: 'Houston Rap' }, { name: 'Miami Bass' }, { name: 'New Orleans Bounce' },
+          { name: 'Trill' }, { name: 'Country Rap' },
         ],
       },
-      { name: 'Pop Rap', children: [{ name: 'Radio Rap' }, { name: 'Crossover Rap' }] },
-      { name: 'Electronic/Industrial Hip-Hop', children: [{ name: 'Glitch Hop' }, { name: 'Industrial Rap' }] },
-      { name: 'Gospel Rap', children: [{ name: 'Christian Hip-Hop' }, { name: 'Inspirational Rap' }] },
-      { name: 'Cloud Rap', children: [{ name: 'Ethereal Rap' }, { name: 'Vapor Rap' }] },
-      { name: 'Emo Rap', children: [{ name: 'Sad Rap' }, { name: 'Post-Emo Rap' }] },
       {
-        name: 'Juke/Footwork',
+        name: 'West Coast Hip-Hop',
         children: [
-          { name: 'Chicago Juke' }, { name: 'Footwork' }, { name: 'Baltimore Club' },
+          { name: 'G-Funk' }, { name: 'Hyphy' }, { name: 'Bay Area Rap' },
+          { name: 'LA Underground' }, { name: 'Ratchet Music' }, { name: 'West Coast Boom Bap' },
+          { name: 'Chicano Rap' }, { name: 'Jerkin' },
+        ],
+      },
+      {
+        name: 'Midwest Hip-Hop',
+        children: [
+          { name: 'Detroit Rap' }, { name: 'Chicago Rap' }, { name: 'St. Louis Rap' },
+          { name: 'Twin Cities Rap' }, { name: 'Ohio Rap' },
+        ],
+      },
+      {
+        name: 'East Coast Hip-Hop',
+        children: [
+          { name: 'New York Rap' }, { name: 'Griselda Style' }, { name: 'Mobb Deep Style' },
+          { name: 'Lyrical Miracle' }, { name: 'NYC Underground' }, { name: 'DMV Rap' },
+          { name: 'Philly Rap' }, { name: 'Buffalo Rap' },
+        ],
+      },
+      { name: 'Rage Rap', children: [{ name: 'Rage Beat' }, { name: 'Rage Phonk' }] },
+      { name: 'Lo-Fi Hip-Hop', children: [{ name: 'Chill Beats' }, { name: 'Study Beats' }, { name: 'Jazzhop' }] },
+      {
+        name: 'Alternative Hip-Hop',
+        children: [
+          { name: 'Abstract Hip-Hop' }, { name: 'Experimental Rap' },
+          { name: 'Art Rap' }, { name: 'Psychedelic Rap' }, { name: 'Indie Rap' },
+        ],
+      },
+      {
+        name: 'Pop Rap',
+        children: [
+          { name: 'Radio Rap' }, { name: 'Crossover Rap' }, { name: 'Commercial Rap' },
+          { name: 'TikTok Rap' },
+        ],
+      },
+      { name: 'Gospel Rap', children: [{ name: 'Christian Hip-Hop' }, { name: 'Inspirational Rap' }] },
+      { name: 'Cloud Rap', children: [{ name: 'Ethereal Rap' }, { name: 'Vapor Rap' }, { name: 'Dream Rap' }] },
+      {
+        name: 'Emo Rap',
+        children: [
+          { name: 'Sad Rap' }, { name: 'Post-Emo Rap' }, { name: 'Grunge Rap' },
+          { name: 'Gothic Rap' },
+        ],
+      },
+      {
+        name: 'Afro Rap',
+        children: [
+          { name: 'UK Rap' }, { name: 'Grime' }, { name: 'UK Drill' },
+          { name: 'French Rap' }, { name: 'German Rap' }, { name: 'Nigerian Rap' },
+          { name: 'South African Hip-Hop' }, { name: 'Australian Hip-Hop' },
         ],
       },
       {
@@ -117,6 +163,13 @@ export const GENRE_TAXONOMY: GenreTaxonomyNode[] = [
         children: [
           { name: 'Lo-Fi SoundCloud' }, { name: 'Emo SoundCloud' },
           { name: 'Cloud Rap SoundCloud' }, { name: 'DIY Rap' },
+        ],
+      },
+      {
+        name: 'Luxury Rap',
+        children: [
+          { name: 'Coke Rap' }, { name: 'Drug Rap' }, { name: 'Boss Rap' },
+          { name: 'Player Rap' },
         ],
       },
     ],
