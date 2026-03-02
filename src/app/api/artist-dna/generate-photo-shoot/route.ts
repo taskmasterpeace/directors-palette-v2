@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     // Use character sheet as identity reference if available
     if (body.characterSheetUrl) {
-      input.image_input = body.characterSheetUrl
+      input.image_input = [body.characterSheetUrl]
     }
 
     const prediction = await replicate.predictions.create({

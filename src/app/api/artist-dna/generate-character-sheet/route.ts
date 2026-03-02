@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
       input: {
         prompt,
         aspect_ratio: '16:9',
-        image_input: CHARACTER_SHEET_TEMPLATE_URL,
+        image_input: [CHARACTER_SHEET_TEMPLATE_URL],
         output_format: 'jpg',
       },
     })
