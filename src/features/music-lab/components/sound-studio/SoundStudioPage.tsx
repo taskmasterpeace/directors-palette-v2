@@ -22,84 +22,45 @@ import { useSoundStudioStore } from '@/features/music-lab/store/sound-studio.sto
 import { useArtistDnaStore } from '@/features/music-lab/store/artist-dna.store'
 import { GenrePicker } from './GenrePicker'
 import { BpmSlider } from './BpmSlider'
+import { EnergySlider } from './EnergySlider'
 import { MoodSelector } from './MoodSelector'
 import { InstrumentPalette } from './InstrumentPalette'
 import { SunoPromptPreview } from './SunoPromptPreview'
 import { SoundAssistant } from './SoundAssistant'
+import { DrumDesignPanel } from './DrumDesignPanel'
+import { GrooveFeelPanel } from './GrooveFeelPanel'
+import { BassStylePanel } from './BassStylePanel'
+import { SynthTexturePanel } from './SynthTexturePanel'
+import { HarmonyPanel } from './HarmonyPanel'
+import { SpaceFxPanel } from './SpaceFxPanel'
+import { EarCandyPanel } from './EarCandyPanel'
+import { StructurePanel } from './StructurePanel'
+import { PRODUCTION_STYLE_TAGS } from '@/features/music-lab/data/production-tags.data'
+import { MultiSelectPills } from './MultiSelectPills'
 
 // ─── Production Tags Input ────────────────────────────────────────────────────
 
-function ProductionTagsInput() {
+function ProductionTagsSection() {
   const { settings, updateSetting } = useSoundStudioStore()
-  const [inputValue, setInputValue] = useState('')
-
-  const addTag = (tag: string) => {
-    const trimmed = tag.trim()
-    if (!trimmed || settings.productionTags.includes(trimmed)) return
-    updateSetting('productionTags', [...settings.productionTags, trimmed])
-    setInputValue('')
-  }
-
-  const removeTag = (tag: string) => {
-    updateSetting('productionTags', settings.productionTags.filter((t) => t !== tag))
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      addTag(inputValue)
-    }
-    if (e.key === 'Backspace' && !inputValue && settings.productionTags.length > 0) {
-      removeTag(settings.productionTags[settings.productionTags.length - 1])
-    }
-  }
 
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Tag className="w-4 h-4 text-amber-400" />
         <h3 className="text-sm font-semibold text-[oklch(0.88_0.02_55)] tracking-[-0.025em]">
-          Production Tags
+          Production Style
         </h3>
+        {settings.productionTags.length > 0 && (
+          <span className="text-xs text-[oklch(0.50_0.04_55)] ml-auto">{settings.productionTags.length}</span>
+        )}
       </div>
-
-      {/* Tags display */}
-      <div className="flex flex-wrap gap-1.5">
-        {settings.productionTags.map((tag) => (
-          <span
-            key={tag}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-[oklch(0.25_0.03_55)] text-[oklch(0.78_0.02_55)] border border-[oklch(0.32_0.03_55)]"
-          >
-            {tag}
-            <button
-              onClick={() => removeTag(tag)}
-              className="p-0.5 rounded-full hover:bg-[oklch(0.30_0.03_55)] transition-colors"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          </span>
-        ))}
-      </div>
-
-      {/* Input */}
-      <div className="flex items-center gap-2">
-        <Input
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Add tag (e.g. lo-fi, vinyl crackle, reverb)..."
-          className="flex-1 bg-[oklch(0.22_0.025_55)] border-[oklch(0.32_0.03_55)] text-[oklch(0.88_0.02_55)] placeholder:text-[oklch(0.45_0.03_55)] rounded-[0.625rem] text-sm"
-        />
-        <Button
-          onClick={() => addTag(inputValue)}
-          disabled={!inputValue.trim()}
-          size="sm"
-          variant="outline"
-          className="border-[oklch(0.32_0.03_55)] text-[oklch(0.65_0.04_55)] hover:bg-[oklch(0.25_0.03_55)] rounded-[0.625rem]"
-        >
-          <Plus className="w-4 h-4" />
-        </Button>
-      </div>
+      <MultiSelectPills
+        items={PRODUCTION_STYLE_TAGS}
+        selected={settings.productionTags}
+        onChange={(v) => updateSetting('productionTags', v)}
+        color="amber"
+        compact
+      />
     </div>
   )
 }
@@ -149,14 +110,35 @@ function NegativeTagsInput() {
           </span>
         ))}
       </div>
-      <Input
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="Add negative tag..."
-        className="bg-[oklch(0.22_0.025_55)] border-[oklch(0.32_0.03_55)] text-[oklch(0.88_0.02_55)] placeholder:text-[oklch(0.45_0.03_55)] rounded-[0.625rem] text-sm"
-      />
+      <div className="flex items-center gap-2">
+        <Input
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Add negative tag..."
+          className="flex-1 bg-[oklch(0.22_0.025_55)] border-[oklch(0.32_0.03_55)] text-[oklch(0.88_0.02_55)] placeholder:text-[oklch(0.45_0.03_55)] rounded-[0.625rem] text-sm"
+        />
+        <Button
+          onClick={() => addTag(inputValue)}
+          disabled={!inputValue.trim()}
+          size="sm"
+          variant="outline"
+          className="border-[oklch(0.32_0.03_55)] text-[oklch(0.65_0.04_55)] hover:bg-[oklch(0.25_0.03_55)] rounded-[0.625rem]"
+        >
+          <Plus className="w-4 h-4" />
+        </Button>
+      </div>
     </div>
+  )
+}
+
+// ─── Section Card Wrapper ────────────────────────────────────────────────────
+
+function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <section className={`p-4 rounded-[0.625rem] border border-[oklch(0.28_0.03_55)] bg-[oklch(0.20_0.02_55)] ${className}`}>
+      {children}
+    </section>
   )
 }
 
@@ -167,12 +149,11 @@ interface SoundStudioPageProps {
 }
 
 export function SoundStudioPage({ userId }: SoundStudioPageProps) {
-  const { loadFromArtist, resetToDefaults, rebuildPrompt, artistId: _studioArtistId } =
+  const { loadFromArtist, resetToDefaults, rebuildPrompt } =
     useSoundStudioStore()
   const {
     artists,
     activeArtistId,
-    draft: _draft,
     isInitialized,
     initialize,
     loadArtistIntoDraft,
@@ -274,47 +255,107 @@ export function SoundStudioPage({ userId }: SoundStudioPageProps) {
         </Button>
       </div>
 
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto p-4 space-y-8">
-          {/* Genre */}
-          <section className="p-4 rounded-[0.625rem] border border-[oklch(0.28_0.03_55)] bg-[oklch(0.20_0.02_55)]">
-            <GenrePicker />
-          </section>
+      {/* Full-screen 2-column layout */}
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full xl:grid xl:grid-cols-[1fr_380px]">
+          {/* LEFT COLUMN — scrollable controls */}
+          <div className="h-full overflow-y-auto p-4 space-y-4">
+            {/* Genre */}
+            <Card>
+              <GenrePicker />
+            </Card>
 
-          {/* BPM + Mood row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <section className="p-4 rounded-[0.625rem] border border-[oklch(0.28_0.03_55)] bg-[oklch(0.20_0.02_55)]">
-              <BpmSlider />
-            </section>
-            <section className="p-4 rounded-[0.625rem] border border-[oklch(0.28_0.03_55)] bg-[oklch(0.20_0.02_55)]">
+            {/* BPM + Energy row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <BpmSlider />
+              </Card>
+              <Card>
+                <EnergySlider />
+              </Card>
+            </div>
+
+            {/* Mood */}
+            <Card>
               <MoodSelector />
-            </section>
+            </Card>
+
+            {/* Drum Design + Groove Feel row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <DrumDesignPanel />
+              </Card>
+              <Card>
+                <GrooveFeelPanel />
+              </Card>
+            </div>
+
+            {/* Bass + Synth row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <BassStylePanel />
+              </Card>
+              <Card>
+                <SynthTexturePanel />
+              </Card>
+            </div>
+
+            {/* Harmony + Space/FX row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <HarmonyPanel />
+              </Card>
+              <Card>
+                <SpaceFxPanel />
+              </Card>
+            </div>
+
+            {/* Instruments */}
+            <Card>
+              <InstrumentPalette />
+            </Card>
+
+            {/* Ear Candy + Structure row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <EarCandyPanel />
+              </Card>
+              <Card>
+                <StructurePanel />
+              </Card>
+            </div>
+
+            {/* Production Tags */}
+            <Card>
+              <ProductionTagsSection />
+            </Card>
+
+            {/* Negative Tags */}
+            <Card>
+              <NegativeTagsInput />
+            </Card>
+
+            {/* Below xl: prompt preview + assistant inline */}
+            <div className="xl:hidden space-y-4">
+              <Card>
+                <SunoPromptPreview />
+              </Card>
+              <Card>
+                <SoundAssistant artistDna={artistDna} />
+              </Card>
+            </div>
+
+            {/* Bottom spacer */}
+            <div className="h-4" />
           </div>
 
-          {/* Instruments */}
-          <section className="p-4 rounded-[0.625rem] border border-[oklch(0.28_0.03_55)] bg-[oklch(0.20_0.02_55)]">
-            <InstrumentPalette />
-          </section>
-
-          {/* Production Tags + Negative Tags */}
-          <section className="p-4 rounded-[0.625rem] border border-[oklch(0.28_0.03_55)] bg-[oklch(0.20_0.02_55)] space-y-6">
-            <ProductionTagsInput />
-            <NegativeTagsInput />
-          </section>
-
-          {/* Suno Prompt Preview */}
-          <section className="p-4 rounded-[0.625rem] border border-[oklch(0.28_0.03_55)] bg-[oklch(0.20_0.02_55)]">
-            <SunoPromptPreview />
-          </section>
-
-          {/* Sound Assistant */}
-          <section className="p-4 rounded-[0.625rem] border border-[oklch(0.28_0.03_55)] bg-[oklch(0.20_0.02_55)]">
-            <SoundAssistant artistDna={artistDna} />
-          </section>
-
-          {/* Bottom spacer */}
-          <div className="h-4" />
+          {/* RIGHT COLUMN — sticky prompt preview + assistant */}
+          <div className="hidden xl:flex xl:flex-col xl:h-full border-l border-[oklch(0.28_0.03_55)] bg-[oklch(0.19_0.02_55)]">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <SunoPromptPreview />
+              <SoundAssistant artistDna={artistDna} />
+            </div>
+          </div>
         </div>
       </div>
     </div>

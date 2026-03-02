@@ -5,6 +5,7 @@
 
 import { getClient } from '@/lib/db/client'
 import type { SoundStudioSettings, SoundStudioPreset, DbSoundStudioPreset } from '../types/sound-studio.types'
+import { energyToLabel } from '../types/sound-studio.types'
 import { logger } from '@/lib/logger'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -97,18 +98,34 @@ class SoundStudioService {
     const parts: string[] = []
 
     // Genre chain
-    const genreParts = [settings.genre, settings.subgenre, settings.microgenre].filter(Boolean)
-    if (genreParts.length) parts.push(genreParts.join(', '))
+    if (settings.genres.length) parts.push(settings.genres.join(', '))
+    if (settings.subgenres.length) parts.push(settings.subgenres.join(', '))
+    if (settings.microgenres.length) parts.push(settings.microgenres.join(', '))
 
     // Era
     if (settings.era) parts.push(settings.era)
 
     // Mood + energy
-    if (settings.mood) parts.push(settings.mood)
-    if (settings.energy) parts.push(`${settings.energy} energy`)
+    if (settings.moods.length) parts.push(settings.moods.join(', '))
+    parts.push(energyToLabel(settings.energy))
 
     // BPM
     if (settings.bpm) parts.push(`${settings.bpm} BPM`)
+
+    // Key
+    if (settings.key) parts.push(`key of ${settings.key}`)
+
+    // Production sections
+    if (settings.drumDesign.length) parts.push(settings.drumDesign.join(', '))
+    if (settings.grooveFeel.length) parts.push(settings.grooveFeel.join(', '))
+    if (settings.bassStyle.length) parts.push(settings.bassStyle.join(', '))
+    if (settings.synthTexture.length) parts.push(settings.synthTexture.join(', '))
+    if (settings.harmonyColor.length) parts.push(settings.harmonyColor.join(', '))
+    if (settings.spaceFx.length) parts.push(settings.spaceFx.join(', '))
+    if (settings.earCandy.length) parts.push(settings.earCandy.join(', '))
+
+    // Structure
+    if (settings.structure) parts.push(settings.structure)
 
     // Instruments
     if (settings.instruments.length) parts.push(settings.instruments.join(', '))
@@ -116,16 +133,13 @@ class SoundStudioService {
     // Production tags
     if (settings.productionTags.length) parts.push(settings.productionTags.join(', '))
 
-    // Negative tags (always appended)
+    // Negative tags
     if (settings.negativeTags.length) parts.push(settings.negativeTags.join(', '))
 
     const prompt = parts.join(', ')
-
-    // Suno v4.5+ has 1000 char limit
     if (prompt.length > 1000) {
       return prompt.substring(0, 997) + '...'
     }
-
     return prompt
   }
 }

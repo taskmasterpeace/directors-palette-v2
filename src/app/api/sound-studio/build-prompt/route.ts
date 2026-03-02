@@ -42,19 +42,28 @@ export async function POST(request: NextRequest) {
 
 Return ONLY valid JSON (no markdown, no code fences):
 {
-  "genre": "main genre or null",
-  "subgenre": "subgenre or null",
-  "microgenre": "microgenre or null",
+  "genres": ["main genre(s)"],
+  "subgenres": ["subgenre(s)"],
+  "microgenres": ["microgenre(s)"],
   "bpm": 120,
-  "mood": "mood descriptor or null",
-  "energy": "low/medium/high or null",
+  "moods": ["mood descriptors"],
+  "energy": 50,
   "era": "decade/era or null",
+  "drumDesign": ["kick/snare/hat descriptors"],
+  "grooveFeel": ["groove descriptors"],
+  "bassStyle": ["bass descriptors"],
+  "synthTexture": ["synth/keys descriptors"],
+  "harmonyColor": ["harmony descriptors"],
+  "key": "C minor or null",
+  "spaceFx": ["reverb/delay/processing descriptors"],
+  "earCandy": ["embellishment descriptors"],
+  "structure": "structure description or null",
   "instruments": ["list", "of", "instruments"],
   "productionTags": ["production", "qualities"],
   "negativeTags": ["no vocals", "no singing", "no humming", "no choir", "no spoken words"]
 }
 
-Always include the 5 default negative tags to ensure instrumental output. BPM should be realistic for the genre (trap: 130-160, house: 120-130, hip-hop: 80-100, etc.).`
+Energy is 0-100 (0=very calm, 100=maximum intensity). Always include the 5 default negative tags to ensure instrumental output. BPM should be realistic for the genre (trap: 130-160, house: 120-130, hip-hop: 80-100, etc.).`
           },
           { role: 'user', content: description },
         ],

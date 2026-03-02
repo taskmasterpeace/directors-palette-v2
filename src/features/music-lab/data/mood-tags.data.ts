@@ -6,6 +6,7 @@ export const MOOD_TAGS: MoodTag[] = [
   { id: 'euphoric', label: 'Euphoric', valence: 'positive' },
   { id: 'joyful', label: 'Joyful', valence: 'positive' },
   { id: 'triumphant', label: 'Triumphant', valence: 'positive' },
+  { id: 'victorious', label: 'Victorious', valence: 'positive' },
   { id: 'playful', label: 'Playful', valence: 'positive' },
   { id: 'festive', label: 'Festive', valence: 'positive' },
   { id: 'warm', label: 'Warm', valence: 'positive' },
@@ -16,6 +17,10 @@ export const MOOD_TAGS: MoodTag[] = [
   { id: 'groovy', label: 'Groovy', valence: 'positive' },
   { id: 'funky', label: 'Funky', valence: 'positive' },
   { id: 'sexy', label: 'Sexy', valence: 'positive' },
+  { id: 'soulful', label: 'Soulful', valence: 'positive' },
+  { id: 'rebellious', label: 'Rebellious', valence: 'positive' },
+  { id: 'defiant', label: 'Defiant', valence: 'positive' },
+  { id: 'carefree', label: 'Carefree', valence: 'positive' },
 
   // Neutral
   { id: 'dreamy', label: 'Dreamy', valence: 'neutral' },
@@ -32,6 +37,10 @@ export const MOOD_TAGS: MoodTag[] = [
   { id: 'spacey', label: 'Spacey', valence: 'neutral' },
   { id: 'contemplative', label: 'Contemplative', valence: 'neutral' },
   { id: 'chill', label: 'Chill', valence: 'neutral' },
+  { id: 'wistful', label: 'Wistful', valence: 'neutral' },
+  { id: 'pensive', label: 'Pensive', valence: 'neutral' },
+  { id: 'surreal', label: 'Surreal', valence: 'neutral' },
+  { id: 'floating', label: 'Floating', valence: 'neutral' },
 
   // Dark
   { id: 'haunting', label: 'Haunting', valence: 'dark' },
@@ -48,4 +57,8 @@ export const MOOD_TAGS: MoodTag[] = [
   { id: 'raw', label: 'Raw', valence: 'dark' },
   { id: 'somber', label: 'Somber', valence: 'dark' },
   { id: 'tense', label: 'Tense', valence: 'dark' },
+  { id: 'desperate', label: 'Desperate', valence: 'dark' },
+  { id: 'paranoid', label: 'Paranoid', valence: 'dark' },
+  { id: 'chaotic', label: 'Chaotic', valence: 'dark' },
+  { id: 'vengeful', label: 'Vengeful', valence: 'dark' },
 ]

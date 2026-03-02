@@ -28,11 +28,11 @@ const VALENCE_CONFIG = {
 export function MoodSelector() {
   const { settings, updateSetting } = useSoundStudioStore()
 
-  const handleSelect = (moodLabel: string) => {
-    if (settings.mood === moodLabel) {
-      updateSetting('mood', null)
+  const handleToggle = (moodLabel: string) => {
+    if (settings.moods.includes(moodLabel)) {
+      updateSetting('moods', settings.moods.filter((m) => m !== moodLabel))
     } else {
-      updateSetting('mood', moodLabel)
+      updateSetting('moods', [...settings.moods, moodLabel])
     }
   }
 
@@ -46,8 +46,8 @@ export function MoodSelector() {
         <h3 className="text-sm font-semibold text-[oklch(0.88_0.02_55)] tracking-[-0.025em]">
           Mood
         </h3>
-        {settings.mood && (
-          <span className="text-xs text-amber-400 ml-auto">{settings.mood}</span>
+        {settings.moods.length > 0 && (
+          <span className="text-xs text-amber-400 ml-auto">{settings.moods.length} selected</span>
         )}
       </div>
 
@@ -64,11 +64,11 @@ export function MoodSelector() {
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {tags.map((tag) => {
-                  const isActive = settings.mood === tag.label
+                  const isActive = settings.moods.includes(tag.label)
                   return (
                     <button
                       key={tag.id}
-                      onClick={() => handleSelect(tag.label)}
+                      onClick={() => handleToggle(tag.label)}
                       className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                         isActive ? config.tagActiveColor : config.tagColor
                       } hover:scale-[1.03]`}

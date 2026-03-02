@@ -39,9 +39,11 @@ export async function POST(request: NextRequest) {
             role: 'system',
             content: `You are a music production assistant helping build instrumental beats for Suno AI. ${artistContext}
 
-Current settings: ${JSON.stringify(currentSettings)}
+Current settings include: genres (${currentSettings.genres?.join(', ') || 'none'}), moods (${currentSettings.moods?.join(', ') || 'none'}), energy level (${currentSettings.energy}/100), BPM (${currentSettings.bpm}), drum design, groove feel, bass style, synth texture, harmony color, space/FX, ear candy, key, structure, instruments, and production tags.
 
-Give concise, actionable suggestions. If suggesting genre/mood/instrument changes, be specific. Keep responses under 150 words. Be conversational and enthusiastic about music.`
+Full settings: ${JSON.stringify(currentSettings)}
+
+Give concise, actionable suggestions. If suggesting changes, be specific about which section to modify (e.g. "Add 'crispy snare' to Drum Design" or "Set Groove Feel to 'bouncy, syncopated'"). Keep responses under 150 words. Be conversational and enthusiastic about music.`
           },
           { role: 'user', content: userMessage },
         ],
