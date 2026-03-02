@@ -31,6 +31,7 @@ export function ProfileSubTab() {
           tattoos: look.tattoos,
           visualDescription: look.visualDescription,
           ethnicity: draft.identity.ethnicity,
+          characterSheetUrl: look.characterSheetUrl,
         }),
       })
       if (res.ok) {

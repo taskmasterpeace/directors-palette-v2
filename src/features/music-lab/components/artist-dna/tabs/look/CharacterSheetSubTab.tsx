@@ -64,7 +64,9 @@ export function CharacterSheetSubTab() {
       setGeneratingSheet(false)
     }
 
-    // Phase 2: Auto-generate portrait (only if sheet succeeded or we want portrait anyway)
+    // Phase 2: Auto-generate portrait FROM the character sheet (only if sheet succeeded)
+    if (!sheetSuccess) return
+    const currentSheetUrl = useArtistDnaStore.getState().draft.look.characterSheetUrl
     setGeneratingPortrait(true)
     try {
       const portraitRes = await fetch('/api/artist-dna/generate-portrait', {
@@ -80,6 +82,7 @@ export function CharacterSheetSubTab() {
           tattoos: look.tattoos,
           visualDescription: look.visualDescription,
           ethnicity: draft.identity.ethnicity,
+          characterSheetUrl: currentSheetUrl,
         }),
       })
       if (portraitRes.ok) {

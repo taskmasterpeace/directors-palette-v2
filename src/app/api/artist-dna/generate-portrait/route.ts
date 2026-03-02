@@ -23,6 +23,7 @@ interface PortraitRequest {
   ethnicity: string
   stageName?: string
   realName?: string
+  characterSheetUrl?: string  // reference image to maintain character consistency
 }
 
 function buildPrompt(req: PortraitRequest): string {
@@ -41,7 +42,10 @@ function buildPrompt(req: PortraitRequest): string {
   if (req.tattoos) details.push(req.tattoos)
   if (req.visualDescription) details.push(req.visualDescription)
 
-  const allParts = [description, ...details, 'Professional headshot, studio lighting, high quality portrait photography']
+  const suffix = req.characterSheetUrl
+    ? 'Portrait headshot of EXACT SAME PERSON from the character reference sheet, identical face and features, studio lighting, high quality portrait photography'
+    : 'Professional headshot, studio lighting, high quality portrait photography'
+  const allParts = [description, ...details, suffix]
   return allParts.filter(Boolean).join('. ') + '.'
 }
 
@@ -54,13 +58,20 @@ export async function POST(request: NextRequest) {
 
     const prompt = buildPrompt(body)
 
+    const input: Record<string, unknown> = {
+      prompt,
+      aspect_ratio: '1:1',
+      output_format: 'jpg',
+    }
+
+    // Use character sheet as reference so portrait matches the same character
+    if (body.characterSheetUrl) {
+      input.image_input = [body.characterSheetUrl]
+    }
+
     const prediction = await replicate.predictions.create({
       model: 'google/nano-banana-2',
-      input: {
-        prompt,
-        aspect_ratio: '1:1',
-        output_format: 'jpg',
-      },
+      input,
     })
 
     const completed = await replicate.wait(prediction, { interval: 1000 })
@@ -70,7 +81,7 @@ export async function POST(request: NextRequest) {
         ? completed.output[0]
         : completed.output
 
-      // Persist to Supabase storage + reference library
+      // Persist to Supabase storage (no reference library — character sheet is the identity anchor)
       const artistName = body.stageName || body.realName || 'Artist'
       const persisted = await persistToLibrary({
         imageUrl: replicateUrl,
@@ -79,6 +90,7 @@ export async function POST(request: NextRequest) {
         type: 'portrait',
         aspectRatio: '1:1',
         prompt,
+        addToReferenceLibrary: false,
       })
 
       const url = persisted?.publicUrl || replicateUrl
