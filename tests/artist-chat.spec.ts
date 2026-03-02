@@ -8,14 +8,14 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Artist Chat — No Artist Selected', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/music-lab')
+    await page.goto('/test-music-lab')
     await page.waitForLoadState('networkidle')
     await page.getByRole('button', { name: /Artist Chat/i }).click()
     await page.waitForTimeout(1000)
   })
 
   test('shows artist picker with header', async ({ page }) => {
-    await expect(page.locator('text=Artist Chat')).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Artist Chat/i })).toBeVisible()
     await expect(page.locator('text=Choose an artist to start chatting')).toBeVisible()
   })
 
@@ -44,7 +44,7 @@ test.describe('Artist Chat — No Artist Selected', () => {
 
 test.describe('Artist Chat — Artist Selection & Chat Flow', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/music-lab')
+    await page.goto('/test-music-lab')
     await page.waitForLoadState('networkidle')
   })
 
@@ -99,7 +99,7 @@ test.describe('Artist Chat — Artist Selection & Chat Flow', () => {
 
 test.describe('Artist Chat — Chat Interface', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/music-lab')
+    await page.goto('/test-music-lab')
     await page.waitForLoadState('networkidle')
 
     // Go to Artist Chat
@@ -245,7 +245,7 @@ test.describe('Artist Chat — Chat Interface', () => {
 
 test.describe('Artist Chat — Living Context', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/music-lab')
+    await page.goto('/test-music-lab')
     await page.waitForLoadState('networkidle')
     await page.getByRole('button', { name: /Artist Chat/i }).click()
     await page.waitForTimeout(2000)
@@ -324,7 +324,7 @@ test.describe('Artist Chat — Living Context', () => {
 
 test.describe('Artist Chat — Screenshots', () => {
   test('capture artist chat empty state', async ({ page }) => {
-    await page.goto('/music-lab')
+    await page.goto('/test-music-lab')
     await page.waitForLoadState('networkidle')
     await page.getByRole('button', { name: /Artist Chat/i }).click()
     await page.waitForTimeout(2000)
@@ -332,7 +332,7 @@ test.describe('Artist Chat — Screenshots', () => {
   })
 
   test('capture active chat', async ({ page }) => {
-    await page.goto('/music-lab')
+    await page.goto('/test-music-lab')
     await page.waitForLoadState('networkidle')
     await page.getByRole('button', { name: /Artist Chat/i }).click()
     await page.waitForTimeout(2000)
@@ -352,7 +352,7 @@ test.describe('Artist Chat — Screenshots', () => {
   })
 
   test('capture chat with message', async ({ page }) => {
-    await page.goto('/music-lab')
+    await page.goto('/test-music-lab')
     await page.waitForLoadState('networkidle')
     await page.getByRole('button', { name: /Artist Chat/i }).click()
     await page.waitForTimeout(2000)

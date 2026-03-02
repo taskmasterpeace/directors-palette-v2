@@ -8,7 +8,7 @@ import { test, expect } from '@playwright/test'
 test.describe('Music Lab - New Tabs', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to music lab
-    await page.goto('/music-lab')
+    await page.goto('/test-music-lab')
     await page.waitForLoadState('networkidle')
   })
 
@@ -41,7 +41,7 @@ test.describe('Music Lab - New Tabs', () => {
 
 test.describe('Artist Chat', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/music-lab')
+    await page.goto('/test-music-lab')
     await page.waitForLoadState('networkidle')
     await page.getByRole('button', { name: /Artist Chat/i }).click()
     await page.waitForTimeout(1000)
@@ -81,7 +81,7 @@ test.describe('Artist Chat', () => {
 
 test.describe('Sound Studio', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/music-lab')
+    await page.goto('/test-music-lab')
     await page.waitForLoadState('networkidle')
     await page.getByRole('button', { name: /Sound Studio/i }).click()
     await page.waitForTimeout(1000)
@@ -150,7 +150,7 @@ test.describe('Sound Studio', () => {
 
 test.describe('Tab Navigation Flow', () => {
   test('should navigate between all tabs smoothly', async ({ page }) => {
-    await page.goto('/music-lab')
+    await page.goto('/test-music-lab')
     await page.waitForLoadState('networkidle')
 
     // Artist Lab
