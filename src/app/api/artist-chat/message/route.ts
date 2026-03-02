@@ -205,6 +205,10 @@ export async function POST(request: NextRequest) {
       reaction: null,
     })
 
+    if (!savedUserMsg) {
+      logger.api.error('Failed to save user message to DB', { artistId, userId: user.id })
+    }
+
     // Build system prompt and call LLM
     const systemPrompt = buildSystemPrompt(dna, personalityPrint, livingContext, memory, recentMessages || [])
 
@@ -229,12 +233,17 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const error = await response.text()
-      logger.api.error('Chat message API failed', { error })
-      return NextResponse.json({ error: 'Failed to get artist response' }, { status: 500 })
+      logger.api.error('OpenRouter API failed', { status: response.status, error })
+      return NextResponse.json({ error: 'Failed to get artist response' }, { status: 502 })
     }
 
     const data = await response.json()
-    const rawContent = data.choices?.[0]?.message?.content || ''
+    const rawContent = data.choices?.[0]?.message?.content
+
+    if (!rawContent) {
+      logger.api.error('OpenRouter returned empty content', { data: JSON.stringify(data).substring(0, 500) })
+      return NextResponse.json({ error: 'Artist had nothing to say' }, { status: 502 })
+    }
 
     // Detect special content types
     const { type, actionData, cleanContent } = detectMessageType(rawContent)
@@ -252,9 +261,33 @@ export async function POST(request: NextRequest) {
       reaction: null,
     })
 
+    if (!savedArtistMsg) {
+      logger.api.error('Failed to save artist message to DB', { artistId, userId: user.id })
+    }
+
+    // Build fallback messages if DB save failed (don't lose the content)
+    const userMsg = savedUserMsg || {
+      id: `local-user-${Date.now()}`,
+      artistId,
+      role: 'user' as const,
+      content: userMessage,
+      messageType: 'text' as const,
+      createdAt: new Date().toISOString(),
+    }
+
+    const artistMsg = savedArtistMsg || {
+      id: `local-artist-${Date.now()}`,
+      artistId,
+      role: 'artist' as const,
+      content: cleanContent,
+      messageType: type,
+      actionData: actionData || undefined,
+      createdAt: new Date().toISOString(),
+    }
+
     return NextResponse.json({
-      userMessage: savedUserMsg,
-      artistMessage: savedArtistMsg,
+      userMessage: userMsg,
+      artistMessage: artistMsg,
       photoTrigger: type === 'photo',
     })
   } catch (error) {

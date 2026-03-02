@@ -129,7 +129,6 @@ export const useArtistChatStore = create<ArtistChatState>()(
           }
 
           if (!personalityPrint) {
-            // Show error as a system message instead of silently failing
             const errorMsg: ChatMessage = {
               id: `error-${Date.now()}`,
               artistId: activeArtistId,
@@ -175,21 +174,61 @@ export const useArtistChatStore = create<ArtistChatState>()(
             const data = await res.json()
 
             set(state => {
-              // Replace temp user message with real one, add artist message
               const filtered = state.messages.filter(m => m.id !== tempUserMsg.id)
               const newMessages = [...filtered]
-              if (data.userMessage) newMessages.push(data.userMessage)
+              // Keep the user message even if DB save returned null
+              if (data.userMessage) {
+                newMessages.push(data.userMessage)
+              } else {
+                // DB save failed — keep temp message so it doesn't vanish
+                newMessages.push(tempUserMsg)
+              }
               if (data.artistMessage) newMessages.push(data.artistMessage)
               return { messages: newMessages }
             })
+
+            // If artist message is missing despite 200, show error
+            if (!data.artistMessage) {
+              const errorMsg: ChatMessage = {
+                id: `error-${Date.now()}`,
+                artistId: activeArtistId,
+                role: 'artist',
+                content: "Couldn't get a response right now. Try again.",
+                messageType: 'text',
+                createdAt: new Date().toISOString(),
+              }
+              set(state => ({ messages: [...state.messages, errorMsg] }))
+            }
 
             // Handle photo trigger
             if (data.photoTrigger) {
               get().requestPhoto('selfie from chat context', dna)
             }
+          } else {
+            // Non-ok response — show error, keep user message visible
+            console.error('Chat API returned', res.status, await res.text().catch(() => ''))
+            const errorMsg: ChatMessage = {
+              id: `error-${Date.now()}`,
+              artistId: activeArtistId,
+              role: 'artist',
+              content: "Something went wrong. Try sending your message again.",
+              messageType: 'text',
+              createdAt: new Date().toISOString(),
+            }
+            set(state => ({ messages: [...state.messages, errorMsg] }))
           }
         } catch (e) {
           console.error('Send message failed:', e)
+          // Network error — show error, keep user message visible
+          const errorMsg: ChatMessage = {
+            id: `error-${Date.now()}`,
+            artistId: activeArtistId,
+            role: 'artist',
+            content: "Connection issue. Check your network and try again.",
+            messageType: 'text',
+            createdAt: new Date().toISOString(),
+          }
+          set(state => ({ messages: [...state.messages, errorMsg] }))
         } finally {
           set({ isSending: false })
         }
