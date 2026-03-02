@@ -25,10 +25,16 @@ export function LookTab() {
       <CardContent className="space-y-3">
         <Tabs value={subTab} onValueChange={(v) => setSubTab(v as LookSubTab)}>
           <TabsList className="w-full">
-            <TabsTrigger value="profile" className="flex-1 text-xs">Profile</TabsTrigger>
-            <TabsTrigger value="character-sheet" className="flex-1 text-xs">Character Sheet</TabsTrigger>
-            <TabsTrigger value="photo-shoot" className="flex-1 text-xs">Photo Shoot</TabsTrigger>
-            <TabsTrigger value="gallery" className="flex-1 text-xs">Gallery</TabsTrigger>
+            <TabsTrigger value="profile" className="flex-1 text-xs min-h-[36px]">Profile</TabsTrigger>
+            <TabsTrigger value="character-sheet" className="flex-1 text-xs min-h-[36px]">
+              <span className="sm:hidden">Sheet</span>
+              <span className="hidden sm:inline">Character Sheet</span>
+            </TabsTrigger>
+            <TabsTrigger value="photo-shoot" className="flex-1 text-xs min-h-[36px]">
+              <span className="sm:hidden">Photos</span>
+              <span className="hidden sm:inline">Photo Shoot</span>
+            </TabsTrigger>
+            <TabsTrigger value="gallery" className="flex-1 text-xs min-h-[36px]">Gallery</TabsTrigger>
           </TabsList>
           <TabsContent value="profile">
             <ProfileSubTab />

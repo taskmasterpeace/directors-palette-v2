@@ -134,45 +134,48 @@ export function CharacterSheetSubTab() {
   return (
     <div className="space-y-3">
       {/* Header + actions */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium">Character Sheet</p>
-          <p className="text-[11px] text-muted-foreground">
-            Full reference sheet + auto-portrait. Used as identity anchor for photo shoots.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={look.wardrobeStyle}
-            onChange={(e) => updateDraft('look', { wardrobeStyle: e.target.value })}
-            className="h-7 rounded-md border border-border/60 bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            <option value="">Wardrobe: Use Fashion Style</option>
-            {WARDROBE_STYLES.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
-          {look.characterSheetUrl && !isGenerating && (
-            <Button size="sm" variant="outline" onClick={handleDownload} className="h-7 text-xs">
-              <Download className="w-3 h-3 mr-1" />Download
-            </Button>
-          )}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleGenerate}
-            disabled={isGenerating || !hasNameAndLook}
-            className="h-7 text-xs"
-          >
-            {generatingSheet ? (
-              <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Sheet...</>
-            ) : generatingPortrait ? (
-              <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Portrait...</>
-            ) : (
-              <><Sparkles className="w-3 h-3 mr-1" />{look.characterSheetUrl ? 'Regenerate' : 'Generate'}</>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">Character Sheet</p>
+            <p className="text-[11px] text-muted-foreground hidden sm:block">
+              Full reference sheet + auto-portrait. Used as identity anchor for photo shoots.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {look.characterSheetUrl && !isGenerating && (
+              <Button size="sm" variant="outline" onClick={handleDownload} className="h-8 sm:h-7 text-xs">
+                <Download className="w-3 h-3 sm:mr-1" /><span className="hidden sm:inline">Download</span>
+              </Button>
             )}
-          </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleGenerate}
+              disabled={isGenerating || !hasNameAndLook}
+              className="h-8 sm:h-7 text-xs"
+            >
+              {generatingSheet ? (
+                <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Sheet...</>
+              ) : generatingPortrait ? (
+                <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Portrait...</>
+              ) : (
+                <><Sparkles className="w-3 h-3 mr-1" />{look.characterSheetUrl ? 'Regenerate' : 'Generate'}</>
+              )}
+            </Button>
+          </div>
         </div>
+        {/* Wardrobe selector — full width row */}
+        <select
+          value={look.wardrobeStyle}
+          onChange={(e) => updateDraft('look', { wardrobeStyle: e.target.value })}
+          className="w-full h-8 sm:h-7 rounded-md border border-border/60 bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        >
+          <option value="">Wardrobe: Use Fashion Style</option>
+          {WARDROBE_STYLES.map((s) => (
+            <option key={s.value} value={s.value}>{s.label}</option>
+          ))}
+        </select>
       </div>
 
       {/* Error display */}

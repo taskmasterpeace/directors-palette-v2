@@ -139,7 +139,7 @@ export function Storyboard() {
         <div className="flex h-full overflow-hidden">
             {/* Vertical Sidebar */}
             <TooltipProvider>
-                <div className="flex-shrink-0 w-14 border-r bg-muted/30 flex flex-col items-center py-2 gap-1">
+                <div className="flex-shrink-0 w-11 sm:w-14 border-r bg-muted/30 flex flex-col items-center py-2 gap-1">
                     {sidebarTabs.map((tab, i) => {
                         const Icon = tab.icon
                         const isActive = internalTab === tab.id

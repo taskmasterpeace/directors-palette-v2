@@ -44,14 +44,14 @@ export function MusicLabHub({ userId }: MusicLabHubProps) {
               key={tab.id}
               onClick={() => setMusicLabSubTab(tab.id)}
               className={cn(
-                'flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 min-w-0',
+                'flex-1 flex items-center justify-center gap-1.5 px-1 sm:px-2 py-2.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 min-w-0 min-h-[44px]',
                 isActive
                   ? 'bg-amber-500/15 text-amber-400 shadow-sm'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               )}
             >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              <span className="truncate">{tab.label}</span>
+              <Icon className="w-4 h-4 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="hidden sm:inline truncate">{tab.label}</span>
             </button>
           )
         })}
@@ -60,7 +60,7 @@ export function MusicLabHub({ userId }: MusicLabHubProps) {
       {/* Sub-tab content */}
       <div className="flex-1 overflow-hidden relative z-10">
         {musicLabSubTab === 'artist-lab' && (
-          <div className="h-full p-4 overflow-y-auto">
+          <div className="h-full p-2 sm:p-4 overflow-y-auto">
             <ArtistDnaPage userId={userId} />
           </div>
         )}
@@ -74,7 +74,7 @@ export function MusicLabHub({ userId }: MusicLabHubProps) {
           <SoundStudioPage userId={userId} />
         )}
         {musicLabSubTab === 'music-video' && (
-          <div className="h-full p-4 overflow-y-auto">
+          <div className="h-full p-2 sm:p-4 overflow-y-auto">
             <MusicVideoPage />
           </div>
         )}

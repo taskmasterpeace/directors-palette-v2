@@ -90,7 +90,7 @@ export function GallerySubTab() {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {sorted.map((item) => (
           <div
             key={item.id}

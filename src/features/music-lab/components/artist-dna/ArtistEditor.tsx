@@ -126,12 +126,12 @@ export function ArtistEditor() {
       <ConstellationWidget />
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-        <TabsList className="w-full overflow-x-auto flex-nowrap justify-start">
+        <TabsList className="w-full overflow-x-auto flex-nowrap justify-start scrollbar-hide">
           {ARTIST_DNA_TABS.map((tab) => (
             <TabsTrigger
               key={tab.id}
               value={tab.id}
-              className="relative"
+              className="relative min-h-[40px] px-2 sm:px-3 text-xs sm:text-sm whitespace-nowrap"
             >
               {tab.label}
               {lcfCounts[tab.id] > 0 && (
@@ -166,7 +166,7 @@ export function ArtistEditor() {
 
       {/* Sticky save bar — always visible */}
       {isDirty && (
-        <div className="sticky bottom-0 z-20 -mx-4 px-4 py-3 bg-background/90 backdrop-blur-md border-t border-border/50">
+        <div className="sticky bottom-0 z-20 -mx-4 px-4 py-3 bg-background/90 backdrop-blur-md border-t border-border/50 safe-bottom">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               Unsaved changes

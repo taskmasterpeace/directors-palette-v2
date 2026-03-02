@@ -85,26 +85,26 @@ export function ProfileSubTab() {
   return (
     <div className="space-y-3">
       {/* Portrait section */}
-      <div className="flex items-center gap-4 pb-2 border-b border-border/30">
-        <div className="w-[80px] h-[80px] rounded-lg overflow-hidden bg-muted/30 border border-border/40 flex items-center justify-center shrink-0">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 pb-2 border-b border-border/30">
+        <div className="w-[64px] h-[64px] sm:w-[80px] sm:h-[80px] rounded-lg overflow-hidden bg-muted/30 border border-border/40 flex items-center justify-center shrink-0">
           {look.portraitUrl ? (
             <img src={look.portraitUrl} alt="Artist portrait" className="w-full h-full object-cover" />
           ) : (
             <User className="w-8 h-8 text-muted-foreground/30" />
           )}
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5 w-full sm:w-auto">
           <p className="text-xs text-muted-foreground">
             {look.portraitUrl ? 'Portrait generated from your Look profile' : 'Auto-generates when you create a character sheet'}
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {look.portraitUrl && (
               <Button
                 size="sm"
                 variant="outline"
                 onClick={handleGeneratePortrait}
                 disabled={generatingPortrait || !hasLookFields}
-                className="h-7 text-xs"
+                className="h-8 sm:h-7 text-xs"
               >
                 {generatingPortrait ? (
                   <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Generating...</>
@@ -118,7 +118,7 @@ export function ProfileSubTab() {
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="h-7 text-xs"
+              className="h-8 sm:h-7 text-xs"
             >
               {uploading ? (
                 <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Uploading...</>
@@ -138,7 +138,7 @@ export function ProfileSubTab() {
       </div>
 
       {/* Row 1: Skin Tone | Hair Style | Fashion Style */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="space-y-1">
           <Label className="text-xs">Skin Tone</Label>
           <MagicWandField
@@ -172,7 +172,7 @@ export function ProfileSubTab() {
       </div>
 
       {/* Row 2: Jewelry | Tattoos */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="space-y-1">
           <Label className="text-xs">Jewelry</Label>
           <MagicWandField

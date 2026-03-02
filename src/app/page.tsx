@@ -99,7 +99,7 @@ export default function Home() {
               <TabsContent key="gallery" value="gallery" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
                 <PageTransition>
                   <SectionHeader section="gallery" />
-                  <div className="flex-1 p-4 overflow-y-auto md:overflow-hidden">
+                  <div className="flex-1 p-2 sm:p-4 overflow-y-auto md:overflow-hidden">
                     <UnifiedImageGallery currentTab="gallery" mode="full" />
                   </div>
                 </PageTransition>
