@@ -4,9 +4,11 @@ import { Music } from 'lucide-react'
 import { useSoundStudioStore } from '@/features/music-lab/store/sound-studio.store'
 import { HARMONY_COLOR_TAGS, getMusicalKeys } from '@/features/music-lab/data/production-tags.data'
 import { MultiSelectPills } from './MultiSelectPills'
+import { useArtistFit } from '../../hooks/useArtistFit'
 
 export function HarmonyPanel() {
   const { settings, updateSetting } = useSoundStudioStore()
+  const { harmonyColor: artistPicks } = useArtistFit()
   const keys = getMusicalKeys()
 
   return (
@@ -45,6 +47,7 @@ export function HarmonyPanel() {
         onChange={(v) => updateSetting('harmonyColor', v)}
         color="cyan"
         compact
+        artistPicks={artistPicks}
       />
     </div>
   )

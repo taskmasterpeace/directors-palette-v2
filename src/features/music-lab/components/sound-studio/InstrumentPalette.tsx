@@ -5,13 +5,11 @@ import { Search, X, Piano, ThumbsUp } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { INSTRUMENT_TAGS, INSTRUMENT_CATEGORIES } from '@/features/music-lab/data/instrument-tags.data'
 import { useSoundStudioStore } from '@/features/music-lab/store/sound-studio.store'
-import { useArtistDnaStore } from '@/features/music-lab/store/artist-dna.store'
+import { useArtistFit } from '../../hooks/useArtistFit'
 
 export function InstrumentPalette() {
   const { settings, updateSetting } = useSoundStudioStore()
-  const { artists, activeArtistId } = useArtistDnaStore()
-  const activeArtist = artists.find(a => a.id === activeArtistId)
-  const artistInstruments = activeArtist?.dna?.sound?.instruments || []
+  const { instruments: artistInstruments } = useArtistFit()
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
 

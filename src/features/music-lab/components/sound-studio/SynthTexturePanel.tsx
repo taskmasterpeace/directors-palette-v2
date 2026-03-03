@@ -4,9 +4,11 @@ import { Disc3 } from 'lucide-react'
 import { useSoundStudioStore } from '@/features/music-lab/store/sound-studio.store'
 import { SYNTH_TEXTURE_TAGS } from '@/features/music-lab/data/production-tags.data'
 import { MultiSelectPills } from './MultiSelectPills'
+import { useArtistFit } from '../../hooks/useArtistFit'
 
 export function SynthTexturePanel() {
   const { settings, updateSetting } = useSoundStudioStore()
+  const { synthTexture: artistPicks } = useArtistFit()
 
   return (
     <div className="space-y-3">
@@ -25,6 +27,7 @@ export function SynthTexturePanel() {
         onChange={(v) => updateSetting('synthTexture', v)}
         color="purple"
         compact
+        artistPicks={artistPicks}
       />
     </div>
   )

@@ -4,9 +4,11 @@ import { AudioLines } from 'lucide-react'
 import { useSoundStudioStore } from '@/features/music-lab/store/sound-studio.store'
 import { BASS_STYLE_TAGS } from '@/features/music-lab/data/production-tags.data'
 import { MultiSelectPills } from './MultiSelectPills'
+import { useArtistFit } from '../../hooks/useArtistFit'
 
 export function BassStylePanel() {
   const { settings, updateSetting } = useSoundStudioStore()
+  const { bassStyle: artistPicks } = useArtistFit()
 
   return (
     <div className="space-y-3">
@@ -25,6 +27,7 @@ export function BassStylePanel() {
         onChange={(v) => updateSetting('bassStyle', v)}
         color="orange"
         compact
+        artistPicks={artistPicks}
       />
     </div>
   )

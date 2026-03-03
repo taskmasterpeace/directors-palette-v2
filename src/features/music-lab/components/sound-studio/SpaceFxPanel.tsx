@@ -4,9 +4,11 @@ import { Sparkles } from 'lucide-react'
 import { useSoundStudioStore } from '@/features/music-lab/store/sound-studio.store'
 import { SPACE_FX_TAGS } from '@/features/music-lab/data/production-tags.data'
 import { MultiSelectPills } from './MultiSelectPills'
+import { useArtistFit } from '../../hooks/useArtistFit'
 
 export function SpaceFxPanel() {
   const { settings, updateSetting } = useSoundStudioStore()
+  const { spaceFx: artistPicks } = useArtistFit()
 
   return (
     <div className="space-y-3">
@@ -26,6 +28,7 @@ export function SpaceFxPanel() {
         color="blue"
         grouped
         compact
+        artistPicks={artistPicks}
       />
     </div>
   )

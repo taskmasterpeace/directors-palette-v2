@@ -1,6 +1,6 @@
 /**
  * Suggest Concepts API
- * Suggests song concepts based on artist DNA
+ * Generates song concepts in the artist's own voice using their full DNA
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -14,6 +14,51 @@ interface SuggestConceptsBody {
   artistDna: ArtistDNA
 }
 
+function buildArtistProfile(dna: ArtistDNA): string {
+  const lines: string[] = []
+
+  // Identity
+  const name = dna.identity?.stageName || dna.identity?.realName || 'Unknown'
+  lines.push(`NAME: ${name}`)
+  if (dna.identity?.city) {
+    const location = [dna.identity.neighborhood, dna.identity.city, dna.identity.state].filter(Boolean).join(', ')
+    lines.push(`FROM: ${location}`)
+  }
+  if (dna.identity?.ethnicity) lines.push(`ETHNICITY: ${dna.identity.ethnicity}`)
+  if (dna.identity?.backstory) lines.push(`BACKSTORY: ${dna.identity.backstory}`)
+  if (dna.identity?.significantEvents?.length > 0) {
+    lines.push(`LIFE EVENTS: ${dna.identity.significantEvents.join('; ')}`)
+  }
+
+  // Persona
+  if (dna.persona?.attitude) lines.push(`ATTITUDE: ${dna.persona.attitude}`)
+  if (dna.persona?.worldview) lines.push(`WORLDVIEW: ${dna.persona.worldview}`)
+  if (dna.persona?.traits?.length > 0) lines.push(`PERSONALITY: ${dna.persona.traits.join(', ')}`)
+  if (dna.persona?.likes?.length > 0) lines.push(`CARES ABOUT: ${dna.persona.likes.join(', ')}`)
+  if (dna.persona?.dislikes?.length > 0) lines.push(`HATES: ${dna.persona.dislikes.join(', ')}`)
+
+  // Sound
+  if (dna.sound?.genres?.length > 0) lines.push(`GENRES: ${dna.sound.genres.join(', ')}`)
+  if (dna.sound?.subgenres?.length > 0) lines.push(`SUBGENRES: ${dna.sound.subgenres.join(', ')}`)
+  if (dna.sound?.soundDescription) lines.push(`SOUND: ${dna.sound.soundDescription}`)
+
+  // Lexicon — the artist's actual vocabulary
+  if (dna.lexicon?.signaturePhrases?.length > 0) {
+    lines.push(`SIGNATURE PHRASES: "${dna.lexicon.signaturePhrases.join('", "')}"`)
+  }
+  if (dna.lexicon?.slang?.length > 0) lines.push(`SLANG THEY USE: ${dna.lexicon.slang.join(', ')}`)
+  if (dna.lexicon?.adLibs?.length > 0) lines.push(`AD-LIBS: ${dna.lexicon.adLibs.join(', ')}`)
+  if (dna.lexicon?.bannedWords?.length > 0) lines.push(`NEVER SAYS: ${dna.lexicon.bannedWords.join(', ')}`)
+
+  // Existing catalog — to avoid repeats
+  if (dna.catalog?.entries?.length > 0) {
+    const existing = dna.catalog.entries.map((e) => e.title).join(', ')
+    lines.push(`EXISTING SONGS (don't repeat these themes): ${existing}`)
+  }
+
+  return lines.join('\n')
+}
+
 export async function POST(request: NextRequest) {
   try {
     const auth = await getAuthenticatedUser(request)
@@ -25,38 +70,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'artistDna is required' }, { status: 400 })
     }
 
-    const parts: string[] = []
-    parts.push('Suggest 6 unique song concept ideas for this artist. Each concept should be 1-2 sentences.')
-    parts.push('Return ONLY a JSON array of strings. No markdown, no explanation.')
+    const artistName = artistDna.identity?.stageName || artistDna.identity?.realName || 'the artist'
+    const profile = buildArtistProfile(artistDna)
 
-    const artistName = artistDna.identity?.stageName || artistDna.identity?.realName
-    if (artistName) {
-      parts.push(`Artist: ${artistName}`)
-    }
-    if (artistDna.identity?.city) {
-      parts.push(`From: ${artistDna.identity.city}`)
-    }
-    if (artistDna.persona?.attitude) {
-      parts.push(`Attitude: ${artistDna.persona.attitude}`)
-    }
-    if (artistDna.persona?.worldview) {
-      parts.push(`Worldview: ${artistDna.persona.worldview}`)
-    }
-    if (artistDna.persona?.traits?.length > 0) {
-      parts.push(`Traits: ${artistDna.persona.traits.join(', ')}`)
-    }
-    if (artistDna.sound?.genres?.length > 0) {
-      parts.push(`Genres: ${artistDna.sound.genres.join(', ')}`)
-    }
+    const systemPrompt = `You ARE ${artistName}. You're a musician pitching song ideas to your producer.
 
-    // Avoid repeating catalog themes
-    if (artistDna.catalog?.entries?.length > 0) {
-      const existingThemes = artistDna.catalog.entries.map((e) => e.title).join(', ')
-      parts.push(`Avoid themes already in catalog: ${existingThemes}`)
-    }
+Here's who you are:
+${profile}
 
-    parts.push('Mix personal stories, social commentary, aspirational themes, and emotional depth.')
-    parts.push('Be specific and vivid, not generic.')
+RULES:
+- Write each concept AS ${artistName} would actually say it — use their slang, their rhythm, their attitude.
+- Reference specific places, people, feelings, and moments from their life.
+- Each concept should be 2-3 sentences max. Casual, not formal. Like you're in the studio talking.
+- Mix it up: some personal/emotional, some hard/aspirational, some storytelling, some for the culture.
+- Don't start every concept the same way. Vary the energy.
+- Never use generic phrases like "a song about overcoming adversity" — be SPECIFIC.
+- Return ONLY a JSON array of 6 strings. No markdown, no explanation, no wrapping.`
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -69,10 +98,10 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         model: MODEL,
         messages: [
-          { role: 'system', content: parts.join('\n') },
-          { role: 'user', content: 'Suggest 6 song concepts.' },
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: "What you been cooking? Pitch me 6 song ideas." },
         ],
-        temperature: 0.9,
+        temperature: 0.95,
         max_tokens: 2000,
       }),
     })

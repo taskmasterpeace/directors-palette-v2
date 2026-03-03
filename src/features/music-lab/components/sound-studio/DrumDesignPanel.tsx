@@ -4,9 +4,11 @@ import { Drum } from 'lucide-react'
 import { useSoundStudioStore } from '@/features/music-lab/store/sound-studio.store'
 import { DRUM_DESIGN_TAGS } from '@/features/music-lab/data/production-tags.data'
 import { MultiSelectPills } from './MultiSelectPills'
+import { useArtistFit } from '../../hooks/useArtistFit'
 
 export function DrumDesignPanel() {
   const { settings, updateSetting } = useSoundStudioStore()
+  const { drumDesign: artistPicks } = useArtistFit()
 
   return (
     <div className="space-y-3">
@@ -26,6 +28,7 @@ export function DrumDesignPanel() {
         color="rose"
         grouped
         compact
+        artistPicks={artistPicks}
       />
     </div>
   )

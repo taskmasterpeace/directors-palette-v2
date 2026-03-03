@@ -4,9 +4,11 @@ import { Waves } from 'lucide-react'
 import { useSoundStudioStore } from '@/features/music-lab/store/sound-studio.store'
 import { GROOVE_FEEL_TAGS } from '@/features/music-lab/data/production-tags.data'
 import { MultiSelectPills } from './MultiSelectPills'
+import { useArtistFit } from '../../hooks/useArtistFit'
 
 export function GrooveFeelPanel() {
   const { settings, updateSetting } = useSoundStudioStore()
+  const { grooveFeel: artistPicks } = useArtistFit()
 
   return (
     <div className="space-y-3">
@@ -25,6 +27,7 @@ export function GrooveFeelPanel() {
         onChange={(v) => updateSetting('grooveFeel', v)}
         color="emerald"
         compact
+        artistPicks={artistPicks}
       />
     </div>
   )

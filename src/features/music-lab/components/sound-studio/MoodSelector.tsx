@@ -1,8 +1,9 @@
 'use client'
 
-import { Heart } from 'lucide-react'
+import { Heart, ThumbsUp } from 'lucide-react'
 import { MOOD_TAGS } from '@/features/music-lab/data/mood-tags.data'
 import { useSoundStudioStore } from '@/features/music-lab/store/sound-studio.store'
+import { useArtistFit } from '../../hooks/useArtistFit'
 
 const VALENCE_CONFIG = {
   positive: {
@@ -27,6 +28,7 @@ const VALENCE_CONFIG = {
 
 export function MoodSelector() {
   const { settings, updateSetting } = useSoundStudioStore()
+  const { moods: artistMoods } = useArtistFit()
 
   const handleToggle = (moodLabel: string) => {
     if (settings.moods.includes(moodLabel)) {
@@ -65,14 +67,16 @@ export function MoodSelector() {
               <div className="flex flex-wrap gap-1.5">
                 {tags.map((tag) => {
                   const isActive = settings.moods.includes(tag.label)
+                  const isArtistPick = artistMoods.includes(tag.label)
                   return (
                     <button
                       key={tag.id}
                       onClick={() => handleToggle(tag.label)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all inline-flex items-center gap-1 ${
                         isActive ? config.tagActiveColor : config.tagColor
                       } hover:scale-[1.03]`}
                     >
+                      {isArtistPick && <ThumbsUp className="w-2.5 h-2.5 text-emerald-400" />}
                       {tag.label}
                     </button>
                   )

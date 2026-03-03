@@ -4,9 +4,11 @@ import { Candy } from 'lucide-react'
 import { useSoundStudioStore } from '@/features/music-lab/store/sound-studio.store'
 import { EAR_CANDY_TAGS } from '@/features/music-lab/data/production-tags.data'
 import { MultiSelectPills } from './MultiSelectPills'
+import { useArtistFit } from '../../hooks/useArtistFit'
 
 export function EarCandyPanel() {
   const { settings, updateSetting } = useSoundStudioStore()
+  const { earCandy: artistPicks } = useArtistFit()
 
   return (
     <div className="space-y-3">
@@ -25,6 +27,7 @@ export function EarCandyPanel() {
         onChange={(v) => updateSetting('earCandy', v)}
         color="pink"
         compact
+        artistPicks={artistPicks}
       />
     </div>
   )
