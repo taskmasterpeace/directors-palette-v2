@@ -87,10 +87,15 @@ export function DesktopPromptsRecipesBar({
     const [renamingRecipeId, setRenamingRecipeId] = useState<string | null>(null)
 
     // Recipe store (useRecipes triggers initialization)
-    const { quickAccessItems, setActiveRecipe, removeFromQuickAccess, updateQuickAccessLabel, deleteRecipe } = useRecipes()
-    const recipeItems = quickAccessItems
+    const { recipes, quickAccessItems, setActiveRecipe, removeFromQuickAccess, updateQuickAccessLabel, deleteRecipe } = useRecipes()
+
+    // Quick access items for pinned recipes
+    const quickAccessRecipes = quickAccessItems
         .filter((item) => item.type === 'recipe' && item.recipeId)
         .sort((a, b) => a.order - b.order)
+
+    // All visible recipes (user-owned + system, excluding system-only)
+    const allRecipes = recipes.filter(r => !r.isSystemOnly)
 
     // Prompt library store
     const { prompts, categories, addPrompt, updatePrompt, deletePrompt } = usePromptLibraryStore()
@@ -186,7 +191,7 @@ export function DesktopPromptsRecipesBar({
     }
 
     const promptCount = prompts.length
-    const recipeCount = recipeItems.length
+    const recipeCount = allRecipes.length
 
     return (
         <div className={cn(className)}>
@@ -393,67 +398,80 @@ export function DesktopPromptsRecipesBar({
                                 </>
                             )}
 
-                            {/* RECIPES TAB */}
+                            {/* RECIPES TAB - Shows ALL recipes */}
                             {activeTab === 'recipes' && (
                                 <>
-                                    {recipeItems.length === 0 ? (
+                                    {allRecipes.length === 0 ? (
                                         <span className="text-xs text-muted-foreground px-2">
-                                            No recipes in quick access. Add recipes from Prompt Tools.
+                                            No recipes yet. Add recipes from Community or create your own.
                                         </span>
                                     ) : (
-                                        recipeItems.map((item) => (
-                                            <div key={item.id} className="group relative flex items-center">
-                                                {renamingRecipeId === item.id ? (
-                                                    <InlineRenameInput
-                                                        value={item.label}
-                                                        onSave={(val) => handleRenameRecipeLabel(item.id, val)}
-                                                        onCancel={() => setRenamingRecipeId(null)}
-                                                    />
-                                                ) : (
-                                                    <>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => item.recipeId && handleRecipeSelect(item.recipeId)}
-                                                            className={cn(
-                                                                'h-10 lg:h-8 px-4 lg:px-3 pr-8 lg:pr-7 text-sm lg:text-xs whitespace-nowrap',
-                                                                'bg-card hover:bg-amber-500/20 border-border',
-                                                                'border-l-2 border-l-amber-500'
-                                                            )}
-                                                        >
-                                                            {item.label}
-                                                        </Button>
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <button className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-white transition-opacity p-0.5 rounded">
-                                                                    <MoreHorizontal className="w-3.5 h-3.5" />
-                                                                </button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-44">
-                                                                <DropdownMenuItem onClick={() => setRenamingRecipeId(item.id)}>
-                                                                    <Pencil className="w-3.5 h-3.5 mr-2" />
-                                                                    Rename Label
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    onClick={() => handleRemoveRecipeFromQuickAccess(item.id)}
-                                                                    className="text-yellow-400 focus:text-yellow-400"
-                                                                >
-                                                                    <FlaskConical className="w-3.5 h-3.5 mr-2" />
-                                                                    Remove from Bar
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    onClick={() => item.recipeId && handleDeleteRecipeFull(item.recipeId, item.id)}
-                                                                    className="text-red-400 focus:text-red-400"
-                                                                >
-                                                                    <Trash2 className="w-3.5 h-3.5 mr-2" />
-                                                                    Delete Recipe
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </>
-                                                )}
-                                            </div>
-                                        ))
+                                        allRecipes.map((recipe) => {
+                                            const qaItem = quickAccessRecipes.find(q => q.recipeId === recipe.id)
+                                            return (
+                                                <div key={recipe.id} className="group relative flex items-center">
+                                                    {renamingRecipeId === recipe.id ? (
+                                                        <InlineRenameInput
+                                                            value={qaItem?.label || recipe.name}
+                                                            onSave={(val) => qaItem ? handleRenameRecipeLabel(qaItem.id, val) : setRenamingRecipeId(null)}
+                                                            onCancel={() => setRenamingRecipeId(null)}
+                                                        />
+                                                    ) : (
+                                                        <>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleRecipeSelect(recipe.id)}
+                                                                className={cn(
+                                                                    'h-10 lg:h-8 px-4 lg:px-3 pr-8 lg:pr-7 text-sm lg:text-xs whitespace-nowrap',
+                                                                    'bg-card hover:bg-amber-500/20 border-border',
+                                                                    qaItem ? 'border-l-2 border-l-amber-500' : 'border-l-2 border-l-transparent',
+                                                                    recipe.isSystem && !recipe.categoryId ? 'opacity-70' : ''
+                                                                )}
+                                                            >
+                                                                {qaItem?.label || recipe.name}
+                                                            </Button>
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <button className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-white transition-opacity p-0.5 rounded">
+                                                                        <MoreHorizontal className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end" className="w-44">
+                                                                    {qaItem && (
+                                                                        <>
+                                                                            <DropdownMenuItem onClick={() => setRenamingRecipeId(recipe.id)}>
+                                                                                <Pencil className="w-3.5 h-3.5 mr-2" />
+                                                                                Rename Label
+                                                                            </DropdownMenuItem>
+                                                                            <DropdownMenuItem
+                                                                                onClick={() => handleRemoveRecipeFromQuickAccess(qaItem.id)}
+                                                                                className="text-yellow-400 focus:text-yellow-400"
+                                                                            >
+                                                                                <FlaskConical className="w-3.5 h-3.5 mr-2" />
+                                                                                Remove from Bar
+                                                                            </DropdownMenuItem>
+                                                                        </>
+                                                                    )}
+                                                                    {!recipe.isSystem && (
+                                                                        <DropdownMenuItem
+                                                                            onClick={() => {
+                                                                                if (qaItem) handleDeleteRecipeFull(recipe.id, qaItem.id)
+                                                                                else deleteRecipe(recipe.id)
+                                                                            }}
+                                                                            className="text-red-400 focus:text-red-400"
+                                                                        >
+                                                                            <Trash2 className="w-3.5 h-3.5 mr-2" />
+                                                                            Delete Recipe
+                                                                        </DropdownMenuItem>
+                                                                    )}
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )
+                                        })
                                     )}
                                 </>
                             )}
