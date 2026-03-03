@@ -35,6 +35,7 @@ import {
   Download,
   Upload,
   MoreVertical,
+  Search,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -87,6 +88,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const [isCategoryManageOpen, setIsCategoryManageOpen] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
   const [newCategoryIcon, setNewCategoryIcon] = useState('')
@@ -287,10 +289,18 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
     }
   }
 
-  // Filter recipes by category
-  const filteredRecipes = selectedCategory
-    ? recipes.filter((r) => r.categoryId === selectedCategory)
-    : recipes
+  // Filter recipes by category and search
+  const filteredRecipes = recipes.filter((r) => {
+    if (selectedCategory && r.categoryId !== selectedCategory) return false
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      return (
+        r.name.toLowerCase().includes(q) ||
+        r.description?.toLowerCase().includes(q)
+      )
+    }
+    return true
+  })
 
   // Check if recipe is in quick access
   const isInQuickAccess = (recipeId: string) => {
@@ -490,6 +500,17 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
             <TooltipContent>Manage Categories</TooltipContent>
           </Tooltip>
         </TooltipProvider>
+      </div>
+
+      {/* Search */}
+      <div className="relative mb-3">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+        <Input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search recipes..."
+          className="h-8 pl-8 text-xs"
+        />
       </div>
 
       {/* Recipe List */}
