@@ -9,29 +9,29 @@ import { DragDropPrevention } from "@/components/DragDropPrevention"
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: "Directors Palette - AI Image & Video Generation",
-  description: "Turn stories into visual art. AI-powered image and video generation with advanced prompting. Create consistent characters, stunning scenes, and complete storyboards.",
-  generator: 'Directors Palette',
-  keywords: ['AI image generation', 'storyboard', 'character consistency', 'video generation', 'prompt engineering', 'visual storytelling'],
+  title: "Director's Palette — AI Creative Studio",
+  description: "The AI creative studio for images, video, music, storyboards, children's books, and more. Create consistent characters, stunning scenes, and complete productions with AI.",
+  generator: "Director's Palette",
+  keywords: ['AI creative studio', 'AI image generation', 'AI video generation', 'AI music', 'storyboard', 'character consistency', 'prompt engineering', 'visual storytelling', 'AI production'],
   authors: [{ name: 'Machine King Labs', url: 'https://machinekinglabs.com' }],
   creator: 'Machine King Labs',
   publisher: 'Machine King Labs',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Directors Palette'
+    title: "Director's Palette"
   },
   openGraph: {
-    title: 'Directors Palette - AI Image & Video Generation',
-    description: 'Turn stories into visual art. Create consistent characters, stunning scenes, and complete storyboards with AI-powered generation.',
+    title: "Director's Palette — AI Creative Studio",
+    description: 'The AI creative studio for images, video, music, storyboards, and more. Turn ideas into complete creative productions.',
     url: 'https://directorspalette.com',
-    siteName: 'Directors Palette',
+    siteName: "Director's Palette",
     images: [
       {
         url: '/landing/app-results-1.png',
         width: 1920,
         height: 1080,
-        alt: 'Directors Palette - AI Generated Storyboard Interface',
+        alt: "Director's Palette — AI Creative Studio",
       },
     ],
     locale: 'en_US',
@@ -39,8 +39,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Directors Palette - AI Image & Video Generation',
-    description: 'Turn stories into visual art. Create consistent characters, stunning scenes, and complete storyboards with AI.',
+    title: "Director's Palette — AI Creative Studio",
+    description: 'The AI creative studio for images, video, music, storyboards, and more. Turn ideas into complete creative productions.',
     images: ['/landing/app-results-1.png'],
     creator: '@machinekinglabs',
   },
