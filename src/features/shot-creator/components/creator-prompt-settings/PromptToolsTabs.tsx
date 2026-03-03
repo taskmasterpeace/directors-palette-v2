@@ -9,7 +9,7 @@ import { RecipeBuilder } from '../recipe/RecipeBuilder'
 import { WildCardManager } from '../wildcard/WildCardManager'
 import StyleSelector from './StyleSelector'
 import { cn } from '@/utils/utils'
-import { useRecipeStore } from '../../store/recipe.store'
+import { useRecipes } from '../../hooks/useRecipes'
 import { useWildCardStore } from '../../store/wildcard.store'
 import { usePromptLibraryStore } from '../../store/prompt-library-store'
 
@@ -26,7 +26,7 @@ export function PromptToolsTabs({
 }: PromptToolsTabsProps) {
   const [activeTab, setActiveTab] = useState('library')
 
-  const { recipes } = useRecipeStore()
+  const { recipes } = useRecipes()
   const { wildcards } = useWildCardStore()
   const { prompts } = usePromptLibraryStore()
 

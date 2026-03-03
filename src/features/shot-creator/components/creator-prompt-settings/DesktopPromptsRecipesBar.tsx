@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { ChevronLeft, ChevronDown, ChevronUp, BookOpen, FlaskConical, Save, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/utils/utils'
-import { useRecipeStore } from '../../store/recipe.store'
+import { useRecipes } from '../../hooks/useRecipes'
 import { usePromptLibraryStore } from '../../store/prompt-library-store'
 import { PROMPT_CATEGORIES } from '../../constants/prompt-library-presets'
 import { AddPromptDialog } from '../prompt-library/dialogs/AddPromptDialog'
@@ -86,8 +86,8 @@ export function DesktopPromptsRecipesBar({
     const [renamingPromptId, setRenamingPromptId] = useState<string | null>(null)
     const [renamingRecipeId, setRenamingRecipeId] = useState<string | null>(null)
 
-    // Recipe store
-    const { quickAccessItems, setActiveRecipe, removeFromQuickAccess, updateQuickAccessLabel, deleteRecipe } = useRecipeStore()
+    // Recipe store (useRecipes triggers initialization)
+    const { quickAccessItems, setActiveRecipe, removeFromQuickAccess, updateQuickAccessLabel, deleteRecipe } = useRecipes()
     const recipeItems = quickAccessItems
         .filter((item) => item.type === 'recipe' && item.recipeId)
         .sort((a, b) => a.order - b.order)
@@ -259,7 +259,7 @@ export function DesktopPromptsRecipesBar({
                     </div>
 
                     {/* Tab Content */}
-                    <div className="p-3 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+                    <div className="p-3 overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
                         <div className="flex items-center gap-2 flex-nowrap lg:flex-wrap min-w-max lg:min-w-0">
                             {/* PROMPTS TAB - Categories View */}
                             {activeTab === 'prompts' && promptView === 'categories' && (

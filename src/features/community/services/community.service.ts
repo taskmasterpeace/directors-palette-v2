@@ -315,15 +315,33 @@ class CommunityService {
         is_system: false,
       }
 
-      const { error: recipeError } = await this.supabase
+      // Check if user already has a recipe with this name
+      const { data: existing } = await this.supabase
         .from('user_recipes')
-        .upsert(recipeData, {
-          onConflict: 'user_id,name',
-          ignoreDuplicates: false,
-        })
+        .select('id')
+        .eq('user_id', userId)
+        .eq('name', item.name)
+        .maybeSingle()
 
-      if (recipeError) {
-        log.error('Error adding recipe to user_recipes', { recipeError: recipeError })
+      if (existing) {
+        // Update existing recipe
+        const { error: updateError } = await this.supabase
+          .from('user_recipes')
+          .update(recipeData)
+          .eq('id', existing.id)
+
+        if (updateError) {
+          log.error('Error updating recipe in user_recipes', { updateError: updateError })
+        }
+      } else {
+        // Insert new recipe
+        const { error: insertError } = await this.supabase
+          .from('user_recipes')
+          .insert(recipeData)
+
+        if (insertError) {
+          log.error('Error inserting recipe to user_recipes', { insertError: insertError })
+        }
       }
     }
 
