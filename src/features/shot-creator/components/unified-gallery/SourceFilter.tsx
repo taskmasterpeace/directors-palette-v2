@@ -20,6 +20,7 @@ const SOURCE_OPTIONS: SourceOption[] = [
   { value: 'adhub', label: 'Adhub', icon: '📣', bgColor: 'bg-purple-600', textColor: 'text-purple-200' },
   { value: 'storybook', label: 'Storybook', icon: '📖', bgColor: 'bg-amber-600', textColor: 'text-amber-200' },
   { value: 'storyboard', label: 'Storyboard', icon: '🎬', bgColor: 'bg-sky-600', textColor: 'text-sky-200' },
+  { value: 'artist-dna', label: 'Artist DNA', icon: '🧬', bgColor: 'bg-rose-600', textColor: 'text-rose-200' },
 ]
 
 interface SourceFilterProps {

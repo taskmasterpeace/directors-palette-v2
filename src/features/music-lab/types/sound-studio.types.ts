@@ -37,9 +37,9 @@ export interface SoundStudioSettings {
   microgenres: string[]
 
   // Core
-  bpm: number
+  bpm: number | null
   moods: string[]
-  energy: number // 0-100
+  energy: number | null // 0-100, null = unset
   era: string | null
 
   // Production sections
@@ -111,7 +111,8 @@ export function createDefaultSettings(): SoundStudioSettings {
 /**
  * Map energy 0-100 to a descriptive label for Suno prompts
  */
-export function energyToLabel(energy: number): string {
+export function energyToLabel(energy: number | null): string | null {
+  if (energy === null) return null
   if (energy <= 20) return 'very low energy'
   if (energy <= 40) return 'low energy'
   if (energy <= 60) return 'medium energy'

@@ -27,10 +27,11 @@ function buildSunoPrompt(settings: SoundStudioSettings): string {
 
   // Mood + energy
   if (settings.moods.length) parts.push(settings.moods.join(', '))
-  parts.push(energyToLabel(settings.energy))
+  const energyLabel = energyToLabel(settings.energy)
+  if (energyLabel) parts.push(energyLabel)
 
   // BPM
-  if (settings.bpm) parts.push(`${settings.bpm} BPM`)
+  if (settings.bpm !== null) parts.push(`${settings.bpm} BPM`)
 
   // Key
   if (settings.key) parts.push(`key of ${settings.key}`)
@@ -84,9 +85,11 @@ function migrateSettings(raw: OldSettings): SoundStudioSettings {
   const microgenres = raw.microgenres ?? (raw.microgenre ? [raw.microgenre] : defaults.microgenres)
   const moods = raw.moods ?? (raw.mood ? [raw.mood] : defaults.moods)
 
-  // Migrate energy string → number
-  let energy = defaults.energy
-  if (typeof raw.energy === 'number') {
+  // Migrate energy string → number | null
+  let energy: number | null = defaults.energy
+  if (raw.energy === null) {
+    energy = null
+  } else if (typeof raw.energy === 'number') {
     energy = raw.energy
   } else if (typeof raw.energy === 'string') {
     const map: Record<string, number> = { low: 25, medium: 50, high: 75 }
@@ -97,7 +100,7 @@ function migrateSettings(raw: OldSettings): SoundStudioSettings {
     genres,
     subgenres,
     microgenres,
-    bpm: typeof raw.bpm === 'number' ? raw.bpm : defaults.bpm,
+    bpm: raw.bpm === null ? null : (typeof raw.bpm === 'number' ? raw.bpm : defaults.bpm),
     moods,
     energy,
     era: typeof raw.era === 'string' ? raw.era : defaults.era,

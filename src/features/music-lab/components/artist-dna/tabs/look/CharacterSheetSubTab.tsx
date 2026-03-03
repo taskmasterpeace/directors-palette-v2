@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Loader2, Sparkles, Download } from 'lucide-react'
+import { Loader2, Sparkles, Download, Link2 } from 'lucide-react'
 import { useArtistDnaStore } from '../../../../store/artist-dna.store'
 import { logger } from '@/lib/logger'
 import { WARDROBE_STYLES } from '../../../../data/wardrobe-wildcards'
@@ -13,6 +13,7 @@ export function CharacterSheetSubTab() {
   const [generatingSheet, setGeneratingSheet] = useState(false)
   const [generatingPortrait, setGeneratingPortrait] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [referenceTag, setReferenceTag] = useState<string | null>(null)
 
   const hasLookFields = look.skinTone || look.hairStyle || look.fashionStyle || look.visualDescription
   const hasNameAndLook = (draft.identity.stageName || draft.identity.realName) && hasLookFields
@@ -50,6 +51,9 @@ export function CharacterSheetSubTab() {
             prompt: sheetData.prompt,
             aspectRatio: '16:9',
           })
+          // Show reference tag created for Shot Creator
+          const artistName = draft.identity.stageName || draft.identity.realName || 'artist'
+          setReferenceTag(`@${artistName.toLowerCase().replace(/\s+/g, '-')}`)
           sheetSuccess = true
         } else {
           setError('Character sheet generation returned no image. Try again.')
@@ -182,6 +186,16 @@ export function CharacterSheetSubTab() {
       {error && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2">
           <p className="text-xs text-red-400">{error}</p>
+        </div>
+      )}
+
+      {/* Reference tag indicator */}
+      {referenceTag && look.characterSheetUrl && !generatingSheet && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10">
+          <Link2 className="w-3.5 h-3.5 text-emerald-400" />
+          <p className="text-xs text-emerald-300">
+            Saved to Shot Creator as <span className="font-mono font-semibold">{referenceTag}</span>
+          </p>
         </div>
       )}
 

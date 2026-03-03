@@ -107,10 +107,11 @@ class SoundStudioService {
 
     // Mood + energy
     if (settings.moods.length) parts.push(settings.moods.join(', '))
-    parts.push(energyToLabel(settings.energy))
+    const energyLabel = energyToLabel(settings.energy)
+    if (energyLabel) parts.push(energyLabel)
 
     // BPM
-    if (settings.bpm) parts.push(`${settings.bpm} BPM`)
+    if (settings.bpm !== null) parts.push(`${settings.bpm} BPM`)
 
     // Key
     if (settings.key) parts.push(`key of ${settings.key}`)

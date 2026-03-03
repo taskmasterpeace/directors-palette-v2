@@ -61,4 +61,5 @@ export const MOOD_TAGS: MoodTag[] = [
   { id: 'paranoid', label: 'Paranoid', valence: 'dark' },
   { id: 'chaotic', label: 'Chaotic', valence: 'dark' },
   { id: 'vengeful', label: 'Vengeful', valence: 'dark' },
+  { id: 'nocturnal', label: 'Nocturnal', valence: 'dark' },
 ]

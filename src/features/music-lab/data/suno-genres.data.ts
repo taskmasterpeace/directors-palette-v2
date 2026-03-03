@@ -931,6 +931,16 @@ export const GENRE_TAXONOMY: GenreNode[] = [
         ],
       },
       {
+        id: 'classical-marching-band',
+        label: 'Marching Band',
+        children: [
+          { id: 'classical-marching-band-hbcu', label: 'HBCU Marching Band' },
+          { id: 'classical-marching-band-college', label: 'College Marching Band' },
+          { id: 'classical-marching-band-military', label: 'Military Band' },
+          { id: 'classical-marching-band-drum-corps', label: 'Drum Corps' },
+        ],
+      },
+      {
         id: 'classical-opera',
         label: 'Opera',
         children: [

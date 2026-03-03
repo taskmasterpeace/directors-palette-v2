@@ -112,15 +112,17 @@ export function SunoPromptPreview() {
       {hasBreakdown && (
         <div className="p-3 rounded-[0.625rem] border border-border/60 bg-background space-y-2">
           <SectionBadge label="Genre" items={[...settings.genres, ...settings.subgenres, ...settings.microgenres]} color="text-amber-400/60" />
-          {(settings.bpm || settings.key) && (
+          {(settings.bpm !== null || settings.key || settings.energy !== null) && (
             <div className="flex gap-3">
-              {settings.bpm && (
+              {settings.bpm !== null && (
                 <span className="text-[10px] font-mono text-muted-foreground">{settings.bpm} BPM</span>
               )}
               {settings.key && (
                 <span className="text-[10px] font-mono text-cyan-400/70">{settings.key}</span>
               )}
-              <span className="text-[10px] font-mono text-muted-foreground">{energyToLabel(settings.energy)}</span>
+              {settings.energy !== null && (
+                <span className="text-[10px] font-mono text-muted-foreground">{energyToLabel(settings.energy)}</span>
+              )}
             </div>
           )}
           <SectionBadge label="Mood" items={settings.moods} color="text-blue-400/60" />

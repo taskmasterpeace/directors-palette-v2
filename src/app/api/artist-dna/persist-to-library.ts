@@ -65,7 +65,8 @@ export async function persistToLibrary(opts: {
       .from(STORAGE_BUCKET)
       .getPublicUrl(storagePath)
 
-    // 3. Create gallery entry
+    // 3. Create gallery entry — include @reference in metadata so Shot Creator can find it
+    const referenceTag = `@${opts.artistName.toLowerCase().replace(/\s+/g, '-')}`
     const { data: galleryEntry, error: galleryError } = await supabase
       .from('gallery')
       .insert({
@@ -81,6 +82,7 @@ export async function persistToLibrary(opts: {
           source: 'artist-dna',
           type: opts.type,
           artistName: opts.artistName,
+          reference: referenceTag,
           aspectRatio: opts.aspectRatio,
           prompt: opts.prompt,
           createdAt: new Date().toISOString(),

@@ -8,8 +8,8 @@ const BPM_PRESETS = [60, 80, 90, 100, 120, 140, 160]
 
 export function BpmSlider() {
   const { settings, updateSetting } = useSoundStudioStore()
-
   const bpm = settings.bpm
+  const isActive = bpm !== null
 
   const handleSliderChange = (values: number[]) => {
     updateSetting('bpm', values[0])
@@ -19,9 +19,18 @@ export function BpmSlider() {
     updateSetting('bpm', val)
   }
 
+  const toggleBpm = () => {
+    if (isActive) {
+      updateSetting('bpm', null)
+    } else {
+      updateSetting('bpm', 120)
+    }
+  }
+
   // Color the BPM display based on tempo range
-  const bpmColor =
-    bpm < 70
+  const bpmColor = !isActive
+    ? 'text-muted-foreground'
+    : bpm < 70
       ? 'text-blue-400'
       : bpm < 100
         ? 'text-emerald-400'
@@ -35,50 +44,71 @@ export function BpmSlider() {
     <div className="space-y-4">
       {/* Header with prominent BPM */}
       <div className="flex items-center gap-2">
-        <Gauge className="w-4 h-4 text-amber-400" />
+        <Gauge className={`w-4 h-4 ${isActive ? 'text-amber-400' : 'text-muted-foreground/40'}`} />
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.025em]">
           Tempo
         </h3>
-        <div className="ml-auto flex items-baseline gap-1">
-          <span className={`text-2xl font-bold tabular-nums tracking-tight ${bpmColor}`}>
-            {bpm}
+        <button
+          onClick={toggleBpm}
+          className={`ml-1 px-2 py-0.5 rounded text-[10px] font-medium transition-all ${
+            isActive
+              ? 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25'
+              : 'bg-muted/20 text-muted-foreground hover:bg-muted/30'
+          }`}
+        >
+          {isActive ? 'ON' : 'OFF'}
+        </button>
+        {isActive && (
+          <div className="ml-auto flex items-baseline gap-1">
+            <span className={`text-2xl font-bold tabular-nums tracking-tight ${bpmColor}`}>
+              {bpm}
+            </span>
+            <span className="text-xs text-muted-foreground">BPM</span>
+          </div>
+        )}
+        {!isActive && (
+          <span className="ml-auto text-[10px] text-muted-foreground/60 italic">
+            Not specified
           </span>
-          <span className="text-xs text-muted-foreground">BPM</span>
-        </div>
+        )}
       </div>
 
-      {/* Slider */}
-      <div className="px-1">
-        <Slider
-          value={[bpm]}
-          onValueChange={handleSliderChange}
-          min={40}
-          max={200}
-          step={1}
-          className="w-full [&_[role=slider]]:bg-amber-500 [&_[role=slider]]:border-amber-400 [&_[role=slider]]:shadow-[0_0_8px_oklch(0.6_0.2_55/0.3)] [&_[data-orientation=horizontal]>[data-role=range]]:bg-amber-500/60"
-        />
-        <div className="flex justify-between mt-1">
-          <span className="text-[10px] text-muted-foreground/60">40</span>
-          <span className="text-[10px] text-muted-foreground/60">200</span>
-        </div>
-      </div>
+      {isActive && (
+        <>
+          {/* Slider */}
+          <div className="px-1">
+            <Slider
+              value={[bpm]}
+              onValueChange={handleSliderChange}
+              min={40}
+              max={200}
+              step={1}
+              className="w-full [&_[role=slider]]:bg-amber-500 [&_[role=slider]]:border-amber-400 [&_[role=slider]]:shadow-[0_0_8px_oklch(0.6_0.2_55/0.3)] [&_[data-orientation=horizontal]>[data-role=range]]:bg-amber-500/60"
+            />
+            <div className="flex justify-between mt-1">
+              <span className="text-[10px] text-muted-foreground/60">40</span>
+              <span className="text-[10px] text-muted-foreground/60">200</span>
+            </div>
+          </div>
 
-      {/* Presets */}
-      <div className="flex flex-wrap gap-1.5">
-        {BPM_PRESETS.map((preset) => (
-          <button
-            key={preset}
-            onClick={() => handlePreset(preset)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-              bpm === preset
-                ? 'bg-amber-500/25 text-amber-300 border border-amber-500/40'
-                : 'bg-muted/20 text-muted-foreground border border-border hover:border-border hover:text-foreground'
-            }`}
-          >
-            {preset}
-          </button>
-        ))}
-      </div>
+          {/* Presets */}
+          <div className="flex flex-wrap gap-1.5">
+            {BPM_PRESETS.map((preset) => (
+              <button
+                key={preset}
+                onClick={() => handlePreset(preset)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                  bpm === preset
+                    ? 'bg-amber-500/25 text-amber-300 border border-amber-500/40'
+                    : 'bg-muted/20 text-muted-foreground border border-border hover:border-border hover:text-foreground'
+                }`}
+              >
+                {preset}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
