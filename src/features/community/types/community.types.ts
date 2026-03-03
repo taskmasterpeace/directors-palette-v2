@@ -227,6 +227,11 @@ export const WILDCARD_CATEGORIES = [
   { value: 'styles', label: 'Styles' },
   { value: 'props', label: 'Props & Objects' },
   { value: 'actions', label: 'Actions & Poses' },
+  { value: 'street', label: 'Wardrobe: Street' },
+  { value: 'lux', label: 'Wardrobe: Luxury' },
+  { value: 'edge', label: 'Wardrobe: Edge' },
+  { value: 'sport', label: 'Wardrobe: Sport' },
+  { value: 'casual', label: 'Wardrobe: Casual' },
 ] as const
 
 export const RECIPE_CATEGORIES = [
