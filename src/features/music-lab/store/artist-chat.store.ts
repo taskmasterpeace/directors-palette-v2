@@ -68,15 +68,36 @@ export const useArtistChatStore = create<ArtistChatState>()(
       openChat: async (artistId, userId, dna) => {
         set({ activeArtistId: artistId, isLoading: true, messages: [] })
 
-        // Load everything in parallel
+        // Phase 1: Load fast data (DB reads) — show chat ASAP
         await Promise.all([
           get().loadMessages(artistId, userId),
           get().loadMemory(artistId, userId),
           get().loadPersonalityPrint(artistId, userId),
-          get().generateLivingContext(dna),
         ])
 
         set({ isLoading: false })
+
+        // Phase 2: Generate living context in background (LLM call, 3-5s)
+        get().generateLivingContext(dna)
+
+        // Phase 3: If no personality print was loaded, generate one eagerly
+        if (!get().personalityPrint) {
+          try {
+            const genRes = await fetch('/api/artist-dna/generate-personality-print', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ artistId, dna }),
+            })
+            if (genRes.ok) {
+              const genData = await genRes.json()
+              if (genData.print) {
+                set({ personalityPrint: genData.print })
+              }
+            }
+          } catch {
+            // Will generate on first message if needed
+          }
+        }
       },
 
       closeChat: (userId) => {
@@ -155,6 +176,18 @@ export const useArtistChatStore = create<ArtistChatState>()(
         }
         set(state => ({ messages: [...state.messages, tempUserMsg] }))
 
+        // Create streaming placeholder for artist response
+        const streamingMsgId = `streaming-${Date.now()}`
+        const streamingMsg: ChatMessage = {
+          id: streamingMsgId,
+          artistId: activeArtistId,
+          role: 'artist',
+          content: '',
+          messageType: 'text',
+          createdAt: new Date().toISOString(),
+        }
+        set(state => ({ messages: [...state.messages, streamingMsg] }))
+
         try {
           const res = await fetch('/api/artist-chat/message', {
             method: 'POST',
@@ -170,65 +203,101 @@ export const useArtistChatStore = create<ArtistChatState>()(
             }),
           })
 
-          if (res.ok) {
-            const data = await res.json()
+          if (!res.ok) {
+            console.error('Chat API returned', res.status)
+            set(state => ({
+              messages: state.messages.map(m =>
+                m.id === streamingMsgId
+                  ? { ...m, content: "Something went wrong. Try sending your message again." }
+                  : m
+              ),
+            }))
+            return
+          }
 
-            set(state => {
-              const filtered = state.messages.filter(m => m.id !== tempUserMsg.id)
-              const newMessages = [...filtered]
-              // Keep the user message even if DB save returned null
-              if (data.userMessage) {
-                newMessages.push(data.userMessage)
-              } else {
-                // DB save failed — keep temp message so it doesn't vanish
-                newMessages.push(tempUserMsg)
+          // Read SSE stream
+          const reader = res.body?.getReader()
+          if (!reader) {
+            set(state => ({
+              messages: state.messages.map(m =>
+                m.id === streamingMsgId
+                  ? { ...m, content: "Couldn't get a response right now. Try again." }
+                  : m
+              ),
+            }))
+            return
+          }
+
+          const decoder = new TextDecoder()
+          let buffer = ''
+
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+
+            buffer += decoder.decode(value, { stream: true })
+            const lines = buffer.split('\n')
+            buffer = lines.pop() || ''
+
+            for (const line of lines) {
+              if (!line.startsWith('data: ')) continue
+              const raw = line.slice(6).trim()
+              if (!raw) continue
+
+              try {
+                const event = JSON.parse(raw)
+
+                if (event.type === 'user_saved' && event.message) {
+                  // Replace temp user message with saved version
+                  set(state => ({
+                    messages: state.messages.map(m =>
+                      m.id === tempUserMsg.id ? event.message : m
+                    ),
+                  }))
+                } else if (event.type === 'chunk' && event.content) {
+                  // Append chunk to streaming artist message
+                  set(state => ({
+                    messages: state.messages.map(m =>
+                      m.id === streamingMsgId
+                        ? { ...m, content: m.content + event.content }
+                        : m
+                    ),
+                  }))
+                } else if (event.type === 'done' && event.message) {
+                  // Replace streaming message with final saved version
+                  set(state => ({
+                    messages: state.messages.map(m =>
+                      m.id === streamingMsgId ? event.message : m
+                    ),
+                  }))
+
+                  // Handle photo trigger
+                  if (event.photoTrigger) {
+                    get().requestPhoto('selfie from chat context', dna)
+                  }
+                } else if (event.type === 'error') {
+                  set(state => ({
+                    messages: state.messages.map(m =>
+                      m.id === streamingMsgId
+                        ? { ...m, content: "Something went wrong. Try sending your message again." }
+                        : m
+                    ),
+                  }))
+                }
+              } catch {
+                // Skip malformed SSE lines
               }
-              if (data.artistMessage) newMessages.push(data.artistMessage)
-              return { messages: newMessages }
-            })
-
-            // If artist message is missing despite 200, show error
-            if (!data.artistMessage) {
-              const errorMsg: ChatMessage = {
-                id: `error-${Date.now()}`,
-                artistId: activeArtistId,
-                role: 'artist',
-                content: "Couldn't get a response right now. Try again.",
-                messageType: 'text',
-                createdAt: new Date().toISOString(),
-              }
-              set(state => ({ messages: [...state.messages, errorMsg] }))
             }
-
-            // Handle photo trigger
-            if (data.photoTrigger) {
-              get().requestPhoto('selfie from chat context', dna)
-            }
-          } else {
-            // Non-ok response — show error, keep user message visible
-            console.error('Chat API returned', res.status, await res.text().catch(() => ''))
-            const errorMsg: ChatMessage = {
-              id: `error-${Date.now()}`,
-              artistId: activeArtistId,
-              role: 'artist',
-              content: "Something went wrong. Try sending your message again.",
-              messageType: 'text',
-              createdAt: new Date().toISOString(),
-            }
-            set(state => ({ messages: [...state.messages, errorMsg] }))
           }
         } catch (e) {
           console.error('Send message failed:', e)
-          // Network error — show error, keep user message visible
-          const errorMsg: ChatMessage = {
-            id: `error-${Date.now()}`,
-            artistId: activeArtistId,
-            role: 'artist',
-            content: "Connection issue. Check your network and try again.",
-            messageType: 'text',
-            createdAt: new Date().toISOString(),
-          }
-          set(state => ({ messages: [...state.messages, errorMsg] }))
+          set(state => ({
+            messages: state.messages.map(m =>
+              m.id === streamingMsgId
+                ? { ...m, content: "Connection issue. Check your network and try again." }
+                : m
+            ),
+          }))
         } finally {
           set({ isSending: false })
         }

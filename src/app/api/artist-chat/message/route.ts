@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Save user message to DB
+    // Save user message to DB immediately
     const savedUserMsg = await artistChatService.saveMessage({
       artist_id: artistId,
       user_id: user.id,
@@ -209,10 +209,19 @@ export async function POST(request: NextRequest) {
       logger.api.error('Failed to save user message to DB', { artistId, userId: user.id })
     }
 
-    // Build system prompt and call LLM
+    const userMsg = savedUserMsg || {
+      id: `local-user-${Date.now()}`,
+      artistId,
+      role: 'user' as const,
+      content: userMessage,
+      messageType: 'text' as const,
+      createdAt: new Date().toISOString(),
+    }
+
+    // Build system prompt and call LLM with streaming
     const systemPrompt = buildSystemPrompt(dna, personalityPrint, livingContext, memory, recentMessages || [])
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const llmResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -228,67 +237,112 @@ export async function POST(request: NextRequest) {
         ],
         temperature: 0.8,
         max_tokens: 1000,
+        stream: true,
       }),
     })
 
-    if (!response.ok) {
-      const error = await response.text()
-      logger.api.error('OpenRouter API failed', { status: response.status, error })
+    if (!llmResponse.ok) {
+      const error = await llmResponse.text()
+      logger.api.error('OpenRouter API failed', { status: llmResponse.status, error })
       return NextResponse.json({ error: 'Failed to get artist response' }, { status: 502 })
     }
 
-    const data = await response.json()
-    const rawContent = data.choices?.[0]?.message?.content
+    // Stream SSE response to client
+    const encoder = new TextEncoder()
+    const userId = user.id
 
-    if (!rawContent) {
-      logger.api.error('OpenRouter returned empty content', { data: JSON.stringify(data).substring(0, 500) })
-      return NextResponse.json({ error: 'Artist had nothing to say' }, { status: 502 })
-    }
+    const stream = new ReadableStream({
+      async start(controller) {
+        // Send saved user message immediately
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'user_saved', message: userMsg })}\n\n`))
 
-    // Detect special content types
-    const { type, actionData, cleanContent } = detectMessageType(rawContent)
+        let fullContent = ''
 
-    // Save artist response to DB
-    const savedArtistMsg = await artistChatService.saveMessage({
-      artist_id: artistId,
-      user_id: user.id,
-      role: 'artist',
-      content: cleanContent,
-      message_type: type,
-      photo_url: null,
-      action_data: actionData || null,
-      web_share_data: null,
-      reaction: null,
+        try {
+          const reader = llmResponse.body?.getReader()
+          if (!reader) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: 'No response body' })}\n\n`))
+            controller.close()
+            return
+          }
+
+          const decoder = new TextDecoder()
+          let buffer = ''
+
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+
+            buffer += decoder.decode(value, { stream: true })
+            const lines = buffer.split('\n')
+            buffer = lines.pop() || ''
+
+            for (const line of lines) {
+              if (!line.startsWith('data: ')) continue
+              const data = line.slice(6).trim()
+              if (data === '[DONE]') continue
+
+              try {
+                const parsed = JSON.parse(data)
+                const delta = parsed.choices?.[0]?.delta?.content
+                if (delta) {
+                  fullContent += delta
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chunk', content: delta })}\n\n`))
+                }
+              } catch {
+                // Skip malformed chunks
+              }
+            }
+          }
+
+          // Stream complete — detect type and save to DB
+          if (!fullContent.trim()) fullContent = "..."
+
+          const { type, actionData, cleanContent } = detectMessageType(fullContent)
+
+          const savedArtistMsg = await artistChatService.saveMessage({
+            artist_id: artistId,
+            user_id: userId,
+            role: 'artist',
+            content: cleanContent,
+            message_type: type,
+            photo_url: null,
+            action_data: actionData || null,
+            web_share_data: null,
+            reaction: null,
+          })
+
+          const artistMsg = savedArtistMsg || {
+            id: `local-artist-${Date.now()}`,
+            artistId,
+            role: 'artist' as const,
+            content: cleanContent,
+            messageType: type,
+            actionData: actionData || undefined,
+            createdAt: new Date().toISOString(),
+          }
+
+          // Send final metadata event
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+            type: 'done',
+            message: artistMsg,
+            photoTrigger: type === 'photo',
+          })}\n\n`))
+        } catch (err) {
+          logger.api.error('Stream error', { error: err instanceof Error ? err.message : String(err) })
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: 'Stream failed' })}\n\n`))
+        } finally {
+          controller.close()
+        }
+      },
     })
 
-    if (!savedArtistMsg) {
-      logger.api.error('Failed to save artist message to DB', { artistId, userId: user.id })
-    }
-
-    // Build fallback messages if DB save failed (don't lose the content)
-    const userMsg = savedUserMsg || {
-      id: `local-user-${Date.now()}`,
-      artistId,
-      role: 'user' as const,
-      content: userMessage,
-      messageType: 'text' as const,
-      createdAt: new Date().toISOString(),
-    }
-
-    const artistMsg = savedArtistMsg || {
-      id: `local-artist-${Date.now()}`,
-      artistId,
-      role: 'artist' as const,
-      content: cleanContent,
-      messageType: type,
-      actionData: actionData || undefined,
-      createdAt: new Date().toISOString(),
-    }
-
-    return NextResponse.json({
-      userMessage: userMsg,
-      artistMessage: artistMsg,
-      photoTrigger: type === 'photo',
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
     })
   } catch (error) {
     logger.api.error('Chat message error', { error: error instanceof Error ? error.message : String(error) })
