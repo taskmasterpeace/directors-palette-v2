@@ -149,7 +149,14 @@ export async function POST(request: NextRequest) {
         updateData = { is_featured: false }
         break
 
-      case 'delete':
+      case 'delete': {
+        // Fetch the item first so we can clean up related tables
+        const { data: itemToDelete } = await supabase
+          .from('community_items')
+          .select('name, type, tags')
+          .eq('id', itemId)
+          .single()
+
         const { error: deleteError } = await supabase
           .from('community_items')
           .delete()
@@ -163,9 +170,28 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        return NextResponse.json({ message: 'Item deleted successfully' })
+        // For system recipes, also delete from user_recipes
+        if (itemToDelete?.type === 'recipe' && (itemToDelete.tags || []).includes('system')) {
+          const { error: recipeDeleteError } = await supabase
+            .from('user_recipes')
+            .delete()
+            .eq('name', itemToDelete.name)
+            .eq('is_system', true)
 
-      case 'edit':
+          if (recipeDeleteError) {
+            logger.api.error('Error deleting system recipe from user_recipes', {
+              name: itemToDelete.name,
+              error: recipeDeleteError instanceof Error ? recipeDeleteError.message : String(recipeDeleteError),
+            })
+          } else {
+            logger.api.info('Deleted system recipe from both tables', { name: itemToDelete.name })
+          }
+        }
+
+        return NextResponse.json({ message: 'Item deleted successfully' })
+      }
+
+      case 'edit': {
         const { updates } = body
         if (!updates || typeof updates !== 'object') {
           return NextResponse.json(
@@ -173,6 +199,13 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           )
         }
+
+        // Fetch current item to get original name for user_recipes lookup
+        const { data: itemToEdit } = await supabase
+          .from('community_items')
+          .select('name, type, tags')
+          .eq('id', itemId)
+          .single()
 
         // Whitelist allowed fields to update
         const allowedFields = ['name', 'description', 'category', 'tags', 'content', 'is_featured']
@@ -188,7 +221,51 @@ export async function POST(request: NextRequest) {
 
         sanitizedUpdates.updated_at = new Date().toISOString()
         updateData = sanitizedUpdates
+
+        // For system recipes, also update user_recipes
+        if (itemToEdit?.type === 'recipe' && (itemToEdit.tags || []).includes('system')) {
+          const recipeUpdates: Record<string, unknown> = {}
+          if (updates.name) recipeUpdates.name = updates.name
+          if (updates.description !== undefined) recipeUpdates.description = updates.description || null
+          if (updates.content) {
+            const content = updates.content as { stages?: Array<Record<string, unknown>>; recipeNote?: string; suggestedAspectRatio?: string }
+            if (content.stages) {
+              recipeUpdates.stages = content.stages.map((stage: Record<string, unknown>, idx: number) => {
+                const mapped: Record<string, unknown> = {
+                  id: stage.id,
+                  order: idx,
+                  template: stage.template,
+                  fields: [],
+                  referenceImages: stage.referenceImages || [],
+                }
+                if (stage.type) mapped.type = stage.type
+                if (stage.analysisId) mapped.analysisId = stage.analysisId
+                return mapped
+              })
+            }
+            if (content.recipeNote !== undefined) recipeUpdates.recipe_note = content.recipeNote || null
+            if (content.suggestedAspectRatio !== undefined) recipeUpdates.suggested_aspect_ratio = content.suggestedAspectRatio || null
+          }
+
+          if (Object.keys(recipeUpdates).length > 0) {
+            const { error: recipeEditError } = await supabase
+              .from('user_recipes')
+              .update(recipeUpdates)
+              .eq('name', itemToEdit.name)
+              .eq('is_system', true)
+
+            if (recipeEditError) {
+              logger.api.error('Error updating system recipe in user_recipes', {
+                name: itemToEdit.name,
+                error: recipeEditError instanceof Error ? recipeEditError.message : String(recipeEditError),
+              })
+            } else {
+              logger.api.info('Updated system recipe in both tables', { name: itemToEdit.name })
+            }
+          }
+        }
         break
+      }
 
       default:
         return NextResponse.json(
