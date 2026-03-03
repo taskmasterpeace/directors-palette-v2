@@ -21,6 +21,8 @@ export const MOOD_TAGS: MoodTag[] = [
   { id: 'rebellious', label: 'Rebellious', valence: 'positive' },
   { id: 'defiant', label: 'Defiant', valence: 'positive' },
   { id: 'carefree', label: 'Carefree', valence: 'positive' },
+  { id: 'majestic', label: 'Majestic', valence: 'positive' },
+  { id: 'sensual', label: 'Sensual', valence: 'positive' },
 
   // Neutral
   { id: 'dreamy', label: 'Dreamy', valence: 'neutral' },

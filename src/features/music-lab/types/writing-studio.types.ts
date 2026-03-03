@@ -9,6 +9,15 @@ export interface ToneSettings {
   emotion: string
   energy: number // 0-100
   delivery: string
+  barCount: number
+}
+
+export const BAR_COUNT_RANGES: Record<SectionType, { min: number; max: number; default: number }> = {
+  intro: { min: 2, max: 8, default: 4 },
+  hook: { min: 4, max: 12, default: 8 },
+  verse: { min: 8, max: 32, default: 20 },
+  bridge: { min: 2, max: 8, default: 4 },
+  outro: { min: 2, max: 8, default: 4 },
 }
 
 export interface DraftOption {
@@ -57,4 +66,5 @@ export const DEFAULT_TONE: ToneSettings = {
   emotion: 'Confident',
   energy: 50,
   delivery: 'Raw',
+  barCount: 16,
 }

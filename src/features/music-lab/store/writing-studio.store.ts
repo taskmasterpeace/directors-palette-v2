@@ -13,7 +13,7 @@ import type {
   SectionType,
   IdeaTag,
 } from '../types/writing-studio.types'
-import { DEFAULT_TONE } from '../types/writing-studio.types'
+import { DEFAULT_TONE, BAR_COUNT_RANGES } from '../types/writing-studio.types'
 import { logger } from '@/lib/logger'
 
 interface WritingStudioState {
@@ -29,6 +29,7 @@ interface WritingStudioState {
 
   // Generation
   isGenerating: boolean
+  isGeneratingFullSong: boolean
   draftOptions: DraftOption[] // current options for active section
   sectionDrafts: Record<string, DraftOption[]> // per-section draft storage
 
@@ -58,6 +59,14 @@ interface WritingStudioState {
   // Computed-like getter for current artist's idea bank
   getIdeaBank: () => IdeaEntry[]
 
+  // Full song generation
+  generateFullSong: (
+    structure: { type: SectionType; barCount: number }[],
+    tone: { emotion: string; energy: number; delivery: string },
+    artistDna: unknown,
+    concept: string
+  ) => Promise<void>
+
   // Concept
   setConcept: (concept: string) => void
 
@@ -75,14 +84,16 @@ export const useWritingStudioStore = create<WritingStudioState>()(
       activeArtistId: null,
       ideaBankOpen: false,
       isGenerating: false,
+      isGeneratingFullSong: false,
       draftOptions: [],
       sectionDrafts: {},
 
       addSection: (type: SectionType) => {
+        const barDefaults = BAR_COUNT_RANGES[type]
         const section: SongSection = {
           id: crypto.randomUUID(),
           type,
-          tone: { ...DEFAULT_TONE },
+          tone: { ...DEFAULT_TONE, barCount: barDefaults.default },
           selectedDraft: null,
           isLocked: false,
         }
@@ -281,6 +292,47 @@ export const useWritingStudioStore = create<WritingStudioState>()(
         return state.ideaBankByArtist[artistId] || []
       },
 
+      generateFullSong: async (structure, tone, artistDna, concept) => {
+        set({ isGeneratingFullSong: true, sections: [], draftOptions: [], sectionDrafts: {}, activeSectionId: null })
+
+        try {
+          const res = await fetch('/api/artist-dna/generate-full-song', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ structure, tone, concept, artistDna }),
+          })
+
+          if (res.ok) {
+            const data = await res.json()
+            const generatedSections = data.sections || []
+
+            const newSections: SongSection[] = generatedSections.map(
+              (s: { type: SectionType; content: string }, i: number) => {
+                const barDefaults = BAR_COUNT_RANGES[s.type] || BAR_COUNT_RANGES.verse
+                const barCount = structure[i]?.barCount ?? barDefaults.default
+                return {
+                  id: crypto.randomUUID(),
+                  type: s.type,
+                  tone: { ...tone, barCount },
+                  selectedDraft: {
+                    id: crypto.randomUUID(),
+                    label: 'A',
+                    content: s.content,
+                  },
+                  isLocked: true,
+                }
+              }
+            )
+
+            set({ sections: newSections, activeSectionId: newSections[0]?.id || null })
+          }
+        } catch (error) {
+          logger.musicLab.error('Failed to generate full song', { error: error instanceof Error ? error.message : String(error) })
+        } finally {
+          set({ isGeneratingFullSong: false })
+        }
+      },
+
       setConcept: (concept) => set({ concept }),
 
       resetStudio: () =>
@@ -291,6 +343,7 @@ export const useWritingStudioStore = create<WritingStudioState>()(
           draftOptions: [],
           sectionDrafts: {},
           isGenerating: false,
+          isGeneratingFullSong: false,
         }),
     }),
     {

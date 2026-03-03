@@ -2,7 +2,7 @@
 
 import { Slider } from '@/components/ui/slider'
 import { useWritingStudioStore } from '../../store/writing-studio.store'
-import { EMOTIONS, DELIVERIES, ENERGY_ZONES } from '../../types/writing-studio.types'
+import { EMOTIONS, DELIVERIES, ENERGY_ZONES, BAR_COUNT_RANGES } from '../../types/writing-studio.types'
 
 export function ToneControls() {
   const { sections, activeSectionId, updateSectionTone } = useWritingStudioStore()
@@ -19,6 +19,9 @@ export function ToneControls() {
   const energyZone = ENERGY_ZONES.find(
     (z) => section.tone.energy >= z.min && section.tone.energy <= z.max
   )
+
+  const barRange = BAR_COUNT_RANGES[section.type]
+  const barCount = section.tone.barCount ?? barRange.default
 
   return (
     <div className="space-y-4">
@@ -58,6 +61,25 @@ export function ToneControls() {
         <div className="flex justify-between mt-1">
           <span className="text-[10px] text-muted-foreground">Chill</span>
           <span className="text-[10px] text-muted-foreground">Explosive</span>
+        </div>
+      </div>
+
+      {/* Bar count slider */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-xs font-medium text-muted-foreground">Bars</label>
+          <span className="text-xs text-amber-400">{barCount} bars</span>
+        </div>
+        <Slider
+          value={[barCount]}
+          onValueChange={([value]) => updateSectionTone(section.id, { barCount: value })}
+          min={barRange.min}
+          max={barRange.max}
+          step={1}
+        />
+        <div className="flex justify-between mt-1">
+          <span className="text-[10px] text-muted-foreground">{barRange.min}</span>
+          <span className="text-[10px] text-muted-foreground">{barRange.max}</span>
         </div>
       </div>
 

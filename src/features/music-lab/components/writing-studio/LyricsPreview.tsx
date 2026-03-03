@@ -29,7 +29,9 @@ export function LyricsPreview() {
     const needsNumber = sections.filter((s) => s.type === section.type && s.isLocked).length > 1
     const label = needsNumber ? `${baseLabel} ${count}` : baseLabel
 
-    return `[${label}]\n${section.selectedDraft!.content}`
+    const content = section.selectedDraft!.content
+    const lineCount = content.split('\n').filter((l) => l.trim()).length
+    return `[${label}] (${lineCount} bars)\n${content}`
   })
 
   const fullLyrics = assembledLyrics.join('\n\n')

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
-import { Sparkles, PenTool, RotateCcw, Lightbulb, Loader2, RefreshCw } from 'lucide-react'
+import { Sparkles, PenTool, RotateCcw, Lightbulb, Loader2, RefreshCw, ListMusic } from 'lucide-react'
 import { useWritingStudioStore } from '../../store/writing-studio.store'
 import { useArtistDnaStore } from '../../store/artist-dna.store'
 import { SectionPicker } from './SectionPicker'
@@ -14,6 +14,8 @@ import { OptionGrid } from './OptionGrid'
 import { IdeaBankDrawer } from './IdeaBankDrawer'
 import { LyricsPreview } from './LyricsPreview'
 import { PromptPreview } from './PromptPreview'
+import { FullSongBuilder } from './FullSongBuilder'
+import type { SectionType } from '../../types/writing-studio.types'
 
 export function StudioTab() {
   const {
@@ -22,14 +24,17 @@ export function StudioTab() {
     concept,
     setConcept,
     isGenerating,
+    isGeneratingFullSong,
     draftOptions,
     generateOptions,
+    generateFullSong,
     resetStudio,
     setActiveArtistId,
   } = useWritingStudioStore()
 
   const { draft: artistDna, activeArtistId } = useArtistDnaStore()
   const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false)
+  const [showFullSongBuilder, setShowFullSongBuilder] = useState(false)
   const [conceptSuggestions, setConceptSuggestions] = useState<string[]>([])
   const [isLoadingConcepts, setIsLoadingConcepts] = useState(false)
   const [showConcepts, setShowConcepts] = useState(false)
@@ -80,6 +85,14 @@ export function StudioTab() {
     setShowConcepts(false)
   }
 
+  const handleFullSongGenerate = async (
+    structure: { type: SectionType; barCount: number }[],
+    tone: { emotion: string; energy: number; delivery: string }
+  ) => {
+    setShowFullSongBuilder(false)
+    await generateFullSong(structure, tone, artistDna, concept)
+  }
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -88,15 +101,31 @@ export function StudioTab() {
             <PenTool className="w-5 h-5" />
             Writing Studio
           </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs text-muted-foreground"
-            onClick={resetStudio}
-          >
-            <RotateCcw className="w-3 h-3 mr-1" />
-            Reset
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs gap-1.5 border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300"
+              onClick={() => setShowFullSongBuilder(true)}
+              disabled={isGeneratingFullSong}
+            >
+              {isGeneratingFullSong ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <ListMusic className="w-3 h-3" />
+              )}
+              {isGeneratingFullSong ? 'Writing...' : 'Full Song'}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-muted-foreground"
+              onClick={resetStudio}
+            >
+              <RotateCcw className="w-3 h-3 mr-1" />
+              Reset
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -173,7 +202,24 @@ export function StudioTab() {
 
           {/* Center: Tone + Options */}
           <div className="flex-1 space-y-4 min-w-0">
-            {activeSection ? (
+            {isGeneratingFullSong ? (
+              <div className="flex flex-col items-center justify-center h-full gap-4">
+                <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
+                <div className="text-center">
+                  <p className="text-sm font-medium">Writing full song...</p>
+                  <p className="text-xs text-muted-foreground mt-1">This may take 30-60 seconds</p>
+                </div>
+                <div className="w-full max-w-sm space-y-2 mt-4">
+                  {[...Array(5)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-3 rounded bg-muted/50 animate-pulse"
+                      style={{ width: `${70 + Math.random() * 30}%`, animationDelay: `${i * 200}ms` }}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : activeSection ? (
               <>
                 <ToneControls />
                 <div className="flex items-center justify-between">
@@ -211,6 +257,15 @@ export function StudioTab() {
           </div>
         </div>
       </CardContent>
+
+      {/* Full Song Builder dialog */}
+      <FullSongBuilder
+        open={showFullSongBuilder}
+        onOpenChange={setShowFullSongBuilder}
+        onGenerate={handleFullSongGenerate}
+        isGenerating={isGeneratingFullSong}
+        concept={concept}
+      />
 
       {/* Regenerate confirmation dialog */}
       <AlertDialog open={showRegenerateConfirm} onOpenChange={setShowRegenerateConfirm}>

@@ -46,22 +46,23 @@ function buildSystemPrompt(body: GenerateOptionsBody): string {
   parts.push(`Energy level: ${tone.energy}/100 (${tone.energy <= 25 ? 'chill' : tone.energy <= 50 ? 'moderate' : tone.energy <= 75 ? 'hype' : 'explosive'})`)
   parts.push(`Delivery style: ${tone.delivery}`)
 
-  // Section-specific guidance
+  // Section-specific guidance with bar count
+  const barCount = tone.barCount
   switch (sectionType) {
     case 'intro':
-      parts.push('This is an intro: set the scene, establish mood, 2-4 lines.')
+      parts.push(`This is an intro: set the scene, establish mood. Write exactly ${barCount || 4} bars.`)
       break
     case 'hook':
-      parts.push('This is a hook/chorus: catchy, memorable, repeatable. 4-8 lines.')
+      parts.push(`This is a hook/chorus: catchy, memorable, repeatable. Write exactly ${barCount || 8} bars. Every line should be singable and stick in your head.`)
       break
     case 'verse':
-      parts.push('This is a verse: storytelling, detail, 8-16 bars.')
+      parts.push(`This is a verse: storytelling, vivid detail, narrative progression. Write exactly ${barCount || 20} bars. Pack each line with meaning.`)
       break
     case 'bridge':
-      parts.push('This is a bridge: shift perspective, build tension, 4 lines.')
+      parts.push(`This is a bridge: shift perspective, build tension. Write exactly ${barCount || 4} bars.`)
       break
     case 'outro':
-      parts.push('This is an outro: wrap up, fade out, 2-4 lines.')
+      parts.push(`This is an outro: wrap up, leave a lasting impression. Write exactly ${barCount || 4} bars.`)
       break
   }
 

@@ -35,6 +35,7 @@ export const INSTRUMENT_TAGS: InstrumentTag[] = [
   { id: 'dulcimer', label: 'Dulcimer', category: 'strings' },
   { id: 'string-ensemble', label: 'String Ensemble', category: 'strings' },
   { id: 'pedal-steel', label: 'Pedal Steel', category: 'strings' },
+  { id: 'slide-guitar', label: 'Slide Guitar', category: 'strings' },
 
   // Drums & Percussion
   { id: 'drums', label: 'Drums', category: 'drums' },
@@ -134,6 +135,9 @@ export const INSTRUMENT_TAGS: InstrumentTag[] = [
   { id: 'guzheng', label: 'Guzheng', category: 'world' },
   { id: 'dholak', label: 'Dholak', category: 'world' },
   { id: 'surdo', label: 'Surdo', category: 'world' },
+  { id: 'bajo-sexto', label: 'Bajo Sexto', category: 'world' },
+  { id: 'tres-guitar', label: 'Tres Guitar', category: 'world' },
+  { id: 'log-drum', label: 'Log Drum', category: 'world' },
 ]
 
 export const INSTRUMENT_CATEGORIES = [

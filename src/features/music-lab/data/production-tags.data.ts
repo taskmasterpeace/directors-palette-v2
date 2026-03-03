@@ -30,6 +30,9 @@ export const DRUM_DESIGN_TAGS: ProductionTag[] = [
   { id: 'breakbeat-pattern', label: 'breakbeat pattern', category: 'drumDesign', group: 'Patterns' },
   { id: 'shuffled-drums', label: 'shuffled drums', category: 'drumDesign', group: 'Patterns' },
   { id: 'double-time-drums', label: 'double-time drums', category: 'drumDesign', group: 'Patterns' },
+  { id: 'brushed-drums', label: 'brushed drums', category: 'drumDesign', group: 'Patterns' },
+  { id: 'one-drop-drums', label: 'one-drop drums', category: 'drumDesign', group: 'Patterns' },
+  { id: 'double-bass-drums', label: 'double bass drums', category: 'drumDesign', group: 'Patterns' },
 ]
 
 // ─── Groove Feel ─────────────────────────────────────────────────────────────
@@ -47,6 +50,9 @@ export const GROOVE_FEEL_TAGS: ProductionTag[] = [
   { id: 'dragging', label: 'dragging', category: 'grooveFeel' },
   { id: 'polyrhythmic', label: 'polyrhythmic', category: 'grooveFeel' },
   { id: 'stuttered', label: 'stuttered', category: 'grooveFeel' },
+  { id: 'shuffle', label: 'shuffle', category: 'grooveFeel' },
+  { id: 'dembow', label: 'dembow', category: 'grooveFeel' },
+  { id: 'bossa-nova', label: 'bossa nova', category: 'grooveFeel' },
 ]
 
 // ─── Bass Style ──────────────────────────────────────────────────────────────
@@ -64,6 +70,7 @@ export const BASS_STYLE_TAGS: ProductionTag[] = [
   { id: 'plucked-bass', label: 'plucked bass', category: 'bassStyle' },
   { id: 'acid-bass', label: 'acid bass', category: 'bassStyle' },
   { id: 'fingerstyle-bass', label: 'fingerstyle bass', category: 'bassStyle' },
+  { id: 'analog-synth-bass', label: 'analog synth bass', category: 'bassStyle' },
 ]
 
 // ─── Synth/Keys Texture ──────────────────────────────────────────────────────
@@ -81,6 +88,8 @@ export const SYNTH_TEXTURE_TAGS: ProductionTag[] = [
   { id: 'pluck-melody', label: 'pluck melody', category: 'synthTexture' },
   { id: 'arpeggiated-synth', label: 'arpeggiated synth', category: 'synthTexture' },
   { id: 'gritty-keys', label: 'gritty keys', category: 'synthTexture' },
+  { id: 'ambient-pads', label: 'ambient pads', category: 'synthTexture' },
+  { id: 'filtered-pads', label: 'filtered pads', category: 'synthTexture' },
 ]
 
 // ─── Harmony Color ───────────────────────────────────────────────────────────
@@ -124,6 +133,9 @@ export const SPACE_FX_TAGS: ProductionTag[] = [
   { id: 'chorus', label: 'chorus', category: 'spaceFx', group: 'Processing' },
   { id: 'phaser', label: 'phaser', category: 'spaceFx', group: 'Processing' },
   { id: 'flanger', label: 'flanger', category: 'spaceFx', group: 'Processing' },
+  { id: 'room-reverb', label: 'room reverb', category: 'spaceFx', group: 'Reverb' },
+  { id: 'filter-sweeps', label: 'filter sweeps', category: 'spaceFx', group: 'Processing' },
+  { id: 'wah-wah', label: 'wah-wah', category: 'spaceFx', group: 'Processing' },
 ]
 
 // ─── Ear Candy ───────────────────────────────────────────────────────────────
@@ -141,6 +153,7 @@ export const EAR_CANDY_TAGS: ProductionTag[] = [
   { id: 'foley-sounds', label: 'foley sounds', category: 'earCandy' },
   { id: 'glitch-textures', label: 'glitch textures', category: 'earCandy' },
   { id: 'transition-fx', label: 'transition FX', category: 'earCandy' },
+  { id: 'talk-box', label: 'talk-box', category: 'earCandy' },
 ]
 
 // ─── Production Style (general tags) ────────────────────────────────────────
@@ -170,6 +183,7 @@ export const STRUCTURE_PRESETS = [
   { id: 'ambient-evolving', label: 'Slow Evolving (ambient)', value: 'slowly evolving ambient progression' },
   { id: 'abab', label: 'A-B-A-B', value: 'ABAB alternating sections' },
   { id: 'cinematic-arc', label: 'Cinematic Arc', value: 'cinematic arc building from quiet to epic' },
+  { id: '12-bar-blues', label: '12-Bar Blues', value: '12-bar blues progression (I-I-I-I-IV-IV-I-I-V-IV-I-V)' },
 ]
 
 // ─── Musical Keys ────────────────────────────────────────────────────────────
