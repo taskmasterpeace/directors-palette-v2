@@ -105,22 +105,21 @@ function recipeToDbRecipe(
 class RecipeService {
   /**
    * Get all recipes for a user (including system recipes)
+   * Uses server API route to bypass RLS on user_recipes table
    */
-  async getRecipes(userId: string): Promise<Recipe[]> {
-    const supabase = await getRecipeClient()
-
-    const { data, error } = await supabase
-      .from('user_recipes')
-      .select('*')
-      .or(`user_id.eq.${userId},is_system.eq.true`)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      logger.shotCreator.error('Error fetching recipes', { error: error })
+  async getRecipes(_userId: string): Promise<Recipe[]> {
+    try {
+      const response = await fetch('/api/recipes')
+      if (!response.ok) {
+        logger.shotCreator.error('Error fetching recipes via API', { status: response.status })
+        return []
+      }
+      const { recipes } = await response.json()
+      return (recipes as DbRecipe[]).map(dbRecipeToRecipe)
+    } catch (error) {
+      logger.shotCreator.error('Error fetching recipes', { error: error instanceof Error ? error.message : String(error) })
       return []
     }
-
-    return (data as DbRecipe[]).map(dbRecipeToRecipe)
   }
 
   /**
