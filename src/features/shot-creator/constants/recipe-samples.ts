@@ -3216,4 +3216,34 @@ STYLE: photo quality, photo realistic, professional character reference sheet`,
     quickAccessLabel: 'ArtistSheet',
     categoryId: 'artists',
   },
+
+  // Battle Rap - acappella battle rap scene generator
+  {
+    name: 'Battle Rap',
+    description: 'Generate an intense acappella battle rap scene with two performers face-to-face, no microphones, surrounded by a crowd',
+    recipeNote: 'Pick your battlers, their stances, location, lighting, and camera angle. The scene is always acappella — no mics, empty hands, pure aggression.',
+    stages: [{
+      id: generateStageId(),
+      order: 0,
+      template: `A professional high-definition <<CAMERA_ANGLE:select(Over-the-shoulder shot,Low-angle side profile,Tight extreme close-up,Wide master shot,Eye-level centered shot)!>> of an acappella battle rap event. The camera is positioned behind Person B, looking over their shoulder at Person A who is standing face-to-face in a high-intensity verbal battle. Crucially, there are NO microphones; both performers have completely empty hands, using wild hand gestures and aggressive facial expressions.
+
+PERSON A: <<PERSON_A:text!>>
+PERSON A ACTION: <<ACTION_A:select(Pointing aggressively at opponent,Throwing hands up mid-bar,Leaning forward with intense eye contact,Pounding chest with conviction,Waving dismissively at opponent)!>>
+
+PERSON B: <<PERSON_B:text!>>
+PERSON B ACTION: <<ACTION_B:select(Smirking with arms crossed,Shaking head in disbelief,Laughing and looking at the crowd,Stepping forward confrontationally,Grimacing and biting lower lip)!>>
+
+SETTING: <<LOCATION:select(Abandoned subway platform,Rain-slicked concrete alleyway,Packed local barbershop,Empty indoor swimming pool,Industrial rooftop at dusk)!>>
+
+LIGHTING: <<LIGHTING_STYLE:select(Chiaroscuro high-contrast,Harsh overhead spotlight,Flickering industrial fluorescent,Natural golden-hour sunlight,Stark monochromatic grayscale)!>> creating deep shadows.
+
+Surround them with a dense, diverse crowd of spectators with blurred faces. Authentic hip-hop aesthetic, high contrast, gritty texture. Cinematic realism, hands visible and empty. No microphones anywhere in the scene.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '16:9',
+    isQuickAccess: true,
+    quickAccessLabel: 'BattleRap',
+    categoryId: 'scenes',
+  },
 ]
