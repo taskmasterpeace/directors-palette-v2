@@ -3221,19 +3221,19 @@ STYLE: photo quality, photo realistic, professional character reference sheet`,
   {
     name: 'Battle Rap',
     description: 'Generate an intense acappella battle rap scene with two performers face-to-face, no microphones, surrounded by a crowd',
-    recipeNote: 'Pick your battlers, their stances, location, lighting, and camera angle. The scene is always acappella — no mics, empty hands, pure aggression.',
+    recipeNote: 'Tag your characters with @ to pull from your character library — set them once, reuse forever. Pick a preset location from the dropdown, or type your own in Custom Location. Attach a reference image for style/mood matching.',
     stages: [{
       id: generateStageId(),
       order: 0,
       template: `A professional high-definition <<CAMERA_ANGLE:select(Over-the-shoulder shot,Low-angle side profile,Tight extreme close-up,Wide master shot,Eye-level centered shot)!>> of an acappella battle rap event. The camera is positioned behind Person B, looking over their shoulder at Person A who is standing face-to-face in a high-intensity verbal battle. Crucially, there are NO microphones; both performers have completely empty hands, using wild hand gestures and aggressive facial expressions.
 
-PERSON A: <<PERSON_A:text!>>
+PERSON A: @<<PERSON_A:name!>>
 PERSON A ACTION: <<ACTION_A:select(Pointing aggressively at opponent,Throwing hands up mid-bar,Leaning forward with intense eye contact,Pounding chest with conviction,Waving dismissively at opponent)!>>
 
-PERSON B: <<PERSON_B:text!>>
+PERSON B: @<<PERSON_B:name!>>
 PERSON B ACTION: <<ACTION_B:select(Smirking with arms crossed,Shaking head in disbelief,Laughing and looking at the crowd,Stepping forward confrontationally,Grimacing and biting lower lip)!>>
 
-SETTING: <<LOCATION:select(Abandoned subway platform,Rain-slicked concrete alleyway,Packed local barbershop,Empty indoor swimming pool,Industrial rooftop at dusk)!>>
+SETTING: <<LOCATION:select(Abandoned subway platform,Rain-slicked concrete alleyway,Packed local barbershop,Empty indoor swimming pool,Industrial rooftop at dusk,Dimly lit basement with exposed pipes,Street corner under an overpass,Back of a crowded bodega,Graffiti-covered parking garage,Outdoor basketball court at night)>> <<CUSTOM_LOCATION:text>>
 
 LIGHTING: <<LIGHTING_STYLE:select(Chiaroscuro high-contrast,Harsh overhead spotlight,Flickering industrial fluorescent,Natural golden-hour sunlight,Stark monochromatic grayscale)!>> creating deep shadows.
 
