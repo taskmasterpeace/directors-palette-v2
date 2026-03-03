@@ -4,6 +4,7 @@
  *
  * Seeds the system recipes from SAMPLE_RECIPES to the database.
  * Incremental: only inserts recipes that don't already exist (by name).
+ * Also seeds non-system-only recipes into community_items as pre-approved items.
  */
 
 import { NextResponse } from 'next/server'
@@ -15,6 +16,23 @@ import { logger } from '@/lib/logger'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getAdminClient(): Promise<any> {
   return await getAPIClient()
+}
+
+// Map Shot Creator categoryId to Community recipe category
+function mapCategoryToCommunity(categoryId?: string): string {
+  switch (categoryId) {
+    case 'characters': return 'character-sheets'
+    case 'products': return 'product'
+    case 'scenes': return 'storyboards'
+    case 'styles': return 'style-guides'
+    case 'artists': return 'style-guides'
+    case 'time-based': return 'time-based'
+    case 'environments': return 'storyboards'
+    case 'narrative': return 'storyboards'
+    case 'action': return 'action'
+    case 'portraits': return 'portraits'
+    default: return 'character-sheets'
+  }
 }
 
 export async function POST() {
@@ -33,11 +51,14 @@ export async function POST() {
     const newRecipes = SAMPLE_RECIPES.filter(sample => !existingNames.has(sample.name))
 
     if (newRecipes.length === 0) {
+      // Even if all user_recipes exist, still sync community_items
+      const communityCount = await seedCommunityItems(supabase)
       return NextResponse.json({
         success: true,
-        message: `All ${SAMPLE_RECIPES.length} system recipes already exist`,
+        message: `All ${SAMPLE_RECIPES.length} system recipes already exist. Synced ${communityCount} to community.`,
         count: 0,
         existing: existingNames.size,
+        communitySeeded: communityCount,
       })
     }
 
@@ -81,11 +102,15 @@ export async function POST() {
       }
     }
 
+    // Seed community_items with non-system-only recipes
+    const communityCount = await seedCommunityItems(supabase)
+
     return NextResponse.json({
       success: true,
-      message: `Seeded ${insertedCount} new system recipes (${existingNames.size} already existed)`,
+      message: `Seeded ${insertedCount} new system recipes (${existingNames.size} already existed). Synced ${communityCount} to community.`,
       count: insertedCount,
       existing: existingNames.size,
+      communitySeeded: communityCount,
     })
   } catch (error) {
     logger.api.error('Error seeding recipes', { error: error instanceof Error ? error.message : String(error) })
@@ -95,6 +120,85 @@ export async function POST() {
       count: 0
     }, { status: 500 })
   }
+}
+
+/**
+ * Seed non-system-only recipes into community_items as pre-approved items.
+ * Skips recipes that already exist in community_items (matched by type + name).
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function seedCommunityItems(supabase: any): Promise<number> {
+  // Get existing community recipe names to avoid duplicates
+  const { data: existingCommunity } = await supabase
+    .from('community_items')
+    .select('name')
+    .eq('type', 'recipe')
+
+  const existingCommunityNames = new Set(
+    (existingCommunity || []).map((r: { name: string }) => r.name)
+  )
+
+  // Filter: skip isSystemOnly and already-existing community items
+  const communityRecipes = SAMPLE_RECIPES.filter(
+    sample => !sample.isSystemOnly && !existingCommunityNames.has(sample.name)
+  )
+
+  if (communityRecipes.length === 0) {
+    logger.api.info('All eligible recipes already in community_items')
+    return 0
+  }
+
+  let seededCount = 0
+  const now = new Date().toISOString()
+
+  for (const sample of communityRecipes) {
+    const communityItem = {
+      type: 'recipe' as const,
+      name: sample.name,
+      description: sample.description || null,
+      category: mapCategoryToCommunity(sample.categoryId),
+      tags: ['system'],
+      content: {
+        stages: sample.stages.map(stage => ({
+          id: stage.id,
+          order: stage.order,
+          template: stage.template,
+          fields: [],
+          referenceImages: stage.referenceImages || [],
+          ...(stage.type && { type: stage.type }),
+          ...(stage.analysisId && { analysisId: stage.analysisId }),
+        })),
+        suggestedAspectRatio: sample.suggestedAspectRatio || undefined,
+        recipeNote: sample.recipeNote || undefined,
+        referenceImages: [],
+      },
+      submitted_by: null,
+      submitted_by_name: 'System',
+      status: 'approved' as const,
+      approved_at: now,
+      is_featured: false,
+    }
+
+    const { error } = await supabase
+      .from('community_items')
+      .insert(communityItem)
+
+    if (error) {
+      logger.api.error('Error inserting community recipe', {
+        name: sample.name,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    } else {
+      seededCount++
+    }
+  }
+
+  logger.api.info('Community recipes seeded', {
+    seeded: seededCount,
+    skipped: existingCommunityNames.size,
+  })
+
+  return seededCount
 }
 
 export async function GET() {

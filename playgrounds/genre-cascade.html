@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Genre Cascade — Genre Picker Prototype</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0c0c10;
+    --surface: #16161c;
+    --surface-hover: #1e1e28;
+    --border: #2a2a38;
+    --text: #e8e6f0;
+    --text-muted: #8888a0;
+    --text-dim: #555568;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-pill: 100px;
+
+    /* Genre family colors */
+    --hip-hop: oklch(0.65 0.18 30);
+    --hip-hop-bg: oklch(0.25 0.06 30);
+    --hip-hop-glow: oklch(0.55 0.15 30 / 0.3);
+    --rnb: oklch(0.65 0.18 290);
+    --rnb-bg: oklch(0.25 0.06 290);
+    --rnb-glow: oklch(0.55 0.15 290 / 0.3);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Header */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: oklch(0.12 0.02 270 / 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+  }
+  .header h1 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--hip-hop), var(--rnb));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header p {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Selected bar */
+  .selected-bar {
+    position: sticky;
+    top: 56px;
+    z-index: 99;
+    background: oklch(0.14 0.02 270 / 0.9);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .selected-bar::-webkit-scrollbar { display: none; }
+  .selected-bar-label {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+    font-weight: 600;
+  }
+  .selected-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px 4px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 0.72rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s;
+    animation: tagIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    flex-shrink: 0;
+  }
+  .selected-tag.hip-hop {
+    background: var(--hip-hop-bg);
+    color: var(--hip-hop);
+    border: 1px solid oklch(0.45 0.12 30 / 0.3);
+  }
+  .selected-tag.rnb {
+    background: var(--rnb-bg);
+    color: var(--rnb);
+    border: 1px solid oklch(0.45 0.12 290 / 0.3);
+  }
+  .selected-tag:hover { filter: brightness(1.2); }
+  .selected-tag .x {
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 10px;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+  }
+  .selected-tag:hover .x { opacity: 1; }
+  .selected-empty {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  @keyframes tagIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Genre cascade container */
+  .cascade {
+    padding: 12px;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  /* Genre family card */
+  .genre-family {
+    margin-bottom: 12px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: border-color 0.3s;
+  }
+  .genre-family.expanded { border-color: transparent; }
+  .genre-family.hip-hop.expanded {
+    border-color: oklch(0.4 0.1 30 / 0.4);
+    box-shadow: 0 4px 24px var(--hip-hop-glow);
+  }
+  .genre-family.rnb.expanded {
+    border-color: oklch(0.4 0.1 290 / 0.4);
+    box-shadow: 0 4px 24px var(--rnb-glow);
+  }
+
+  /* Genre header */
+  .genre-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    cursor: pointer;
+    background: var(--surface);
+    transition: background 0.2s;
+    min-height: 52px;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .genre-header:hover { background: var(--surface-hover); }
+  .genre-header:active { background: oklch(0.2 0.03 270); }
+
+  .genre-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .genre-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .hip-hop .genre-dot { background: var(--hip-hop); box-shadow: 0 0 8px var(--hip-hop-glow); }
+  .rnb .genre-dot { background: var(--rnb); box-shadow: 0 0 8px var(--rnb-glow); }
+
+  .genre-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .genre-count {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    background: oklch(0.2 0.02 270);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+  }
+
+  .genre-chevron {
+    width: 20px;
+    height: 20px;
+    color: var(--text-dim);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    flex-shrink: 0;
+  }
+  .genre-family.expanded .genre-chevron {
+    transform: rotate(90deg);
+  }
+
+  /* Subgenre cascade */
+  .subgenre-cascade {
+    overflow: hidden;
+    transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+    max-height: 0;
+    opacity: 0;
+    background: oklch(0.13 0.015 270);
+  }
+  .genre-family.expanded .subgenre-cascade {
+    opacity: 1;
+  }
+  .subgenre-cascade-inner {
+    padding: 4px 12px 12px;
+  }
+
+  /* Subgenre item */
+  .subgenre-item {
+    margin-bottom: 6px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .subgenre-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+    min-height: 44px;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .subgenre-header:hover { background: oklch(0.2 0.02 270); }
+  .subgenre-header:active { background: oklch(0.22 0.03 270); }
+
+  .subgenre-bar {
+    width: 3px;
+    height: 20px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    opacity: 0.5;
+    transition: opacity 0.2s, height 0.2s;
+  }
+  .hip-hop .subgenre-bar { background: var(--hip-hop); }
+  .rnb .subgenre-bar { background: var(--rnb); }
+  .subgenre-item.expanded .subgenre-bar { opacity: 1; height: 26px; }
+
+  .subgenre-name {
+    font-size: 0.82rem;
+    font-weight: 500;
+    flex: 1;
+  }
+  .subgenre-item.expanded .subgenre-name {
+    font-weight: 600;
+  }
+
+  .subgenre-chevron {
+    width: 16px;
+    height: 16px;
+    color: var(--text-dim);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    flex-shrink: 0;
+  }
+  .subgenre-item.expanded .subgenre-chevron {
+    transform: rotate(90deg);
+  }
+
+  .subgenre-selected-badge {
+    font-size: 0.6rem;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 1px 6px;
+    border-radius: var(--radius-pill);
+    flex-shrink: 0;
+  }
+  .hip-hop .subgenre-selected-badge {
+    background: var(--hip-hop-bg);
+    color: var(--hip-hop);
+  }
+  .rnb .subgenre-selected-badge {
+    background: var(--rnb-bg);
+    color: var(--rnb);
+  }
+
+  /* Micro-genre pills */
+  .micro-cascade {
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s;
+    max-height: 0;
+    opacity: 0;
+  }
+  .subgenre-item.expanded .micro-cascade {
+    opacity: 1;
+  }
+  .micro-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 12px 12px 25px;
+  }
+
+  .micro-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 7px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    -webkit-user-select: none;
+    user-select: none;
+    white-space: nowrap;
+    min-height: 34px;
+  }
+  .micro-pill:hover {
+    background: var(--surface-hover);
+    border-color: oklch(0.4 0.06 270);
+    color: var(--text);
+  }
+  .micro-pill:active {
+    transform: scale(0.95);
+  }
+
+  /* Selected micro-pill states */
+  .micro-pill.selected.hip-hop {
+    background: var(--hip-hop-bg);
+    border-color: oklch(0.5 0.14 30 / 0.5);
+    color: var(--hip-hop);
+    box-shadow: 0 0 12px var(--hip-hop-glow);
+  }
+  .micro-pill.selected.rnb {
+    background: var(--rnb-bg);
+    border-color: oklch(0.5 0.14 290 / 0.5);
+    color: var(--rnb);
+    box-shadow: 0 0 12px var(--rnb-glow);
+  }
+
+  .micro-pill .check {
+    width: 14px;
+    height: 14px;
+    display: none;
+  }
+  .micro-pill.selected .check {
+    display: block;
+  }
+
+  /* Stagger animation for micro pills */
+  .micro-pill {
+    animation: pillCascade 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  }
+
+  @keyframes pillCascade {
+    0% {
+      transform: translateY(10px) scale(0.9);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* Select-all mini button */
+  .select-all-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    border-radius: var(--radius-pill);
+    font-size: 0.65rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px dashed var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    min-height: 34px;
+  }
+  .select-all-btn:hover {
+    border-style: solid;
+    color: var(--text-muted);
+    background: var(--surface);
+  }
+
+  /* Prompt output */
+  .prompt-section {
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+    background: oklch(0.1 0.02 270 / 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+  }
+  .prompt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .prompt-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+  .copy-btn {
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', system-ui;
+  }
+  .copy-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+    border-color: oklch(0.4 0.06 270);
+  }
+  .copy-btn.copied {
+    background: oklch(0.3 0.1 150);
+    border-color: oklch(0.5 0.15 150);
+    color: oklch(0.8 0.15 150);
+  }
+  .prompt-text {
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    max-height: 60px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  /* Presets bar */
+  .presets-bar {
+    display: flex;
+    gap: 6px;
+    padding: 10px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .presets-bar::-webkit-scrollbar { display: none; }
+  .preset-btn {
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: 'DM Sans', system-ui;
+    min-height: 36px;
+  }
+  .preset-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+  .preset-btn.active {
+    background: oklch(0.3 0.08 270);
+    border-color: oklch(0.5 0.12 290);
+    color: oklch(0.85 0.12 290);
+  }
+
+  /* Clear all button */
+  .clear-btn {
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    border: 1px solid oklch(0.35 0.1 15 / 0.4);
+    background: oklch(0.2 0.04 15);
+    color: oklch(0.7 0.12 15);
+    font-size: 0.72rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: 'DM Sans', system-ui;
+    min-height: 36px;
+  }
+  .clear-btn:hover {
+    background: oklch(0.25 0.06 15);
+    border-color: oklch(0.45 0.12 15 / 0.5);
+  }
+
+  /* Responsive */
+  @media (min-width: 640px) {
+    .cascade { padding: 20px; }
+    .header { padding: 16px 24px; }
+    .selected-bar { padding: 10px 24px; }
+    .presets-bar { padding: 12px 24px; }
+    .prompt-section { padding: 16px 24px; }
+    .micro-pills { gap: 8px; }
+    .genre-header { padding: 16px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Genre Cascade</h1>
+  <p>Tap a genre to expand. Tap micro-genres to select your sound.</p>
+</div>
+
+<div class="presets-bar" id="presetsBar"></div>
+
+<div class="selected-bar" id="selectedBar">
+  <span class="selected-bar-label">DNA</span>
+  <span class="selected-empty">No genres selected yet</span>
+</div>
+
+<div class="cascade" id="cascade"></div>
+
+<div class="prompt-section">
+  <div class="prompt-header">
+    <span class="prompt-label">Prompt Output</span>
+    <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">Copy</button>
+  </div>
+  <div class="prompt-text" id="promptOutput">Select genres to generate a prompt...</div>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────────────────
+
+const GENRE_DATA = [
+  {
+    id: 'hip-hop',
+    name: 'Hip-Hop / Rap',
+    family: 'hip-hop',
+    subgenres: [
+      {
+        name: 'Trap',
+        micros: ['Latin Trap', 'EDM Trap', 'Phonk', 'Plugg', 'Drill Chicago', 'Drill Brooklyn', 'Melodic Trap', 'Dark Trap', 'Rage Trap']
+      },
+      {
+        name: 'Boom Bap',
+        micros: ['East Coast Classic', 'Jazz Rap', 'Golden Age', 'Gritty Boom Bap', 'Lo-Fi Boom Bap', 'Lyrical Boom Bap']
+      },
+      {
+        name: 'Southern Hip-Hop',
+        micros: ['Atlanta Rap', 'Dirty South', 'Crunk', 'Houston Rap', 'Chopped & Screwed', 'Snap Music', 'Bass Music']
+      },
+      {
+        name: 'Memphis Rap',
+        micros: ['Dark Memphis', 'Underground Memphis', 'Memphis Phonk', 'Horrorcore Memphis', 'Triple Six Style']
+      },
+      {
+        name: 'West Coast Hip-Hop',
+        micros: ['G-Funk', 'Hyphy', 'Gangsta Rap', 'LA Underground', 'Bay Area Rap']
+      },
+      {
+        name: 'Midwest Hip-Hop',
+        micros: ['Detroit Rap', 'Chicago Boom', 'Twin Cities Underground', 'St. Louis Rap']
+      },
+      {
+        name: 'Alt Hip-Hop',
+        micros: ['Abstract Hip-Hop', 'Conscious Rap', 'Backpacker Rap', 'Art Rap', 'Psychedelic Rap']
+      },
+      {
+        name: 'Luxury Rap',
+        micros: ['Champagne Rap', 'Designer Rap', 'Yacht Hop', 'Opulent Trap']
+      }
+    ]
+  },
+  {
+    id: 'rnb',
+    name: 'R&B / Soul',
+    family: 'rnb',
+    subgenres: [
+      {
+        name: 'Neo-Soul',
+        micros: ['Conscious Soul', 'Organic Soul', 'Live Band Neo-Soul', 'Afrocentric Neo-Soul', 'Jazzy Neo-Soul']
+      },
+      {
+        name: 'Trap Soul',
+        micros: ['Melodic Trap Soul', 'Dark Trap Soul', 'Moody Trap Soul', 'Louisville Trap Soul', 'Ambient Trap Soul']
+      },
+      {
+        name: 'Contemporary R&B',
+        micros: ['90s R&B', 'Modern R&B', 'Bedroom R&B', 'Quiet Storm', 'Urban Adult Contemporary']
+      },
+      {
+        name: 'Progressive R&B',
+        micros: ['Introspective R&B', 'Art Soul', 'Cinematic R&B', 'Experimental R&B', 'Deconstructed R&B']
+      },
+      {
+        name: 'Vocal R&B',
+        micros: ['Power Ballad Soul', 'Acapella R&B', 'Vocal Runs Style', 'Gospel-Tinged R&B']
+      },
+      {
+        name: 'Retro Soul',
+        micros: ['Classic Motown', 'Northern Soul', 'Philly Soul', '70s Funk Soul', 'Doo-Wop Revival']
+      },
+      {
+        name: 'UK R&B',
+        micros: ['British Soul', 'UK Garage R&B', 'Grime Soul', 'Afroswing']
+      },
+      {
+        name: 'Street R&B',
+        micros: ['Hood R&B', 'Gangsta Soul', 'Trunk R&B', 'Club R&B']
+      }
+    ]
+  }
+]
+
+const PRESETS = [
+  {
+    name: 'Trap King',
+    selections: ['Melodic Trap', 'Dark Trap', 'Phonk', 'Moody Trap Soul']
+  },
+  {
+    name: 'Old School',
+    selections: ['East Coast Classic', 'Golden Age', 'Classic Motown', '90s R&B']
+  },
+  {
+    name: 'ATL Vibes',
+    selections: ['Atlanta Rap', 'Dirty South', 'Snap Music', 'Club R&B', 'Melodic Trap']
+  },
+  {
+    name: 'Smooth Operator',
+    selections: ['Organic Soul', 'Jazzy Neo-Soul', 'Quiet Storm', 'Bedroom R&B']
+  },
+  {
+    name: 'Left Field',
+    selections: ['Abstract Hip-Hop', 'Art Rap', 'Experimental R&B', 'Deconstructed R&B']
+  }
+]
+
+// ─── STATE ──────────────────────────────────────────────────────────────────────
+
+const state = {
+  expandedGenres: new Set(),
+  expandedSubgenres: new Set(),
+  selected: new Set(),
+  activePreset: null
+}
+
+// ─── RENDERING ──────────────────────────────────────────────────────────────────
+
+function render() {
+  renderCascade()
+  renderSelectedBar()
+  updatePrompt()
+}
+
+function renderCascade() {
+  const container = document.getElementById('cascade')
+  container.innerHTML = ''
+
+  GENRE_DATA.forEach(genre => {
+    const isExpanded = state.expandedGenres.has(genre.id)
+    const totalMicros = genre.subgenres.reduce((sum, s) => sum + s.micros.length, 0)
+    const selectedCount = genre.subgenres.reduce((sum, s) =>
+      sum + s.micros.filter(m => state.selected.has(m)).length, 0)
+
+    const familyEl = document.createElement('div')
+    familyEl.className = `genre-family ${genre.family}${isExpanded ? ' expanded' : ''}`
+
+    // Header
+    const header = document.createElement('div')
+    header.className = 'genre-header'
+    header.innerHTML = `
+      <div class="genre-header-left">
+        <div class="genre-dot"></div>
+        <span class="genre-name">${genre.name}</span>
+        <span class="genre-count">${selectedCount > 0 ? selectedCount + '/' : ''}${totalMicros}</span>
+      </div>
+      <svg class="genre-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    `
+    header.addEventListener('click', () => toggleGenre(genre.id))
+    familyEl.appendChild(header)
+
+    // Subgenre cascade
+    const subCascade = document.createElement('div')
+    subCascade.className = 'subgenre-cascade'
+
+    const subInner = document.createElement('div')
+    subInner.className = 'subgenre-cascade-inner'
+
+    genre.subgenres.forEach((sub, si) => {
+      const subKey = `${genre.id}::${sub.name}`
+      const isSubExpanded = state.expandedSubgenres.has(subKey)
+      const subSelectedCount = sub.micros.filter(m => state.selected.has(m)).length
+
+      const subItem = document.createElement('div')
+      subItem.className = `subgenre-item${isSubExpanded ? ' expanded' : ''}`
+
+      // Subgenre header
+      const subHeader = document.createElement('div')
+      subHeader.className = 'subgenre-header'
+      subHeader.innerHTML = `
+        <div class="subgenre-bar"></div>
+        <span class="subgenre-name">${sub.name}</span>
+        ${subSelectedCount > 0 ? `<span class="subgenre-selected-badge">${subSelectedCount}</span>` : ''}
+        <svg class="subgenre-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      `
+      subHeader.addEventListener('click', () => toggleSubgenre(subKey))
+      subItem.appendChild(subHeader)
+
+      // Micro pills
+      const microCascade = document.createElement('div')
+      microCascade.className = 'micro-cascade'
+
+      const microPills = document.createElement('div')
+      microPills.className = 'micro-pills'
+
+      sub.micros.forEach((micro, mi) => {
+        const isSelected = state.selected.has(micro)
+        const pill = document.createElement('button')
+        pill.className = `micro-pill ${genre.family}${isSelected ? ' selected' : ''}`
+        pill.style.animationDelay = `${mi * 0.04}s`
+        pill.innerHTML = `
+          <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          ${micro}
+        `
+        pill.addEventListener('click', (e) => {
+          e.stopPropagation()
+          toggleMicro(micro)
+        })
+        microPills.appendChild(pill)
+      })
+
+      // Select all button
+      const allSelected = sub.micros.every(m => state.selected.has(m))
+      const selectAllBtn = document.createElement('button')
+      selectAllBtn.className = 'select-all-btn'
+      selectAllBtn.textContent = allSelected ? '✕ Clear' : '✓ All'
+      selectAllBtn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        if (allSelected) {
+          sub.micros.forEach(m => state.selected.delete(m))
+        } else {
+          sub.micros.forEach(m => state.selected.add(m))
+        }
+        state.activePreset = null
+        render()
+      })
+      microPills.appendChild(selectAllBtn)
+
+      microCascade.appendChild(microPills)
+      subItem.appendChild(microCascade)
+
+      // Animate micro cascade height
+      if (isSubExpanded) {
+        requestAnimationFrame(() => {
+          microCascade.style.maxHeight = microCascade.scrollHeight + 'px'
+        })
+      }
+
+      subInner.appendChild(subItem)
+    })
+
+    subCascade.appendChild(subInner)
+    familyEl.appendChild(subCascade)
+
+    // Animate subgenre cascade height
+    if (isExpanded) {
+      requestAnimationFrame(() => {
+        subCascade.style.maxHeight = subCascade.scrollHeight + 'px'
+      })
+    }
+
+    container.appendChild(familyEl)
+  })
+}
+
+function renderSelectedBar() {
+  const bar = document.getElementById('selectedBar')
+  const items = Array.from(state.selected)
+
+  if (items.length === 0) {
+    bar.innerHTML = `
+      <span class="selected-bar-label">DNA</span>
+      <span class="selected-empty">No genres selected yet</span>
+    `
+    return
+  }
+
+  let html = `<span class="selected-bar-label">DNA · ${items.length}</span>`
+  items.forEach(micro => {
+    const family = findFamily(micro)
+    html += `
+      <span class="selected-tag ${family}" onclick="removeMicro('${micro.replace(/'/g, "\\'")}')">
+        ${micro}
+        <span class="x">✕</span>
+      </span>
+    `
+  })
+  bar.innerHTML = html
+}
+
+function renderPresets() {
+  const bar = document.getElementById('presetsBar')
+  let html = ''
+  PRESETS.forEach((preset, i) => {
+    const isActive = state.activePreset === i
+    html += `<button class="preset-btn${isActive ? ' active' : ''}" onclick="applyPreset(${i})">${preset.name}</button>`
+  })
+  html += `<button class="clear-btn" onclick="clearAll()">Clear All</button>`
+  bar.innerHTML = html
+}
+
+// ─── INTERACTIONS ───────────────────────────────────────────────────────────────
+
+function toggleGenre(id) {
+  if (state.expandedGenres.has(id)) {
+    state.expandedGenres.delete(id)
+    // Also collapse all subgenres
+    GENRE_DATA.find(g => g.id === id)?.subgenres.forEach(s => {
+      state.expandedSubgenres.delete(`${id}::${s.name}`)
+    })
+  } else {
+    state.expandedGenres.add(id)
+  }
+  render()
+}
+
+function toggleSubgenre(key) {
+  if (state.expandedSubgenres.has(key)) {
+    state.expandedSubgenres.delete(key)
+  } else {
+    state.expandedSubgenres.add(key)
+  }
+  render()
+}
+
+function toggleMicro(micro) {
+  if (state.selected.has(micro)) {
+    state.selected.delete(micro)
+  } else {
+    state.selected.add(micro)
+  }
+  state.activePreset = null
+  renderPresets()
+  render()
+}
+
+function removeMicro(micro) {
+  state.selected.delete(micro)
+  state.activePreset = null
+  renderPresets()
+  render()
+}
+
+function applyPreset(index) {
+  const preset = PRESETS[index]
+  state.selected.clear()
+  preset.selections.forEach(s => state.selected.add(s))
+  state.activePreset = index
+
+  // Expand relevant genres and subgenres
+  state.expandedGenres.clear()
+  state.expandedSubgenres.clear()
+  preset.selections.forEach(micro => {
+    GENRE_DATA.forEach(genre => {
+      genre.subgenres.forEach(sub => {
+        if (sub.micros.includes(micro)) {
+          state.expandedGenres.add(genre.id)
+          state.expandedSubgenres.add(`${genre.id}::${sub.name}`)
+        }
+      })
+    })
+  })
+
+  renderPresets()
+  render()
+}
+
+function clearAll() {
+  state.selected.clear()
+  state.activePreset = null
+  renderPresets()
+  render()
+}
+
+// ─── HELPERS ────────────────────────────────────────────────────────────────────
+
+function findFamily(micro) {
+  for (const genre of GENRE_DATA) {
+    for (const sub of genre.subgenres) {
+      if (sub.micros.includes(micro)) return genre.family
+    }
+  }
+  return 'hip-hop'
+}
+
+function findSubgenre(micro) {
+  for (const genre of GENRE_DATA) {
+    for (const sub of genre.subgenres) {
+      if (sub.micros.includes(micro)) return sub.name
+    }
+  }
+  return null
+}
+
+// ─── PROMPT ─────────────────────────────────────────────────────────────────────
+
+function updatePrompt() {
+  const el = document.getElementById('promptOutput')
+  const items = Array.from(state.selected)
+
+  if (items.length === 0) {
+    el.textContent = 'Select genres to generate a prompt...'
+    return
+  }
+
+  // Group by subgenre
+  const groups = {}
+  items.forEach(micro => {
+    const sub = findSubgenre(micro)
+    if (!groups[sub]) groups[sub] = []
+    groups[sub].push(micro)
+  })
+
+  const parts = []
+
+  // Build natural language
+  const genreNames = Object.keys(groups)
+  if (genreNames.length === 1) {
+    const [sub] = genreNames
+    const micros = groups[sub]
+    parts.push(`The artist's genre DNA is rooted in ${sub}`)
+    if (micros.length <= 3) {
+      parts.push(`specifically ${micros.join(', ')}`)
+    } else {
+      parts.push(`drawing from ${micros.slice(0, 3).join(', ')}, and ${micros.length - 3} more micro-genres`)
+    }
+  } else {
+    parts.push(`The artist blends ${genreNames.length} subgenres:`)
+    genreNames.forEach(sub => {
+      const micros = groups[sub]
+      if (micros.length === 1) {
+        parts.push(`${sub} (${micros[0]})`)
+      } else {
+        parts.push(`${sub} (${micros.join(', ')})`)
+      }
+    })
+  }
+
+  el.textContent = parts.join('. ') + '.'
+}
+
+function copyPrompt() {
+  const text = document.getElementById('promptOutput').textContent
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn')
+    btn.textContent = 'Copied!'
+    btn.classList.add('copied')
+    setTimeout(() => {
+      btn.textContent = 'Copy'
+      btn.classList.remove('copied')
+    }, 1500)
+  })
+}
+
+// ─── INIT ───────────────────────────────────────────────────────────────────────
+
+renderPresets()
+render()
+</script>
+</body>
+</html>
