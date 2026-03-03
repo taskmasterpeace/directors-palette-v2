@@ -12,9 +12,6 @@ import type {
   SubmitItemRequest,
   UserLibraryItem,
   UserLibraryItemRow,
-  RecipeContent,
-  WildcardContent,
-  DirectorContent,
 } from '../types/community.types'
 import { createLogger } from '@/lib/logger'
 
@@ -254,163 +251,37 @@ class CommunityService {
   // ==========================================================================
 
   /**
-   * Add a community item to user's library
+   * Add a community item to user's library via server API
+   * Uses /api/community/add which has service role access for type-specific writes
    */
-  async addToLibrary(communityItemId: string, userId: string): Promise<UserLibraryItem> {
-    // Get the community item first
-    const item = await this.getItemById(communityItemId)
-    if (!item) {
-      throw new Error('Community item not found')
+  async addToLibrary(communityItemId: string, _userId: string): Promise<UserLibraryItem> {
+    const response = await fetch('/api/community/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemId: communityItemId }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+      log.error('Error adding to library via API', { error: errorData.error })
+      throw new Error(errorData.error || 'Failed to add to library')
     }
 
-    // Upsert to user_library_items - overwrite if exists with same name
-    const { data, error } = await this.supabase
-      .from('user_library_items')
-      .upsert({
-        user_id: userId,
-        community_item_id: communityItemId,
-        type: item.type,
-        name: item.name,
-        content: item.content,
-        is_modified: false,
-        submitted_to_community: false,
-        community_status: null,
-      }, {
-        onConflict: 'user_id,type,name',
-      })
-      .select()
-      .single()
+    const result = await response.json()
+    const item = result.libraryItem
 
-    if (error) {
-      log.error('Error adding to library', { error: error })
-      throw error
-    }
-
-    // =========================================================================
-    // TYPE-SPECIFIC TABLE WRITES
-    // Each type needs to be written to its specific table so it appears in UI
-    // =========================================================================
-
-    // RECIPES: Also add to user_recipes table so they appear in Shot Creator
-    if (item.type === 'recipe') {
-      const recipeContent = item.content as RecipeContent
-
-      const recipeData = {
-        user_id: userId,
-        name: item.name,
-        description: item.description || null,
-        recipe_note: recipeContent.recipeNote || null,
-        stages: recipeContent.stages.map((stage, index) => ({
-          id: stage.id || `stage_${index}_${Date.now()}`,
-          order: stage.order ?? index,
-          template: stage.template,
-          fields: [], // Fields are parsed on read, not stored
-          referenceImages: stage.referenceImages || [],
-        })),
-        suggested_aspect_ratio: recipeContent.suggestedAspectRatio || null,
-        suggested_resolution: null,
-        quick_access_label: null,
-        is_quick_access: false,
-        category_id: item.category || null,
-        is_system: false,
-      }
-
-      // Check if user already has a recipe with this name
-      const { data: existing } = await this.supabase
-        .from('user_recipes')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('name', item.name)
-        .maybeSingle()
-
-      if (existing) {
-        // Update existing recipe
-        const { error: updateError } = await this.supabase
-          .from('user_recipes')
-          .update(recipeData)
-          .eq('id', existing.id)
-
-        if (updateError) {
-          log.error('Error updating recipe in user_recipes', { updateError: updateError })
-        }
-      } else {
-        // Insert new recipe
-        const { error: insertError } = await this.supabase
-          .from('user_recipes')
-          .insert(recipeData)
-
-        if (insertError) {
-          log.error('Error inserting recipe to user_recipes', { insertError: insertError })
-        }
-      }
-    }
-
-    // WILDCARDS: Also add to wildcards table so they appear in Wildcard Manager
-    if (item.type === 'wildcard') {
-      const wildcardContent = item.content as WildcardContent
-
-      const wildcardData = {
-        user_id: userId,
-        name: item.name,
-        entries: wildcardContent.entries,
-        is_shared: false,
-      }
-
-      const { error: wildcardError } = await this.supabase
-        .from('wildcards')
-        .upsert(wildcardData, {
-          onConflict: 'user_id,name',
-          ignoreDuplicates: false,
-        })
-
-      if (wildcardError) {
-        log.error('Error adding wildcard to wildcards table', { wildcardError: wildcardError })
-      }
-    }
-
-    // DIRECTORS: Also add to user_directors table so they appear in Music Lab
-    if (item.type === 'director') {
-      const directorContent = item.content as DirectorContent
-
-      const directorData = {
-        user_id: userId,
-        name: item.name,
-        description: item.description || null,
-        fingerprint: directorContent.fingerprint,
-        community_item_id: communityItemId,
-        is_modified: false,
-        avatar_url: directorContent.avatarUrl || null,
-      }
-
-      const { error: directorError } = await this.supabase
-        .from('user_directors')
-        .upsert(directorData, {
-          onConflict: 'user_id,name',
-          ignoreDuplicates: false,
-        })
-
-      if (directorError) {
-        log.error('Error adding director to user_directors table', { directorError: directorError })
-      }
-    }
-
-    // PROMPTS: For prompts, we don't have a separate table yet
-    // They use user_settings.config.prompt_library (JSON settings)
-    // TODO: Consider creating a user_prompts table for consistency
-
-    const row = data as UserLibraryItemRow
     return {
-      id: row.id,
-      userId: row.user_id,
-      communityItemId: row.community_item_id,
-      type: row.type,
-      name: row.name,
-      content: row.content,
-      isModified: row.is_modified,
-      submittedToCommunity: row.submitted_to_community,
-      communityStatus: row.community_status,
-      addedAt: row.added_at,
-      modifiedAt: row.modified_at,
+      id: item.id,
+      userId: item.userId,
+      communityItemId: item.communityItemId,
+      type: item.type,
+      name: item.name,
+      content: item.content,
+      isModified: item.isModified,
+      submittedToCommunity: false,
+      communityStatus: null,
+      addedAt: item.addedAt,
+      modifiedAt: item.addedAt,
     }
   }
 

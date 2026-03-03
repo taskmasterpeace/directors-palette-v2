@@ -9,6 +9,7 @@ import type {
   CommunityFilters,
 } from '../types/community.types'
 import { communityService } from '../services/community.service'
+import { useRecipeStore } from '@/features/shot-creator/store/recipe.store'
 import { createLogger } from '@/lib/logger'
 
 
@@ -104,6 +105,10 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       )
 
       set({ libraryItemIds: newLibraryIds, items: updatedItems })
+
+      // Refresh recipe store so newly added recipes appear in Shot Creator
+      useRecipeStore.getState().refreshRecipes()
+
       return true
     } catch (error) {
       log.error('Error adding to library', { error: error instanceof Error ? error.message : String(error) })
