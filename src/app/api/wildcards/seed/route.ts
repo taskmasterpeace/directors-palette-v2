@@ -232,68 +232,6 @@ The setting is an underground parking garage with concrete pillars and dim fluor
 The setting is a small park in the Bronx under moonlight, with playground equipment in the background. The crowd gathers in a tight circle around the rappers, creating an open-air, gritty feel`
     },
     {
-        name: 'wardrobe_designer',
-        category: 'fashion',
-        description: 'Luxury designer clothing and accessories',
-        content: `Wearing a Gucci button-up shirt made of a sleek, satin-like fabric with a prominent stripe pattern in red and green running horizontally across the chest
-Wearing a Gucci bomber jacket crafted from soft lambskin leather, featuring the brand's signature green and red web stripe running vertically along the sleeves
-Wearing a Louis Vuitton monogram-patterned button-up shirt in a crisp white cotton fabric with the LV monogram printed in a subtle pearl tone
-Wearing a Louis Vuitton oversized puffer jacket in jet black with gold accents along the zippers and cuffs
-Wearing a Louis Vuitton tailored blazer in a deep navy tone, embroidered with a gold LV monogram pattern cascading down the lapels
-Wearing a Prada nylon vest in sleek black, featuring bold silver hardware and the iconic triangular Prada logo on the chest
-Wearing a Prada slim-fit turtleneck sweater in charcoal gray, with the Prada logo subtly stitched at the collar
-Wearing an oversized Balenciaga hoodie in jet black with the brand's logo emblazoned across the front in bold white letters
-Wearing a Balenciaga trench coat made of water-resistant fabric in a muted beige with exaggerated lapels
-Wearing a Dior button-up shirt in sky blue with the signature Dior Oblique pattern running throughout
-Wearing a Dior wool overcoat in midnight black, with a silk inner lining featuring the Dior logo
-Wearing a Versace silk shirt with a vibrant baroque print in gold and black, featuring Medusa head buttons
-Wearing a Versace black leather jacket with bold gold hardware and embossed Medusa head details on the shoulders
-Wearing a YSL velvet blazer in rich emerald green with satin lapels and the iconic YSL logo embroidered in gold
-Wearing a Fendi turtleneck sweater in cream white with the iconic FF logo pattern knitted across the torso
-Wearing a Fendi overcoat in charcoal gray wool, featuring a detachable collar lined with FF monogram fur trim
-Wearing a Chanel boucle jacket in classic black and white, with pearl-button details
-Wearing an Off-White graphic hoodie in bright neon green, with the iconic diagonal stripe pattern printed across the back
-Wearing an Off-White utility vest in dark gray with multiple functional pockets and the brand's signature cross-arrow logo
-Wearing a Burberry trench coat in classic beige with the iconic plaid lining visible at the collar and cuffs
-Wearing a Burberry cashmere scarf in the signature beige-and-red checkered pattern
-Wearing a Moncler down jacket in metallic silver, featuring a high-gloss finish and the iconic Moncler logo patch on the sleeve`
-    },
-    {
-        name: 'wardrobe_streetwear',
-        category: 'fashion',
-        description: 'Streetwear and urban fashion with brand names',
-        content: `Wearing a plain white Pro Club heavyweight tee under a black zip-up hoodie with a soft fleece lining
-Wearing a Champion reverse-weave sweatshirt in gray, with the small embroidered "C" logo on the chest and sleeve
-Wearing a black Carhartt work jacket with a boxy fit, layered over a graphic tee featuring bold, oversized lettering
-Wearing a Nike tech fleece tracksuit in jet black, with slim-tapered joggers and a zip-up hoodie
-Wearing an Adidas three-stripe hoodie in heather gray, paired with matching joggers
-Wearing a Puma windbreaker in a vibrant red-and-white color-block design
-Wearing a plaid flannel shirt in red and black, layered over a black thermal Henley
-Wearing a Levi's trucker jacket in a medium-wash denim with faux shearling lining
-Wearing a pair of baggy Dickies carpenter jeans in a dark indigo wash, paired with a longline white tee
-Wearing a North Face Nuptse puffer jacket in matte black, paired with straight-leg jeans and wheat-colored Timberlands
-Wearing a Champion hoodie in deep burgundy, layered under a black varsity jacket with faux leather sleeves
-Wearing a Pelle Pelle leather jacket in a rich brown tone, featuring embroidered graffiti-inspired designs across the back
-Wearing a Billionaire Boys Club t-shirt with a cosmic design and bold lettering across the chest
-Wearing a Grimey NYC oversized graphic hoodie featuring an abstract street art-inspired design in neon green and purple
-Wearing a Supreme long-sleeve tee in white, with the iconic red box logo across the chest
-Wearing a pair of classic black-and-red Jordan 1s, matched with an oversized white tee and distressed denim shorts
-Wearing a pair of Yeezy Boost 350s in a "Zebra" colorway, styled with slim joggers in olive green
-Wearing a pair of Air Max 97s in metallic silver, with a black bomber jacket and tapered black jeans
-Wearing a black-and-gold snapback with a bold logo print on the front
-Wearing a gold Cuban link chain over a simple black hoodie, paired with a matching gold bracelet
-Wearing a sherpa-lined khaki bomber jacket, layered over a waffle-knit long-sleeve shirt in cream
-Wearing a camo-print parka with faux fur trim on the hood, paired with a black turtleneck sweater
-is wearing a black Carhartt beanie with a small logo patch, paired with a navy quilted bomber jacket
-is wearing a gray Nike fleece hoodie with a bold swoosh logo, layered under a black puffer vest
-is wearing a burgundy Champion crewneck sweatshirt with a subtle "C" embroidery
-is wearing a dark green Adidas track jacket with white stripes, over a black graphic tee
-is wearing a black Pelle Pelle leather jacket with stitched logo details
-is wearing a red Supreme snapback with a box logo, styled with a black oversized hoodie
-is wearing a navy North Face puffer jacket with a matte finish
-is wearing a black-and-white Stussy graphic tee with a wave design, paired with loose-fit camo pants`
-    },
-    {
         name: 'camera_angle_dramatic',
         category: 'cinematography',
         description: 'Dramatic camera angles and shots',
@@ -319,7 +257,9 @@ const WILDCARDS_TO_DELETE = [
     'triumphant_mood',
     'intense_mood',
     'film_grain_style',
-    'battle_rap_lighting'
+    'battle_rap_lighting',
+    'wardrobe_designer',
+    'wardrobe_streetwear',
 ]
 
 export async function POST(request: NextRequest) {
