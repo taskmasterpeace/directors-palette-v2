@@ -34,11 +34,44 @@ Video models: `bytedance/seedance-1-lite`, `bytedance/seedance-1-pro-fast`, `wan
 
 # RECIPE SYSTEM
 
-Field syntax: `<<FIELD_NAME:type>>` (optional), `<<FIELD_NAME:type!>>` (required). Types: `name`, `text`, `select(A,B,C)`
+Field syntax: `<<FIELD_NAME:type>>` (optional), `<<FIELD_NAME:type!>>` (required).
+
+**Field types:**
+- `name` — Short text input (~12 chars)
+- `text` — Freeform textarea, multi-line
+- `select(A,B,C)` — Dropdown with flat options
+- `select(---Category---,opt1,opt2,---Category2---,opt3,opt4)` — Grouped dropdown with category headers
+
+**Category headers in select fields:** Any option wrapped in `---` (e.g. `---Small Room---`) renders as a non-selectable bold header in the dropdown. Items after it belong to that category until the next header. Backward compatible — selects without `---` work as flat lists.
+
+Example with categories:
+```
+<<VENUE:select(---Small Room---,pit studio,black-box theater,dance studio,---Main Stage---,concert venue,amphitheater,convention center,---Outdoor---,rooftop,courtyard,street corner)!>>
+```
+
+**Multi-stage recipes:** Stages separated by `|`. Same field name across stages = user fills once, value reused.
 
 API: `POST /api/recipes/{recipeName}/execute` with `fieldValues`, `referenceImages`, `modelSettings`
 
-Key files: `src/features/shot-creator/types/recipe.types.ts`, `src/features/shot-creator/services/recipe.service.ts`, `src/features/shared/services/recipe-execution.service.ts`
+Key files: `src/features/shot-creator/types/recipe-utils.ts` (parser), `src/features/shot-creator/components/recipe/RecipeFormFields.tsx` (UI renderer), `src/features/shot-creator/services/recipe.service.ts`, `src/features/shared/services/recipe-execution.service.ts`
+
+---
+
+# WILDCARD SYSTEM
+
+Syntax in prompts: `_wildcard_name_` (underscores). At generation time, one random entry is picked from the wildcard's content.
+
+**Storage:** Supabase `wildcards` table (name, category, content). Content = newline-separated entries.
+
+**Files:** `public/storyboard-assets/wildcards/` contains seed data:
+- `venue.txt` — 30 battle rap venue types with varied lighting (parking garage, warehouse, black-box theater, boxing gym, amphitheater, etc.)
+- `wardrobe.txt` — 200+ outfit descriptions (luxury brands, sports, streetwear with signature details)
+- `action.txt` — Character actions/poses
+- `venue-crowd.txt` — Crowd descriptions
+
+**Key files:** `src/features/shot-creator/helpers/wildcard/parser.ts` (extraction + random selection), `src/app/api/wildcards/seed/route.ts` (seed endpoint)
+
+**Combining wildcards + recipes:** Wildcards resolve first, then recipe fields, then brackets expand. Example: `_character_ in a [forest, city, desert]` = random character in 3 locations = 3 images.
 
 ---
 
