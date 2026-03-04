@@ -159,7 +159,7 @@ export function ClapperboardHero() {
             <div
                 ref={containerRef}
                 className="relative"
-                style={{ height: "400vh" }}
+                style={{ height: "250vh" }}
             >
                 {/* Sticky viewport — pure black */}
                 <div className="sticky top-0 h-screen w-full overflow-hidden bg-black">
