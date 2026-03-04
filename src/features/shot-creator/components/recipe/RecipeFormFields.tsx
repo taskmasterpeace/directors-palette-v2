@@ -7,7 +7,9 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -48,6 +50,58 @@ export function RecipeFormFields({
   // Get all fields from all stages
   const allFields = getAllFields(activeRecipe.stages)
 
+  // Render select options, supporting ---Header--- category separators
+  const renderSelectOptions = (options?: string[]) => {
+    if (!options) return null
+
+    // Check if any option uses the ---Header--- pattern
+    const hasHeaders = options.some(opt => opt.startsWith('---') && opt.endsWith('---'))
+
+    if (!hasHeaders) {
+      // Flat list — no grouping
+      return options.map((opt) => (
+        <SelectItem key={opt} value={opt} className="text-sm">
+          {opt}
+        </SelectItem>
+      ))
+    }
+
+    // Group options under headers
+    const groups: { label: string; items: string[] }[] = []
+    let currentGroup: { label: string; items: string[] } | null = null
+
+    for (const opt of options) {
+      if (opt.startsWith('---') && opt.endsWith('---')) {
+        // This is a category header
+        currentGroup = { label: opt.slice(3, -3).trim(), items: [] }
+        groups.push(currentGroup)
+      } else if (currentGroup) {
+        currentGroup.items.push(opt)
+      } else {
+        // Items before any header go into an unnamed group
+        if (!groups.length || groups[0].label !== '') {
+          groups.unshift({ label: '', items: [] })
+        }
+        groups[0].items.push(opt)
+      }
+    }
+
+    return groups.map((group, gi) => (
+      <SelectGroup key={gi}>
+        {group.label && (
+          <SelectLabel className="text-xs font-semibold text-amber-400 uppercase tracking-wider px-2 py-1.5">
+            {group.label}
+          </SelectLabel>
+        )}
+        {group.items.map((opt) => (
+          <SelectItem key={opt} value={opt} className="text-sm">
+            {opt}
+          </SelectItem>
+        ))}
+      </SelectGroup>
+    ))
+  }
+
   // Render a field based on its type
   const renderField = (field: RecipeField) => {
     const value = activeFieldValues[field.id] || ''
@@ -69,11 +123,7 @@ export function RecipeFormFields({
               <SelectValue placeholder={field.placeholder} />
             </SelectTrigger>
             <SelectContent>
-              {field.options?.map((opt) => (
-                <SelectItem key={opt} value={opt} className="text-sm">
-                  {opt}
-                </SelectItem>
-              ))}
+              {renderSelectOptions(field.options)}
             </SelectContent>
           </Select>
         )
