@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 
-const TOTAL_FRAMES = 61
+const TOTAL_FRAMES = 97
 const FRAME_PATH = "/landing/clapperboard-frames/frame-"
 
 export function ClapperboardHero() {
@@ -30,7 +30,6 @@ export function ClapperboardHero() {
                 if (loadedCount === TOTAL_FRAMES) {
                     framesRef.current = images
                     setLoaded(true)
-                    // Draw first frame
                     drawFrame(0)
                 }
             }
@@ -47,7 +46,6 @@ export function ClapperboardHero() {
         const img = framesRef.current[frameIndex]
         if (!img) return
 
-        // Set canvas size to match image aspect ratio
         if (canvas.width !== img.naturalWidth || canvas.height !== img.naturalHeight) {
             canvas.width = img.naturalWidth
             canvas.height = img.naturalHeight
@@ -85,7 +83,7 @@ export function ClapperboardHero() {
         }
 
         window.addEventListener("scroll", handleScroll, { passive: true })
-        handleScroll() // Initial call
+        handleScroll()
 
         return () => {
             window.removeEventListener("scroll", handleScroll)
@@ -93,71 +91,61 @@ export function ClapperboardHero() {
         }
     }, [loaded, drawFrame])
 
-    // Text reveal opacity — fades in during the last 30% of scroll
-    const textOpacity = Math.max(0, Math.min(1, (progress - 0.7) / 0.3))
-    const textTranslate = (1 - textOpacity) * 40
+    // Text fades in as the clapperboard fades to black (last 25% of scroll)
+    const textOpacity = Math.max(0, Math.min(1, (progress - 0.75) / 0.2))
+    const textTranslate = (1 - textOpacity) * 30
 
     return (
         <div
             ref={containerRef}
             className="relative"
-            style={{ height: "300vh" }}
+            style={{ height: "400vh" }}
         >
-            {/* Sticky canvas container */}
+            {/* Sticky canvas container — pure black background */}
             <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden bg-black">
                 {/* Loading state */}
                 {!loaded && (
                     <div className="absolute inset-0 flex items-center justify-center z-20">
                         <div className="flex flex-col items-center gap-4">
                             <div className="w-12 h-12 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
-                            <p className="text-sm text-muted-foreground">Loading experience...</p>
+                            <p className="text-sm text-neutral-500">Loading experience...</p>
                         </div>
                     </div>
                 )}
 
-                {/* Canvas for frame animation */}
+                {/* Canvas for frame animation — fills viewport */}
                 <canvas
                     ref={canvasRef}
-                    className="max-w-full max-h-full object-contain"
+                    className="w-full h-full object-contain"
                     style={{
                         opacity: loaded ? 1 : 0,
                         transition: "opacity 0.5s ease",
                     }}
                 />
 
-                {/* Text overlay — fades in as scroll completes */}
+                {/* Text overlay — appears as clapperboard fades to black */}
                 <div
-                    className="absolute inset-0 flex flex-col items-center justify-end pb-16 md:pb-24 z-10 pointer-events-none"
+                    className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none"
                     style={{
                         opacity: textOpacity,
                         transform: `translateY(${textTranslate}px)`,
                     }}
                 >
-                    {/* Gradient background for text readability */}
-                    <div
-                        className="absolute inset-x-0 bottom-0 h-1/2"
-                        style={{
-                            background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)",
-                            opacity: textOpacity,
-                        }}
-                    />
-
-                    <div className="relative z-10 flex flex-col items-center text-center px-4 pointer-events-auto">
-                        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-4 tracking-tight">
+                    <div className="flex flex-col items-center text-center px-4 pointer-events-auto">
+                        <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-3 tracking-[-0.03em] leading-none">
                             Director&apos;s Palette
                         </h1>
-                        <p className="text-xl md:text-2xl text-amber-400 font-medium mb-8 tracking-wide">
+                        <p className="text-lg md:text-2xl text-amber-400 font-medium mb-6 tracking-widest uppercase">
                             AI Creative Studio
                         </p>
-                        <p className="text-base md:text-lg text-neutral-300 mb-10 max-w-xl leading-relaxed">
+                        <p className="text-base md:text-lg text-neutral-400 mb-10 max-w-lg leading-relaxed">
                             Images, video, music, storyboards, children&apos;s books, and more.
-                            Create complete productions with AI.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4">
                             <Link href="/auth/signin">
                                 <Button
                                     size="lg"
-                                    className="bg-amber-500 text-black hover:bg-amber-400 text-lg px-8 font-semibold shadow-lg shadow-amber-500/20"
+                                    className="bg-amber-500 text-black hover:bg-amber-400 text-lg px-10 py-6 font-semibold shadow-lg shadow-amber-500/25 rounded-xl"
                                 >
                                     Get Started Free
                                     <ArrowRight className="w-5 h-5 ml-2" />
@@ -167,7 +155,7 @@ export function ClapperboardHero() {
                                 <Button
                                     size="lg"
                                     variant="outline"
-                                    className="border-white/20 text-white hover:bg-white/10 text-lg px-8"
+                                    className="border-neutral-700 text-white hover:bg-white/10 text-lg px-10 py-6 rounded-xl"
                                 >
                                     Log In
                                 </Button>
@@ -176,16 +164,15 @@ export function ClapperboardHero() {
                     </div>
                 </div>
 
-                {/* Scroll indicator — visible only at the start */}
+                {/* Scroll indicator — fades out quickly */}
                 <div
                     className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-10"
                     style={{
-                        opacity: Math.max(0, 1 - progress * 5),
-                        transition: "opacity 0.2s ease",
+                        opacity: loaded ? Math.max(0, 1 - progress * 6) : 0,
                     }}
                 >
-                    <span className="text-xs text-neutral-500 uppercase tracking-widest">Scroll to explore</span>
-                    <div className="w-6 h-10 rounded-full border-2 border-neutral-600 flex items-start justify-center p-1.5">
+                    <span className="text-xs text-neutral-600 uppercase tracking-widest">Scroll</span>
+                    <div className="w-6 h-10 rounded-full border-2 border-neutral-700 flex items-start justify-center p-1.5">
                         <div className="w-1.5 h-2.5 rounded-full bg-amber-500 animate-bounce" />
                     </div>
                 </div>
