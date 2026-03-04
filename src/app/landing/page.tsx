@@ -76,7 +76,7 @@ const FEATURES = [
             "Page-flip preview with audio narration support",
         ],
         image: "/banners/storybook-banner.webp",
-        video: null as string | null,
+        video: "/landing/videos/storybook.mp4",
     },
     {
         id: "shot-animator",
