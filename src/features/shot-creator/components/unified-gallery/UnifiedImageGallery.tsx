@@ -523,6 +523,62 @@ CRITICAL RULES:
         }
     }, [toast])
 
+    // Handle sharing an image (generates share link)
+    const [sharingImageId, setSharingImageId] = useState<string | null>(null)
+    const handleShare = useCallback(async (image: GeneratedImage) => {
+        if (sharingImageId) return
+        setSharingImageId(image.id)
+
+        try {
+            // Generate share ID via API
+            const response = await fetch('/api/gallery/share', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ galleryId: image.id })
+            })
+
+            const result = await response.json()
+            if (!response.ok) throw new Error(result.error || 'Failed to create share link')
+
+            const shareUrl = `${window.location.origin}/share/${result.shareId}`
+
+            // Mobile: use native share with image file
+            if (isMobile && navigator.share) {
+                try {
+                    const imgResponse = await fetch(image.url)
+                    const blob = await imgResponse.blob()
+                    const file = new File([blob], `directors-palette-${Date.now()}.jpg`, { type: blob.type })
+
+                    await navigator.share({
+                        files: [file],
+                        title: "Director's Palette",
+                        text: `Created with Director's Palette\n${shareUrl}`,
+                    })
+                    toast({ title: 'Shared', description: 'Image shared successfully' })
+                } catch (shareError) {
+                    // If native share cancelled, fall through to clipboard
+                    if ((shareError as Error).name !== 'AbortError') {
+                        await navigator.clipboard.writeText(shareUrl)
+                        toast({ title: 'Share link copied', description: shareUrl })
+                    }
+                }
+            } else {
+                // Desktop: copy link to clipboard
+                await navigator.clipboard.writeText(shareUrl)
+                toast({ title: 'Share link copied', description: shareUrl })
+            }
+        } catch (error) {
+            logger.shotCreator.error('Share error', { error: error instanceof Error ? error.message : String(error) })
+            toast({
+                title: 'Share Failed',
+                description: error instanceof Error ? error.message : 'An error occurred',
+                variant: 'destructive'
+            })
+        } finally {
+            setSharingImageId(null)
+        }
+    }, [sharingImageId, isMobile, toast])
+
     // Handle retry for failed generations
     // Copies the prompt to clipboard and removes the failed entry
     const handleRetryGeneration = useCallback(async (image: GeneratedImage) => {
@@ -855,6 +911,7 @@ CRITICAL RULES:
                                                 useNativeAspectRatio={useNativeAspectRatio}
                                                 gridSize={gridSize}
                                                 onRetry={() => handleRetryGeneration(image)}
+                                                onShare={() => handleShare(image)}
                                             />
                                         ))}
                                     </div>
@@ -957,6 +1014,7 @@ CRITICAL RULES:
                             isGeneratingCinematic={generatingCinematicId === fullscreenImage.id}
                             onGenerateBRollGrid={() => handleGenerateBRollGrid(fullscreenImage)}
                             isGeneratingBRoll={generatingBRollId === fullscreenImage.id}
+                            onShare={() => handleShare(fullscreenImage)}
                             showReferenceNamePrompt={showReferenceNamePrompt}
                         />
                     )}

@@ -107,6 +107,7 @@ export type Database = {
           mime_type: string | null
           prediction_id: string
           public_url: string | null
+          share_id: string | null
           status: Database["public"]["Enums"]["status"]
           storage_path: string | null
           updated_at: string
@@ -123,6 +124,7 @@ export type Database = {
           mime_type?: string | null
           prediction_id: string
           public_url?: string | null
+          share_id?: string | null
           status?: Database["public"]["Enums"]["status"]
           storage_path?: string | null
           updated_at?: string
@@ -139,6 +141,7 @@ export type Database = {
           mime_type?: string | null
           prediction_id?: string
           public_url?: string | null
+          share_id?: string | null
           status?: Database["public"]["Enums"]["status"]
           storage_path?: string | null
           updated_at?: string

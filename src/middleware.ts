@@ -10,6 +10,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
+  // Skip authentication for public share pages
+  if (request.nextUrl.pathname.startsWith('/share')) {
+    return NextResponse.next({ request });
+  }
+
   // Skip authentication for webhook endpoints
   if (request.nextUrl.pathname.startsWith('/api/webhooks/')) {
     return NextResponse.next({ request });

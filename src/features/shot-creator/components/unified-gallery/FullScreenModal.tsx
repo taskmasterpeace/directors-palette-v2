@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import Image from 'next/image'
-import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, Eraser, Clapperboard, Layers } from 'lucide-react'
+import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, Eraser, Clapperboard, Layers, Share2 } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 import { GeneratedImage } from "../../store/unified-gallery-store"
 import { useIsMobile } from '@/hooks/useMediaQuery'
@@ -30,6 +30,7 @@ interface FullscreenModalProps {
     isGeneratingCinematic?: boolean
     onGenerateBRollGrid?: () => void
     isGeneratingBRoll?: boolean
+    onShare?: () => void
     showReferenceNamePrompt: (defaultValue?: string) => Promise<string | null>
 }
 
@@ -53,6 +54,7 @@ function FullscreenModal({
     isGeneratingCinematic,
     onGenerateBRollGrid,
     isGeneratingBRoll,
+    onShare,
     showReferenceNamePrompt
 }: FullscreenModalProps) {
     const { toast } = useToast()
@@ -335,6 +337,19 @@ function FullscreenModal({
                                     <Download className="w-3.5 h-3.5 mr-1" />
                                     Download
                                 </Button>
+
+                                {onShare && (
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="flex-1 text-white border-border"
+                                        onClick={onShare}
+                                        title="Share Image"
+                                    >
+                                        <Share2 className="w-3.5 h-3.5 mr-1" />
+                                        Share
+                                    </Button>
+                                )}
                             </div>
 
                             {/* Secondary actions */}

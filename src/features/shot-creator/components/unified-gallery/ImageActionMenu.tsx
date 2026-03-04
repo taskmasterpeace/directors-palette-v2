@@ -32,6 +32,7 @@ import {
   Send,
   ImageIcon,
   Eraser,
+  Share2,
 } from 'lucide-react'
 import type { FolderWithCount } from '../../types/folder.types'
 import { MobileImageActionSheet } from './MobileImageActionSheet'
@@ -55,6 +56,7 @@ interface ImageActionMenuProps {
   onMoveToFolder?: (folderId: string | null) => void
   onRemoveBackground?: () => void
   isRemovingBackground?: boolean
+  onShare?: () => void
   dropdownOpen: boolean
   onDropdownChange: (open: boolean) => void
 }
@@ -82,6 +84,7 @@ export function ImageActionMenu({
   onMoveToFolder,
   onRemoveBackground,
   isRemovingBackground,
+  onShare,
   dropdownOpen,
   onDropdownChange
 }: ImageActionMenuProps) {
@@ -124,6 +127,7 @@ export function ImageActionMenu({
         onMoveToFolder={onMoveToFolder}
         onRemoveBackground={onRemoveBackground}
         isRemovingBackground={isRemovingBackground}
+        onShare={onShare}
       />
 
       {/* Desktop: Dropdown with nested submenus */}
@@ -244,6 +248,17 @@ export function ImageActionMenu({
             <Download className="mr-2 h-4 w-4" />
             Download
           </DropdownMenuItem>
+
+          {/* Share */}
+          {onShare && (
+            <DropdownMenuItem
+              onClick={onShare}
+              className="hover:bg-secondary cursor-pointer"
+            >
+              <Share2 className="mr-2 h-4 w-4" />
+              Share
+            </DropdownMenuItem>
+          )}
 
           {/* Remove Background */}
           {onRemoveBackground && (

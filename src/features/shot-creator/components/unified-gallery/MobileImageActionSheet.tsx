@@ -24,6 +24,7 @@ import {
   ImageIcon,
   Copy,
   Eraser,
+  Share2,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import type { FolderWithCount } from '../../types/folder.types'
@@ -49,6 +50,7 @@ interface MobileImageActionSheetProps {
   onMoveToFolder?: (folderId: string | null) => void
   onRemoveBackground?: () => void
   isRemovingBackground?: boolean
+  onShare?: () => void
 }
 
 export function MobileImageActionSheet({
@@ -70,6 +72,7 @@ export function MobileImageActionSheet({
   onMoveToFolder,
   onRemoveBackground,
   isRemovingBackground,
+  onShare,
 }: MobileImageActionSheetProps) {
   const [currentView, setCurrentView] = useState<MenuView>('main')
 
@@ -162,6 +165,15 @@ export function MobileImageActionSheet({
                     label="Download"
                     onClick={() => handleAction(onDownload)}
                   />
+
+                  {/* Share */}
+                  {onShare && (
+                    <MenuButton
+                      icon={<Share2 className="h-5 w-5" />}
+                      label="Share"
+                      onClick={() => handleAction(onShare)}
+                    />
+                  )}
 
                   {/* Remove Background */}
                   {onRemoveBackground && (
