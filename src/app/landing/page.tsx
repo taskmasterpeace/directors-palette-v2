@@ -184,6 +184,13 @@ export default function LandingPage() {
                             className="h-12 md:h-14 w-auto object-contain invert opacity-70 hover:opacity-100 transition-opacity"
                         />
                         <Image
+                            src="/landing/logos/lognog.png"
+                            alt="LogNog"
+                            width={160}
+                            height={60}
+                            className="h-12 md:h-14 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity"
+                        />
+                        <Image
                             src="/landing/logos/myfieldtime.png"
                             alt="MyFieldTime"
                             width={160}
