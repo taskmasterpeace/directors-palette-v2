@@ -138,15 +138,15 @@ export function ClapperboardHero() {
 
     // Text appears after the clapperboard fades to black
     // Video hits black around frame 90 of 97 (~93% progress)
-    // Text starts at 78% so it's ready as soon as black settles
-    const textOpacity = Math.max(0, Math.min(1, (progress - 0.78) / 0.06))
+    // Text starts at 75% (~3 frames sooner)
+    const textOpacity = Math.max(0, Math.min(1, (progress - 0.75) / 0.06))
 
     // Staggered reveal — tight sequence, no dead scrolling
-    const titleOpacity = Math.max(0, Math.min(1, (progress - 0.78) / 0.05))
-    const subtitleOpacity = Math.max(0, Math.min(1, (progress - 0.80) / 0.05))
-    const descOpacity = Math.max(0, Math.min(1, (progress - 0.82) / 0.05))
-    const ctaOpacity = Math.max(0, Math.min(1, (progress - 0.84) / 0.05))
-    const proofOpacity = Math.max(0, Math.min(1, (progress - 0.86) / 0.04))
+    const titleOpacity = Math.max(0, Math.min(1, (progress - 0.75) / 0.05))
+    const subtitleOpacity = Math.max(0, Math.min(1, (progress - 0.77) / 0.05))
+    const descOpacity = Math.max(0, Math.min(1, (progress - 0.79) / 0.05))
+    const ctaOpacity = Math.max(0, Math.min(1, (progress - 0.81) / 0.05))
+    const proofOpacity = Math.max(0, Math.min(1, (progress - 0.83) / 0.04))
 
     return (
         <>
