@@ -9,7 +9,7 @@ import { DragDropPrevention } from "@/components/DragDropPrevention"
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://directorspalette.com'),
+  metadataBase: new URL('https://directorspal.com'),
   title: "Director's Palette — AI Creative Studio",
   description: "The AI creative studio for images, video, music, storyboards, children's books, and more. Create consistent characters, stunning scenes, and complete productions with AI.",
   generator: "Director's Palette",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Director's Palette — AI Creative Studio",
     description: 'The AI creative studio for images, video, music, storyboards, and more. Turn ideas into complete creative productions.',
-    url: 'https://directorspalette.com',
+    url: 'https://directorspal.com',
     siteName: "Director's Palette",
     images: [
       {

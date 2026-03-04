@@ -125,7 +125,7 @@ export function SharePageClient({ publicUrl, prompt, model, source, createdAt }:
             className="text-white/30 text-sm hover:text-white/50 transition-colors"
             style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
-            directorspalette.com
+            directorspal.com
           </Link>
         </div>
       </footer>

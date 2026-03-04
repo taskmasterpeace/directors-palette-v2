@@ -105,7 +105,7 @@ export default async function OGImage({ params }: { params: Promise<{ shareId: s
               color: 'rgba(255,255,255,0.4)',
             }}
           >
-            directorspalette.com
+            directorspal.com
           </span>
         </div>
       </div>
