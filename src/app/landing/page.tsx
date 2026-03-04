@@ -168,43 +168,44 @@ export default function LandingPage() {
                     <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-neutral-950 to-transparent z-10" />
                     <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-neutral-950 to-transparent z-10" />
 
-                    <div className="flex animate-marquee">
+                    <div className="flex animate-marquee will-change-transform">
                         {/* Two copies for seamless loop */}
                         {[0, 1].map((copy) => (
-                            <div key={copy} className="flex items-center gap-12 md:gap-20 shrink-0 px-6 md:px-10">
+                            <div key={copy} className="flex items-center gap-16 md:gap-24 shrink-0 px-8 md:px-12">
                                 <Image
                                     src="/landing/logos/aiobr.png"
                                     alt="Algorithm Institute of Battle Rap"
-                                    width={160}
-                                    height={60}
-                                    className="h-12 md:h-14 w-auto object-contain brightness-90 opacity-80"
+                                    width={200}
+                                    height={80}
+                                    className="h-16 md:h-20 w-auto object-contain brightness-90 opacity-80"
                                 />
-                                <span
-                                    className="text-base md:text-lg text-neutral-500 font-semibold whitespace-nowrap"
-                                    style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.02em" }}
-                                >
-                                    Hood History Club
-                                </span>
+                                <Image
+                                    src="/landing/logos/hood-history-club.jpg"
+                                    alt="Hood History Club"
+                                    width={200}
+                                    height={80}
+                                    className="h-16 md:h-20 w-auto object-contain rounded-lg opacity-80"
+                                />
                                 <Image
                                     src="/landing/logos/machine-king-labs.png"
                                     alt="Machine King Labs"
-                                    width={160}
-                                    height={60}
-                                    className="h-12 md:h-14 w-auto object-contain invert opacity-70"
+                                    width={200}
+                                    height={80}
+                                    className="h-16 md:h-20 w-auto object-contain invert opacity-70"
                                 />
                                 <Image
                                     src="/landing/logos/lognog.png"
                                     alt="LogNog"
-                                    width={160}
-                                    height={60}
-                                    className="h-12 md:h-14 w-auto object-contain opacity-80"
+                                    width={200}
+                                    height={80}
+                                    className="h-16 md:h-20 w-auto object-contain opacity-80"
                                 />
                                 <Image
                                     src="/landing/logos/myfieldtime.png"
                                     alt="MyFieldTime"
-                                    width={160}
-                                    height={60}
-                                    className="h-10 md:h-12 w-auto object-contain brightness-90 opacity-80"
+                                    width={200}
+                                    height={80}
+                                    className="h-14 md:h-16 w-auto object-contain brightness-90 opacity-80"
                                 />
                             </div>
                         ))}
@@ -213,11 +214,13 @@ export default function LandingPage() {
 
                 <style jsx>{`
                     @keyframes marquee {
-                        0% { transform: translateX(0); }
-                        100% { transform: translateX(-50%); }
+                        0% { transform: translate3d(0, 0, 0); }
+                        100% { transform: translate3d(-50%, 0, 0); }
                     }
                     .animate-marquee {
-                        animation: marquee 20s linear infinite;
+                        animation: marquee 25s linear infinite;
+                        backface-visibility: hidden;
+                        perspective: 1000px;
                     }
                     .animate-marquee:hover {
                         animation-play-state: paused;
