@@ -162,22 +162,34 @@ export default function LandingPage() {
                     >
                         Trusted by creators &amp; organizations
                     </p>
-                    <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 md:gap-x-14">
-                        {[
-                            "Algorithm Institute of Battle Rap",
-                            "Hood History Club",
-                            "Urban Arts Collective",
-                            "The Cypher Room",
-                            "Culture Vault Media",
-                        ].map((name) => (
-                            <span
-                                key={name}
-                                className="text-sm md:text-base text-neutral-500 font-medium whitespace-nowrap"
-                                style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.02em" }}
-                            >
-                                {name}
-                            </span>
-                        ))}
+                    <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 md:gap-x-16">
+                        <Image
+                            src="/landing/logos/aiobr.png"
+                            alt="Algorithm Institute of Battle Rap"
+                            width={160}
+                            height={60}
+                            className="h-12 md:h-14 w-auto object-contain brightness-90 opacity-80 hover:opacity-100 transition-opacity"
+                        />
+                        <span
+                            className="text-base md:text-lg text-neutral-500 font-semibold whitespace-nowrap hover:text-neutral-300 transition-colors"
+                            style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.02em" }}
+                        >
+                            Hood History Club
+                        </span>
+                        <Image
+                            src="/landing/logos/machine-king-labs.png"
+                            alt="Machine King Labs"
+                            width={160}
+                            height={60}
+                            className="h-12 md:h-14 w-auto object-contain invert opacity-70 hover:opacity-100 transition-opacity"
+                        />
+                        <Image
+                            src="/landing/logos/myfieldtime.png"
+                            alt="MyFieldTime"
+                            width={160}
+                            height={60}
+                            className="h-10 md:h-12 w-auto object-contain brightness-90 opacity-80 hover:opacity-100 transition-opacity"
+                        />
                     </div>
                 </div>
             </section>
