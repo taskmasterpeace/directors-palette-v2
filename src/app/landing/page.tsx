@@ -109,7 +109,7 @@ const FEATURES: {
             "Export MP4 for social media or presentations",
         ],
         image: "/banners/shot-animator-banner.webp",
-        frames: null,
+        frames: { path: "/landing/frames/shot-animator/frame-", total: 145 },
     },
 ]
 
