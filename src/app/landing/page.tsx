@@ -174,11 +174,12 @@ export default function LandingPage() {
                 const bgClass = index % 2 === 0
                     ? "bg-neutral-950"
                     : "bg-gradient-to-b from-black to-neutral-950"
+                const hasFrames = !!feature.frames
 
                 return (
                     <section
                         key={feature.id}
-                        className={`py-20 md:py-28 ${bgClass} relative overflow-hidden`}
+                        className={`${hasFrames ? "py-16 md:py-20" : "py-20 md:py-28"} ${bgClass} relative overflow-hidden`}
                     >
                         {/* Subtle ambient glow */}
                         <div
@@ -190,18 +191,81 @@ export default function LandingPage() {
                         />
 
                         <div className="container mx-auto px-4 relative z-10">
-                            <div className={`flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-10 md:gap-16 max-w-6xl mx-auto`}>
-                                {/* Visual side */}
-                                <div className="w-full md:w-1/2">
-                                    <div className="relative rounded-xl overflow-hidden border border-neutral-800 shadow-2xl shadow-black/50 group">
-                                        {feature.frames ? (
-                                            <ScrollVideo
-                                                framePath={feature.frames.path}
-                                                totalFrames={feature.frames.total}
-                                                ext={feature.frames.ext || "jpg"}
-                                                className="aspect-video"
-                                            />
-                                        ) : (
+                            {hasFrames ? (
+                                /* ── Wide immersive layout for scroll-driven flipbooks ── */
+                                <div className="max-w-6xl mx-auto">
+                                    {/* Header row */}
+                                    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
+                                                    {feature.icon}
+                                                </div>
+                                                <span
+                                                    className="text-xs text-amber-400 font-medium uppercase"
+                                                    style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.2em" }}
+                                                >
+                                                    {feature.title}
+                                                </span>
+                                            </div>
+                                            <h3
+                                                className="text-3xl md:text-4xl lg:text-5xl text-white leading-tight"
+                                                style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.03em" }}
+                                            >
+                                                {feature.headline}
+                                            </h3>
+                                        </div>
+                                        <p
+                                            className="text-neutral-400 text-base md:text-lg leading-relaxed max-w-lg"
+                                            style={{ fontFamily: "'DM Sans', sans-serif" }}
+                                        >
+                                            {feature.description}
+                                        </p>
+                                    </div>
+
+                                    {/* Full-width flipbook */}
+                                    <div className="relative rounded-xl overflow-hidden border border-neutral-800 shadow-2xl shadow-black/50">
+                                        <ScrollVideo
+                                            framePath={feature.frames!.path}
+                                            totalFrames={feature.frames!.total}
+                                            ext={feature.frames!.ext || "jpg"}
+                                            className="aspect-[21/9] md:aspect-[2.2/1]"
+                                        />
+                                        <div className="absolute inset-0 pointer-events-none rounded-xl" style={{ boxShadow: "inset 0 0 80px rgba(0,0,0,0.4)" }} />
+                                    </div>
+
+                                    {/* Bullets + CTA below */}
+                                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mt-8">
+                                        <ul className="flex flex-col md:flex-row gap-3 md:gap-6">
+                                            {feature.bullets.map((bullet) => (
+                                                <li key={bullet} className="flex items-center gap-2">
+                                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                                                    <span
+                                                        className="text-sm text-neutral-300"
+                                                        style={{ fontFamily: "'DM Sans', sans-serif" }}
+                                                    >
+                                                        {bullet}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <Link href="/auth/signin" className="flex-shrink-0">
+                                            <Button
+                                                className="bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 rounded-lg px-6 transition-all duration-300"
+                                                style={{ fontFamily: "'DM Sans', sans-serif" }}
+                                            >
+                                                Try It Free
+                                                <ArrowRight className="w-4 h-4 ml-2" />
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* ── Split layout for static images ── */
+                                <div className={`flex flex-col ${isEven ? "md:flex-row" : "md:flex-row-reverse"} items-center gap-10 md:gap-16 max-w-6xl mx-auto`}>
+                                    {/* Visual side */}
+                                    <div className="w-full md:w-1/2">
+                                        <div className="relative rounded-xl overflow-hidden border border-neutral-800 shadow-2xl shadow-black/50 group">
                                             <Image
                                                 src={feature.image}
                                                 alt={feature.title}
@@ -209,70 +273,64 @@ export default function LandingPage() {
                                                 height={450}
                                                 className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-700"
                                             />
-                                        )}
-                                        {/* Vignette */}
-                                        <div className="absolute inset-0 pointer-events-none rounded-xl" style={{ boxShadow: "inset 0 0 80px rgba(0,0,0,0.4)" }} />
-                                    </div>
-                                </div>
-
-                                {/* Text side */}
-                                <div className="w-full md:w-1/2">
-                                    {/* Feature label */}
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
-                                            {feature.icon}
+                                            <div className="absolute inset-0 pointer-events-none rounded-xl" style={{ boxShadow: "inset 0 0 80px rgba(0,0,0,0.4)" }} />
                                         </div>
-                                        <span
-                                            className="text-xs text-amber-400 font-medium uppercase"
-                                            style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.2em" }}
-                                        >
-                                            {feature.title}
-                                        </span>
                                     </div>
 
-                                    {/* Headline */}
-                                    <h3
-                                        className="text-3xl md:text-4xl lg:text-5xl text-white mb-4 leading-tight"
-                                        style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.03em" }}
-                                    >
-                                        {feature.headline}
-                                    </h3>
+                                    {/* Text side */}
+                                    <div className="w-full md:w-1/2">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
+                                                {feature.icon}
+                                            </div>
+                                            <span
+                                                className="text-xs text-amber-400 font-medium uppercase"
+                                                style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.2em" }}
+                                            >
+                                                {feature.title}
+                                            </span>
+                                        </div>
 
-                                    {/* Description */}
-                                    <p
-                                        className="text-neutral-400 text-base md:text-lg leading-relaxed mb-6"
-                                        style={{ fontFamily: "'DM Sans', sans-serif" }}
-                                    >
-                                        {feature.description}
-                                    </p>
+                                        <h3
+                                            className="text-3xl md:text-4xl lg:text-5xl text-white mb-4 leading-tight"
+                                            style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.03em" }}
+                                        >
+                                            {feature.headline}
+                                        </h3>
 
-                                    {/* Bullets */}
-                                    <ul className="space-y-2.5 mb-8">
-                                        {feature.bullets.map((bullet) => (
-                                            <li key={bullet} className="flex items-start gap-2.5">
-                                                <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                                                <span
-                                                    className="text-sm text-neutral-300"
-                                                    style={{ fontFamily: "'DM Sans', sans-serif" }}
-                                                >
-                                                    {bullet}
-                                                </span>
-                                            </li>
-                                        ))}
-                                    </ul>
-
-                                    {/* CTA */}
-                                    <Link href="/auth/signin">
-                                        <Button
-                                            className="bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 rounded-lg px-6 transition-all duration-300"
+                                        <p
+                                            className="text-neutral-400 text-base md:text-lg leading-relaxed mb-6"
                                             style={{ fontFamily: "'DM Sans', sans-serif" }}
                                         >
-                                            Try It Free
-                                            <ArrowRight className="w-4 h-4 ml-2" />
-                                        </Button>
-                                    </Link>
+                                            {feature.description}
+                                        </p>
+
+                                        <ul className="space-y-2.5 mb-8">
+                                            {feature.bullets.map((bullet) => (
+                                                <li key={bullet} className="flex items-start gap-2.5">
+                                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                                                    <span
+                                                        className="text-sm text-neutral-300"
+                                                        style={{ fontFamily: "'DM Sans', sans-serif" }}
+                                                    >
+                                                        {bullet}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ul>
+
+                                        <Link href="/auth/signin">
+                                            <Button
+                                                className="bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 rounded-lg px-6 transition-all duration-300"
+                                                style={{ fontFamily: "'DM Sans', sans-serif" }}
+                                            >
+                                                Try It Free
+                                                <ArrowRight className="w-4 h-4 ml-2" />
+                                            </Button>
+                                        </Link>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </section>
                 )
