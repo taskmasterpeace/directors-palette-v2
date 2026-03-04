@@ -153,52 +153,76 @@ export default function LandingPage() {
             {/* ── Hero ───────────────────────────────────────── */}
             <ClapperboardHero />
 
-            {/* ── Trusted By ──────────────────────────────────── */}
-            <section className="py-10 md:py-14 bg-neutral-950 border-y border-neutral-800/30">
-                <div className="container mx-auto px-4">
-                    <p
-                        className="text-center text-xs text-neutral-600 uppercase tracking-[0.3em] mb-6 md:mb-8"
-                        style={{ fontFamily: "'DM Sans', sans-serif" }}
-                    >
-                        Trusted by creators &amp; organizations
-                    </p>
-                    <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 md:gap-x-16">
-                        <Image
-                            src="/landing/logos/aiobr.png"
-                            alt="Algorithm Institute of Battle Rap"
-                            width={160}
-                            height={60}
-                            className="h-12 md:h-14 w-auto object-contain brightness-90 opacity-80 hover:opacity-100 transition-opacity"
-                        />
-                        <span
-                            className="text-base md:text-lg text-neutral-500 font-semibold whitespace-nowrap hover:text-neutral-300 transition-colors"
-                            style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.02em" }}
-                        >
-                            Hood History Club
-                        </span>
-                        <Image
-                            src="/landing/logos/machine-king-labs.png"
-                            alt="Machine King Labs"
-                            width={160}
-                            height={60}
-                            className="h-12 md:h-14 w-auto object-contain invert opacity-70 hover:opacity-100 transition-opacity"
-                        />
-                        <Image
-                            src="/landing/logos/lognog.png"
-                            alt="LogNog"
-                            width={160}
-                            height={60}
-                            className="h-12 md:h-14 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity"
-                        />
-                        <Image
-                            src="/landing/logos/myfieldtime.png"
-                            alt="MyFieldTime"
-                            width={160}
-                            height={60}
-                            className="h-10 md:h-12 w-auto object-contain brightness-90 opacity-80 hover:opacity-100 transition-opacity"
-                        />
+            {/* ── Trusted By — infinite scroll marquee ────────── */}
+            <section className="py-10 md:py-14 bg-neutral-950 border-y border-neutral-800/30 overflow-hidden">
+                <p
+                    className="text-center text-xs text-neutral-600 uppercase tracking-[0.3em] mb-6 md:mb-8"
+                    style={{ fontFamily: "'DM Sans', sans-serif" }}
+                >
+                    Trusted by creators &amp; organizations
+                </p>
+
+                {/* Marquee wrapper */}
+                <div className="relative">
+                    {/* Fade edges */}
+                    <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-neutral-950 to-transparent z-10" />
+                    <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-neutral-950 to-transparent z-10" />
+
+                    <div className="flex animate-marquee">
+                        {/* Two copies for seamless loop */}
+                        {[0, 1].map((copy) => (
+                            <div key={copy} className="flex items-center gap-12 md:gap-20 shrink-0 px-6 md:px-10">
+                                <Image
+                                    src="/landing/logos/aiobr.png"
+                                    alt="Algorithm Institute of Battle Rap"
+                                    width={160}
+                                    height={60}
+                                    className="h-12 md:h-14 w-auto object-contain brightness-90 opacity-80"
+                                />
+                                <span
+                                    className="text-base md:text-lg text-neutral-500 font-semibold whitespace-nowrap"
+                                    style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.02em" }}
+                                >
+                                    Hood History Club
+                                </span>
+                                <Image
+                                    src="/landing/logos/machine-king-labs.png"
+                                    alt="Machine King Labs"
+                                    width={160}
+                                    height={60}
+                                    className="h-12 md:h-14 w-auto object-contain invert opacity-70"
+                                />
+                                <Image
+                                    src="/landing/logos/lognog.png"
+                                    alt="LogNog"
+                                    width={160}
+                                    height={60}
+                                    className="h-12 md:h-14 w-auto object-contain opacity-80"
+                                />
+                                <Image
+                                    src="/landing/logos/myfieldtime.png"
+                                    alt="MyFieldTime"
+                                    width={160}
+                                    height={60}
+                                    className="h-10 md:h-12 w-auto object-contain brightness-90 opacity-80"
+                                />
+                            </div>
+                        ))}
                     </div>
                 </div>
+
+                <style jsx>{`
+                    @keyframes marquee {
+                        0% { transform: translateX(0); }
+                        100% { transform: translateX(-50%); }
+                    }
+                    .animate-marquee {
+                        animation: marquee 20s linear infinite;
+                    }
+                    .animate-marquee:hover {
+                        animation-play-state: paused;
+                    }
+                `}</style>
             </section>
 
             {/* ── Feature Sections (alternating split) ───────── */}
