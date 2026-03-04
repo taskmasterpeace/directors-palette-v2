@@ -10,6 +10,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
+  // Skip authentication for OG image generation routes
+  if (request.nextUrl.pathname === '/opengraph-image' || request.nextUrl.pathname === '/twitter-image') {
+    return NextResponse.next({ request });
+  }
+
   // Skip authentication for webhook endpoints
   if (request.nextUrl.pathname.startsWith('/api/webhooks/')) {
     return NextResponse.next({ request });

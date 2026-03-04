@@ -9,6 +9,7 @@ import { DragDropPrevention } from "@/components/DragDropPrevention"
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://directorspalette.com'),
   title: "Director's Palette — AI Creative Studio",
   description: "The AI creative studio for images, video, music, storyboards, children's books, and more. Create consistent characters, stunning scenes, and complete productions with AI.",
   generator: "Director's Palette",
@@ -26,14 +27,6 @@ export const metadata: Metadata = {
     description: 'The AI creative studio for images, video, music, storyboards, and more. Turn ideas into complete creative productions.',
     url: 'https://directorspalette.com',
     siteName: "Director's Palette",
-    images: [
-      {
-        url: '/landing/app-results-1.png',
-        width: 1920,
-        height: 1080,
-        alt: "Director's Palette — AI Creative Studio",
-      },
-    ],
     locale: 'en_US',
     type: 'website',
   },
@@ -41,7 +34,6 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: "Director's Palette — AI Creative Studio",
     description: 'The AI creative studio for images, video, music, storyboards, and more. Turn ideas into complete creative productions.',
-    images: ['/landing/app-results-1.png'],
     creator: '@machinekinglabs',
   },
   robots: {
