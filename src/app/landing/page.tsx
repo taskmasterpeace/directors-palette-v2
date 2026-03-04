@@ -179,7 +179,7 @@ export default function LandingPage() {
                 return (
                     <section
                         key={feature.id}
-                        className={`${hasFrames ? "py-16 md:py-20" : "py-20 md:py-28"} ${bgClass} relative overflow-hidden`}
+                        className={`${hasFrames ? "py-10 md:py-20" : "py-12 md:py-28"} ${bgClass} relative overflow-hidden`}
                     >
                         {/* Subtle ambient glow */}
                         <div
@@ -195,7 +195,7 @@ export default function LandingPage() {
                                 /* ── Wide immersive layout for scroll-driven flipbooks ── */
                                 <div className="max-w-6xl mx-auto">
                                     {/* Header row */}
-                                    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
+                                    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 md:gap-4 mb-5 md:mb-8">
                                         <div>
                                             <div className="flex items-center gap-2 mb-3">
                                                 <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
@@ -223,19 +223,19 @@ export default function LandingPage() {
                                         </p>
                                     </div>
 
-                                    {/* Full-width flipbook */}
+                                    {/* Full-width flipbook — taller on mobile for impact */}
                                     <div className="relative rounded-xl overflow-hidden border border-neutral-800 shadow-2xl shadow-black/50">
                                         <ScrollVideo
                                             framePath={feature.frames!.path}
                                             totalFrames={feature.frames!.total}
                                             ext={feature.frames!.ext || "jpg"}
-                                            className="aspect-[21/9] md:aspect-[2.2/1]"
+                                            className="aspect-[4/3] sm:aspect-video md:aspect-[2.2/1]"
                                         />
                                         <div className="absolute inset-0 pointer-events-none rounded-xl" style={{ boxShadow: "inset 0 0 80px rgba(0,0,0,0.4)" }} />
                                     </div>
 
                                     {/* Bullets + CTA below */}
-                                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mt-8">
+                                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6 mt-5 md:mt-8">
                                         <ul className="flex flex-col md:flex-row gap-3 md:gap-6">
                                             {feature.bullets.map((bullet) => (
                                                 <li key={bullet} className="flex items-center gap-2">
@@ -337,8 +337,8 @@ export default function LandingPage() {
             })}
 
             {/* ── Prompt Visualizer (compact) ────────────────── */}
-            <section className="py-20 bg-black relative overflow-hidden">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[1px] bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
+            <section className="py-12 md:py-20 bg-black relative overflow-hidden">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] md:w-[600px] h-[1px] bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
 
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-10">
@@ -367,9 +367,9 @@ export default function LandingPage() {
             </section>
 
             {/* ── Pricing ────────────────────────────────────── */}
-            <section className="py-24 bg-neutral-950">
+            <section className="py-16 md:py-24 bg-neutral-950">
                 <div className="container mx-auto px-4">
-                    <div className="text-center mb-16">
+                    <div className="text-center mb-10 md:mb-16">
                         <h3
                             className="text-3xl md:text-5xl text-white mb-4"
                             style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.04em" }}
@@ -384,7 +384,7 @@ export default function LandingPage() {
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-5xl mx-auto">
                         {[
                             { name: "Starter", price: "$5.99", credits: "500 credits", images: "~25 images", popular: false },
                             { name: "Creator", price: "$11.99", credits: "1,000 credits", images: "~50 images", popular: true },
@@ -412,7 +412,7 @@ export default function LandingPage() {
             </section>
 
             {/* ── Final CTA ──────────────────────────────────── */}
-            <section className="py-24 bg-black relative overflow-hidden">
+            <section className="py-16 md:py-24 bg-black relative overflow-hidden">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-amber-500/5 rounded-full blur-3xl" />
 
                 <div className="container mx-auto px-4 text-center relative z-10">

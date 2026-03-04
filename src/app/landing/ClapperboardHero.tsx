@@ -158,8 +158,7 @@ export function ClapperboardHero() {
 
             <div
                 ref={containerRef}
-                className="relative"
-                style={{ height: "250vh" }}
+                className="relative h-[180vh] sm:h-[220vh] md:h-[250vh]"
             >
                 {/* Sticky viewport — pure black */}
                 <div className="sticky top-0 h-screen w-full overflow-hidden bg-black">
@@ -197,7 +196,7 @@ export function ClapperboardHero() {
                                     transition: "transform 0.1s ease-out",
                                     letterSpacing: "0.08em",
                                 }}
-                                className="text-6xl md:text-8xl lg:text-9xl font-normal text-white leading-none mb-2"
+                                className="text-[2.75rem] sm:text-6xl md:text-8xl lg:text-9xl font-normal text-white leading-none mb-2"
                             >
                                 DIRECTOR&apos;S PALETTE
                             </h1>
@@ -220,7 +219,7 @@ export function ClapperboardHero() {
                                     transform: `translateY(${(1 - subtitleOpacity) * 15}px)`,
                                     letterSpacing: "0.35em",
                                 }}
-                                className="text-sm md:text-base text-amber-400 font-medium uppercase mb-8"
+                                className="text-xs sm:text-sm md:text-base text-amber-400 font-medium uppercase mb-6 sm:mb-8"
                             >
                                 AI Creative Studio
                             </p>
@@ -232,14 +231,14 @@ export function ClapperboardHero() {
                                     opacity: descOpacity,
                                     transform: `translateY(${(1 - descOpacity) * 15}px)`,
                                 }}
-                                className="text-base md:text-lg text-neutral-400 mb-10 max-w-md leading-relaxed font-normal"
+                                className="text-sm sm:text-base md:text-lg text-neutral-400 mb-8 sm:mb-10 max-w-md leading-relaxed font-normal"
                             >
                                 One prompt. Infinite possibilities. Create images, video, music, storyboards, and children&apos;s books with cinematic AI.
                             </p>
 
                             {/* CTAs */}
                             <div
-                                className="flex flex-col sm:flex-row gap-4 mb-8"
+                                className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8 w-full sm:w-auto"
                                 style={{
                                     opacity: ctaOpacity,
                                     transform: `translateY(${(1 - ctaOpacity) * 15}px)`,
@@ -248,7 +247,7 @@ export function ClapperboardHero() {
                                 <Link href="/auth/signin">
                                     <Button
                                         size="lg"
-                                        className="bg-amber-500 text-black hover:bg-amber-400 text-base px-10 py-6 font-semibold rounded-xl shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)] transition-all duration-300"
+                                        className="bg-amber-500 text-black hover:bg-amber-400 text-sm sm:text-base px-8 sm:px-10 py-5 sm:py-6 font-semibold rounded-xl shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)] transition-all duration-300 w-full sm:w-auto"
                                         style={{ fontFamily: "'DM Sans', sans-serif" }}
                                     >
                                         Start Creating
@@ -259,7 +258,7 @@ export function ClapperboardHero() {
                                     <Button
                                         size="lg"
                                         variant="outline"
-                                        className="border-neutral-700 text-neutral-300 hover:text-white hover:bg-white/5 hover:border-neutral-500 text-base px-10 py-6 rounded-xl transition-all duration-300"
+                                        className="border-neutral-700 text-neutral-300 hover:text-white hover:bg-white/5 hover:border-neutral-500 text-sm sm:text-base px-8 sm:px-10 py-5 sm:py-6 rounded-xl transition-all duration-300 w-full sm:w-auto"
                                         style={{ fontFamily: "'DM Sans', sans-serif" }}
                                     >
                                         Sign In
