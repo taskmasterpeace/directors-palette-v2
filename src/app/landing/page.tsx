@@ -49,7 +49,7 @@ const FEATURES: {
             "Recipe templates with fill-in-the-blank fields",
         ],
         image: "/banners/shot-creator-banner.webp",
-        frames: null,
+        frames: { path: "/landing/frames/shot-creator/frame-", total: 145 },
     },
     {
         id: "storyboard",
@@ -64,7 +64,7 @@ const FEATURES: {
             "Export contact sheets and 9-shot cinematic grids",
         ],
         image: "/banners/storyboard-banner.webp",
-        frames: null,
+        frames: { path: "/landing/frames/storyboard/frame-", total: 61 },
     },
     {
         id: "music-lab",
