@@ -79,7 +79,7 @@ const FEATURES: {
             "Chat with your artists in-character for inspiration",
         ],
         image: "/banners/music-lab-banner.webp",
-        frames: null,
+        frames: { path: "/landing/frames/music-lab/frame-", total: 61 },
     },
     {
         id: "storybook",
