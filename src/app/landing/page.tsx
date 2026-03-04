@@ -22,83 +22,13 @@ import {
     Layers,
     Rocket
 } from "lucide-react"
+import { ClapperboardHero } from "./ClapperboardHero"
 
 export default function LandingPage() {
     return (
         <div className="min-h-screen bg-background">
-            {/* Hero Section */}
-            <section className="relative overflow-hidden">
-                {/* Background gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-transparent" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-amber-500/5 rounded-full blur-3xl" />
-
-                <div className="container mx-auto px-4 py-20 relative z-10">
-                    <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
-                        {/* Logo */}
-                        <div className="flex items-center gap-3 mb-8">
-                            <Image
-                                src="/favicon.ico"
-                                alt="Directors Palette"
-                                width={48}
-                                height={48}
-                                className="w-12 h-12"
-                            />
-                            <h1 className="text-3xl font-bold text-white">
-                                Directors Palette
-                            </h1>
-                        </div>
-
-                        {/* Headline */}
-                        <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-                            Turn Stories Into
-                            <span className="text-amber-500"> Visual Art</span>
-                        </h2>
-
-                        <p className="text-xl text-muted-foreground mb-8 max-w-2xl">
-                            AI-powered image and video generation with advanced prompting.
-                            Create consistent characters, stunning scenes, and complete storyboards.
-                        </p>
-
-                        {/* CTA Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-4 mb-12">
-                            <Link href="/auth/signin">
-                                <Button size="lg" className="bg-amber-500 text-black hover:bg-amber-600 text-lg px-8">
-                                    Get Started Free
-                                    <ArrowRight className="w-5 h-5 ml-2" />
-                                </Button>
-                            </Link>
-                            <Link href="/auth/signin">
-                                <Button size="lg" variant="outline" className="border-amber-500/50 text-amber-500 hover:bg-amber-500/10 text-lg px-8">
-                                    Log In
-                                </Button>
-                            </Link>
-                        </div>
-
-                        {/* Social proof */}
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <CheckCircle2 className="w-4 h-4 text-green-500" />
-                            <span>3 free generations to start</span>
-                            <span className="mx-2">•</span>
-                            <span>No credit card required</span>
-                        </div>
-                    </div>
-
-                    {/* Hero App Screenshot */}
-                    <div className="mt-16 max-w-5xl mx-auto">
-                        <div className="relative rounded-xl overflow-hidden border border-amber-500/30 shadow-2xl shadow-amber-500/10">
-                            <Image
-                                src="/landing/app-results-1.png"
-                                alt="Directors Palette - AI Generated Storyboard"
-                                width={1920}
-                                height={1080}
-                                className="w-full h-auto"
-                                priority
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-                        </div>
-                    </div>
-                </div>
-            </section>
+            {/* Hero Section — Scroll-Driven Clapperboard Animation */}
+            <ClapperboardHero />
 
             {/* As Seen At - Credibility Section */}
             <section className="py-12 bg-card/30 border-y border-border/50 overflow-hidden">
