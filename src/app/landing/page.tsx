@@ -37,21 +37,6 @@ const FEATURES: {
     frames: FeatureFrames | null
 }[] = [
     {
-        id: "shot-creator",
-        icon: <Sparkles className="w-5 h-5" />,
-        title: "SHOT CREATOR",
-        headline: "One Prompt. Ten Images.",
-        description:
-            "Write once, generate many. Brackets create variations, pipes chain sequences, wildcards pull from your custom lists. Advanced syntax that feels simple.",
-        bullets: [
-            "Batch generate up to 10 variations in a single prompt",
-            "Wildcard lists for random wardrobe, locations, poses",
-            "Recipe templates with fill-in-the-blank fields",
-        ],
-        image: "/banners/shot-creator-banner.webp",
-        frames: null,
-    },
-    {
         id: "storyboard",
         icon: <Film className="w-5 h-5" />,
         title: "STORYBOARD",
@@ -336,34 +321,80 @@ export default function LandingPage() {
                 )
             })}
 
-            {/* ── Prompt Visualizer (compact) ────────────────── */}
+            {/* ── One Prompt. Ten Images. (Shot Creator + Prompting Language merged) ── */}
             <section className="py-12 md:py-20 bg-black relative overflow-hidden">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] md:w-[600px] h-[1px] bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
 
                 <div className="container mx-auto px-4">
-                    <div className="text-center mb-10">
-                        <h3
-                            className="text-3xl md:text-4xl text-white mb-3"
-                            style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.04em" }}
-                        >
-                            The Prompting Language
-                        </h3>
-                        <p
-                            className="text-neutral-400 max-w-lg mx-auto"
-                            style={{ fontFamily: "'DM Sans', sans-serif" }}
-                        >
-                            Six operators — Batch, Pipe, Anchor, Wildcard, AI, Stack. Master them once, create forever.
-                        </p>
-                    </div>
+                    <div className="max-w-5xl mx-auto">
+                        {/* Header */}
+                        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6 md:mb-10">
+                            <div>
+                                <div className="flex items-center gap-2 mb-3">
+                                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
+                                        <Sparkles className="w-5 h-5" />
+                                    </div>
+                                    <span
+                                        className="text-xs text-amber-400 font-medium uppercase"
+                                        style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.2em" }}
+                                    >
+                                        SHOT CREATOR
+                                    </span>
+                                </div>
+                                <h3
+                                    className="text-3xl md:text-4xl lg:text-5xl text-white leading-tight"
+                                    style={{ fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.03em" }}
+                                >
+                                    One Prompt. Ten Images.
+                                </h3>
+                            </div>
+                            <p
+                                className="text-neutral-400 text-base md:text-lg leading-relaxed max-w-lg"
+                                style={{ fontFamily: "'DM Sans', sans-serif" }}
+                            >
+                                Write once, generate many. Brackets create variations, pipes chain sequences, wildcards pull from your custom lists. Six operators — master them once, create forever.
+                            </p>
+                        </div>
 
-                    <div className="max-w-4xl mx-auto">
-                        <div className="relative rounded-xl overflow-hidden border border-neutral-800 shadow-xl">
-                            <ScrollVideo
-                                framePath="/landing/frames/shot-creator/frame-"
-                                totalFrames={145}
-                                className="aspect-[4/3] sm:aspect-video md:aspect-[2.2/1]"
-                            />
+                        {/* Video */}
+                        <div className="relative rounded-xl overflow-hidden border border-neutral-800 shadow-2xl shadow-black/50">
+                            <video autoPlay muted loop playsInline className="w-full h-auto">
+                                <source src="/landing/prompt-visualizer.mp4" type="video/mp4" />
+                            </video>
                             <div className="absolute inset-0 pointer-events-none rounded-xl" style={{ boxShadow: "inset 0 0 80px rgba(0,0,0,0.4)" }} />
+                        </div>
+
+                        {/* Bullets + CTA */}
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6 mt-5 md:mt-8">
+                            <ul className="flex flex-col md:flex-row gap-3 md:gap-6">
+                                <li className="flex items-center gap-2">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                                    <span className="text-sm text-neutral-300" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                                        Batch generate up to 10 variations
+                                    </span>
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                                    <span className="text-sm text-neutral-300" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                                        Wildcards for random wardrobe, locations, poses
+                                    </span>
+                                </li>
+                                <li className="flex items-center gap-2">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                                    <span className="text-sm text-neutral-300" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                                        Recipe templates with fill-in-the-blank fields
+                                    </span>
+                                </li>
+                            </ul>
+                            <Link href="/auth/signin" className="flex-shrink-0">
+                                <Button
+                                    className="bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 rounded-lg px-6 transition-all duration-300"
+                                    style={{ fontFamily: "'DM Sans', sans-serif" }}
+                                >
+                                    Try It Free
+                                    <ArrowRight className="w-4 h-4 ml-2" />
+                                </Button>
+                            </Link>
                         </div>
                     </div>
                 </div>
