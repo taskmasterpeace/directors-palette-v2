@@ -27,6 +27,14 @@ export const metadata: Metadata = {
     description: 'The AI creative studio for images, video, music, storyboards, and more. Turn ideas into complete creative productions.',
     url: 'https://directorspalette.com',
     siteName: "Director's Palette",
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: "Director's Palette — AI Creative Studio",
+      },
+    ],
     locale: 'en_US',
     type: 'website',
   },
@@ -34,6 +42,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: "Director's Palette — AI Creative Studio",
     description: 'The AI creative studio for images, video, music, storyboards, and more. Turn ideas into complete creative productions.',
+    images: ['/og-image.jpg'],
     creator: '@machinekinglabs',
   },
   robots: {
