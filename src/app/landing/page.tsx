@@ -15,9 +15,27 @@ import {
     Play,
 } from "lucide-react"
 import { ClapperboardHero } from "./ClapperboardHero"
+import { ScrollVideo } from "./ScrollVideo"
 
 // ─── Feature data ──────────────────────────────────────────────
-const FEATURES = [
+// For scroll-driven flipbooks: extract frames with ffmpeg then set
+// frames: { path, total, ext }. Features without frames show banner image.
+interface FeatureFrames {
+    path: string   // e.g. "/landing/frames/storybook/frame-"
+    total: number  // total frame count
+    ext?: string   // default "jpg"
+}
+
+const FEATURES: {
+    id: string
+    icon: React.ReactNode
+    title: string
+    headline: string
+    description: string
+    bullets: string[]
+    image: string
+    frames: FeatureFrames | null
+}[] = [
     {
         id: "shot-creator",
         icon: <Sparkles className="w-5 h-5" />,
@@ -31,7 +49,7 @@ const FEATURES = [
             "Recipe templates with fill-in-the-blank fields",
         ],
         image: "/banners/shot-creator-banner.webp",
-        video: null as string | null,
+        frames: null,
     },
     {
         id: "storyboard",
@@ -46,7 +64,7 @@ const FEATURES = [
             "Export contact sheets and 9-shot cinematic grids",
         ],
         image: "/banners/storyboard-banner.webp",
-        video: null as string | null,
+        frames: null,
     },
     {
         id: "music-lab",
@@ -61,7 +79,7 @@ const FEATURES = [
             "Chat with your artists in-character for inspiration",
         ],
         image: "/banners/music-lab-banner.webp",
-        video: null as string | null,
+        frames: null,
     },
     {
         id: "storybook",
@@ -76,7 +94,7 @@ const FEATURES = [
             "Page-flip preview with audio narration support",
         ],
         image: "/banners/storybook-banner.webp",
-        video: "/landing/videos/storybook.mp4",
+        frames: { path: "/landing/frames/storybook/frame-", total: 61 },
     },
     {
         id: "shot-animator",
@@ -91,7 +109,7 @@ const FEATURES = [
             "Export MP4 for social media or presentations",
         ],
         image: "/banners/shot-animator-banner.webp",
-        video: null as string | null,
+        frames: null,
     },
 ]
 
@@ -176,16 +194,13 @@ export default function LandingPage() {
                                 {/* Visual side */}
                                 <div className="w-full md:w-1/2">
                                     <div className="relative rounded-xl overflow-hidden border border-neutral-800 shadow-2xl shadow-black/50 group">
-                                        {feature.video ? (
-                                            <video
-                                                autoPlay
-                                                muted
-                                                loop
-                                                playsInline
-                                                className="w-full h-auto"
-                                            >
-                                                <source src={feature.video} type="video/mp4" />
-                                            </video>
+                                        {feature.frames ? (
+                                            <ScrollVideo
+                                                framePath={feature.frames.path}
+                                                totalFrames={feature.frames.total}
+                                                ext={feature.frames.ext || "jpg"}
+                                                className="aspect-video"
+                                            />
                                         ) : (
                                             <Image
                                                 src={feature.image}
@@ -196,7 +211,7 @@ export default function LandingPage() {
                                             />
                                         )}
                                         {/* Vignette */}
-                                        <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: "inset 0 0 80px rgba(0,0,0,0.4)" }} />
+                                        <div className="absolute inset-0 pointer-events-none rounded-xl" style={{ boxShadow: "inset 0 0 80px rgba(0,0,0,0.4)" }} />
                                     </div>
                                 </div>
 
