@@ -153,6 +153,35 @@ export default function LandingPage() {
             {/* ── Hero ───────────────────────────────────────── */}
             <ClapperboardHero />
 
+            {/* ── Trusted By ──────────────────────────────────── */}
+            <section className="py-10 md:py-14 bg-neutral-950 border-y border-neutral-800/30">
+                <div className="container mx-auto px-4">
+                    <p
+                        className="text-center text-xs text-neutral-600 uppercase tracking-[0.3em] mb-6 md:mb-8"
+                        style={{ fontFamily: "'DM Sans', sans-serif" }}
+                    >
+                        Trusted by creators &amp; organizations
+                    </p>
+                    <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 md:gap-x-14">
+                        {[
+                            "Algorithm Institute of Battle Rap",
+                            "Hood History Club",
+                            "Urban Arts Collective",
+                            "The Cypher Room",
+                            "Culture Vault Media",
+                        ].map((name) => (
+                            <span
+                                key={name}
+                                className="text-sm md:text-base text-neutral-500 font-medium whitespace-nowrap"
+                                style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.02em" }}
+                            >
+                                {name}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
             {/* ── Feature Sections (alternating split) ───────── */}
             {FEATURES.map((feature, index) => {
                 const isEven = index % 2 === 0
