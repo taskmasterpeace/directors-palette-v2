@@ -49,7 +49,7 @@ const FEATURES: {
             "Recipe templates with fill-in-the-blank fields",
         ],
         image: "/banners/shot-creator-banner.webp",
-        frames: { path: "/landing/frames/shot-creator/frame-", total: 145 },
+        frames: null,
     },
     {
         id: "storyboard",
@@ -356,11 +356,14 @@ export default function LandingPage() {
                         </p>
                     </div>
 
-                    <div className="max-w-3xl mx-auto">
+                    <div className="max-w-4xl mx-auto">
                         <div className="relative rounded-xl overflow-hidden border border-neutral-800 shadow-xl">
-                            <video autoPlay muted loop playsInline className="w-full h-auto">
-                                <source src="/landing/prompt-visualizer.mp4" type="video/mp4" />
-                            </video>
+                            <ScrollVideo
+                                framePath="/landing/frames/shot-creator/frame-"
+                                totalFrames={145}
+                                className="aspect-[4/3] sm:aspect-video md:aspect-[2.2/1]"
+                            />
+                            <div className="absolute inset-0 pointer-events-none rounded-xl" style={{ boxShadow: "inset 0 0 80px rgba(0,0,0,0.4)" }} />
                         </div>
                     </div>
                 </div>
