@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import { RefreshCw, Sparkles, Trash2, Copy, Pencil, Search, ChevronDown, ChevronUp, Plus } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { toast } from "sonner"
@@ -39,6 +40,8 @@ export function RecipesTab() {
     const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false)
 
     // Initialize recipe store
     useEffect(() => {
@@ -79,6 +82,53 @@ export function RecipesTab() {
             toast.error(error instanceof Error ? error.message : "Failed to delete recipe")
         } finally {
             setDeletingId(null)
+        }
+    }
+
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id)
+            else next.add(id)
+            return next
+        })
+    }
+
+    const toggleSelectAll = () => {
+        if (selectedIds.size === filteredRecipes.length) {
+            setSelectedIds(new Set())
+        } else {
+            setSelectedIds(new Set(filteredRecipes.map(r => r.id)))
+        }
+    }
+
+    const handleBulkDelete = async () => {
+        const count = selectedIds.size
+        if (count === 0) return
+        if (!confirm(`Delete ${count} recipe${count !== 1 ? 's' : ''}? This cannot be undone.`)) return
+
+        setIsBulkDeleting(true)
+        let deleted = 0
+        let failed = 0
+
+        for (const id of selectedIds) {
+            try {
+                const response = await fetch(`/api/recipes/${id}`, { method: 'DELETE' })
+                if (response.ok) deleted++
+                else failed++
+            } catch {
+                failed++
+            }
+        }
+
+        await refreshRecipes()
+        setSelectedIds(new Set())
+        setIsBulkDeleting(false)
+
+        if (failed === 0) {
+            toast.success(`Deleted ${deleted} recipe${deleted !== 1 ? 's' : ''}`)
+        } else {
+            toast.error(`Deleted ${deleted}, failed ${failed}`)
         }
     }
 
@@ -284,6 +334,36 @@ export function RecipesTab() {
                 </div>
             </div>
 
+            {/* Bulk Actions */}
+            {selectedIds.size > 0 && (
+                <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                    <span className="text-sm text-red-400 font-medium">
+                        {selectedIds.size} selected
+                    </span>
+                    <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleBulkDelete}
+                        disabled={isBulkDeleting}
+                    >
+                        {isBulkDeleting ? (
+                            <LoadingSpinner size="sm" color="current" className="mr-2" />
+                        ) : (
+                            <Trash2 className="w-4 h-4 mr-2" />
+                        )}
+                        Delete Selected
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedIds(new Set())}
+                        className="text-zinc-400"
+                    >
+                        Clear
+                    </Button>
+                </div>
+            )}
+
             {/* Recipes Table */}
             <Card className="bg-zinc-900 border-zinc-800">
                 <CardHeader>
@@ -293,6 +373,12 @@ export function RecipesTab() {
                     <Table>
                         <TableHeader>
                             <TableRow className="border-zinc-800">
+                                <TableHead className="text-zinc-400 w-10">
+                                    <Checkbox
+                                        checked={filteredRecipes.length > 0 && selectedIds.size === filteredRecipes.length}
+                                        onCheckedChange={toggleSelectAll}
+                                    />
+                                </TableHead>
                                 <TableHead className="text-zinc-400 w-8"></TableHead>
                                 <TableHead className="text-zinc-400">Name</TableHead>
                                 <TableHead className="text-zinc-400">Category</TableHead>
@@ -304,13 +390,13 @@ export function RecipesTab() {
                         <TableBody>
                             {isLoading ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-8">
+                                    <TableCell colSpan={7} className="text-center py-8">
                                         <LoadingSpinner className="mx-auto" />
                                     </TableCell>
                                 </TableRow>
                             ) : filteredRecipes.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-8 text-zinc-500">
+                                    <TableCell colSpan={7} className="text-center py-8 text-zinc-500">
                                         No recipes found matching your filters.
                                     </TableCell>
                                 </TableRow>
@@ -318,6 +404,12 @@ export function RecipesTab() {
                                 filteredRecipes.map((recipe) => (
                                     <React.Fragment key={recipe.id}>
                                         <TableRow className="border-zinc-800">
+                                            <TableCell>
+                                                <Checkbox
+                                                    checked={selectedIds.has(recipe.id)}
+                                                    onCheckedChange={() => toggleSelect(recipe.id)}
+                                                />
+                                            </TableCell>
                                             <TableCell>
                                                 <Button
                                                     variant="ghost"
@@ -410,7 +502,7 @@ export function RecipesTab() {
                                         </TableRow>
                                         {expandedRows.has(recipe.id) && (
                                             <TableRow key={`${recipe.id}-expanded`} className="border-zinc-800 bg-zinc-950">
-                                                <TableCell colSpan={6} className="p-4">
+                                                <TableCell colSpan={7} className="p-4">
                                                     <div className="space-y-4">
                                                         {/* Recipe Details */}
                                                         <div className="grid grid-cols-2 gap-4 text-sm">
