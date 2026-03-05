@@ -199,15 +199,15 @@ export const PRESET_STYLES: PresetStyle[] = [
     {
         id: 'comic',
         name: 'Comic Book',
-        description: 'Bold comic book style',
+        description: 'Bronze Age comic art with bold ink work, dramatic lighting, and halftone printing',
         imagePath: '/storyboard-assets/styles/comic.webp',
-        stylePrompt: 'in the Comic Book style of the reference image',
+        stylePrompt: 'classic American comic book illustration in the style of the reference image, bold confident ink linework with varying line weight from thick contour outlines to thin interior detail hatching, dramatic chiaroscuro lighting with deep solid black shadow areas and stark white highlights creating high contrast compositions, flat cel-shaded color fills in saturated primaries and secondaries with limited palette per panel, visible Ben-Day dot halftone patterns in midtones and gradients especially on skin tones and skies, dynamic foreshortened perspective with exaggerated vanishing points and worm-eye or bird-eye angles for action scenes, speed lines and motion blur streaks radiating from points of impact or movement, bold black gutters between panels, word balloons with hand-lettered style text, Kirby Krackle energy dots crackling around power effects and explosions, crosshatching for shadow depth on faces and musculature, rim lighting rendered as thin white edge lines separating figures from dark backgrounds, dramatic dutch angle tilted compositions for tension, heavy spot blacks flooding backgrounds to push foreground subjects forward, color holds where line art switches from black to colored lines for glowing or ethereal elements, printed on matte newsprint stock with slightly muted ink absorption',
         technicalAttributes: {
-            cameraRenderType: 'Flat illustration rendering',
-            lensPerspective: 'Dynamic foreshortened perspective',
-            stockMedium: 'Ink and digital color on paper',
-            colorPalette: 'Bold saturated primaries, halftone dots',
-            texture: 'Heavy ink outlines, Ben-Day dot shading',
+            cameraRenderType: 'Hand-inked illustration with digital color',
+            lensPerspective: 'Dynamic foreshortened angles, exaggerated vanishing points, dutch tilts for tension, worm-eye heroic shots',
+            stockMedium: 'Ink on Bristol board with flat digital color, matte newsprint printing',
+            colorPalette: 'Saturated primaries and secondaries, limited palette per panel, deep spot blacks, color holds for glowing elements',
+            texture: 'Ben-Day halftone dots, crosshatching in shadows, varying ink line weight, Kirby Krackle energy dots, speed line streaks',
             medium: '2d-animation'
         }
     },
