@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og'
 import { getAPIClient } from '@/lib/db/client'
 
 export const runtime = 'nodejs'
-export const alt = 'Created with Director\'s Palette'
+export const alt = "Created with Director's Palette"
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -18,10 +18,9 @@ export default async function OGImage({ params }: { params: Promise<{ shareId: s
 
   const imageUrl = image?.public_url
 
-  // Load the Bebas Neue font
-  const fontData = await fetch(
-    new URL('../../../app/fonts/BebasNeue-Regular.ttf', import.meta.url)
-  ).then((res) => res.arrayBuffer())
+  // Fetch font from public directory (reliable on Vercel)
+  const fontUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL ? 'https://directorspal.com' : 'http://localhost:3002'}/fonts/BebasNeue-Regular.ttf`
+  const fontData = await fetch(fontUrl).then((res) => res.arrayBuffer())
 
   return new ImageResponse(
     (
@@ -97,7 +96,7 @@ export default async function OGImage({ params }: { params: Promise<{ shareId: s
               letterSpacing: '0.1em',
             }}
           >
-            CREATED WITH DIRECTOR&apos;S PALETTE
+            {"CREATED WITH DIRECTOR'S PALETTE"}
           </span>
           <span
             style={{
