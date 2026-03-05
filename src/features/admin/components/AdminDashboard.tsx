@@ -42,6 +42,7 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
     const [grantAmount, setGrantAmount] = useState('')
     const [grantDescription, setGrantDescription] = useState('')
     const [granting, setGranting] = useState(false)
+    const [hideAdminAccounts, setHideAdminAccounts] = useState(true)
 
     const fetchUsers = useCallback(async () => {
         try {
@@ -347,8 +348,19 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
 
                 {/* Activity Tab */}
                 <TabsContent value="activity" className="space-y-6">
-                    <GenerationStats />
-                    <GenerationsTable onExportLogs={handleExportLogs} />
+                    <div className="flex items-center justify-end">
+                        <label className="flex items-center gap-2 cursor-pointer text-sm text-zinc-400 hover:text-zinc-300">
+                            <input
+                                type="checkbox"
+                                checked={hideAdminAccounts}
+                                onChange={(e) => setHideAdminAccounts(e.target.checked)}
+                                className="rounded border-zinc-600 bg-zinc-800 text-amber-500 focus:ring-amber-500"
+                            />
+                            Hide my accounts
+                        </label>
+                    </div>
+                    <GenerationStats hideAdminAccounts={hideAdminAccounts} />
+                    <GenerationsTable onExportLogs={handleExportLogs} hideAdminAccounts={hideAdminAccounts} />
                 </TabsContent>
 
                 {/* Coupons Tab */}

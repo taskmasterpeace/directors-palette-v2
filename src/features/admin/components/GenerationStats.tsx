@@ -6,10 +6,16 @@ import { Image as ImageIcon, Sparkles, TrendingUp, Users } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import type { GenerationStatsResponse } from '../types/generation-events.types'
 import { createLogger } from '@/lib/logger'
+import { ADMIN_EMAILS } from '../constants'
 
 
 const log = createLogger('Admin')
-export function GenerationStats() {
+
+interface GenerationStatsProps {
+    hideAdminAccounts?: boolean
+}
+
+export function GenerationStats({ hideAdminAccounts = false }: GenerationStatsProps) {
     const [stats, setStats] = useState<GenerationStatsResponse | null>(null)
     const [loading, setLoading] = useState(true)
 
@@ -126,7 +132,9 @@ export function GenerationStats() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-2">
-                            {stats.topUsers.slice(0, 5).map((user) => (
+                            {stats.topUsers
+                                .filter((user) => !hideAdminAccounts || !ADMIN_EMAILS.some(e => user.user_email?.startsWith(e)))
+                                .slice(0, 5).map((user) => (
                                 <div key={user.user_id} className="flex items-center justify-between">
                                     <span className="text-sm text-zinc-300 truncate max-w-[150px]">
                                         {user.user_email || user.user_id.slice(0, 8)}

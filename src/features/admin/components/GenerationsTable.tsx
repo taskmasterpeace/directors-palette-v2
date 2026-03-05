@@ -11,14 +11,16 @@ import { Search, RefreshCw, CheckCircle, XCircle, Clock, Download } from 'lucide
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import type { GenerationEvent, GenerationEventsListResponse } from '../types/generation-events.types'
 import { createLogger } from '@/lib/logger'
+import { ADMIN_EMAILS } from '../constants'
 
 
 const log = createLogger('Admin')
 interface GenerationsTableProps {
     onExportLogs?: () => void
+    hideAdminAccounts?: boolean
 }
 
-export function GenerationsTable({ onExportLogs }: GenerationsTableProps) {
+export function GenerationsTable({ onExportLogs, hideAdminAccounts = false }: GenerationsTableProps) {
     const [generations, setGenerations] = useState<GenerationEvent[]>([])
     const [total, setTotal] = useState(0)
     const [loading, setLoading] = useState(true)
@@ -142,7 +144,9 @@ export function GenerationsTable({ onExportLogs }: GenerationsTableProps) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {generations.map((gen) => (
+                                {generations
+                                .filter((gen) => !hideAdminAccounts || !ADMIN_EMAILS.some(e => gen.user_email?.startsWith(e)))
+                                .map((gen) => (
                                     <TableRow key={gen.id} className="border-zinc-800">
                                         <TableCell className="text-white">
                                             <div className="flex flex-col">
