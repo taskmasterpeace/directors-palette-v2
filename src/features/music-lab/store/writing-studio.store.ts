@@ -88,7 +88,7 @@ interface WritingStudioState {
 
   // Full song generation
   generateFullSong: (
-    structure: { type: SectionType; barCount: number }[],
+    structure: { type: SectionType; barCount: number; direction?: string }[],
     tone: { emotion: string; energy: number; delivery: string },
     artistDna: unknown,
     concept: string

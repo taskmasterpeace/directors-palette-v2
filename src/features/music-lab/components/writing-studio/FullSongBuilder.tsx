@@ -217,7 +217,7 @@ interface FullSongBuilderProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onGenerate: (
-    structure: { type: SectionType; barCount: number }[],
+    structure: { type: SectionType; barCount: number; direction?: string }[],
     tone: { emotion: string; energy: number; delivery: string }
   ) => void
   isGenerating: boolean
@@ -280,7 +280,7 @@ export function FullSongBuilder({ open, onOpenChange, onGenerate, isGenerating, 
   const handleGenerate = () => {
     if (structure.length === 0) return
     onGenerate(
-      structure.map((s) => ({ type: s.type, barCount: s.barCount })),
+      structure.map((s) => ({ type: s.type, barCount: s.barCount, direction: sectionNotes[s.id] || undefined })),
       { emotion, energy, delivery }
     )
   }

@@ -88,7 +88,7 @@ export function StudioTab() {
   }
 
   const handleFullSongGenerate = async (
-    structure: { type: SectionType; barCount: number }[],
+    structure: { type: SectionType; barCount: number; direction?: string }[],
     tone: { emotion: string; energy: number; delivery: string }
   ) => {
     setShowFullSongBuilder(false)
