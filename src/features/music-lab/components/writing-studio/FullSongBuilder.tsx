@@ -467,7 +467,7 @@ export function FullSongBuilder({ open, onOpenChange, onGenerate, isGenerating, 
               ) : (
                 <>
                   <Zap className="w-4 h-4" />
-                  Write Full Song
+                  Write Full Song (10 pts)
                 </>
               )}
             </Button>

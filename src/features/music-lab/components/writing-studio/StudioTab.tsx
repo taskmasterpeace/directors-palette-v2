@@ -252,7 +252,7 @@ export function StudioTab() {
                     className="gap-1.5"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
-                    {isGenerating ? 'Generating...' : 'Generate'}
+                    {isGenerating ? 'Generating...' : 'Generate (10 pts)'}
                   </Button>
                 </div>
                 <OptionGrid />
