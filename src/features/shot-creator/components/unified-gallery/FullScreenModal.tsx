@@ -22,6 +22,7 @@ interface FullscreenModalProps {
     onSendTo: (url: string, target: string) => void
     onSetReference: (id: string, ref: string) => void
     onAddToLibrary?: (url: string) => void
+    onSavePromptToLibrary?: (prompt: string) => void
     onExtractFrames?: () => void
     onExtractFramesToGallery?: () => void
     onRemoveBackground?: () => void
@@ -46,6 +47,7 @@ function FullscreenModal({
     onSendTo,
     onSetReference,
     onAddToLibrary,
+    onSavePromptToLibrary,
     onExtractFrames,
     onExtractFramesToGallery,
     onRemoveBackground,
@@ -61,6 +63,7 @@ function FullscreenModal({
     const isMobile = useIsMobile()
     const [showDetails, setShowDetails] = useState(false)
     const [extractModalOpen, setExtractModalOpen] = useState(false)
+    const [promptExpanded, setPromptExpanded] = useState(false)
 
     // Keyboard navigation
     useEffect(() => {
@@ -197,7 +200,17 @@ function FullscreenModal({
                         {/* Prompt */}
                         <div className="mb-4">
                             <h4 className="text-muted-foreground text-xs uppercase mb-2">Prompt</h4>
-                            <p className="text-white text-sm leading-relaxed">{fullscreenImage.prompt}</p>
+                            <p className={`text-white text-sm leading-relaxed ${!promptExpanded ? 'line-clamp-3' : ''}`}>
+                                {fullscreenImage.prompt}
+                            </p>
+                            {fullscreenImage.prompt && fullscreenImage.prompt.length > 150 && (
+                                <button
+                                    onClick={() => setPromptExpanded(!promptExpanded)}
+                                    className="text-xs text-primary hover:underline mt-1"
+                                >
+                                    {promptExpanded ? 'Show less' : 'Show more'}
+                                </button>
+                            )}
                         </div>
 
                         {/* Model */}
@@ -408,6 +421,22 @@ function FullscreenModal({
                                     Copy URL
                                 </Button>
                             </div>
+
+                            {/* Save Prompt to Library */}
+                            {onSavePromptToLibrary && fullscreenImage.prompt && (
+                                <div className="flex gap-2">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="w-full text-amber-400 border-amber-500/30 hover:bg-amber-500/10"
+                                        onClick={() => onSavePromptToLibrary(fullscreenImage.prompt || '')}
+                                        title="Save this prompt to your prompt library"
+                                    >
+                                        <Save className="w-3.5 h-3.5 mr-1" />
+                                        Save Prompt to Library
+                                    </Button>
+                                </div>
+                            )}
 
                             {/* Send to options */}
                             <div className="flex gap-2">

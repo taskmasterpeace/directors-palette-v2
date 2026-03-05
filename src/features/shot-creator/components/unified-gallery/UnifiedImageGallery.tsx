@@ -22,6 +22,7 @@ import { BulkDownloadModal } from "./BulkDownloadModal"
 import { BulkActionsToolbar } from "./BulkActionsToolbar"
 import { useFolderManager } from "../../hooks/useFolderManager"
 import { GeneratedImage, useUnifiedGalleryStore, GridSize } from '../../store/unified-gallery-store'
+import { usePromptLibraryStore } from '../../store/prompt-library-store'
 import { logger } from '@/lib/logger'
 
 export interface UnifiedImageGalleryProps {
@@ -579,6 +580,27 @@ CRITICAL RULES:
         }
     }, [sharingImageId, isMobile, toast])
 
+    // Save prompt to library
+    const handleSavePromptToLibrary = useCallback((prompt: string) => {
+        const name = window.prompt('Name this prompt:', prompt.slice(0, 50))
+        if (!name) return
+
+        const { addPrompt } = usePromptLibraryStore.getState()
+        addPrompt({
+            title: name,
+            prompt,
+            categoryId: 'custom',
+            tags: [],
+            isQuickAccess: false,
+            metadata: {
+                source: 'gallery',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            }
+        })
+        toast({ title: 'Prompt Saved', description: `"${name}" added to your prompt library` })
+    }, [toast])
+
     // Handle retry for failed generations
     // Copies the prompt to clipboard and removes the failed entry
     const handleRetryGeneration = useCallback(async (image: GeneratedImage) => {
@@ -1006,6 +1028,7 @@ CRITICAL RULES:
                                 await updateImageReference(id, ref)
                             }}
                             onAddToLibrary={onSendToLibrary && fullscreenImage ? () => onSendToLibrary(fullscreenImage.url, fullscreenImage.id) : undefined}
+                            onSavePromptToLibrary={handleSavePromptToLibrary}
                             onExtractFrames={isGridImage(fullscreenImage) ? () => handleExtractFrames(fullscreenImage.url) : undefined}
                             onExtractFramesToGallery={isGridImage(fullscreenImage) ? () => handleExtractFramesToGallery(fullscreenImage.url, fullscreenImage.id) : undefined}
                             onRemoveBackground={() => handleRemoveBackground(fullscreenImage)}

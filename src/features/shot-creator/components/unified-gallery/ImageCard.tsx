@@ -237,6 +237,15 @@ const ImageCardComponent = ({
         resolution={image.settings.resolution || '1024x1024'}
         gridSize={gridSize}
       />
+
+      {/* Prompt preview below image */}
+      {image.prompt && (
+        <div className="px-2 py-1.5 bg-card border-t border-border">
+          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+            {image.prompt}
+          </p>
+        </div>
+      )}
     </div>
   )
 }
