@@ -568,14 +568,14 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
                           </Badge>
                         )}
                         {recipe.requiresImage === false ? (
-                          <Badge variant="outline" className="text-xs text-zinc-400 border-zinc-600 shrink-0 hidden sm:inline-flex">
-                            <ImageOff className="w-3 h-3 mr-1" />
-                            No image
+                          <Badge variant="outline" className="text-xs text-zinc-400 border-zinc-600 shrink-0">
+                            <ImageOff className="w-3 h-3 sm:mr-1" />
+                            <span className="hidden sm:inline">No image</span>
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-xs text-blue-400 border-blue-500/30 shrink-0 hidden sm:inline-flex">
-                            <ImageIcon className="w-3 h-3 mr-1" />
-                            Image req.
+                          <Badge variant="outline" className="text-xs text-blue-400 border-blue-500/30 shrink-0">
+                            <ImageIcon className="w-3 h-3 sm:mr-1" />
+                            <span className="hidden sm:inline">Image req.</span>
                           </Badge>
                         )}
                       </div>

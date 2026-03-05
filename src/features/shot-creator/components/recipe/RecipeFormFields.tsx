@@ -174,9 +174,8 @@ export function RecipeFormFields({
       )}
     >
       {/* Header - Compact */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Recipe:</span>
+      <div className="flex items-start justify-between gap-1">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-xs font-medium text-amber-400">{activeRecipe.name}</span>
           {activeRecipe.stages.length > 1 && (
             <Badge variant="secondary" className="text-xs py-0">
@@ -185,18 +184,18 @@ export function RecipeFormFields({
           )}
           {activeRecipe.requiresImage === false ? (
             <Badge variant="outline" className="text-xs py-0 border-zinc-600 text-zinc-400">
-              <ImageOff className="w-3 h-3 mr-1" />
-              No image needed
+              <ImageOff className="w-3 h-3 sm:mr-1" />
+              <span className="hidden sm:inline">No image</span>
             </Badge>
           ) : (
             <Badge variant="outline" className="text-xs py-0 border-blue-500/30 text-blue-400">
-              <ImageIcon className="w-3 h-3 mr-1" />
-              Image required
+              <ImageIcon className="w-3 h-3 sm:mr-1" />
+              <span className="hidden sm:inline">Image req.</span>
             </Badge>
           )}
           {allFields.length > 0 && (
             <span className="text-xs text-muted-foreground">
-              {allFields.filter(f => f.required).length} required, {allFields.filter(f => !f.required).length} optional
+              {allFields.filter(f => f.required).length} req / {allFields.filter(f => !f.required).length} opt
             </span>
           )}
         </div>
@@ -204,7 +203,7 @@ export function RecipeFormFields({
           variant="ghost"
           size="sm"
           onClick={handleCancel}
-          className="h-5 w-5 p-0 text-muted-foreground hover:text-white"
+          className="h-5 w-5 p-0 shrink-0 text-muted-foreground hover:text-white"
         >
           <X className="w-3 h-3" />
         </Button>
@@ -233,8 +232,8 @@ export function RecipeFormFields({
       )}
 
       {/* Footer: Validation status, Cost & Aspect Ratio */}
-      <div className="flex items-center justify-between pt-2 border-t border-border gap-2">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between pt-2 border-t border-border gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {validation && !validation.isValid ? (
             <div className="flex items-center gap-1 text-xs text-amber-400">
               <AlertCircle className="w-3 h-3" />

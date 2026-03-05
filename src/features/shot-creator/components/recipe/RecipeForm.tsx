@@ -153,7 +153,7 @@ export function RecipeForm({
         <Label htmlFor="requiresImage" className="cursor-pointer">
           Requires reference image
         </Label>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-muted-foreground hidden sm:inline">
           (user must upload an image to generate)
         </span>
       </div>
