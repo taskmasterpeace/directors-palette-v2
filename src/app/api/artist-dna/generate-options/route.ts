@@ -29,6 +29,7 @@ interface GenerateOptionsBody {
   concept: string
   artistDna: ArtistDNA
   previousSections: PreviousSection[]
+  artistDirection?: string
 }
 
 function buildSystemPrompt(body: GenerateOptionsBody): string {
@@ -68,6 +69,11 @@ function buildSystemPrompt(body: GenerateOptionsBody): string {
 
   if (concept) {
     parts.push(`Song concept: ${concept}`)
+  }
+
+  if (body.artistDirection) {
+    parts.push(`\nARTIST DIRECTION: "${body.artistDirection}"`)
+    parts.push('The artist specifically wants this vibe. Let it guide the tone, imagery, and feel.')
   }
 
   // Artist DNA context — full profile

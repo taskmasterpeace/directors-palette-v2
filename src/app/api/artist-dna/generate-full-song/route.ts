@@ -28,6 +28,7 @@ interface GenerateFullSongBody {
   tone: Pick<ToneSettings, 'emotion' | 'energy' | 'delivery'>
   concept: string
   artistDna: ArtistDNA
+  artistDirection?: string
 }
 
 function buildFullSongPrompt(body: GenerateFullSongBody): string {
@@ -53,6 +54,11 @@ function buildFullSongPrompt(body: GenerateFullSongBody): string {
 
   if (concept) {
     parts.push(`Song concept: ${concept}`)
+  }
+
+  if (body.artistDirection) {
+    parts.push(`\nARTIST DIRECTION: "${body.artistDirection}"`)
+    parts.push('The artist specifically wants this vibe. Let it guide the tone, imagery, and feel of every section.')
   }
 
   // Artist DNA context — reuse same approach as generate-options
