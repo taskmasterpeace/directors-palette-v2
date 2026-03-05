@@ -19,6 +19,7 @@ export interface Recipe {
   quickAccessLabel?: string;     // 1-word label for quick access bar
   isQuickAccess: boolean;        // Whether it's in quick access
   categoryId?: string;           // Optional category
+  requiresImage?: boolean;       // Whether recipe requires reference images (default: true)
   isSystem?: boolean;            // System recipes are read-only, must be duplicated to edit
   isSystemOnly?: boolean;        // If true, only visible to admin users (hidden from regular users)
   createdAt: number;

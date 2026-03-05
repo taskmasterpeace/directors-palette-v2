@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react'
 import { useShotCreatorStore } from '@/features/shot-creator/store/shot-creator.store'
 import { useCustomStylesStore } from '../store/custom-styles.store'
-import { getModelConfig, type ModelId } from '@/config'
+import { getModelCost, type ModelId } from '@/config'
 import { useShotCreatorSettings } from './useShotCreatorSettings'
 import { useImageGeneration } from './useImageGeneration'
 import { parseDynamicPrompt, detectAnchorTransform, stripAnchorSyntax } from '../helpers/prompt-syntax-feedback'
@@ -85,9 +85,7 @@ export function usePromptGeneration() {
     // ── Cost calculation ───────────────────────────────────────────────
     const generationCost: GenerationCost = React.useMemo(() => {
         const model = shotCreatorSettings.model || 'nano-banana-2'
-        const modelConfig = getModelConfig(model)
-
-        const costPerImage = modelConfig.costPerImage
+        const costPerImage = getModelCost(model, shotCreatorSettings.resolution)
 
         const isAnchorMode = shotCreatorSettings.enableAnchorTransform
 
@@ -123,9 +121,13 @@ export function usePromptGeneration() {
         const activeRecipe = getActiveRecipe()
         if (activeRecipe) {
             const validation = getActiveValidation()
-            const hasRefs = shotCreatorReferenceImages.length > 0 ||
-                activeRecipe.stages.some(s => (s.referenceImages?.length || 0) > 0)
-            return (validation?.isValid ?? false) && hasRefs
+            const needsImage = activeRecipe.requiresImage !== false
+            if (needsImage) {
+                const hasRefs = shotCreatorReferenceImages.length > 0 ||
+                    activeRecipe.stages.some(s => (s.referenceImages?.length || 0) > 0)
+                return (validation?.isValid ?? false) && hasRefs
+            }
+            return validation?.isValid ?? false
         }
 
         if (shotCreatorSettings.quickMode === 'style-transfer' && shotCreatorReferenceImages.length > 0) {
