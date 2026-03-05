@@ -345,7 +345,7 @@ export function SidebarNavigation() {
                     >
                         {/* App Icon */}
                         <div className="w-8 h-8 flex items-center justify-center">
-                            <img src="/favicon.ico" alt="App Icon" className="w-full h-full object-contain" />
+                            <img src="/logo.svg" alt="App Icon" className="w-full h-full object-contain" />
                         </div>
                         <span>Director&apos;s Palette</span>
                     </motion.div>
@@ -909,17 +909,17 @@ function MobileNavigation({ open, onOpenChange, activeTab, onNavSelect, user, on
 
     return (
         <>
-            {/* Floating Logo Button - Fixed position, top-right - RED theme */}
+            {/* Floating Logo Button - Fixed position, top-right */}
             <Button
                 variant="ghost"
                 size="icon"
-                className="fixed top-3 right-3 z-50 h-12 w-12 rounded-full bg-red-600/90 hover:bg-red-500 backdrop-blur-md border border-red-500/50 shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
+                className="fixed top-3 right-3 z-50 h-12 w-12 rounded-full bg-zinc-900/90 hover:bg-zinc-800 backdrop-blur-md border border-amber-500/40 shadow-lg hover:shadow-xl hover:border-amber-400/60 transition-all hover:scale-105 active:scale-95"
                 onClick={() => onOpenChange(true)}
             >
                 <img
-                    src="/favicon.ico"
+                    src="/logo.svg"
                     alt="Menu"
-                    className="w-7 h-7 object-contain"
+                    className="w-9 h-9 object-contain"
                 />
             </Button>
 
@@ -930,7 +930,7 @@ function MobileNavigation({ open, onOpenChange, activeTab, onNavSelect, user, on
                     <SheetHeader className="p-4 border-b border-border/50">
                         <div className="flex items-center gap-2">
                             <img
-                                src="/favicon.ico"
+                                src="/logo.svg"
                                 className="w-7 h-7 object-contain"
                                 alt="Logo"
                             />

@@ -76,7 +76,7 @@ export default function SignInPage() {
         <div className="flex flex-col items-center mb-6">
           <div className="flex items-center gap-3 mb-2">
             <Image
-              src="/favicon.ico"
+              src="/logo.svg"
               alt="Directors Palette"
               width={48}
               height={48}

@@ -115,7 +115,7 @@ export function UserManual() {
                     {/* Header */}
                     <div className="space-y-4 text-center pb-8 border-b border-border/50">
                         <div className="inline-flex items-center justify-center p-3 rounded-full bg-primary/10 mb-4">
-                            <img src="/favicon.ico" alt="Logo" className="w-12 h-12 object-contain filter grayscale brightness-200" />
+                            <img src="/logo.svg" alt="Logo" className="w-12 h-12 object-contain" />
                         </div>
                         <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">Director&apos;s Palette</h1>
                         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
