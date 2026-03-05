@@ -216,6 +216,7 @@ export const useWritingStudioStore = create<WritingStudioState>()(
               tone: section.tone,
               concept: get().concept,
               artistDna,
+              artistDirection: get().artistDirection,
               previousSections: previousSections
                 .filter((s) => s.selectedDraft)
                 .map((s) => ({
@@ -232,6 +233,12 @@ export const useWritingStudioStore = create<WritingStudioState>()(
               draftOptions: options,
               sectionDrafts: { ...state.sectionDrafts, [sectionId]: options },
             }))
+
+            // Auto-judge the drafts
+            if (options.length > 0) {
+              const state = get()
+              state.judgeDrafts(sectionId, options, section.type, artistDna, state.artistDirection)
+            }
           }
         } catch (error) {
           logger.musicLab.error('Failed to generate options', { error: error instanceof Error ? error.message : String(error) })
@@ -405,7 +412,7 @@ export const useWritingStudioStore = create<WritingStudioState>()(
           const res = await fetch('/api/artist-dna/generate-full-song', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ structure, tone, concept, artistDna }),
+            body: JSON.stringify({ structure, tone, concept, artistDna, artistDirection: get().artistDirection }),
           })
 
           if (res.ok) {

@@ -30,6 +30,11 @@ export function StudioTab() {
     generateFullSong,
     resetStudio,
     setActiveArtistId,
+    artistDirection,
+    setArtistDirection,
+    isJudging: _isJudging,
+    judgeResult: _judgeResult,
+    judgeDrafts: _judgeDrafts,
   } = useWritingStudioStore()
 
   const { draft: artistDna, activeArtistId } = useArtistDnaStore()
@@ -190,6 +195,20 @@ export function StudioTab() {
               )}
             </div>
           )}
+        </div>
+
+        {/* Artist direction */}
+        <div className="mb-4">
+          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+            What vibe are you going for?
+            <span className="text-muted-foreground/50 ml-1 font-normal">(optional)</span>
+          </label>
+          <Input
+            value={artistDirection}
+            onChange={(e) => setArtistDirection(e.target.value)}
+            placeholder="e.g. Late night confession, like talking to yourself at 3am..."
+            className="text-sm"
+          />
         </div>
 
         {/* 3-column layout */}
