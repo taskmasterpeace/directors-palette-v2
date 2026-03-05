@@ -68,3 +68,26 @@ export const DEFAULT_TONE: ToneSettings = {
   delivery: 'Raw',
   barCount: 16,
 }
+
+// ─── Artist Judge Types ──────────────────────────────────────────────────────
+
+export interface LineNote {
+  lineNumber: number
+  note: string
+  suggestion?: string
+}
+
+export interface ArtistJudgment {
+  draftIndex: number
+  vibe: string
+  score: number
+  rhymeScore: number
+  lineNotes: LineNote[]
+  wouldKeep: boolean
+}
+
+export interface JudgeResult {
+  judgments: ArtistJudgment[]
+  ranking: number[]
+  rankingReason: string
+}
