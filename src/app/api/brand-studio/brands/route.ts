@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { getAPIClient } from '@/lib/db/client'
 import { createLogger } from '@/lib/logger'
 
 const log = createLogger('BrandStudio')
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Auth — same pattern as shot creator
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+
     const supabase = await getAPIClient()
     const { data, error } = await supabase
       .from('brands')
@@ -26,6 +31,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+
     const body = await request.json()
     const { name, logo_url, raw_company_info } = body
 
@@ -61,6 +69,9 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+
     const body = await request.json()
     const { id, ...updates } = body
 

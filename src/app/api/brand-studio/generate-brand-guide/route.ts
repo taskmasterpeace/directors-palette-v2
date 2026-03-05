@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { getAPIClient } from '@/lib/db/client'
 import { createLogger } from '@/lib/logger'
 
@@ -171,6 +172,10 @@ function parseBrandGuideOutput(data: Record<string, unknown>): Record<string, un
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth — same pattern as shot creator
+    const auth = await getAuthenticatedUser(request)
+    if (auth instanceof NextResponse) return auth
+
     const body = await request.json()
     const { brand_id, logo_url, company_description } = body
 
@@ -181,7 +186,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    log.info('Generating brand guide', { brand_id, logo_url })
+    log.info('Generating brand guide', { brand_id, logo_url: logo_url ? '(provided)' : '(none)', userId: auth.user.id })
 
     // Call OpenRouter directly — no child process, completes in ~15-30s
     const brandData = await analyzeBrand(logo_url, company_description)
