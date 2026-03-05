@@ -12,6 +12,8 @@ import type {
   ToneSettings,
   SectionType,
   IdeaTag,
+  JudgeResult,
+  ArtistJudgment,
 } from '../types/writing-studio.types'
 import { DEFAULT_TONE, BAR_COUNT_RANGES } from '../types/writing-studio.types'
 import { logger } from '@/lib/logger'
@@ -33,6 +35,19 @@ interface WritingStudioState {
   draftOptions: DraftOption[] // current options for active section
   sectionDrafts: Record<string, DraftOption[]> // per-section draft storage
 
+  // Artist direction
+  artistDirection: string
+  sectionDirections: Record<string, string>
+
+  // Artist judge
+  isJudging: boolean
+  judgeResult: JudgeResult | null
+  sectionJudgments: Record<string, JudgeResult>
+
+  // Revision
+  isRevising: boolean
+  revisionNotes: string
+
   // Section management
   addSection: (type: SectionType) => void
   removeSection: (id: string) => void
@@ -49,6 +64,18 @@ interface WritingStudioState {
   tossDraft: (draftId: string) => void
   editDraft: (draftId: string, content: string) => void
   clearDraftOptions: () => void
+
+  // Artist direction
+  setArtistDirection: (direction: string) => void
+  setSectionDirection: (sectionId: string, direction: string) => void
+
+  // Judge
+  judgeDrafts: (sectionId: string, drafts: DraftOption[], sectionType: SectionType, artistDna: unknown, artistDirection?: string) => Promise<void>
+  clearJudgeResult: () => void
+
+  // Revision
+  reviseDraft: (sectionId: string, draft: DraftOption, revisionNotes: string, sectionType: SectionType, artistDna: unknown, judgment?: ArtistJudgment, artistDirection?: string) => Promise<void>
+  setRevisionNotes: (notes: string) => void
 
   // Idea bank
   addToIdeaBank: (text: string, tags: IdeaTag[], source: 'chopped' | 'manual') => void
@@ -87,6 +114,13 @@ export const useWritingStudioStore = create<WritingStudioState>()(
       isGeneratingFullSong: false,
       draftOptions: [],
       sectionDrafts: {},
+      artistDirection: '',
+      sectionDirections: {},
+      isJudging: false,
+      judgeResult: null,
+      sectionJudgments: {},
+      isRevising: false,
+      revisionNotes: '',
 
       addSection: (type: SectionType) => {
         const barDefaults = BAR_COUNT_RANGES[type]
@@ -252,6 +286,78 @@ export const useWritingStudioStore = create<WritingStudioState>()(
 
       clearDraftOptions: () => set({ draftOptions: [] }),
 
+      setArtistDirection: (direction) => set({ artistDirection: direction }),
+
+      setSectionDirection: (sectionId, direction) => {
+        set((state) => ({
+          sectionDirections: { ...state.sectionDirections, [sectionId]: direction },
+        }))
+      },
+
+      judgeDrafts: async (sectionId, drafts, sectionType, artistDna, artistDirection) => {
+        set({ isJudging: true, judgeResult: null })
+        try {
+          const res = await fetch('/api/artist-dna/judge-drafts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ drafts, sectionType, artistDna, artistDirection }),
+          })
+          if (res.ok) {
+            const result = await res.json()
+            set((state) => ({
+              judgeResult: result,
+              sectionJudgments: { ...state.sectionJudgments, [sectionId]: result },
+            }))
+          }
+        } catch (error) {
+          logger.musicLab.error('Failed to judge drafts', { error: error instanceof Error ? error.message : String(error) })
+        } finally {
+          set({ isJudging: false })
+        }
+      },
+
+      clearJudgeResult: () => set({ judgeResult: null }),
+
+      reviseDraft: async (sectionId, draft, revisionNotes, sectionType, artistDna, judgment, artistDirection) => {
+        set({ isRevising: true })
+        try {
+          const res = await fetch('/api/artist-dna/revise-section', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              originalContent: draft.content,
+              sectionType,
+              revisionNotes,
+              judgment,
+              artistDna,
+              artistDirection,
+            }),
+          })
+          if (res.ok) {
+            const data = await res.json()
+            // Replace the draft content with the revised version
+            set((state) => ({
+              draftOptions: state.draftOptions.map((d) =>
+                d.id === draft.id ? { ...d, content: data.content } : d
+              ),
+              sectionDrafts: {
+                ...state.sectionDrafts,
+                [sectionId]: (state.sectionDrafts[sectionId] || []).map((d) =>
+                  d.id === draft.id ? { ...d, content: data.content } : d
+                ),
+              },
+              revisionNotes: '',
+            }))
+          }
+        } catch (error) {
+          logger.musicLab.error('Failed to revise draft', { error: error instanceof Error ? error.message : String(error) })
+        } finally {
+          set({ isRevising: false })
+        }
+      },
+
+      setRevisionNotes: (notes) => set({ revisionNotes: notes }),
+
       addToIdeaBank: (text, tags, source) => {
         const state = get()
         const artistId = state.activeArtistId || '_default'
@@ -344,6 +450,13 @@ export const useWritingStudioStore = create<WritingStudioState>()(
           sectionDrafts: {},
           isGenerating: false,
           isGeneratingFullSong: false,
+          artistDirection: '',
+          sectionDirections: {},
+          isJudging: false,
+          judgeResult: null,
+          sectionJudgments: {},
+          isRevising: false,
+          revisionNotes: '',
         }),
     }),
     {
@@ -354,6 +467,8 @@ export const useWritingStudioStore = create<WritingStudioState>()(
         ideaBankByArtist: state.ideaBankByArtist,
         sectionDrafts: state.sectionDrafts,
         activeArtistId: state.activeArtistId,
+        artistDirection: state.artistDirection,
+        sectionDirections: state.sectionDirections,
       }),
       merge: (persisted, current) => {
         const p = persisted as Partial<WritingStudioState> & { ideaBank?: IdeaEntry[] }
