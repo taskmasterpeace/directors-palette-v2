@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import Replicate from 'replicate'
 import { logger } from '@/lib/logger'
+import { creditsService } from '@/features/credits/services/credits.service'
 
 const DEMUCS_MODEL = 'cjwbw/demucs:25a173108cff36ef9f80f854c162d01df9e6528be175794b81571f87f7e83f5e'
 
@@ -16,6 +17,17 @@ export async function POST(request: NextRequest) {
         // Check authentication
         const auth = await getAuthenticatedUser(request)
         if (auth instanceof NextResponse) return auth
+
+        // Deduct credits (Demucs vocal isolation = 3 pts)
+        const deductResult = await creditsService.deductCredits(auth.user.id, 'demucs-isolate', {
+            generationType: 'audio',
+            description: 'Music Lab: vocal isolation',
+            overrideAmount: 3,
+            user_email: auth.user.email,
+        })
+        if (!deductResult.success) {
+            return NextResponse.json({ error: deductResult.error || 'Insufficient credits' }, { status: 402 })
+        }
 
         const { audioUrl } = await request.json()
 

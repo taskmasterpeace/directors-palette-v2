@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import Replicate from 'replicate'
 import { logger } from '@/lib/logger'
+import { creditsService } from '@/features/credits/services/credits.service'
 import { persistToLibrary } from '../persist-to-library'
 import { pickRandomWardrobe } from '@/features/music-lab/data/wardrobe-wildcards'
 
@@ -136,6 +137,17 @@ export async function POST(request: NextRequest) {
         { error: 'A name and at least one visual field (skin tone, hair, fashion, or description) are required' },
         { status: 400 }
       )
+    }
+
+    // Deduct credits (nano-banana-2 @ 1K = 10 pts)
+    const deductResult = await creditsService.deductCredits(auth.user.id, 'nano-banana-2', {
+      generationType: 'image',
+      description: 'Artist DNA: character sheet generation',
+      overrideAmount: 10,
+      user_email: auth.user.email,
+    })
+    if (!deductResult.success) {
+      return NextResponse.json({ error: deductResult.error || 'Insufficient credits' }, { status: 402 })
     }
 
     const prompt = buildPrompt(body)

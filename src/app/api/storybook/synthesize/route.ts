@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
 import { logger } from '@/lib/logger'
+import { creditsService } from '@/features/credits/services/credits.service'
 
 // ElevenLabs voice options
 const ELEVENLABS_VOICES: Record<string, string> = {
@@ -41,6 +42,17 @@ export async function POST(request: NextRequest) {
     userId = user.id
 
     logger.api.info('Storybook API: synthesize (ElevenLabs TTS) called by user', { user: user.id })
+
+    // Deduct credits (ElevenLabs TTS = 5 pts)
+    const deductResult = await creditsService.deductCredits(user.id, 'elevenlabs-tts', {
+      generationType: 'audio',
+      description: 'Storybook: text-to-speech narration',
+      overrideAmount: 5,
+      user_email: user.email,
+    })
+    if (!deductResult.success) {
+      return NextResponse.json({ error: deductResult.error || 'Insufficient credits' }, { status: 402 })
+    }
 
     const body: SynthesizeRequest = await request.json()
     const { text, voiceId = 'rachel', projectId, pageNumber } = body

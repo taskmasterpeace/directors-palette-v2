@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import Replicate from 'replicate'
 import { logger } from '@/lib/logger'
+import { creditsService } from '@/features/credits/services/credits.service'
 import { persistToLibrary } from '../persist-to-library'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
 
@@ -103,6 +104,17 @@ export async function POST(request: NextRequest) {
     const { dna } = await request.json() as { dna: ArtistDNA }
     if (!dna) {
       return NextResponse.json({ error: 'Missing dna' }, { status: 400 })
+    }
+
+    // Deduct credits (z-image-turbo = 5 pts)
+    const deductResult = await creditsService.deductCredits(auth.user.id, 'z-image-turbo', {
+      generationType: 'image',
+      description: 'Artist DNA: header background generation',
+      overrideAmount: 5,
+      user_email: auth.user.email,
+    })
+    if (!deductResult.success) {
+      return NextResponse.json({ error: deductResult.error || 'Insufficient credits' }, { status: 402 })
     }
 
     const prompt = buildPrompt(dna)

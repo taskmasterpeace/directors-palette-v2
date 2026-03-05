@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import Replicate from 'replicate'
 import { logger } from '@/lib/logger'
+import { creditsService } from '@/features/credits/services/credits.service'
 import { persistToLibrary } from '../persist-to-library'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
 import { buildPhotoShootPrompt } from '@/features/music-lab/services/photo-shoot.service'
@@ -37,6 +38,17 @@ export async function POST(request: NextRequest) {
         { error: 'dna is required' },
         { status: 400 }
       )
+    }
+
+    // Deduct credits (nano-banana-2 @ 1K = 10 pts)
+    const deductResult = await creditsService.deductCredits(auth.user.id, 'nano-banana-2', {
+      generationType: 'image',
+      description: 'Artist DNA: photo shoot generation',
+      overrideAmount: 10,
+      user_email: auth.user.email,
+    })
+    if (!deductResult.success) {
+      return NextResponse.json({ error: deductResult.error || 'Insufficient credits' }, { status: 402 })
     }
 
     let finalPrompt: string

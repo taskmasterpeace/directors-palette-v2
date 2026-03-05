@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
 import { logger } from '@/lib/logger'
+import { creditsService } from '@/features/credits/services/credits.service'
 
 interface SoundEffectRequest {
   description: string
@@ -42,6 +43,17 @@ export async function POST(request: NextRequest) {
     userEmail = user.email
 
     logger.api.info('Storybook API: sound-effects (ElevenLabs) called by user', { user: user.id })
+
+    // Deduct credits (ElevenLabs SFX = 3 pts)
+    const deductResult = await creditsService.deductCredits(user.id, 'elevenlabs-sfx', {
+      generationType: 'audio',
+      description: 'Storybook: sound effect generation',
+      overrideAmount: 3,
+      user_email: user.email,
+    })
+    if (!deductResult.success) {
+      return NextResponse.json({ error: deductResult.error || 'Insufficient credits' }, { status: 402 })
+    }
 
     const body: SoundEffectRequest = await request.json()
     let { description } = body

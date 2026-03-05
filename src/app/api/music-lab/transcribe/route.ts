@@ -10,6 +10,7 @@ import Replicate from 'replicate'
 import { readFile } from 'fs/promises'
 import path from 'path'
 import { logger } from '@/lib/logger'
+import { creditsService } from '@/features/credits/services/credits.service'
 
 // Using official OpenAI Whisper large-v3 - much better quality than whisper-diarization
 const WHISPER_MODEL = 'openai/whisper:4d50db2a3dbc86e2eeeed463f29d0c15d319f1b8c3cdae41f8f2cbe59c3a23be'
@@ -20,7 +21,18 @@ export async function POST(request: NextRequest) {
         const auth = await getAuthenticatedUser(request)
         if (auth instanceof NextResponse) return auth
 
-        const { user: _user } = auth
+        const { user } = auth
+
+        // Deduct credits (Whisper transcription = 3 pts)
+        const deductResult = await creditsService.deductCredits(user.id, 'whisper-transcribe', {
+            generationType: 'audio',
+            description: 'Music Lab: audio transcription',
+            overrideAmount: 3,
+            user_email: user.email,
+        })
+        if (!deductResult.success) {
+            return NextResponse.json({ error: deductResult.error || 'Insufficient credits' }, { status: 402 })
+        }
 
         const { audioUrl } = await request.json()
 
