@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
-    let raw = data.choices?.[0]?.message?.content || ''
+    const raw = data.choices?.[0]?.message?.content || ''
 
     let result
     try {

@@ -112,10 +112,14 @@ function SortableSectionChip({
   entry,
   onRemove,
   onBarCountChange,
+  note,
+  onNoteChange,
 }: {
   entry: StructureEntry
   onRemove: () => void
   onBarCountChange: (count: number) => void
+  note?: string
+  onNoteChange?: (note: string) => void
 }) {
   const {
     attributes,
@@ -190,6 +194,19 @@ function SortableSectionChip({
           +
         </button>
       </div>
+
+      {/* Section note */}
+      {onNoteChange && (
+        <input
+          type="text"
+          value={note || ''}
+          onChange={(e) => onNoteChange(e.target.value)}
+          placeholder="Direction..."
+          className="w-full mt-1 text-[10px] bg-background/30 border border-border/30 rounded px-1.5 py-0.5
+                     placeholder:text-muted-foreground/40 focus:outline-none focus:border-amber-500/50"
+          onPointerDown={(e) => e.stopPropagation()}
+        />
+      )}
     </div>
   )
 }
@@ -209,6 +226,7 @@ interface FullSongBuilderProps {
 
 export function FullSongBuilder({ open, onOpenChange, onGenerate, isGenerating, concept }: FullSongBuilderProps) {
   const [structure, setStructure] = useState<StructureEntry[]>([])
+  const [sectionNotes, setSectionNotes] = useState<Record<string, string>>({})
   const [emotion, setEmotion] = useState('Confident')
   const [energy, setEnergy] = useState(50)
   const [delivery, setDelivery] = useState('Raw')
@@ -356,6 +374,8 @@ export function FullSongBuilder({ open, onOpenChange, onGenerate, isGenerating, 
                           entry={entry}
                           onRemove={() => removeSection(entry.id)}
                           onBarCountChange={(count) => updateBarCount(entry.id, count)}
+                          note={sectionNotes[entry.id] || ''}
+                          onNoteChange={(note) => setSectionNotes(prev => ({ ...prev, [entry.id]: note }))}
                         />
                       ))}
                     </div>
