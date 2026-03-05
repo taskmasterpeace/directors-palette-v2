@@ -32,9 +32,6 @@ export function StudioTab() {
     setActiveArtistId,
     artistDirection,
     setArtistDirection,
-    isJudging: _isJudging,
-    judgeResult: _judgeResult,
-    judgeDrafts: _judgeDrafts,
   } = useWritingStudioStore()
 
   const { draft: artistDna, activeArtistId } = useArtistDnaStore()
