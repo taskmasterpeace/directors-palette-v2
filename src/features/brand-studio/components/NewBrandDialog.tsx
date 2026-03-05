@@ -11,10 +11,37 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useBrandStore } from '../hooks/useBrandStore'
+import { toast } from 'sonner'
 
 interface NewBrandDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+}
+
+/**
+ * Upload a base64 data URI to Supabase storage via /api/upload-file
+ * Returns the public URL of the uploaded file
+ */
+async function uploadLogoToStorage(dataUri: string): Promise<string> {
+  // Convert data URI to blob
+  const response = await fetch(dataUri)
+  const blob = await response.blob()
+
+  const formData = new FormData()
+  formData.append('file', blob, 'brand-logo.png')
+
+  const uploadRes = await fetch('/api/upload-file', {
+    method: 'POST',
+    body: formData,
+  })
+
+  if (!uploadRes.ok) {
+    const err = await uploadRes.json()
+    throw new Error(err.error || 'Failed to upload logo')
+  }
+
+  const { url } = await uploadRes.json()
+  return url
 }
 
 export function NewBrandDialog({ open, onOpenChange }: NewBrandDialogProps) {
@@ -37,12 +64,26 @@ export function NewBrandDialog({ open, onOpenChange }: NewBrandDialogProps) {
     if (!name.trim() || !description.trim()) return
     setStep('generating')
     try {
-      const logoUrl = logoPreview
-      const brand = await createBrand(name.trim(), logoUrl ?? undefined, description.trim())
-      await generateBrandGuide(brand.id, logoUrl, description.trim())
+      // Upload logo to storage if provided (don't store base64 in DB)
+      let logoUrl: string | undefined
+      if (logoPreview) {
+        toast.info('Uploading logo...')
+        logoUrl = await uploadLogoToStorage(logoPreview)
+      }
+
+      // Create the brand record
+      const brand = await createBrand(name.trim(), logoUrl, description.trim())
+
+      // Generate brand guide via LLM analysis
+      toast.info('Analyzing brand identity...')
+      await generateBrandGuide(brand.id, logoUrl ?? null, description.trim())
+
+      toast.success('Brand guide generated!')
       handleReset()
       onOpenChange(false)
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Something went wrong'
+      toast.error(`Brand guide failed: ${message}`)
       setStep('input')
     }
   }
