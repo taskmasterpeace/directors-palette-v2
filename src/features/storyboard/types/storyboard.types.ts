@@ -231,7 +231,7 @@ export const PRESET_STYLES: PresetStyle[] = [
         id: 'black-dynamite',
         name: 'Street Fury',
         description: '70s exploitation cinema with raw gritty energy and retro grain',
-        imagePath: '/storyboard-assets/styles/black-dynamite.webp',
+        imagePath: '',
         stylePrompt: '1970s exploitation cinema still photograph aesthetic, Super 16mm Color Reversal film stock with heavy visible grain structure and high contrast saturated color, low-angle heroic composition shooting upward making protagonists appear larger than life and dominant in the frame, amber and brown warm color grading with oversaturated reds and golds bleeding at highlight edges, practical location lighting using harsh available sunlight and bare interior tungsten bulbs with no diffusion creating hard unflattering shadows, urban street compositions framing subjects against concrete walls and hand-painted signage and neon, high-contrast silhouettes in doorways and alleys with strong hard backlight rimming figures, soft focus and slight halation around bright highlights from uncoated vintage lens elements, shallow depth of field with nervous bokeh from fast vintage primes wide open, visible film grain texture with color noise especially in shadow areas, slightly faded and yellowed color shift as if aged film stock, subjects framed tight against gritty textured environments like peeling paint brick walls and linoleum floors, double exposure and kaleidoscopic superimposition layering for stylized compositions',
         technicalAttributes: {
             cameraRenderType: 'Super 16mm film camera',
@@ -246,7 +246,7 @@ export const PRESET_STYLES: PresetStyle[] = [
         id: 'blade-runner',
         name: 'Neon Noir',
         description: 'Rain-soaked dystopian noir with atmospheric haze and neon reflections',
-        imagePath: '/storyboard-assets/styles/blade-runner.webp',
+        imagePath: '',
         stylePrompt: 'neon-noir dystopian still photograph, frame bathed in darkness with bold theatrical color choices contrasting sterile cool blue interiors against warm amber-cast exteriors, xenon spotlight shafts cutting through dense atmospheric smoke and haze creating visible volumetric light beams in the air, venetian blind shadow patterns fragmenting illumination across walls and faces in sharp parallel lines, horizontal anamorphic lens flare streaks from bright practicals in frame, rain-soaked streets and surfaces creating mirror-like reflective neon pools of teal and amber on wet pavement, warm soft uplight illuminating foreground subjects from below combined with hard backlight and layered smoke in the background, deep shadow with faces half-lit by practical light sources and neon signage spilling colored light, push-processed film stock with elevated grain structure and crushed deep blacks, silhouetted figures backlit against rain-streaked window glass, glowing bright eye-level catch lights in close-ups creating an unsettling almost supernatural quality, oppressive urban density with layered architectural depth receding into smoky atmospheric haze, wet reflective surfaces everywhere doubling every light source in the composition',
         technicalAttributes: {
             cameraRenderType: 'Panavision Panaflex with anamorphic lenses',
@@ -261,7 +261,7 @@ export const PRESET_STYLES: PresetStyle[] = [
         id: 'mr-robot',
         name: 'Digital Paranoia',
         description: 'Oppressive off-center framing, cold clinical precision, surveillance aesthetic',
-        imagePath: '/storyboard-assets/styles/mr-robot.webp',
+        imagePath: '',
         stylePrompt: 'cinematic digital paranoia aesthetic, characters pushed to extreme edges or bottom of the frame leaving large oppressive empty spaces above or beside them to suggest emotional smallness, shortsighted framing that places subjects on the near edge breaking classical leading-room rules creating tense disorienting conversations, wide lenses used close to faces with slight distortion emphasizing large expressive eyes drawing viewers into an interior subjective world, shallow depth of field isolating subjects from surroundings so backgrounds fall out of focus and figures appear to float in space, under-lit high-contrast lighting with strong practicals like lamps windows and screens creating pools of light in otherwise shadowy environments, silhouettes and backlit figures obscuring faces reinforcing secrecy and mistrust, cool desaturated color palette with fluorescent green tint for corporate and urban spaces deepening technological and emotional coldness, clinical digital precision, balanced centered framing reserved only for moments of relative stability or introspection as a deliberate contrast to the dominant off-center compositions',
         technicalAttributes: {
             cameraRenderType: 'ARRI Alexa Mini',
@@ -276,7 +276,7 @@ export const PRESET_STYLES: PresetStyle[] = [
         id: 'toy-story',
         name: 'Plastic World',
         description: 'Saturated 3D animation with toy-scale perspective and glossy plastic surfaces',
-        imagePath: '/storyboard-assets/styles/toy-story.webp',
+        imagePath: '',
         stylePrompt: 'premium 3D animated render, low-angle perspective shot from toy-scale height looking upward at an oversized world making everyday objects appear monumental, smooth glossy plastic surface rendering with specular highlights and visible seam lines and ball-joint articulation on characters, bright saturated primary color palette with slightly caricatured proportions and tangible realistic surface textures, soft ambient occlusion darkening corners and crevices where surfaces meet grounding objects in their environment, global illumination with radiosity causing colored light to bounce between nearby brightly colored surfaces tinting adjacent areas, subsurface scattering on translucent and skin-like materials creating warm inner glow where light passes through thin edges, contact shadows soft and precise beneath every object sitting on a surface, subtle barrel distortion from a wide-angle virtual lens, shallow depth of field with creamy circular bokeh softly dissolving the background, warm interior lighting with soft diffused window light and colorful bounce fill from surrounding toys and objects, clean anti-aliased edges with no jaggies, smooth phong and blinn specular reflections on plastic and metallic toy surfaces, slight environmental reflection on glossy materials showing the surrounding room, rim light separating characters from backgrounds with a thin bright edge outline',
         technicalAttributes: {
             cameraRenderType: 'Virtual 3D render camera',
@@ -291,7 +291,7 @@ export const PRESET_STYLES: PresetStyle[] = [
         id: 'gi-joe',
         name: 'GI Joe',
         description: '80s hand-drawn cel animation style',
-        imagePath: '/storyboard-assets/styles/gi-joe.webp',
+        imagePath: '',
         stylePrompt: 'in the style of 1980s hand-drawn cel animation, bold flat colors, clean ink outlines, limited shading, action line framing, vintage cartoon aesthetic',
         technicalAttributes: {
             cameraRenderType: 'Hand-drawn cel animation',

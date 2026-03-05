@@ -429,9 +429,13 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                 }
 
                 const styleImageUrl = selectedStyle.imagePath
-                anchorUrl = styleImageUrl.startsWith('data:') || styleImageUrl.startsWith('http')
-                    ? styleImageUrl
-                    : `${window.location.origin}${styleImageUrl}`
+                if (styleImageUrl) {
+                    anchorUrl = styleImageUrl.startsWith('data:') || styleImageUrl.startsWith('http')
+                        ? styleImageUrl
+                        : `${window.location.origin}${styleImageUrl}`
+                } else {
+                    anchorUrl = null
+                }
 
                 _anchorName = selectedStyle.name || 'Style Guide'
 
@@ -500,7 +504,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
 
                     const refsToSend = shotCreatorSettings.selectedStyle
                         ? [inputUrl]
-                        : [anchorUrl, inputUrl]
+                        : [anchorUrl, inputUrl].filter((url): url is string => Boolean(url))
 
                     await generateImage(
                         model,

@@ -476,17 +476,16 @@ export function useImageGeneration() {
                     // Inject style prompt at the end of user's prompt
                     promptWithStyle = `${prompt}, ${selectedStyle.stylePrompt}`
 
-                    // Auto-attach style reference image
+                    // Auto-attach style reference image (if one exists)
                     const styleImageUrl = selectedStyle.imagePath
-                    // Handle data URLs (custom styles), full URLs, and local paths (presets)
-                    if (typeof window !== 'undefined') {
+                    if (styleImageUrl && typeof window !== 'undefined') {
                         const fullStyleUrl = styleImageUrl.startsWith('data:') || styleImageUrl.startsWith('http')
                             ? styleImageUrl
                             : `${window.location.origin}${styleImageUrl}`
                         uniqueReferenceImages = [fullStyleUrl, ...uniqueReferenceImages]
                     }
 
-                    logger.shotCreator.info('Style applied', { style: selectedStyle.name, prompt: selectedStyle.stylePrompt, reference: styleImageUrl.startsWith('data:') ? '[data URL]' : styleImageUrl })
+                    logger.shotCreator.info('Style applied', { style: selectedStyle.name, prompt: selectedStyle.stylePrompt, reference: !styleImageUrl ? '[none]' : styleImageUrl.startsWith('data:') ? '[data URL]' : styleImageUrl })
                 }
             }
 
