@@ -234,7 +234,11 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         badgeColor: 'bg-green-600',
         textColor: 'text-green-300',
         endpoint: 'google/nano-banana-2',
-        costPerImage: 0.10, // 10 pts = $0.10 (43% margin on $0.07 Replicate cost)
+        costPerImage: 0.10, // 10 pts = $0.10 — default (1K) rate
+        costByResolution: {
+            '1K': 0.10, // 10 pts — actual cost $0.067, margin ~33%
+            '2K': 0.15, // 15 pts — actual cost $0.101, margin ~33%
+        },
         supportedParameters: ['aspectRatio', 'resolution', 'outputFormat', 'safetyFilterLevel', 'personGeneration', 'googleSearch', 'imageSearch'],
         parameters: {
             aspectRatio: MODEL_PARAMETERS.nanoBanana2AspectRatio,
