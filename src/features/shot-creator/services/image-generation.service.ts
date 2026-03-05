@@ -12,8 +12,6 @@ import type {
   ImageGenerationResponse,
   NanoBanana2Settings,
   ZImageTurboSettings,
-  SeedreamSettings,
-  NanoBananaProSettings,
 } from '../types/image-generation.types'
 import { ASPECT_RATIO_SIZES } from '@/config'
 import { logger } from '@/lib/logger'
@@ -43,15 +41,6 @@ export class ImageGenerationService {
         break
       case 'z-image-turbo':
         errors.push(...this.validateZImageTurbo(input))
-        break
-      case 'seedream-5-lite':
-        // Seedream 5 Lite supports up to 14 reference images
-        if (input.referenceImages && input.referenceImages.length > 14) {
-          errors.push('Seedream 5 Lite supports maximum 14 reference images')
-        }
-        break
-      case 'nano-banana-pro':
-        errors.push(...this.validateNanoBananaPro(input))
         break
     }
 
@@ -95,18 +84,7 @@ export class ImageGenerationService {
     return errors
   }
 
-  /**
-   * Validate nano-banana-pro specific constraints
-   */
-  private static validateNanoBananaPro(input: ImageGenerationInput): string[] {
-    const errors: string[] = []
 
-    if (input.referenceImages && input.referenceImages.length > 14) {
-      errors.push('Nano Banana Pro supports maximum 14 reference images')
-    }
-
-    return errors
-  }
 
   /**
    * Build Replicate input object based on model
@@ -117,10 +95,6 @@ export class ImageGenerationService {
         return this.buildNanoBanana2Input(input)
       case 'z-image-turbo':
         return this.buildZImageTurboInput(input)
-      case 'seedream-5-lite':
-        return this.buildSeedreamInput(input)
-      case 'nano-banana-pro':
-        return this.buildNanoBananaProInput(input)
       default:
         throw new Error(`Unsupported model: ${input.model}`)
     }
@@ -203,74 +177,7 @@ export class ImageGenerationService {
     return replicateInput
   }
 
-  private static buildSeedreamInput(input: ImageGenerationInput) {
-    const settings = input.modelSettings as SeedreamSettings
-    const replicateInput: Record<string, unknown> = {
-      prompt: input.prompt,
-    }
 
-    if (settings.aspectRatio) {
-      replicateInput.aspect_ratio = settings.aspectRatio
-    }
-
-    if (settings.resolution) {
-      replicateInput.size = settings.resolution // 2K, 4K, or custom
-    }
-
-    // Seedream 5 Lite supports output_format; Seedream 4.5 does not (always JPG)
-    if (input.model === 'seedream-5-lite' && settings.outputFormat) {
-      replicateInput.output_format = settings.outputFormat
-    }
-
-    // Sequential image generation - API accepts 'auto' or 'disabled' string
-    if (settings.sequentialGeneration !== undefined) {
-      replicateInput.sequential_image_generation = settings.sequentialGeneration ? 'auto' : 'disabled'
-    }
-
-    if (settings.maxImages && settings.maxImages > 1) {
-      replicateInput.max_images = settings.maxImages
-    }
-
-    // Reference images for i2i
-    if (input.referenceImages && input.referenceImages.length > 0) {
-      replicateInput.image_input = this.normalizeReferenceImages(input.referenceImages)
-    }
-
-    return replicateInput
-  }
-
-  /**
-   * Build Nano Banana Pro input
-   */
-  private static buildNanoBananaProInput(input: ImageGenerationInput) {
-    const settings = input.modelSettings as NanoBananaProSettings
-    const replicateInput: Record<string, unknown> = {
-      prompt: input.prompt,
-    }
-
-    if (settings.aspectRatio) {
-      replicateInput.aspect_ratio = settings.aspectRatio
-    }
-
-    if (settings.outputFormat) {
-      const format = settings.outputFormat as string
-      replicateInput.output_format = format === 'webp' ? 'jpg' : settings.outputFormat
-    }
-
-    if (settings.resolution) {
-      replicateInput.resolution = settings.resolution
-    }
-
-    if (settings.safetyFilterLevel) {
-      replicateInput.safety_filter_level = settings.safetyFilterLevel
-    }
-
-    if (input.referenceImages && input.referenceImages.length > 0) {
-      replicateInput.image_input = this.normalizeReferenceImages(input.referenceImages)
-    }
-
-    return replicateInput
-  }
 
   /**
    * Normalize reference images to URL strings

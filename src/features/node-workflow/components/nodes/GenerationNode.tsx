@@ -10,8 +10,6 @@ function GenerationNode({ data, selected }: NodeProps) {
   const modelLabels: Record<string, string> = {
     'nano-banana-2': 'Nano Banana 2',
     'z-image-turbo': 'Z-Image Turbo',
-    'seedream-5-lite': 'SeeDream 5 Lite',
-    'nano-banana-pro': 'Nano Banana Pro',
   }
 
   return (

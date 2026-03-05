@@ -34,24 +34,6 @@ export function buildModelSettings(
       // numInferenceSteps and guidanceScale use config defaults (8 and 0)
       break;
 
-    case 'seedream-5-lite':
-      modelSettings.aspectRatio = settings.aspectRatio;
-      modelSettings.outputFormat = settings.outputFormat || 'png';
-      modelSettings.resolution = settings.resolution || '2K';
-      // Sequential generation settings
-      if (settings.sequentialGeneration) {
-        modelSettings.sequentialGeneration = true;
-        modelSettings.maxImages = settings.maxImages || 3;
-      }
-      break;
-
-    case 'nano-banana-pro':
-      modelSettings.aspectRatio = settings.aspectRatio;
-      modelSettings.outputFormat = settings.outputFormat || 'jpg';
-      modelSettings.resolution = settings.resolution || '2K';
-      modelSettings.safetyFilterLevel = settings.safetyFilterLevel || 'block_only_high';
-      break;
-
     default:
       // Unknown model - copy basic settings
       modelSettings.aspectRatio = settings.aspectRatio;
@@ -70,10 +52,6 @@ export function getDefaultOutputFormat(model: string): string {
       return 'webp'; // nano-banana-2 always outputs WebP
     case 'z-image-turbo':
       return 'jpg';
-    case 'seedream-5-lite':
-      return 'png';
-    case 'nano-banana-pro':
-      return 'jpg';
     default:
       return 'webp';
   }
@@ -82,13 +60,13 @@ export function getDefaultOutputFormat(model: string): string {
 /**
  * Check if a model supports resolution settings
  */
-export function supportsResolution(model: string): boolean {
-  return ['seedream-5-lite', 'nano-banana-pro'].includes(model);
+export function supportsResolution(_model: string): boolean {
+  return false;
 }
 
 /**
  * Check if a model supports sequential generation
  */
-export function supportsSequentialGeneration(model: string): boolean {
-  return model === 'seedream-5-lite';
+export function supportsSequentialGeneration(_model: string): boolean {
+  return false;
 }

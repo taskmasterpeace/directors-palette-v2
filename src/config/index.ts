@@ -22,7 +22,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana-2' | 'nano-banana-pro' | 'z-image-turbo' | 'seedream-5-lite'
+export type ModelId = 'nano-banana-2' | 'z-image-turbo'
 
 export interface ModelParameter {
     id: string
@@ -234,7 +234,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         badgeColor: 'bg-green-600',
         textColor: 'text-green-300',
         endpoint: 'google/nano-banana-2',
-        costPerImage: 0.06, // 6 pts = $0.06 (50% margin on $0.04 cost)
+        costPerImage: 0.10, // 10 pts = $0.10 (43% margin on $0.07 Replicate cost)
         supportedParameters: ['aspectRatio', 'resolution', 'outputFormat', 'safetyFilterLevel', 'personGeneration', 'googleSearch', 'imageSearch'],
         parameters: {
             aspectRatio: MODEL_PARAMETERS.nanoBanana2AspectRatio,
@@ -259,7 +259,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         badgeColor: 'bg-purple-600',
         textColor: 'text-purple-300',
         endpoint: 'prunaai/z-image-turbo',
-        costPerImage: 0.03, // 3 points = 3 cents
+        costPerImage: 0.05, // 5 pts = $0.05 (67% margin on ~$0.02 Replicate cost)
         supportedParameters: ['outputFormat', 'aspectRatio', 'numInferenceSteps', 'guidanceScale'],
         parameters: {
             outputFormat: MODEL_PARAMETERS.outputFormat,
@@ -270,63 +270,15 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         maxReferenceImages: 0, // Text-to-image only - no image input support
         estimatedSeconds: 8,
     },
-    'seedream-5-lite': {
-        id: 'seedream-5-lite',
-        name: 'seedream-5-lite',
-        displayName: 'Seedream 5 Lite',
-        type: 'generation',
-        icon: '🌿',
-        description: 'Deep thinking image generation with reasoning, web search, and editing capabilities.',
-        badge: 'New',
-        badgeColor: 'bg-green-600',
-        textColor: 'text-green-300',
-        endpoint: 'bytedance/seedream-5-lite',
-        costPerImage: 0.04, // 4 points = 4 cents ($0.035 cost, ~14% margin)
-        supportedParameters: ['aspectRatio', 'resolution', 'maxImages', 'sequentialGeneration', 'outputFormat'],
-        parameters: {
-            aspectRatio: MODEL_PARAMETERS.aspectRatio,
-            resolution: MODEL_PARAMETERS.seedream5Resolution,
-            maxImages: MODEL_PARAMETERS.maxImages,
-            sequentialGeneration: MODEL_PARAMETERS.sequentialGeneration,
-            outputFormat: MODEL_PARAMETERS.outputFormat
-        },
-        maxReferenceImages: 14,
-        estimatedSeconds: 15,
-    },
-    'nano-banana-pro': {
-        id: 'nano-banana-pro',
-        name: 'nano-banana-pro',
-        displayName: 'Nano Banana Pro',
-        type: 'generation',
-        icon: '🔥',
-        description: 'SOTA quality with accurate text rendering, 4K support, and advanced editing capabilities',
-        badge: 'Pro',
-        badgeColor: 'bg-amber-600',
-        textColor: 'text-amber-300',
-        endpoint: 'google/nano-banana-pro',
-        costPerImage: 0.25, // Default price (1K/2K) - 25 pts = $0.25
-        costByResolution: {
-            '1K': 0.25,  // 25 pts - Replicate cost $0.15 (66% margin)
-            '2K': 0.25,  // 25 pts - Replicate cost $0.15 (66% margin)
-            '4K': 0.45,  // 45 pts - Replicate cost $0.30 (50% margin)
-        },
-        supportedParameters: ['outputFormat', 'aspectRatio', 'resolution', 'safetyFilterLevel'],
-        parameters: {
-            outputFormat: MODEL_PARAMETERS.outputFormat,
-            aspectRatio: MODEL_PARAMETERS.aspectRatio,
-            resolution: MODEL_PARAMETERS.nanoBananaProResolution,
-            safetyFilterLevel: MODEL_PARAMETERS.safetyFilterLevel
-        },
-        maxReferenceImages: 14,
-        estimatedSeconds: 45,
-    }
 }
 
 /** Map deprecated model IDs to their current replacements */
 const DEPRECATED_MODEL_MAP: Record<string, ModelId> = {
     'nano-banana': 'nano-banana-2',
-    'nano-banana-pro-exp': 'nano-banana-pro',
-    'riverflow-2-pro': 'nano-banana-pro',
+    'nano-banana-pro-exp': 'nano-banana-2',
+    'nano-banana-pro': 'nano-banana-2',
+    'riverflow-2-pro': 'nano-banana-2',
+    'seedream-5-lite': 'nano-banana-2',
 }
 
 /** Migrate a potentially deprecated model ID to its current equivalent */

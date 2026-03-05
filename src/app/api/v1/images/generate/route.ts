@@ -19,7 +19,7 @@ import type { ModelId } from '@/config'
 import { logger } from '@/lib/logger'
 
 /** Valid image model IDs */
-const VALID_MODEL_IDS: ReadonlySet<string> = new Set(['nano-banana-2', 'nano-banana-pro', 'z-image-turbo', 'seedream-5-lite'])
+const VALID_MODEL_IDS: ReadonlySet<string> = new Set(['nano-banana-2', 'z-image-turbo'])
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,

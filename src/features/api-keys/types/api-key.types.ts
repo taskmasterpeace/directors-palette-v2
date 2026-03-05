@@ -86,7 +86,7 @@ export interface ValidatedApiKey {
 // API Request/Response types
 export interface GenerateImageRequest {
   prompt: string
-  model?: 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'nano-banana-pro'
+  model?: 'nano-banana-2' | 'z-image-turbo'
   aspectRatio?: string
   outputFormat?: 'webp' | 'jpg' | 'png'
   referenceImages?: string[]  // URLs
@@ -94,8 +94,8 @@ export interface GenerateImageRequest {
   // Anchor Transform (@!)
   enableAnchorTransform?: boolean  // If true, first image is anchor, rest are inputs
   // Model-specific settings
-  resolution?: string  // For nano-banana-pro
-  safetyFilterLevel?: string  // For nano-banana-pro
+  resolution?: string
+  safetyFilterLevel?: string
   numInferenceSteps?: number  // For z-image-turbo
   guidanceScale?: number  // For z-image-turbo
 }
@@ -114,7 +114,7 @@ export interface GenerateImageResponse {
 export interface ExecuteRecipeRequest {
   recipeId: string
   variables?: Record<string, string>
-  model?: 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'nano-banana-pro'
+  model?: 'nano-banana-2' | 'z-image-turbo'
   aspectRatio?: string
   outputFormat?: 'webp' | 'jpg' | 'png'
 }

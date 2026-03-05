@@ -43,18 +43,6 @@ const MODEL_CAPABILITIES: Record<ModelId, {
     refImages: 'Up to 1',
     bestFor: ['High quality', 'Fast generation', 'Free tier', 'General use']
   },
-  'seedream-5-lite': {
-    speed: '~10s (Moderate)',
-    textRendering: 'Good',
-    refImages: 'Up to 14',
-    bestFor: ['Deep thinking', 'Reasoning', 'Editing', 'Cheap']
-  },
-  'nano-banana-pro': {
-    speed: 'Standard',
-    textRendering: 'Excellent',
-    refImages: 'Up to 14',
-    bestFor: ['Text rendering', '4K', 'Editing', 'SOTA quality']
-  }
 }
 
 interface ModelSelectorProps {

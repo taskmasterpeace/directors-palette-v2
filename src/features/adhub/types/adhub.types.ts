@@ -7,7 +7,7 @@
 // MODEL TYPES
 // =============================================================================
 
-export type AdhubModel = 'nano-banana-2' | 'nano-banana-pro'
+export type AdhubModel = 'nano-banana-2' | 'z-image-turbo'
 
 // =============================================================================
 // ASPECT RATIO (moved from store for shared access)

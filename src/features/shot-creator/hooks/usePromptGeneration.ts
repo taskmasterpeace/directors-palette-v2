@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react'
 import { useShotCreatorStore } from '@/features/shot-creator/store/shot-creator.store'
 import { useCustomStylesStore } from '../store/custom-styles.store'
-import { getModelConfig } from '@/config'
+import { getModelConfig, type ModelId } from '@/config'
 import { useShotCreatorSettings } from './useShotCreatorSettings'
 import { useImageGeneration } from './useImageGeneration'
 import { parseDynamicPrompt, detectAnchorTransform, stripAnchorSyntax } from '../helpers/prompt-syntax-feedback'
@@ -157,21 +157,6 @@ export function usePromptGeneration() {
             case 'z-image-turbo':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
                 baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
-                break
-            case 'seedream-5-lite':
-                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
-                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
-                baseSettings.resolution = shotCreatorSettings.resolution || '2K'
-                if (shotCreatorSettings.sequentialGeneration) {
-                    baseSettings.sequentialGeneration = true
-                    baseSettings.maxImages = shotCreatorSettings.maxImages || 3
-                }
-                break
-            case 'nano-banana-pro':
-                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
-                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
-                baseSettings.resolution = shotCreatorSettings.resolution || '2K'
-                baseSettings.safetyFilterLevel = shotCreatorSettings.safetyFilterLevel || 'block_only_high'
                 break
         }
 
@@ -562,7 +547,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
             }
 
             if (activeRecipe.suggestedModel) {
-                updateSettings({ model: activeRecipe.suggestedModel as 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'nano-banana-pro' })
+                updateSettings({ model: activeRecipe.suggestedModel as ModelId })
             }
             if (activeRecipe.suggestedAspectRatio) {
                 updateSettings({ aspectRatio: activeRecipe.suggestedAspectRatio })
@@ -584,7 +569,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                     stageReferenceImages[0] = [...new Set([...allRefs, ...stageReferenceImages[0]])]
                 }
 
-                const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-2') as 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'nano-banana-pro'
+                const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-2') as ModelId
                 const aspectRatio = shotCreatorSettings.aspectRatio || activeRecipe.suggestedAspectRatio || '16:9'
 
                 try {
@@ -623,7 +608,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
                 setStageReferenceImages([])
             }
 
-            const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-2') as 'nano-banana-2' | 'z-image-turbo' | 'seedream-5-lite' | 'nano-banana-pro'
+            const model = (activeRecipe.suggestedModel || shotCreatorSettings.model || 'nano-banana-2') as ModelId
             const modelSettings = buildModelSettings()
 
             toast.info(`Generating with recipe: ${activeRecipe.name}`)

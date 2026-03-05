@@ -8,9 +8,7 @@ import type { ModelId } from '@/config'
 // Available image generation models
 export type ImageModel = Extract<ModelId,
   | 'nano-banana-2'
-  | 'nano-banana-pro'
   | 'z-image-turbo'
-  | 'seedream-5-lite'
 >
 
 // Model-specific settings interfaces
