@@ -28,6 +28,7 @@ import {
   Edit3,
   Play,
   Image as ImageIcon,
+  ImageOff,
   Layers,
   Settings,
   Copy,
@@ -101,6 +102,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
   const [formQuickLabel, setFormQuickLabel] = useState('')
   const [formIsQuickAccess, setFormIsQuickAccess] = useState(false)
   const [formAspectRatio, setFormAspectRatio] = useState('')
+  const [formRequiresImage, setFormRequiresImage] = useState(true)
   const [formSuggestedModel, setFormSuggestedModel] = useState('')
   const [formStages, setFormStages] = useState<RecipeStage[]>([
     { id: 'stage_0', order: 0, type: 'generation', template: '', fields: [], referenceImages: [] }
@@ -114,6 +116,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
     setFormCategory('')
     setFormQuickLabel('')
     setFormIsQuickAccess(false)
+    setFormRequiresImage(true)
     setFormAspectRatio('')
     setFormSuggestedModel('')
     setFormStages([{ id: 'stage_0', order: 0, type: 'generation', template: '', fields: [], referenceImages: [] }])
@@ -134,6 +137,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
     setFormCategory(recipe.categoryId || '')
     setFormQuickLabel(recipe.quickAccessLabel || '')
     setFormIsQuickAccess(recipe.isQuickAccess)
+    setFormRequiresImage(recipe.requiresImage !== false)
     setFormAspectRatio(recipe.suggestedAspectRatio || '')
     setFormSuggestedModel(recipe.suggestedModel || '')
     setFormStages(recipe.stages.map(s => ({ ...s, type: s.type || 'generation' })))
@@ -165,6 +169,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
       description: formDescription.trim() || undefined,
       recipeNote: formRecipeNote.trim() || undefined,
       stages: stagesWithFields,
+      requiresImage: formRequiresImage,
       suggestedAspectRatio: formAspectRatio.trim() || undefined,
       suggestedModel: formSuggestedModel.trim() || undefined,
       categoryId: formCategory || undefined,
@@ -211,6 +216,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
       description: formDescription.trim() || undefined,
       recipeNote: formRecipeNote.trim() || undefined,
       stages: stagesWithFields,
+      requiresImage: formRequiresImage,
       suggestedAspectRatio: formAspectRatio.trim() || undefined,
       suggestedModel: formSuggestedModel.trim() || undefined,
       categoryId: formCategory || undefined,
@@ -561,13 +567,29 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
                             {totalRefImages}
                           </Badge>
                         )}
+                        {recipe.requiresImage === false ? (
+                          <Badge variant="outline" className="text-xs text-zinc-400 border-zinc-600 shrink-0 hidden sm:inline-flex">
+                            <ImageOff className="w-3 h-3 mr-1" />
+                            No image
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs text-blue-400 border-blue-500/30 shrink-0 hidden sm:inline-flex">
+                            <ImageIcon className="w-3 h-3 mr-1" />
+                            Image req.
+                          </Badge>
+                        )}
                       </div>
                       {recipe.description && (
                         <p className="text-xs text-muted-foreground mt-0.5 truncate">
                           {recipe.description}
                         </p>
                       )}
-                      <div className="flex gap-1 mt-2 flex-wrap">
+                      <div className="flex gap-1 mt-2 flex-wrap items-center">
+                        {allFields.length > 0 && (
+                          <span className="text-xs text-muted-foreground mr-1">
+                            {allFields.filter(f => f.required).length} req / {allFields.filter(f => !f.required).length} opt
+                          </span>
+                        )}
                         {allFields.slice(0, 3).map((field) => (
                           <Badge
                             key={field.id}
@@ -780,6 +802,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
               category={formCategory}
               quickLabel={formQuickLabel}
               isQuickAccess={formIsQuickAccess}
+              requiresImage={formRequiresImage}
               aspectRatio={formAspectRatio}
               suggestedModel={formSuggestedModel}
               stages={formStages}
@@ -790,6 +813,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
               onCategoryChange={setFormCategory}
               onQuickLabelChange={setFormQuickLabel}
               onIsQuickAccessChange={setFormIsQuickAccess}
+              onRequiresImageChange={setFormRequiresImage}
               onAspectRatioChange={setFormAspectRatio}
               onSuggestedModelChange={setFormSuggestedModel}
               onAddStage={addStage}
@@ -834,6 +858,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
               category={formCategory}
               quickLabel={formQuickLabel}
               isQuickAccess={formIsQuickAccess}
+              requiresImage={formRequiresImage}
               aspectRatio={formAspectRatio}
               suggestedModel={formSuggestedModel}
               stages={formStages}
@@ -844,6 +869,7 @@ export function RecipeBuilder({ onSelectRecipe, className }: RecipeBuilderProps)
               onCategoryChange={setFormCategory}
               onQuickLabelChange={setFormQuickLabel}
               onIsQuickAccessChange={setFormIsQuickAccess}
+              onRequiresImageChange={setFormRequiresImage}
               onAspectRatioChange={setFormAspectRatio}
               onSuggestedModelChange={setFormSuggestedModel}
               onAddStage={addStage}

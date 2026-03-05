@@ -29,6 +29,7 @@ export interface DbRecipe {
   quick_access_label: string | null
   is_quick_access: boolean
   category_id: string | null
+  requires_image: boolean | null
   is_system: boolean
   is_system_only: boolean
   created_at: string
@@ -63,6 +64,7 @@ function dbRecipeToRecipe(dbRecipe: DbRecipe): Recipe {
     suggestedResolution: dbRecipe.suggested_resolution || undefined,
     suggestedModel: dbRecipe.suggested_model || undefined,
     quickAccessLabel: dbRecipe.quick_access_label || undefined,
+    requiresImage: dbRecipe.requires_image ?? undefined,
     isQuickAccess: dbRecipe.is_quick_access,
     categoryId: dbRecipe.category_id || undefined,
     isSystem: dbRecipe.is_system,
@@ -95,6 +97,7 @@ function recipeToDbRecipe(
     suggested_resolution: recipe.suggestedResolution || null,
     suggested_model: recipe.suggestedModel || null,
     quick_access_label: recipe.quickAccessLabel || null,
+    requires_image: recipe.requiresImage ?? null,
     is_quick_access: recipe.isQuickAccess,
     category_id: recipe.categoryId || null,
     is_system: recipe.isSystem || false,

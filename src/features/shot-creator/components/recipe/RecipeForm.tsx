@@ -34,6 +34,7 @@ export interface RecipeFormProps {
   category: string
   quickLabel: string
   isQuickAccess: boolean
+  requiresImage: boolean
   aspectRatio: string
   suggestedModel: string
   stages: RecipeStage[]
@@ -44,6 +45,7 @@ export interface RecipeFormProps {
   onCategoryChange: (v: string) => void
   onQuickLabelChange: (v: string) => void
   onIsQuickAccessChange: (v: boolean) => void
+  onRequiresImageChange: (v: boolean) => void
   onAspectRatioChange: (v: string) => void
   onSuggestedModelChange: (v: string) => void
   onAddStage: () => void
@@ -64,6 +66,7 @@ export function RecipeForm({
   category,
   quickLabel,
   isQuickAccess,
+  requiresImage,
   aspectRatio,
   suggestedModel,
   stages,
@@ -74,6 +77,7 @@ export function RecipeForm({
   onCategoryChange,
   onQuickLabelChange,
   onIsQuickAccessChange,
+  onRequiresImageChange,
   onAspectRatioChange,
   onSuggestedModelChange,
   onAddStage,
@@ -135,6 +139,23 @@ export function RecipeForm({
           onChange={(e) => onRecipeNoteChange(e.target.value)}
           placeholder="e.g., Please provide an image with a character"
         />
+      </div>
+
+      {/* Requires Image */}
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="requiresImage"
+          checked={requiresImage}
+          onChange={(e) => onRequiresImageChange(e.target.checked)}
+          className="rounded border-border"
+        />
+        <Label htmlFor="requiresImage" className="cursor-pointer">
+          Requires reference image
+        </Label>
+        <span className="text-xs text-muted-foreground">
+          (user must upload an image to generate)
+        </span>
       </div>
 
       {/* Aspect Ratio & Suggested Model Row */}

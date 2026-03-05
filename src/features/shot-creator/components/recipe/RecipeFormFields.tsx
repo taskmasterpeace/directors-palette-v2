@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { X, Check, AlertCircle } from 'lucide-react'
+import { X, Check, AlertCircle, Image as ImageIcon, ImageOff } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { RecipeField, getAllFields, calculateRecipeCost } from '../../types/recipe.types'
 
@@ -182,6 +182,22 @@ export function RecipeFormFields({
             <Badge variant="secondary" className="text-xs py-0">
               {activeRecipe.stages.length} stages
             </Badge>
+          )}
+          {activeRecipe.requiresImage === false ? (
+            <Badge variant="outline" className="text-xs py-0 border-zinc-600 text-zinc-400">
+              <ImageOff className="w-3 h-3 mr-1" />
+              No image needed
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="text-xs py-0 border-blue-500/30 text-blue-400">
+              <ImageIcon className="w-3 h-3 mr-1" />
+              Image required
+            </Badge>
+          )}
+          {allFields.length > 0 && (
+            <span className="text-xs text-muted-foreground">
+              {allFields.filter(f => f.required).length} required, {allFields.filter(f => !f.required).length} optional
+            </span>
           )}
         </div>
         <Button
