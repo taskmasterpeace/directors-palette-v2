@@ -5,10 +5,12 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { creditsService } from '@/features/credits/services/credits.service'
 import type { SectionType, ToneSettings } from '@/features/music-lab/types/writing-studio.types'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
 import { logger } from '@/lib/logger'
 
+const GENERATE_FULL_SONG_COST_CENTS = 10
 const MODEL = 'openai/gpt-4.1'
 
 const BANNED_AI_PHRASES = [
@@ -21,6 +23,7 @@ const BANNED_AI_PHRASES = [
 interface StructureEntry {
   type: SectionType
   barCount: number
+  direction?: string
 }
 
 interface GenerateFullSongBody {
@@ -49,7 +52,11 @@ function buildFullSongPrompt(body: GenerateFullSongBody): string {
   parts.push('SONG STRUCTURE:')
   structure.forEach((s, i) => {
     const guidance = getSectionGuidance(s.type)
-    parts.push(`  ${i + 1}. [${s.type.toUpperCase()}] — ${s.barCount} bars. ${guidance}`)
+    let line = `  ${i + 1}. [${s.type.toUpperCase()}] — ${s.barCount} bars. ${guidance}`
+    if (s.direction) {
+      line += ` DIRECTION: "${s.direction}"`
+    }
+    parts.push(line)
   })
 
   if (concept) {
@@ -178,6 +185,16 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
+
+    const deductResult = await creditsService.deductCredits(auth.user.id, 'full-song-gen', {
+      generationType: 'text',
+      description: 'Writing studio: generate full song',
+      overrideAmount: GENERATE_FULL_SONG_COST_CENTS,
+      user_email: auth.user.email,
+    })
+    if (!deductResult.success) {
+      return NextResponse.json({ error: 'Insufficient credits', ...deductResult }, { status: 402 })
+    }
 
     const body = await request.json() as GenerateFullSongBody
 

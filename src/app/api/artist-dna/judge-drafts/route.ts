@@ -5,11 +5,13 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { creditsService } from '@/features/credits/services/credits.service'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
 import type { DraftOption, SectionType } from '@/features/music-lab/types/writing-studio.types'
 import { logger } from '@/lib/logger'
 
 const MODEL = 'openai/gpt-4.1'
+const JUDGE_COST_CENTS = 5
 
 interface JudgeDraftsBody {
   drafts: DraftOption[]
@@ -100,6 +102,16 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
+
+    const deductResult = await creditsService.deductCredits(auth.user.id, 'artist-judge', {
+      generationType: 'text',
+      description: 'Artist judge: draft review',
+      overrideAmount: JUDGE_COST_CENTS,
+      user_email: auth.user.email,
+    })
+    if (!deductResult.success) {
+      return NextResponse.json({ error: 'Insufficient credits', ...deductResult }, { status: 402 })
+    }
 
     const body = await request.json() as JudgeDraftsBody
 

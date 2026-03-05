@@ -5,10 +5,12 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { creditsService } from '@/features/credits/services/credits.service'
 import type { ToneSettings, SectionType } from '@/features/music-lab/types/writing-studio.types'
 import type { ArtistDNA } from '@/features/music-lab/types/artist-dna.types'
 import { logger } from '@/lib/logger'
 
+const GENERATE_OPTIONS_COST_CENTS = 5
 const MODEL = 'openai/gpt-4.1-mini'
 
 const BANNED_AI_PHRASES = [
@@ -248,6 +250,16 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
+
+    const deductResult = await creditsService.deductCredits(auth.user.id, 'writing-options', {
+      generationType: 'text',
+      description: 'Writing studio: generate 4 draft options',
+      overrideAmount: GENERATE_OPTIONS_COST_CENTS,
+      user_email: auth.user.email,
+    })
+    if (!deductResult.success) {
+      return NextResponse.json({ error: 'Insufficient credits', ...deductResult }, { status: 402 })
+    }
 
     const body = await request.json() as GenerateOptionsBody
 
