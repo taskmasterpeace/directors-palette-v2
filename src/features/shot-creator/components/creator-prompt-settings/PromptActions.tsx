@@ -445,8 +445,7 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                     {/* Generation cost and info */}
                     <div className="flex items-center justify-between text-sm">
                         <span className="text-slate-600 dark:text-slate-400">
-                            Cost: {generationCost.imageCount} image{generationCost.imageCount !== 1 ? 's' : ''} × ${generationCost.costPerImage.toFixed(2)}
-                            {' = $'}{generationCost.totalCost.toFixed(2)} ({generationCost.tokenCost} pts)
+                            {generationCost.tokenCost} pts — {generationCost.imageCount} image{generationCost.imageCount !== 1 ? 's' : ''} × {Math.round(generationCost.costPerImage * 100)} pts
                         </span>
                         {showResizeControls && (
                             <Button
@@ -538,7 +537,7 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                     ) : (
                         <>
                             <Sparkles className="w-4 h-4" />
-                            Generate
+                            Generate ({generationCost.tokenCost} pts)
                         </>
                     )}
                 </Button>
