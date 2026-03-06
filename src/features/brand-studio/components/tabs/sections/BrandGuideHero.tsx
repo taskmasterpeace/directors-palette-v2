@@ -11,53 +11,84 @@ interface BrandGuideHeroProps {
 }
 
 export function BrandGuideHero({ brand, isGenerating, onRegenerate }: BrandGuideHeroProps) {
+  // Extract brand's primary color for the banner gradient
+  const primaryColor = brand.visual_identity_json?.colors?.find(c => c.role === 'primary')?.hex || '#6366f1'
+  const secondaryColor = brand.visual_identity_json?.colors?.find(c => c.role === 'secondary')?.hex || '#8b5cf6'
+
   return (
-    <div className="space-y-4">
-      {/* Logo + Brand Name Header */}
-      <div className="flex items-center gap-4">
-        {brand.logo_url && (
-          <img
-            src={brand.logo_url}
-            alt={`${brand.name} logo`}
-            className="w-16 h-16 rounded-xl object-contain bg-white/5 border border-border/20 p-1.5"
-          />
-        )}
-        <div className="flex-1 min-w-0">
-          <h2 className="text-xl font-bold tracking-tight truncate">{brand.name}</h2>
-          {brand.tagline && (
-            <p className="text-sm text-muted-foreground/70 truncate">{brand.tagline}</p>
+    <div className="space-y-5">
+      {/* Brand-Colored Banner */}
+      <div
+        className="relative rounded-2xl overflow-hidden p-6 pb-8"
+        style={{
+          background: `linear-gradient(135deg, ${primaryColor}18 0%, ${secondaryColor}0a 50%, transparent 100%)`,
+        }}
+      >
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `radial-gradient(${primaryColor} 1px, transparent 1px)`,
+            backgroundSize: '24px 24px',
+          }}
+        />
+
+        <div className="relative flex items-center gap-5">
+          {/* Logo */}
+          {brand.logo_url ? (
+            <div className="w-20 h-20 rounded-2xl bg-white/10 border border-white/20 shadow-xl shadow-black/10 flex items-center justify-center overflow-hidden shrink-0 backdrop-blur-sm">
+              <img src={brand.logo_url} alt={`${brand.name} logo`} className="w-16 h-16 object-contain" />
+            </div>
+          ) : (
+            <div
+              className="w-20 h-20 rounded-2xl border border-white/15 shadow-xl shadow-black/10 flex items-center justify-center shrink-0"
+              style={{ background: `linear-gradient(135deg, ${primaryColor}30, ${primaryColor}10)` }}
+            >
+              <span className="text-2xl font-bold text-foreground/80">{brand.name.charAt(0)}</span>
+            </div>
           )}
-          {brand.industry && (
-            <span className="inline-block mt-1 text-[10px] uppercase tracking-widest text-muted-foreground/40 bg-secondary/40 px-2 py-0.5 rounded-full">
-              {brand.industry}
-            </span>
-          )}
+
+          {/* Brand Info */}
+          <div className="flex-1 min-w-0">
+            <h2 className="text-2xl font-bold tracking-tight truncate">{brand.name}</h2>
+            {brand.tagline && (
+              <p className="text-sm text-muted-foreground/70 truncate mt-0.5">{brand.tagline}</p>
+            )}
+            {brand.industry && (
+              <span
+                className="inline-block mt-2 text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-full font-medium"
+                style={{
+                  backgroundColor: `${primaryColor}15`,
+                  color: `${primaryColor}cc`,
+                  border: `1px solid ${primaryColor}25`,
+                }}
+              >
+                {brand.industry}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Brand Guide Image */}
       {brand.brand_guide_image_url ? (
-        <div className="relative group rounded-2xl overflow-hidden border border-border/30 shadow-lg shadow-black/20">
-          <img
-            src={brand.brand_guide_image_url}
-            alt={`${brand.name} brand guide`}
-            className="w-full object-contain"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
-            <Button
-              size="sm"
-              variant="secondary"
-              className="gap-1.5 bg-background/90 backdrop-blur-md border border-border/40 shadow-lg"
-              onClick={onRegenerate}
-              disabled={isGenerating}
-            >
-              {isGenerating
-                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                : <RefreshCw className="w-3.5 h-3.5" />
-              }
-              Regenerate Guide (15 pts)
-            </Button>
+        <div className="relative rounded-2xl overflow-hidden border border-border/30 shadow-lg shadow-black/20">
+          <img src={brand.brand_guide_image_url} alt={`${brand.name} brand guide`} className="w-full object-contain" />
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background/80 to-transparent">
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                variant="secondary"
+                className="gap-1.5 bg-background/90 backdrop-blur-md border border-border/40 shadow-lg"
+                onClick={onRegenerate}
+                disabled={isGenerating}
+              >
+                {isGenerating
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <RefreshCw className="w-3.5 h-3.5" />
+                }
+                Regenerate Guide (15 pts)
+              </Button>
+            </div>
           </div>
         </div>
       ) : isGenerating ? (
