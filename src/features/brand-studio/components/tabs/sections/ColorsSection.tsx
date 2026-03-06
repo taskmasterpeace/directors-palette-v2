@@ -86,24 +86,23 @@ export function ColorsSection({ brand, onSave, isSaving }: SectionProps) {
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {Object.entries(grouped).map(([role, roleColors]) => (
-            <div key={role}>
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/40 mb-2 font-medium">
+            <div key={role} className="flex items-center gap-3">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground/40 font-medium w-20 shrink-0">
                 {role}
               </p>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2">
                 {roleColors.map((c, i) => (
-                  <div key={i} className="flex flex-col items-center gap-1.5">
+                  <div key={i} className="flex items-center gap-2 group" title={`${c.name}\n${c.hex}\n${hexToRgb(c.hex)}`}>
                     <div
-                      className="w-[72px] h-[72px] rounded-xl border border-white/10 shadow-md shadow-black/10 ring-1 ring-inset ring-white/5"
+                      className="w-8 h-8 rounded-lg border border-white/10 shadow-sm shadow-black/10 ring-1 ring-inset ring-white/5"
                       style={{ backgroundColor: c.hex }}
                     />
-                    <span className="text-[11px] font-medium text-center leading-tight max-w-[72px] truncate">{c.name}</span>
-                    <code className="text-[9px] text-muted-foreground/50 font-mono uppercase">{c.hex}</code>
-                    <span className="text-[8px] text-muted-foreground/30 font-mono">
-                      {hexToRgb(c.hex)}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-[11px] font-medium leading-tight truncate max-w-[80px]">{c.name}</span>
+                      <code className="text-[9px] text-muted-foreground/50 font-mono uppercase">{c.hex}</code>
+                    </div>
                   </div>
                 ))}
               </div>

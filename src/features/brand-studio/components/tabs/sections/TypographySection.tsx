@@ -73,23 +73,23 @@ export function TypographySection({ brand, onSave, isSaving }: SectionProps) {
             </div>
           )}
 
-          {/* Visual hierarchy */}
+          {/* Visual hierarchy — compact inline */}
           {sizes.length > 0 && (
-            <div className="space-y-2 pt-2 border-t border-border/15">
+            <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 pt-2 border-t border-border/15">
               {sizes.map((s, i) => {
                 const ptMatch = s.size.match(/(\d+)/)
                 const pt = ptMatch ? parseInt(ptMatch[1]) : 14
-                const scale = Math.max(0.75, Math.min(2.2, pt / 16))
+                const scale = Math.max(0.7, Math.min(1.6, pt / 20))
                 return (
-                  <div key={i} className="flex items-baseline gap-3">
-                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground/30 w-10 shrink-0 font-mono">{s.label}</span>
+                  <div key={i} className="flex items-baseline gap-1.5">
+                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground/30 font-mono">{s.label}</span>
                     <span
-                      className="font-semibold truncate"
-                      style={{ fontSize: `${scale}rem`, lineHeight: 1.2 }}
+                      className="font-semibold"
+                      style={{ fontSize: `${scale}rem`, lineHeight: 1.3 }}
                     >
-                      {typo.heading_font || 'Sample Text'}
+                      {typo.heading_font || 'Aa'}
                     </span>
-                    <span className="text-[9px] text-muted-foreground/30 font-mono shrink-0">{s.size}</span>
+                    <span className="text-[9px] text-muted-foreground/30 font-mono">{s.size}</span>
                   </div>
                 )
               })}

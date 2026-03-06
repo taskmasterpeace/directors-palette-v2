@@ -185,7 +185,7 @@ export function BrandStudioLayout() {
           </div>
         ) : (
           <ScrollArea className="h-full">
-            <div className="max-w-5xl mx-auto px-8 py-6">
+            <div className="px-8 py-6">
               {/* Page Header */}
               <motion.div
                 key={activeTab}
