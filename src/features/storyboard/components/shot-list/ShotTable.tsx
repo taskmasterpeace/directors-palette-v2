@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import type { GeneratedShotPrompt } from '../../types/storyboard.types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -28,12 +29,59 @@ export function ShotTable({ chapterIndex = 0 }: ShotTableProps) {
         breakdownResult,
         chapters,
         isPreviewCollapsed,
+        storyText,
+        selectedModel,
         updateGeneratedPrompt,
         updateGeneratedShot,
         deleteShotBySequence,
+        insertShotsAfter,
     } = useStoryboardStore()
 
     const [copiedExport, setCopiedExport] = useState(false)
+    const [expandingSequence, setExpandingSequence] = useState<number | null>(null)
+
+    const handleExpandWithCharacter = useCallback(async (sequence: number, characterTag: string, characterDesc: string) => {
+        setExpandingSequence(sequence)
+        try {
+            const prompt = generatedPrompts.find(p => p.sequence === sequence)
+            if (!prompt) return
+
+            const res = await fetch('/api/storyboard/expand-shot', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    shotSequence: sequence,
+                    characterTag,
+                    characterDescription: characterDesc,
+                    existingPrompt: prompt.prompt,
+                    storyContext: storyText,
+                    model: selectedModel,
+                })
+            })
+
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error)
+
+            const newShots: GeneratedShotPrompt[] = data.shots.map((shot: { prompt: string; shotType: string }, i: number) => ({
+                sequence: sequence + i + 1,
+                originalText: '',
+                prompt: shot.prompt,
+                shotType: (shot.shotType || 'medium') as GeneratedShotPrompt['shotType'],
+                characterRefs: characters.filter(c => {
+                    const tag = '@' + c.name.toLowerCase().replace(/\s+/g, '_')
+                    return shot.prompt.toLowerCase().includes(c.name.toLowerCase()) || shot.prompt.includes(tag)
+                }),
+                edited: false,
+            }))
+
+            insertShotsAfter(sequence, newShots)
+            toast.success(`Added ${newShots.length} coverage shot${newShots.length > 1 ? 's' : ''} for ${characterTag}`)
+        } catch {
+            toast.error('Failed to generate coverage shots')
+        } finally {
+            setExpandingSequence(null)
+        }
+    }, [generatedPrompts, characters, storyText, selectedModel, insertShotsAfter])
 
     // Filter prompts by chapter
     const filteredPrompts = (() => {
@@ -163,6 +211,8 @@ export function ShotTable({ chapterIndex = 0 }: ShotTableProps) {
                                     onPromptChange={handlePromptChange}
                                     onCharacterRefsChange={handleCharacterRefsChange}
                                     onDelete={handleDeleteShot}
+                                    onExpandWithCharacter={handleExpandWithCharacter}
+                                    isExpanding={expandingSequence === prompt.sequence}
                                 />
                             ))}
                         </TableBody>
