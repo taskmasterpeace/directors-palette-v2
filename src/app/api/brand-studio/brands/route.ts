@@ -18,14 +18,15 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      log.error('Failed to fetch brands', { error: error.message })
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      log.error('Failed to fetch brands', { error: error.message, code: error.code, details: error.details })
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 500 })
     }
 
     return NextResponse.json(data)
   } catch (error) {
-    log.error('Brands GET error', { error: error instanceof Error ? error.message : String(error) })
-    return NextResponse.json({ error: 'Failed to fetch brands' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : String(error)
+    log.error('Brands GET error', { error: msg, stack: error instanceof Error ? error.stack : undefined })
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 
@@ -56,14 +57,15 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      log.error('Failed to create brand', { error: error.message })
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      log.error('Failed to create brand', { error: error.message, code: error.code, details: error.details })
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 500 })
     }
 
     return NextResponse.json(data, { status: 201 })
   } catch (error) {
-    log.error('Brands POST error', { error: error instanceof Error ? error.message : String(error) })
-    return NextResponse.json({ error: 'Failed to create brand' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : String(error)
+    log.error('Brands POST error', { error: msg, stack: error instanceof Error ? error.stack : undefined })
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 
