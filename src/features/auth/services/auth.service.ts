@@ -46,6 +46,46 @@ export class AuthService {
   }
 
   /**
+   * Sign up with email and password
+   */
+  static async signUp(credentials: SignInCredentials): Promise<{
+    user: AuthUser | null;
+    session: AuthSession | null;
+    error: AuthError | null;
+  }> {
+    try {
+      const supabase = await this.supabase();
+      const { data, error } = await supabase.auth.signUp({
+        email: credentials.email,
+        password: credentials.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        return {
+          user: null,
+          session: null,
+          error: { message: error.message, code: error.status?.toString() },
+        };
+      }
+
+      return {
+        user: data.user,
+        session: data.session,
+        error: null,
+      };
+    } catch {
+      return {
+        user: null,
+        session: null,
+        error: { message: 'An unexpected error occurred' },
+      };
+    }
+  }
+
+  /**
    * Sign out current user
    */
   static async signOut(): Promise<{ error: AuthError | null }> {

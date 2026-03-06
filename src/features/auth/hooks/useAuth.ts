@@ -85,6 +85,30 @@ export function useAuth() {
     return { success: true };
   };
 
+  const signUp = async (credentials: SignInCredentials) => {
+    setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+    const { user, session, error } = await AuthService.signUp(credentials);
+
+    if (error) {
+      setAuthState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: error.message,
+      }));
+      return { success: false, error };
+    }
+
+    setAuthState({
+      user,
+      session,
+      isLoading: false,
+      error: null,
+    });
+
+    return { success: true };
+  };
+
   const signOut = async () => {
     setAuthState((prev) => ({ ...prev, isLoading: true }));
 
@@ -112,6 +136,7 @@ export function useAuth() {
   return {
     ...authState,
     signIn,
+    signUp,
     signOut,
   };
 }
