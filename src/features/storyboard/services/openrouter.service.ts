@@ -296,17 +296,19 @@ DIRECTOR'S APPROACH:
 
 CHARACTER COVERAGE:
 ${characters_with_roles}
-- Main characters should appear in 70%+ of shots — they are the visual through-line
-- For documentary-style: the main subject should be visually present in most shots (shown directly, or referenced visually through belongings, documents, silhouettes, etc.)
+- Main characters MUST appear in at least 70% of shots — they are the visual through-line
+- Even when another character or object is the focus, try to include the main character reacting, observing, or in the background
+- Use over-the-shoulder shots, reaction close-ups, or two-shots to keep the main character visible
 - When a character appears, use their @name tag (e.g., @geechi_gotti)
-- Each shot MUST list which characters are visible in it
+- Each shot MUST list which characters are visible in it via characterTags
 
 IMPORTANT RULES:
 - These are STILL IMAGES, not video. Do NOT use movement terms like "dolly", "crane", "rack focus", "pan", "tilt"
 - Focus on composition, framing, lighting, and atmosphere
 - For BATTLE RAP scenes: DO NOT include microphones. Battle rap is face-to-face without mics.
-- You may generate MORE shots than input segments — a single story beat can need 2-4 shots for proper coverage
-- Number your output shots sequentially starting from the first segment's sequence number
+- You SHOULD generate MORE shots than input segments — a single story beat often needs 2-4 shots for proper coverage
+- For dramatic or important moments, break the segment into multiple shots at different angles/distances
+- Number your output shots sequentially starting from 1 (total count will exceed input segment count)
 
 For each shot, describe:
 1. Shot type (establishing, wide, medium, close-up, or detail)
@@ -317,11 +319,12 @@ For each shot, describe:
             },
             {
                 role: 'user',
-                content: `Convert these story segments into detailed visual shot prompts. Each prompt should be a complete image description:
+                content: `Plan shot coverage for these story segments. Think like a director — break important moments into multiple shots at different angles. Generate MORE shots than segments for proper coverage.
 
+STORY SEGMENTS:
 ${segments
     .map((s) => {
-        let text = `[Shot ${s.sequence}] "${s.text}"`
+        let text = `[Segment ${s.sequence}] "${s.text}"`
         if (s.directorNote) {
             text += `\n  Director's Note: ${s.directorNote}`
         }
@@ -329,12 +332,12 @@ ${segments
     })
     .join('\n\n')}
 
-For each shot, provide:
-1. The sequence number (matching the input)
-2. A detailed visual prompt (2-3 sentences describing the exact image)
-3. The shot type (establishing/wide/medium/close-up/detail)
-
-IMPORTANT: When a Director's Note is provided, incorporate that specific guidance into your visual description for that shot.`
+INSTRUCTIONS:
+- Number shots sequentially starting from 1
+- Generate 1.5x to 2x more shots than input segments (e.g., 5 segments → 8-10 shots)
+- For each shot: provide a detailed visual prompt (2-3 sentences), shot type, and characterTags
+- When a Director's Note is provided, incorporate that guidance into the shot
+- The main character should appear in 70%+ of all shots`
             }
         ]
 
