@@ -250,7 +250,14 @@ Generate exactly ${count} diverse B-roll shot descriptions.`
         characterDescriptions?: Record<string, string>,
         storyContext?: string,
         locationDescriptions?: Record<string, string>
-    ): Promise<Array<{ sequence: number; prompt: string; shotType: string }>> {
+    ): Promise<Array<{ sequence: number; prompt: string; shotType: string; characterTags?: string[] }>> {
+        // Build character role context for director-style coverage
+        const characters_with_roles = characterDescriptions && Object.keys(characterDescriptions).length > 0
+            ? Object.entries(characterDescriptions)
+                .map(([name, desc]) => `- ${name}: ${desc || 'no description'}`)
+                .join('\n')
+            : 'No specific characters defined.'
+
         const characterContext = characterDescriptions && Object.keys(characterDescriptions).length > 0
             ? `\n\nCharacter references (IMPORTANT: Use the exact @name format when referring to characters):
 ${Object.entries(characterDescriptions)
@@ -278,26 +285,35 @@ ${Object.entries(locationDescriptions)
         const messages: OpenRouterMessage[] = [
             {
                 role: 'system',
-                content: `You are a professional storyboard artist creating STILL IMAGE descriptions. Your task is to convert story text segments into detailed visual shot descriptions suitable for AI image generation.
+                content: `You are a film director planning shot coverage for a visual storyboard. Your task is to convert story text segments into detailed STILL IMAGE descriptions suitable for AI image generation.
+
+DIRECTOR'S APPROACH:
+- Think like a director planning coverage for each scene
+- For key moments, generate a SEQUENCE of shots: establishing → wide → medium → close-up (use judgment — not every moment needs all four)
+- When a segment introduces a new location, start with an establishing shot
+- When a character is doing something important, show it across multiple angles
+- Follow natural cinematic grammar: don't jump from establishing straight to close-up without a medium
+
+CHARACTER COVERAGE:
+${characters_with_roles}
+- Main characters should appear in 70%+ of shots — they are the visual through-line
+- For documentary-style: the main subject should be visually present in most shots (shown directly, or referenced visually through belongings, documents, silhouettes, etc.)
+- When a character appears, use their @name tag (e.g., @geechi_gotti)
+- Each shot MUST list which characters are visible in it
 
 IMPORTANT RULES:
-- These are STILL IMAGES, not video. Do NOT use movement terms like "dolly", "crane", "rack focus", "pan", "tilt", etc.
+- These are STILL IMAGES, not video. Do NOT use movement terms like "dolly", "crane", "rack focus", "pan", "tilt"
 - Focus on composition, framing, lighting, and atmosphere
-- For BATTLE RAP scenes: DO NOT include microphones. Battle rap is face-to-face without mics. Show two people facing each other with crowd in a half-circle behind them.
+- For BATTLE RAP scenes: DO NOT include microphones. Battle rap is face-to-face without mics.
+- You may generate MORE shots than input segments — a single story beat can need 2-4 shots for proper coverage
+- Number your output shots sequentially starting from the first segment's sequence number
 
-For each segment, create a cinematic shot prompt that includes:
+For each shot, describe:
 1. Shot type (establishing, wide, medium, close-up, or detail)
-2. Subject and action/pose
+2. Subject and action/pose — WHO is in this shot
 3. Setting/environment details
 4. Mood/atmosphere and lighting
-5. Composition and framing
-
-The shot type should be based on the content:
-- "establishing" - for opening scenes, location introductions, or scene transitions
-- "wide" - for showing full environment with characters
-- "medium" - for character interactions, waist-up framing
-- "close-up" - for emotional moments, face/expression focus
-- "detail" - for specific objects, hands, symbolic elements${styleContext}${characterContext}${locationContext}${storyOverview}`
+5. Composition and framing${styleContext}${characterContext}${locationContext}${storyOverview}`
             },
             {
                 role: 'user',
@@ -326,27 +342,33 @@ IMPORTANT: When a Director's Note is provided, incorporate that specific guidanc
             type: 'function',
             function: {
                 name: 'generate_shot_prompts',
-                description: 'Generate visual shot prompts from story segments',
+                description: 'Generate visual shot prompts from story segments with director-style coverage',
                 parameters: {
                     type: 'object',
                     properties: {
                         shots: {
                             type: 'array',
+                            description: 'Array of shot descriptions. You may generate MORE shots than input segments for proper director coverage.',
                             items: {
                                 type: 'object',
                                 properties: {
                                     sequence: {
                                         type: 'number',
-                                        description: 'The shot sequence number'
+                                        description: 'Sequential shot number (may exceed input segment count for multi-shot coverage)'
                                     },
                                     prompt: {
                                         type: 'string',
-                                        description: 'Detailed visual description for image generation (2-3 sentences)'
+                                        description: 'Detailed visual description for image generation (2-3 sentences). Include @character_tags for characters visible in the shot.'
                                     },
                                     shotType: {
                                         type: 'string',
                                         enum: ['establishing', 'wide', 'medium', 'close-up', 'detail'],
                                         description: 'The type of camera shot'
+                                    },
+                                    characterTags: {
+                                        type: 'array',
+                                        items: { type: 'string' },
+                                        description: 'Array of @character_tags visible in this shot (e.g., ["@geechi_gotti", "@det_berger"])'
                                     }
                                 },
                                 required: ['sequence', 'prompt', 'shotType']
@@ -367,7 +389,7 @@ IMPORTANT: When a Director's Note is provided, incorporate that specific guidanc
 
         try {
             const result = JSON.parse(toolCall.function.arguments) as {
-                shots: Array<{ sequence: number; prompt: string; shotType: string }>
+                shots: Array<{ sequence: number; prompt: string; shotType: string; characterTags?: string[] }>
             }
             return result.shots
         } catch {

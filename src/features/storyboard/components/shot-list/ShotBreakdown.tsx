@@ -298,11 +298,13 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                             originalText: segment?.text || '',
                             prompt: processedPrompt,
                             shotType: (shot.shotType || 'unknown') as 'establishing' | 'wide' | 'medium' | 'close-up' | 'detail' | 'unknown',
-                            characterRefs: characters.filter(c =>
-                                c.has_reference &&
-                                (promptLower.includes(c.name.toLowerCase()) ||
-                                    processedPrompt.includes('@' + c.name.toLowerCase().replace(/\s+/g, '_')))
-                            ),
+                            characterRefs: characters.filter(c => {
+                                const tag = '@' + c.name.toLowerCase().replace(/\s+/g, '_')
+                                const apiTags = (shot as { characterTags?: string[] }).characterTags || []
+                                return promptLower.includes(c.name.toLowerCase()) ||
+                                    processedPrompt.includes(tag) ||
+                                    apiTags.some(t => t === tag)
+                            }),
                             locationRef: locations.find(l =>
                                 l.has_reference &&
                                 (promptLower.includes(l.name.toLowerCase()) ||
