@@ -147,6 +147,20 @@ export const createGenerationSlice = (set: Set, _get: Get) => ({
         promptsGenerated: false
     }),
     setIsGeneratingPrompts: (generating: boolean) => set({ isGeneratingPrompts: generating }),
+    insertShotsAfter: (afterSequence: number, newShots: GeneratedShotPrompt[]) => set((state) => {
+        const insertIndex = state.generatedPrompts.findIndex(p => p.sequence === afterSequence)
+        if (insertIndex === -1) return state
+        const before = state.generatedPrompts.slice(0, insertIndex + 1)
+        const after = state.generatedPrompts.slice(insertIndex + 1)
+        const merged = [...before, ...newShots, ...after]
+        const renumbered = merged.map((p, i) => ({ ...p, sequence: i + 1 }))
+        return { generatedPrompts: renumbered, promptsGenerated: renumbered.length > 0 }
+    }),
+    deleteShotBySequence: (sequence: number) => set((state) => {
+        const filtered = state.generatedPrompts.filter(p => p.sequence !== sequence)
+        const renumbered = filtered.map((p, i) => ({ ...p, sequence: i + 1 }))
+        return { generatedPrompts: renumbered, promptsGenerated: renumbered.length > 0 }
+    }),
 
     // ---- Extraction Actions ----
     setExtractionResult: (result: ExtractionResult | null) => set({ extractionResult: result }),

@@ -243,6 +243,8 @@ export interface StoryboardStore {
     updateGeneratedPromptMetadata: (sequence: number, metadata: Partial<GeneratedShotPrompt['metadata']>) => void
     clearGeneratedPrompts: () => void
     setIsGeneratingPrompts: (generating: boolean) => void
+    insertShotsAfter: (afterSequence: number, newShots: GeneratedShotPrompt[]) => void
+    deleteShotBySequence: (sequence: number) => void
 
     // ---- Extraction Actions ----
     setExtractionResult: (result: ExtractionResult | null) => void
