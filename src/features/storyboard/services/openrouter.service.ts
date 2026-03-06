@@ -572,7 +572,7 @@ ${segments.map(s => `[${s.sequence}] "${s.text}"`).join('\n')}`
     /**
      * Make API call with tool calling
      */
-    private async callWithTool(
+    async callWithTool(
         messages: OpenRouterMessage[],
         tool: OpenRouterTool
     ): Promise<OpenRouterResponse> {
