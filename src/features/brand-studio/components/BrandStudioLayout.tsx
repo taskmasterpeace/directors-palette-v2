@@ -20,7 +20,7 @@ import { CampaignsTab } from './tabs/CampaignsTab'
 const TABS: { id: BrandStudioTab; label: string; icon: React.ComponentType<{ className?: string }>; accent: string; disabled?: boolean }[] = [
   { id: 'brand', label: 'Brand', icon: Palette, accent: 'from-amber-500/20 to-orange-500/10' },
   { id: 'library', label: 'Library', icon: FolderOpen, accent: 'from-teal-500/20 to-cyan-500/10', disabled: true },
-  { id: 'create', label: 'Create', icon: Wand2, accent: 'from-violet-500/20 to-purple-500/10', disabled: true },
+  { id: 'create', label: 'Create', icon: Wand2, accent: 'from-violet-500/20 to-purple-500/10' },
   { id: 'campaigns', label: 'Campaigns', icon: Megaphone, accent: 'from-rose-500/20 to-pink-500/10', disabled: true },
 ]
 
