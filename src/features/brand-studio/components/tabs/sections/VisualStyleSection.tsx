@@ -19,9 +19,9 @@ export function VisualStyleSection({ brand, onSave, isSaving }: SectionProps) {
 
   return (
     <SectionCard
-      number={5} icon={Eye} title="Visual Style" iconColor="bg-cyan-500/10 text-cyan-400"
+      icon={Eye} title="Visual Style" iconColor="bg-cyan-500/10 text-cyan-400"
       editing={editing} onEdit={() => { setLocal(style); setEditing(true) }}
-      onSave={handleSave} isSaving={isSaving}
+      onSave={handleSave} onCancel={() => setEditing(false)} isSaving={isSaving}
     >
       {!style && !editing ? (
         <p className="text-sm text-muted-foreground/60 italic">No visual style defined yet.</p>

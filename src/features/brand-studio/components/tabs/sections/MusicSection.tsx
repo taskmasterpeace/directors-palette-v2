@@ -19,9 +19,9 @@ export function MusicSection({ brand, onSave, isSaving }: SectionProps) {
 
   return (
     <SectionCard
-      number={6} icon={Music2} title="Music & Sound" iconColor="bg-rose-500/10 text-rose-400"
+      icon={Music2} title="Music & Sound" iconColor="bg-rose-500/10 text-rose-400"
       editing={editing} onEdit={() => { setLocal(music); setEditing(true) }}
-      onSave={handleSave} isSaving={isSaving}
+      onSave={handleSave} onCancel={() => setEditing(false)} isSaving={isSaving}
     >
       {!music && !editing ? (
         <p className="text-sm text-muted-foreground/60 italic">No music preferences defined yet.</p>

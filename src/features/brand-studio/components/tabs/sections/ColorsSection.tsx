@@ -43,9 +43,9 @@ export function ColorsSection({ brand, onSave, isSaving }: SectionProps) {
 
   return (
     <SectionCard
-      number={1} icon={Palette} title="Color Palette" iconColor="bg-amber-500/10 text-amber-400"
+      icon={Palette} title="Color Palette" iconColor="bg-amber-500/10 text-amber-400"
       editing={editing} onEdit={() => { setLocalColors(colors); setEditing(true) }}
-      onSave={handleSave} isSaving={isSaving}
+      onSave={handleSave} onCancel={() => setEditing(false)} isSaving={isSaving}
     >
       {colors.length === 0 && !editing ? (
         <p className="text-sm text-muted-foreground/60 italic">No colors defined yet.</p>

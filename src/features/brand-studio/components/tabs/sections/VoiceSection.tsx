@@ -20,9 +20,9 @@ export function VoiceSection({ brand, onSave, isSaving }: SectionProps) {
 
   return (
     <SectionCard
-      number={3} icon={Mic2} title="Voice & Tone" iconColor="bg-emerald-500/10 text-emerald-400"
+      icon={Mic2} title="Voice & Tone" iconColor="bg-emerald-500/10 text-emerald-400"
       editing={editing} onEdit={() => { setLocal(voice); setEditing(true) }}
-      onSave={handleSave} isSaving={isSaving}
+      onSave={handleSave} onCancel={() => setEditing(false)} isSaving={isSaving}
     >
       {!voice && !editing ? (
         <p className="text-sm text-muted-foreground/60 italic">No voice profile defined yet.</p>

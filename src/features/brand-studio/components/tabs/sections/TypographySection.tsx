@@ -33,9 +33,9 @@ export function TypographySection({ brand, onSave, isSaving }: SectionProps) {
 
   return (
     <SectionCard
-      number={2} icon={Type} title="Typography" iconColor="bg-blue-500/10 text-blue-400"
+      icon={Type} title="Typography" iconColor="bg-blue-500/10 text-blue-400"
       editing={editing} onEdit={() => { setLocal(typo); setEditing(true) }}
-      onSave={handleSave} isSaving={isSaving}
+      onSave={handleSave} onCancel={() => setEditing(false)} isSaving={isSaving}
     >
       {!typo && !editing ? (
         <p className="text-sm text-muted-foreground/60 italic">No typography defined yet.</p>

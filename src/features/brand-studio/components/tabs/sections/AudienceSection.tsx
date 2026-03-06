@@ -20,9 +20,9 @@ export function AudienceSection({ brand, onSave, isSaving }: SectionProps) {
 
   return (
     <SectionCard
-      number={4} icon={Users} title="Audience" iconColor="bg-purple-500/10 text-purple-400"
+      icon={Users} title="Audience" iconColor="bg-purple-500/10 text-purple-400"
       editing={editing} onEdit={() => { setLocal(audience); setEditing(true) }}
-      onSave={handleSave} isSaving={isSaving}
+      onSave={handleSave} onCancel={() => setEditing(false)} isSaving={isSaving}
     >
       {!audience && !editing ? (
         <p className="text-sm text-muted-foreground/60 italic">No audience defined yet.</p>
