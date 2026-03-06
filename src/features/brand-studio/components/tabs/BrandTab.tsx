@@ -1,10 +1,13 @@
 'use client'
 
-import { Palette, Sparkles } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { Palette, Sparkles, Eye, Mic2, Music2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { cn } from '@/utils/utils'
 import { Button } from '@/components/ui/button'
 import { useActiveBrand, useBrandStore } from '../../hooks/useBrandStore'
 import { BrandGuideHero } from './sections/BrandGuideHero'
+import { BrandScoreRing } from './sections/BrandScoreRing'
 import { ColorsSection } from './sections/ColorsSection'
 import { TypographySection } from './sections/TypographySection'
 import { VoiceSection } from './sections/VoiceSection'
@@ -12,17 +15,23 @@ import { AudienceSection } from './sections/AudienceSection'
 import { VisualStyleSection } from './sections/VisualStyleSection'
 import { MusicSection } from './sections/MusicSection'
 
-const stagger = {
-  animate: { transition: { staggerChildren: 0.06 } }
-}
+type BrandSubTab = 'visual' | 'voice' | 'audio'
+
+const SUB_TABS: { id: BrandSubTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: 'visual', label: 'Visual Identity', icon: Eye },
+  { id: 'voice', label: 'Voice & Messaging', icon: Mic2 },
+  { id: 'audio', label: 'Audio', icon: Music2 },
+]
+
 const fadeUp = {
   initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.35 } }
+  animate: { opacity: 1, y: 0, transition: { duration: 0.35 } },
 }
 
 export function BrandTab() {
   const brand = useActiveBrand()
   const { updateBrand, generateBrandGuide, isGeneratingGuide, isSaving } = useBrandStore()
+  const [activeSubTab, setActiveSubTab] = useState<BrandSubTab>('visual')
 
   if (!brand) {
     return <EmptyBrandState />
@@ -33,33 +42,76 @@ export function BrandTab() {
   }
 
   return (
-    <motion.div className="space-y-5 pb-8" variants={stagger} initial="initial" animate="animate">
-      {/* Hero: Logo + Brand Guide Image */}
-      <motion.div variants={fadeUp}>
+    <div className="space-y-6 pb-8">
+      {/* Hero: Brand-Colored Banner + Guide Image */}
+      <motion.div {...fadeUp}>
         <BrandGuideHero brand={brand} isGenerating={isGeneratingGuide} onRegenerate={handleRegenerate} />
       </motion.div>
 
-      {/* Numbered Sections */}
-      <motion.div variants={fadeUp}>
-        <ColorsSection brand={brand} onSave={updateBrand} isSaving={isSaving} />
-      </motion.div>
-      <motion.div variants={fadeUp}>
-        <TypographySection brand={brand} onSave={updateBrand} isSaving={isSaving} />
-      </motion.div>
-      <motion.div variants={fadeUp}>
-        <VoiceSection brand={brand} onSave={updateBrand} isSaving={isSaving} />
-      </motion.div>
-      <motion.div variants={fadeUp}>
-        <AudienceSection brand={brand} onSave={updateBrand} isSaving={isSaving} />
-      </motion.div>
-      <motion.div variants={fadeUp}>
-        <VisualStyleSection brand={brand} onSave={updateBrand} isSaving={isSaving} />
-      </motion.div>
-      <motion.div variants={fadeUp}>
-        <MusicSection brand={brand} onSave={updateBrand} isSaving={isSaving} />
+      {/* Brand Score */}
+      <motion.div {...fadeUp} transition={{ delay: 0.05 }}>
+        <BrandScoreRing brand={brand} />
       </motion.div>
 
-    </motion.div>
+      {/* Sub-Tab Navigation */}
+      <motion.div {...fadeUp} transition={{ delay: 0.1 }}>
+        <div className="flex gap-1 p-1 bg-secondary/30 rounded-xl border border-border/20 w-fit">
+          {SUB_TABS.map((tab) => {
+            const Icon = tab.icon
+            const isActive = activeSubTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveSubTab(tab.id)}
+                className={cn(
+                  'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+                  isActive
+                    ? 'bg-background shadow-sm text-foreground border border-border/30'
+                    : 'text-muted-foreground/60 hover:text-muted-foreground'
+                )}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {tab.label}
+              </button>
+            )
+          })}
+        </div>
+      </motion.div>
+
+      {/* Sub-Tab Content */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeSubTab}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2 }}
+        >
+          {activeSubTab === 'visual' && (
+            <div className="space-y-5">
+              {/* Two-column: Colors | Typography */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <ColorsSection brand={brand} onSave={updateBrand} isSaving={isSaving} />
+                <TypographySection brand={brand} onSave={updateBrand} isSaving={isSaving} />
+              </div>
+              {/* Full-width: Visual Style */}
+              <VisualStyleSection brand={brand} onSave={updateBrand} isSaving={isSaving} />
+            </div>
+          )}
+
+          {activeSubTab === 'voice' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <VoiceSection brand={brand} onSave={updateBrand} isSaving={isSaving} />
+              <AudienceSection brand={brand} onSave={updateBrand} isSaving={isSaving} />
+            </div>
+          )}
+
+          {activeSubTab === 'audio' && (
+            <MusicSection brand={brand} onSave={updateBrand} isSaving={isSaving} />
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </div>
   )
 }
 
