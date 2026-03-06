@@ -2,9 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { getAPIClient } from '@/lib/db/client'
 import { createLogger } from '@/lib/logger'
-// Types used for reference — the transformation produces plain objects matching these shapes
+import Replicate from 'replicate'
+import { createClient } from '@supabase/supabase-js'
+import { creditsService } from '@/features/credits/services/credits.service'
+
+export const maxDuration = 120
 
 const log = createLogger('BrandStudio')
+
+const BRAND_GUIDE_TEMPLATE_URL =
+  'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/templates/system/brand-guides/brand-visual-guide-template.png'
+
+const STORAGE_BUCKET = 'directors-palette'
 
 const BRAND_ANALYSIS_SYSTEM_PROMPT = `You are a brand identity analyst. Given a company description (and optionally a logo image), analyze the brand and produce a structured brand configuration.
 
@@ -242,6 +251,132 @@ function parseBrandGuideOutput(raw: Record<string, any>) {
 
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
+/**
+ * Build a detailed prompt for nano-banana-2 to generate a visual brand guide image.
+ */
+function buildBrandGuideImagePrompt(brandName: string, parsed: ReturnType<typeof parseBrandGuideOutput>): string {
+  const vi = parsed.visual_identity_json
+  const colors = vi?.colors ?? []
+  const typo = vi?.typography
+  const style = parsed.visual_style_json
+
+  const colorDesc = colors.map((c: { name: string; hex: string; role: string }) => `${c.name} (${c.hex}, ${c.role})`).join(', ')
+  const fontDesc = typo
+    ? `Heading: ${typo.heading_font}, Body: ${typo.body_font}, Sizes: ${typo.heading_sizes}`
+    : ''
+
+  return [
+    `BRAND VISUAL IDENTITY GUIDE for "${brandName}"`,
+    '',
+    'LAYOUT: Professional brand style guide sheet organized in 6 labeled sections on a clean white/light background.',
+    '',
+    'SECTION 1 - LOGO USAGE:',
+    `- Display the brand name "${brandName}" in large, bold typography`,
+    '- Show logo placement rules: full color, reversed, monochrome variants',
+    '- Clear space and minimum size guidelines',
+    '',
+    'SECTION 2 - COLOR PALETTE:',
+    `- Large color swatches with hex codes: ${colorDesc}`,
+    '- Primary and secondary color groupings clearly labeled',
+    '',
+    'SECTION 3 - TYPOGRAPHY:',
+    `- ${fontDesc}`,
+    '- Show font hierarchy: H1 largest, H2 medium, H3 smaller, Body text',
+    `- Weight examples: ${typo?.weights?.join(', ') || 'Regular, Bold'}`,
+    '',
+    'SECTION 4 - PHOTOGRAPHY STYLE:',
+    `- Mood: ${style?.photography_tone || 'modern and professional'}`,
+    `- Subjects: ${style?.subjects?.join(', ') || 'people, products, lifestyle'}`,
+    '',
+    'SECTION 5 - ICONOGRAPHY:',
+    '- Clean, minimal icon style examples',
+    '- Consistent stroke weight and rounded corners',
+    '',
+    'SECTION 6 - GRAPHIC ELEMENTS:',
+    `- Patterns and textures using brand colors`,
+    `- ${style?.composition || 'Clean, balanced compositions with ample white space'}`,
+    '',
+    'STYLE: Professional brand identity document, clean corporate design, organized grid layout, print-ready quality, crisp typography, high production value. NOT a website mockup. This is a static visual reference sheet.',
+  ].join('\n')
+}
+
+/**
+ * Generate a brand guide image with nano-banana-2 and upload to Supabase storage.
+ */
+async function generateBrandGuideImage(
+  brandName: string,
+  brandId: string,
+  userId: string,
+  parsed: ReturnType<typeof parseBrandGuideOutput>,
+  logoUrl: string | null
+): Promise<string | null> {
+  try {
+    const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN })
+
+    const prompt = buildBrandGuideImagePrompt(brandName, parsed)
+    const imageInputs: string[] = [BRAND_GUIDE_TEMPLATE_URL]
+    if (logoUrl && !logoUrl.startsWith('data:')) {
+      imageInputs.push(logoUrl)
+    }
+
+    log.info('Generating brand guide image', { brandId, imageInputCount: imageInputs.length })
+
+    const prediction = await replicate.predictions.create({
+      model: 'google/nano-banana-2',
+      input: {
+        prompt,
+        aspect_ratio: '16:9',
+        image_input: imageInputs,
+        output_format: 'jpg',
+      },
+    })
+    const completed = await replicate.wait(prediction, { interval: 1000 })
+
+    if (completed.status !== 'succeeded' || !completed.output) {
+      log.error('Brand guide image generation failed', { status: completed.status })
+      return null
+    }
+
+    const replicateUrl = Array.isArray(completed.output)
+      ? completed.output[0]
+      : completed.output
+
+    // Download and upload to Supabase storage
+    const response = await fetch(replicateUrl)
+    if (!response.ok) {
+      log.error('Failed to download brand guide image', { status: response.status })
+      return null
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer())
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const timestamp = Date.now()
+    const storagePath = `generations/${userId}/brand-guide_${brandId}_${timestamp}.jpg`
+
+    const { error: uploadError } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .upload(storagePath, buffer, { contentType: 'image/jpeg', upsert: true })
+
+    if (uploadError) {
+      log.error('Brand guide image upload error', { error: uploadError.message })
+      return null
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from(STORAGE_BUCKET)
+      .getPublicUrl(storagePath)
+
+    return publicUrl
+  } catch (error) {
+    log.error('Brand guide image generation error', { error: error instanceof Error ? error.message : String(error) })
+    return null
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Auth — same pattern as shot creator
@@ -270,7 +405,7 @@ export async function POST(request: NextRequest) {
 
     const result = parseBrandGuideOutput(brandData)
 
-    // Update brand with generated data
+    // Update brand with generated data (save LLM results first)
     const supabase = await getAPIClient()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updatePayload: any = {
@@ -287,6 +422,39 @@ export async function POST(request: NextRequest) {
     if (error) {
       log.error('Failed to update brand with guide data', { error: error.message })
       return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    // Phase 2: Generate visual brand guide image (non-fatal)
+    const deductResult = await creditsService.deductCredits(auth.user.id, 'nano-banana-2', {
+      generationType: 'image',
+      description: 'Brand Studio: visual brand guide generation',
+      overrideAmount: 15,
+      user_email: auth.user.email,
+    })
+
+    if (deductResult.success) {
+      const imageUrl = await generateBrandGuideImage(
+        data.name || brand_id,
+        brand_id,
+        auth.user.id,
+        result,
+        logo_url
+      )
+
+      if (imageUrl) {
+        const { data: updated } = await supabase
+          .from('brands')
+          .update({ brand_guide_image_url: imageUrl, updated_at: new Date().toISOString() })
+          .eq('id', brand_id)
+          .select()
+          .single()
+
+        if (updated) {
+          return NextResponse.json(updated)
+        }
+      }
+    } else {
+      log.info('Skipping brand guide image — insufficient credits', { userId: auth.user.id })
     }
 
     return NextResponse.json(data)
