@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Progress } from '@/components/ui/progress'
-import { SplitSquareVertical, Wand2, AlertCircle, CheckCircle, MapPin, Sparkles } from 'lucide-react'
+import { SplitSquareVertical, Wand2, AlertCircle, CheckCircle, MapPin } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useStoryboardStore } from '../../store'
 import { useDocumentaryPipeline } from '../../hooks/useDocumentaryPipeline'
@@ -17,9 +17,10 @@ import {
     type CharacterReplacement
 } from '../../services/name-replacement.service'
 import { EditableShot } from './EditableShot'
+import { ShotTable } from './ShotTable'
 import { toast } from 'sonner'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
-import type { GeneratedShotPrompt, StoryboardLocation } from '../../types/storyboard.types'
+import type { GeneratedShotPrompt } from '../../types/storyboard.types'
 import { logger } from '@/lib/logger'
 
 interface ShotBreakdownProps {
@@ -40,9 +41,9 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         chapters,
         shotNotes,
         isPreviewCollapsed,
-        generatedImages,
-        openContactSheetModal,
-        openBRollModal,
+        generatedImages: _generatedImages,
+        openContactSheetModal: _openContactSheetModal,
+        openBRollModal: _openBRollModal,
         isDocumentaryMode,
         isClassifyingSegments,
         isGeneratingBrollPool,
@@ -54,39 +55,15 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         setIsGeneratingPrompts,
         clearGeneratedPrompts,
         setShotNote,
-        updateGeneratedShot
+        updateGeneratedShot: _updateGeneratedShot
     } = useStoryboardStore()
 
     const { runPipeline } = useDocumentaryPipeline()
 
 
-    const handleGetAngles = (sequence: number) => {
-        // Open contact sheet modal with the shot
-        openContactSheetModal(String(sequence))
-    }
+    const [_isRefining, setIsRefining] = useState(false)
 
-    const handleGetBRoll = (sequence: number) => {
-        // Get the generated image URL for this shot
-        const imageData = generatedImages[sequence]
-        if (imageData?.imageUrl) {
-            openBRollModal(sequence, imageData.imageUrl)
-        } else {
-            // If no image, try to use character reference or alert user
-            logger.storyboard.warn('No generated image for shot', { sequence: sequence })
-        }
-    }
-
-    const handleCharacterRefsChange = (sequence: number, characterRefs: typeof characters) => {
-        updateGeneratedShot(sequence, { characterRefs })
-    }
-
-    const handleLocationRefChange = (sequence: number, locationRef: StoryboardLocation | undefined) => {
-        updateGeneratedShot(sequence, { locationRef })
-    }
-
-    const [isRefining, setIsRefining] = useState(false)
-
-    const handleRefinePrompts = async () => {
+    const _handleRefinePrompts = async () => {
         // Only refine prompts that haven't been manually edited
         const toRefine = generatedPrompts.filter(p => !p.edited)
         if (toRefine.length === 0) {
@@ -210,7 +187,7 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         })
     }
 
-    const handleGeneratedPromptChange = (sequence: number, newPrompt: string) => {
+    const _handleGeneratedPromptChange = (sequence: number, newPrompt: string) => {
         updateGeneratedPrompt(sequence, newPrompt)
     }
 
@@ -404,7 +381,7 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
     const isBusy = isGeneratingPrompts || isDocPipelineRunning
 
     // Get generated prompt for a segment
-    const getGeneratedPrompt = (sequence: number): GeneratedShotPrompt | undefined => {
+    const _getGeneratedPrompt = (sequence: number): GeneratedShotPrompt | undefined => {
         return generatedPrompts.find(p => p.sequence === sequence)
     }
 
@@ -559,99 +536,65 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                 </div>
             )}
 
-            {/* Shot List */}
-            <Card>
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <SplitSquareVertical className="w-4 h-4" />
-                            Shot List
-                        </div>
-                        <div className="flex items-center gap-2">
-                            {promptsGenerated && (
-                                <Badge variant="secondary" className="text-xs">
-                                    AI Enhanced
-                                </Badge>
-                            )}
-                            {promptsGenerated && (
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-6 text-xs"
-                                    onClick={handleRefinePrompts}
-                                    disabled={isRefining || isGeneratingPrompts}
-                                >
-                                    {isRefining ? (
-                                        <>
-                                            <LoadingSpinner size="xs" color="current" className="mr-1" />
-                                            Refining...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Sparkles className="w-3 h-3 mr-1" />
-                                            Enhance with AI
-                                        </>
-                                    )}
-                                </Button>
-                            )}
-                            <Badge variant="outline">
-                                {locationFilter
-                                    ? `${locationFilteredSegments.length} of ${filteredSegments.length} shots`
-                                    : chapters && chapters.length > 1 && chapterIndex >= 0
-                                        ? `${filteredSegments.length} of ${breakdownResult.total_count} shots`
-                                        : `${breakdownResult.total_count} shots`}
-                            </Badge>
-                        </div>
-                    </CardTitle>
-                    <CardDescription className="text-xs flex items-center justify-between">
-                        <span>
-                            {promptsGenerated
-                                ? 'Click to expand and edit. AI-generated prompts included.'
-                                : 'Click any shot to expand and edit.'}
-                        </span>
-                        {/* Location filter */}
-                        {locationNames.length > 0 && (
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                                <MapPin className="w-3 h-3 text-muted-foreground" />
-                                <select
-                                    value={locationFilter || ''}
-                                    onChange={(e) => setLocationFilter(e.target.value || null)}
-                                    className="text-xs bg-background border rounded px-1.5 py-0.5 text-foreground cursor-pointer [&>option]:bg-background [&>option]:text-foreground"
-                                >
-                                    <option value="">All locations</option>
-                                    {locationNames.map(name => (
-                                        <option key={name} value={name}>{name}</option>
-                                    ))}
-                                </select>
+            {/* Shot Table (post-generation) */}
+            {promptsGenerated && (
+                <ShotTable chapterIndex={chapterIndex} />
+            )}
+
+            {/* Pre-generation shot list (raw segments, no table yet) */}
+            {!promptsGenerated && breakdownResult && (
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-base flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <SplitSquareVertical className="w-4 h-4" />
+                                Story Segments
                             </div>
-                        )}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ScrollArea className={isPreviewCollapsed ? "h-[calc(100vh-300px)] pr-4" : "h-[500px] pr-4"}>
-                        <div className="space-y-2">
-                            {locationFilteredSegments.map((segment) => (
-                                <EditableShot
-                                    key={segment.sequence}
-                                    segment={segment}
-                                    generatedPrompt={getGeneratedPrompt(segment.sequence)}
-                                    characters={characterNames}
-                                    locations={locationNames}
-                                    shotNote={shotNotes[segment.sequence]}
-                                    hasGeneratedImage={!!generatedImages[segment.sequence]?.imageUrl}
-                                    onPromptChange={handlePromptChange}
-                                    onGeneratedPromptChange={handleGeneratedPromptChange}
-                                    onNoteChange={setShotNote}
-                                    onCharacterRefsChange={handleCharacterRefsChange}
-                                    onLocationRefChange={handleLocationRefChange}
-                                    onGetAngles={handleGetAngles}
-                                    onGetBRoll={handleGetBRoll}
-                                />
-                            ))}
-                        </div>
-                    </ScrollArea>
-                </CardContent>
-            </Card>
+                            <div className="flex items-center gap-2">
+                                {/* Location filter */}
+                                {locationNames.length > 0 && (
+                                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                                        <MapPin className="w-3 h-3 text-muted-foreground" />
+                                        <select
+                                            value={locationFilter || ''}
+                                            onChange={(e) => setLocationFilter(e.target.value || null)}
+                                            className="text-xs bg-background border rounded px-1.5 py-0.5 text-foreground cursor-pointer [&>option]:bg-background [&>option]:text-foreground"
+                                        >
+                                            <option value="">All locations</option>
+                                            {locationNames.map(name => (
+                                                <option key={name} value={name}>{name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                                <Badge variant="outline">{breakdownResult.total_count} segments</Badge>
+                            </div>
+                        </CardTitle>
+                        <CardDescription className="text-xs">
+                            Click &quot;Generate Shot Prompts&quot; to transform these into cinematic shot descriptions.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <ScrollArea className={isPreviewCollapsed ? "h-[calc(100vh-300px)] pr-4" : "h-[500px] pr-4"}>
+                            <div className="space-y-2">
+                                {locationFilteredSegments.map((segment) => (
+                                    <EditableShot
+                                        key={segment.sequence}
+                                        segment={segment}
+                                        generatedPrompt={undefined}
+                                        characters={characterNames}
+                                        locations={locationNames}
+                                        shotNote={shotNotes[segment.sequence]}
+                                        hasGeneratedImage={false}
+                                        onPromptChange={handlePromptChange}
+                                        onNoteChange={setShotNote}
+                                    />
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+            )}
 
 
 
