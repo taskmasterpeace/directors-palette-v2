@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import {
-  Palette, FolderOpen, Wand2, Megaphone, Loader2, Plus, Sparkles
+  Palette, FolderOpen, Wand2, Megaphone, Loader2, Plus, Sparkles, Lock
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/utils/utils'
@@ -17,11 +17,11 @@ import { LibraryTab } from './tabs/LibraryTab'
 import { CreateTab } from './tabs/CreateTab'
 import { CampaignsTab } from './tabs/CampaignsTab'
 
-const TABS: { id: BrandStudioTab; label: string; icon: React.ComponentType<{ className?: string }>; accent: string }[] = [
+const TABS: { id: BrandStudioTab; label: string; icon: React.ComponentType<{ className?: string }>; accent: string; disabled?: boolean }[] = [
   { id: 'brand', label: 'Brand', icon: Palette, accent: 'from-amber-500/20 to-orange-500/10' },
-  { id: 'library', label: 'Library', icon: FolderOpen, accent: 'from-teal-500/20 to-cyan-500/10' },
-  { id: 'create', label: 'Create', icon: Wand2, accent: 'from-violet-500/20 to-purple-500/10' },
-  { id: 'campaigns', label: 'Campaigns', icon: Megaphone, accent: 'from-rose-500/20 to-pink-500/10' },
+  { id: 'library', label: 'Library', icon: FolderOpen, accent: 'from-teal-500/20 to-cyan-500/10', disabled: true },
+  { id: 'create', label: 'Create', icon: Wand2, accent: 'from-violet-500/20 to-purple-500/10', disabled: true },
+  { id: 'campaigns', label: 'Campaigns', icon: Megaphone, accent: 'from-rose-500/20 to-pink-500/10', disabled: true },
 ]
 
 export function BrandStudioLayout() {
@@ -131,29 +131,36 @@ export function BrandStudioLayout() {
             return (
               <motion.button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                whileHover={{ x: 2 }}
-                whileTap={{ scale: 0.98 }}
+                onClick={() => !tab.disabled && setActiveTab(tab.id)}
+                whileHover={tab.disabled ? {} : { x: 2 }}
+                whileTap={tab.disabled ? {} : { scale: 0.98 }}
                 className={cn(
                   'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative overflow-hidden',
-                  isActive
-                    ? 'text-foreground'
-                    : 'text-muted-foreground hover:text-foreground/80'
+                  tab.disabled
+                    ? 'text-muted-foreground/30 cursor-default'
+                    : isActive
+                      ? 'text-foreground'
+                      : 'text-muted-foreground hover:text-foreground/80'
                 )}
               >
                 {/* Active tab background glow */}
-                {isActive && (
+                {isActive && !tab.disabled && (
                   <motion.div
                     layoutId="activeTabBg"
                     className={cn('absolute inset-0 bg-gradient-to-r rounded-xl border border-primary/15', tab.accent)}
                     transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
                   />
                 )}
-                <Icon className={cn('w-4 h-4 relative z-10', isActive && 'text-primary')} />
+                <Icon className={cn('w-4 h-4 relative z-10', isActive && !tab.disabled && 'text-primary')} />
                 <span className="relative z-10">{tab.label}</span>
 
+                {/* Lock icon for disabled tabs */}
+                {tab.disabled && (
+                  <Lock className="w-3 h-3 ml-auto text-muted-foreground/20" />
+                )}
+
                 {/* Active indicator dot */}
-                {isActive && (
+                {isActive && !tab.disabled && (
                   <motion.div
                     layoutId="activeIndicator"
                     className="absolute right-3 w-1.5 h-1.5 rounded-full bg-primary"
@@ -165,13 +172,6 @@ export function BrandStudioLayout() {
           })}
         </nav>
 
-        {/* Sidebar footer */}
-        <div className="p-4 border-t border-border/20">
-          <div className="flex items-center gap-2 text-[11px] text-muted-foreground/50">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50" />
-            <span>Brand Studio v1.0</span>
-          </div>
-        </div>
       </aside>
 
       {/* Main Content */}

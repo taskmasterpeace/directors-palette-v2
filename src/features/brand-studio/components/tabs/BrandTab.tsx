@@ -3,8 +3,6 @@
 import { Palette, Sparkles } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { ChevronDown } from 'lucide-react'
 import { useActiveBrand, useBrandStore } from '../../hooks/useBrandStore'
 import { BrandGuideHero } from './sections/BrandGuideHero'
 import { ColorsSection } from './sections/ColorsSection'
@@ -61,22 +59,6 @@ export function BrandTab() {
         <MusicSection brand={brand} onSave={updateBrand} isSaving={isSaving} />
       </motion.div>
 
-      {/* Raw JSON */}
-      <motion.div variants={fadeUp}>
-        <Collapsible>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground/60 hover:text-muted-foreground text-xs">
-              <ChevronDown className="w-3.5 h-3.5" />
-              Raw Brand Data
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <pre className="mt-2 p-4 bg-secondary/30 rounded-xl text-[11px] overflow-x-auto max-h-64 overflow-y-auto border border-border/20 text-muted-foreground/70 font-mono">
-              {JSON.stringify(brand, null, 2)}
-            </pre>
-          </CollapsibleContent>
-        </Collapsible>
-      </motion.div>
     </motion.div>
   )
 }
