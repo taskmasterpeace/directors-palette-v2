@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   authors: [{ name: 'Machine King Labs', url: 'https://machinekinglabs.com' }],
   creator: 'Machine King Labs',
   publisher: 'Machine King Labs',
+  icons: {
+    icon: '/logo.svg',
+    apple: '/logo.svg',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

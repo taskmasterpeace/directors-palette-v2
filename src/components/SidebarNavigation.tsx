@@ -913,13 +913,13 @@ function MobileNavigation({ open, onOpenChange, activeTab, onNavSelect, user, on
             <Button
                 variant="ghost"
                 size="icon"
-                className="fixed top-3 right-3 z-50 h-12 w-12 rounded-full bg-zinc-900/90 hover:bg-zinc-800 backdrop-blur-md border border-amber-500/40 shadow-lg hover:shadow-xl hover:border-amber-400/60 transition-all hover:scale-105 active:scale-95"
+                className="fixed top-3 right-3 z-50 h-[52px] w-[52px] rounded-full bg-zinc-900/90 hover:bg-zinc-800 backdrop-blur-md border border-amber-500/40 shadow-lg hover:shadow-xl hover:border-amber-400/60 transition-all hover:scale-105 active:scale-95"
                 onClick={() => onOpenChange(true)}
             >
                 <img
                     src="/logo.svg"
                     alt="Menu"
-                    className="w-9 h-9 object-contain"
+                    className="w-10 h-10 object-contain"
                 />
             </Button>
 
