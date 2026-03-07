@@ -139,17 +139,20 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
         return item?.preview || item?.imageData || null
     }, [libraryItems])
 
-    // Session reference suggestions: @reference_1, @reference_2, etc. derived from loaded images
-    const sessionRefSuggestions = React.useMemo(() => {
-        const refs = shotCreatorReferenceImages.map((img, idx) => ({
-            tag: `@reference_${idx + 1}`,
-            preview: img.preview,
-        }))
+    // Untagged session reference images shown as IMG_1, IMG_2, etc.
+    const filteredSessionRefs = React.useMemo(() => {
+        const refs = shotCreatorReferenceImages
+            .map((img, idx) => ({
+                label: `IMG_${idx + 1}`,
+                insertText: `(REF:IMG_${idx + 1})`,
+                preview: img.preview,
+                hasTags: img.tags && img.tags.length > 0,
+            }))
+            .filter(r => !r.hasTags)
+
         if (!autocompleteSearch) return refs
-        const searchWithAt = autocompleteSearch.startsWith('@')
-            ? autocompleteSearch.toLowerCase()
-            : '@' + autocompleteSearch.toLowerCase()
-        return refs.filter(r => r.tag.toLowerCase().startsWith(searchWithAt))
+        const search = autocompleteSearch.toLowerCase()
+        return refs.filter(r => r.label.toLowerCase().includes(search))
     }, [shotCreatorReferenceImages, autocompleteSearch])
 
     // Filter autocomplete suggestions with category grouping
@@ -252,14 +255,14 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
     // Flatten suggestions for keyboard navigation
     const flatSuggestions = React.useMemo(() => {
         const flat: string[] = []
-        // Session references first
-        sessionRefSuggestions.forEach(r => flat.push(r.tag))
-        // Then library refs
+        // Untagged session refs first (above the line)
+        filteredSessionRefs.forEach(r => flat.push(r.insertText))
+        // Library refs below
         Object.values(autocompleteSuggestions).forEach(categoryRefs => {
             flat.push(...categoryRefs)
         })
         return flat
-    }, [sessionRefSuggestions, autocompleteSuggestions])
+    }, [filteredSessionRefs, autocompleteSuggestions])
 
     const hasSuggestions = flatSuggestions.length > 0
 
@@ -413,37 +416,34 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                                     width: textareaRef.current ? `${textareaRef.current.offsetWidth}px` : 'auto'
                                 }}
                             >
-                                {/* Session references: @reference_1, @reference_2, etc. */}
-                                {sessionRefSuggestions.length > 0 && (
-                                    <div>
-                                        <div className="px-3 py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-900">
-                                            Current References
-                                        </div>
-                                        {sessionRefSuggestions.map((ref, idx) => {
-                                            const isSelected = idx === autocompleteSelectedIndex
-                                            return (
-                                                <button
-                                                    key={ref.tag}
-                                                    onClick={() => selectAutocompleteSuggestion(ref.tag)}
-                                                    className={cn(
-                                                        'w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2',
-                                                        isSelected
-                                                            ? 'bg-blue-500 text-white dark:bg-blue-600'
-                                                            : 'hover:bg-slate-100 dark:hover:bg-slate-700'
-                                                    )}
-                                                >
-                                                    <img src={ref.preview} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
-                                                    <span>{ref.tag}</span>
-                                                </button>
-                                            )
-                                        })}
-                                    </div>
+                                {/* Untagged session images above the line */}
+                                {filteredSessionRefs.map((ref, idx) => {
+                                    const isSelected = idx === autocompleteSelectedIndex
+                                    return (
+                                        <button
+                                            key={ref.label}
+                                            onClick={() => selectAutocompleteSuggestion(ref.insertText)}
+                                            className={cn(
+                                                'w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2',
+                                                isSelected
+                                                    ? 'bg-blue-500 text-white dark:bg-blue-600'
+                                                    : 'hover:bg-slate-100 dark:hover:bg-slate-700'
+                                            )}
+                                        >
+                                            <img src={ref.preview} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                                            <span className="font-medium">{ref.label}</span>
+                                        </button>
+                                    )
+                                })}
+                                {/* Divider between session refs and library */}
+                                {filteredSessionRefs.length > 0 && Object.values(autocompleteSuggestions).some(s => s.length > 0) && (
+                                    <hr className="border-t border-slate-200 dark:border-slate-700 my-1" />
                                 )}
                                 {/* Library references by category */}
                                 {Object.entries(autocompleteSuggestions).map(([category, suggestions]) => {
                                     if (suggestions.length === 0) return null
                                     const categoryIndex = Object.keys(autocompleteSuggestions).indexOf(category)
-                                    const startIndex = sessionRefSuggestions.length + Object.keys(autocompleteSuggestions)
+                                    const startIndex = filteredSessionRefs.length + Object.keys(autocompleteSuggestions)
                                         .slice(0, categoryIndex)
                                         .reduce((sum, cat) => sum + autocompleteSuggestions[cat as Category].length, 0)
 
