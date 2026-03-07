@@ -21,14 +21,13 @@ import { logger } from '@/lib/logger'
 interface CharacterCardProps {
     character: StoryboardCharacter
     index: number
-    autoReferenceNumber?: number
     onUpdate: (index: number, updates: Partial<StoryboardCharacter>) => void
     onOpenCharacterSheetRecipe: (characterId: string) => void
     onSaveToLibrary: (characterId: string, tag: string, galleryId: string) => void
     onRemoveFromLibrary: (characterId: string, galleryId: string) => void
 }
 
-function CharacterCard({ character, index, autoReferenceNumber, onUpdate, onOpenCharacterSheetRecipe, onSaveToLibrary, onRemoveFromLibrary }: CharacterCardProps) {
+function CharacterCard({ character, index, onUpdate, onOpenCharacterSheetRecipe, onSaveToLibrary, onRemoveFromLibrary }: CharacterCardProps) {
     const [isExpanded, setIsExpanded] = useState(false)
     const [imageInputMode, setImageInputMode] = useState<'upload' | 'url' | 'gallery'>('upload')
     const [imageUrl, setImageUrl] = useState(character.reference_image_url || '')
@@ -236,14 +235,6 @@ function CharacterCard({ character, index, autoReferenceNumber, onUpdate, onOpen
                                             >
                                                 <X className="w-2.5 h-2.5" />
                                             </span>
-                                        </Badge>
-                                    )}
-                                    {autoReferenceNumber && (
-                                        <Badge
-                                            variant="secondary"
-                                            className="text-[10px] px-1.5 py-0 bg-cyan-500/20 text-cyan-400 border-cyan-500/30"
-                                        >
-                                            @reference_{autoReferenceNumber}
                                         </Badge>
                                     )}
                                     {character.has_reference && character.reference_image_url && (
@@ -613,15 +604,6 @@ export function CharacterList() {
 
     const charactersWithRef = displayCharacters.filter(c => c.has_reference && c.reference_image_url).length
 
-    // Compute auto-reference numbers: characterId → 1-based index for chars with images
-    const referenceNumbers: Record<string, number> = {}
-    let refIdx = 1
-    for (const c of displayCharacters) {
-        if (c.reference_image_url) {
-            referenceNumbers[c.id] = refIdx++
-        }
-    }
-
     // Group characters by role, maintaining original index for updates
     const indexedCharacters = displayCharacters.map((c, index) => ({ ...c, _index: index }))
     const mainChars = indexedCharacters.filter(c => c.role === 'main')
@@ -668,7 +650,6 @@ export function CharacterList() {
                                             key={character.id || character._index}
                                             character={character}
                                             index={character._index}
-                                            autoReferenceNumber={referenceNumbers[character.id]}
                                             onUpdate={handleUpdateCharacter}
                                             onOpenCharacterSheetRecipe={handleOpenCharacterSheetRecipe}
                                             onSaveToLibrary={handleSaveToLibrary}
@@ -686,7 +667,6 @@ export function CharacterList() {
                                 key={character.id || index}
                                 character={character}
                                 index={index}
-                                autoReferenceNumber={referenceNumbers[character.id]}
                                 onUpdate={handleUpdateCharacter}
                                 onOpenCharacterSheetRecipe={handleOpenCharacterSheetRecipe}
                                 onSaveToLibrary={handleSaveToLibrary}

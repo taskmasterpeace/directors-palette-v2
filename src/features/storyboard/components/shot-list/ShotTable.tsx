@@ -40,15 +40,6 @@ export function ShotTable({ chapterIndex = 0 }: ShotTableProps) {
     const [copiedExport, setCopiedExport] = useState(false)
     const [expandingSequence, setExpandingSequence] = useState<number | null>(null)
 
-    // Compute reference index map: characterId → 1-based index for chars with images
-    const referenceIndexMap: Record<string, number> = {}
-    let refIdx = 1
-    for (const char of characters) {
-        if (char.reference_image_url) {
-            referenceIndexMap[char.id] = refIdx++
-        }
-    }
-
     const handleExpandWithCharacter = useCallback(async (sequence: number, characterTag: string, characterDesc: string) => {
         setExpandingSequence(sequence)
         try {
@@ -217,7 +208,6 @@ export function ShotTable({ chapterIndex = 0 }: ShotTableProps) {
                                     key={`shot-${prompt.sequence}`}
                                     prompt={prompt}
                                     characters={characters}
-                                    referenceIndexMap={referenceIndexMap}
                                     onPromptChange={handlePromptChange}
                                     onCharacterRefsChange={handleCharacterRefsChange}
                                     onDelete={handleDeleteShot}
