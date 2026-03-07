@@ -144,7 +144,7 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
         const refs = shotCreatorReferenceImages
             .map((img, idx) => ({
                 label: `IMG_${idx + 1}`,
-                insertText: `(REF:IMG_${idx + 1})`,
+                insertText: `@IMG_${idx + 1} (REF:IMG_${idx + 1})`,
                 preview: img.preview,
                 hasTags: img.tags && img.tags.length > 0,
             }))
