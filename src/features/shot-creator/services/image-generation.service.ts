@@ -171,6 +171,12 @@ export class ImageGenerationService {
       replicateInput.output_format = settings.outputFormat
     }
 
+    // LoRA support — API expects arrays for lora_weights and lora_scales
+    if (settings.loraWeightsUrl) {
+      replicateInput.lora_weights = [settings.loraWeightsUrl]
+      replicateInput.lora_scales = [settings.loraScale ?? 1.0]
+    }
+
     // Note: Z-Image Turbo is TEXT-TO-IMAGE ONLY
     // It does NOT support image input - reference images are ignored
 
@@ -198,10 +204,18 @@ export class ImageGenerationService {
   /**
    * Get Replicate model identifier
    */
-  static getReplicateModelId(model: ImageModel): string {
+  static getReplicateModelId(model: ImageModel, loraActive?: boolean): string {
     const modelConfig = getModelConfig(model)
+    // When LoRA is active on z-image-turbo, use the LoRA-enabled variant
+    // This model requires version-based prediction (not model: shorthand)
+    if (loraActive && model === 'z-image-turbo') {
+      return 'prunaai/z-image-turbo-lora'
+    }
     return modelConfig.endpoint
   }
+
+  /** Version hash for models that require version-based predictions */
+  static readonly LORA_VERSION = '197b2db2015aa366d2bc61a941758adf4c31ac66b18573f5c66dc388ab081ca2'
 
   /**
    * Build metadata for database storage

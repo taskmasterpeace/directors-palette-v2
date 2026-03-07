@@ -564,10 +564,12 @@ export async function POST(request: NextRequest) {
       userId: user.id, // ✅ Use authenticated user
     });
 
-    // Get model identifier
-    const replicateModelId = ImageGenerationService.getReplicateModelId(model as ImageModel);
+    // Get model identifier - swap to LoRA variant if LoRA weights present
+    const loraActive = !!(modelSettings as Record<string, unknown>)?.loraWeightsUrl
+    const replicateModelId = ImageGenerationService.getReplicateModelId(model as ImageModel, loraActive);
     lognog.devDebug('Using Replicate model', {
       model_id: replicateModelId,
+      lora_active: loraActive,
       has_webhook: !!process.env.WEBHOOK_URL,
       replicate_input_has_image: !!replicateInput.image,
       replicate_input_has_reference_images: !!replicateInput.reference_images,
@@ -582,24 +584,20 @@ export async function POST(request: NextRequest) {
     let prediction;
     try {
       // Build prediction options - webhook is optional for local development
-      const predictionOptions: {
-        model: string;
-        input: typeof replicateInput;
-        webhook?: string;
-        webhook_events_filter?: ('start' | 'output' | 'logs' | 'completed')[];
-      } = {
-        model: replicateModelId,
-        input: replicateInput,
-      };
+      // LoRA models require version-based predictions, not model: shorthand
+      const predictionOptions: Record<string, unknown> = loraActive
+        ? { version: ImageGenerationService.LORA_VERSION, input: replicateInput }
+        : { model: replicateModelId, input: replicateInput };
 
       // Only add webhook if URL is configured (production)
       if (webhookUrl) {
         predictionOptions.webhook = webhookUrl;
-        predictionOptions.webhook_events_filter = ['completed'] as const;
+        predictionOptions.webhook_events_filter = ['completed'];
       }
 
       const replicateStart = Date.now();
-      prediction = await replicate.predictions.create(predictionOptions);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      prediction = await replicate.predictions.create(predictionOptions as any);
       const replicateLatency = Date.now() - replicateStart;
 
       // Log Replicate integration success

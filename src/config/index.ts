@@ -263,7 +263,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         badgeColor: 'bg-purple-600',
         textColor: 'text-purple-300',
         endpoint: 'prunaai/z-image-turbo',
-        costPerImage: 0.05, // 5 pts = $0.05 (67% margin on ~$0.02 Replicate cost)
+        costPerImage: 0.03, // 3 pts = $0.03 (~$0.01 Replicate cost)
         supportedParameters: ['outputFormat', 'aspectRatio', 'numInferenceSteps', 'guidanceScale'],
         parameters: {
             outputFormat: MODEL_PARAMETERS.outputFormat,

@@ -15,6 +15,7 @@ import { useShotCreatorSettings } from "../../hooks"
 import { getModelConfig, ModelId } from '@/config'
 import { Button } from "@/components/ui/button"
 import { Shuffle } from "lucide-react"
+import { useLoraStore } from "../../store/lora.store"
 
 const AdvancedSettings = () => {
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
@@ -52,6 +53,12 @@ const AdvancedSettings = () => {
         modelConfig.supportedParameters.includes('imageSearch'),
         [modelConfig]
     )
+    const supportsGuidanceScale = useMemo(() =>
+        modelConfig.supportedParameters.includes('guidanceScale'),
+        [modelConfig]
+    )
+
+    const activeLora = useLoraStore((s) => s.getActiveLora())
 
     return (
         <div className="space-y-4 border-t border-border pt-4">
@@ -141,6 +148,53 @@ const AdvancedSettings = () => {
                     </div>
                     <p className="text-xs text-muted-foreground pl-6">
                         Use web images as visual context (also enables web search)
+                    </p>
+                </div>
+            )}
+
+            {/* Guidance Scale - for z-image-turbo */}
+            {supportsGuidanceScale && (
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-sm text-foreground">Guidance Scale</Label>
+                        <span className="text-sm text-muted-foreground font-medium tabular-nums">
+                            {shotCreatorSettings.guidanceScale ?? (activeLora ? 1 : 0)}
+                        </span>
+                    </div>
+                    <Slider
+                        value={[shotCreatorSettings.guidanceScale ?? (activeLora ? 1 : 0)]}
+                        onValueChange={([val]) => updateSettings({ guidanceScale: val })}
+                        min={0}
+                        max={20}
+                        step={0.5}
+                        className="w-full"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Use 0 for turbo speed, higher for more prompt adherence
+                        {activeLora && ' (auto-set to 1 for LoRA)'}
+                    </p>
+                </div>
+            )}
+
+            {/* LoRA Scale - only when LoRA is active */}
+            {activeLora && (
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-sm text-foreground">LoRA Scale</Label>
+                        <span className="text-sm text-purple-400 font-medium tabular-nums">
+                            {shotCreatorSettings.loraScale ?? activeLora.defaultLoraScale}
+                        </span>
+                    </div>
+                    <Slider
+                        value={[shotCreatorSettings.loraScale ?? activeLora.defaultLoraScale]}
+                        onValueChange={([val]) => updateSettings({ loraScale: val })}
+                        min={0}
+                        max={2}
+                        step={0.1}
+                        className="w-full"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Strength of the LoRA effect (0 = none, 1 = full, 2 = exaggerated)
                     </p>
                 </div>
             )}

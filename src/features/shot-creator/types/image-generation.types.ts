@@ -28,6 +28,8 @@ export interface ZImageTurboSettings {
   numInferenceSteps?: number
   guidanceScale?: number
   promptStrength?: number
+  loraWeightsUrl?: string
+  loraScale?: number
 }
 
 export interface SeedreamSettings {

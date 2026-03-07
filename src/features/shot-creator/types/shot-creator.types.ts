@@ -68,4 +68,7 @@ export interface ShotCreatorSettings {
     // Slot Machine syntax settings
     disableSlotMachineSyntax?: boolean // Treat {text} as literal, don't expand to variations
     slotMachineVariationCount?: number // Number of variations to generate (2-5, default 3)
+    // Z-Image Turbo / LoRA settings
+    guidanceScale?: number // Guidance scale (0-20, default 0, auto-set to 1 when LoRA active)
+    loraScale?: number // LoRA strength (0-2, default 1.0)
 }

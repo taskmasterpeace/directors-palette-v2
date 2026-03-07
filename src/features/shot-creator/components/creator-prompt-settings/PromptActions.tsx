@@ -34,6 +34,7 @@ import { cn } from "@/utils/utils"
 import { Category } from "../CategorySelectDialog"
 import { toast } from "sonner"
 import { SlotMachinePanel } from "../slot-machine"
+import { LoraSection } from "../lora/LoraSection"
 import { logger } from '@/lib/logger'
 import { useTextareaResize } from "../../hooks/useTextareaResize"
 import { usePromptGeneration } from "../../hooks/usePromptGeneration"
@@ -562,6 +563,9 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                         <RecipeFormFields />
                     </div>
                 )}
+
+                {/* LoRA section */}
+                <LoraSection />
 
                 {/* Generate button - sticky on mobile so it's always visible */}
                 <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-background/95 backdrop-blur-sm border-t border-border shadow-[0_-4px_12px_rgba(0,0,0,0.15)] lg:static lg:p-0 lg:bg-transparent lg:backdrop-blur-none lg:border-0 lg:shadow-none lg:z-auto">

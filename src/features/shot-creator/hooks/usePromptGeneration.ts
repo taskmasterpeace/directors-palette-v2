@@ -11,6 +11,7 @@ import { executeRecipe } from '@/features/shared/services/recipe-execution.servi
 import type { Recipe } from '../types/recipe.types'
 import { toast } from 'sonner'
 import { logger } from '@/lib/logger'
+import { useLoraStore } from '../store/lora.store'
 
 /**
  * Check if a recipe has any tool stages that require special execution
@@ -47,6 +48,7 @@ export function usePromptGeneration() {
     const { generateImage, isGenerating, cancelGeneration } = useImageGeneration()
     const { wildcards } = useWildCardStore()
     const { activeFieldValues, setActiveRecipe: _setActiveRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts } = useRecipeStore()
+    const activeLora = useLoraStore((s) => s.getActiveLora())
 
     // Track last used recipe for generation metadata
     const [lastUsedRecipe, setLastUsedRecipe] = useState<{ recipeId: string; recipeName: string } | null>(null)
@@ -159,11 +161,19 @@ export function usePromptGeneration() {
             case 'z-image-turbo':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
                 baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
+                // Inject LoRA settings when active
+                if (activeLora) {
+                    baseSettings.loraWeightsUrl = activeLora.weightsUrl
+                    baseSettings.loraScale = shotCreatorSettings.loraScale ?? activeLora.defaultLoraScale
+                    baseSettings.guidanceScale = shotCreatorSettings.guidanceScale ?? activeLora.defaultGuidanceScale
+                } else if (shotCreatorSettings.guidanceScale !== undefined) {
+                    baseSettings.guidanceScale = shotCreatorSettings.guidanceScale
+                }
                 break
         }
 
         return baseSettings
-    }, [shotCreatorSettings])
+    }, [shotCreatorSettings, activeLora])
 
     // ── Main generation handler ────────────────────────────────────────
     const handleGenerate = useCallback(async () => {
@@ -633,16 +643,22 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
             .filter((url): url is string => Boolean(url))
         const modelSettings = buildModelSettings()
 
+        // Prepend LoRA trigger word when active
+        let finalPrompt = shotCreatorPrompt
+        if (activeLora) {
+            finalPrompt = `${activeLora.triggerWord}, ${shotCreatorPrompt}`
+        }
+
         await generateImage(
             model,
-            shotCreatorPrompt,
+            finalPrompt,
             referenceUrls,
             modelSettings,
             lastUsedRecipe || undefined,
         )
 
         setLastUsedRecipe(null)
-    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages, activeFieldValues, generationCost])
+    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages, activeFieldValues, generationCost, activeLora])
 
     return {
         handleGenerate,
