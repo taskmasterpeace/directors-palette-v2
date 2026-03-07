@@ -381,7 +381,7 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
 
     return (
         <Fragment>
-            <div className="flex flex-col gap-3 px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col gap-3 px-4 sm:px-6 lg:px-8 pb-20 lg:pb-0">
                 {/* Textarea section */}
                 <div className="space-y-2">
                     <label htmlFor="prompt" className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -563,40 +563,41 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                     </div>
                 )}
 
-                {/* Generate button */}
-                <Button
-                    onClick={handleGenerate}
-                    disabled={!canGenerate || isGenerating}
-                    className="w-full gap-2"
-                    size="lg"
-                >
-                    {isGenerating ? (
-                        <>
-                            <LoadingSpinner />
-                            {countdown !== null && countdown > 0
-                                ? `Generating... ~${countdown}s`
-                                : 'Generating...'}
-                        </>
-                    ) : (
-                        <>
-                            <Sparkles className="w-4 h-4" />
-                            Generate ({generationCost.tokenCost} pts)
-                        </>
-                    )}
-                </Button>
-
-                {/* Cancel button */}
-                {isGenerating && (
-                    <Button
-                        onClick={cancelGeneration}
-                        variant="outline"
-                        className="w-full gap-2"
-                        size="lg"
-                    >
-                        <X className="w-4 h-4" />
-                        Cancel
-                    </Button>
-                )}
+                {/* Generate button - sticky on mobile so it's always visible */}
+                <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-background/95 backdrop-blur-sm border-t border-border shadow-[0_-4px_12px_rgba(0,0,0,0.15)] lg:static lg:p-0 lg:bg-transparent lg:backdrop-blur-none lg:border-0 lg:shadow-none lg:z-auto">
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={handleGenerate}
+                            disabled={!canGenerate || isGenerating}
+                            className={cn("gap-2", isGenerating ? "flex-1" : "w-full")}
+                            size="lg"
+                        >
+                            {isGenerating ? (
+                                <>
+                                    <LoadingSpinner />
+                                    {countdown !== null && countdown > 0
+                                        ? `~${countdown}s`
+                                        : 'Generating...'}
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="w-4 h-4" />
+                                    Generate ({generationCost.tokenCost} pts)
+                                </>
+                            )}
+                        </Button>
+                        {isGenerating && (
+                            <Button
+                                onClick={cancelGeneration}
+                                variant="outline"
+                                size="lg"
+                                className="px-4"
+                            >
+                                <X className="w-4 h-4" />
+                            </Button>
+                        )}
+                    </div>
+                </div>
 
                 {/* Prompt syntax feedback */}
                 <PromptSyntaxFeedback

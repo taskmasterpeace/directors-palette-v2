@@ -1,19 +1,19 @@
 ---
 active: true
 iteration: 1
-max_iterations: 30
-completion_promise: "SECURITY_ANALYSIS_COMPLETE"
+max_iterations: 20
+completion_promise: "COMPLETE"
 original_prompt: |
-  Perform a comprehensive security analysis of the directors-palette-v2 codebase.
-started_at: 2026-02-13
+  Fix the Shot Creator mobile experience - the Generate button gets pushed off screen when there's a lot of content (wildcard options, reference images, etc.). The button needs to always be visible/accessible on mobile.
+started_at: 2026-03-07
 ---
 
-# Ralph Loop Active - Security Analysis
+# Ralph Loop Active
 
-Working on iteration 1 of 30
+Working on iteration 1 of 20
 
-## Phases
-1. Discovery & Analysis
-2. Fix Critical & High issues
-3. Fix Medium & Low issues
-4. Document findings
+## Original Task
+Fix the Shot Creator mobile experience - the Generate button gets pushed off screen when there's a lot of content (wildcard options, reference images, etc.). The button needs to always be visible/accessible on mobile.
+
+## Completion Criteria
+Output `<promise>COMPLETE</promise>` when the task is genuinely complete.
