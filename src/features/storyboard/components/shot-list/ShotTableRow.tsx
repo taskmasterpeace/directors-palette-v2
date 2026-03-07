@@ -20,9 +20,19 @@ function getShotTypeColor(type: string) {
     }
 }
 
+interface AutocompleteOption {
+    tag: string
+    label: string
+    thumbnail?: string
+    characterId: string
+    character: StoryboardCharacter
+    isNumberedRef: boolean
+}
+
 interface ShotTableRowProps {
     prompt: GeneratedShotPrompt
     characters: StoryboardCharacter[]
+    referenceIndexMap: Record<string, number>
     onPromptChange: (sequence: number, newPrompt: string) => void
     onCharacterRefsChange: (sequence: number, characterRefs: StoryboardCharacter[]) => void
     onDelete: (sequence: number) => void
@@ -33,6 +43,7 @@ interface ShotTableRowProps {
 export function ShotTableRow({
     prompt,
     characters,
+    referenceIndexMap,
     onPromptChange,
     onCharacterRefsChange,
     onDelete,
@@ -47,7 +58,7 @@ export function ShotTableRow({
     const [autocompleteOpen, setAutocompleteOpen] = useState(false)
     const [autocompleteIndex, setAutocompleteIndex] = useState(0)
     const [triggerPosition, setTriggerPosition] = useState(0)
-    const [filteredChars, setFilteredChars] = useState<StoryboardCharacter[]>([])
+    const [filteredOptions, setFilteredOptions] = useState<AutocompleteOption[]>([])
 
     // Handle text change with @ detection
     const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -62,13 +73,38 @@ export function ShotTableRow({
         if (lastAtIndex !== -1) {
             const queryText = textBeforeCursor.slice(lastAtIndex + 1)
             if (/^[a-zA-Z0-9_-]*$/.test(queryText)) {
-                const matches = characters.filter(c => {
-                    const tag = c.name.toLowerCase().replace(/\s+/g, '_')
-                    return tag.includes(queryText.toLowerCase()) || c.name.toLowerCase().includes(queryText.toLowerCase())
-                })
+                // Build combined options: name tags + @reference_N tags
+                const options: AutocompleteOption[] = []
+                for (const c of characters) {
+                    const nameTag = '@' + c.name.toLowerCase().replace(/\s+/g, '_')
+                    options.push({
+                        tag: nameTag,
+                        label: c.name,
+                        thumbnail: c.reference_image_url,
+                        characterId: c.id,
+                        character: c,
+                        isNumberedRef: false,
+                    })
+                    const refNum = referenceIndexMap[c.id]
+                    if (refNum !== undefined) {
+                        options.push({
+                            tag: `@reference_${refNum}`,
+                            label: `Reference ${refNum} (${c.name})`,
+                            thumbnail: c.reference_image_url,
+                            characterId: c.id,
+                            character: c,
+                            isNumberedRef: true,
+                        })
+                    }
+                }
+
+                const query = queryText.toLowerCase()
+                const matches = options.filter(opt =>
+                    opt.tag.slice(1).toLowerCase().includes(query) || opt.label.toLowerCase().includes(query)
+                )
                 if (matches.length > 0) {
                     setAutocompleteOpen(true)
-                    setFilteredChars(matches)
+                    setFilteredOptions(matches)
                     setAutocompleteIndex(0)
                     setTriggerPosition(lastAtIndex)
                     return
@@ -76,11 +112,11 @@ export function ShotTableRow({
             }
         }
         setAutocompleteOpen(false)
-    }, [characters])
+    }, [characters, referenceIndexMap])
 
     // Handle autocomplete selection
-    const handleAutocompleteSelect = useCallback((char: StoryboardCharacter) => {
-        const tag = '@' + char.name.toLowerCase().replace(/\s+/g, '_')
+    const handleAutocompleteSelect = useCallback((option: AutocompleteOption) => {
+        const tag = option.tag
         const before = editedPrompt.slice(0, triggerPosition)
         const cursorPos = textareaRef.current?.selectionStart || editedPrompt.length
         const after = editedPrompt.slice(cursorPos)
@@ -103,18 +139,18 @@ export function ShotTableRow({
 
         if (e.key === 'ArrowDown') {
             e.preventDefault()
-            setAutocompleteIndex(i => Math.min(i + 1, filteredChars.length - 1))
+            setAutocompleteIndex(i => Math.min(i + 1, filteredOptions.length - 1))
         } else if (e.key === 'ArrowUp') {
             e.preventDefault()
             setAutocompleteIndex(i => Math.max(i - 1, 0))
         } else if (e.key === 'Enter' || e.key === 'Tab') {
             e.preventDefault()
-            const char = filteredChars[autocompleteIndex]
-            if (char) handleAutocompleteSelect(char)
+            const option = filteredOptions[autocompleteIndex]
+            if (option) handleAutocompleteSelect(option)
         } else if (e.key === 'Escape') {
             setAutocompleteOpen(false)
         }
-    }, [autocompleteOpen, filteredChars, autocompleteIndex, handleAutocompleteSelect])
+    }, [autocompleteOpen, filteredOptions, autocompleteIndex, handleAutocompleteSelect])
 
     const handleSave = () => {
         onPromptChange(prompt.sequence, editedPrompt)
@@ -199,22 +235,22 @@ export function ShotTableRow({
                         </div>
                         {/* Inline @ autocomplete dropdown */}
                         {autocompleteOpen && (
-                            <div className="absolute z-20 top-full left-0 mt-1 bg-popover border rounded-md shadow-md p-1 min-w-[200px] max-h-[160px] overflow-y-auto">
-                                {filteredChars.map((char, idx) => (
+                            <div className="absolute z-20 top-full left-0 mt-1 bg-popover border rounded-md shadow-md p-1 min-w-[220px] max-h-[200px] overflow-y-auto">
+                                {filteredOptions.map((opt, idx) => (
                                     <button
-                                        key={char.id}
+                                        key={`${opt.characterId}-${opt.isNumberedRef ? 'ref' : 'name'}`}
                                         className={`w-full flex items-center gap-2 p-1.5 rounded text-xs hover:bg-muted ${idx === autocompleteIndex ? 'bg-muted' : ''}`}
-                                        onMouseDown={(e) => { e.preventDefault(); handleAutocompleteSelect(char) }}
+                                        onMouseDown={(e) => { e.preventDefault(); handleAutocompleteSelect(opt) }}
                                     >
-                                        {char.reference_image_url ? (
-                                            <img src={char.reference_image_url} alt={char.name} className="w-5 h-5 rounded-full object-cover" />
+                                        {opt.thumbnail ? (
+                                            <img src={opt.thumbnail} alt={opt.label} className="w-5 h-5 rounded-full object-cover" />
                                         ) : (
                                             <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
                                                 <Users className="w-3 h-3" />
                                             </span>
                                         )}
-                                        <span className="font-medium">{char.name}</span>
-                                        <span className="text-muted-foreground ml-auto">@{char.name.toLowerCase().replace(/\s+/g, '_')}</span>
+                                        <span className="font-medium">{opt.label}</span>
+                                        <span className={`ml-auto ${opt.isNumberedRef ? 'text-cyan-400' : 'text-muted-foreground'}`}>{opt.tag}</span>
                                     </button>
                                 ))}
                             </div>
