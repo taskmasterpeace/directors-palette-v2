@@ -332,7 +332,12 @@ export function ReferenceImageCard({
             {/* Tags section */}
             {image && (
                 <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Tags</Label>
+                    <div className="flex items-center gap-2">
+                        <Label className="text-xs text-muted-foreground">Tags</Label>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-cyan-500/15 text-cyan-400 border-cyan-500/30">
+                            @reference_{index + 1}
+                        </Badge>
+                    </div>
                     {editingTagsId === image.id ? (
                         <InlineTagEditor
                             initialTags={image.tags}
