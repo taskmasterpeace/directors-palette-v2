@@ -9,12 +9,14 @@ import { useLoraStore, type LoraItem } from '../../store/lora.store'
 import { Plus, Trash2, Upload, X, Layers, Pencil, ChevronDown, ChevronUp } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/utils/utils'
+import { useAdminAuth } from '@/features/admin/hooks/useAdminAuth'
 
 // ── LoRA Card ──────────────────────────────────────────────────────
 
-function LoraCard({ lora, isActive, onToggle, onDelete, onUpdateScale, onEdit }: {
+function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, onEdit }: {
     lora: LoraItem
     isActive: boolean
+    isAdmin: boolean
     onToggle: () => void
     onDelete: () => void
     onUpdateScale: (scale: number) => void
@@ -48,20 +50,24 @@ function LoraCard({ lora, isActive, onToggle, onDelete, onUpdateScale, onEdit }:
                     onCheckedChange={onToggle}
                     className="flex-shrink-0"
                 />
-                <button
-                    onClick={onEdit}
-                    className="p-1 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                    title="Edit LoRA"
-                >
-                    <Pencil className="w-3.5 h-3.5" />
-                </button>
-                <button
-                    onClick={onDelete}
-                    className="p-1 text-muted-foreground hover:text-red-400 transition-colors flex-shrink-0"
-                    title="Delete LoRA"
-                >
-                    <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                {isAdmin && (
+                    <button
+                        onClick={onEdit}
+                        className="p-1 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                        title="Edit LoRA"
+                    >
+                        <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                )}
+                {isAdmin && (
+                    <button
+                        onClick={onDelete}
+                        className="p-1 text-muted-foreground hover:text-red-400 transition-colors flex-shrink-0"
+                        title="Delete LoRA"
+                    >
+                        <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                )}
             </div>
             {isActive && (
                 <div className="px-3 pb-3 pt-0">
@@ -342,6 +348,7 @@ const COLLAPSED_MAX = 3
 
 export function LoraSection() {
     const { loras, activeLoraId, setActiveLora, removeLora, updateLora } = useLoraStore()
+    const { isAdmin } = useAdminAuth()
     const [showDialog, setShowDialog] = useState(false)
     const [editingLora, setEditingLora] = useState<LoraItem | null>(null)
     const [expanded, setExpanded] = useState(false)
@@ -350,6 +357,9 @@ export function LoraSection() {
         ? loras
         : loras.slice(0, COLLAPSED_MAX)
     const hiddenCount = loras.length - COLLAPSED_MAX
+
+    // No LoRAs and not admin — nothing to show
+    if (loras.length === 0 && !isAdmin) return null
 
     if (loras.length === 0 && !showDialog) {
         return (
@@ -389,15 +399,17 @@ export function LoraSection() {
                         <span className="text-xs text-muted-foreground">({loras.length})</span>
                     )}
                 </label>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => { setEditingLora(null); setShowDialog(true) }}
-                    className="h-7 px-2 text-xs gap-1"
-                >
-                    <Plus className="w-3 h-3" />
-                    Add
-                </Button>
+                {isAdmin && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setEditingLora(null); setShowDialog(true) }}
+                        className="h-7 px-2 text-xs gap-1"
+                    >
+                        <Plus className="w-3 h-3" />
+                        Add
+                    </Button>
+                )}
             </div>
 
             <div className="space-y-2">
@@ -406,6 +418,7 @@ export function LoraSection() {
                         key={lora.id}
                         lora={lora}
                         isActive={activeLoraId === lora.id}
+                        isAdmin={isAdmin}
                         onToggle={() => {
                             setActiveLora(activeLoraId === lora.id ? null : lora.id)
                         }}
