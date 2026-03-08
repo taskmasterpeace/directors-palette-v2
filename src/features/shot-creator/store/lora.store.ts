@@ -43,6 +43,15 @@ const BUILT_IN_LORAS: LoraItem[] = [
         defaultLoraScale: 1.3,
         createdAt: 0,
     },
+    {
+        id: 'battlerap-style',
+        name: 'Battle Rap',
+        triggerWord: 'in the style of battlerap',
+        weightsUrl: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/loras/battlerap-style/battlerap_lora_weights.safetensors',
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 1.3,
+        createdAt: 0,
+    },
 ]
 
 export const useLoraStore = create<LoraStore>()(
@@ -91,7 +100,7 @@ export const useLoraStore = create<LoraStore>()(
         }),
         {
             name: 'directors-palette-lora-store',
-            version: 2,
+            version: 3,
             migrate: (persisted: unknown) => {
                 const state = persisted as Record<string, unknown>
                 const loras = (state?.loras as LoraItem[]) || []
