@@ -32,7 +32,7 @@ export const TOKEN_CATEGORIES: TokenCategoryMeta[] = [
     id: 'visualLook',
     label: 'Visual Look',
     icon: 'Palette',
-    color: 'text-purple-400',
+    color: 'text-cyan-400',
     description: 'Lens effects, lighting, and color (only when no style)',
   },
   {

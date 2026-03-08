@@ -95,7 +95,7 @@ export function GenerationStats({ hideAdminAccounts = false }: GenerationStatsPr
             <Card className="bg-zinc-900 border-zinc-800">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-zinc-400">Active Users</CardTitle>
-                    <Users className="h-4 w-4 text-purple-500" />
+                    <Users className="h-4 w-4 text-cyan-500" />
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold text-white">{stats?.uniqueUsers || 0}</div>

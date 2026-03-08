@@ -294,8 +294,8 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         icon: '⚡',
         description: 'Ultra-fast generation with LoRA support. Best for rapid iterations, character/style LoRAs, and concept exploration.',
         badge: 'Turbo',
-        badgeColor: 'bg-purple-600',
-        textColor: 'text-purple-300',
+        badgeColor: 'bg-cyan-600',
+        textColor: 'text-cyan-300',
         endpoint: 'prunaai/z-image-turbo',
         costPerImage: 0.03, // 3 pts = $0.03 (~$0.01 Replicate cost)
         supportedParameters: ['outputFormat', 'aspectRatio', 'numInferenceSteps', 'guidanceScale'],

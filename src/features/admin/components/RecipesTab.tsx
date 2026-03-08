@@ -450,7 +450,7 @@ export function RecipesTab() {
                                                         </Badge>
                                                     )}
                                                     {recipe.isSystemOnly && (
-                                                        <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+                                                        <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
                                                             Hidden
                                                         </Badge>
                                                     )}

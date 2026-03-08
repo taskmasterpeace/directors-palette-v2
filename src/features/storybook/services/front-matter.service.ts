@@ -349,7 +349,7 @@ export function getPageTypeDisplay(pageType: PageType): {
 } {
   const displays: Record<PageType, { icon: string; label: string; color: string }> = {
     'half-title': { icon: '📖', label: 'Half Title', color: 'text-blue-400' },
-    'frontispiece': { icon: '🖼️', label: 'Frontispiece', color: 'text-purple-400' },
+    'frontispiece': { icon: '🖼️', label: 'Frontispiece', color: 'text-cyan-400' },
     'title-page': { icon: '📕', label: 'Title Page', color: 'text-blue-400' },
     'copyright': { icon: '©', label: 'Copyright', color: 'text-gray-400' },
     'dedication': { icon: '💝', label: 'Dedication', color: 'text-pink-400' },

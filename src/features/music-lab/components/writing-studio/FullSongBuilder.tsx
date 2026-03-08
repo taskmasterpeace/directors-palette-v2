@@ -50,7 +50,7 @@ const SECTION_CHIP_STYLES: Record<SectionType, { bg: string; border: string; tex
   intro:  { bg: 'bg-blue-500/15',   border: 'border-blue-500/40',   text: 'text-blue-400',   glow: 'shadow-blue-500/20' },
   verse:  { bg: 'bg-green-500/15',  border: 'border-green-500/40',  text: 'text-green-400',  glow: 'shadow-green-500/20' },
   hook:   { bg: 'bg-amber-500/15',  border: 'border-amber-500/40',  text: 'text-amber-400',  glow: 'shadow-amber-500/20' },
-  bridge: { bg: 'bg-purple-500/15', border: 'border-purple-500/40', text: 'text-purple-400', glow: 'shadow-purple-500/20' },
+  bridge: { bg: 'bg-cyan-500/15', border: 'border-cyan-500/40', text: 'text-cyan-400', glow: 'shadow-cyan-500/20' },
   outro:  { bg: 'bg-rose-500/15',   border: 'border-rose-500/40',   text: 'text-rose-400',   glow: 'shadow-rose-500/20' },
 }
 

@@ -240,14 +240,14 @@ export function UserManual() {
                                 <Separator />
                                 <div>
                                     <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                                        <Wand2 className="w-5 h-5 text-purple-500" /> Shot Actions
+                                        <Wand2 className="w-5 h-5 text-cyan-500" /> Shot Actions
                                     </h3>
                                     <p className="text-muted-foreground mb-4">
                                         Hover over any completed shot (Grid view) or view the toolbar below the image (Carousel view) to access these actions:
                                     </p>
                                     <ul className="space-y-2">
                                         <li className="flex gap-3">
-                                            <span className="bg-purple-500/10 text-purple-500 p-1 rounded h-fit"><FlaskConical className="w-4 h-4" /></span>
+                                            <span className="bg-cyan-500/10 text-cyan-500 p-1 rounded h-fit"><FlaskConical className="w-4 h-4" /></span>
                                             <span><strong>Shot Lab:</strong> Open the shot in Shot Lab for advanced editing, inpainting, and re-prompting.</span>
                                         </li>
                                         <li className="flex gap-3">
@@ -353,13 +353,13 @@ export function UserManual() {
                     {/* Shot Lab */}
                     <section id="shot-lab" className="space-y-6 scroll-mt-20">
                         <h2 className="text-2xl font-bold flex items-center gap-2">
-                            <FlaskConical className="w-6 h-6 text-purple-500" /> Shot Lab & VFX Bay
+                            <FlaskConical className="w-6 h-6 text-cyan-500" /> Shot Lab & VFX Bay
                         </h2>
                         <Card>
                             <CardContent className="p-6">
                                 <div className="grid md:grid-cols-2 gap-8">
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-2 font-semibold text-lg text-purple-400">
+                                        <div className="flex items-center gap-2 font-semibold text-lg text-cyan-400">
                                             <Layout className="w-5 h-5" /> Canvas Editor (Blocking)
                                         </div>
                                         <p className="text-muted-foreground text-sm">
@@ -855,17 +855,17 @@ export function UserManual() {
                     {/* AI Models */}
                     <section id="models" className="space-y-6 scroll-mt-20">
                         <h2 className="text-2xl font-bold flex items-center gap-2">
-                            <ImageIcon className="w-6 h-6 text-purple-500" /> Image Generation
+                            <ImageIcon className="w-6 h-6 text-cyan-500" /> Image Generation
                         </h2>
                         <p className="text-muted-foreground">
                             Create stunning images with AI. Choose from 7 models with different speed, quality, reference image support, and pricing options.
                         </p>
 
                         {/* Image System Infographic */}
-                        <Card className="bg-gradient-to-br from-purple-950/50 to-background border-purple-800/50 overflow-hidden">
+                        <Card className="bg-gradient-to-br from-cyan-950/50 to-background border-cyan-800/50 overflow-hidden">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <Info className="w-5 h-5 text-purple-400" /> Image Credit System Overview
+                                    <Info className="w-5 h-5 text-cyan-400" /> Image Credit System Overview
                                 </CardTitle>
                                 <CardDescription>Visual guide to models, pricing, and reference image support</CardDescription>
                             </CardHeader>
@@ -889,13 +889,13 @@ export function UserManual() {
 
                         <div className="grid gap-6">
                             {/* Z-Image Turbo */}
-                            <Card className="bg-gradient-to-br from-purple-950/20 to-background border-purple-900/30">
+                            <Card className="bg-gradient-to-br from-cyan-950/20 to-background border-cyan-900/30">
                                 <CardHeader className="pb-2">
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="flex items-center gap-2">
                                             <span className="text-2xl">⚡</span> Z-Image Turbo
                                         </CardTitle>
-                                        <span className="px-2 py-1 text-xs font-bold rounded bg-purple-500/20 text-purple-400">5 TOKENS</span>
+                                        <span className="px-2 py-1 text-xs font-bold rounded bg-cyan-500/20 text-cyan-400">5 TOKENS</span>
                                     </div>
                                     <CardDescription>Fast Flux-based generation with great text</CardDescription>
                                 </CardHeader>
@@ -907,7 +907,7 @@ export function UserManual() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <h4 className="font-semibold text-purple-400">Prompting Tips</h4>
+                                        <h4 className="font-semibold text-cyan-400">Prompting Tips</h4>
                                         <ul className="text-muted-foreground space-y-1 list-disc pl-4">
                                             <li>Use natural language, not keyword lists</li>
                                             <li>Be specific and literal (80-250 words ideal)</li>
@@ -1119,7 +1119,7 @@ export function UserManual() {
                                         <tbody className="text-muted-foreground">
                                             <tr className="border-b border-border/30 hover:bg-muted/30">
                                                 <td className="p-2">⚡ Z-Image Turbo</td>
-                                                <td className="text-center p-2 text-purple-400">5 pts</td>
+                                                <td className="text-center p-2 text-cyan-400">5 pts</td>
                                                 <td className="text-center p-2">⚡⚡⚡</td>
                                                 <td className="text-center p-2">★★★☆☆</td>
                                                 <td className="text-center p-2">★★★★☆</td>

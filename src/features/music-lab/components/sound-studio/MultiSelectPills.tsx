@@ -35,12 +35,12 @@ const COLOR_SCHEMES = {
     tagActive: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-[0_0_8px_oklch(0.55_0.15_155/0.15)]',
     groupLabel: 'text-emerald-400/70',
   },
-  purple: {
-    pill: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-    pillHover: 'hover:bg-purple-500/30',
-    tag: 'bg-muted/20 text-foreground/80 border-border hover:border-purple-500/40 hover:text-purple-300',
-    tagActive: 'bg-purple-500/20 text-purple-300 border-purple-500/40 shadow-[0_0_8px_oklch(0.55_0.15_290/0.15)]',
-    groupLabel: 'text-purple-400/70',
+  cyan: {
+    pill: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+    pillHover: 'hover:bg-cyan-500/30',
+    tag: 'bg-muted/20 text-foreground/80 border-border hover:border-cyan-500/40 hover:text-cyan-300',
+    tagActive: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 shadow-[0_0_8px_oklch(0.55_0.15_200/0.15)]',
+    groupLabel: 'text-cyan-400/70',
   },
   orange: {
     pill: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
@@ -48,13 +48,6 @@ const COLOR_SCHEMES = {
     tag: 'bg-muted/20 text-foreground/80 border-border hover:border-orange-500/40 hover:text-orange-300',
     tagActive: 'bg-orange-500/20 text-orange-300 border-orange-500/40 shadow-[0_0_8px_oklch(0.55_0.15_40/0.15)]',
     groupLabel: 'text-orange-400/70',
-  },
-  cyan: {
-    pill: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
-    pillHover: 'hover:bg-cyan-500/30',
-    tag: 'bg-muted/20 text-foreground/80 border-border hover:border-cyan-500/40 hover:text-cyan-300',
-    tagActive: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 shadow-[0_0_8px_oklch(0.55_0.15_200/0.15)]',
-    groupLabel: 'text-cyan-400/70',
   },
   pink: {
     pill: 'bg-pink-500/20 text-pink-300 border-pink-500/30',

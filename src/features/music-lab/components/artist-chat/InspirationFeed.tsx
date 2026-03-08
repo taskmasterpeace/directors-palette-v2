@@ -48,8 +48,8 @@ const TYPE_CONFIG: Record<
   beat: {
     icon: Drum,
     label: 'Beats',
-    color: 'text-purple-400',
-    bgColor: 'bg-purple-500/15',
+    color: 'text-cyan-400',
+    bgColor: 'bg-cyan-500/15',
   },
 }
 

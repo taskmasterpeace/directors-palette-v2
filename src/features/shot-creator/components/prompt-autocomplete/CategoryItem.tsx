@@ -21,7 +21,7 @@ const CATEGORY_COLORS: Record<ReferenceCategory, string> = {
   people: 'text-blue-600',
   places: 'text-green-600',
   props: 'text-orange-600',
-  layouts: 'text-purple-600',
+  layouts: 'text-cyan-600',
   styles: 'text-pink-600',
 }
 

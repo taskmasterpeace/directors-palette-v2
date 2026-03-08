@@ -24,7 +24,7 @@ export function MetadataBar({ aspectRatio, resolution, loraName, loraScale, grid
       <p className="text-xs font-semibold text-white text-center">
         {aspectRatio} • {resolution}
         {loraName && (
-          <span className="text-purple-300"> • {loraName}{loraScale ? ` ${loraScale}x` : ''}</span>
+          <span className="text-cyan-300"> • {loraName}{loraScale ? ` ${loraScale}x` : ''}</span>
         )}
       </p>
     </div>

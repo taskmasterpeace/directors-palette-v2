@@ -119,14 +119,14 @@ export default function HelpPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <FlaskConical className="w-5 h-5 text-purple-400" />
+                                <FlaskConical className="w-5 h-5 text-cyan-400" />
                                 Shot Lab (Refinement)
                             </CardTitle>
                             <CardDescription>Click the &quot;Refine Shot&quot; button (Flask Icon) on any shot card to enter.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div className="space-y-2">
-                                <div className="flex items-center gap-2 font-semibold text-lg text-purple-300">
+                                <div className="flex items-center gap-2 font-semibold text-lg text-cyan-300">
                                     <Layout className="w-5 h-5" />
                                     Blocking (Layout)
                                 </div>

@@ -50,8 +50,8 @@ export function VideoGenerator({ onBack }: { onBack: () => void }) {
         <button onClick={onBack} className="p-1.5 rounded-lg hover:bg-secondary/50 transition-colors">
           <ArrowLeft className="w-4 h-4 text-muted-foreground" />
         </button>
-        <div className="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center">
-          <Film className="w-4.5 h-4.5 text-purple-400" />
+        <div className="w-9 h-9 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+          <Film className="w-4.5 h-4.5 text-cyan-400" />
         </div>
         <div>
           <h3 className="text-lg font-bold tracking-tight">Video Generator</h3>
@@ -84,7 +84,7 @@ export function VideoGenerator({ onBack }: { onBack: () => void }) {
                   className={cn(
                     'flex-1 py-2.5 px-3 rounded-lg text-xs font-medium transition-all border',
                     model === m.value
-                      ? 'bg-purple-500/15 border-purple-500/30 text-purple-300'
+                      ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300'
                       : 'bg-secondary/20 border-border/20 text-muted-foreground hover:bg-secondary/40'
                   )}
                 >
@@ -106,7 +106,7 @@ export function VideoGenerator({ onBack }: { onBack: () => void }) {
                   className={cn(
                     'flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all border',
                     duration === d.value
-                      ? 'bg-purple-500/15 border-purple-500/30 text-purple-300'
+                      ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300'
                       : 'bg-secondary/20 border-border/20 text-muted-foreground hover:bg-secondary/40'
                   )}
                 >
@@ -141,7 +141,7 @@ export function VideoGenerator({ onBack }: { onBack: () => void }) {
           <Button
             onClick={handleGenerate}
             disabled={!prompt.trim() || isGenerating}
-            className="w-full gap-2 bg-purple-600 hover:bg-purple-500 text-white"
+            className="w-full gap-2 bg-cyan-600 hover:bg-cyan-500 text-white"
           >
             {isGenerating ? (
               <>
@@ -167,7 +167,7 @@ export function VideoGenerator({ onBack }: { onBack: () => void }) {
             >
               {lastResult.status === 'pending' ? (
                 <>
-                  <Clock className="w-10 h-10 text-purple-400/50 mx-auto" />
+                  <Clock className="w-10 h-10 text-cyan-400/50 mx-auto" />
                   <div>
                     <p className="text-sm font-medium">Video is being generated</p>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -186,7 +186,7 @@ export function VideoGenerator({ onBack }: { onBack: () => void }) {
           ) : isGenerating ? (
             <div className="flex items-center justify-center h-64 rounded-2xl border border-dashed border-border/30 bg-secondary/10">
               <div className="text-center space-y-3">
-                <Loader2 className="w-8 h-8 animate-spin text-purple-400/50 mx-auto" />
+                <Loader2 className="w-8 h-8 animate-spin text-cyan-400/50 mx-auto" />
                 <p className="text-sm text-muted-foreground/60">Submitting video request...</p>
               </div>
             </div>

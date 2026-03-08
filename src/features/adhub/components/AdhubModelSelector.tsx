@@ -31,7 +31,7 @@ const MODEL_OPTIONS: ModelOption[] = [
     icon: '⚡',
     description: 'Ultra-fast generation for rapid visualization',
     badge: 'Turbo',
-    badgeColor: 'bg-purple-600',
+    badgeColor: 'bg-cyan-600',
     capabilities: ['Ultra fast', 'Budget friendly', 'Text-to-image'],
   },
 ]

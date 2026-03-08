@@ -184,7 +184,7 @@ export function BlockingCanvas({ shot, onUpdate }: BlockingCanvasProps) {
                     size="icon"
                     title="Add Actor"
                     onClick={addActor}
-                    className="hover:bg-purple-500/20 hover:text-purple-400"
+                    className="hover:bg-cyan-500/20 hover:text-cyan-400"
                 >
                     <Users className="w-6 h-6" />
                 </Button>
@@ -220,7 +220,7 @@ export function BlockingCanvas({ shot, onUpdate }: BlockingCanvasProps) {
                 </div>
 
                 <div className="mt-4 flex gap-2">
-                    <Button onClick={generateDescription} size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                    <Button onClick={generateDescription} size="sm" className="bg-cyan-600 hover:bg-cyan-700 text-white">
                         <Wand2 className="w-4 h-4 mr-2" />
                         Generate Prompt from Layout
                     </Button>

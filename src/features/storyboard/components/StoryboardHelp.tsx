@@ -27,7 +27,7 @@ export function StoryboardHelp() {
                 <div className="space-y-6">
                     <section className="space-y-2">
                         <h3 className="font-medium flex items-center gap-2">
-                            <Wand2 className="w-4 h-4 text-purple-500" />
+                            <Wand2 className="w-4 h-4 text-cyan-500" />
                             1. Generating Prompts
                         </h3>
                         <p className="text-sm text-muted-foreground">

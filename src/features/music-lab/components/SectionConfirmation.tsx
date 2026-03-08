@@ -23,7 +23,7 @@ import { useMusicLabStore } from '../store/music-lab.store'
 import type { SongSection, SongSectionType } from '../types/music-lab.types'
 
 const SECTION_COLORS: Record<SongSectionType, string> = {
-    'intro': 'bg-purple-500/20 text-purple-400 border-purple-500/50',
+    'intro': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50',
     'verse': 'bg-blue-500/20 text-blue-400 border-blue-500/50',
     'pre-chorus': 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50',
     'chorus': 'bg-green-500/20 text-green-400 border-green-500/50',

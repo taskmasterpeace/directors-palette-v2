@@ -191,7 +191,7 @@ export function FinancialsTab() {
                 <Card className="bg-zinc-900 border-zinc-800">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-zinc-400">Paying Users</CardTitle>
-                        <Users className="h-4 w-4 text-purple-500" />
+                        <Users className="h-4 w-4 text-cyan-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-white">{stats?.users.paying_users}</div>
@@ -279,7 +279,7 @@ export function FinancialsTab() {
                 <Card className="bg-zinc-900 border-zinc-800">
                     <CardHeader>
                         <CardTitle className="text-white flex items-center gap-2">
-                            <Video className="w-4 h-4 text-purple-500" />
+                            <Video className="w-4 h-4 text-cyan-500" />
                             Video Generations
                         </CardTitle>
                     </CardHeader>
@@ -340,7 +340,7 @@ export function FinancialsTab() {
                                         <TableCell>
                                             <Badge variant="outline" className={
                                                 model.generation_type === 'video'
-                                                    ? 'border-purple-500 text-purple-400'
+                                                    ? 'border-cyan-500 text-cyan-400'
                                                     : 'border-blue-500 text-blue-400'
                                             }>
                                                 {model.generation_type}

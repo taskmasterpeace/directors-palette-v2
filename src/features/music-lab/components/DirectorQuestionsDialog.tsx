@@ -55,7 +55,7 @@ export function DirectorQuestionsDialog({
             case 'emotional': return 'border-l-rose-500'
             case 'visual': return 'border-l-blue-500'
             case 'narrative': return 'border-l-amber-500'
-            case 'spectacle': return 'border-l-purple-500'
+            case 'spectacle': return 'border-l-cyan-500'
             default: return 'border-l-zinc-500'
         }
     }

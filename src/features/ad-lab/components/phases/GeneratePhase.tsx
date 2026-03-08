@@ -62,7 +62,7 @@ const DURATION_COLORS = {
 
 const VARIANT_COLORS = {
   A: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  B: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  B: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
 }
 
 export function GeneratePhase() {

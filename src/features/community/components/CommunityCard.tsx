@@ -30,7 +30,7 @@ interface CommunityCardProps {
 }
 
 const TYPE_COLORS: Record<CommunityItemType, string> = {
-  wildcard: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  wildcard: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
   recipe: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
   prompt: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
   director: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',

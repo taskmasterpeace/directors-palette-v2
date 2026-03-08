@@ -527,20 +527,20 @@ export function CharacterStep() {
               key={character.id}
               className={cn(
                 "bg-zinc-900/50 border-zinc-800",
-                character.role === 'supporting' && "border-l-4 border-l-purple-500/50"
+                character.role === 'supporting' && "border-l-4 border-l-cyan-500/50"
               )}
             >
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     {character.role === 'supporting' ? (
-                      <UserCircle className="w-4 h-4 text-purple-400" />
+                      <UserCircle className="w-4 h-4 text-cyan-400" />
                     ) : (
                       <User className="w-4 h-4 text-amber-400" />
                     )}
                     <span className="text-amber-400">{character.tag}</span>
                     {character.role === 'supporting' && (
-                      <Badge variant="outline" className="text-xs text-purple-400 border-purple-500/50">
+                      <Badge variant="outline" className="text-xs text-cyan-400 border-cyan-500/50">
                         {character.characterRole || 'Supporting'}
                       </Badge>
                     )}

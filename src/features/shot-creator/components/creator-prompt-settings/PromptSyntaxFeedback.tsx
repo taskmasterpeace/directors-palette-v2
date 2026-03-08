@@ -306,7 +306,7 @@ export function PromptSyntaxFeedback({
                         onClick={() => onTogglePipeSyntax?.(!disablePipeSyntax)}
                         className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition-all cursor-pointer ${disablePipeSyntax
                                 ? 'border-border bg-card/30 opacity-50 hover:opacity-75'
-                                : 'border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20'
+                                : 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20'
                             }`}
                         title={disablePipeSyntax
                             ? 'Pipe syntax disabled - Click to enable. Use prompt1 | prompt2 for sequential chain generation'

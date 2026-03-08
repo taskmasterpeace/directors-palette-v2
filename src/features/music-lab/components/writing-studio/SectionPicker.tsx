@@ -24,7 +24,7 @@ const SECTION_COLORS: Record<SectionType, string> = {
   intro: 'bg-blue-500/20 text-blue-400',
   hook: 'bg-amber-500/20 text-amber-400',
   verse: 'bg-green-500/20 text-green-400',
-  bridge: 'bg-purple-500/20 text-purple-400',
+  bridge: 'bg-cyan-500/20 text-cyan-400',
   outro: 'bg-rose-500/20 text-rose-400',
 }
 

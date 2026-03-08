@@ -191,7 +191,7 @@ export function TemplatePreview({
                       </div>
                       <div className="p-2 rounded bg-zinc-800/50">
                         <span className="text-xs text-zinc-500">Style Prompt: </span>
-                        <span className="text-xs text-purple-400">
+                        <span className="text-xs text-cyan-400">
                           {previews.withStyle.style.stylePrompt || '(none)'}
                         </span>
                       </div>

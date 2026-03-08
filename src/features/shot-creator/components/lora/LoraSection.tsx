@@ -38,7 +38,7 @@ function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, 
         <div ref={cardRef} className={cn(
             'rounded-lg border transition-all',
             isActive
-                ? 'border-purple-500/50 bg-purple-950/20'
+                ? 'border-cyan-500/50 bg-cyan-950/20'
                 : 'border-border bg-card/50 hover:border-border/80'
         )}>
             <div className="flex items-center gap-2 px-2 py-1.5">
@@ -49,7 +49,7 @@ function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, 
                     className={cn(
                         'flex-shrink-0',
                         isActive
-                            ? 'data-[state=checked]:bg-purple-500'
+                            ? 'data-[state=checked]:bg-cyan-500'
                             : 'data-[state=unchecked]:bg-slate-600'
                     )}
                 />
@@ -62,8 +62,8 @@ function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, 
                         className="w-7 h-7 rounded object-cover flex-shrink-0 border border-border/50"
                     />
                 ) : (
-                    <div className="w-7 h-7 rounded bg-purple-900/30 border border-purple-800/30 flex items-center justify-center flex-shrink-0">
-                        <Layers className="w-3 h-3 text-purple-400" />
+                    <div className="w-7 h-7 rounded bg-cyan-900/30 border border-cyan-800/30 flex items-center justify-center flex-shrink-0">
+                        <Layers className="w-3 h-3 text-cyan-400" />
                     </div>
                 )}
 
@@ -80,10 +80,10 @@ function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, 
                             step={0.1}
                             value={lora.defaultLoraScale}
                             onChange={(e) => onUpdateScale(parseFloat(e.target.value))}
-                            className="flex-1 h-1.5 accent-purple-500 touch-none min-w-[60px]"
+                            className="flex-1 h-1.5 accent-cyan-500 touch-none min-w-[60px]"
                             style={{ WebkitAppearance: 'none', padding: '8px 0' }}
                         />
-                        <span className="text-xs text-purple-400 font-medium tabular-nums flex-shrink-0">
+                        <span className="text-xs text-cyan-400 font-medium tabular-nums flex-shrink-0">
                             {lora.defaultLoraScale.toFixed(1)}
                         </span>
                     </div>
@@ -237,10 +237,10 @@ function LoraDialog({ onClose, editingLora }: {
                                 />
                             ) : (
                                 <div
-                                    className="w-14 h-14 rounded-lg bg-purple-900/20 border border-dashed border-purple-700/40 flex items-center justify-center cursor-pointer hover:bg-purple-900/30 transition-colors"
+                                    className="w-14 h-14 rounded-lg bg-cyan-900/20 border border-dashed border-cyan-700/40 flex items-center justify-center cursor-pointer hover:bg-cyan-900/30 transition-colors"
                                     onClick={() => thumbnailInputRef.current?.click()}
                                 >
-                                    <Layers className="w-6 h-6 text-purple-500/60" />
+                                    <Layers className="w-6 h-6 text-cyan-500/60" />
                                 </div>
                             )}
                             <div className="flex flex-col gap-1">
@@ -318,7 +318,7 @@ function LoraDialog({ onClose, editingLora }: {
                     <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
                             <Label className="text-sm">Default LoRA Scale</Label>
-                            <span className="text-sm text-purple-400 font-medium tabular-nums">{defaultScale.toFixed(1)}</span>
+                            <span className="text-sm text-cyan-400 font-medium tabular-nums">{defaultScale.toFixed(1)}</span>
                         </div>
                         <input
                             type="range"
@@ -327,7 +327,7 @@ function LoraDialog({ onClose, editingLora }: {
                             step={0.1}
                             value={defaultScale}
                             onChange={(e) => setDefaultScale(parseFloat(e.target.value))}
-                            className="w-full h-1.5 accent-purple-500"
+                            className="w-full h-1.5 accent-cyan-500"
                         />
                     </div>
 

@@ -277,9 +277,9 @@ export function ConstellationWidget() {
               onClick={() => setActiveTab('catalog')}
               className="border-t border-border/30 pt-2 mt-2 flex items-center gap-1.5 w-full hover:opacity-80 transition-opacity"
             >
-              <Dna className="w-3 h-3 text-purple-400" />
+              <Dna className="w-3 h-3 text-cyan-400" />
               <span className="text-[11px] text-muted-foreground flex-1 text-left">Genome</span>
-              <span className="text-[11px] tabular-nums text-purple-400 font-medium">
+              <span className="text-[11px] tabular-nums text-cyan-400 font-medium">
                 {(Array.isArray(draft.catalog.entries) ? draft.catalog.entries : []).filter((e) => e.analysis).length} song{(Array.isArray(draft.catalog.entries) ? draft.catalog.entries : []).filter((e) => e.analysis).length !== 1 ? 's' : ''}
               </span>
               {draft.catalog.genome && (

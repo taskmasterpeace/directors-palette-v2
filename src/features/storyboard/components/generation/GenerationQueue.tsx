@@ -33,7 +33,7 @@ interface GenerationQueueProps {
 
 // Shot type colors - defined at module level for performance
 const SHOT_TYPE_COLORS: Record<string, string> = {
-    'establishing': 'bg-purple-500',
+    'establishing': 'bg-cyan-500',
     'wide': 'bg-blue-500',
     'medium': 'bg-green-500',
     'close-up': 'bg-amber-500',

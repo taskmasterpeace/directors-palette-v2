@@ -18,7 +18,7 @@ const categoryConfig = {
     'places': { icon: MapPin, label: 'Places', color: 'green' },
     'props': { icon: Package, label: 'Props', color: 'orange' },
     'layouts': { icon: Layout, label: 'Layouts', color: 'red' },
-    'styles': { icon: Brush, label: 'Styles', color: 'purple' },
+    'styles': { icon: Brush, label: 'Styles', color: 'cyan' },
     'unorganized': { icon: Palette, label: 'Unorganized', color: 'gray' },
 }
 
@@ -190,7 +190,7 @@ const ShotReferenceLibrary = () => {
                                                     {item.category === 'places' && <MapPin className="w-3 h-3 text-emerald-400" />}
                                                     {item.category === 'props' && <Package className="w-3 h-3 text-orange-400" />}
                                                     {item.category === 'layouts' && <Layout className="w-3 h-3 text-red-400" />}
-                                                    {item.category === 'styles' && <Brush className="w-3 h-3 text-purple-400" />}
+                                                    {item.category === 'styles' && <Brush className="w-3 h-3 text-cyan-400" />}
                                                     {(!item.category || item.category === 'unorganized') && <ImageIcon className="w-3 h-3 text-muted-foreground" />}
                                                 </div>
 

@@ -50,8 +50,8 @@ function GenerationNode({ data, selected }: NodeProps) {
 
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded bg-purple-500/10 flex items-center justify-center">
-          <Sparkles className="w-4 h-4 text-purple-500" />
+        <div className="w-8 h-8 rounded bg-cyan-500/10 flex items-center justify-center">
+          <Sparkles className="w-4 h-4 text-cyan-500" />
         </div>
         <div className="flex-1">
           <div className="text-sm font-medium text-white">Generation</div>

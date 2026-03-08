@@ -13,7 +13,7 @@ const TOKEN_STYLES: Record<TokenType, { color: string; bg: string } | null> = {
     text: null, // uses default text color
     bracket: { color: '#60a5fa', bg: 'rgba(59, 130, 246, 0.12)' },           // blue-400
     bracketDelimiter: { color: '#93c5fd', bg: 'transparent' },                // blue-300 (delimiters)
-    pipe: { color: '#c084fc', bg: 'rgba(168, 85, 247, 0.12)' },              // purple-400
+    pipe: { color: '#22d3ee', bg: 'rgba(6, 182, 212, 0.12)' },               // cyan-400
     wildcard: { color: '#fbbf24', bg: 'rgba(245, 158, 11, 0.12)' },          // amber-400
     slotMachine: { color: '#34d399', bg: 'rgba(16, 185, 129, 0.12)' },       // emerald-400
     slotMachineDelimiter: { color: '#6ee7b7', bg: 'transparent' },            // emerald-300

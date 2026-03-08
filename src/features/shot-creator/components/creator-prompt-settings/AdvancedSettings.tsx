@@ -181,7 +181,7 @@ const AdvancedSettings = () => {
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <Label className="text-sm text-foreground">LoRA Scale</Label>
-                        <span className="text-sm text-purple-400 font-medium tabular-nums">
+                        <span className="text-sm text-cyan-400 font-medium tabular-nums">
                             {shotCreatorSettings.loraScale ?? activeLora.defaultLoraScale}
                         </span>
                     </div>

@@ -52,7 +52,7 @@ export function CategorySelectionStep() {
               selectedCategory === category.id
                 ? "bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/50"
                 : category.id === 'custom'
-                  ? "bg-gradient-to-br from-purple-900/50 to-pink-900/30 border-purple-700/50 hover:border-purple-500/70"
+                  ? "bg-gradient-to-br from-cyan-900/50 to-pink-900/30 border-cyan-700/50 hover:border-cyan-500/70"
                   : "bg-zinc-900/50 border-zinc-800 hover:border-zinc-700"
             )}
           >
@@ -73,7 +73,7 @@ export function CategorySelectionStep() {
               {allCategories.find(c => c.id === selectedCategory)?.name}
             </span>
             {selectedCategory === 'custom' && (
-              <span className="text-purple-400 ml-2">- You&apos;ll describe your story idea next</span>
+              <span className="text-cyan-400 ml-2">- You&apos;ll describe your story idea next</span>
             )}
           </p>
         </div>

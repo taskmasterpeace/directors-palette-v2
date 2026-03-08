@@ -213,7 +213,7 @@ export function PromptModal({ isOpen, config, onConfirm, onCancel }: PromptModal
             variant={config.variant === 'destructive' ? 'destructive' : 'default'}
             className={cn(
               "flex-1 sm:flex-none",
-              config.variant !== 'destructive' && "bg-purple-600 hover:bg-purple-700 focus-visible:ring-purple-600/20 dark:bg-purple-700 dark:hover:bg-purple-600"
+              config.variant !== 'destructive' && "bg-cyan-600 hover:bg-cyan-700 focus-visible:ring-cyan-600/20 dark:bg-cyan-700 dark:hover:bg-cyan-600"
             )}
           >
             Confirm

@@ -20,7 +20,7 @@ export function AudienceSection({ brand, onSave, isSaving }: SectionProps) {
 
   return (
     <SectionCard
-      icon={Users} title="Audience" iconColor="bg-purple-500/10 text-purple-400"
+      icon={Users} title="Audience" iconColor="bg-cyan-500/10 text-cyan-400"
       editing={editing} onEdit={() => { setLocal(audience); setEditing(true) }}
       onSave={handleSave} onCancel={() => setEditing(false)} isSaving={isSaving}
     >
@@ -45,12 +45,12 @@ export function AudienceSection({ brand, onSave, isSaving }: SectionProps) {
         <div className="space-y-3">
           {/* Two-column cards */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg bg-purple-500/5 border border-purple-500/10 p-3">
-              <p className="text-[10px] uppercase tracking-widest text-purple-400/50 mb-1">Primary</p>
+            <div className="rounded-lg bg-cyan-500/5 border border-cyan-500/10 p-3">
+              <p className="text-[10px] uppercase tracking-widest text-cyan-400/50 mb-1">Primary</p>
               <p className="text-sm font-medium leading-relaxed">{audience.primary}</p>
             </div>
-            <div className="rounded-lg bg-purple-500/5 border border-purple-500/10 p-3">
-              <p className="text-[10px] uppercase tracking-widest text-purple-400/50 mb-1">Secondary</p>
+            <div className="rounded-lg bg-cyan-500/5 border border-cyan-500/10 p-3">
+              <p className="text-[10px] uppercase tracking-widest text-cyan-400/50 mb-1">Secondary</p>
               <p className="text-sm font-medium leading-relaxed">{audience.secondary}</p>
             </div>
           </div>

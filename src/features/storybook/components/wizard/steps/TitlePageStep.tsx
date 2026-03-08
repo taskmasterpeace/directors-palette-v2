@@ -112,8 +112,8 @@ export function TitlePageStep() {
 
         <Card className="bg-zinc-900/50 border-zinc-700">
           <CardContent className="p-4 flex items-start gap-3">
-            <div className="p-2 bg-purple-500/20 rounded-lg">
-              <BookOpen className="w-5 h-5 text-purple-400" />
+            <div className="p-2 bg-cyan-500/20 rounded-lg">
+              <BookOpen className="w-5 h-5 text-cyan-400" />
             </div>
             <div>
               <h3 className="font-semibold text-white text-sm">Story Scene Style</h3>
@@ -263,7 +263,7 @@ export function TitlePageStep() {
                     {/* Composition label */}
                     <div className={cn(
                       "absolute top-2 left-2 text-white text-xs px-2 py-1 rounded",
-                      index < 2 ? "bg-amber-600/80" : "bg-purple-600/80"
+                      index < 2 ? "bg-amber-600/80" : "bg-cyan-600/80"
                     )}>
                       {getCompositionLabel(index)} #{(index % 2) + 1}
                     </div>

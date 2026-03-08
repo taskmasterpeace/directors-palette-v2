@@ -15,7 +15,7 @@ const SOURCE_CONFIG: Record<ImageSource, { label: string; icon: string; bgColor:
   'adhub': {
     label: 'Adhub',
     icon: '📣',
-    bgColor: 'bg-purple-500/80',
+    bgColor: 'bg-cyan-500/80',
     textColor: 'text-white',
   },
   'storybook': {

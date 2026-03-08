@@ -104,18 +104,18 @@ export function VfxBay({ shot, onUpdate: _onUpdate }: VfxBayProps) {
             <div
                 ref={refs.setFloating}
                 style={floatingStyles}
-                className="z-50 bg-background/95 backdrop-blur-md border border-purple-500/30 rounded-full px-4 py-2 shadow-[0_0_15px_-3px_rgba(168,85,247,0.3)] flex items-center gap-4 transition-all duration-300 hover:shadow-purple-500/20"
+                className="z-50 bg-background/95 backdrop-blur-md border border-cyan-500/30 rounded-full px-4 py-2 shadow-[0_0_15px_-3px_rgba(168,85,247,0.3)] flex items-center gap-4 transition-all duration-300 hover:shadow-cyan-500/20"
             >
                 <div className="flex items-center gap-2 border-r pr-3 border-white/10 mr-1">
-                    <Wand2 className="w-4 h-4 text-purple-400" />
-                    <span className="text-xs font-bold text-purple-100/70 uppercase tracking-widest hidden sm:block">VFX Bay</span>
+                    <Wand2 className="w-4 h-4 text-cyan-400" />
+                    <span className="text-xs font-bold text-cyan-100/70 uppercase tracking-widest hidden sm:block">VFX Bay</span>
                 </div>
 
                 <div className="flex items-center gap-1 border-r pr-4 border-border/50">
                     <Button
                         variant={mode === "paint" ? "default" : "ghost"}
                         size="icon"
-                        className="rounded-full w-8 h-8 data-[state=active]:bg-purple-600"
+                        className="rounded-full w-8 h-8 data-[state=active]:bg-cyan-600"
                         onClick={() => setMode("paint")}
                     >
                         <Paintbrush className="w-4 h-4" />
@@ -180,7 +180,7 @@ export function VfxBay({ shot, onUpdate: _onUpdate }: VfxBayProps) {
             <div className="h-20 border-t border-zinc-800 bg-background/95 p-4 flex items-center justify-center gap-4">
                 <div className="max-w-3xl w-full flex gap-2">
                     <div className="relative flex-1">
-                        <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-500" />
+                        <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-500" />
                         <Input
                             value={instruction}
                             onChange={(e) => setInstruction(e.target.value)}
@@ -191,7 +191,7 @@ export function VfxBay({ shot, onUpdate: _onUpdate }: VfxBayProps) {
                     <Button
                         onClick={handleGenerate}
                         disabled={isProcessing || !instruction}
-                        className="bg-purple-600 hover:bg-purple-700 text-white min-w-[120px]"
+                        className="bg-cyan-600 hover:bg-cyan-700 text-white min-w-[120px]"
                     >
                         {isProcessing ? <LoadingSpinner size="sm" color="current" className="mr-2" /> : <Wand2 className="w-4 h-4 mr-2" />}
                         Generate

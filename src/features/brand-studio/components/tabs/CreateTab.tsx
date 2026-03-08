@@ -21,7 +21,7 @@ const GENERATORS: {
   disabled?: boolean
 }[] = [
   { id: 'image', icon: ImageIcon, label: 'Image', desc: 'Brand photos & graphics', cost: '10 pts', color: 'from-violet-500/15 to-violet-500/5 border-violet-500/25 hover:border-violet-500/40', iconColor: 'text-violet-400' },
-  { id: 'video', icon: Film, label: 'Video', desc: 'Brand video clips', cost: '25+ pts', color: 'from-purple-500/15 to-purple-500/5 border-purple-500/25 hover:border-purple-500/40', iconColor: 'text-purple-400' },
+  { id: 'video', icon: Film, label: 'Video', desc: 'Brand video clips', cost: '25+ pts', color: 'from-cyan-500/15 to-cyan-500/5 border-cyan-500/25 hover:border-cyan-500/40', iconColor: 'text-cyan-400' },
   { id: 'voice', icon: Mic2, label: 'Voice', desc: 'Brand voiceovers', cost: '5 pts', color: 'from-indigo-500/15 to-indigo-500/5 border-indigo-500/25 hover:border-indigo-500/40', iconColor: 'text-indigo-400' },
   { id: 'music', icon: Music2, label: 'Music', desc: 'Brand music tracks', cost: '15 pts', color: 'from-fuchsia-500/15 to-fuchsia-500/5 border-fuchsia-500/25 hover:border-fuchsia-500/40', iconColor: 'text-fuchsia-400' },
   { id: 'script', icon: FileText, label: 'Script', desc: 'Ad scripts & copy', cost: '—', color: 'from-pink-500/10 to-pink-500/3 border-border/15', iconColor: 'text-muted-foreground/30', disabled: true },

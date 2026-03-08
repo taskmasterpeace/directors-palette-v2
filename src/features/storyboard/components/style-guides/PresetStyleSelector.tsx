@@ -27,7 +27,7 @@ const MEDIUM_LABELS: Record<string, string> = {
 const MEDIUM_COLORS: Record<string, string> = {
     'live-action': 'bg-blue-500/20 text-blue-400',
     '2d-animation': 'bg-orange-500/20 text-orange-400',
-    '3d-animation': 'bg-purple-500/20 text-purple-400',
+    '3d-animation': 'bg-cyan-500/20 text-cyan-400',
     'stop-motion': 'bg-amber-500/20 text-amber-400',
     'puppetry': 'bg-green-500/20 text-green-400',
     'mixed-media': 'bg-pink-500/20 text-pink-400',

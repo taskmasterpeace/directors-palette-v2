@@ -129,7 +129,7 @@ export function SunoPromptPreview() {
           <SectionBadge label="Drums" items={settings.drumDesign} color="text-rose-400/60" />
           <SectionBadge label="Groove" items={settings.grooveFeel} color="text-emerald-400/60" />
           <SectionBadge label="Bass" items={settings.bassStyle} color="text-orange-400/60" />
-          <SectionBadge label="Synth" items={settings.synthTexture} color="text-purple-400/60" />
+          <SectionBadge label="Synth" items={settings.synthTexture} color="text-cyan-400/60" />
           <SectionBadge label="Harmony" items={settings.harmonyColor} color="text-cyan-400/60" />
           <SectionBadge label="Space/FX" items={settings.spaceFx} color="text-blue-400/60" />
           <SectionBadge label="Ear Candy" items={settings.earCandy} color="text-pink-400/60" />

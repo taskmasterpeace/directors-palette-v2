@@ -177,7 +177,7 @@ export default function NodeWorkflowCanvas() {
               case 'prompt':
                 return '#3b82f6' // blue
               case 'generation':
-                return '#a855f7' // purple
+                return '#06b6d4' // cyan
               case 'tool':
                 return '#10b981' // emerald
               case 'output':

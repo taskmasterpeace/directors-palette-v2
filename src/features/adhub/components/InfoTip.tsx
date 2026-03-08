@@ -94,7 +94,7 @@ export function AdhubFlowGuide() {
     <InfoTip title="How Adhub Works" variant="collapsible">
       <div className="space-y-3">
         <div className="flex gap-2">
-          <div className="w-6 h-6 rounded-full bg-purple-500/20 flex items-center justify-center text-xs font-medium text-purple-400 shrink-0">1</div>
+          <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center text-xs font-medium text-cyan-400 shrink-0">1</div>
           <div>
             <strong className="text-foreground">Brand</strong> = Your identity (logo + context)
             <p className="text-xs opacity-80">Logo auto-included as reference image</p>
@@ -185,7 +185,7 @@ export function ArchitectureHelpModal() {
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-purple-400" />
+            <BookOpen className="w-5 h-5 text-cyan-400" />
             Adhub Architecture
           </DialogTitle>
         </DialogHeader>
@@ -194,8 +194,8 @@ export function ArchitectureHelpModal() {
           {/* Explanation */}
           <div className="grid md:grid-cols-3 gap-4">
             {/* Inputs */}
-            <div className="p-4 rounded-lg border border-purple-500/30 bg-purple-500/5">
-              <h4 className="font-semibold text-purple-400 mb-2">1. Brand + Product</h4>
+            <div className="p-4 rounded-lg border border-cyan-500/30 bg-cyan-500/5">
+              <h4 className="font-semibold text-cyan-400 mb-2">1. Brand + Product</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <strong className="text-foreground">Brand:</strong> Your identity - logo, context text, reference images
@@ -243,7 +243,7 @@ export function ArchitectureHelpModal() {
           <div className="p-4 rounded-lg border border-border bg-muted/30">
             <h4 className="font-semibold mb-3">The Complete Flow</h4>
             <div className="flex items-center justify-center gap-2 text-sm flex-wrap">
-              <span className="px-3 py-1 rounded bg-purple-500/20 text-purple-400">Brand + Product</span>
+              <span className="px-3 py-1 rounded bg-cyan-500/20 text-cyan-400">Brand + Product</span>
               <span className="text-muted-foreground">→</span>
               <span className="px-3 py-1 rounded bg-amber-500/20 text-amber-400">Preset Template</span>
               <span className="text-muted-foreground">→</span>

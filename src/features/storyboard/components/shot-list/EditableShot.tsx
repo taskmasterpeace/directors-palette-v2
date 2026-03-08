@@ -48,7 +48,7 @@ export interface EditableShotProps {
 
 function getShotTypeColor(type: string) {
     switch (type) {
-        case 'establishing': return 'bg-purple-500/20 text-purple-500 border-purple-500/30'
+        case 'establishing': return 'bg-cyan-500/20 text-cyan-500 border-cyan-500/30'
         case 'wide': return 'bg-blue-500/20 text-blue-500 border-blue-500/30'
         case 'medium': return 'bg-green-500/20 text-green-500 border-green-500/30'
         case 'close-up': return 'bg-amber-500/20 text-amber-500 border-amber-500/30'

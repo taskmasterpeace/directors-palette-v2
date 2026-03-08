@@ -369,7 +369,7 @@ export function PromptOrganizerModal({
                         <Section
                             title="Visual Look"
                             icon={<Palette className="w-4 h-4" />}
-                            color="text-purple-400"
+                            color="text-cyan-400"
                             defaultOpen={false}
                         >
                             <div className="space-y-4">

@@ -437,7 +437,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                         type="button"
                                         onClick={handleAiAnalyze}
                                         disabled={aiAnalyzing}
-                                        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white min-h-[44px]"
+                                        className="w-full bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 text-white min-h-[44px]"
                                     >
                                         <Sparkles className="w-4 h-4 mr-2" />
                                         {aiAnalyzing ? 'Analyzing with AI...' : 'AI Analyze Style'}
@@ -698,7 +698,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                     type="button"
                                     onClick={handleAiAnalyze}
                                     disabled={aiAnalyzing}
-                                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white min-h-[44px]"
+                                    className="w-full bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 text-white min-h-[44px]"
                                 >
                                     <Sparkles className="w-4 h-4 mr-2" />
                                     {aiAnalyzing ? 'Analyzing with AI...' : 'AI Analyze Style'}
@@ -828,7 +828,7 @@ const StyleSelector = ({ compact = false }: StyleSelectorProps) => {
                                     type="button"
                                     onClick={handleAiAnalyze}
                                     disabled={aiAnalyzing}
-                                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white min-h-[44px]"
+                                    className="w-full bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600 text-white min-h-[44px]"
                                 >
                                     <Sparkles className="w-4 h-4 mr-2" />
                                     {aiAnalyzing ? 'Analyzing with AI...' : 'AI Analyze Style'}

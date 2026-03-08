@@ -47,7 +47,7 @@ function TraitBadges({ traits, variant }: { traits: GenomeTrait[]; variant: 'sig
   const colors = {
     signature: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
     tendency: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
-    experiment: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+    experiment: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
   }
   const icons = { signature: '●', tendency: '○', experiment: '◦' }
 
@@ -84,7 +84,7 @@ function GenomePanel() {
 
   return (
     <Collapsible open={genomeOpen} onOpenChange={setGenomeOpen}>
-      <div className="border rounded-lg mb-4 bg-gradient-to-br from-amber-500/5 to-purple-500/5">
+      <div className="border rounded-lg mb-4 bg-gradient-to-br from-amber-500/5 to-cyan-500/5">
         <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2 hover:bg-muted/30 transition-colors rounded-t-lg">
           <div className="flex items-center gap-2">
             <Dna className="w-4 h-4 text-amber-400" />
@@ -153,7 +153,7 @@ function GenomePanel() {
                     )}
                     {Array.isArray(genome.blueprint.suggestExploring) && genome.blueprint.suggestExploring.length > 0 && (
                       <div>
-                        <p className="font-medium text-purple-400 mb-0.5">Explore</p>
+                        <p className="font-medium text-cyan-400 mb-0.5">Explore</p>
                         <ul className="text-muted-foreground space-y-0.5">
                           {genome.blueprint.suggestExploring.map((item, i) => (
                             <li key={i}>• {item}</li>

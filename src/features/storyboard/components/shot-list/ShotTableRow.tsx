@@ -11,7 +11,7 @@ import type { GeneratedShotPrompt, StoryboardCharacter } from '../../types/story
 
 function getShotTypeColor(type: string) {
     switch (type) {
-        case 'establishing': return 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+        case 'establishing': return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
         case 'wide': return 'bg-blue-500/20 text-blue-400 border-blue-500/30'
         case 'medium': return 'bg-green-500/20 text-green-400 border-green-500/30'
         case 'close-up': return 'bg-amber-500/20 text-amber-400 border-amber-500/30'

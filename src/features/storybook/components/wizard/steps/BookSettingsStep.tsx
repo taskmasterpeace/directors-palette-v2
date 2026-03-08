@@ -186,10 +186,10 @@ export function BookSettingsStep() {
       <div className="flex-1 space-y-6 overflow-y-auto">
         {/* Custom Story Idea (only for custom category) */}
         {isCustomCategory && (
-          <Card className="bg-gradient-to-br from-purple-900/30 to-pink-900/20 border-purple-700/50">
+          <Card className="bg-gradient-to-br from-cyan-900/30 to-pink-900/20 border-cyan-700/50">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg text-white flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-400" />
+                <Sparkles className="w-5 h-5 text-cyan-400" />
                 What Kind of Story?
               </CardTitle>
               <p className="text-sm text-muted-foreground">
@@ -214,8 +214,8 @@ export function BookSettingsStep() {
                     className={cn(
                       "p-3 rounded-lg border text-left transition-all hover:scale-[1.02]",
                       selectedTheme === theme.id
-                        ? "bg-purple-500/30 border-purple-500 ring-2 ring-purple-500/50"
-                        : "bg-zinc-800/50 border-zinc-700 hover:border-purple-500/50"
+                        ? "bg-cyan-500/30 border-cyan-500 ring-2 ring-cyan-500/50"
+                        : "bg-zinc-800/50 border-zinc-700 hover:border-cyan-500/50"
                     )}
                   >
                     <div className="flex items-center gap-2">
@@ -249,12 +249,12 @@ export function BookSettingsStep() {
                       }
                     }
                   }}
-                  className="bg-zinc-800/50 border-purple-700/50 min-h-[80px] text-white placeholder:text-zinc-500"
+                  className="bg-zinc-800/50 border-cyan-700/50 min-h-[80px] text-white placeholder:text-zinc-500"
                 />
               </div>
 
               {!customStoryIdea.trim() && !selectedTheme && (
-                <p className="text-xs text-purple-400">
+                <p className="text-xs text-cyan-400">
                   Select a theme above or describe your story idea
                 </p>
               )}
@@ -496,7 +496,7 @@ export function BookSettingsStep() {
         <Card className={cn(
           "border",
           isCustomCategory
-            ? "bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20"
+            ? "bg-gradient-to-br from-cyan-500/10 to-pink-500/10 border-cyan-500/20"
             : "bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/20"
         )}>
           <CardContent className="p-6">
@@ -516,13 +516,13 @@ export function BookSettingsStep() {
               </div>
               <div>
                 <p className="text-muted-foreground">Total Pages</p>
-                <p className={cn("font-medium", isCustomCategory ? "text-purple-400" : "text-amber-400")}>
+                <p className={cn("font-medium", isCustomCategory ? "text-cyan-400" : "text-amber-400")}>
                   {pageCount} pages
                 </p>
               </div>
               <div>
                 <p className="text-muted-foreground">Est. Words</p>
-                <p className={cn("font-medium", isCustomCategory ? "text-purple-400" : "text-amber-400")}>
+                <p className={cn("font-medium", isCustomCategory ? "text-cyan-400" : "text-amber-400")}>
                   ~{estimatedWordCount} words
                 </p>
               </div>
@@ -576,7 +576,7 @@ export function BookSettingsStep() {
           className={cn(
             "gap-2 px-6 text-black",
             isCustomCategory
-              ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+              ? "bg-gradient-to-r from-cyan-500 to-pink-500 hover:from-cyan-600 hover:to-pink-600"
               : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
           )}
         >
