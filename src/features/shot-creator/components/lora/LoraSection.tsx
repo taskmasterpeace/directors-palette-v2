@@ -38,20 +38,32 @@ function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, 
         <div ref={cardRef} className={cn(
             'rounded-lg border transition-all',
             isActive
-                ? 'border-purple-500/50 bg-purple-950/20 shadow-[0_0_12px_rgba(168,85,247,0.08)]'
+                ? 'border-purple-500/50 bg-purple-950/20'
                 : 'border-border bg-card/50 hover:border-border/80'
         )}>
-            <div className="flex items-center gap-2.5 p-2">
+            <div className="flex items-center gap-2 px-2 py-1.5">
+                {/* Toggle - moved to front for visibility */}
+                <Switch
+                    checked={isActive}
+                    onCheckedChange={handleToggle}
+                    className={cn(
+                        'flex-shrink-0',
+                        isActive
+                            ? 'data-[state=checked]:bg-purple-500'
+                            : 'data-[state=unchecked]:bg-slate-600'
+                    )}
+                />
+
                 {/* Thumbnail */}
                 {lora.thumbnailUrl ? (
                     <img
                         src={lora.thumbnailUrl}
                         alt={lora.name}
-                        className="w-8 h-8 rounded-md object-cover flex-shrink-0 border border-border/50"
+                        className="w-7 h-7 rounded object-cover flex-shrink-0 border border-border/50"
                     />
                 ) : (
-                    <div className="w-8 h-8 rounded-md bg-purple-900/30 border border-purple-800/30 flex items-center justify-center flex-shrink-0">
-                        <Layers className="w-3.5 h-3.5 text-purple-400" />
+                    <div className="w-7 h-7 rounded bg-purple-900/30 border border-purple-800/30 flex items-center justify-center flex-shrink-0">
+                        <Layers className="w-3 h-3 text-purple-400" />
                     </div>
                 )}
 
@@ -68,7 +80,7 @@ function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, 
                             step={0.1}
                             value={lora.defaultLoraScale}
                             onChange={(e) => onUpdateScale(parseFloat(e.target.value))}
-                            className="flex-1 h-2 accent-purple-500 touch-none min-w-[60px]"
+                            className="flex-1 h-1.5 accent-purple-500 touch-none min-w-[60px]"
                             style={{ WebkitAppearance: 'none', padding: '8px 0' }}
                         />
                         <span className="text-xs text-purple-400 font-medium tabular-nums flex-shrink-0">
@@ -80,13 +92,6 @@ function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, 
                 {/* Spacer when not active */}
                 {!isActive && <div className="flex-1" />}
 
-                {/* Toggle */}
-                <Switch
-                    checked={isActive}
-                    onCheckedChange={handleToggle}
-                    className="flex-shrink-0"
-                />
-
                 {/* Admin actions */}
                 {isAdmin && (
                     <button
@@ -94,7 +99,7 @@ function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, 
                         className="p-1 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
                         title="Edit LoRA"
                     >
-                        <Pencil className="w-3.5 h-3.5" />
+                        <Pencil className="w-3 h-3" />
                     </button>
                 )}
                 {isAdmin && (
@@ -103,7 +108,7 @@ function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, 
                         className="p-1 text-muted-foreground hover:text-red-400 transition-colors flex-shrink-0"
                         title="Delete LoRA"
                     >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-3 h-3" />
                     </button>
                 )}
             </div>
@@ -431,7 +436,7 @@ export function LoraSection() {
                 )}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
                 {visibleLoras.map((lora) => (
                     <LoraCard
                         key={lora.id}
