@@ -52,6 +52,15 @@ const BUILT_IN_LORAS: LoraItem[] = [
         defaultLoraScale: 1.3,
         createdAt: 0,
     },
+    {
+        id: 'pixar-style',
+        name: 'Pixar',
+        triggerWord: 'DisneyIZT,,',
+        weightsUrl: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/loras/pixar-style/pixar_disney_lora_weights.safetensors',
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 1.0,
+        createdAt: 0,
+    },
 ]
 
 export const useLoraStore = create<LoraStore>()(
@@ -100,7 +109,7 @@ export const useLoraStore = create<LoraStore>()(
         }),
         {
             name: 'directors-palette-lora-store',
-            version: 3,
+            version: 4,
             migrate: (persisted: unknown) => {
                 const state = persisted as Record<string, unknown>
                 const loras = (state?.loras as LoraItem[]) || []
