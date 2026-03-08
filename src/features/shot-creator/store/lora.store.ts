@@ -43,16 +43,7 @@ const BUILT_IN_LORAS: LoraItem[] = [
         defaultLoraScale: 1.3,
         createdAt: 0,
     },
-    {
-        id: 'battlerap-style',
-        name: 'Battle Rap',
-        triggerWord: 'in the style of battlerap',
-        weightsUrl: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/loras/battlerap-style/battlerap_lora_weights.safetensors',
-        defaultGuidanceScale: 1.0,
-        defaultLoraScale: 1.3,
-        createdAt: 0,
-    },
-    {
+{
         id: 'pixar-style',
         name: 'Pixar',
         triggerWord: 'DisneyIZT,,',
@@ -109,22 +100,24 @@ export const useLoraStore = create<LoraStore>()(
         }),
         {
             name: 'directors-palette-lora-store',
-            version: 4,
+            version: 5,
             migrate: (persisted: unknown) => {
                 const state = persisted as Record<string, unknown>
                 const loras = (state?.loras as LoraItem[]) || []
+                const builtInIds = new Set(BUILT_IN_LORAS.map(l => l.id))
+                // Remove old built-ins no longer in the list (createdAt === 0 means built-in)
+                const filtered = loras.filter(l => l.createdAt !== 0 || builtInIds.has(l.id))
                 // Ensure built-in LoRAs are present and up-to-date
                 for (const builtIn of BUILT_IN_LORAS) {
-                    const existing = loras.find((l) => l.id === builtIn.id)
+                    const existing = filtered.find((l) => l.id === builtIn.id)
                     if (!existing) {
-                        loras.push(builtIn)
+                        filtered.push(builtIn)
                     } else {
-                        // Update built-in defaults
                         existing.defaultLoraScale = builtIn.defaultLoraScale
                         existing.defaultGuidanceScale = builtIn.defaultGuidanceScale
                     }
                 }
-                return { ...state, loras }
+                return { ...state, loras: filtered }
             },
         }
     )
