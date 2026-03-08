@@ -647,11 +647,11 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                     )
                 })()}
 
-                {/* Help tooltip */}
+                {/* Help tooltip - hidden on mobile to save space */}
                 <TooltipProvider>
                     <Tooltip delayDuration={200}>
                         <TooltipTrigger asChild>
-                            <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 cursor-help w-fit">
+                            <div className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 cursor-help w-fit">
                                 <HelpCircle className="w-3.5 h-3.5" />
                                 <span>Prompt tips</span>
                             </div>

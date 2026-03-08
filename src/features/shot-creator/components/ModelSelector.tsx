@@ -15,7 +15,6 @@ import {
   HoverCardTrigger,
 } from '@/components/ui/hover-card'
 import {
-  Sparkles,
   Info,
   Zap,
   Image as ImageIcon,
@@ -65,20 +64,7 @@ export function ModelSelector({
     ? allModels 
     : allModels.filter(model => model.type === filterType)
 
-  // Map to legacy format for icon components
-  const models = filteredModels.map(model => ({
-    ...model,
-    iconComponent: getIconComponent(model.id),
-    badgeColor: model.badgeColor,
-    textColor: model.textColor
-  }))
-
-  function getIconComponent(modelId: ModelId) {
-    switch (modelId) {
-      case 'nano-banana-2': return Sparkles
-      default: return Sparkles
-    }
-  }
+  const models = filteredModels
 
   const currentModel = models.find(m => m.id === selectedModel) || models[0]
 
@@ -123,7 +109,6 @@ export function ModelSelector({
       <div className="grid grid-cols-2 gap-3">
         {models.map((model) => {
           const isSelected = selectedModel === model.id
-          const IconComponent = model.iconComponent
           const capabilities = MODEL_CAPABILITIES[model.id as ModelId]
 
           const buttonContent = (
@@ -139,11 +124,10 @@ export function ModelSelector({
               {/* Icon */}
               <div className="flex items-center gap-1">
                 <span className="text-2xl">{model.icon}</span>
-                <IconComponent className={`w-4 h-4 ${model.textColor}`} />
               </div>
 
-              {/* Name */}
-              <span className="text-sm font-medium text-white">
+              {/* Name - hidden on mobile, shown on larger screens */}
+              <span className="text-sm font-medium text-white hidden sm:block truncate max-w-full">
                 {model.displayName}
               </span>
 

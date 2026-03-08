@@ -38,6 +38,7 @@ const BUILT_IN_LORAS: LoraItem[] = [
         name: 'Nava',
         triggerWord: 'in the style of nava',
         weightsUrl: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/loras/nava-style/nava_lora_weights.safetensors',
+        thumbnailUrl: '/images/lora/nava-style.png',
         defaultGuidanceScale: 1.0,
         defaultLoraScale: 1.3,
         createdAt: 0,

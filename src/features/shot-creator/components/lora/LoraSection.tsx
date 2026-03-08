@@ -22,8 +22,20 @@ function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, 
     onUpdateScale: (scale: number) => void
     onEdit: () => void
 }) {
+    const cardRef = useRef<HTMLDivElement>(null)
+
+    // Prevent auto-scroll when LoRA scale slider appears on mobile
+    const handleToggle = useCallback(() => {
+        const scrollY = window.scrollY
+        onToggle()
+        // Restore scroll position after React re-renders with the slider
+        requestAnimationFrame(() => {
+            window.scrollTo({ top: scrollY, behavior: 'instant' as ScrollBehavior })
+        })
+    }, [onToggle])
+
     return (
-        <div className={cn(
+        <div ref={cardRef} className={cn(
             'rounded-lg border transition-all',
             isActive
                 ? 'border-purple-500/50 bg-purple-950/20 shadow-[0_0_12px_rgba(168,85,247,0.08)]'
@@ -47,7 +59,7 @@ function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, 
                 </div>
                 <Switch
                     checked={isActive}
-                    onCheckedChange={onToggle}
+                    onCheckedChange={handleToggle}
                     className="flex-shrink-0"
                 />
                 {isAdmin && (
@@ -80,7 +92,7 @@ function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, 
                             step={0.1}
                             value={lora.defaultLoraScale}
                             onChange={(e) => onUpdateScale(parseFloat(e.target.value))}
-                            className="flex-1 h-1.5 accent-purple-500"
+                            className="flex-1 h-1.5 accent-purple-500 touch-none"
                         />
                         <span className="text-purple-400 font-medium tabular-nums w-7 text-right">
                             {lora.defaultLoraScale.toFixed(1)}
