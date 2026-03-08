@@ -319,7 +319,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         badgeColor: 'bg-orange-600',
         textColor: 'text-orange-300',
         endpoint: 'prunaai/firered-image-edit',
-        costPerImage: 0.02, // 2 pts = $0.02 (~$0.015 Replicate cost)
+        costPerImage: 0.04, // 4 pts = $0.04 (~$0.015 Replicate cost, ~62% margin)
         supportedParameters: ['aspectRatio', 'outputFormat', 'trueCfgScale', 'numInferenceSteps'],
         parameters: {
             aspectRatio: MODEL_PARAMETERS.fireRedAspectRatio,
