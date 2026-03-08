@@ -583,10 +583,10 @@ export async function POST(request: NextRequest) {
 
     let prediction;
     try {
-      // Build prediction options - webhook is optional for local development
-      // LoRA models require version-based predictions, not model: shorthand
-      const predictionOptions: Record<string, unknown> = loraActive
-        ? { version: ImageGenerationService.LORA_VERSION, input: replicateInput }
+      // Build prediction options - some models require version-based predictions
+      const versionHash = ImageGenerationService.getVersionForModel(model as ImageModel, loraActive);
+      const predictionOptions: Record<string, unknown> = versionHash
+        ? { version: versionHash, input: replicateInput }
         : { model: replicateModelId, input: replicateInput };
 
       // Only add webhook if URL is configured (production)

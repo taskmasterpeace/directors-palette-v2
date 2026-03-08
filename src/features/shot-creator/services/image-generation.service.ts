@@ -269,8 +269,18 @@ export class ImageGenerationService {
     return modelConfig.endpoint
   }
 
-  /** Version hash for models that require version-based predictions */
+  /** Version hashes for models that require version-based predictions */
   static readonly LORA_VERSION = '197b2db2015aa366d2bc61a941758adf4c31ac66b18573f5c66dc388ab081ca2'
+  static readonly FIRERED_VERSION = '778e5a9b1a1c75e0f8013e19db9a9e6ff456c46d796e31070fe740a2874daa96'
+
+  /**
+   * Check if a model requires version-based prediction (not model: shorthand)
+   */
+  static getVersionForModel(model: ImageModel, loraActive?: boolean): string | null {
+    if (loraActive && model === 'z-image-turbo') return this.LORA_VERSION
+    if (model === 'firered-image-edit') return this.FIRERED_VERSION
+    return null
+  }
 
   /**
    * Build metadata for database storage
