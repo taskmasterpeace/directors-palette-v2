@@ -436,29 +436,31 @@ export function LoraSection() {
                 )}
             </div>
 
-            <div className="space-y-1.5">
+            {/* Horizontal scroll on mobile, vertical stack on desktop */}
+            <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-col sm:overflow-x-visible sm:pb-0 sm:gap-1.5">
                 {visibleLoras.map((lora) => (
-                    <LoraCard
-                        key={lora.id}
-                        lora={lora}
-                        isActive={activeLoraId === lora.id}
-                        isAdmin={isAdmin}
-                        onToggle={() => {
-                            setActiveLora(activeLoraId === lora.id ? null : lora.id)
-                        }}
-                        onEdit={() => {
-                            setEditingLora(lora)
-                            setShowDialog(true)
-                        }}
-                        onDelete={() => {
-                            if (window.confirm(`Delete "${lora.name}"?`)) {
-                                removeLora(lora.id)
-                            }
-                        }}
-                        onUpdateScale={(scale) => {
-                            updateLora(lora.id, { defaultLoraScale: scale })
-                        }}
-                    />
+                    <div key={lora.id} className="flex-shrink-0 min-w-[160px] sm:min-w-0 sm:flex-shrink">
+                        <LoraCard
+                            lora={lora}
+                            isActive={activeLoraId === lora.id}
+                            isAdmin={isAdmin}
+                            onToggle={() => {
+                                setActiveLora(activeLoraId === lora.id ? null : lora.id)
+                            }}
+                            onEdit={() => {
+                                setEditingLora(lora)
+                                setShowDialog(true)
+                            }}
+                            onDelete={() => {
+                                if (window.confirm(`Delete "${lora.name}"?`)) {
+                                    removeLora(lora.id)
+                                }
+                            }}
+                            onUpdateScale={(scale) => {
+                                updateLora(lora.id, { defaultLoraScale: scale })
+                            }}
+                        />
+                    </div>
                 ))}
             </div>
 
