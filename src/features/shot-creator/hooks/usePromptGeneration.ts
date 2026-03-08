@@ -165,6 +165,7 @@ export function usePromptGeneration() {
                 if (activeLora) {
                     baseSettings.loraWeightsUrl = activeLora.weightsUrl
                     baseSettings.loraScale = shotCreatorSettings.loraScale ?? activeLora.defaultLoraScale
+                    baseSettings.loraName = activeLora.name
                     baseSettings.guidanceScale = shotCreatorSettings.guidanceScale ?? activeLora.defaultGuidanceScale
                 } else if (shotCreatorSettings.guidanceScale !== undefined) {
                     baseSettings.guidanceScale = shotCreatorSettings.guidanceScale

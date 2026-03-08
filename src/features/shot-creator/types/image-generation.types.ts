@@ -31,6 +31,7 @@ export interface ZImageTurboSettings {
   promptStrength?: number
   loraWeightsUrl?: string
   loraScale?: number
+  loraName?: string
 }
 
 export interface FireRedEditSettings {

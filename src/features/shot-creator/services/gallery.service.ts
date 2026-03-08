@@ -173,6 +173,10 @@ export class GalleryService {
         const isGrid = (metadata as { isGrid?: boolean }).isGrid || undefined
         const gridType = (metadata as { gridType?: 'angles' | 'broll' }).gridType || undefined
 
+        // Extract LoRA metadata
+        const loraName = (modelSettings.loraName as string) || undefined
+        const loraScale = (modelSettings.loraScale as number) || undefined
+
         return {
             id: item.id,
             url: item.public_url || '',
@@ -189,6 +193,8 @@ export class GalleryService {
                 custom_width: customWidth,
                 custom_height: customHeight,
                 aspect_ratio: aspectRatio,
+                loraName,
+                loraScale,
             },
             metadata: {
                 createdAt: item.created_at,

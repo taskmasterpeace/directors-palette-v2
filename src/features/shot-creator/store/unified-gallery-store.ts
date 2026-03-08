@@ -26,6 +26,8 @@ export interface GeneratedImage {
     custom_width?: number
     custom_height?: number
     aspect_ratio?: string
+    loraName?: string
+    loraScale?: number
   }
   metadata: {
     createdAt: string

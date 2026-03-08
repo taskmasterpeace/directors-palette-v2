@@ -235,6 +235,8 @@ const ImageCardComponent = ({
       <MetadataBar
         aspectRatio={image.settings.aspectRatio || image.settings.aspect_ratio || '16:9'}
         resolution={image.settings.resolution || '1024x1024'}
+        loraName={image.settings.loraName}
+        loraScale={image.settings.loraScale}
         gridSize={gridSize}
       />
 
