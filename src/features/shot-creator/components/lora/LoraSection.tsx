@@ -41,27 +41,53 @@ function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, 
                 ? 'border-purple-500/50 bg-purple-950/20 shadow-[0_0_12px_rgba(168,85,247,0.08)]'
                 : 'border-border bg-card/50 hover:border-border/80'
         )}>
-            <div className="flex items-center gap-3 p-3">
+            <div className="flex items-center gap-2.5 p-2">
+                {/* Thumbnail */}
                 {lora.thumbnailUrl ? (
                     <img
                         src={lora.thumbnailUrl}
                         alt={lora.name}
-                        className="w-10 h-10 rounded-md object-cover flex-shrink-0 border border-border/50"
+                        className="w-8 h-8 rounded-md object-cover flex-shrink-0 border border-border/50"
                     />
                 ) : (
-                    <div className="w-10 h-10 rounded-md bg-purple-900/30 border border-purple-800/30 flex items-center justify-center flex-shrink-0">
-                        <Layers className="w-4 h-4 text-purple-400" />
+                    <div className="w-8 h-8 rounded-md bg-purple-900/30 border border-purple-800/30 flex items-center justify-center flex-shrink-0">
+                        <Layers className="w-3.5 h-3.5 text-purple-400" />
                     </div>
                 )}
-                <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-foreground truncate">{lora.name}</div>
-                    <div className="text-xs text-muted-foreground font-mono truncate">{lora.triggerWord}</div>
-                </div>
+
+                {/* Name */}
+                <span className="text-sm font-medium text-foreground truncate min-w-0 flex-shrink">{lora.name}</span>
+
+                {/* Scale slider - inline when active */}
+                {isActive && (
+                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                        <input
+                            type="range"
+                            min={0}
+                            max={2}
+                            step={0.1}
+                            value={lora.defaultLoraScale}
+                            onChange={(e) => onUpdateScale(parseFloat(e.target.value))}
+                            className="flex-1 h-2 accent-purple-500 touch-none min-w-[60px]"
+                            style={{ WebkitAppearance: 'none', padding: '8px 0' }}
+                        />
+                        <span className="text-xs text-purple-400 font-medium tabular-nums flex-shrink-0">
+                            {lora.defaultLoraScale.toFixed(1)}
+                        </span>
+                    </div>
+                )}
+
+                {/* Spacer when not active */}
+                {!isActive && <div className="flex-1" />}
+
+                {/* Toggle */}
                 <Switch
                     checked={isActive}
                     onCheckedChange={handleToggle}
                     className="flex-shrink-0"
                 />
+
+                {/* Admin actions */}
                 {isAdmin && (
                     <button
                         onClick={onEdit}
@@ -81,25 +107,6 @@ function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, 
                     </button>
                 )}
             </div>
-            {isActive && (
-                <div className="px-3 pb-3 pt-0">
-                    <div className="flex items-center gap-2 text-xs">
-                        <span className="text-muted-foreground whitespace-nowrap">Scale</span>
-                        <input
-                            type="range"
-                            min={0}
-                            max={2}
-                            step={0.1}
-                            value={lora.defaultLoraScale}
-                            onChange={(e) => onUpdateScale(parseFloat(e.target.value))}
-                            className="flex-1 h-1.5 accent-purple-500 touch-none"
-                        />
-                        <span className="text-purple-400 font-medium tabular-nums w-7 text-right">
-                            {lora.defaultLoraScale.toFixed(1)}
-                        </span>
-                    </div>
-                </div>
-            )}
         </div>
     )
 }
