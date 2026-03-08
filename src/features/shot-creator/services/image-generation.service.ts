@@ -12,6 +12,7 @@ import type {
   ImageGenerationResponse,
   NanoBanana2Settings,
   ZImageTurboSettings,
+  FireRedEditSettings,
 } from '../types/image-generation.types'
 import { ASPECT_RATIO_SIZES } from '@/config'
 import { logger } from '@/lib/logger'
@@ -41,6 +42,9 @@ export class ImageGenerationService {
         break
       case 'z-image-turbo':
         errors.push(...this.validateZImageTurbo(input))
+        break
+      case 'firered-image-edit':
+        errors.push(...this.validateFireRedEdit(input))
         break
     }
 
@@ -84,7 +88,18 @@ export class ImageGenerationService {
     return errors
   }
 
+  /**
+   * Validate firered-image-edit specific constraints
+   */
+  private static validateFireRedEdit(input: ImageGenerationInput): string[] {
+    const errors: string[] = []
 
+    if (!input.referenceImages || input.referenceImages.length === 0) {
+      errors.push('Z-Image Edit requires an input image to edit')
+    }
+
+    return errors
+  }
 
   /**
    * Build Replicate input object based on model
@@ -95,6 +110,8 @@ export class ImageGenerationService {
         return this.buildNanoBanana2Input(input)
       case 'z-image-turbo':
         return this.buildZImageTurboInput(input)
+      case 'firered-image-edit':
+        return this.buildFireRedEditInput(input)
       default:
         throw new Error(`Unsupported model: ${input.model}`)
     }
@@ -183,7 +200,45 @@ export class ImageGenerationService {
     return replicateInput
   }
 
+  private static buildFireRedEditInput(input: ImageGenerationInput) {
+    const settings = input.modelSettings as FireRedEditSettings
+    const replicateInput: Record<string, unknown> = {
+      prompt: input.prompt,
+      go_fast: settings.goFast !== false, // Default true
+    }
 
+    // Image input (required, array of URIs)
+    if (input.referenceImages && input.referenceImages.length > 0) {
+      replicateInput.image = this.normalizeReferenceImages(input.referenceImages)
+    }
+
+    // Aspect ratio
+    if (settings.aspectRatio) {
+      replicateInput.aspect_ratio = settings.aspectRatio
+    }
+
+    // CFG scale
+    if (settings.trueCfgScale !== undefined) {
+      replicateInput.true_cfg_scale = settings.trueCfgScale
+    }
+
+    // Inference steps
+    if (settings.numInferenceSteps !== undefined) {
+      replicateInput.num_inference_steps = settings.numInferenceSteps
+    }
+
+    // Output format
+    if (settings.outputFormat) {
+      replicateInput.output_format = settings.outputFormat
+    }
+
+    // Output quality
+    if (settings.outputQuality !== undefined) {
+      replicateInput.output_quality = settings.outputQuality
+    }
+
+    return replicateInput
+  }
 
   /**
    * Normalize reference images to URL strings

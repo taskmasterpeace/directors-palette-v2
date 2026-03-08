@@ -30,17 +30,23 @@ const MODEL_CAPABILITIES: Record<ModelId, {
   refImages: string
   bestFor: string[]
 }> = {
-  'z-image-turbo': {
-    speed: '~5s (Fast)',
-    textRendering: 'Good',
-    refImages: 'Up to 1',
-    bestFor: ['Ultra-fast generation', 'Concept exploration', 'Budget work']
-  },
   'nano-banana-2': {
-    speed: '~8s (Fast)',
+    speed: '~60s',
     textRendering: 'Excellent',
-    refImages: 'Up to 1',
-    bestFor: ['High quality', 'Fast generation', 'Free tier', 'General use']
+    refImages: 'Up to 14',
+    bestFor: ['Text in images', 'Reference images', 'Google search', 'Highest quality']
+  },
+  'z-image-turbo': {
+    speed: '~8s (Fast)',
+    textRendering: 'Good',
+    refImages: 'None',
+    bestFor: ['Ultra-fast generation', 'LoRA styles & characters', 'Concept exploration']
+  },
+  'firered-image-edit': {
+    speed: '~10s',
+    textRendering: 'Good',
+    refImages: 'Required (1)',
+    bestFor: ['Edit existing images', 'Add/remove objects', 'Background swap', 'Style transfer']
   },
 }
 
@@ -106,7 +112,7 @@ export function ModelSelector({
         <span className="text-sm font-medium text-white">Model Selection</span>
       </div>
       
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-2">
         {models.map((model) => {
           const isSelected = selectedModel === model.id
           const capabilities = MODEL_CAPABILITIES[model.id as ModelId]

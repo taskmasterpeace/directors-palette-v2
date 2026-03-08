@@ -9,6 +9,7 @@ import type { ModelId } from '@/config'
 export type ImageModel = Extract<ModelId,
   | 'nano-banana-2'
   | 'z-image-turbo'
+  | 'firered-image-edit'
 >
 
 // Model-specific settings interfaces
@@ -32,6 +33,15 @@ export interface ZImageTurboSettings {
   loraScale?: number
 }
 
+export interface FireRedEditSettings {
+  aspectRatio?: string
+  outputFormat?: 'jpg' | 'png' | 'webp'
+  trueCfgScale?: number
+  numInferenceSteps?: number
+  goFast?: boolean
+  outputQuality?: number
+}
+
 export interface SeedreamSettings {
   aspectRatio?: string
   outputFormat?: 'jpg' | 'png'
@@ -51,6 +61,7 @@ export interface NanoBananaProSettings {
 export type ImageModelSettings =
   | NanoBanana2Settings
   | ZImageTurboSettings
+  | FireRedEditSettings
   | SeedreamSettings
   | NanoBananaProSettings
 

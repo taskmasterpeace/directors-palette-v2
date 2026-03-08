@@ -22,7 +22,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana-2' | 'z-image-turbo'
+export type ModelId = 'nano-banana-2' | 'z-image-turbo' | 'firered-image-edit'
 
 export interface ModelParameter {
     id: string
@@ -200,6 +200,40 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         default: false,
         description: 'Use web images as visual context (also enables web search)'
     },
+    // FireRed Image Edit parameters
+    fireRedCfgScale: {
+        id: 'trueCfgScale',
+        label: 'CFG Scale',
+        type: 'slider',
+        min: 0,
+        max: 20,
+        step: 0.5,
+        default: 4,
+        description: 'Guidance strength. Higher = more faithful to prompt.'
+    },
+    fireRedInferenceSteps: {
+        id: 'numInferenceSteps',
+        label: 'Inference Steps',
+        type: 'slider',
+        min: 1,
+        max: 100,
+        default: 40,
+        description: 'Number of denoising steps. Higher = better quality, slower.'
+    },
+    fireRedAspectRatio: {
+        id: 'aspectRatio',
+        label: 'Aspect Ratio',
+        type: 'select',
+        default: 'match_input_image',
+        options: [
+            { value: 'match_input_image', label: 'Match Input Image' },
+            { value: '1:1', label: '1:1 Square' },
+            { value: '16:9', label: '16:9 Landscape' },
+            { value: '9:16', label: '9:16 Portrait' },
+            { value: '4:3', label: '4:3 Classic' },
+            { value: '3:4', label: '3:4 Portrait' },
+        ]
+    },
     // Z-Image Turbo parameters (Replicate API: 1-50 steps, 0-20 guidance, defaults per API docs)
     numInferenceSteps: {
         id: 'numInferenceSteps',
@@ -229,7 +263,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         displayName: 'Nano Banana 2',
         type: 'generation',
         icon: '🍌',
-        description: 'Latest generation model. Fast, high quality.',
+        description: 'Best for text rendering, Google search grounding, and high-quality reference image editing. Handles up to 14 reference images.',
         badge: 'New',
         badgeColor: 'bg-green-600',
         textColor: 'text-green-300',
@@ -258,7 +292,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         displayName: 'Z-Image Turbo',
         type: 'generation',
         icon: '⚡',
-        description: 'Ultra-fast image generation for rapid visualization.',
+        description: 'Ultra-fast generation with LoRA support. Best for rapid iterations, character/style LoRAs, and concept exploration.',
         badge: 'Turbo',
         badgeColor: 'bg-purple-600',
         textColor: 'text-purple-300',
@@ -273,6 +307,29 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         },
         maxReferenceImages: 0, // Text-to-image only - no image input support
         estimatedSeconds: 8,
+    },
+    'firered-image-edit': {
+        id: 'firered-image-edit',
+        name: 'firered-image-edit',
+        displayName: 'Z-Image Edit',
+        type: 'editing',
+        icon: '✏️',
+        description: 'Instruction-based image editing. Add/remove objects, change backgrounds, swap styles, fix details. Requires an input image.',
+        badge: 'Edit',
+        badgeColor: 'bg-orange-600',
+        textColor: 'text-orange-300',
+        endpoint: 'prunaai/firered-image-edit',
+        costPerImage: 0.02, // 2 pts = $0.02 (~$0.015 Replicate cost)
+        supportedParameters: ['aspectRatio', 'outputFormat', 'trueCfgScale', 'numInferenceSteps'],
+        parameters: {
+            aspectRatio: MODEL_PARAMETERS.fireRedAspectRatio,
+            outputFormat: MODEL_PARAMETERS.outputFormat,
+            trueCfgScale: MODEL_PARAMETERS.fireRedCfgScale,
+            numInferenceSteps: MODEL_PARAMETERS.fireRedInferenceSteps,
+        },
+        maxReferenceImages: 1,
+        requiresInputImage: true,
+        estimatedSeconds: 12,
     },
 }
 
