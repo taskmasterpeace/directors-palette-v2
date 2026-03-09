@@ -18,6 +18,7 @@ import { CommunityPage } from "@/features/community"
 import { SectionHeader } from "@/components/SectionHeader"
 import { NodeWorkflow } from "@/features/node-workflow"
 import { BrandStudioLayout } from "@/features/brand-studio"
+import { FigurineStudio } from "@/features/figurine-studio"
 import { useAuth } from "@/features/auth/hooks/useAuth"
 
 export default function Home() {
@@ -131,6 +132,17 @@ export default function Home() {
                 <PageTransition>
                   <div className="flex-1 overflow-hidden">
                     <BrandStudioLayout />
+                  </div>
+                </PageTransition>
+              </TabsContent>
+            )}
+
+            {activeTab === 'figurine-studio' && (
+              <TabsContent key="figurine-studio" value="figurine-studio" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
+                <PageTransition>
+                  <SectionHeader section="figurine-studio" />
+                  <div className="flex-1 overflow-hidden">
+                    <FigurineStudio />
                   </div>
                 </PageTransition>
               </TabsContent>

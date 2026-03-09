@@ -23,7 +23,8 @@ import {
     Check,
     Circle,
     ArrowRight,
-    Brush
+    Brush,
+    Box
 } from 'lucide-react'
 import { useLayoutStore, TabValue } from '@/store/layout.store'
 import { useSidebarWizardSteps, useNavigateToWizardStep } from '@/features/storybook/hooks/useSidebarWizardSteps'
@@ -99,6 +100,13 @@ const NAV_SECTIONS: NavSection[] = [
                 icon: Workflow,
                 banner: '/banners/shot-creator.webp',
                 tooltipExpanded: 'Visual workflow editor for complex generation pipelines'
+            },
+            {
+                id: 'figurine-studio',
+                label: 'Figurine Studio',
+                icon: Box,
+                banner: '/banners/shot-creator.webp',
+                tooltipExpanded: 'Turn characters into 3D models and physical figurines'
             }
         ]
     },
