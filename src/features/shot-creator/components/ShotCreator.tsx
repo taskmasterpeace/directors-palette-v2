@@ -238,11 +238,11 @@ const ShotCreator = () => {
             <div className="flex-1 overflow-hidden">
                 {/* Mobile Layout (< lg) */}
                 <div className="lg:hidden space-y-4">
-                    {/* Reference Images */}
-                    <div className="bg-background/30 p-0">
+                    {/* Reference Images (or just model selector when maxImages=0) */}
+                    <div className={modelConfig?.maxReferenceImages === 0 ? 'px-1' : 'bg-background/30 p-0'}>
                         <CreatorReferenceManager
                             compact={true}
-                            maxImages={modelConfig?.maxReferenceImages || 3}
+                            maxImages={modelConfig?.maxReferenceImages ?? 3}
                             modelSelector={
                                 <ModelSelector
                                     selectedModel={shotCreatorSettings.model || 'nano-banana-2'}
@@ -328,11 +328,14 @@ const ShotCreator = () => {
                         {/* LEFT PANEL - Reference Images & Prompt */}
                         <ResizablePanel defaultSize={rightPanelCollapsed ? 100 : 60} minSize={30}>
                             <div className="h-full pr-3 space-y-4 overflow-y-auto">
-                                {/* Reference Images */}
-                                <div className="bg-background/30 rounded-lg border border-border/50 p-4">
+                                {/* Reference Images (or just model selector when maxImages=0) */}
+                                <div className={modelConfig?.maxReferenceImages === 0
+                                    ? 'px-1'
+                                    : 'bg-background/30 rounded-lg border border-border/50 p-4'
+                                }>
                                     <CreatorReferenceManager
                                         compact={true}
-                                        maxImages={modelConfig?.maxReferenceImages || 3}
+                                        maxImages={modelConfig?.maxReferenceImages ?? 3}
                                         modelSelector={
                                             <ModelSelector
                                                 selectedModel={shotCreatorSettings.model || 'nano-banana-2'}
