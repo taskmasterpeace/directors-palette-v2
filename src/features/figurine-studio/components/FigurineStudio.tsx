@@ -2,7 +2,11 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Upload, Box, Loader2, RotateCcw, Download, AlertCircle, Sparkles, Image as ImageIcon } from 'lucide-react'
+import {
+  Upload, Box, Loader2, RotateCcw, Download, AlertCircle, Sparkles,
+  Image as ImageIcon, Package, Truck, ChevronRight, Palette,
+  Layers, ArrowRight, CheckCircle2, Star,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useFigurineStore } from '../hooks/useFigurineStore'
 import { figurineService } from '../services/figurine.service'
@@ -11,6 +15,83 @@ import { useCreditsStore } from '@/features/credits/store/credits.store'
 import { cn } from '@/utils/utils'
 
 const GENERATION_COST = 25
+
+// Pipeline step component
+function PipelineStep({ step, label, icon: Icon, active, completed, delay }: {
+  step: number
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  active: boolean
+  completed: boolean
+  delay: number
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+      className="flex items-center gap-2"
+    >
+      <div className={cn(
+        'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-500',
+        completed
+          ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/30'
+          : active
+            ? 'bg-cyan-500/20 border-2 border-cyan-400 text-cyan-400 animate-pulse'
+            : 'bg-card/40 border border-border/40 text-muted-foreground/50',
+      )}>
+        {completed ? <CheckCircle2 className="w-4 h-4" /> : <Icon className="w-3.5 h-3.5" />}
+      </div>
+      <div className="hidden sm:block">
+        <p className={cn(
+          'text-[10px] font-semibold uppercase tracking-wider transition-colors',
+          completed ? 'text-cyan-400' : active ? 'text-foreground/80' : 'text-muted-foreground/40',
+        )}>
+          Step {step}
+        </p>
+        <p className={cn(
+          'text-xs transition-colors',
+          completed || active ? 'text-foreground/70' : 'text-muted-foreground/30',
+        )}>
+          {label}
+        </p>
+      </div>
+    </motion.div>
+  )
+}
+
+// Material card for the physical figurine teaser
+function MaterialCard({ name, color, price, popular }: {
+  name: string
+  color: string
+  price: string
+  popular?: boolean
+}) {
+  return (
+    <div className={cn(
+      'relative p-3 rounded-xl border transition-all cursor-pointer group',
+      'hover:scale-[1.03] hover:shadow-lg',
+      popular
+        ? 'border-cyan-500/40 bg-cyan-500/5 hover:border-cyan-400/60 hover:shadow-cyan-500/10'
+        : 'border-border/30 bg-card/20 hover:border-border/60',
+    )}>
+      {popular && (
+        <div className="absolute -top-2 right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-cyan-500 text-[9px] font-bold text-white uppercase tracking-wider">
+          <Star className="w-2.5 h-2.5" />
+          Popular
+        </div>
+      )}
+      <div
+        className="w-full aspect-square rounded-lg mb-2 border border-border/20"
+        style={{
+          background: color,
+        }}
+      />
+      <p className="text-xs font-medium text-foreground/80">{name}</p>
+      <p className="text-[10px] text-muted-foreground">From {price}</p>
+    </div>
+  )
+}
 
 export function FigurineStudio() {
   const [dragOver, setDragOver] = useState(false)
@@ -41,6 +122,12 @@ export function FigurineStudio() {
   }, [preSelectedImageUrl, setPreSelectedImage])
 
   const activeModel = models.find((m) => m.id === activeModelId)
+
+  // Derive pipeline state
+  const pipelineStep = activeModel?.status === 'ready' ? 3
+    : activeModel?.status === 'generating' ? 2
+    : selectedImage ? 1
+    : 0
 
   const handleFileSelect = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -95,6 +182,7 @@ export function FigurineStudio() {
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-950/20 via-background to-violet-950/20" />
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-[120px]" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-violet-500/5 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 right-1/6 w-64 h-64 bg-amber-500/3 rounded-full blur-[100px]" />
       </div>
 
       <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
@@ -103,18 +191,34 @@ export function FigurineStudio() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center space-y-2"
+          className="text-center space-y-3"
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-xs font-medium tracking-wider uppercase">
             <Box className="w-3.5 h-3.5" />
-            3D Model Generation
+            Character to Figurine
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-cyan-300 via-white to-violet-300 bg-clip-text text-transparent">
             Figurine Studio
           </h1>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Upload a character image, generate a 3D model, and bring it to life as a physical figurine.
+          <p className="text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
+            Turn any character into a 3D model you can inspect, download, and soon — order as a real physical figurine shipped to your door.
           </p>
+        </motion.div>
+
+        {/* Pipeline Progress Bar */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="flex items-center justify-center gap-2 sm:gap-4"
+        >
+          <PipelineStep step={1} label="Upload Image" icon={ImageIcon} active={pipelineStep >= 1} completed={pipelineStep > 1} delay={0.2} />
+          <ArrowRight className={cn('w-4 h-4 transition-colors hidden sm:block', pipelineStep >= 2 ? 'text-cyan-400' : 'text-muted-foreground/20')} />
+          <ChevronRight className={cn('w-4 h-4 transition-colors sm:hidden', pipelineStep >= 2 ? 'text-cyan-400' : 'text-muted-foreground/20')} />
+          <PipelineStep step={2} label="Generate 3D" icon={Layers} active={pipelineStep >= 2} completed={pipelineStep > 2} delay={0.3} />
+          <ArrowRight className={cn('w-4 h-4 transition-colors hidden sm:block', pipelineStep >= 3 ? 'text-cyan-400' : 'text-muted-foreground/20')} />
+          <ChevronRight className={cn('w-4 h-4 transition-colors sm:hidden', pipelineStep >= 3 ? 'text-cyan-400' : 'text-muted-foreground/20')} />
+          <PipelineStep step={3} label="Order Physical" icon={Package} active={pipelineStep >= 3} completed={false} delay={0.4} />
         </motion.div>
 
         {/* Main Content Grid */}
@@ -177,10 +281,10 @@ export function FigurineStudio() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-foreground/80">Drop a character image here</p>
-                    <p className="text-xs mt-1">or click to browse</p>
+                    <p className="text-xs mt-1">or click to browse &middot; or use &quot;Make Figurine&quot; from your gallery</p>
                   </div>
                   <p className="text-[10px] text-muted-foreground/60 max-w-xs">
-                    Best results: clean subject on solid/removed background. Front-facing, well-lit character.
+                    Best results: clean character on a solid or removed background. Front-facing, well-lit.
                   </p>
                 </div>
               )}
@@ -232,7 +336,7 @@ export function FigurineStudio() {
               ) : (
                 <span className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
-                  Generate 3D Model — {GENERATION_COST} credits
+                  Generate 3D Model &mdash; {GENERATION_COST} credits
                 </span>
               )}
             </Button>
@@ -372,31 +476,123 @@ export function FigurineStudio() {
               )}
             </div>
 
-            {/* Info panel under viewer */}
+            {/* Model Ready Panel with Physical Order Teaser */}
             {activeModel?.status === 'ready' && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 rounded-xl bg-card/40 border border-border/30 space-y-3"
+                className="space-y-3"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Model Ready</span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {new Date(activeModel.createdAt).toLocaleTimeString()}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Your 3D model is ready. Drag to rotate, scroll to zoom. Download the GLB file to use in Blender, Unity, or any 3D application.
-                </p>
-                <div className="pt-2 border-t border-border/20">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-violet-500/10 border border-violet-500/20 text-violet-400 text-[10px] font-medium">
-                    Physical printing coming soon
+                {/* Download & Export */}
+                <div className="p-4 rounded-xl bg-card/40 border border-border/30 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Model Ready</span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {new Date(activeModel.createdAt).toLocaleTimeString()}
+                    </span>
                   </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Drag to rotate, scroll to zoom. Download the GLB file for Blender, Unity, or 3D printing.
+                  </p>
+                </div>
+
+                {/* Physical Figurine CTA */}
+                <div className="p-4 rounded-xl border border-violet-500/30 bg-gradient-to-br from-violet-500/5 via-card/30 to-amber-500/5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-violet-400" />
+                    <span className="text-xs font-semibold text-violet-300 uppercase tracking-wider">Order Physical Figurine</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Turn this 3D model into a real figurine printed in full color and shipped to your door. Choose from multiple materials and sizes.
+                  </p>
+                  <Button
+                    disabled
+                    className={cn(
+                      'w-full h-10 rounded-lg font-semibold text-xs transition-all',
+                      'bg-gradient-to-r from-violet-600/80 to-violet-500/80',
+                      'text-white/80 shadow-lg shadow-violet-500/10',
+                      'disabled:opacity-60',
+                    )}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Truck className="w-3.5 h-3.5" />
+                      Coming Soon &mdash; Join Waitlist
+                    </span>
+                  </Button>
                 </div>
               </motion.div>
             )}
           </motion.div>
         </div>
+
+        {/* Physical Figurine Showcase Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="pt-6 border-t border-border/20"
+        >
+          <div className="text-center space-y-2 mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-400 text-xs font-medium tracking-wider uppercase">
+              <Package className="w-3.5 h-3.5" />
+              Coming Soon
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground/90">
+              From Screen to Shelf
+            </h2>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              Once your 3D model is ready, choose a material and size. We handle printing and shipping.
+            </p>
+          </div>
+
+          {/* Material Preview Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
+            <MaterialCard
+              name="Full Color Sandstone"
+              color="linear-gradient(135deg, #e8d5b7 0%, #c9b896 50%, #a89672 100%)"
+              price="3,500 credits"
+              popular
+            />
+            <MaterialCard
+              name="Smooth Resin"
+              color="linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 50%, #bdbdbd 100%)"
+              price="2,800 credits"
+            />
+            <MaterialCard
+              name="Metallic Bronze"
+              color="linear-gradient(135deg, #cd7f32 0%, #b87333 50%, #a0522d 100%)"
+              price="5,200 credits"
+            />
+            <MaterialCard
+              name="Flexible Plastic"
+              color="linear-gradient(135deg, #4fc3f7 0%, #29b6f6 50%, #0288d1 100%)"
+              price="2,200 credits"
+            />
+          </div>
+
+          {/* How it works */}
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+            {[
+              { icon: Palette, title: 'Choose Material', desc: '90+ materials including sandstone, resin, metal, and flexible plastics' },
+              { icon: Package, title: 'We Print It', desc: 'Professional 3D printing with quality checks and full-color support' },
+              { icon: Truck, title: 'Ships To You', desc: 'Delivered worldwide with tracking. Typical delivery in 10-14 business days' },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 + i * 0.1 }}
+                className="p-4 rounded-xl bg-card/20 border border-border/20 text-center space-y-2"
+              >
+                <div className="w-10 h-10 mx-auto rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+                  <item.icon className="w-5 h-5 text-violet-400" />
+                </div>
+                <h3 className="text-sm font-semibold text-foreground/80">{item.title}</h3>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
 
         {/* Previous Generations */}
         {models.length > 1 && (
