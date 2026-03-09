@@ -131,6 +131,7 @@ export function ImageActionMenu({
         onRemoveBackground={onRemoveBackground}
         isRemovingBackground={isRemovingBackground}
         onShare={onShare}
+        onMakeFigurine={onMakeFigurine}
       />
 
       {/* Desktop: Dropdown with nested submenus */}

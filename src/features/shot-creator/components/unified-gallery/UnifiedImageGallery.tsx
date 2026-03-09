@@ -817,7 +817,7 @@ CRITICAL RULES:
         onRemoveBackground: (image: GeneratedImage) => handleRemoveBackground(image),
         onRetry: (image: GeneratedImage) => handleRetryGeneration(image),
         onShare: (image: GeneratedImage) => handleShare(image),
-        onMakeFigurine: (image: GeneratedImage) => handleMakeFigurine(image),
+        onMakeFigurine: (currentTab === 'gallery' || currentTab === 'shot-creator') ? (image: GeneratedImage) => handleMakeFigurine(image) : undefined,
         isGridImage,
         removingBackgroundId,
     }), [
