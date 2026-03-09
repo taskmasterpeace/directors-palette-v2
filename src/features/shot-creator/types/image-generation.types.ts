@@ -29,8 +29,10 @@ export interface ZImageTurboSettings {
   numInferenceSteps?: number
   guidanceScale?: number
   promptStrength?: number
-  loraWeightsUrl?: string
-  loraScale?: number
+  loraWeightsUrl?: string     // single (backward compat)
+  loraScale?: number          // single (backward compat)
+  loraWeightsUrls?: string[]  // multiple LoRAs
+  loraScales?: number[]       // multiple scales
   loraName?: string
 }
 

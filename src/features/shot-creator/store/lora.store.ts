@@ -27,7 +27,7 @@ export interface LoraRating {
 interface LoraStore {
     // State
     loras: LoraItem[]
-    activeLoraId: string | null
+    activeLoraIds: string[]
     loraRatings: Record<string, LoraRating>
     usedLoraIds: string[]
 
@@ -35,7 +35,8 @@ interface LoraStore {
     addLora: (lora: Omit<LoraItem, 'id' | 'createdAt'>) => string
     removeLora: (id: string) => void
     updateLora: (id: string, updates: Partial<Omit<LoraItem, 'id' | 'createdAt'>>) => void
-    setActiveLora: (id: string | null) => void
+    toggleActiveLora: (id: string) => void
+    isLoraActive: (id: string) => boolean
 
     // Community actions
     addFromCommunity: (loraId: string) => void
@@ -49,7 +50,8 @@ interface LoraStore {
     isLoraUsed: (id: string) => boolean
 
     // Computed
-    getActiveLora: () => LoraItem | null
+    getActiveLoras: () => LoraItem[]
+    getActiveLora: () => LoraItem | null  // backward compat — returns first active
 }
 
 const BUILT_IN_LORAS: LoraItem[] = [
@@ -170,7 +172,7 @@ export const useLoraStore = create<LoraStore>()(
     persist(
         (set, get) => ({
             loras: BUILT_IN_LORAS,
-            activeLoraId: null,
+            activeLoraIds: [],
             loraRatings: {},
             usedLoraIds: [],
 
@@ -190,7 +192,7 @@ export const useLoraStore = create<LoraStore>()(
             removeLora: (id) => {
                 set((state) => ({
                     loras: state.loras.filter((l) => l.id !== id),
-                    activeLoraId: state.activeLoraId === id ? null : state.activeLoraId,
+                    activeLoraIds: state.activeLoraIds.filter((lid) => lid !== id),
                 }))
             },
 
@@ -202,8 +204,20 @@ export const useLoraStore = create<LoraStore>()(
                 }))
             },
 
-            setActiveLora: (id) => {
-                set({ activeLoraId: id })
+            toggleActiveLora: (id) => {
+                set((state) => {
+                    const isActive = state.activeLoraIds.includes(id)
+                    return {
+                        activeLoraIds: isActive
+                            ? state.activeLoraIds.filter((lid) => lid !== id)
+                            : [...state.activeLoraIds, id],
+                    }
+                })
+            },
+
+            isLoraActive: (id) => {
+                const { activeLoraIds } = get()
+                return activeLoraIds.includes(id)
             },
 
             addFromCommunity: (loraId) => {
@@ -219,7 +233,7 @@ export const useLoraStore = create<LoraStore>()(
             removeFromCollection: (loraId) => {
                 set((state) => ({
                     loras: state.loras.filter((l) => l.id !== loraId),
-                    activeLoraId: state.activeLoraId === loraId ? null : state.activeLoraId,
+                    activeLoraIds: state.activeLoraIds.filter((lid) => lid !== loraId),
                 }))
             },
 
@@ -253,15 +267,22 @@ export const useLoraStore = create<LoraStore>()(
                 return usedLoraIds.includes(id)
             },
 
+            getActiveLoras: () => {
+                const { loras, activeLoraIds } = get()
+                return activeLoraIds
+                    .map((id) => loras.find((l) => l.id === id))
+                    .filter((l): l is LoraItem => l !== undefined)
+            },
+
             getActiveLora: () => {
-                const { loras, activeLoraId } = get()
-                if (!activeLoraId) return null
-                return loras.find((l) => l.id === activeLoraId) ?? null
+                const { loras, activeLoraIds } = get()
+                if (activeLoraIds.length === 0) return null
+                return loras.find((l) => l.id === activeLoraIds[0]) ?? null
             },
         }),
         {
             name: 'directors-palette-lora-store',
-            version: 9,
+            version: 10,
             migrate: (persisted: unknown) => {
                 const state = persisted as Record<string, unknown>
                 const loras = (state?.loras as LoraItem[]) || []
@@ -283,7 +304,10 @@ export const useLoraStore = create<LoraStore>()(
                 // Ensure rating fields exist (v9)
                 const loraRatings = (state?.loraRatings as Record<string, LoraRating>) || {}
                 const usedLoraIds = (state?.usedLoraIds as string[]) || []
-                return { ...state, loras: filtered, loraRatings, usedLoraIds }
+                // Migrate activeLoraId (string|null) → activeLoraIds (string[]) (v10)
+                const oldActiveId = state?.activeLoraId as string | null | undefined
+                const activeLoraIds = (state?.activeLoraIds as string[]) || (oldActiveId ? [oldActiveId] : [])
+                return { ...state, loras: filtered, loraRatings, usedLoraIds, activeLoraIds }
             },
         }
     )

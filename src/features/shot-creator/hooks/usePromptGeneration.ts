@@ -48,7 +48,7 @@ export function usePromptGeneration() {
     const { generateImage, isGenerating, cancelGeneration } = useImageGeneration()
     const { wildcards } = useWildCardStore()
     const { activeFieldValues, setActiveRecipe: _setActiveRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts } = useRecipeStore()
-    const activeLora = useLoraStore((s) => s.getActiveLora())
+    const activeLoras = useLoraStore((s) => s.getActiveLoras())
 
     // Track last used recipe for generation metadata
     const [lastUsedRecipe, setLastUsedRecipe] = useState<{ recipeId: string; recipeName: string } | null>(null)
@@ -164,12 +164,12 @@ export function usePromptGeneration() {
             case 'z-image-turbo':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
                 baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
-                // Inject LoRA settings when active
-                if (activeLora) {
-                    baseSettings.loraWeightsUrl = activeLora.weightsUrl
-                    baseSettings.loraScale = shotCreatorSettings.loraScale ?? activeLora.defaultLoraScale
-                    baseSettings.loraName = activeLora.name
-                    baseSettings.guidanceScale = shotCreatorSettings.guidanceScale ?? activeLora.defaultGuidanceScale
+                // Inject LoRA settings when active (supports multiple)
+                if (activeLoras.length > 0) {
+                    baseSettings.loraWeightsUrls = activeLoras.map(l => l.weightsUrl)
+                    baseSettings.loraScales = activeLoras.map(l => l.defaultLoraScale)
+                    baseSettings.loraName = activeLoras.map(l => l.name).join(' + ')
+                    baseSettings.guidanceScale = shotCreatorSettings.guidanceScale ?? activeLoras[0].defaultGuidanceScale
                 } else if (shotCreatorSettings.guidanceScale !== undefined) {
                     baseSettings.guidanceScale = shotCreatorSettings.guidanceScale
                 }
@@ -177,7 +177,7 @@ export function usePromptGeneration() {
         }
 
         return baseSettings
-    }, [shotCreatorSettings, activeLora])
+    }, [shotCreatorSettings, activeLoras])
 
     // ── Main generation handler ────────────────────────────────────────
     const handleGenerate = useCallback(async () => {
@@ -647,10 +647,11 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
             .filter((url): url is string => Boolean(url))
         const modelSettings = buildModelSettings()
 
-        // Prepend LoRA trigger word when active
+        // Prepend LoRA trigger words when active (supports multiple)
         let finalPrompt = shotCreatorPrompt
-        if (activeLora) {
-            finalPrompt = `${activeLora.triggerWord}, ${shotCreatorPrompt}`
+        if (activeLoras.length > 0) {
+            const triggerWords = activeLoras.map(l => l.triggerWord).join(', ')
+            finalPrompt = `${triggerWords}, ${shotCreatorPrompt}`
         }
 
         const batchCount = shotCreatorSettings.batchCount || 1
@@ -669,7 +670,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
         }
 
         setLastUsedRecipe(null)
-    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages, activeFieldValues, generationCost, activeLora])
+    }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages, activeFieldValues, generationCost, activeLoras])
 
     return {
         handleGenerate,

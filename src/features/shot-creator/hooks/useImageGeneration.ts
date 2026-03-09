@@ -251,10 +251,10 @@ export function useImageGeneration() {
             setShotCreatorProcessing(false)
             setActiveGalleryId(null)
 
-            // Mark active LoRA as used for rating system
-            const activeLora = useLoraStore.getState().getActiveLora()
-            if (activeLora) {
-                useLoraStore.getState().markLoraUsed(activeLora.id)
+            // Mark active LoRAs as used for rating system
+            const activeLoras = useLoraStore.getState().getActiveLoras()
+            for (const lora of activeLoras) {
+                useLoraStore.getState().markLoraUsed(lora.id)
             }
 
             // Remove pending placeholder then refresh to load the completed image from DB

@@ -56,7 +56,7 @@ export function ExpandedGallery() {
   // Handle re-generate: load image settings back into shot creator
   const handleRegenerate = useCallback((image: GeneratedImage) => {
     const { setShotCreatorPrompt, setSettings } = useShotCreatorStore.getState()
-    const { loras, setActiveLora } = useLoraStore.getState()
+    const { loras, toggleActiveLora, activeLoraIds } = useLoraStore.getState()
 
     if (image.prompt) {
       setShotCreatorPrompt(image.prompt)
@@ -69,13 +69,15 @@ export function ExpandedGallery() {
       loraScale: image.settings?.loraScale ?? prev.loraScale,
     }))
 
+    // Deactivate all current LoRAs, then activate the one from the image
+    for (const id of activeLoraIds) {
+      toggleActiveLora(id)
+    }
     if (image.settings?.loraName) {
       const matchingLora = loras.find(l => l.name === image.settings?.loraName)
       if (matchingLora) {
-        setActiveLora(matchingLora.id)
+        toggleActiveLora(matchingLora.id)
       }
-    } else {
-      setActiveLora(null)
     }
 
     setFullscreenImage(null)

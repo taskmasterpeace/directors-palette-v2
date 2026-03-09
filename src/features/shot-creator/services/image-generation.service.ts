@@ -189,7 +189,11 @@ export class ImageGenerationService {
     }
 
     // LoRA support — API expects arrays for lora_weights and lora_scales
-    if (settings.loraWeightsUrl) {
+    if (settings.loraWeightsUrls && settings.loraWeightsUrls.length > 0) {
+      replicateInput.lora_weights = settings.loraWeightsUrls
+      replicateInput.lora_scales = settings.loraScales || settings.loraWeightsUrls.map(() => 1.0)
+    } else if (settings.loraWeightsUrl) {
+      // backward compat: single LoRA
       replicateInput.lora_weights = [settings.loraWeightsUrl]
       replicateInput.lora_scales = [settings.loraScale ?? 1.0]
     }

@@ -58,7 +58,8 @@ const AdvancedSettings = () => {
         [modelConfig]
     )
 
-    const activeLora = useLoraStore((s) => s.getActiveLora())
+    const activeLoras = useLoraStore((s) => s.getActiveLoras())
+    const activeLora = activeLoras.length > 0 ? activeLoras[0] : null
 
     return (
         <div className="space-y-4 border-t border-border pt-4">

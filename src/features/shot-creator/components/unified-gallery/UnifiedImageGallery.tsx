@@ -616,7 +616,7 @@ CRITICAL RULES:
     // Handle re-generate: load image settings back into shot creator
     const handleRegenerate = useCallback((image: GeneratedImage) => {
         const { setShotCreatorPrompt, setSettings } = useShotCreatorStore.getState()
-        const { loras, setActiveLora } = useLoraStore.getState()
+        const { loras, toggleActiveLora, activeLoraIds } = useLoraStore.getState()
 
         // Set prompt
         if (image.prompt) {
@@ -631,14 +631,15 @@ CRITICAL RULES:
             loraScale: image.settings?.loraScale ?? prev.loraScale,
         }))
 
-        // Activate matching LoRA if one was used
+        // Deactivate all current LoRAs, then activate the one from the image
+        for (const id of activeLoraIds) {
+            toggleActiveLora(id)
+        }
         if (image.settings?.loraName) {
             const matchingLora = loras.find(l => l.name === image.settings?.loraName)
             if (matchingLora) {
-                setActiveLora(matchingLora.id)
+                toggleActiveLora(matchingLora.id)
             }
-        } else {
-            setActiveLora(null)
         }
 
         // Close fullscreen modal

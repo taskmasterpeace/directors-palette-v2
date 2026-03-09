@@ -578,7 +578,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Get model identifier - swap to LoRA variant if LoRA weights present
-    const loraActive = !!(modelSettings as Record<string, unknown>)?.loraWeightsUrl
+    const ms = modelSettings as Record<string, unknown>
+    const loraActive = !!ms?.loraWeightsUrl || (Array.isArray(ms?.loraWeightsUrls) && (ms.loraWeightsUrls as string[]).length > 0)
     const replicateModelId = ImageGenerationService.getReplicateModelId(model as ImageModel, loraActive);
     lognog.devDebug('Using Replicate model', {
       model_id: replicateModelId,
