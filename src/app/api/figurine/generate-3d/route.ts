@@ -36,13 +36,50 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { imageUrl } = body
+    let { imageUrl } = body
 
     if (!imageUrl) {
       return NextResponse.json(
         { error: 'imageUrl is required' },
         { status: 400 }
       )
+    }
+
+    // If image is base64, upload to Replicate's file API first
+    if (imageUrl.startsWith('data:')) {
+      const base64Match = imageUrl.match(/^data:image\/\w+;base64,(.+)/)
+      if (!base64Match) {
+        return NextResponse.json(
+          { error: 'Invalid base64 image data' },
+          { status: 400 }
+        )
+      }
+      const buffer = Buffer.from(base64Match[1], 'base64')
+      const mimeType = imageUrl.match(/^data:(image\/\w+)/)?.[1] || 'image/png'
+
+      const form = new FormData()
+      form.append('content', new Blob([buffer], { type: mimeType }), 'figurine-source.png')
+
+      const fileResponse = await fetch('https://api.replicate.com/v1/files', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${process.env.REPLICATE_API_TOKEN}` },
+        body: form,
+      })
+      const fileData = await fileResponse.json()
+      const uploadedUrl = fileData.urls?.get
+
+      if (!uploadedUrl) {
+        lognog.error('figurine_3d_file_upload_failed', {
+          type: 'error',
+          response: JSON.stringify(fileData).slice(0, 300),
+          user_id: user.id,
+        })
+        return NextResponse.json(
+          { success: false, error: 'Failed to upload image for processing' },
+          { status: 500 }
+        )
+      }
+      imageUrl = uploadedUrl
     }
 
     // Check credits
@@ -70,10 +107,11 @@ export async function POST(request: NextRequest) {
     })
 
     // Run Trellis model on Replicate
+    // Input requires `images` as an array, and we use version hash (not model name)
     const prediction = await replicate.predictions.create({
-      model: 'firtoz/trellis',
+      version: 'e8f6c45206993f297372f5436b90350817bd9b4a0d52d2a76df50c1c8afa2b3c',
       input: {
-        image: imageUrl,
+        images: [imageUrl],
         texture_size: 1024,
         mesh_simplify: 0.95,
         generate_color: true,

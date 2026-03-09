@@ -69,7 +69,7 @@ const nextConfig: NextConfig = {
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: blob: https://*.supabase.co https://replicate.delivery https://api.replicate.com https://picsum.photos https://lh3.googleusercontent.com https://*.googleusercontent.com",
               "media-src 'self' blob: https://*.supabase.co",
-              "connect-src 'self' data: blob: https://*.supabase.co https://api.supabase.com https://api.replicate.com https://router.requesty.ai https://api.stripe.com https://api.elevenlabs.io https://vercel.live https://*.vercel.live wss://*.supabase.co",
+              "connect-src 'self' data: blob: https://*.supabase.co https://api.supabase.com https://api.replicate.com https://replicate.delivery https://router.requesty.ai https://api.stripe.com https://api.elevenlabs.io https://vercel.live https://*.vercel.live wss://*.supabase.co",
               "worker-src 'self' blob:",
               "frame-src 'self' https://js.stripe.com https://vercel.live",
               "object-src 'none'",
