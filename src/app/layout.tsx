@@ -17,14 +17,19 @@ export const metadata: Metadata = {
   authors: [{ name: 'Machine King Labs', url: 'https://machinekinglabs.com' }],
   creator: 'Machine King Labs',
   publisher: 'Machine King Labs',
+  manifest: '/manifest.json',
   icons: {
-    icon: '/logo.svg',
-    apple: '/logo.svg',
+    icon: [
+      { url: '/logo.svg', type: 'image/svg+xml' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/icons/apple-touch-icon.png',
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: "Director's Palette"
+    title: "Director's Palette",
   },
   openGraph: {
     title: "Director's Palette — AI Creative Studio",
@@ -60,7 +65,8 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  viewportFit: 'cover'
+  viewportFit: 'cover',
+  themeColor: '#0a0a0f',
 }
 
 export default function RootLayout({
