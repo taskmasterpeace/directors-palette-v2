@@ -8,6 +8,7 @@ import { creditsService } from '@/features/credits';
 import { isAdminEmail } from '@/features/admin/types/admin.types';
 import { lognog } from '@/lib/lognog';
 import { logger } from '@/lib/logger'
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -24,6 +25,19 @@ export async function POST(request: NextRequest) {
 
     const { user, supabase } = auth;
     userId = user.id;
+
+    // Rate limit check (admins bypass)
+    const userIsAdmin = isAdminEmail(user.email);
+    if (!userIsAdmin) {
+      const rl = checkRateLimit(`video:${user.id}`, RATE_LIMITS.VIDEO_GENERATION);
+      if (!rl.allowed) {
+        const retryAfter = Math.ceil((rl.resetAt - Date.now()) / 1000);
+        return NextResponse.json(
+          { error: 'Too many requests. Please slow down.', retryAfter },
+          { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+        );
+      }
+    }
 
     const {
       model,
@@ -83,7 +97,6 @@ export async function POST(request: NextRequest) {
     }
 
     // ✅ CREDITS: Check if user has sufficient credits (admins bypass)
-    const userIsAdmin = isAdminEmail(user.email)
     if (!userIsAdmin) {
       // Calculate actual cost based on model, duration, and resolution
       const settings = modelSettings as ModelSettings

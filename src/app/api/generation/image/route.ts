@@ -13,6 +13,7 @@ import type { Database } from '../../../../../supabase/database.types';
 import fs from 'fs';
 import path from 'path';
 import { lognog } from '@/lib/lognog';
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -185,6 +186,18 @@ export async function POST(request: NextRequest) {
 
     const { user, supabase } = auth;
     userId = user.id;
+
+    // Rate limit check (admins bypass)
+    if (!isAdminEmail(user.email)) {
+      const rl = checkRateLimit(`image:${user.id}`, RATE_LIMITS.IMAGE_GENERATION);
+      if (!rl.allowed) {
+        const retryAfter = Math.ceil((rl.resetAt - Date.now()) / 1000);
+        return NextResponse.json(
+          { error: 'Too many requests. Please slow down.', retryAfter },
+          { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+        );
+      }
+    }
 
     const body = await request.json();
     const {

@@ -73,7 +73,13 @@ export const RATE_LIMITS = {
   /** Coupon redemption: 5 attempts per 60 seconds per user */
   COUPON_REDEEM: { maxRequests: 5, windowSeconds: 60 },
   /** Image generation: 10 requests per 60 seconds per user */
-  IMAGE_GENERATION: { maxRequests: 10, windowSeconds: 60 },
+  IMAGE_GENERATION: { maxRequests: 20, windowSeconds: 60 },
+  /** Video generation: 5 requests per 60 seconds per user */
+  VIDEO_GENERATION: { maxRequests: 5, windowSeconds: 60 },
+  /** Wildcard generation: 30 requests per 60 seconds per user */
+  WILDCARD_GENERATION: { maxRequests: 30, windowSeconds: 60 },
+  /** Prompt expansion: 20 requests per 60 seconds per user */
+  PROMPT_EXPANSION: { maxRequests: 20, windowSeconds: 60 },
   /** Admin credit grants: 10 per 60 seconds */
   ADMIN_CREDIT_GRANT: { maxRequests: 10, windowSeconds: 60 },
   /** API key operations: 20 per 60 seconds */

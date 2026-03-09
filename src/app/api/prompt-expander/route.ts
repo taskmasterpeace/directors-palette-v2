@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { lognog } from '@/lib/lognog'
 import { logger } from '@/lib/logger'
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
 
 const MODEL = 'openai/gpt-4o-mini'
 
@@ -60,6 +61,16 @@ export async function POST(request: NextRequest) {
         if (auth instanceof NextResponse) return auth
         userId = auth.user.id
         userEmail = auth.user.email
+
+        // Rate limit: prevent spam
+        const rl = checkRateLimit(`prompt-expand:${userId}`, RATE_LIMITS.PROMPT_EXPANSION)
+        if (!rl.allowed) {
+            const retryAfter = Math.ceil((rl.resetAt - Date.now()) / 1000)
+            return NextResponse.json(
+                { error: 'Too many requests. Please slow down.', retryAfter },
+                { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+            )
+        }
 
         const body: ExpandRequest = await request.json()
         const { prompt, level, director } = body
