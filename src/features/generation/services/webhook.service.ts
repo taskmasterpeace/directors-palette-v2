@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { StorageService } from './storage.service';
+import { R2StorageService } from './r2-storage.service';
 import { generationEventsService } from '@/features/admin/services/generation-events.service';
 import { creditsService } from '@/features/credits';
 import { isAdminEmail } from '@/features/admin/types/admin.types';
@@ -165,14 +166,36 @@ export class WebhookService {
       input?.output_format as string | undefined
     );
 
-    // Upload to Supabase Storage
-    const { publicUrl, storagePath, fileSize } = await StorageService.uploadToStorage(
-      buffer,
-      galleryEntry.user_id,
-      galleryEntry.prediction_id,
-      ext,
-      mimeType
-    );
+    // Route videos to R2, images to Supabase
+    const isVideo = mimeType.startsWith('video/');
+    let publicUrl: string;
+    let storagePath: string;
+    let fileSize: number;
+
+    if (isVideo && process.env.R2_ENDPOINT) {
+      const result = await R2StorageService.uploadVideo(
+        buffer,
+        galleryEntry.user_id,
+        galleryEntry.prediction_id,
+        ext,
+        mimeType
+      );
+      publicUrl = result.publicUrl;
+      storagePath = result.storagePath;
+      fileSize = result.fileSize;
+      logger.generation.info('[R2] Video stored in R2', { storagePath, fileSize });
+    } else {
+      const result = await StorageService.uploadToStorage(
+        buffer,
+        galleryEntry.user_id,
+        galleryEntry.prediction_id,
+        ext,
+        mimeType
+      );
+      publicUrl = result.publicUrl;
+      storagePath = result.storagePath;
+      fileSize = result.fileSize;
+    }
 
     // Get current metadata
     const currentMetadata = (galleryEntry.metadata as Record<string, unknown>) || {};
