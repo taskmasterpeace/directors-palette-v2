@@ -44,14 +44,14 @@ export function Toaster() {
       {toasts.map(function ({ id, title, description, action, variant, ...props }) {
         return (
           <Toast key={id} variant={variant} {...props}>
-            <div className="flex items-start gap-3 w-full">
+            <div className="flex items-start gap-2 sm:gap-3 w-full">
               {/* Branded icon */}
-              <div className={`flex-shrink-0 mt-0.5 rounded-lg p-1.5 ${
+              <div className={`flex-shrink-0 mt-0.5 rounded-md sm:rounded-lg p-1 sm:p-1.5 ${
                 variant === 'destructive'
                   ? 'bg-red-950/50'
                   : 'bg-amber-900/30'
               }`}>
-                <ClapperIcon className="h-5 w-5" />
+                <ClapperIcon className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
               {/* Content */}
               <div className="grid gap-0.5 flex-1 min-w-0">
