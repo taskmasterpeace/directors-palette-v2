@@ -65,6 +65,8 @@ const BUILT_IN_LORAS: LoraItem[] = [
     },
 ]
 
+const LORA_STORAGE_BASE = 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/loras'
+
 /** All available LoRAs users can browse in the community tab */
 export const COMMUNITY_LORAS: LoraItem[] = [
     {
@@ -73,7 +75,7 @@ export const COMMUNITY_LORAS: LoraItem[] = [
         type: 'style',
         referenceTag: 'nava',
         triggerWord: 'in the style of nava',
-        weightsUrl: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/loras/nava-style/nava_lora_weights.safetensors',
+        weightsUrl: `${LORA_STORAGE_BASE}/nava-style/nava_lora_weights.safetensors`,
         thumbnailUrl: '/images/lora/nava-style.png',
         defaultGuidanceScale: 1.0,
         defaultLoraScale: 1.3,
@@ -85,7 +87,64 @@ export const COMMUNITY_LORAS: LoraItem[] = [
         type: 'style',
         referenceTag: 'pixar',
         triggerWord: 'DisneyIZT,,',
-        weightsUrl: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/loras/pixar-style/pixar_disney_lora_weights.safetensors',
+        weightsUrl: `${LORA_STORAGE_BASE}/pixar-style/pixar_disney_lora_weights.safetensors`,
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 1.0,
+        createdAt: 0,
+    },
+    {
+        id: 'poster-movie',
+        name: 'Poster Movie',
+        type: 'style',
+        referenceTag: 'poster-movie',
+        triggerWord: 'Poster Movie.',
+        weightsUrl: `${LORA_STORAGE_BASE}/poster-movie/poster-movie_weights.safetensors`,
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 1.0,
+        createdAt: 0,
+    },
+    {
+        id: 'childish',
+        name: 'Childish',
+        type: 'style',
+        referenceTag: 'childish',
+        triggerWord: 'a childish crayon drawing',
+        weightsUrl: `${LORA_STORAGE_BASE}/childish/childish_weights.safetensors`,
+        thumbnailUrl: `${LORA_STORAGE_BASE}/childish/childish_thumbnail.png`,
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 1.0,
+        createdAt: 0,
+    },
+    {
+        id: 'impressionism',
+        name: 'Impressionism',
+        type: 'style',
+        referenceTag: 'impressionism',
+        triggerWord: 'ArsMJStyle, Impressionism',
+        weightsUrl: `${LORA_STORAGE_BASE}/impressionism/impressionism_weights.safetensors`,
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 0.8,
+        createdAt: 0,
+    },
+    {
+        id: 'c64-pixel-art',
+        name: 'C64 Pixel Art',
+        type: 'style',
+        referenceTag: 'c64',
+        triggerWord: 'C64style pixel art',
+        weightsUrl: `${LORA_STORAGE_BASE}/c64-pixel-art/c64-pixel-art_weights.safetensors`,
+        thumbnailUrl: `${LORA_STORAGE_BASE}/c64-pixel-art/c64-pixel-art_thumbnail.png`,
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 1.0,
+        createdAt: 0,
+    },
+    {
+        id: 'sat-morn-cartoon',
+        name: 'Sat Morn Cartoon',
+        type: 'style',
+        referenceTag: 'smc',
+        triggerWord: 'smcstyle cartoon',
+        weightsUrl: `${LORA_STORAGE_BASE}/sat-morn-cartoon/sat-morn-cartoon_weights.safetensors`,
         defaultGuidanceScale: 1.0,
         defaultLoraScale: 1.0,
         createdAt: 0,
@@ -160,7 +219,7 @@ export const useLoraStore = create<LoraStore>()(
         }),
         {
             name: 'directors-palette-lora-store',
-            version: 6,
+            version: 7,
             migrate: (persisted: unknown) => {
                 const state = persisted as Record<string, unknown>
                 const loras = (state?.loras as LoraItem[]) || []
