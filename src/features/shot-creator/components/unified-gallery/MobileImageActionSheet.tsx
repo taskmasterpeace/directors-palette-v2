@@ -25,6 +25,7 @@ import {
   Copy,
   Eraser,
   Share2,
+  Box,
 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import type { FolderWithCount } from '../../types/folder.types'
@@ -51,6 +52,7 @@ interface MobileImageActionSheetProps {
   onRemoveBackground?: () => void
   isRemovingBackground?: boolean
   onShare?: () => void
+  onMakeFigurine?: () => void
 }
 
 export function MobileImageActionSheet({
@@ -73,6 +75,7 @@ export function MobileImageActionSheet({
   onRemoveBackground,
   isRemovingBackground,
   onShare,
+  onMakeFigurine,
 }: MobileImageActionSheetProps) {
   const [currentView, setCurrentView] = useState<MenuView>('main')
 
@@ -217,6 +220,15 @@ export function MobileImageActionSheet({
                       icon={<Library className="h-5 w-5" />}
                       label="Add to Library"
                       onClick={() => handleAction(onAddToLibrary)}
+                    />
+                  )}
+
+                  {/* Make Figurine (3D) */}
+                  {onMakeFigurine && (
+                    <MenuButton
+                      icon={<Box className="h-5 w-5" />}
+                      label="Make Figurine"
+                      onClick={() => handleAction(onMakeFigurine)}
                     />
                   )}
 

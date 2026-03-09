@@ -23,6 +23,8 @@ import { GeneratedImage, useUnifiedGalleryStore } from '../../store/unified-gall
 import { usePromptLibraryStore } from '../../store/prompt-library-store'
 import { useShotCreatorStore } from '../../store/shot-creator.store'
 import { useLoraStore } from '../../store/lora.store'
+import { useLayoutStore } from '@/store/layout.store'
+import { useFigurineStore } from '@/features/figurine-studio/hooks/useFigurineStore'
 import type { ModelId } from '@/config'
 import { logger } from '@/lib/logger'
 
@@ -581,6 +583,15 @@ CRITICAL RULES:
         }
     }, [sharingImageId, isMobile, toast])
 
+    // Handle making a figurine from a gallery image
+    const { setActiveTab } = useLayoutStore()
+    const { setPreSelectedImage } = useFigurineStore()
+    const handleMakeFigurine = useCallback((image: GeneratedImage) => {
+        // Pre-load the image URL and switch to figurine studio
+        setPreSelectedImage(image.url)
+        setActiveTab('figurine-studio')
+    }, [setActiveTab, setPreSelectedImage])
+
     // Save prompt to library
     const handleSavePromptToLibrary = useCallback((prompt: string) => {
         const name = window.prompt('Name this prompt:', prompt.slice(0, 50))
@@ -806,6 +817,7 @@ CRITICAL RULES:
         onRemoveBackground: (image: GeneratedImage) => handleRemoveBackground(image),
         onRetry: (image: GeneratedImage) => handleRetryGeneration(image),
         onShare: (image: GeneratedImage) => handleShare(image),
+        onMakeFigurine: (image: GeneratedImage) => handleMakeFigurine(image),
         isGridImage,
         removingBackgroundId,
     }), [
@@ -813,7 +825,7 @@ CRITICAL RULES:
         setFullscreenImage, handleCopyImage, handleDownloadImage, handleDeleteImage,
         handleSendTo, currentTab, showReferenceNamePrompt, updateImageReference, toast,
         onSendToLibrary, handleMoveToFolder, handleExtractFrames, handleExtractFramesToGallery,
-        handleRemoveBackground, handleRetryGeneration, handleShare, isGridImage, removingBackgroundId,
+        handleRemoveBackground, handleRetryGeneration, handleShare, handleMakeFigurine, isGridImage, removingBackgroundId,
     ])
 
     // Minimal mode for embedded use

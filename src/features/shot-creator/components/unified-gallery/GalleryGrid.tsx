@@ -23,6 +23,7 @@ interface ImageCardCallbacks {
   onRemoveBackground: (image: GeneratedImage) => void
   onRetry: (image: GeneratedImage) => void
   onShare?: (image: GeneratedImage) => void
+  onMakeFigurine?: (image: GeneratedImage) => void
   isGridImage: (image: GeneratedImage) => boolean
   removingBackgroundId: string | null
 }
@@ -90,6 +91,7 @@ function renderImageCard(
       gridSize={gridSize}
       onRetry={() => callbacks.onRetry(image)}
       onShare={includeShare && callbacks.onShare ? () => callbacks.onShare!(image) : undefined}
+      onMakeFigurine={callbacks.onMakeFigurine ? () => callbacks.onMakeFigurine!(image) : undefined}
     />
   )
 }

@@ -37,6 +37,7 @@ interface ImageCardProps {
   onRemoveBackground?: () => void
   isRemovingBackground?: boolean
   onShare?: () => void
+  onMakeFigurine?: () => void
   currentFolderId?: string | null
   folders?: FolderWithCount[]
   showActions?: boolean
@@ -68,6 +69,7 @@ const ImageCardComponent = ({
   onRemoveBackground,
   isRemovingBackground,
   onShare,
+  onMakeFigurine,
   currentFolderId,
   folders = [],
   showActions = true,
@@ -225,6 +227,7 @@ const ImageCardComponent = ({
             onRemoveBackground={onRemoveBackground}
             isRemovingBackground={isRemovingBackground}
             onShare={onShare}
+            onMakeFigurine={onMakeFigurine}
             dropdownOpen={dropdownOpen}
             onDropdownChange={setDropdownOpen}
           />

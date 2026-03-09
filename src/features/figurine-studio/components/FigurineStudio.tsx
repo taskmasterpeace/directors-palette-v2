@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback, useRef } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Upload, Box, Loader2, RotateCcw, Download, AlertCircle, Sparkles, Image as ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -23,12 +23,22 @@ export function FigurineStudio() {
     models,
     activeModelId,
     isGenerating,
+    preSelectedImageUrl,
     startGeneration,
     setGenerationComplete,
     setGenerationFailed,
     setActiveModel,
     removeModel,
+    setPreSelectedImage,
   } = useFigurineStore()
+
+  // Consume pre-selected image from gallery "Make Figurine" action
+  useEffect(() => {
+    if (preSelectedImageUrl) {
+      setSelectedImage(preSelectedImageUrl)
+      setPreSelectedImage(null)
+    }
+  }, [preSelectedImageUrl, setPreSelectedImage])
 
   const activeModel = models.find((m) => m.id === activeModelId)
 

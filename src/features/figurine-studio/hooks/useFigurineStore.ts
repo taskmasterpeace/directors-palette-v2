@@ -15,6 +15,7 @@ interface FigurineStore {
   models: FigurineModel[]
   activeModelId: string | null
   isGenerating: boolean
+  preSelectedImageUrl: string | null
 
   // Actions
   startGeneration: (sourceImageUrl: string) => string
@@ -22,6 +23,7 @@ interface FigurineStore {
   setGenerationFailed: (id: string, error: string) => void
   setActiveModel: (id: string | null) => void
   removeModel: (id: string) => void
+  setPreSelectedImage: (url: string | null) => void
 }
 
 let idCounter = 0
@@ -30,6 +32,7 @@ export const useFigurineStore = create<FigurineStore>((set) => ({
   models: [],
   activeModelId: null,
   isGenerating: false,
+  preSelectedImageUrl: null,
 
   startGeneration: (sourceImageUrl) => {
     const id = `figurine-${Date.now()}-${++idCounter}`
@@ -74,4 +77,6 @@ export const useFigurineStore = create<FigurineStore>((set) => ({
       models: state.models.filter((m) => m.id !== id),
       activeModelId: state.activeModelId === id ? null : state.activeModelId,
     })),
+
+  setPreSelectedImage: (url) => set({ preSelectedImageUrl: url }),
 }))

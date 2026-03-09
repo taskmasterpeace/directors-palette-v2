@@ -33,6 +33,7 @@ import {
   ImageIcon,
   Eraser,
   Share2,
+  Box,
 } from 'lucide-react'
 import type { FolderWithCount } from '../../types/folder.types'
 import { MobileImageActionSheet } from './MobileImageActionSheet'
@@ -57,6 +58,7 @@ interface ImageActionMenuProps {
   onRemoveBackground?: () => void
   isRemovingBackground?: boolean
   onShare?: () => void
+  onMakeFigurine?: () => void
   dropdownOpen: boolean
   onDropdownChange: (open: boolean) => void
 }
@@ -85,6 +87,7 @@ export function ImageActionMenu({
   onRemoveBackground,
   isRemovingBackground,
   onShare,
+  onMakeFigurine,
   dropdownOpen,
   onDropdownChange
 }: ImageActionMenuProps) {
@@ -320,6 +323,17 @@ export function ImageActionMenu({
             >
               <Library className="mr-2 h-4 w-4" />
               Add to Library
+            </DropdownMenuItem>
+          )}
+
+          {/* Make Figurine (3D) */}
+          {onMakeFigurine && (
+            <DropdownMenuItem
+              onClick={onMakeFigurine}
+              className="hover:bg-secondary cursor-pointer"
+            >
+              <Box className="mr-2 h-4 w-4" />
+              Make Figurine
             </DropdownMenuItem>
           )}
 
