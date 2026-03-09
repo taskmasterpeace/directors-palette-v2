@@ -122,10 +122,25 @@ export function AnimatorUnifiedGallery({
             Video Gallery
           </h3>
           <Badge variant="outline" className="border-primary text-primary">
-            {completedVideos.length} videos
+            {completedVideos.length} / 100
           </Badge>
         </div>
-        <p className="text-xs text-muted-foreground">All generated videos</p>
+        {/* Storage bar */}
+        <div className="space-y-1">
+          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                completedVideos.length >= 90 ? 'bg-red-500' : completedVideos.length >= 70 ? 'bg-amber-500' : 'bg-cyan-500'
+              }`}
+              style={{ width: `${Math.min((completedVideos.length / 100) * 100, 100)}%` }}
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            {completedVideos.length >= 100
+              ? 'Video limit reached — delete old videos to generate more'
+              : `${100 - completedVideos.length} videos remaining`}
+          </p>
+        </div>
       </div>
 
       {/* Videos Grid - 2 Columns */}

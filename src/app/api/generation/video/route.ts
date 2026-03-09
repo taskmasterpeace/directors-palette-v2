@@ -39,6 +39,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Check 100-video limit
+    const { count: videoCount, error: countError } = await supabase
+      .from('gallery')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('generation_type', 'video')
+      .in('status', ['completed', 'processing', 'pending']);
+
+    if (!countError && (videoCount ?? 0) >= 100) {
+      return NextResponse.json(
+        { error: 'Video limit reached (100). Delete old videos to generate more.' },
+        { status: 403 }
+      );
+    }
+
     const {
       model,
       prompt,
