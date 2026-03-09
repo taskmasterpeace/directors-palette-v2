@@ -97,7 +97,7 @@ export const COMMUNITY_LORAS: LoraItem[] = [
         name: 'Poster Movie',
         type: 'style',
         referenceTag: 'poster-movie',
-        triggerWord: 'Poster Movie.',
+        triggerWord: 'POSTER',
         weightsUrl: `${LORA_STORAGE_BASE}/poster-movie/poster-movie_weights.safetensors`,
         defaultGuidanceScale: 1.0,
         defaultLoraScale: 1.0,
@@ -112,7 +112,7 @@ export const COMMUNITY_LORAS: LoraItem[] = [
         weightsUrl: `${LORA_STORAGE_BASE}/childish/childish_weights.safetensors`,
         thumbnailUrl: `${LORA_STORAGE_BASE}/childish/childish_thumbnail.png`,
         defaultGuidanceScale: 1.0,
-        defaultLoraScale: 1.0,
+        defaultLoraScale: 0.4,
         createdAt: 0,
     },
     {
@@ -219,7 +219,7 @@ export const useLoraStore = create<LoraStore>()(
         }),
         {
             name: 'directors-palette-lora-store',
-            version: 7,
+            version: 8,
             migrate: (persisted: unknown) => {
                 const state = persisted as Record<string, unknown>
                 const loras = (state?.loras as LoraItem[]) || []
