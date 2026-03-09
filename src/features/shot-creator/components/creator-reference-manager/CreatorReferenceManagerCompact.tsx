@@ -76,16 +76,11 @@ const CreatorReferenceManagerCompact = ({ maxImages = 3, modelSelector }: Creato
         }
     }, [handleMultipleImageUpload])
 
-    // For text-only models (maxImages === 0), show simplified UI
+    // For text-only models (maxImages === 0), just show model selector
     if (maxImages === 0) {
         return (
-            <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                    {modelSelector}
-                </div>
-                <div className="text-xs text-muted-foreground italic">
-                    This model generates from text only
-                </div>
+            <div className="flex items-center gap-2">
+                {modelSelector}
             </div>
         )
     }
