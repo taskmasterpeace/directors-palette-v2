@@ -3,16 +3,15 @@
   "appName": "Directors Palette",
   "webDir": "out",
   "server": {
-    "url": "http://192.168.1.217:3001",
-    "cleartext": true
+    "url": "https://directorspal.com",
+    "allowNavigation": ["directorspal.com", "*.directorspal.com", "*.supabase.co", "*.stripe.com"]
   },
   "ios": {
     "contentInset": "automatic",
-    "scrollEnabled": true
+    "scrollEnabled": true,
+    "scheme": "Directors Palette"
   },
-  "android": {
-    "allowMixedContent": true
-  },
+  "android": {},
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 5000,
