@@ -113,13 +113,14 @@ export function LipSyncStudio({ className }: LipSyncStudioProps) {
   }, [avatarSource, referenceSheets.identityLock.imageUrl, customAvatarUrl])
 
   // Get audio URL based on source
+  const [uploadedVocalsUrl, setUploadedVocalsUrl] = useState<string | null>(null)
   const audioUrl = useMemo(() => {
     if (audioSource === 'isolated-vocals') {
-      // TODO: Get isolated vocals URL from audio analysis
-      return project.audioUrl // Fallback to original audio for now
+      // Use uploaded isolated vocals if available, otherwise fall back to original audio
+      return uploadedVocalsUrl || project.audioUrl
     }
     return customAudioUrl
-  }, [audioSource, project.audioUrl, customAudioUrl])
+  }, [audioSource, project.audioUrl, customAudioUrl, uploadedVocalsUrl])
 
   // Check if ready to generate
   const canGenerate = useMemo(() => {
@@ -336,6 +337,30 @@ export function LipSyncStudio({ className }: LipSyncStudioProps) {
                     </p>
                   </div>
                 </div>
+
+                {audioSource === 'isolated-vocals' && (
+                  <div className="ml-6 mt-2 mb-1">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {uploadedVocalsUrl
+                        ? 'Isolated vocals loaded'
+                        : project.audioUrl
+                          ? 'Using original audio. Upload isolated vocals for better results:'
+                          : 'No audio available yet.'}
+                    </p>
+                    <input
+                      type="file"
+                      accept=".mp3,.wav,.m4a,.aac,audio/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          const url = URL.createObjectURL(file)
+                          setUploadedVocalsUrl(url)
+                        }
+                      }}
+                      className="w-full text-sm file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-cyan-500/20 file:text-cyan-400 file:font-medium hover:file:bg-cyan-500/30"
+                    />
+                  </div>
+                )}
 
                 <div className="flex items-start gap-3 pt-2">
                   <RadioGroupItem value="custom-upload" id="audio-custom" />

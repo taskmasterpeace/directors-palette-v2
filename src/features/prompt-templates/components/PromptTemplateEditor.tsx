@@ -164,10 +164,57 @@ export function PromptTemplateEditor() {
     URL.revokeObjectURL(url)
   }
 
-  // Import config (placeholder - would need file input)
+  // Import config from JSON file
   const handleImport = () => {
-    // TODO: Implement file import
-    alert('Import functionality coming soon')
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json,.txt'
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+
+      try {
+        const text = await file.text()
+        const config = JSON.parse(text)
+
+        // Validate basic structure
+        if (!config.tokens && !config.templates) {
+          alert('Invalid config file: must contain tokens or templates')
+          return
+        }
+
+        // Import templates
+        if (config.templates && Array.isArray(config.templates)) {
+          for (const template of config.templates) {
+            if (template.id && template.name && template.moduleId) {
+              addTemplate({
+                ...template,
+                id: crypto.randomUUID(), // Avoid ID collisions
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              })
+            }
+          }
+        }
+
+        // Import tokens
+        if (config.tokens && Array.isArray(config.tokens)) {
+          for (const token of config.tokens) {
+            if (token.id && token.name) {
+              addToken({
+                ...token,
+                id: crypto.randomUUID(),
+              })
+            }
+          }
+        }
+
+        await saveConfig()
+      } catch {
+        alert('Failed to parse file. Ensure it is valid JSON.')
+      }
+    }
+    input.click()
   }
 
   if (isLoading) {

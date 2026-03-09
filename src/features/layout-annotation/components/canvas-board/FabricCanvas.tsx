@@ -14,17 +14,12 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
-  RotateCw,
-  FlipHorizontal,
-  FlipVertical,
-  Trash2,
-  Lock,
-  Unlock,
-  Crop
 } from 'lucide-react'
+import { CanvasToolbarMobile } from './CanvasToolbar'
+import { CanvasProperties } from './CanvasProperties'
+import { CanvasLayers } from './CanvasLayers'
 import * as fabric from 'fabric'
 import { clipboardManager } from '@/utils/clipboard-manager'
-import { cn } from '@/utils/utils'
 import { createLogger } from '@/lib/logger'
 
 
@@ -1242,37 +1237,13 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
     <Card className="bg-card/50 border-border h-full flex flex-col">
       <CardContent className="p-4 flex-1 flex flex-col relative">
         {/* Mobile: Floating Zoom Controls */}
-        <div className="sm:hidden fixed left-4 z-30 flex flex-col gap-2" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 80px)' }}>
-          <Button
-            size="sm"
-            onClick={handleZoomIn}
-            disabled={!fabricRef.current}
-            className="bg-primary/90 hover:bg-primary rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
-            aria-label="Zoom in"
-          >
-            <ZoomIn className="w-5 h-5 text-white" />
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleFitToScreen}
-            disabled={!fabricRef.current}
-            className="bg-primary/90 hover:bg-primary rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
-            aria-label="Fit to screen"
-          >
-            <Maximize2 className="w-5 h-5 text-white" />
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleZoomOut}
-            disabled={!fabricRef.current}
-            className="bg-primary/90 hover:bg-primary rounded-full w-12 h-12 p-0 shadow-lg backdrop-blur-sm touch-manipulation flex items-center justify-center"
-            aria-label="Zoom out"
-          >
-            <ZoomOut className="w-5 h-5 text-white" />
-          </Button>
-        </div>
+        <CanvasToolbarMobile
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onFitToScreen={handleFitToScreen}
+          disabled={!fabricRef.current}
+        />
 
-        {/* Desktop: Existing Top Controls */}
         {/* Desktop: Unified Top Controls */}
         <div className="hidden sm:flex items-center justify-between gap-2 mb-2 p-1 bg-card/50 border border-border/50 rounded-lg">
           {/* Left: App Controls (Import, Mode, Undo - Passed from Parent) */}
@@ -1298,57 +1269,24 @@ const FabricCanvas = forwardRef<FabricCanvasRef, FabricCanvasProps>((props, ref)
               <ZoomIn className="w-4 h-4" />
             </Button>
 
-            {selectedObject && (
-              <>
-                <div className="h-4 w-px bg-border mx-1" />
-                <Button size="sm" onClick={() => rotateSelected(45)} variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="Rotate 45°">
-                  <RotateCw className="w-4 h-4" />
-                </Button>
-                <Button size="sm" onClick={() => flipSelected('horizontal')} variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="Flip horizontal">
-                  <FlipHorizontal className="w-4 h-4" />
-                </Button>
-                <Button size="sm" onClick={() => flipSelected('vertical')} variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="Flip vertical">
-                  <FlipVertical className="w-4 h-4" />
-                </Button>
-                <Button size="sm" onClick={() => onToolChange?.('crop')} variant="ghost" className={cn("h-7 w-7 p-0 text-muted-foreground hover:text-foreground", tool === 'crop' && "bg-primary/20 text-primary")} title="Crop Image">
-                  <Crop className="w-4 h-4" />
-                </Button>
-                <Button size="sm" onClick={toggleLockSelected} variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="Lock/Unlock">
-                  {selectedObject?.lockMovementX ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-                </Button>
-                <Button size="sm" onClick={deleteSelected} variant="ghost" className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10" title="Delete selected">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </>
-            )}
+            <CanvasProperties
+              selectedObject={selectedObject}
+              tool={tool}
+              onRotate={(angle) => rotateSelected(angle)}
+              onFlip={(direction) => flipSelected(direction)}
+              onCrop={() => onToolChange?.('crop')}
+              onToggleLock={toggleLockSelected}
+              onDelete={deleteSelected}
+            />
           </div>
         </div>
 
         {/* Canvas Container */}
-        <div
-          ref={containerRef}
-          className="flex-1 bg-background p-4 relative flex items-center justify-center overflow-auto border-2 border-primary/50"
-          tabIndex={0}
-          style={{
-            touchAction: 'none',
-            WebkitOverflowScrolling: 'auto',
-            overscrollBehavior: 'contain'
-          }}
-        >
-          <canvas
-            ref={canvasRef}
-            className="border-4 border-primary shadow-2xl"
-          />
-
-          <div
-            ref={cursorRef}
-            className="fixed pointer-events-none rounded-full border-2 z-[9999] opacity-0 transition-opacity duration-75 ease-out"
-            style={{
-              top: 0,
-              left: 0
-            }}
-          />
-        </div>
+        <CanvasLayers
+          containerRef={containerRef}
+          canvasRef={canvasRef}
+          cursorRef={cursorRef}
+        />
       </CardContent>
     </Card>
   )

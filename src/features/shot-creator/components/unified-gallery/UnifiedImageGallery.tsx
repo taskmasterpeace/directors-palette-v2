@@ -1,19 +1,17 @@
 'use client'
 
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback, useState, useMemo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { ImageIcon } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { useReferenceNamePrompt } from '@/components/providers/PromptProvider'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useToast } from '@/hooks/use-toast'
 import { autoExtractFrames } from '@/features/layout-annotation/services/grid-detector'
-import { LoadMoreButton } from './LoadMoreButton'
 import { useGalleryLogic } from "../../hooks/useGalleryLogic"
 import { ImageCard } from "./ImageCard"
 import { GalleryHeader } from "./GalleryHeader"
+import { GalleryGrid } from "./GalleryGrid"
+import { GalleryEmptyState } from "./GalleryEmptyState"
 import FullscreenModal from "./FullScreenModal"
 import { FolderSidebar } from "./FolderSidebar"
 import { MobileFolderMenu } from "./MobileFolderMenu"
@@ -70,8 +68,8 @@ export function UnifiedImageGallery({
         handleSelectAll,
         handleClearSelection,
         handleDeleteSelected,
-        handleImageSelect,
-        handleImageSelectWithModifiers,
+        handleImageSelect: _handleImageSelect,
+        handleImageSelectWithModifiers: _handleImageSelectWithModifiers,
         updateImageReference,
         downloadModalOpen,
         downloadProgress,
@@ -370,9 +368,9 @@ CRITICAL RULES:
     const uncategorizedCount = getUncategorizedCount()
 
     // Handle moving single image to folder
-    const handleMoveToFolder = async (imageId: string, folderId: string | null) => {
+    const handleMoveToFolder = useCallback(async (imageId: string, folderId: string | null) => {
         await handleMoveImages([imageId], folderId)
-    }
+    }, [handleMoveImages])
 
     // Handle bulk moving selected images to folder (for BulkActionsToolbar)
     const handleBulkMoveToFolder = useCallback(async (folderId: string | null) => {
@@ -664,21 +662,6 @@ CRITICAL RULES:
         await handleDeleteImage(image.url || image.id)
     }, [handleDeleteImage, toast])
 
-    // Grid size to CSS classes mapping
-    // Mobile: small=3cols, medium=2cols, large=1col for clear differentiation
-    const getGridClasses = (size: GridSize): string => {
-        switch (size) {
-            case 'small':
-                return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8'
-            case 'medium':
-                return 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-            case 'large':
-                return 'grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-            default:
-                return 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-        }
-    }
-
     // Keyboard navigation for fullscreen modal
     const navigateToImage = useCallback((direction: 'next' | 'previous') => {
         if (!fullscreenImage || images.length <= 1) return
@@ -784,6 +767,53 @@ CRITICAL RULES:
         downloadModalOpen,
         handleClearSelection,
         handleSelectAll
+    ])
+
+    // Callbacks object for extracted GalleryGrid component
+    const gridCallbacks = useMemo(() => ({
+        onSelect: (url: string, e?: React.MouseEvent) => {
+            if (e && (e.ctrlKey || e.metaKey || e.shiftKey)) {
+                _handleImageSelectWithModifiers(url, e)
+            } else {
+                _handleImageSelect(url)
+            }
+        },
+        onZoom: (image: GeneratedImage) => setFullscreenImage(image),
+        onCopy: (url: string) => handleCopyImage(url),
+        onDownload: (url: string) => handleDownloadImage(url),
+        onDelete: (url: string) => handleDeleteImage(url),
+        onSendTo: currentTab ? (url: string, target: string) => handleSendTo(url, target) : undefined,
+        onSetReference: async (image: GeneratedImage) => {
+            const newRef = await showReferenceNamePrompt()
+            if (newRef) {
+                await updateImageReference(image.id, newRef)
+            }
+        },
+        onEditReference: async (image: GeneratedImage) => {
+            const newRef = await showReferenceNamePrompt(image.reference)
+            if (newRef !== null) {
+                await updateImageReference(image.id, newRef)
+                toast({
+                    title: newRef ? "Reference Updated" : "Reference Cleared",
+                    description: newRef ? `Image tagged as ${newRef}` : "Reference tag removed"
+                })
+            }
+        },
+        onAddToLibrary: onSendToLibrary ? (image: GeneratedImage) => onSendToLibrary(image.url, image.id) : undefined,
+        onMoveToFolder: (imageId: string, folderId: string | null) => handleMoveToFolder(imageId, folderId),
+        onExtractFrames: (image: GeneratedImage) => handleExtractFrames(image.url),
+        onExtractFramesToGallery: (image: GeneratedImage) => handleExtractFramesToGallery(image.url, image.id),
+        onRemoveBackground: (image: GeneratedImage) => handleRemoveBackground(image),
+        onRetry: (image: GeneratedImage) => handleRetryGeneration(image),
+        onShare: (image: GeneratedImage) => handleShare(image),
+        isGridImage,
+        removingBackgroundId,
+    }), [
+        _handleImageSelect, _handleImageSelectWithModifiers,
+        setFullscreenImage, handleCopyImage, handleDownloadImage, handleDeleteImage,
+        handleSendTo, currentTab, showReferenceNamePrompt, updateImageReference, toast,
+        onSendToLibrary, handleMoveToFolder, handleExtractFrames, handleExtractFramesToGallery,
+        handleRemoveBackground, handleRetryGeneration, handleShare, isGridImage, removingBackgroundId,
     ])
 
     // Minimal mode for embedded use
@@ -912,143 +942,23 @@ CRITICAL RULES:
                         "flex-1 flex flex-col md:overflow-hidden transition-all duration-300",
                         isSelectionMode && "ring-2 ring-inset ring-primary/20 bg-primary/[0.02]"
                     )}>
-                        {isLoading ? (
-                            <div className="text-center py-12">
-                                <LoadingSpinner size="xl" color="accent" className="mx-auto mb-4" />
-                                <p className="text-muted-foreground">Loading gallery...</p>
-                            </div>
-                        ) : images.length === 0 ? (
-                            <div className="text-center py-12">
-                                <ImageIcon className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                                <p className="text-muted-foreground">No images generated yet</p>
-                                <p className="text-sm text-muted-foreground mt-2">
-                                    Start creating images in Shot Creator or Shot Editor
-                                </p>
-                            </div>
+                        {(isLoading || images.length === 0) ? (
+                            <GalleryEmptyState isLoading={isLoading} hasImages={images.length > 0} />
                         ) : (
-                            <>
-                                {isMobile ? (
-                                    <div className={cn("grid gap-4 pb-4", getGridClasses(gridSize))}>
-                                        {paginatedImages.map((image: GeneratedImage) => (
-                                            <ImageCard
-                                                key={image.id}
-                                                image={image}
-                                                isSelected={selectedImages.includes(image.url)}
-                                                isSelectionMode={isSelectionMode}
-                                                onSelect={(e) => e ? handleImageSelectWithModifiers(image.url, e) : handleImageSelect(image.url)}
-                                                onZoom={() => setFullscreenImage(image)}
-                                                onCopy={() => handleCopyImage(image.url)}
-                                                onDownload={() => handleDownloadImage(image.url)}
-                                                onDelete={() => handleDeleteImage(image.url)}
-                                                onSendTo={currentTab ? (target) => handleSendTo(image.url, target) : undefined}
-                                                onSetReference={async () => {
-                                                    const newRef = await showReferenceNamePrompt()
-                                                    if (newRef) {
-                                                        await updateImageReference(image.id, newRef)
-                                                    }
-                                                }}
-                                                onEditReference={async () => {
-                                                    const newRef = await showReferenceNamePrompt(image.reference)
-                                                    if (newRef !== null) {
-                                                        await updateImageReference(image.id, newRef)
-                                                        toast({
-                                                            title: newRef ? "Reference Updated" : "Reference Cleared",
-                                                            description: newRef ? `Image tagged as ${newRef}` : "Reference tag removed"
-                                                        })
-                                                    }
-                                                }}
-                                                onAddToLibrary={() => {
-                                                    if (onSendToLibrary) {
-                                                        onSendToLibrary(image.url, image.id)
-                                                    }
-                                                }}
-                                                onMoveToFolder={(folderId) => handleMoveToFolder(image.id, folderId)}
-                                                onExtractFrames={isGridImage(image) ? () => handleExtractFrames(image.url) : undefined}
-                                                onExtractFramesToGallery={isGridImage(image) ? () => handleExtractFramesToGallery(image.url, image.id) : undefined}
-                                                onRemoveBackground={() => handleRemoveBackground(image)}
-                                                isRemovingBackground={removingBackgroundId === image.id}
-                                                currentFolderId={image.folderId}
-                                                folders={folders}
-                                                showActions={true}
-                                                useNativeAspectRatio={useNativeAspectRatio}
-                                                gridSize={gridSize}
-                                                onRetry={() => handleRetryGeneration(image)}
-                                                onShare={() => handleShare(image)}
-                                            />
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <ScrollArea className="flex-1">
-                                        <div className={cn("grid gap-4", getGridClasses(gridSize))}>
-                                            {paginatedImages.map((image: GeneratedImage) => (
-                                                <ImageCard
-                                                    key={image.id}
-                                                    image={image}
-                                                    isSelected={selectedImages.includes(image.url)}
-                                                    isSelectionMode={isSelectionMode}
-                                                    onSelect={(e) => e ? handleImageSelectWithModifiers(image.url, e) : handleImageSelect(image.url)}
-                                                    onZoom={() => setFullscreenImage(image)}
-                                                    onCopy={() => handleCopyImage(image.url)}
-                                                    onDownload={() => handleDownloadImage(image.url)}
-                                                    onDelete={() => handleDeleteImage(image.url)}
-                                                    onSendTo={currentTab ? (target) => handleSendTo(image.url, target) : undefined}
-                                                    onSetReference={async () => {
-                                                        const newRef = await showReferenceNamePrompt()
-                                                        if (newRef) {
-                                                            await updateImageReference(image.id, newRef)
-                                                        }
-                                                    }}
-                                                    onEditReference={async () => {
-                                                        const newRef = await showReferenceNamePrompt(image.reference)
-                                                        if (newRef !== null) {
-                                                            await updateImageReference(image.id, newRef)
-                                                            toast({
-                                                                title: newRef ? "Reference Updated" : "Reference Cleared",
-                                                                description: newRef ? `Image tagged as ${newRef}` : "Reference tag removed"
-                                                            })
-                                                        }
-                                                    }}
-                                                    onAddToLibrary={() => {
-                                                        if (onSendToLibrary) {
-                                                            onSendToLibrary(image.url, image.id)
-                                                        }
-                                                    }}
-                                                    onMoveToFolder={(folderId) => handleMoveToFolder(image.id, folderId)}
-                                                    onExtractFrames={isGridImage(image) ? () => handleExtractFrames(image.url) : undefined}
-                                                    onExtractFramesToGallery={isGridImage(image) ? () => handleExtractFramesToGallery(image.url, image.id) : undefined}
-                                                    onRemoveBackground={() => handleRemoveBackground(image)}
-                                                    isRemovingBackground={removingBackgroundId === image.id}
-                                                    currentFolderId={image.folderId}
-                                                    folders={folders}
-                                                    showActions={true}
-                                                    useNativeAspectRatio={useNativeAspectRatio}
-                                                    gridSize={gridSize}
-                                                    onRetry={() => handleRetryGeneration(image)}
-                                                />
-                                            ))}
-                                        </div>
-                                    </ScrollArea>
-                                )}
-
-                                {hasMore && (
-                                    <div className="flex justify-center py-8">
-                                        <LoadMoreButton
-                                            onClick={() => loadMoreImages()}
-                                            loading={isLoadingMore}
-                                            hasMore={hasMore}
-                                        />
-                                    </div>
-                                )}
-
-                                {!hasMore && images.length > 0 && (
-                                    <div className="text-center py-8">
-                                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 border border-border/50 text-muted-foreground text-sm">
-                                            <span className="text-emerald-400">✓</span>
-                                            All {images.length} images loaded
-                                        </div>
-                                    </div>
-                                )}
-                            </>
+                            <GalleryGrid
+                                images={images}
+                                paginatedImages={paginatedImages}
+                                selectedImages={selectedImages}
+                                isSelectionMode={isSelectionMode}
+                                isMobile={isMobile}
+                                gridSize={gridSize}
+                                useNativeAspectRatio={useNativeAspectRatio}
+                                folders={folders}
+                                hasMore={hasMore}
+                                isLoadingMore={isLoadingMore}
+                                onLoadMore={() => loadMoreImages()}
+                                callbacks={gridCallbacks}
+                            />
                         )}
                     </CardContent>
 

@@ -9,6 +9,8 @@ import { persist } from 'zustand/middleware'
 export interface LoraItem {
     id: string
     name: string
+    type?: 'character' | 'style'      // Default 'style' for existing LoRAs
+    referenceTag?: string              // e.g. 'nava', 'pixar' - used as @tag in prompts
     triggerWord: string
     weightsUrl: string       // Supabase Storage public URL
     thumbnailUrl?: string
@@ -28,6 +30,11 @@ interface LoraStore {
     updateLora: (id: string, updates: Partial<Omit<LoraItem, 'id' | 'createdAt'>>) => void
     setActiveLora: (id: string | null) => void
 
+    // Community actions
+    addFromCommunity: (loraId: string) => void
+    removeFromCollection: (loraId: string) => void
+    isInCollection: (loraId: string) => boolean
+
     // Computed
     getActiveLora: () => LoraItem | null
 }
@@ -36,6 +43,8 @@ const BUILT_IN_LORAS: LoraItem[] = [
     {
         id: 'nava-style',
         name: 'Nava',
+        type: 'style',
+        referenceTag: 'nava',
         triggerWord: 'in the style of nava',
         weightsUrl: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/loras/nava-style/nava_lora_weights.safetensors',
         thumbnailUrl: '/images/lora/nava-style.png',
@@ -43,9 +52,38 @@ const BUILT_IN_LORAS: LoraItem[] = [
         defaultLoraScale: 1.3,
         createdAt: 0,
     },
-{
+    {
         id: 'pixar-style',
         name: 'Pixar',
+        type: 'style',
+        referenceTag: 'pixar',
+        triggerWord: 'DisneyIZT,,',
+        weightsUrl: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/loras/pixar-style/pixar_disney_lora_weights.safetensors',
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 1.0,
+        createdAt: 0,
+    },
+]
+
+/** All available LoRAs users can browse in the community tab */
+export const COMMUNITY_LORAS: LoraItem[] = [
+    {
+        id: 'nava-style',
+        name: 'Nava',
+        type: 'style',
+        referenceTag: 'nava',
+        triggerWord: 'in the style of nava',
+        weightsUrl: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/loras/nava-style/nava_lora_weights.safetensors',
+        thumbnailUrl: '/images/lora/nava-style.png',
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 1.3,
+        createdAt: 0,
+    },
+    {
+        id: 'pixar-style',
+        name: 'Pixar',
+        type: 'style',
+        referenceTag: 'pixar',
         triggerWord: 'DisneyIZT,,',
         weightsUrl: 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/loras/pixar-style/pixar_disney_lora_weights.safetensors',
         defaultGuidanceScale: 1.0,
@@ -92,6 +130,28 @@ export const useLoraStore = create<LoraStore>()(
                 set({ activeLoraId: id })
             },
 
+            addFromCommunity: (loraId) => {
+                const community = COMMUNITY_LORAS.find((l) => l.id === loraId)
+                if (!community) return
+                const { loras } = get()
+                if (loras.some((l) => l.id === loraId)) return
+                set((state) => ({
+                    loras: [...state.loras, { ...community }],
+                }))
+            },
+
+            removeFromCollection: (loraId) => {
+                set((state) => ({
+                    loras: state.loras.filter((l) => l.id !== loraId),
+                    activeLoraId: state.activeLoraId === loraId ? null : state.activeLoraId,
+                }))
+            },
+
+            isInCollection: (loraId) => {
+                const { loras } = get()
+                return loras.some((l) => l.id === loraId)
+            },
+
             getActiveLora: () => {
                 const { loras, activeLoraId } = get()
                 if (!activeLoraId) return null
@@ -100,7 +160,7 @@ export const useLoraStore = create<LoraStore>()(
         }),
         {
             name: 'directors-palette-lora-store',
-            version: 5,
+            version: 6,
             migrate: (persisted: unknown) => {
                 const state = persisted as Record<string, unknown>
                 const loras = (state?.loras as LoraItem[]) || []
@@ -115,6 +175,8 @@ export const useLoraStore = create<LoraStore>()(
                     } else {
                         existing.defaultLoraScale = builtIn.defaultLoraScale
                         existing.defaultGuidanceScale = builtIn.defaultGuidanceScale
+                        existing.type = builtIn.type
+                        existing.referenceTag = builtIn.referenceTag
                     }
                 }
                 return { ...state, loras: filtered }

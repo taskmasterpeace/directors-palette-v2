@@ -8,14 +8,15 @@
  * After transcription, automatically detects song sections using LLM.
  */
 
-import { useState } from 'react'
-import { FileText, Sparkles, Music, Layers } from 'lucide-react'
+import { useState, useCallback } from 'react'
+import { FileText, Sparkles, Music, Layers, Gauge } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import { useMusicLabStore } from '../store/music-lab.store'
 import { logger } from '@/lib/logger'
 
@@ -29,6 +30,14 @@ export function LyricsEditor({ onAnalyze, showTranscribeButton = true }: LyricsE
     const [isTranscribing, setIsTranscribing] = useState(false)
     const [isAnalyzing, setIsAnalyzing] = useState(false)
     const [status, setStatus] = useState('')
+    const [manualBpm, setManualBpm] = useState<number>(project.songAnalysis?.structure?.bpm || 120)
+
+    const handleBpmChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = parseInt(e.target.value, 10)
+        if (!isNaN(value) && value > 0 && value <= 300) {
+            setManualBpm(value)
+        }
+    }, [])
 
     const lyrics = project.manualLyrics || project.songAnalysis?.transcription?.fullText || ''
     const useVocalIsolation = project.useVocalIsolation ?? false
@@ -102,9 +111,7 @@ export function LyricsEditor({ onAnalyze, showTranscribeButton = true }: LyricsE
                         words: transcriptionData.words || []
                     },
                     structure: {
-                        // TODO: Implement BPM detection using audio-analysis.service.ts
-                        // Currently defaults to 120 BPM - affects timeline calculations
-                        bpm: 120,
+                        bpm: manualBpm,
                         sections: [],
                         beats: []
                     },
@@ -154,8 +161,7 @@ export function LyricsEditor({ onAnalyze, showTranscribeButton = true }: LyricsE
                 setSongAnalysis({
                     transcription: { fullText: lyrics, words: [] },
                     structure: {
-                        // TODO: Implement BPM detection using audio-analysis.service.ts
-                        bpm: 120,
+                        bpm: manualBpm,
                         sections: [],
                         beats: []
                     },
@@ -256,6 +262,30 @@ export function LyricsEditor({ onAnalyze, showTranscribeButton = true }: LyricsE
                         />
                     </div>
                 )}
+
+                {/* BPM Input */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                    <div className="flex items-center gap-2">
+                        <Gauge className="w-4 h-4 text-muted-foreground" />
+                        <div>
+                            <Label htmlFor="bpm-input" className="text-sm font-medium cursor-pointer">
+                                BPM (Tempo)
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                                Used for timeline calculations
+                            </p>
+                        </div>
+                    </div>
+                    <Input
+                        id="bpm-input"
+                        type="number"
+                        min={1}
+                        max={300}
+                        value={manualBpm}
+                        onChange={handleBpmChange}
+                        className="w-20 text-center"
+                    />
+                </div>
 
                 <Textarea
                     value={lyrics}

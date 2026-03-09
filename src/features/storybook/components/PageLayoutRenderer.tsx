@@ -11,9 +11,8 @@
  */
 
 import Image from 'next/image'
-// TODO: Re-enable zoom after fixing npm install issue
-// import Zoom from 'react-medium-image-zoom'
-// import 'react-medium-image-zoom/dist/styles.css'
+import Zoom from 'react-medium-image-zoom'
+import 'react-medium-image-zoom/dist/styles.css'
 import { cn } from '@/utils/utils'
 import { PageLayout, TextPosition, TextBoxPosition } from '../types/storybook.types'
 import { sanitizeHtml } from '@/lib/sanitize'
@@ -66,13 +65,15 @@ export function PageLayoutRenderer({
         <div className={cn('relative w-full h-full bg-white overflow-hidden', className)}>
           {/* Background Image */}
           {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt="Page illustration"
-              fill
-              className="object-contain"
-              priority
-            />
+            <Zoom>
+              <Image
+                src={imageUrl}
+                alt="Page illustration"
+                fill
+                className="object-contain"
+                priority
+              />
+            </Zoom>
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-zinc-100 to-zinc-200" />
           )}
@@ -118,13 +119,15 @@ export function PageLayoutRenderer({
       return (
         <div className={cn('relative w-full h-full bg-white overflow-hidden', className)}>
           {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt="Page illustration"
-              fill
-              className="object-contain"
-              priority
-            />
+            <Zoom>
+              <Image
+                src={imageUrl}
+                alt="Page illustration"
+                fill
+                className="object-contain"
+                priority
+              />
+            </Zoom>
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-zinc-100 to-zinc-200 flex items-center justify-center">
               <span className="text-zinc-400 text-sm">No image</span>

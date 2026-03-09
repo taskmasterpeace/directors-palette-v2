@@ -1,27 +1,13 @@
 'use client'
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
-import { Upload, ImageIcon, Search, Play, VideoIcon, PanelRightClose, PanelRightOpen } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { CompactShotCard } from './CompactShotCard'
+import { AnimatorControls } from './AnimatorControls'
+import { AnimatorPreview } from './AnimatorPreview'
+import { AnimatorSettings } from './AnimatorSettings'
 import { ReferenceImagesModal } from './ReferenceImagesModal'
 import { LastFrameModal } from './LastFrameModal'
-import { ModelSettingsModal } from './ModelSettingsModal'
 import { GallerySelectModal } from './GallerySelectModal'
-import { AnimatorUnifiedGallery } from './AnimatorUnifiedGallery'
+import VideoPreviewsModal from "./VideoPreviewsModal"
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useVideoGeneration } from '../hooks/useVideoGeneration'
 import { useVideoPolling } from '../hooks/useVideoPolling'
@@ -32,27 +18,14 @@ import { getClient } from '@/lib/db/client'
 import {
   AnimationModel,
   ShotAnimationConfig,
-  AnimatorSettings,
+  AnimatorSettings as AnimatorSettingsType,
 } from '../types'
 import {
   ANIMATION_MODELS,
   DEFAULT_MODEL_SETTINGS,
-  ACTIVE_VIDEO_MODELS,
-  MODEL_TIER_LABELS,
 } from '../config/models.config'
 import { VIDEO_MODEL_PRICING } from '../types'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
 import { toast } from '@/hooks/use-toast'
-import VideoPreviewsModal from "./VideoPreviewsModal"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { useIsMobile } from '@/hooks/use-mobile'
 import { ALLOWED_IMAGE_TYPES, GALLERY_IMAGE_MIME_TYPE, GalleryImageDragPayload } from '../constants/drag-drop.constants'
 import { logger } from '@/lib/logger'
 
@@ -89,7 +62,6 @@ export function ShotAnimatorView() {
 
   // Shot Animator Store
   const { shotConfigs, setShotConfigs, addShotConfigs, updateShotConfig, removeShotConfig } = useShotAnimatorStore()
-  const isMobile = useIsMobile()
   const [mobileGalleryOpen, setMobileGalleryOpen] = useState(false)
 
   // State — restore last-used model from settings, default to seedance-1.5-pro
@@ -114,11 +86,10 @@ export function ShotAnimatorView() {
   }
 
   // Get model settings from settings store, merging with defaults per-model
-  // so new models or new fields added after a user's settings were saved still work
   const modelSettings = useMemo(() => {
-    const saved = shotAnimator.modelSettings as Partial<AnimatorSettings> | undefined
+    const saved = shotAnimator.modelSettings as Partial<AnimatorSettingsType> | undefined
     if (!saved) return DEFAULT_MODEL_SETTINGS
-    const merged = { ...DEFAULT_MODEL_SETTINGS } as AnimatorSettings
+    const merged = { ...DEFAULT_MODEL_SETTINGS } as AnimatorSettingsType
     for (const key of Object.keys(merged) as AnimationModel[]) {
       if (saved[key]) {
         merged[key] = { ...merged[key], ...saved[key] }
@@ -136,9 +107,7 @@ export function ShotAnimatorView() {
 
   // Drag-and-drop state
   const [isDragOver, setIsDragOver] = useState(false)
-  const [isToolbarDragOver, setIsToolbarDragOver] = useState(false)
   const dragCounterRef = useRef(0)
-  const toolbarDragCounterRef = useRef(0)
 
   // Gallery panel state
   const [galleryCollapsed, setGalleryCollapsed] = useState(false)
@@ -187,16 +156,13 @@ export function ShotAnimatorView() {
     const settings = modelSettings[selectedModel]
     const pricing = VIDEO_MODEL_PRICING[selectedModel]
 
-    // Guard against undefined settings or pricing
     if (!settings || !pricing) return 0
 
     const pricePerUnit = pricing[settings.resolution] ?? pricing['720p'] ?? 0
 
     if (currentModelConfig.pricingType === 'per-video') {
-      // Per-video models: fixed cost per video
       return selectedCount * pricePerUnit
     } else {
-      // Per-second models: cost based on duration
       return selectedCount * pricePerUnit * (settings.duration ?? 5)
     }
   }, [selectedCount, selectedModel, modelSettings, currentModelConfig.pricingType])
@@ -243,10 +209,8 @@ export function ShotAnimatorView() {
           (payload) => {
             const updatedRecord = payload.new as { id: string; public_url?: string; metadata?: Record<string, unknown> }
 
-            // Only process if this ID is in our tracking list
             if (!galleryIdsSet.has(updatedRecord.id)) return
 
-            // Use ref to read current shotConfigs to avoid stale closures
             const currentConfigs = shotConfigsRef.current
             const updatedConfigs = currentConfigs.map(config => {
               const updatedVideos = config.generatedVideos?.map(video => {
@@ -288,9 +252,7 @@ export function ShotAnimatorView() {
     }
   }, [processingGalleryIdsKey, user, setShotConfigs])
 
-  // Polling fallback -- if the real-time subscription misses an update,
-  // periodically check processing videos via direct DB query.
-  // See useVideoPolling for implementation details.
+  // Polling fallback
   useVideoPolling({
     shotConfigs,
     setShotConfigs,
@@ -300,11 +262,9 @@ export function ShotAnimatorView() {
   // Clear last frame images when switching to a model that doesn't support it
   useEffect(() => {
     if (!currentModelConfig.supportsLastFrame) {
-      // Check if any shots have last frame images
       const shotsWithLastFrame = shotConfigs.filter(shot => shot.lastFrameImage)
 
       if (shotsWithLastFrame.length > 0) {
-        // Clear last frame from all shots
         const updatedConfigs = shotConfigs.map(shot => ({
           ...shot,
           lastFrameImage: undefined
@@ -317,7 +277,7 @@ export function ShotAnimatorView() {
         })
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- Only trigger on model change, not on state updates
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Only trigger on model change
   }, [selectedModel, currentModelConfig.supportsLastFrame, currentModelConfig.displayName])
 
   // Reset aspect ratio when switching to a model that doesn't support the current ratio
@@ -328,7 +288,6 @@ export function ShotAnimatorView() {
     const currentAspectRatio = currentSettings.aspectRatio
     const supportedRatios = currentModelConfig.supportedAspectRatios
 
-    // If current aspect ratio is not supported by the new model, reset to first supported
     if (supportedRatios && !supportedRatios.includes(currentAspectRatio)) {
       const newRatio = supportedRatios[0] || '16:9'
       updateShotAnimatorSettings({
@@ -346,13 +305,13 @@ export function ShotAnimatorView() {
         description: `${currentModelConfig.displayName} doesn't support ${currentAspectRatio}. Changed to ${newRatio}.`,
       })
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- Only trigger on model change, not on state updates
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Only trigger on model change
   }, [selectedModel, currentModelConfig.displayName, currentModelConfig.supportedAspectRatios])
 
   // Transform gallery images for the modal
   const transformedGalleryImages = useMemo(() => {
     return galleryImages
-      .filter((item) => item.public_url) // Only images with URLs
+      .filter((item) => item.public_url)
       .map((item) => {
         const metadata = (item.metadata as Record<string, unknown>) || {}
         const originalPrompt = (metadata.prompt as string) || ''
@@ -361,8 +320,8 @@ export function ShotAnimatorView() {
           id: item.id,
           url: item.public_url!,
           name: originalPrompt || `Image ${item.id.slice(0, 8)}`,
-          originalPrompt, // Store for animation prompt generation
-          imageModel, // Image generation model (e.g. 'nano-banana-pro')
+          originalPrompt,
+          imageModel,
           createdAt: new Date(item.created_at),
         }
       })
@@ -376,57 +335,20 @@ export function ShotAnimatorView() {
       imageName: img.name,
       imageModel: img.imageModel,
       prompt: "",
-      originalPrompt: img.originalPrompt, // Store for AI animation prompt generation
+      originalPrompt: img.originalPrompt,
       referenceImages: [],
       includeInBatch: true,
-      generatedVideos: [] // Initialize empty array
+      generatedVideos: []
     }))
     addShotConfigs(newConfigs)
   }
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
-
-    const validFiles: File[] = []
-    const rejectedFiles: string[] = []
-
-    Array.from(files).forEach((file) => {
-      if (ALLOWED_IMAGE_TYPES.includes(file.type)) {
-        validFiles.push(file)
-      } else {
-        rejectedFiles.push(file.name)
-      }
-    })
-
-    if (rejectedFiles.length > 0) {
-      toast({
-        title: 'Unsupported File Type',
-        description: `Only JPEG, PNG, and WebP images are supported. Rejected: ${rejectedFiles.join(', ')}`,
-        variant: 'destructive',
-      })
-    }
-
-    if (validFiles.length === 0) {
-      e.target.value = ""
-      return
-    }
-
-    const newConfigs = await filesToShotConfigs(validFiles)
-    addShotConfigs(newConfigs)
-    e.target.value = ""
-  }
-
   // Drag-and-drop: React event handlers on the drop zone div
-  // Card-level handlers call stopPropagation() so these only fire for empty-area drops
-  const dropZoneRef = useRef<HTMLDivElement>(null)
-
   const handleZoneDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     dragCounterRef.current++
     if (dragCounterRef.current === 1) {
       setIsDragOver(true)
-
     }
   }, [])
 
@@ -441,7 +363,6 @@ export function ShotAnimatorView() {
     if (dragCounterRef.current <= 0) {
       dragCounterRef.current = 0
       setIsDragOver(false)
-
     }
   }, [])
 
@@ -449,7 +370,6 @@ export function ShotAnimatorView() {
     e.preventDefault()
     dragCounterRef.current = 0
     setIsDragOver(false)
-    // Check for gallery image drag data first
     const galleryData = e.dataTransfer?.getData(GALLERY_IMAGE_MIME_TYPE)
     if (galleryData) {
       try {
@@ -478,63 +398,6 @@ export function ShotAnimatorView() {
     )
     if (validFiles.length === 0) return
 
-    const newConfigs = await filesToShotConfigs(validFiles)
-    addShotConfigs(newConfigs)
-  }, [addShotConfigs])
-
-  // Toolbar drop zone - always creates new cards
-  const handleToolbarDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    toolbarDragCounterRef.current++
-    if (toolbarDragCounterRef.current === 1) setIsToolbarDragOver(true)
-  }, [])
-
-  const handleToolbarDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    e.dataTransfer.dropEffect = 'copy'
-  }, [])
-
-  const handleToolbarDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    toolbarDragCounterRef.current--
-    if (toolbarDragCounterRef.current <= 0) {
-      toolbarDragCounterRef.current = 0
-      setIsToolbarDragOver(false)
-    }
-  }, [])
-
-  const handleToolbarDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    toolbarDragCounterRef.current = 0
-    setIsToolbarDragOver(false)
-
-    const galleryData = e.dataTransfer?.getData(GALLERY_IMAGE_MIME_TYPE)
-    if (galleryData) {
-      try {
-        const parsed = JSON.parse(galleryData) as GalleryImageDragPayload
-        addShotConfigs([{
-          id: `shot-${Date.now()}-${Math.random()}`,
-          imageUrl: parsed.url,
-          imageName: parsed.name,
-          imageModel: parsed.imageModel,
-          prompt: '',
-          originalPrompt: parsed.originalPrompt,
-          referenceImages: [],
-          includeInBatch: true,
-          generatedVideos: [],
-        }])
-      } catch { /* ignore */ }
-      return
-    }
-
-    const files = e.dataTransfer?.files
-    if (!files || files.length === 0) return
-    const validFiles = Array.from(files).filter((f) => ALLOWED_IMAGE_TYPES.includes(f.type))
-    if (validFiles.length === 0) return
     const newConfigs = await filesToShotConfigs(validFiles)
     addShotConfigs(newConfigs)
   }, [addShotConfigs])
@@ -570,7 +433,6 @@ export function ShotAnimatorView() {
       modelSettings[selectedModel]
     )
 
-    // Append new videos to generatedVideos array
     if (results && results.length > 0) {
       const updatedConfigs = shotConfigs.map((config) => {
         const result = results.find((r) => r.shotId === config.id)
@@ -584,7 +446,7 @@ export function ShotAnimatorView() {
           return {
             ...config,
             generatedVideos: [...(config.generatedVideos || []), newVideo],
-            includeInBatch: false // Uncheck after submission
+            includeInBatch: false
           }
         }
         return config
@@ -592,7 +454,6 @@ export function ShotAnimatorView() {
       setShotConfigs(updatedConfigs)
     }
 
-    // Log results for debugging
     logger.shotCreator.info('Generation results', { results: results })
   }
 
@@ -602,7 +463,6 @@ export function ShotAnimatorView() {
       return
     }
 
-    // Cost confirmation for expensive batches (>100 pts)
     if (estimatedCost > 100) {
       setShowCostConfirm(true)
       return
@@ -637,7 +497,7 @@ export function ShotAnimatorView() {
     document.body.removeChild(a)
   }
 
-  const handleSaveModelSettings = async (newSettings: AnimatorSettings) => {
+  const handleSaveModelSettings = async (newSettings: AnimatorSettingsType) => {
     await updateShotAnimatorSettings({ modelSettings: newSettings })
   }
 
@@ -647,7 +507,6 @@ export function ShotAnimatorView() {
       return
     }
 
-    // Find the shot config
     const shotConfig = shotConfigs.find((c) => c.id === shotConfigId)
     if (!shotConfig) {
       logger.shotCreator.error('Shot config not found')
@@ -659,11 +518,7 @@ export function ShotAnimatorView() {
       if (config.id === shotConfigId) {
         const updatedVideos = config.generatedVideos?.map((video) => {
           if (video.galleryId === galleryId) {
-            return {
-              ...video,
-              status: 'processing' as const,
-              error: undefined
-            }
+            return { ...video, status: 'processing' as const, error: undefined }
           }
           return video
         })
@@ -673,25 +528,18 @@ export function ShotAnimatorView() {
     })
     setShotConfigs(updatedConfigs)
 
-    // Retry the video generation
     const result = await retrySingleVideo(
       shotConfig,
       selectedModel,
       modelSettings[selectedModel]
     )
 
-    // Update the generatedVideos array with new galleryId if successful
     if (result.success && result.galleryId) {
       const finalConfigs = shotConfigs.map((config) => {
         if (config.id === shotConfigId) {
           const updatedVideos = config.generatedVideos?.map((video) => {
             if (video.galleryId === galleryId) {
-              return {
-                ...video,
-                galleryId: result.galleryId!,
-                status: 'processing' as const,
-                error: undefined
-              }
+              return { ...video, galleryId: result.galleryId!, status: 'processing' as const, error: undefined }
             }
             return video
           })
@@ -701,16 +549,11 @@ export function ShotAnimatorView() {
       })
       setShotConfigs(finalConfigs)
     } else if (!result.success) {
-      // If retry failed, update status back to failed with error
       const failedConfigs = shotConfigs.map((config) => {
         if (config.id === shotConfigId) {
           const updatedVideos = config.generatedVideos?.map((video) => {
             if (video.galleryId === galleryId) {
-              return {
-                ...video,
-                status: 'failed' as const,
-                error: result.error || 'Retry failed'
-              }
+              return { ...video, status: 'failed' as const, error: result.error || 'Retry failed' }
             }
             return video
           })
@@ -727,374 +570,64 @@ export function ShotAnimatorView() {
 
   return (
     <div className="w-full h-full flex flex-col bg-background">
-      {/* Top Toolbar - entire area is a drop zone for creating new cards */}
-      <div
-        className={`border-b border-border bg-background/50 transition-colors ${isToolbarDragOver ? 'bg-primary/20 ring-2 ring-primary ring-inset' : ''}`}
-        onDragEnter={handleToolbarDragEnter}
-        onDragOver={handleToolbarDragOver}
-        onDragLeave={handleToolbarDragLeave}
-        onDrop={handleToolbarDrop}
-      >
-        {/* MOBILE: Compact single-row toolbar */}
-        <div className="flex sm:hidden items-center gap-2 px-2 py-2" onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }}>
-          {/* Model selector - compact */}
-          <Select
-            value={selectedModel}
-            onValueChange={(value) => handleModelChange(value as AnimationModel)}
-          >
-            <SelectTrigger className="h-10 w-28 flex-shrink-0 bg-card border-border text-white text-xs">
-              <SelectValue placeholder="Model" />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-border">
-              {ACTIVE_VIDEO_MODELS.map((modelId) => {
-                const config = ANIMATION_MODELS[modelId]
-                const tierLabel = MODEL_TIER_LABELS[modelId]
-                return (
-                  <SelectItem key={modelId} value={modelId} className="cursor-pointer text-sm">
-                    <div className="flex items-center gap-1">
-                      <span>{config.displayName}</span>
-                      <Badge variant="outline" className="text-[9px] px-1 py-0">{tierLabel}</Badge>
-                    </div>
-                  </SelectItem>
-                )
-              })}
-            </SelectContent>
-          </Select>
-
-          {/* Action buttons - horizontal scroll */}
-          <div className="flex gap-1.5 flex-shrink-0 overflow-x-auto">
-            {/* Upload */}
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              className="h-10 w-10 flex-shrink-0 border-border text-white hover:bg-card"
-              onClick={() => document.getElementById("file-upload-toolbar")?.click()}
-            >
-              <Upload className="w-4 h-4" />
-            </Button>
-
-            {/* Video Gallery */}
-            <Button
-              size="icon"
-              onClick={() => setIsVideoModalOpen(true)}
-              className="h-10 w-10 flex-shrink-0 bg-secondary hover:bg-muted"
-            >
-              <VideoIcon className="w-4 h-4" />
-            </Button>
-
-            {/* Image Gallery */}
-            <Button
-              size="icon"
-              onClick={() => setIsGalleryModalOpen(true)}
-              className="h-10 w-10 flex-shrink-0 bg-secondary hover:bg-muted"
-            >
-              <ImageIcon className="w-4 h-4" />
-            </Button>
-
-            {/* Settings - Mobile compact */}
-            <ModelSettingsModal settings={modelSettings} onSave={handleSaveModelSettings} selectedModel={selectedModel} />
-          </div>
-
-          {/* Selected count badge */}
-          {selectedCount > 0 && (
-            <Badge variant="secondary" className="ml-auto text-xs flex-shrink-0">
-              {selectedCount} sel
-            </Badge>
-          )}
-        </div>
-
-        {/* DESKTOP: Full toolbar — onDragOver preventDefault on inner wrappers ensures file drops work */}
-        <div className="hidden sm:block" onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy' }}>
-          {/* Model Selection & Settings */}
-          <div className="px-4 py-2 flex flex-col gap-3">
-            {/* Model Selection */}
-            <div className="flex flex-row gap-2 items-center">
-              <Label className="text-muted-foreground text-sm whitespace-nowrap">Model:</Label>
-              <Select
-                value={selectedModel}
-                onValueChange={(value) => handleModelChange(value as AnimationModel)}
-              >
-                <SelectTrigger className="w-[320px] h-10 bg-card border-border text-white">
-                  <SelectValue placeholder="Select a model" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border">
-                  {ACTIVE_VIDEO_MODELS.map((modelId) => {
-                    const config = ANIMATION_MODELS[modelId]
-                    const pricing = VIDEO_MODEL_PRICING[modelId]
-                    const tierLabel = MODEL_TIER_LABELS[modelId]
-                    const priceDisplay = config.pricingType === 'per-video'
-                      ? `${pricing['720p']} pts/video`
-                      : `${pricing['720p']} pts/sec`
-
-                    return (
-                      <SelectItem key={modelId} value={modelId} className="cursor-pointer">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{config.displayName}</span>
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                            {tierLabel}
-                          </Badge>
-                          <span className="text-muted-foreground text-xs">
-                            {priceDisplay}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    )
-                  })}
-                </SelectContent>
-              </Select>
-              {/* Model Info Badge */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {currentModelConfig.supportsLastFrame && (
-                  <Badge variant="secondary" className="text-[10px]">Last Frame</Badge>
-                )}
-                {currentModelConfig.maxReferenceImages > 0 && (
-                  <Badge variant="secondary" className="text-[10px]">Ref Images</Badge>
-                )}
-                <Badge variant="outline" className="text-[10px]">
-                  Max {currentModelConfig.maxDuration}s
-                </Badge>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-row items-center justify-between">
-              {/* Search */}
-              <div className="relative w-auto">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                <Input
-                  placeholder="Search images..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 h-8 w-48 bg-card border-border text-white text-sm"
-                />
-              </div>
-
-              {/* Button Group */}
-              <div className="flex items-center gap-2">
-                {/* Upload */}
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="h-8 border-border text-white hover:bg-card"
-                  onClick={() => document.getElementById("file-upload-toolbar")?.click()}
-                >
-                  <Upload className="w-4 h-4 mr-1" />
-                  Upload
-                </Button>
-
-                {/* Video Gallery */}
-                <Button
-                  onClick={() => setIsVideoModalOpen(true)}
-                  size="sm"
-                  className="h-8 bg-secondary hover:bg-muted"
-                >
-                  <VideoIcon className="w-4 h-4 mr-1" />
-                  Video
-                </Button>
-
-                {/* Image Gallery */}
-                <Button
-                  onClick={() => setIsGalleryModalOpen(true)}
-                  size="sm"
-                  className="h-8 bg-secondary hover:bg-muted"
-                >
-                  <ImageIcon className="w-4 h-4 mr-1" />
-                  Gallery
-                </Button>
-
-                {/* Settings */}
-                <ModelSettingsModal settings={modelSettings} onSave={handleSaveModelSettings} selectedModel={selectedModel} />
-              </div>
-            </div>
-          </div>
-
-          {/* Selection Controls - Desktop only */}
-          <div className="px-4 py-2 flex flex-row items-center justify-between border-t border-border/50">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSelectAll}
-                className="h-7 text-xs text-muted-foreground hover:text-white"
-              >
-                Select All
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleDeselectAll}
-                className="h-7 text-xs text-muted-foreground hover:text-white"
-              >
-                Deselect All
-              </Button>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="show-selected"
-                  checked={showOnlySelected}
-                  onCheckedChange={(checked) => setShowOnlySelected(checked as boolean)}
-                />
-                <Label htmlFor="show-selected" className="text-xs text-muted-foreground cursor-pointer whitespace-nowrap">
-                  Show only selected
-                </Label>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Hidden file input */}
-        <input
-          id="file-upload-toolbar"
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          multiple
-          onChange={handleFileUpload}
-          className="hidden"
-        />
-      </div>
+      {/* Top Toolbar */}
+      <AnimatorControls
+        selectedModel={selectedModel}
+        modelSettings={modelSettings}
+        selectedCount={selectedCount}
+        searchQuery={searchQuery}
+        showOnlySelected={showOnlySelected}
+        onModelChange={handleModelChange}
+        onSearchChange={setSearchQuery}
+        onShowOnlySelectedChange={setShowOnlySelected}
+        onSelectAll={handleSelectAll}
+        onDeselectAll={handleDeselectAll}
+        onSaveModelSettings={handleSaveModelSettings}
+        onOpenGalleryModal={() => setIsGalleryModalOpen(true)}
+        onOpenVideoModal={() => setIsVideoModalOpen(true)}
+        addShotConfigs={addShotConfigs}
+      />
 
       {/* Main Content - Two Column Layout */}
-      <div className={`flex-1 overflow-hidden grid grid-cols-1 ${galleryCollapsed ? '' : 'lg:grid-cols-[1fr_400px]'}`}>
-        {/* Left: Shots Grid — uses plain overflow div instead of ScrollArea to avoid Radix swallowing drag events */}
-        <div
-          ref={dropZoneRef}
-          className="overflow-y-auto relative"
-          onDragEnter={handleZoneDragEnter}
-          onDragOver={handleZoneDragOver}
-          onDragLeave={handleZoneDragLeave}
-          onDrop={handleZoneDrop}
-        >
-          {filteredShots.length === 0 ? (
-            <div
-              className={`flex flex-col items-center justify-center h-96 text-muted-foreground border-2 border-dashed rounded-lg m-4 transition-colors cursor-pointer hover:border-border hover:text-foreground ${isDragOver ? 'border-primary bg-primary/10' : 'border-border/50'}`}
-              onClick={() => document.getElementById('file-upload-toolbar')?.click()}
-            >
-              <Upload className="w-16 h-16 mb-4 opacity-50" />
-              <p className="font-medium">{isDragOver ? 'Drop images to add shots' : 'Click to upload images'}</p>
-              <p className="text-sm mt-2">or press Ctrl+V to paste from clipboard</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-4 border-border"
-                onClick={(e) => { e.stopPropagation(); setIsGalleryModalOpen(true) }}
-              >
-                <ImageIcon className="w-4 h-4 mr-1" />
-                Browse Gallery
-              </Button>
-            </div>
-          ) : (
-            <div className="p-2 sm:p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 pb-24 content-stretch">
-              {filteredShots.map((config) => (
-                <CompactShotCard
-                  key={config.id}
-                  config={config}
-                  maxReferenceImages={currentModelConfig.maxReferenceImages}
-                  supportsLastFrame={currentModelConfig.supportsLastFrame}
-                  selectedModel={selectedModel}
-                  currentModelSettings={modelSettings[selectedModel]}
-                  onUpdate={(updates) => handleUpdateShotConfig(config.id, updates)}
-                  onDelete={() => handleDeleteShot(config.id)}
-                  onManageReferences={() => setRefEditState({ isOpen: true, configId: config.id })}
-                  onManageLastFrame={() => setLastFrameEditState({ isOpen: true, configId: config.id })}
-                  onRetryVideo={(galleryId) => handleRetryVideo(config.id, galleryId)}
-                  onDropStartFrame={(imageUrl, imageName) => updateShotConfig(config.id, { imageUrl, imageName: imageName || config.imageName })}
-                  onDropLastFrame={(imageUrl) => updateShotConfig(config.id, { lastFrameImage: imageUrl })}
-                />
-              ))}
-              {/* Add new shot card — click opens file picker */}
-              <div
-                className="flex flex-col items-center justify-center min-h-[200px] border-2 border-dashed rounded-lg transition-colors cursor-pointer border-border/50 text-muted-foreground hover:border-primary hover:text-primary hover:bg-primary/5"
-                onClick={() => document.getElementById('file-upload-toolbar')?.click()}
-              >
-                <Upload className="w-8 h-8 mb-2 opacity-50" />
-                <p className="text-xs font-medium">Click to add images</p>
-                <p className="text-[10px] mt-1 opacity-60">or Ctrl+V to paste</p>
-              </div>
-            </div>
-          )}
-        </div>
+      <AnimatorPreview
+        filteredShots={filteredShots}
+        shotConfigs={shotConfigs}
+        selectedModel={selectedModel}
+        currentModelSettings={modelSettings[selectedModel]}
+        isDragOver={isDragOver}
+        galleryCollapsed={galleryCollapsed}
+        mobileGalleryOpen={mobileGalleryOpen}
+        onDragEnter={handleZoneDragEnter}
+        onDragOver={handleZoneDragOver}
+        onDragLeave={handleZoneDragLeave}
+        onDrop={handleZoneDrop}
+        onUpdateShotConfig={handleUpdateShotConfig}
+        onDeleteShot={handleDeleteShot}
+        onManageReferences={(configId) => setRefEditState({ isOpen: true, configId })}
+        onManageLastFrame={(configId) => setLastFrameEditState({ isOpen: true, configId })}
+        onRetryVideo={handleRetryVideo}
+        onDropStartFrame={(configId, imageUrl, imageName) => updateShotConfig(configId, { imageUrl, imageName: imageName || shotConfigs.find(c => c.id === configId)?.imageName || '' })}
+        onDropLastFrame={(configId, imageUrl) => updateShotConfig(configId, { lastFrameImage: imageUrl })}
+        onDeleteVideo={handleDeleteVideo}
+        onDownloadVideo={handleDownloadVideo}
+        onToggleGalleryCollapsed={() => setGalleryCollapsed(!galleryCollapsed)}
+        onSetMobileGalleryOpen={setMobileGalleryOpen}
+        onOpenGalleryModal={() => setIsGalleryModalOpen(true)}
+      />
 
-        {/* Right: Unified Gallery - Desktop */}
-        {!galleryCollapsed && (
-          <div className="hidden lg:block">
-            <AnimatorUnifiedGallery
-              shotConfigs={shotConfigs}
-              onDelete={handleDeleteVideo}
-              onDownload={handleDownloadVideo}
-            />
-          </div>
-        )}
-
-        {/* Gallery Toggle Button - Desktop */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="hidden lg:flex fixed right-2 top-1/2 -translate-y-1/2 z-30 h-8 w-8 rounded-full bg-card/80 backdrop-blur-sm border border-border shadow-md hover:bg-secondary"
-          onClick={() => setGalleryCollapsed(!galleryCollapsed)}
-          title={galleryCollapsed ? 'Show video gallery' : 'Hide video gallery'}
-        >
-          {galleryCollapsed ? (
-            <PanelRightOpen className="w-4 h-4" />
-          ) : (
-            <PanelRightClose className="w-4 h-4" />
-          )}
-        </Button>
-
-        {/* Mobile Gallery Button */}
-        {isMobile && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="fixed bottom-20 right-3 z-40 rounded-full h-10 px-3 bg-card/90 backdrop-blur-sm shadow-lg border-border"
-            onClick={() => setMobileGalleryOpen(true)}
-          >
-            <VideoIcon className="w-4 h-4 mr-1.5" />
-            Gallery
-          </Button>
-        )}
-
-        {/* Mobile Gallery Sheet */}
-        <Sheet open={mobileGalleryOpen} onOpenChange={setMobileGalleryOpen}>
-          <SheetContent side="bottom" className="h-[70vh] p-0">
-            <SheetHeader className="px-4 py-3 border-b">
-              <SheetTitle>Generated Videos</SheetTitle>
-            </SheetHeader>
-            <div className="flex-1 overflow-y-auto h-full">
-              <AnimatorUnifiedGallery
-                shotConfigs={shotConfigs}
-                onDelete={handleDeleteVideo}
-                onDownload={handleDownloadVideo}
-              />
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-
-      {/* Bottom Generate Bar */}
-      {selectedCount > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-3 sm:p-4 safe-bottom z-50">
-          <div className="max-w-7xl mx-auto flex items-center justify-center">
-            <Button
-              onClick={handleGenerateAll}
-              disabled={isGenerating || !user}
-              size="lg"
-              className="bg-primary hover:bg-primary/90 text-white px-6 sm:px-8 w-full sm:w-auto min-h-[48px] touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Play className="w-5 h-5 mr-2" />
-              <span className="text-sm sm:text-base">
-                {isGenerating
-                  ? generationPhase === 'uploading'
-                    ? 'Uploading images...'
-                    : generationPhase === 'submitting'
-                      ? 'Starting generation...'
-                      : 'Generating...'
-                  : `Generate ${selectedCount} Video${selectedCount > 1 ? 's' : ''} - ${estimatedCost} pts`}
-              </span>
-            </Button>
-          </div>
-        </div>
-      )}
+      {/* Bottom Generate Bar & Cost Confirmation */}
+      <AnimatorSettings
+        selectedCount={selectedCount}
+        estimatedCost={estimatedCost}
+        isGenerating={isGenerating}
+        generationPhase={generationPhase}
+        showCostConfirm={showCostConfirm}
+        selectedModel={selectedModel}
+        hasUser={!!user}
+        onGenerateAll={handleGenerateAll}
+        onConfirmGeneration={handleConfirmGeneration}
+        onCostConfirmChange={setShowCostConfirm}
+      />
 
       {/* Modals */}
       <GallerySelectModal
@@ -1103,11 +636,10 @@ export function ShotAnimatorView() {
         onSelect={handleGallerySelect}
         galleryImages={transformedGalleryImages}
         currentPage={currentPage}
-        totalPages={totalPages}        
+        totalPages={totalPages}
         onPageChange={loadPage}
       />
 
-      {/* Video Modal */}
       <VideoPreviewsModal isOpen={isVideoModalOpen} onClose={() => setIsVideoModalOpen(false)} />
 
       {currentRefEditConfig && (
@@ -1131,50 +663,6 @@ export function ShotAnimatorView() {
           startFrameUrl={currentLastFrameConfig.imageUrl}
         />
       )}
-
-      {/* Batch Cost Confirmation Dialog */}
-      <AlertDialog open={showCostConfirm} onOpenChange={setShowCostConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Batch Generation</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-3">
-                <p>You are about to generate a large batch of videos:</p>
-                <div className="rounded-md bg-muted p-3 space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Model</span>
-                    <span className="font-medium text-foreground">{currentModelConfig.displayName}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Videos</span>
-                    <span className="font-medium text-foreground">{selectedCount}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Cost per video</span>
-                    <span className="font-medium text-foreground">
-                      ~{selectedCount > 0 ? Math.round(estimatedCost / selectedCount) : 0} pts
-                    </span>
-                  </div>
-                  <div className="border-t border-border my-1" />
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground font-medium">Total estimated cost</span>
-                    <span className="font-bold text-foreground">{estimatedCost} pts</span>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  All {selectedCount} videos will begin generating immediately upon confirmation.
-                </p>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmGeneration}>
-              Generate {selectedCount} Videos
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }
