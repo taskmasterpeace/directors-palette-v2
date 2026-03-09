@@ -79,8 +79,8 @@ function LoraCard({ lora, isActive, isAdmin, isBuiltIn, isUsed, currentRating, o
                 ? 'border-cyan-500/50 bg-cyan-950/20'
                 : 'border-border bg-card/50 hover:border-border/80'
         )}>
+            {/* Top row: toggle, thumbnail, name, actions */}
             <div className="flex items-center gap-2 px-2 py-1.5">
-                {/* Toggle - moved to front for visibility */}
                 <Switch
                     checked={isActive}
                     onCheckedChange={handleToggle}
@@ -106,29 +106,7 @@ function LoraCard({ lora, isActive, isAdmin, isBuiltIn, isUsed, currentRating, o
                 )}
 
                 {/* Name */}
-                <span className="text-sm font-medium text-foreground truncate min-w-0 flex-shrink">{lora.name}</span>
-
-                {/* Scale slider - inline when active */}
-                {isActive && (
-                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                        <input
-                            type="range"
-                            min={0}
-                            max={2}
-                            step={0.1}
-                            value={lora.defaultLoraScale}
-                            onChange={(e) => onUpdateScale(parseFloat(e.target.value))}
-                            className="flex-1 h-1.5 accent-cyan-500 touch-none min-w-[60px]"
-                            style={{ WebkitAppearance: 'none', padding: '8px 0' }}
-                        />
-                        <span className="text-xs text-cyan-400 font-medium tabular-nums flex-shrink-0">
-                            {lora.defaultLoraScale.toFixed(1)}
-                        </span>
-                    </div>
-                )}
-
-                {/* Spacer when not active */}
-                {!isActive && <div className="flex-1" />}
+                <span className="text-sm font-medium text-foreground truncate min-w-0 flex-1">{lora.name}</span>
 
                 {/* Star rating - show for used LoRAs */}
                 {isUsed && !showRating && currentRating !== null && (
@@ -181,7 +159,6 @@ function LoraCard({ lora, isActive, isAdmin, isBuiltIn, isUsed, currentRating, o
                         <Trash2 className="w-3 h-3" />
                     </button>
                 )}
-                {/* Non-admin remove for community LoRAs */}
                 {!isAdmin && !isBuiltIn && (
                     <button
                         onClick={onDelete}
@@ -192,6 +169,26 @@ function LoraCard({ lora, isActive, isAdmin, isBuiltIn, isUsed, currentRating, o
                     </button>
                 )}
             </div>
+
+            {/* Scale slider - own row when active (better on mobile) */}
+            {isActive && (
+                <div className="flex items-center gap-2 px-3 pb-2">
+                    <span className="text-[10px] text-muted-foreground flex-shrink-0 uppercase tracking-wide">Scale</span>
+                    <input
+                        type="range"
+                        min={0}
+                        max={2}
+                        step={0.1}
+                        value={lora.defaultLoraScale}
+                        onChange={(e) => onUpdateScale(parseFloat(e.target.value))}
+                        className="flex-1 h-1.5 accent-cyan-500 touch-none"
+                        style={{ WebkitAppearance: 'none', padding: '8px 0' }}
+                    />
+                    <span className="text-xs text-cyan-400 font-medium tabular-nums flex-shrink-0 w-6 text-right">
+                        {lora.defaultLoraScale.toFixed(1)}
+                    </span>
+                </div>
+            )}
         </div>
     )
 }
@@ -501,6 +498,11 @@ export function LoraSection() {
                     LoRA
                     {loras.length > 0 && (
                         <span className="text-xs text-muted-foreground">({loras.length})</span>
+                    )}
+                    {activeLoraIds.length > 0 && (
+                        <span className="text-[10px] font-medium text-cyan-400 bg-cyan-500/15 px-1.5 py-0.5 rounded-full">
+                            {activeLoraIds.length} active
+                        </span>
                     )}
                 </label>
                 {isAdmin && (
