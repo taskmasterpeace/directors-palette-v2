@@ -125,7 +125,7 @@ export function ImportLyricsModal({ open, onOpenChange }: ImportLyricsModalProps
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col bg-zinc-900 border-zinc-800">
+      <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col bg-zinc-900 border-zinc-800">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white">
             <FileText className="w-5 h-5" />
@@ -146,7 +146,7 @@ export function ImportLyricsModal({ open, onOpenChange }: ImportLyricsModalProps
             <Button
               onClick={handleAnalyze}
               disabled={isAnalyzing || !lyrics.trim()}
-              className="gap-2"
+              className="gap-2 bg-cyan-600 hover:bg-cyan-700"
             >
               {isAnalyzing ? (
                 <>
