@@ -36,6 +36,7 @@ const TYPE_LABELS: Record<CommunityItemType, string> = {
   wildcard: 'Wildcard',
   recipe: 'Recipe',
   prompt: 'Prompt',
+  lora: 'LoRA',
   director: 'Director',
 }
 
@@ -82,6 +83,7 @@ export function CommunityPage() {
       wildcard: featured.find(i => i.type === 'wildcard'),
       recipe: featured.find(i => i.type === 'recipe'),
       prompt: featured.find(i => i.type === 'prompt'),
+      lora: featured.find(i => i.type === 'lora'),
       director: featured.find(i => i.type === 'director'),
     }
   }, [items])
@@ -111,6 +113,7 @@ export function CommunityPage() {
             case 'director':
               await useDirectorStore.getState().refreshDirectors()
               break
+            // loras are added to localStorage lora store via community.store.ts
             // prompts use settings JSON - handled separately
           }
         } catch (e) {
@@ -414,7 +417,7 @@ export function CommunityPage() {
               <h2 className="text-lg font-semibold text-white">Featured</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {(['wildcard', 'recipe', 'prompt', 'director'] as const).map((type) => {
+              {(['wildcard', 'recipe', 'prompt', 'lora', 'director'] as const).map((type) => {
                 const item = featuredByType[type]
                 if (!item) return null
                 return (

@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Search, SlidersHorizontal, Layers, BookOpen, MessageSquare, Film, Grid3X3 } from 'lucide-react'
+import { Search, SlidersHorizontal, Layers, BookOpen, MessageSquare, Wand2, Film, Grid3X3 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,6 +18,7 @@ import {
   WILDCARD_CATEGORIES,
   RECIPE_CATEGORIES,
   PROMPT_CATEGORIES,
+  LORA_CATEGORIES,
   DIRECTOR_CATEGORIES,
 } from '../types/community.types'
 
@@ -34,6 +35,7 @@ const TYPE_TABS: { value: CommunityItemType | 'all'; label: string; icon: React.
   { value: 'wildcard', label: 'Wildcards', icon: Layers },
   { value: 'recipe', label: 'Recipes', icon: BookOpen },
   { value: 'prompt', label: 'Prompts', icon: MessageSquare },
+  { value: 'lora', label: 'LoRAs', icon: Wand2 },
   { value: 'director', label: 'Directors', icon: Film },
 ]
 
@@ -61,6 +63,7 @@ export function CommunityFilters({
     ...WILDCARD_CATEGORIES.map(c => ({ ...c, type: 'wildcard' as const })),
     ...RECIPE_CATEGORIES.map(c => ({ ...c, type: 'recipe' as const })),
     ...PROMPT_CATEGORIES.map(c => ({ ...c, type: 'prompt' as const })),
+    ...LORA_CATEGORIES.map(c => ({ ...c, type: 'lora' as const })),
     ...DIRECTOR_CATEGORIES.map(c => ({ ...c, type: 'director' as const })),
   ]
 

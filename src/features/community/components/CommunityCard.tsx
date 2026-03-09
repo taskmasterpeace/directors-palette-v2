@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Check, User, Tag, Layers, BookOpen, MessageSquare, Film, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Check, User, Tag, Layers, BookOpen, MessageSquare, Wand2, Film, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +13,7 @@ import type {
   WildcardContent,
   RecipeContent,
   PromptContent,
+  LoraContent,
   DirectorContent,
 } from '../types/community.types'
 
@@ -33,6 +34,7 @@ const TYPE_COLORS: Record<CommunityItemType, string> = {
   wildcard: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
   recipe: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
   prompt: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  lora: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
   director: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
 }
 
@@ -40,6 +42,7 @@ const TYPE_ICONS: Record<CommunityItemType, React.ComponentType<{ className?: st
   wildcard: Layers,
   recipe: BookOpen,
   prompt: MessageSquare,
+  lora: Wand2,
   director: Film,
 }
 
@@ -151,6 +154,30 @@ export function CommunityCard({
           <p className="text-xs text-muted-foreground line-clamp-2 italic">
             &ldquo;{content.promptText.slice(0, 100)}...&rdquo;
           </p>
+        )
+      }
+      case 'lora': {
+        const content = item.content as LoraContent
+        return (
+          <div className="space-y-2">
+            {content.thumbnailUrl && (
+              <div className="relative aspect-video rounded overflow-hidden bg-muted/20 mb-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={content.thumbnailUrl}
+                  alt={`${item.name} preview`}
+                  className="object-cover w-full h-full"
+                />
+              </div>
+            )}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                {content.loraType}
+              </Badge>
+              <span className="text-muted-foreground/30">|</span>
+              <span className="italic text-violet-400">{content.triggerWord}</span>
+            </div>
+          </div>
         )
       }
       case 'director': {

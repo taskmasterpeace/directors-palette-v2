@@ -167,6 +167,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Note: LoRAs are stored client-side in localStorage via useLoraStore.
+    // The community store handles adding to lora store after successful API response.
+
     return NextResponse.json({
       libraryItem: {
         id: data.id,

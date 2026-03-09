@@ -10,7 +10,7 @@ import type { DirectorFingerprint } from '@/features/music-lab/types/director.ty
 // CONTENT TYPES
 // =============================================================================
 
-export type CommunityItemType = 'wildcard' | 'recipe' | 'prompt' | 'director'
+export type CommunityItemType = 'wildcard' | 'recipe' | 'prompt' | 'lora' | 'director'
 
 export type CommunityItemStatus = 'pending' | 'approved' | 'rejected'
 
@@ -52,6 +52,16 @@ export interface PromptContent {
   variables?: string[]
 }
 
+export interface LoraContent {
+  loraType: 'character' | 'style'
+  triggerWord: string
+  referenceTag?: string
+  weightsUrl: string
+  thumbnailUrl?: string
+  defaultGuidanceScale: number
+  defaultLoraScale: number
+}
+
 export interface DirectorContent {
   fingerprint: DirectorFingerprint
   avatarUrl?: string
@@ -62,6 +72,7 @@ export type CommunityContent =
   | WildcardContent
   | RecipeContent
   | PromptContent
+  | LoraContent
   | DirectorContent
 
 // =============================================================================
@@ -254,6 +265,13 @@ export const PROMPT_CATEGORIES = [
   { value: 'complete', label: 'Complete Prompts' },
 ] as const
 
+export const LORA_CATEGORIES = [
+  { value: 'character', label: 'Character LoRAs' },
+  { value: 'style', label: 'Style LoRAs' },
+  { value: 'concept', label: 'Concept LoRAs' },
+  { value: 'aesthetic', label: 'Aesthetic LoRAs' },
+] as const
+
 export const DIRECTOR_CATEGORIES = [
   { value: 'classic', label: 'Classic Hollywood' },
   { value: 'indie', label: 'Independent/Arthouse' },
@@ -273,6 +291,8 @@ export function getCategoriesForType(type: CommunityItemType) {
       return RECIPE_CATEGORIES
     case 'prompt':
       return PROMPT_CATEGORIES
+    case 'lora':
+      return LORA_CATEGORIES
     case 'director':
       return DIRECTOR_CATEGORIES
   }

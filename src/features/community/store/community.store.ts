@@ -10,6 +10,8 @@ import type {
 } from '../types/community.types'
 import { communityService } from '../services/community.service'
 import { useRecipeStore } from '@/features/shot-creator/store/recipe.store'
+import { useLoraStore } from '@/features/shot-creator/store/lora.store'
+import type { LoraContent } from '../types/community.types'
 import { createLogger } from '@/lib/logger'
 
 
@@ -106,8 +108,28 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
 
       set({ libraryItemIds: newLibraryIds, items: updatedItems })
 
-      // Refresh recipe store so newly added recipes appear in Shot Creator
+      // Refresh relevant stores so newly added items appear
       useRecipeStore.getState().refreshRecipes()
+
+      // If it's a LoRA, add to the client-side lora store
+      const addedItem = items.find(i => i.id === itemId)
+      if (addedItem?.type === 'lora') {
+        const content = addedItem.content as LoraContent
+        const loraStore = useLoraStore.getState()
+        // Use item ID as lora ID to avoid duplicates
+        if (!loraStore.isInCollection(`community-${addedItem.id}`)) {
+          loraStore.addLora({
+            name: addedItem.name,
+            type: content.loraType,
+            referenceTag: content.referenceTag,
+            triggerWord: content.triggerWord,
+            weightsUrl: content.weightsUrl,
+            thumbnailUrl: content.thumbnailUrl,
+            defaultGuidanceScale: content.defaultGuidanceScale,
+            defaultLoraScale: content.defaultLoraScale,
+          })
+        }
+      }
 
       return true
     } catch (error) {
