@@ -69,6 +69,14 @@ export const DEFAULT_TONE: ToneSettings = {
   barCount: 16,
 }
 
+// ─── Song Import Types ──────────────────────────────────────────────────────
+
+export interface DetectedSection {
+  type: SectionType
+  label: string       // e.g. "Verse 1", "Hook", "Bridge"
+  lines: string[]     // Lines of lyrics in this section
+}
+
 // ─── Artist Judge Types ──────────────────────────────────────────────────────
 
 export interface LineNote {

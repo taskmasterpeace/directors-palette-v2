@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
-import { Sparkles, PenTool, RotateCcw, Lightbulb, Loader2, RefreshCw, ListMusic } from 'lucide-react'
+import { Sparkles, PenTool, RotateCcw, Lightbulb, Loader2, RefreshCw, ListMusic, FileInput } from 'lucide-react'
 import { useWritingStudioStore } from '../../store/writing-studio.store'
 import { useArtistDnaStore } from '../../store/artist-dna.store'
 import { SectionPicker } from './SectionPicker'
@@ -15,6 +15,7 @@ import { IdeaBankDrawer } from './IdeaBankDrawer'
 import { LyricsPreview } from './LyricsPreview'
 import { PromptPreview } from './PromptPreview'
 import { FullSongBuilder } from './FullSongBuilder'
+import { ImportLyricsModal } from './ImportLyricsModal'
 import type { SectionType } from '../../types/writing-studio.types'
 
 export function StudioTab() {
@@ -40,6 +41,7 @@ export function StudioTab() {
   const [conceptSuggestions, setConceptSuggestions] = useState<string[]>([])
   const [isLoadingConcepts, setIsLoadingConcepts] = useState(false)
   const [showConcepts, setShowConcepts] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
 
   // Sync active artist to writing studio for per-artist Idea Bank
   useEffect(() => {
@@ -104,6 +106,15 @@ export function StudioTab() {
             Writing Studio
           </span>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs gap-1.5 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300"
+              onClick={() => setShowImportModal(true)}
+            >
+              <FileInput className="w-3 h-3" />
+              Import Lyrics
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -273,6 +284,12 @@ export function StudioTab() {
           </div>
         </div>
       </CardContent>
+
+      {/* Import Lyrics modal */}
+      <ImportLyricsModal
+        open={showImportModal}
+        onOpenChange={setShowImportModal}
+      />
 
       {/* Full Song Builder dialog */}
       <FullSongBuilder

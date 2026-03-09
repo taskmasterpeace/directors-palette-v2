@@ -14,6 +14,7 @@ import type {
   IdeaTag,
   JudgeResult,
   ArtistJudgment,
+  DetectedSection,
 } from '../types/writing-studio.types'
 import { DEFAULT_TONE, BAR_COUNT_RANGES } from '../types/writing-studio.types'
 import { logger } from '@/lib/logger'
@@ -96,6 +97,9 @@ interface WritingStudioState {
 
   // Concept
   setConcept: (concept: string) => void
+
+  // Import
+  importSections: (detected: DetectedSection[]) => void
 
   // Reset
   resetStudio: () => void
@@ -447,6 +451,31 @@ export const useWritingStudioStore = create<WritingStudioState>()(
       },
 
       setConcept: (concept) => set({ concept }),
+
+      importSections: (detected) => {
+        const sections: SongSection[] = detected.map((d) => {
+          const barDefaults = BAR_COUNT_RANGES[d.type]
+          return {
+            id: crypto.randomUUID(),
+            type: d.type,
+            tone: { ...DEFAULT_TONE, barCount: barDefaults.default },
+            selectedDraft: {
+              id: crypto.randomUUID(),
+              content: d.lines.join('\n'),
+              label: 'A',
+            },
+            isLocked: false,
+          }
+        })
+        set({
+          sections,
+          activeSectionId: sections[0]?.id ?? null,
+          draftOptions: [],
+          sectionDrafts: {},
+          sectionJudgments: {},
+          sectionDirections: {},
+        })
+      },
 
       resetStudio: () =>
         set({
