@@ -36,35 +36,7 @@ export function useReferenceImageManager(maxImages: number = 3) {
         }
     }, [shotCreatorReferenceImages])
 
-    // Load + Save images in Supabase
-    useEffect(() => {
-        const loadImages = async () => {
-            try {
-                // const saved = ''; //TODO: get saved images from supabase
-                // if (saved?.length) setShotCreatorReferenceImages(saved)
-            } catch (err) {
-                logger.shotCreator.error('Failed to load reference images', { error: err instanceof Error ? err.message : String(err) })
-                toast({ title: "Load Error", description: "Could not load saved reference images", variant: "destructive" })
-            }
-        }
-        loadImages()
-    }, [toast, setShotCreatorReferenceImages])
-
-    useEffect(() => {
-        const saveImages = async () => {
-            try {
-                if (shotCreatorReferenceImages.length > 0) {
-                    //TODO: save images to supabase for save
-                } else {
-                    //TODO: clear images from supabase clear remove
-                }
-            } catch (err) {
-                logger.shotCreator.error('Failed to save reference images', { error: err instanceof Error ? err.message : String(err) })
-                toast({ title: "Save Error", description: "Could not save reference images", variant: "destructive" })
-            }
-        }
-        saveImages()
-    }, [shotCreatorReferenceImages, toast])
+    // Persistence is handled by Zustand persist middleware in shot-creator.store.ts
 
     // Upload with validation and resize
     const handleShotCreatorImageUpload = async (file: File): Promise<void> => {

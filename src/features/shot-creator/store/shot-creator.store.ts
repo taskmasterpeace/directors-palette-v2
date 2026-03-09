@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { ShotCreatorGeneration, ShotCreatorReferenceImage, ShotCreatorSettings } from "../types";
 import { toast } from "@/hooks/use-toast";
 import { getImageDimensions } from "@/features/shot-creator/helpers/short-creator.helper";
@@ -68,7 +69,7 @@ export interface ShotCreatorStore {
     onSendToShotAnimator: (imageUrl: string) => Promise<void>;
 }
 
-export const useShotCreatorStore = create<ShotCreatorStore>()((set) => ({
+export const useShotCreatorStore = create<ShotCreatorStore>()(persist((set) => ({
     shotCreatorReferenceImages: [],
     stageReferenceImages: [],
     shotCreatorPrompt: "",
@@ -204,4 +205,12 @@ export const useShotCreatorStore = create<ShotCreatorStore>()((set) => ({
             });
         }
     }
+}), {
+    name: 'shot-creator-storage',
+    partialize: (state) => ({
+        shotCreatorReferenceImages: state.shotCreatorReferenceImages.map(
+            ({ file: _file, ...rest }) => rest
+        ),
+        shotCreatorPrompt: state.shotCreatorPrompt,
+    }),
 }));

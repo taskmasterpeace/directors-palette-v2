@@ -1038,6 +1038,7 @@ CRITICAL RULES:
                             onGenerateBRollGrid={() => handleGenerateBRollGrid(fullscreenImage)}
                             isGeneratingBRoll={generatingBRollId === fullscreenImage.id}
                             onShare={() => handleShare(fullscreenImage)}
+                            onRegenerate={handleRegenerate}
                             showReferenceNamePrompt={showReferenceNamePrompt}
                         />
                     )}

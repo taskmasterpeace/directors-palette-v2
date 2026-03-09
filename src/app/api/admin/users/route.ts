@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { requireAdmin } from '@/lib/auth/admin-auth'
 import { adminService } from '@/features/admin'
 import { logger } from '@/lib/logger'
 
@@ -14,17 +14,8 @@ import { logger } from '@/lib/logger'
  * Query params: page, pageSize, search
  */
 export async function GET(request: NextRequest) {
-    const auth = await getAuthenticatedUser(request)
+    const auth = await requireAdmin(request)
     if (auth instanceof NextResponse) return auth
-
-    // Check admin status via database query (not the broken sync function)
-    const isAdmin = await adminService.checkAdminEmailAsync(auth.user.email || '')
-    if (!isAdmin) {
-        return NextResponse.json(
-            { error: 'Forbidden', message: 'Admin access required' },
-            { status: 403 }
-        )
-    }
 
     try {
         const { searchParams } = new URL(request.url)

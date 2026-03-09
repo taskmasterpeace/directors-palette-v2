@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
+import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 
@@ -15,6 +16,17 @@ interface GenerateRequest {
 
 export async function POST(request: NextRequest) {
     try {
+        // Rate limit: IP-based since this route has no auth
+        const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+        const rl = checkRateLimit(`wildcard:${clientIp}`, RATE_LIMITS.WILDCARD_GENERATION)
+        if (!rl.allowed) {
+            const retryAfter = Math.ceil((rl.resetAt - Date.now()) / 1000)
+            return NextResponse.json(
+                { error: 'Too many requests. Please slow down.', retryAfter },
+                { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+            )
+        }
+
         // Check for API key
         if (!OPENROUTER_API_KEY) {
             return NextResponse.json(

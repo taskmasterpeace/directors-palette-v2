@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { requireAdmin } from '@/lib/auth/admin-auth'
 import { adminService } from '@/features/admin'
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
@@ -15,17 +15,8 @@ import { logger } from '@/lib/logger'
  * Body: { user_id: string, amount: number, description?: string }
  */
 export async function POST(request: NextRequest) {
-    const auth = await getAuthenticatedUser(request)
+    const auth = await requireAdmin(request)
     if (auth instanceof NextResponse) return auth
-
-    // Check admin status using database lookup
-    const isAdmin = await adminService.checkAdminEmailAsync(auth.user.email || '')
-    if (!isAdmin) {
-        return NextResponse.json(
-            { error: 'Forbidden', message: 'Admin access required' },
-            { status: 403 }
-        )
-    }
 
     // SECURITY: Rate limit credit grants even for admins
     const rateCheck = checkRateLimit(`admin-grant:${auth.user.id}`, RATE_LIMITS.ADMIN_CREDIT_GRANT)

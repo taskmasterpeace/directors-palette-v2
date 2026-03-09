@@ -21,8 +21,12 @@ import { GalleryService } from '../../services/gallery.service'
 import { ImageCard } from './ImageCard'
 import FullscreenModal from './FullScreenModal'
 import { useReferenceNamePrompt } from '@/components/providers/PromptProvider'
+import { useShotCreatorStore } from '../../store/shot-creator.store'
+import { useLoraStore } from '../../store/lora.store'
+import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 import { logger } from '@/lib/logger'
+import type { ModelId } from '@/config'
 
 type FilterTab = 'all' | 'tagged' | 'untagged'
 
@@ -47,6 +51,40 @@ export function ExpandedGallery() {
   const [selectedImages, setSelectedImages] = useState<string[]>([])
 
   const showReferenceNamePrompt = useReferenceNamePrompt()
+  const { toast } = useToast()
+
+  // Handle re-generate: load image settings back into shot creator
+  const handleRegenerate = useCallback((image: GeneratedImage) => {
+    const { setShotCreatorPrompt, setSettings } = useShotCreatorStore.getState()
+    const { loras, setActiveLora } = useLoraStore.getState()
+
+    if (image.prompt) {
+      setShotCreatorPrompt(image.prompt)
+    }
+
+    setSettings((prev) => ({
+      ...prev,
+      model: (image.model as ModelId) || prev.model,
+      aspectRatio: image.settings?.aspectRatio || image.settings?.aspect_ratio || prev.aspectRatio,
+      loraScale: image.settings?.loraScale ?? prev.loraScale,
+    }))
+
+    if (image.settings?.loraName) {
+      const matchingLora = loras.find(l => l.name === image.settings?.loraName)
+      if (matchingLora) {
+        setActiveLora(matchingLora.id)
+      }
+    } else {
+      setActiveLora(null)
+    }
+
+    setFullscreenImage(null)
+
+    toast({
+      title: 'Settings Loaded',
+      description: 'Settings loaded from previous generation',
+    })
+  }, [setFullscreenImage, toast])
 
   // Load gallery images
   const loadGallery = useCallback(async (page: number) => {
@@ -415,6 +453,7 @@ export function ExpandedGallery() {
           onSetReference={(id: string, ref: string) => {
             void updateImageReference(id, ref)
           }}
+          onRegenerate={handleRegenerate}
           showReferenceNamePrompt={showReferenceNamePrompt}
         />
       )}
