@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import Image from 'next/image'
-import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, Eraser, Clapperboard, Layers, Share2 } from 'lucide-react'
+import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, Eraser, Clapperboard, Layers, Share2, RefreshCw, Ratio, Box, Sliders } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 import { GeneratedImage } from "../../store/unified-gallery-store"
 import { useIsMobile } from '@/hooks/useMediaQuery'
@@ -32,6 +32,7 @@ interface FullscreenModalProps {
     onGenerateBRollGrid?: () => void
     isGeneratingBRoll?: boolean
     onShare?: () => void
+    onRegenerate?: (image: GeneratedImage) => void
     showReferenceNamePrompt: (defaultValue?: string) => Promise<string | null>
 }
 
@@ -57,6 +58,7 @@ function FullscreenModal({
     onGenerateBRollGrid,
     isGeneratingBRoll,
     onShare,
+    onRegenerate,
     showReferenceNamePrompt
 }: FullscreenModalProps) {
     const { toast } = useToast()
@@ -227,22 +229,22 @@ function FullscreenModal({
                             <div className="text-white text-sm">
                                 {fullscreenImage?.prompt?.includes('|') ? (
                                     <div className="flex items-center gap-2">
-                                        <span className="text-orange-400">🔥 Pipeline</span>
+                                        <span className="text-orange-400">Pipeline</span>
                                         <span className="text-muted-foreground">Multi-step generation</span>
                                     </div>
                                 ) : fullscreenImage.prompt?.includes('[') && fullscreenImage.prompt?.includes(']') ? (
                                     <div className="flex items-center gap-2">
-                                        <span className="text-accent">📝 Brackets</span>
+                                        <span className="text-accent">Brackets</span>
                                         <span className="text-muted-foreground">Option selection</span>
                                     </div>
                                 ) : fullscreenImage.prompt?.includes('_') ? (
                                     <div className="flex items-center gap-2">
-                                        <span className="text-cyan-400">🎲 Wildcards</span>
+                                        <span className="text-cyan-400">Wildcards</span>
                                         <span className="text-muted-foreground">Random variations</span>
                                     </div>
                                 ) : (
                                     <div className="flex items-center gap-2">
-                                        <span className="text-emerald-400">✨ Standard</span>
+                                        <span className="text-emerald-400">Standard</span>
                                         <span className="text-muted-foreground">Direct prompt</span>
                                     </div>
                                 )}
@@ -317,6 +319,20 @@ function FullscreenModal({
                             </div>
                         )}
 
+                        {/* LoRA */}
+                        {fullscreenImage.settings?.loraName && (
+                            <div className="mb-4">
+                                <h4 className="text-muted-foreground text-xs uppercase mb-2">LoRA</h4>
+                                <div className="flex items-center gap-2">
+                                    <Sliders className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+                                    <span className="text-white text-sm">{fullscreenImage.settings.loraName}</span>
+                                    {fullscreenImage.settings.loraScale != null && (
+                                        <span className="text-muted-foreground text-xs">({fullscreenImage.settings.loraScale}x)</span>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Timestamp */}
                         <div className="mb-4">
                             <h4 className="text-muted-foreground text-xs uppercase mb-2">Created</h4>
@@ -324,6 +340,44 @@ function FullscreenModal({
                                 {new Date(fullscreenImage.createdAt || Date.now()).toLocaleString()}
                             </p>
                         </div>
+
+                        {/* Re-generate */}
+                        {onRegenerate && (
+                            <div className="mb-4 p-3 rounded-lg border border-cyan-500/30 bg-cyan-500/5">
+                                <h4 className="text-cyan-400 text-xs uppercase mb-3 font-semibold tracking-wide">Re-generate</h4>
+                                <div className="space-y-1.5 mb-3">
+                                    {fullscreenImage.model && (
+                                        <div className="flex items-center gap-2 text-xs">
+                                            <Box className="w-3 h-3 text-cyan-400/70 flex-shrink-0" />
+                                            <span className="text-muted-foreground">Model:</span>
+                                            <span className="text-white truncate">{fullscreenImage.model}</span>
+                                        </div>
+                                    )}
+                                    {(fullscreenImage.settings?.aspectRatio || fullscreenImage.settings?.aspect_ratio) && (
+                                        <div className="flex items-center gap-2 text-xs">
+                                            <Ratio className="w-3 h-3 text-cyan-400/70 flex-shrink-0" />
+                                            <span className="text-muted-foreground">Ratio:</span>
+                                            <span className="text-white">{fullscreenImage.settings?.aspectRatio || fullscreenImage.settings?.aspect_ratio}</span>
+                                        </div>
+                                    )}
+                                    {fullscreenImage.settings?.loraName && (
+                                        <div className="flex items-center gap-2 text-xs">
+                                            <Sliders className="w-3 h-3 text-cyan-400/70 flex-shrink-0" />
+                                            <span className="text-muted-foreground">LoRA:</span>
+                                            <span className="text-white">{fullscreenImage.settings.loraName} ({fullscreenImage.settings.loraScale ?? 1.0}x)</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <Button
+                                    size="sm"
+                                    className="w-full bg-cyan-600 hover:bg-cyan-500 text-white border-0"
+                                    onClick={() => onRegenerate(fullscreenImage)}
+                                >
+                                    <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                                    Load Settings &amp; Re-generate
+                                </Button>
+                            </div>
+                        )}
 
                         {/* Actions */}
                         <div className="mt-6 space-y-2">

@@ -23,6 +23,9 @@ import { BulkActionsToolbar } from "./BulkActionsToolbar"
 import { useFolderManager } from "../../hooks/useFolderManager"
 import { GeneratedImage, useUnifiedGalleryStore, GridSize } from '../../store/unified-gallery-store'
 import { usePromptLibraryStore } from '../../store/prompt-library-store'
+import { useShotCreatorStore } from '../../store/shot-creator.store'
+import { useLoraStore } from '../../store/lora.store'
+import type { ModelId } from '@/config'
 import { logger } from '@/lib/logger'
 
 export interface UnifiedImageGalleryProps {
@@ -600,6 +603,43 @@ CRITICAL RULES:
         })
         toast({ title: 'Prompt Saved', description: `"${name}" added to your prompt library` })
     }, [toast])
+
+    // Handle re-generate: load image settings back into shot creator
+    const handleRegenerate = useCallback((image: GeneratedImage) => {
+        const { setShotCreatorPrompt, setSettings } = useShotCreatorStore.getState()
+        const { loras, setActiveLora } = useLoraStore.getState()
+
+        // Set prompt
+        if (image.prompt) {
+            setShotCreatorPrompt(image.prompt)
+        }
+
+        // Set model and aspect ratio
+        setSettings((prev) => ({
+            ...prev,
+            model: (image.model as ModelId) || prev.model,
+            aspectRatio: image.settings?.aspectRatio || image.settings?.aspect_ratio || prev.aspectRatio,
+            loraScale: image.settings?.loraScale ?? prev.loraScale,
+        }))
+
+        // Activate matching LoRA if one was used
+        if (image.settings?.loraName) {
+            const matchingLora = loras.find(l => l.name === image.settings?.loraName)
+            if (matchingLora) {
+                setActiveLora(matchingLora.id)
+            }
+        } else {
+            setActiveLora(null)
+        }
+
+        // Close fullscreen modal
+        setFullscreenImage(null)
+
+        toast({
+            title: 'Settings Loaded',
+            description: 'Settings loaded from previous generation',
+        })
+    }, [setFullscreenImage, toast])
 
     // Handle retry for failed generations
     // Copies the prompt to clipboard and removes the failed entry
