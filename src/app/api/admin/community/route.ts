@@ -1,7 +1,8 @@
+import { requireAdmin } from '@/lib/auth/admin-auth'
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+
 import { createClient } from '@supabase/supabase-js'
-import { adminService } from '@/features/admin/services/admin.service'
+
 import { logger } from '@/lib/logger'
 
 /**
@@ -10,16 +11,8 @@ import { logger } from '@/lib/logger'
  */
 export async function GET(request: NextRequest) {
   try {
-    const auth = await getAuthenticatedUser(request)
+    const auth = await requireAdmin(request)
     if (auth instanceof NextResponse) return auth
-
-    const { user } = auth
-
-    // Check admin via database
-    const isAdmin = await adminService.checkAdminEmailAsync(user.email || '')
-    if (!isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-    }
 
     // Use service role client for admin operations
     const supabase = createClient(
@@ -89,16 +82,10 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const auth = await getAuthenticatedUser(request)
+    const auth = await requireAdmin(request)
     if (auth instanceof NextResponse) return auth
 
     const { user } = auth
-
-    // Check admin via database
-    const isAdmin = await adminService.checkAdminEmailAsync(user.email || '')
-    if (!isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-    }
 
     const body = await request.json()
     const { action, itemId, reason } = body

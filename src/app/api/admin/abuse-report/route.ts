@@ -4,10 +4,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthenticatedUser } from '@/lib/auth/api-auth'
+import { requireAdmin } from '@/lib/auth/admin-auth'
 import { creditsService } from '@/features/credits/services/credits.service'
 import { getAPIClient } from '@/lib/db/client'
-import { adminService } from '@/features/admin/services/admin.service'
 import { logger } from '@/lib/logger'
 
 // Helper to get an untyped client for abuse tables (not in main DB types yet)
@@ -21,14 +20,8 @@ async function getUntypedClient(): Promise<any> {
  * Get abuse summary and recent flags
  */
 export async function GET(request: NextRequest) {
-    const auth = await getAuthenticatedUser(request)
+    const auth = await requireAdmin(request)
     if (auth instanceof NextResponse) return auth
-
-    // Check if user is admin via database
-    const isAdmin = await adminService.checkAdminEmailAsync(auth.user.email || '')
-    if (!isAdmin) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-    }
 
     try {
         const summary = await creditsService.getAbuseSummary()
@@ -60,14 +53,8 @@ export async function GET(request: NextRequest) {
  * Actions: resolve, ban_ip, grant_credits
  */
 export async function POST(request: NextRequest) {
-    const auth = await getAuthenticatedUser(request)
+    const auth = await requireAdmin(request)
     if (auth instanceof NextResponse) return auth
-
-    // Check if user is admin via database
-    const isAdmin = await adminService.checkAdminEmailAsync(auth.user.email || '')
-    if (!isAdmin) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-    }
 
     try {
         const body = await request.json()

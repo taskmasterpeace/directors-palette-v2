@@ -7,7 +7,8 @@
  * Also seeds non-system-only recipes into community_items as pre-approved items.
  */
 
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/auth/admin-auth'
 import { getAPIClient } from '@/lib/db/client'
 import { SAMPLE_RECIPES } from '@/features/shot-creator/types/recipe.types'
 import { logger } from '@/lib/logger'
@@ -35,7 +36,10 @@ function mapCategoryToCommunity(categoryId?: string): string {
   }
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  const auth = await requireAdmin(request)
+  if (auth instanceof NextResponse) return auth
+
   try {
     const supabase = await getAdminClient()
 
@@ -201,7 +205,10 @@ async function seedCommunityItems(supabase: any): Promise<number> {
   return seededCount
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = await requireAdmin(request)
+  if (auth instanceof NextResponse) return auth
+
   try {
     const supabase = await getAdminClient()
 

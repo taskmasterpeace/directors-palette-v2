@@ -7,7 +7,8 @@
  * Incremental: skips wildcards that already exist by name.
  */
 
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/auth/admin-auth'
 import { getAPIClient } from '@/lib/db/client'
 import { WARDROBE_WILDCARDS } from '@/features/shot-creator/constants/wardrobe-wildcards'
 import { logger } from '@/lib/logger'
@@ -17,7 +18,10 @@ async function getAdminClient(): Promise<any> {
   return await getAPIClient()
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  const auth = await requireAdmin(request)
+  if (auth instanceof NextResponse) return auth
+
   try {
     const supabase = await getAdminClient()
 
@@ -108,7 +112,10 @@ export async function POST() {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = await requireAdmin(request)
+  if (auth instanceof NextResponse) return auth
+
   try {
     const supabase = await getAdminClient()
 

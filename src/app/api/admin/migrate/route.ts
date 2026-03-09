@@ -7,8 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
+import { requireAdmin } from '@/lib/auth/admin-auth'
 import { logger } from '@/lib/logger'
 
 const MIGRATION_SQL = `
@@ -119,47 +118,10 @@ CREATE TRIGGER on_admin_created
   EXECUTE FUNCTION generate_admin_api_key();
 `
 
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    // Check if user is authenticated and is admin
-    const cookieStore = await cookies()
-    const supabaseUser = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll() {},
-        },
-      }
-    )
-
-    const { data: { user } } = await supabaseUser.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Check if admin
-    const { data: adminCheck } = await supabaseUser
-      .from('admin_users')
-      .select('id')
-      .eq('user_id', user.id)
-      .single()
-
-    if (!adminCheck) {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
-    }
-
-    // Use service role for DDL operations
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!serviceRoleKey) {
-      return NextResponse.json(
-        { error: 'Service role key not configured', sql: MIGRATION_SQL },
-        { status: 500 }
-      )
-    }
+    const auth = await requireAdmin(request)
+    if (auth instanceof NextResponse) return auth
 
     // Unfortunately, Supabase JS client doesn't support raw SQL DDL
     // Return the SQL for manual execution
