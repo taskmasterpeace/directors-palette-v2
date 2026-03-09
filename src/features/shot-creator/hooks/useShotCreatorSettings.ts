@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { shotCreatorSettingsService } from '../services';
 import { ShotCreatorSettings } from '../types';
 import { getClient } from "@/lib/db/client";
@@ -13,6 +13,8 @@ import { logger } from '@/lib/logger'
 export function useShotCreatorSettings() {
   const { settings, setSettings } = useShotCreatorStore()
   const [isInitialized, setIsInitialized] = useState(false);
+  // Track if user has changed settings before Supabase load finishes
+  const userHasInteracted = useRef(false);
 
   /**
    * Load settings from Supabase on mount (overrides localStorage if available)
@@ -41,7 +43,7 @@ export function useShotCreatorSettings() {
         }
 
         const loadedSettings = await shotCreatorSettingsService.loadSettings(user.id);
-        if (loadedSettings) {
+        if (loadedSettings && !userHasInteracted.current) {
           const mergedSettings = { ...DEFAULT_SETTINGS, ...loadedSettings };
           // Migrate deprecated model IDs (e.g., 'nano-banana' -> 'nano-banana-2')
           if (mergedSettings.model) {
@@ -63,6 +65,8 @@ export function useShotCreatorSettings() {
    * Save settings to both Supabase and localStorage immediately on change
    */
   const updateSettings = useCallback(async (partialSettings: Partial<ShotCreatorSettings>) => {
+    // Prevent Supabase load from overwriting this change
+    userHasInteracted.current = true;
     // Update local state immediately
     setSettings(prev => {
       const newSettings = { ...prev, ...partialSettings };
