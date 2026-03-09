@@ -1,6 +1,7 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { logger } from '@/lib/logger';
+
+const R2_PUBLIC_BASE = 'https://pub-5db40a08df07458593b2b31de8bb6b62.r2.dev';
 
 let _s3Client: S3Client | null = null;
 
@@ -28,6 +29,7 @@ const BUCKET = process.env.R2_BUCKET || 'directorspal';
 /**
  * R2 Storage Service
  * Handles uploading videos to Cloudflare R2 (S3-compatible)
+ * Public bucket — permanent URLs, no expiry, zero egress fees
  */
 export class R2StorageService {
   /**
@@ -57,26 +59,12 @@ export class R2StorageService {
     await getR2Client().send(command);
     logger.generation.info('[R2] Uploaded video', { storagePath, size: buffer.byteLength });
 
-    // Generate a long-lived signed URL (7 days) for immediate use
-    // The public URL will be refreshed via the API when needed
-    const publicUrl = await this.getSignedUrl(storagePath);
+    const publicUrl = `${R2_PUBLIC_BASE}/${storagePath}`;
 
     return {
       publicUrl,
       storagePath,
       fileSize: buffer.byteLength,
     };
-  }
-
-  /**
-   * Get a signed URL for a video (7-day expiry)
-   */
-  static async getSignedUrl(storagePath: string, expiresIn = 604800): Promise<string> {
-    const command = new GetObjectCommand({
-      Bucket: BUCKET,
-      Key: storagePath,
-    });
-
-    return getSignedUrl(getR2Client(), command, { expiresIn });
   }
 }
