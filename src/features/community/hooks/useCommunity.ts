@@ -25,6 +25,7 @@ export function useCommunity() {
     fetchLibraryItemIds,
     fetchUserRatings,
     addToLibrary: addToLibraryAction,
+    removeFromLibrary: removeFromLibraryAction,
     rateItem: rateItemAction,
     setFilters,
     setSelectedItem,
@@ -69,6 +70,12 @@ export function useCommunity() {
     if (!userId) return false
     return addToLibraryAction(itemId, userId)
   }, [userId, addToLibraryAction])
+
+  // Remove item from library
+  const removeFromLibrary = useCallback(async (itemId: string): Promise<boolean> => {
+    if (!userId) return false
+    return removeFromLibraryAction(itemId, userId)
+  }, [userId, removeFromLibraryAction])
 
   // Rate an item
   const rateItem = useCallback(async (itemId: string, rating: number): Promise<boolean> => {
@@ -119,6 +126,7 @@ export function useCommunity() {
 
     // Actions
     addToLibrary,
+    removeFromLibrary,
     rateItem,
     setSelectedItem,
     clearError,

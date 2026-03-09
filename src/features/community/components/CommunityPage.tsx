@@ -52,6 +52,7 @@ export function CommunityPage() {
     isInLibrary,
     getUserRating,
     addToLibrary,
+    removeFromLibrary,
     rateItem,
     refresh,
     setTypeFilter,
@@ -128,6 +129,24 @@ export function CommunityPage() {
       toast({
         title: 'Error',
         description: 'Failed to add item to library.',
+        variant: 'destructive',
+      })
+    }
+    return success
+  }
+
+  // Handle remove from library
+  const handleRemove = async (itemId: string): Promise<boolean> => {
+    const success = await removeFromLibrary(itemId)
+    if (success) {
+      toast({
+        title: 'Removed from Library',
+        description: 'Item has been removed from your library.',
+      })
+    } else {
+      toast({
+        title: 'Error',
+        description: 'Failed to remove item from library.',
         variant: 'destructive',
       })
     }
@@ -431,6 +450,7 @@ export function CommunityPage() {
                       isInLibrary={isInLibrary(item.id)}
                       userRating={getUserRating(item.id)}
                       onAdd={() => handleAdd(item.id)}
+                      onRemove={() => handleRemove(item.id)}
                       onRate={(rating) => handleRate(item.id, rating)}
                       isAdmin={isAdmin}
                       onEdit={() => handleOpenEdit(item)}
@@ -454,6 +474,7 @@ export function CommunityPage() {
             isInLibrary={isInLibrary}
             getUserRating={getUserRating}
             onAdd={handleAdd}
+            onRemove={handleRemove}
             onRate={handleRate}
             isAdmin={isAdmin}
             onEdit={handleOpenEdit}

@@ -34,6 +34,7 @@ interface CommunityState {
   fetchLibraryItemIds: (userId: string) => Promise<void>
   fetchUserRatings: (userId: string) => Promise<void>
   addToLibrary: (itemId: string, userId: string) => Promise<boolean>
+  removeFromLibrary: (itemId: string, userId: string) => Promise<boolean>
   rateItem: (itemId: string, userId: string, rating: number) => Promise<boolean>
   setFilters: (filters: Partial<CommunityFilters>) => void
   setSelectedItem: (item: CommunityItem | null) => void
@@ -135,6 +136,37 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
     } catch (error) {
       log.error('Error adding to library', { error: error instanceof Error ? error.message : String(error) })
       set({ error: 'Failed to add to library' })
+      return false
+    }
+  },
+
+  removeFromLibrary: async (itemId: string, userId: string) => {
+    try {
+      await communityService.removeFromLibrary(itemId, userId)
+      const { libraryItemIds, items } = get()
+      const newLibraryIds = new Set(libraryItemIds)
+      newLibraryIds.delete(itemId)
+
+      // Decrement add count in items
+      const updatedItems = items.map(item =>
+        item.id === itemId
+          ? { ...item, addCount: Math.max(0, item.addCount - 1) }
+          : item
+      )
+
+      set({ libraryItemIds: newLibraryIds, items: updatedItems })
+
+      // If it's a LoRA, remove from client-side lora store
+      const removedItem = items.find(i => i.id === itemId)
+      if (removedItem?.type === 'lora') {
+        const loraStore = useLoraStore.getState()
+        loraStore.removeLora(`community-${removedItem.id}`)
+      }
+
+      return true
+    } catch (error) {
+      log.error('Error removing from library', { error: error instanceof Error ? error.message : String(error) })
+      set({ error: 'Failed to remove from library' })
       return false
     }
   },

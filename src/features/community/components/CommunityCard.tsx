@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Check, User, Tag, Layers, BookOpen, MessageSquare, Wand2, Film, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Minus, Check, User, Tag, Layers, BookOpen, MessageSquare, Wand2, Film, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/utils/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +22,7 @@ interface CommunityCardProps {
   isInLibrary: boolean
   userRating: number | null
   onAdd: () => Promise<boolean>
+  onRemove?: () => Promise<boolean>
   onRate: (rating: number) => Promise<boolean>
   onClick?: () => void
   // Admin controls
@@ -51,6 +52,7 @@ export function CommunityCard({
   isInLibrary,
   userRating,
   onAdd,
+  onRemove,
   onRate,
   onClick,
   isAdmin,
@@ -58,10 +60,20 @@ export function CommunityCard({
   onDelete,
 }: CommunityCardProps) {
   const [isAdding, setIsAdding] = useState(false)
+  const [isRemoving, setIsRemoving] = useState(false)
   const [justAdded, setJustAdded] = useState(false)
   const [showRating, setShowRating] = useState(false)
 
   const TypeIcon = TYPE_ICONS[item.type]
+
+  const handleRemove = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!onRemove || isRemoving) return
+    setIsRemoving(true)
+    await onRemove()
+    setIsRemoving(false)
+    setJustAdded(false)
+  }
 
   const handleAdd = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -265,10 +277,22 @@ export function CommunityCard({
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
-              className="flex items-center gap-1 text-emerald-400"
             >
-              <Check className="w-4 h-4" />
-              <span className="text-xs font-medium">Added</span>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={handleRemove}
+                disabled={isRemoving}
+                className={cn(
+                  'h-7 w-7 rounded-full transition-all group/remove',
+                  'bg-emerald-500/10 hover:bg-red-500 text-emerald-400 hover:text-white',
+                  'border border-emerald-500/30 hover:border-red-500',
+                  isRemoving && 'animate-pulse'
+                )}
+              >
+                <Check className="w-4 h-4 group-hover/remove:hidden" />
+                <Minus className="w-4 h-4 hidden group-hover/remove:block" />
+              </Button>
             </motion.div>
           ) : (
             <motion.div key="add" initial={{ scale: 1 }} exit={{ scale: 0 }}>

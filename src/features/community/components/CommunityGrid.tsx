@@ -13,6 +13,7 @@ interface CommunityGridProps {
   isInLibrary: (itemId: string) => boolean
   getUserRating: (itemId: string) => number | null
   onAdd: (itemId: string) => Promise<boolean>
+  onRemove?: (itemId: string) => Promise<boolean>
   onRate: (itemId: string, rating: number) => Promise<boolean>
   onItemClick?: (item: CommunityItem) => void
   // Admin controls
@@ -27,6 +28,7 @@ export function CommunityGrid({
   isInLibrary,
   getUserRating,
   onAdd,
+  onRemove,
   onRate,
   onItemClick,
   isAdmin,
@@ -61,6 +63,7 @@ export function CommunityGrid({
             isInLibrary={isInLibrary(item.id)}
             userRating={getUserRating(item.id)}
             onAdd={() => onAdd(item.id)}
+            onRemove={onRemove ? () => onRemove(item.id) : undefined}
             onRate={(rating) => onRate(item.id, rating)}
             onClick={() => onItemClick?.(item)}
             isAdmin={isAdmin}

@@ -567,25 +567,95 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                 {/* LoRA section - only for z-image-turbo */}
                 {shotCreatorSettings.model === 'z-image-turbo' && <LoraSection />}
 
+                {/* Prompt syntax feedback + Anchor Transform feedback */}
+                <PromptSyntaxFeedback
+                    prompt={shotCreatorPrompt}
+                    disablePipeSyntax={shotCreatorSettings.disablePipeSyntax}
+                    disableBracketSyntax={shotCreatorSettings.disableBracketSyntax}
+                    disableWildcardSyntax={shotCreatorSettings.disableWildcardSyntax}
+                    disableSlotMachineSyntax={shotCreatorSettings.disableSlotMachineSyntax}
+                    enableAnchorTransform={shotCreatorSettings.enableAnchorTransform}
+                    referenceImageCount={shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)}
+                    onTogglePipeSyntax={(disabled) => updateSettings({ disablePipeSyntax: disabled })}
+                    onToggleBracketSyntax={(disabled) => updateSettings({ disableBracketSyntax: disabled })}
+                    onToggleWildcardSyntax={(disabled) => updateSettings({ disableWildcardSyntax: disabled })}
+                    onToggleSlotMachineSyntax={(disabled) => updateSettings({ disableSlotMachineSyntax: disabled })}
+                    onToggleAnchorTransform={(enabled) => updateSettings({ enableAnchorTransform: enabled })}
+                />
+
+                {shotCreatorSettings.enableAnchorTransform && (() => {
+                    const totalImages = shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)
+                    const hasStyle = !!shotCreatorSettings.selectedStyle
+
+                    let anchorName = 'Image 1'
+                    if (hasStyle) {
+                        const selectedStyle = useCustomStylesStore.getState().getStyleById(shotCreatorSettings.selectedStyle!)
+                        anchorName = selectedStyle?.name || 'Style Guide'
+                    } else if (shotCreatorReferenceImages[0]?.file?.name) {
+                        anchorName = shotCreatorReferenceImages[0].file.name
+                    }
+
+                    const transformCount = totalImages - 1
+
+                    return (
+                        <div className="flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg text-sm">
+                            <span className="text-orange-600 dark:text-orange-400">
+                                {totalImages < 2 ? (
+                                    '⚠️ Anchor requires at least 2 images (1 anchor + 1+ inputs)'
+                                ) : (
+                                    `¡ ${anchorName} will anchor ${transformCount} image${transformCount > 1 ? 's' : ''}`
+                                )}
+                            </span>
+                        </div>
+                    )
+                })()}
+
                 {/* Generate button - sticky on mobile so it's always visible */}
                 <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-background/95 backdrop-blur-sm border-t border-border shadow-[0_-4px_12px_rgba(0,0,0,0.15)] lg:static lg:p-0 lg:bg-transparent lg:backdrop-blur-none lg:border-0 lg:shadow-none lg:z-auto">
-                    {/* Batch toggle */}
-                    <div className="flex items-center justify-end gap-1 mb-2">
-                        <span className="text-xs text-muted-foreground mr-1">Batch:</span>
-                        {[1, 5].map((count) => (
-                            <button
-                                key={count}
-                                onClick={() => updateSettings({ batchCount: count })}
-                                className={cn(
-                                    "px-2 py-0.5 text-xs font-medium rounded transition-colors",
-                                    (shotCreatorSettings.batchCount || 1) === count
-                                        ? "bg-cyan-600 text-white"
-                                        : "bg-muted text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                x{count}
-                            </button>
-                        ))}
+                    {/* Prompt tips + Batch toggle row */}
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                        {/* Prompt tips - left side */}
+                        <TooltipProvider>
+                            <Tooltip delayDuration={200}>
+                                <TooltipTrigger asChild>
+                                    <div className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 cursor-help w-fit">
+                                        <HelpCircle className="w-3.5 h-3.5" />
+                                        <span>Prompt tips</span>
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-xs">
+                                    <div className="space-y-1 text-xs">
+                                        <p className="font-medium mb-1.5">Prompt Syntax:</p>
+                                        <ul className="space-y-1">
+                                            <li>• Use @tag references to automatically attach images</li>
+                                            <li>• Use @! for Anchor Transform (first image transforms others)</li>
+                                            <li>• Use pipe (|) syntax for multi-stage generation</li>
+                                            <li>• Use [option1, option2] for variations</li>
+                                            <li>• Use _wildcard_ for random selection from lists</li>
+                                        </ul>
+                                    </div>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+
+                        {/* Batch toggle - right side */}
+                        <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground mr-1">Batch:</span>
+                            {[1, 3, 5].map((count) => (
+                                <button
+                                    key={count}
+                                    onClick={() => updateSettings({ batchCount: count })}
+                                    className={cn(
+                                        "px-2 py-0.5 text-xs font-medium rounded transition-colors",
+                                        (shotCreatorSettings.batchCount || 1) === count
+                                            ? "bg-cyan-600 text-white"
+                                            : "bg-muted text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    x{count}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                     <div className="flex gap-2">
                         <Button
@@ -620,74 +690,6 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                         )}
                     </div>
                 </div>
-
-                {/* Prompt syntax feedback */}
-                <PromptSyntaxFeedback
-                    prompt={shotCreatorPrompt}
-                    disablePipeSyntax={shotCreatorSettings.disablePipeSyntax}
-                    disableBracketSyntax={shotCreatorSettings.disableBracketSyntax}
-                    disableWildcardSyntax={shotCreatorSettings.disableWildcardSyntax}
-                    disableSlotMachineSyntax={shotCreatorSettings.disableSlotMachineSyntax}
-                    enableAnchorTransform={shotCreatorSettings.enableAnchorTransform}
-                    referenceImageCount={shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)}
-                    onTogglePipeSyntax={(disabled) => updateSettings({ disablePipeSyntax: disabled })}
-                    onToggleBracketSyntax={(disabled) => updateSettings({ disableBracketSyntax: disabled })}
-                    onToggleWildcardSyntax={(disabled) => updateSettings({ disableWildcardSyntax: disabled })}
-                    onToggleSlotMachineSyntax={(disabled) => updateSettings({ disableSlotMachineSyntax: disabled })}
-                    onToggleAnchorTransform={(enabled) => updateSettings({ enableAnchorTransform: enabled })}
-                />
-
-                {/* Anchor Transform feedback */}
-                {shotCreatorSettings.enableAnchorTransform && (() => {
-                    const totalImages = shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)
-                    const hasStyle = !!shotCreatorSettings.selectedStyle
-
-                    let anchorName = 'Image 1'
-                    if (hasStyle) {
-                        const selectedStyle = useCustomStylesStore.getState().getStyleById(shotCreatorSettings.selectedStyle!)
-                        anchorName = selectedStyle?.name || 'Style Guide'
-                    } else if (shotCreatorReferenceImages[0]?.file?.name) {
-                        anchorName = shotCreatorReferenceImages[0].file.name
-                    }
-
-                    const transformCount = totalImages - 1
-
-                    return (
-                        <div className="flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg text-sm">
-                            <span className="text-orange-600 dark:text-orange-400">
-                                {totalImages < 2 ? (
-                                    '⚠️ Anchor requires at least 2 images (1 anchor + 1+ inputs)'
-                                ) : (
-                                    `¡ ${anchorName} will anchor ${transformCount} image${transformCount > 1 ? 's' : ''}`
-                                )}
-                            </span>
-                        </div>
-                    )
-                })()}
-
-                {/* Help tooltip - hidden on mobile to save space */}
-                <TooltipProvider>
-                    <Tooltip delayDuration={200}>
-                        <TooltipTrigger asChild>
-                            <div className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 cursor-help w-fit">
-                                <HelpCircle className="w-3.5 h-3.5" />
-                                <span>Prompt tips</span>
-                            </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-xs">
-                            <div className="space-y-1 text-xs">
-                                <p className="font-medium mb-1.5">Prompt Syntax:</p>
-                                <ul className="space-y-1">
-                                    <li>• Use @tag references to automatically attach images</li>
-                                    <li>• Use @! for Anchor Transform (first image transforms others)</li>
-                                    <li>• Use pipe (|) syntax for multi-stage generation</li>
-                                    <li>• Use [option1, option2] for variations</li>
-                                    <li>• Use _wildcard_ for random selection from lists</li>
-                                </ul>
-                            </div>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
             </div>
         </Fragment>
     )
