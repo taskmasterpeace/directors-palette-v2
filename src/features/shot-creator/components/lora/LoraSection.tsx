@@ -93,8 +93,8 @@ function LoraCard({ lora, isActive, isAdmin, isBuiltIn, onToggle, onDelete, onUp
                 {/* Spacer when not active */}
                 {!isActive && <div className="flex-1" />}
 
-                {/* Admin actions */}
-                {isAdmin && (
+                {/* Edit action - admin on all, non-admin on community LoRAs */}
+                {(isAdmin || !isBuiltIn) && (
                     <button
                         onClick={onEdit}
                         className="p-1 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
