@@ -65,6 +65,8 @@ const BUILT_IN_LORAS: LoraItem[] = [
     },
 ]
 
+export const BUILT_IN_LORA_IDS = new Set(BUILT_IN_LORAS.map(l => l.id))
+
 const LORA_STORAGE_BASE = 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/loras'
 
 /** All available LoRAs users can browse in the community tab */

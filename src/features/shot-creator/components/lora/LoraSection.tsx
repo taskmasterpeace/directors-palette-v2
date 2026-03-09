@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { useLoraStore, type LoraItem } from '../../store/lora.store'
+import { useLoraStore, type LoraItem, BUILT_IN_LORA_IDS } from '../../store/lora.store'
 import { Plus, Trash2, Upload, X, Layers, Pencil, ChevronDown, ChevronUp } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/utils/utils'
@@ -13,10 +13,11 @@ import { useAdminAuth } from '@/features/admin/hooks/useAdminAuth'
 
 // ── LoRA Card ──────────────────────────────────────────────────────
 
-function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, onEdit }: {
+function LoraCard({ lora, isActive, isAdmin, isBuiltIn, onToggle, onDelete, onUpdateScale, onEdit }: {
     lora: LoraItem
     isActive: boolean
     isAdmin: boolean
+    isBuiltIn: boolean
     onToggle: () => void
     onDelete: () => void
     onUpdateScale: (scale: number) => void
@@ -109,6 +110,16 @@ function LoraCard({ lora, isActive, isAdmin, onToggle, onDelete, onUpdateScale, 
                         title="Delete LoRA"
                     >
                         <Trash2 className="w-3 h-3" />
+                    </button>
+                )}
+                {/* Non-admin remove for community LoRAs */}
+                {!isAdmin && !isBuiltIn && (
+                    <button
+                        onClick={onDelete}
+                        className="p-1 text-muted-foreground hover:text-red-400 transition-colors flex-shrink-0"
+                        title="Remove from collection"
+                    >
+                        <X className="w-3 h-3" />
                     </button>
                 )}
             </div>
@@ -444,6 +455,7 @@ export function LoraSection() {
                             lora={lora}
                             isActive={activeLoraId === lora.id}
                             isAdmin={isAdmin}
+                            isBuiltIn={BUILT_IN_LORA_IDS.has(lora.id)}
                             onToggle={() => {
                                 setActiveLora(activeLoraId === lora.id ? null : lora.id)
                             }}
@@ -452,8 +464,13 @@ export function LoraSection() {
                                 setShowDialog(true)
                             }}
                             onDelete={() => {
-                                if (window.confirm(`Delete "${lora.name}"?`)) {
+                                if (isAdmin) {
+                                    if (window.confirm(`Delete "${lora.name}"?`)) {
+                                        removeLora(lora.id)
+                                    }
+                                } else {
                                     removeLora(lora.id)
+                                    toast.success(`Removed "${lora.name}" from collection`)
                                 }
                             }}
                             onUpdateScale={(scale) => {
