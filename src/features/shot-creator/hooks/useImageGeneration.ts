@@ -15,6 +15,7 @@ import { uploadImageToStorage } from '../helpers/image-resize.helper'
 import { ImageGenerationRequest, ImageModel, ImageModelSettings } from "../types/image-generation.types"
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { useCustomStylesStore } from '../store/custom-styles.store'
+import { useLoraStore } from '../store/lora.store'
 import { getModelConfig } from '@/config'
 import { logger } from '@/lib/logger'
 
@@ -249,6 +250,12 @@ export function useImageGeneration() {
             setProgress({ status: 'succeeded' })
             setShotCreatorProcessing(false)
             setActiveGalleryId(null)
+
+            // Mark active LoRA as used for rating system
+            const activeLora = useLoraStore.getState().getActiveLora()
+            if (activeLora) {
+                useLoraStore.getState().markLoraUsed(activeLora.id)
+            }
 
             // Remove pending placeholder then refresh to load the completed image from DB
             useUnifiedGalleryStore.getState().removePendingByGalleryId(activeGalleryId)

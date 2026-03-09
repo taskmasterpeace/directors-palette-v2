@@ -19,10 +19,17 @@ export interface LoraItem {
     createdAt: number
 }
 
+export interface LoraRating {
+    rating: number      // 1-5 stars
+    ratedAt: number     // timestamp
+}
+
 interface LoraStore {
     // State
     loras: LoraItem[]
     activeLoraId: string | null
+    loraRatings: Record<string, LoraRating>
+    usedLoraIds: string[]
 
     // Actions
     addLora: (lora: Omit<LoraItem, 'id' | 'createdAt'>) => string
@@ -34,6 +41,12 @@ interface LoraStore {
     addFromCommunity: (loraId: string) => void
     removeFromCollection: (loraId: string) => void
     isInCollection: (loraId: string) => boolean
+
+    // Rating actions
+    markLoraUsed: (id: string) => void
+    rateLora: (id: string, rating: number) => void
+    getLoraRating: (id: string) => LoraRating | null
+    isLoraUsed: (id: string) => boolean
 
     // Computed
     getActiveLora: () => LoraItem | null
@@ -158,6 +171,8 @@ export const useLoraStore = create<LoraStore>()(
         (set, get) => ({
             loras: BUILT_IN_LORAS,
             activeLoraId: null,
+            loraRatings: {},
+            usedLoraIds: [],
 
             addLora: (lora) => {
                 const id = `lora_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -213,6 +228,31 @@ export const useLoraStore = create<LoraStore>()(
                 return loras.some((l) => l.id === loraId)
             },
 
+            markLoraUsed: (id) => {
+                const { usedLoraIds } = get()
+                if (usedLoraIds.includes(id)) return
+                set({ usedLoraIds: [...usedLoraIds, id] })
+            },
+
+            rateLora: (id, rating) => {
+                set((state) => ({
+                    loraRatings: {
+                        ...state.loraRatings,
+                        [id]: { rating, ratedAt: Date.now() },
+                    },
+                }))
+            },
+
+            getLoraRating: (id) => {
+                const { loraRatings } = get()
+                return loraRatings[id] ?? null
+            },
+
+            isLoraUsed: (id) => {
+                const { usedLoraIds } = get()
+                return usedLoraIds.includes(id)
+            },
+
             getActiveLora: () => {
                 const { loras, activeLoraId } = get()
                 if (!activeLoraId) return null
@@ -221,7 +261,7 @@ export const useLoraStore = create<LoraStore>()(
         }),
         {
             name: 'directors-palette-lora-store',
-            version: 8,
+            version: 9,
             migrate: (persisted: unknown) => {
                 const state = persisted as Record<string, unknown>
                 const loras = (state?.loras as LoraItem[]) || []
@@ -240,7 +280,10 @@ export const useLoraStore = create<LoraStore>()(
                         existing.referenceTag = builtIn.referenceTag
                     }
                 }
-                return { ...state, loras: filtered }
+                // Ensure rating fields exist (v9)
+                const loraRatings = (state?.loraRatings as Record<string, LoraRating>) || {}
+                const usedLoraIds = (state?.usedLoraIds as string[]) || []
+                return { ...state, loras: filtered, loraRatings, usedLoraIds }
             },
         }
     )

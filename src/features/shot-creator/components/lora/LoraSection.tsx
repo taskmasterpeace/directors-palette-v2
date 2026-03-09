@@ -6,24 +6,61 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useLoraStore, type LoraItem, BUILT_IN_LORA_IDS } from '../../store/lora.store'
-import { Plus, Trash2, Upload, X, Layers, Pencil, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Trash2, Upload, X, Layers, Pencil, ChevronDown, ChevronUp, Star } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/utils/utils'
 import { useAdminAuth } from '@/features/admin/hooks/useAdminAuth'
 
+// ── Star Rating (inline) ────────────────────────────────────────────
+
+function InlineStarRating({ rating, onRate }: {
+    rating: number | null
+    onRate: (stars: number) => void
+}) {
+    const [hovering, setHovering] = useState<number | null>(null)
+
+    return (
+        <div className="flex items-center gap-0" onMouseLeave={() => setHovering(null)}>
+            {[1, 2, 3, 4, 5].map((star) => {
+                const filled = hovering !== null ? star <= hovering : (rating !== null && star <= rating)
+                return (
+                    <button
+                        key={star}
+                        onClick={(e) => { e.stopPropagation(); onRate(star) }}
+                        onMouseEnter={() => setHovering(star)}
+                        className="p-0.5 transition-colors"
+                        title={`Rate ${star} star${star !== 1 ? 's' : ''}`}
+                    >
+                        <Star className={cn(
+                            'w-3 h-3 transition-colors',
+                            filled
+                                ? 'fill-amber-400 text-amber-400'
+                                : 'text-muted-foreground/40 hover:text-amber-400/60'
+                        )} />
+                    </button>
+                )
+            })}
+        </div>
+    )
+}
+
 // ── LoRA Card ──────────────────────────────────────────────────────
 
-function LoraCard({ lora, isActive, isAdmin, isBuiltIn, onToggle, onDelete, onUpdateScale, onEdit }: {
+function LoraCard({ lora, isActive, isAdmin, isBuiltIn, isUsed, currentRating, onToggle, onDelete, onUpdateScale, onEdit, onRate }: {
     lora: LoraItem
     isActive: boolean
     isAdmin: boolean
     isBuiltIn: boolean
+    isUsed: boolean
+    currentRating: number | null
     onToggle: () => void
     onDelete: () => void
     onUpdateScale: (scale: number) => void
     onEdit: () => void
+    onRate: (stars: number) => void
 }) {
     const cardRef = useRef<HTMLDivElement>(null)
+    const [showRating, setShowRating] = useState(false)
 
     // Prevent auto-scroll when LoRA scale slider appears on mobile
     const handleToggle = useCallback(() => {
@@ -92,6 +129,38 @@ function LoraCard({ lora, isActive, isAdmin, isBuiltIn, onToggle, onDelete, onUp
 
                 {/* Spacer when not active */}
                 {!isActive && <div className="flex-1" />}
+
+                {/* Star rating - show for used LoRAs */}
+                {isUsed && !showRating && currentRating !== null && (
+                    <button
+                        onClick={() => setShowRating(true)}
+                        className="flex items-center gap-0.5 p-1 text-amber-400 flex-shrink-0"
+                        title={`Rated ${currentRating}/5 - click to change`}
+                    >
+                        <Star className="w-3 h-3 fill-amber-400" />
+                        <span className="text-[10px] font-medium tabular-nums">{currentRating}</span>
+                    </button>
+                )}
+                {isUsed && !showRating && currentRating === null && (
+                    <button
+                        onClick={() => setShowRating(true)}
+                        className="p-1 flex-shrink-0 animate-pulse"
+                        title="Rate this LoRA"
+                    >
+                        <Star className="w-3 h-3 text-amber-400/50" />
+                    </button>
+                )}
+                {showRating && (
+                    <div className="flex-shrink-0">
+                        <InlineStarRating
+                            rating={currentRating}
+                            onRate={(stars) => {
+                                onRate(stars)
+                                setShowRating(false)
+                            }}
+                        />
+                    </div>
+                )}
 
                 {/* Edit action - admin on all, non-admin on community LoRAs */}
                 {(isAdmin || !isBuiltIn) && (
@@ -382,7 +451,7 @@ function LoraDialog({ onClose, editingLora }: {
 const COLLAPSED_MAX = 3
 
 export function LoraSection() {
-    const { loras, activeLoraId, setActiveLora, removeLora, updateLora } = useLoraStore()
+    const { loras, activeLoraId, setActiveLora, removeLora, updateLora, rateLora, getLoraRating, isLoraUsed } = useLoraStore()
     const { isAdmin } = useAdminAuth()
     const [showDialog, setShowDialog] = useState(false)
     const [editingLora, setEditingLora] = useState<LoraItem | null>(null)
@@ -456,6 +525,8 @@ export function LoraSection() {
                             isActive={activeLoraId === lora.id}
                             isAdmin={isAdmin}
                             isBuiltIn={BUILT_IN_LORA_IDS.has(lora.id)}
+                            isUsed={isLoraUsed(lora.id)}
+                            currentRating={getLoraRating(lora.id)?.rating ?? null}
                             onToggle={() => {
                                 setActiveLora(activeLoraId === lora.id ? null : lora.id)
                             }}
@@ -475,6 +546,10 @@ export function LoraSection() {
                             }}
                             onUpdateScale={(scale) => {
                                 updateLora(lora.id, { defaultLoraScale: scale })
+                            }}
+                            onRate={(stars) => {
+                                rateLora(lora.id, stars)
+                                toast.success(`Rated "${lora.name}" ${stars}/5`)
                             }}
                         />
                     </div>

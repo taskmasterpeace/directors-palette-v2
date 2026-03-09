@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Layers, Plus, Check } from 'lucide-react'
+import { Layers, Plus, Check, Star } from 'lucide-react'
 import { COMMUNITY_LORAS, useLoraStore } from '../../store/lora.store'
 import { cn } from '@/utils/utils'
 import { toast } from 'sonner'
@@ -10,7 +10,7 @@ type FilterType = 'all' | 'character' | 'style'
 
 export function LoraCommunityBrowser() {
     const [filter, setFilter] = useState<FilterType>('all')
-    const { addFromCommunity, removeFromCollection, isInCollection } = useLoraStore()
+    const { addFromCommunity, removeFromCollection, isInCollection, isLoraUsed, getLoraRating, rateLora } = useLoraStore()
 
     const filtered = COMMUNITY_LORAS.filter((lora) => {
         if (filter === 'all') return true
@@ -63,14 +63,18 @@ export function LoraCommunityBrowser() {
                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                         {filtered.map((lora) => {
                             const added = isInCollection(lora.id)
+                            const used = isLoraUsed(lora.id)
+                            const rating = getLoraRating(lora.id)
                             return (
-                                <LoraCard
+                                <CommunityLoraCard
                                     key={lora.id}
                                     name={lora.name}
                                     type={lora.type ?? 'style'}
                                     thumbnailUrl={lora.thumbnailUrl}
                                     referenceTag={lora.referenceTag}
                                     added={added}
+                                    used={used}
+                                    rating={rating?.rating ?? null}
                                     onToggle={() => {
                                         if (added) {
                                             removeFromCollection(lora.id)
@@ -79,6 +83,10 @@ export function LoraCommunityBrowser() {
                                             addFromCommunity(lora.id)
                                             toast.success(`Added "${lora.name}" to collection`)
                                         }
+                                    }}
+                                    onRate={(stars) => {
+                                        rateLora(lora.id, stars)
+                                        toast.success(`Rated "${lora.name}" ${stars}/5`)
                                     }}
                                 />
                             )
@@ -119,14 +127,19 @@ function FilterPill({ label, count, active, onClick }: {
     )
 }
 
-function LoraCard({ name, type, thumbnailUrl, referenceTag, added, onToggle }: {
+function CommunityLoraCard({ name, type, thumbnailUrl, referenceTag, added, used, rating, onToggle, onRate }: {
     name: string
     type: 'character' | 'style'
     thumbnailUrl?: string
     referenceTag?: string
     added: boolean
+    used: boolean
+    rating: number | null
     onToggle: () => void
+    onRate: (stars: number) => void
 }) {
+    const [showRating, setShowRating] = useState(false)
+
     return (
         <div className={cn(
             'rounded-lg border transition-all group relative overflow-hidden',
@@ -158,6 +171,16 @@ function LoraCard({ name, type, thumbnailUrl, referenceTag, added, onToggle }: {
                     {type}
                 </span>
 
+                {/* "Rate" badge for used but unrated */}
+                {used && rating === null && (
+                    <button
+                        onClick={() => setShowRating(true)}
+                        className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse"
+                    >
+                        Rate
+                    </button>
+                )}
+
                 {/* Add/Remove button */}
                 <button
                     onClick={onToggle}
@@ -177,11 +200,46 @@ function LoraCard({ name, type, thumbnailUrl, referenceTag, added, onToggle }: {
                 </button>
             </div>
 
-            {/* Info */}
+            {/* Info + rating */}
             <div className="px-2.5 py-2">
-                <p className="text-sm font-medium text-foreground truncate">{name}</p>
+                <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-foreground truncate">{name}</p>
+                    {/* Show rating stars if rated */}
+                    {rating !== null && (
+                        <button
+                            onClick={() => setShowRating(true)}
+                            className="flex items-center gap-0.5 text-amber-400 flex-shrink-0"
+                            title={`Rated ${rating}/5 - click to change`}
+                        >
+                            <Star className="w-3 h-3 fill-amber-400" />
+                            <span className="text-[10px] font-medium tabular-nums">{rating}</span>
+                        </button>
+                    )}
+                </div>
                 {referenceTag && (
                     <p className="text-[11px] text-muted-foreground font-mono">@{referenceTag}</p>
+                )}
+                {/* Inline star picker */}
+                {showRating && (
+                    <div className="flex items-center gap-0.5 mt-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                                key={star}
+                                onClick={() => {
+                                    onRate(star)
+                                    setShowRating(false)
+                                }}
+                                className="p-0.5 transition-colors"
+                            >
+                                <Star className={cn(
+                                    'w-3.5 h-3.5 transition-colors hover:fill-amber-400 hover:text-amber-400',
+                                    rating !== null && star <= rating
+                                        ? 'fill-amber-400 text-amber-400'
+                                        : 'text-muted-foreground/40'
+                                )} />
+                            </button>
+                        ))}
+                    </div>
                 )}
             </div>
         </div>
