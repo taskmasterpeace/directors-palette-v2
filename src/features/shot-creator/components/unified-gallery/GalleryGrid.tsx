@@ -6,7 +6,6 @@ import { ImageCard } from './ImageCard'
 import { GalleryPagination } from './GalleryPagination'
 import type { GeneratedImage, GridSize } from '../../store/unified-gallery-store'
 import type { FolderWithCount } from '../../types/folder.types'
-export type { GridSize }
 
 interface ImageCardCallbacks {
   onSelect: (url: string, e?: React.MouseEvent) => void

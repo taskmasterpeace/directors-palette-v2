@@ -19,7 +19,7 @@ import { FolderManagerModal } from "./FolderManagerModal"
 import { BulkDownloadModal } from "./BulkDownloadModal"
 import { BulkActionsToolbar } from "./BulkActionsToolbar"
 import { useFolderManager } from "../../hooks/useFolderManager"
-import { GeneratedImage, useUnifiedGalleryStore, GridSize } from '../../store/unified-gallery-store'
+import { GeneratedImage, useUnifiedGalleryStore } from '../../store/unified-gallery-store'
 import { usePromptLibraryStore } from '../../store/prompt-library-store'
 import { useShotCreatorStore } from '../../store/shot-creator.store'
 import { useLoraStore } from '../../store/lora.store'
