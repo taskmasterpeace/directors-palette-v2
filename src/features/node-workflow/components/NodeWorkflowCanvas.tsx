@@ -12,7 +12,9 @@ import {
   ConnectionMode,
   OnConnect,
   addEdge,
-  Connection
+  Connection,
+  type Node as FlowNode,
+  type Edge as FlowEdge
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useWorkflowStore } from '../store/workflow.store'
@@ -26,6 +28,26 @@ import { toast } from 'sonner'
 import { WorkflowExecutor } from '../services/workflow-executor.service'
 import { createLogger } from '@/lib/logger'
 
+const WORKFLOW_STORAGE_KEY = 'directors-palette-saved-workflows'
+
+interface SavedWorkflow {
+  id: string
+  name: string
+  nodes: FlowNode[]
+  edges: FlowEdge[]
+  savedAt: number
+}
+
+function getSavedWorkflows(): SavedWorkflow[] {
+  try {
+    const raw = localStorage.getItem(WORKFLOW_STORAGE_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch { return [] }
+}
+
+function persistWorkflows(workflows: SavedWorkflow[]) {
+  localStorage.setItem(WORKFLOW_STORAGE_KEY, JSON.stringify(workflows))
+}
 
 const log = createLogger('Workflow')
 export default function NodeWorkflowCanvas() {
@@ -125,13 +147,41 @@ export default function NodeWorkflowCanvas() {
   }
 
   const handleSave = () => {
-    // TODO: Implement save workflow
-    log.info('Save workflow')
+    const name = prompt('Workflow name:')
+    if (!name) return
+    const saved = getSavedWorkflows()
+    const workflow: SavedWorkflow = {
+      id: `wf-${Date.now()}`,
+      name,
+      nodes,
+      edges,
+      savedAt: Date.now(),
+    }
+    saved.push(workflow)
+    persistWorkflows(saved)
+    toast.success(`Saved "${name}"`)
+    log.info('Saved workflow', { name })
   }
 
   const handleLoad = () => {
-    // TODO: Implement load workflow
-    log.info('Load workflow')
+    const saved = getSavedWorkflows()
+    if (saved.length === 0) {
+      toast.info('No saved workflows')
+      return
+    }
+    const names = saved.map((w, i) => `${i + 1}. ${w.name}`).join('\n')
+    const choice = prompt(`Select workflow:\n${names}`)
+    if (!choice) return
+    const idx = parseInt(choice) - 1
+    if (isNaN(idx) || idx < 0 || idx >= saved.length) {
+      toast.error('Invalid selection')
+      return
+    }
+    const wf = saved[idx]
+    useWorkflowStore.getState().setNodes(wf.nodes)
+    useWorkflowStore.getState().setEdges(wf.edges)
+    toast.success(`Loaded "${wf.name}"`)
+    log.info('Loaded workflow', { name: wf.name })
   }
 
   return (

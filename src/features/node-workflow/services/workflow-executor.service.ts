@@ -4,7 +4,6 @@ import type {
   PromptNodeData,
   GenerationNodeData,
   ToolNodeData,
-  OutputNodeData as _OutputNodeData
 } from '../types/workflow.types'
 import { createLogger } from '@/lib/logger'
 
@@ -202,16 +201,16 @@ export class WorkflowExecutor {
 
     try {
       // Call the image generation API
-      const response = await fetch('/api/generate', {
+      const response = await fetch('/api/generation/image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: promptText,
-          model: data.model,
-          aspectRatio: data.aspectRatio,
-          outputFormat: data.outputFormat,
+          model: data.model || 'nano-banana-2',
+          aspectRatio: data.aspectRatio || '16:9',
+          outputFormat: data.outputFormat || 'png',
           negative: data.negative,
-          referenceImageUrl: referenceImage
+          referenceImages: referenceImage ? [referenceImage] : []
         })
       })
 
@@ -244,7 +243,7 @@ export class WorkflowExecutor {
    * Execute Tool node - apply image processing
    */
   private async executeToolNode(node: Node): Promise<NodeResult> {
-    const _data = node.data as unknown as ToolNodeData
+    const data = node.data as unknown as ToolNodeData
 
     // Get input image
     const inputs = this.getNodeInputs(node.id)
@@ -258,8 +257,8 @@ export class WorkflowExecutor {
       }
     }
 
-    // TODO: Implement tool processing
-    // For now, just pass through the image
+    // Pass through image (tool processing is a placeholder)
+    log.info('Tool node pass-through', { toolId: data.toolId })
     return {
       nodeId: node.id,
       success: true,
