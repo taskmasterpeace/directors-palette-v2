@@ -16,6 +16,7 @@ import { getModelConfig, ModelId } from '@/config'
 import { Button } from "@/components/ui/button"
 import { Shuffle } from "lucide-react"
 import { useLoraStore } from "../../store/lora.store"
+import { useShallow } from "zustand/react/shallow"
 
 const AdvancedSettings = () => {
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
@@ -58,7 +59,7 @@ const AdvancedSettings = () => {
         [modelConfig]
     )
 
-    const activeLoras = useLoraStore((s) => s.getActiveLoras())
+    const activeLoras = useLoraStore(useShallow((s) => s.getActiveLoras()))
     const activeLora = activeLoras.length > 0 ? activeLoras[0] : null
 
     return (

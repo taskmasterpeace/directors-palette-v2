@@ -12,6 +12,7 @@ import type { Recipe } from '../types/recipe.types'
 import { toast } from 'sonner'
 import { logger } from '@/lib/logger'
 import { useLoraStore } from '../store/lora.store'
+import { useShallow } from 'zustand/react/shallow'
 
 /**
  * Check if a recipe has any tool stages that require special execution
@@ -48,7 +49,7 @@ export function usePromptGeneration() {
     const { generateImage, isGenerating, cancelGeneration } = useImageGeneration()
     const { wildcards } = useWildCardStore()
     const { activeFieldValues, setActiveRecipe: _setActiveRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts } = useRecipeStore()
-    const activeLoras = useLoraStore((s) => s.getActiveLoras())
+    const activeLoras = useLoraStore(useShallow((s) => s.getActiveLoras()))
 
     // Track last used recipe for generation metadata
     const [lastUsedRecipe, setLastUsedRecipe] = useState<{ recipeId: string; recipeName: string } | null>(null)
