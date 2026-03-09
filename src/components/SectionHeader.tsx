@@ -63,20 +63,8 @@ const SECTION_CONFIG: Record<TabValue, { banner: string; title: string; subtitle
     subtitle: 'Artist Lab, Writing Studio & Music Video',
     helpTip: 'Create artists, write lyrics, and build music video treatments'
   },
-  'ad-lab': {
-    banner: '/banners/adhub.webp',
-    title: 'Ad Lab',
-    subtitle: 'Generate, grade, and refine video ad prompt matrices',
-    helpTip: '5-phase workflow: brief → 12 prompts → grading → refinement → image/video generation'
-  },
-  'adhub': {
-    banner: '/banners/adhub.webp',
-    title: 'Adhub',
-    subtitle: 'Generate branded static ad images',
-    helpTip: 'Create ads using brands, templates, and styles in a guided 5-step wizard'
-  },
   'brand-studio': {
-    banner: '/banners/adhub.webp',
+    banner: '/banners/shot-creator.webp',
     title: 'Brand Studio',
     subtitle: 'Brand identity, content generation & campaigns',
     helpTip: 'Create brands, generate on-brand content, and build multi-platform campaigns'

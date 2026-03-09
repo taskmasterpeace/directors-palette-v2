@@ -23,8 +23,6 @@ import {
     Check,
     Circle,
     ArrowRight,
-    Megaphone,
-    Clapperboard,
     Brush
 } from 'lucide-react'
 import { useLayoutStore, TabValue } from '@/store/layout.store'
@@ -131,24 +129,10 @@ const NAV_SECTIONS: NavSection[] = [
                 tooltipExpanded: 'Artist Lab, Writing Studio & Music Video'
             },
             {
-                id: 'ad-lab',
-                label: 'Ad Lab',
-                icon: Clapperboard,
-                banner: '/banners/adhub.webp',
-                tooltipExpanded: 'Video ad prompt matrix generator'
-            },
-            {
-                id: 'adhub',
-                label: 'Adhub',
-                icon: Megaphone,
-                banner: '/banners/adhub.webp',
-                tooltipExpanded: 'Create branded static ads'
-            },
-            {
                 id: 'brand-studio',
                 label: 'Brand Studio',
                 icon: Brush,
-                banner: '/banners/adhub.webp',
+                banner: '/banners/shot-creator.webp',
                 tooltipExpanded: 'Brand identity, content generation & campaigns'
             }
         ]

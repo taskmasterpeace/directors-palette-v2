@@ -17,8 +17,6 @@ import { UserManual } from "@/features/help/components/UserManual"
 import { CommunityPage } from "@/features/community"
 import { SectionHeader } from "@/components/SectionHeader"
 import { NodeWorkflow } from "@/features/node-workflow"
-import { AdhubWorkspace } from "@/features/adhub"
-import { AdLabWorkspace } from "@/features/ad-lab"
 import { BrandStudioLayout } from "@/features/brand-studio"
 import { useAuth } from "@/features/auth/hooks/useAuth"
 
@@ -123,28 +121,6 @@ export default function Home() {
                   <SectionHeader section="music-lab" />
                   <div className="flex-1 overflow-hidden">
                     <MusicLabHub userId={user.id} />
-                  </div>
-                </PageTransition>
-              </TabsContent>
-            )}
-
-            {activeTab === 'ad-lab' && (
-              <TabsContent key="ad-lab" value="ad-lab" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
-                <PageTransition>
-                  <SectionHeader section="ad-lab" />
-                  <div className="flex-1 overflow-hidden">
-                    <AdLabWorkspace />
-                  </div>
-                </PageTransition>
-              </TabsContent>
-            )}
-
-            {activeTab === 'adhub' && (
-              <TabsContent key="adhub" value="adhub" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
-                <PageTransition>
-                  <SectionHeader section="adhub" />
-                  <div className="flex-1 overflow-hidden">
-                    <AdhubWorkspace />
                   </div>
                 </PageTransition>
               </TabsContent>

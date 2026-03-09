@@ -12,13 +12,7 @@ interface SourceBadgeProps {
 }
 
 const SOURCE_CONFIG: Record<ImageSource, { label: string; icon: string; bgColor: string; textColor: string }> = {
-  'adhub': {
-    label: 'Adhub',
-    icon: '📣',
-    bgColor: 'bg-cyan-500/80',
-    textColor: 'text-white',
-  },
-  'storybook': {
+'storybook': {
     label: 'Storybook',
     icon: '📖',
     bgColor: 'bg-amber-500/80',

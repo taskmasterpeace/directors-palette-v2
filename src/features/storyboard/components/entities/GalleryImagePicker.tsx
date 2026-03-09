@@ -29,7 +29,6 @@ const SOURCE_OPTIONS: { label: string; value: SourceFilter }[] = [
     { label: 'Storyboard', value: 'storyboard' },
     { label: 'Shot Creator', value: 'shot-creator' },
     { label: 'Storybook', value: 'storybook' },
-    { label: 'Adhub', value: 'adhub' },
 ]
 
 export function GalleryImagePicker({ open, onOpenChange, onSelect, defaultMetadataTypeFilter }: GalleryImagePickerProps) {

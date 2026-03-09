@@ -144,7 +144,7 @@ export class GalleryService {
         const reference = (metadata as { reference?: string }).reference || undefined
 
         // Extract source from metadata, default to 'shot-creator'
-        const validSources = ['shot-creator', 'shot-animator', 'layout-annotation', 'adhub', 'storybook', 'storyboard', 'artist-dna'] as const
+        const validSources = ['shot-creator', 'shot-animator', 'layout-annotation', 'storybook', 'storyboard', 'artist-dna'] as const
         type ValidSource = typeof validSources[number]
         const rawSource = (metadata as { source?: string }).source
         const source: ValidSource = rawSource && validSources.includes(rawSource as ValidSource)

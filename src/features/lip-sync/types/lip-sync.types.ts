@@ -36,7 +36,7 @@ export interface LipSyncModelConfig {
 // Request/Response Types
 // ============================================================================
 
-export type LipSyncSource = 'music-lab' | 'adhub'
+export type LipSyncSource = 'music-lab' | 'brand-studio'
 
 export interface LipSyncGenerationRequest {
   avatarImageUrl: string

@@ -17,8 +17,7 @@ interface SourceOption {
 const SOURCE_OPTIONS: SourceOption[] = [
   { value: null, label: 'All', icon: '🖼️', bgColor: 'bg-zinc-600', textColor: 'text-zinc-200' },
   { value: 'shot-creator', label: 'Shot Creator', icon: '📸', bgColor: 'bg-blue-600', textColor: 'text-blue-200' },
-  { value: 'adhub', label: 'Adhub', icon: '📣', bgColor: 'bg-cyan-600', textColor: 'text-cyan-200' },
-  { value: 'storybook', label: 'Storybook', icon: '📖', bgColor: 'bg-amber-600', textColor: 'text-amber-200' },
+{ value: 'storybook', label: 'Storybook', icon: '📖', bgColor: 'bg-amber-600', textColor: 'text-amber-200' },
   { value: 'storyboard', label: 'Storyboard', icon: '🎬', bgColor: 'bg-sky-600', textColor: 'text-sky-200' },
   { value: 'artist-dna', label: 'Artist DNA', icon: '🧬', bgColor: 'bg-rose-600', textColor: 'text-rose-200' },
 ]
