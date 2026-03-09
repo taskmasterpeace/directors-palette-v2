@@ -569,6 +569,24 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
 
                 {/* Generate button - sticky on mobile so it's always visible */}
                 <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-background/95 backdrop-blur-sm border-t border-border shadow-[0_-4px_12px_rgba(0,0,0,0.15)] lg:static lg:p-0 lg:bg-transparent lg:backdrop-blur-none lg:border-0 lg:shadow-none lg:z-auto">
+                    {/* Batch toggle */}
+                    <div className="flex items-center justify-end gap-1 mb-2">
+                        <span className="text-xs text-muted-foreground mr-1">Batch:</span>
+                        {[1, 5].map((count) => (
+                            <button
+                                key={count}
+                                onClick={() => updateSettings({ batchCount: count })}
+                                className={cn(
+                                    "px-2 py-0.5 text-xs font-medium rounded transition-colors",
+                                    (shotCreatorSettings.batchCount || 1) === count
+                                        ? "bg-cyan-600 text-white"
+                                        : "bg-muted text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                x{count}
+                            </button>
+                        ))}
+                    </div>
                     <div className="flex gap-2">
                         <Button
                             onClick={handleGenerate}

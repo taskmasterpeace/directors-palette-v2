@@ -105,6 +105,9 @@ export function usePromptGeneration() {
             imageCount = parsedPrompt.totalCount || 1
         }
 
+        const batchCount = shotCreatorSettings.batchCount || 1
+        imageCount = imageCount * batchCount
+
         const totalCost = imageCount * costPerImage
 
         const tokenCost = Math.ceil(totalCost * 100)
@@ -650,13 +653,20 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
             finalPrompt = `${activeLora.triggerWord}, ${shotCreatorPrompt}`
         }
 
-        await generateImage(
-            model,
-            finalPrompt,
-            referenceUrls,
-            modelSettings,
-            lastUsedRecipe || undefined,
-        )
+        const batchCount = shotCreatorSettings.batchCount || 1
+
+        for (let b = 0; b < batchCount; b++) {
+            if (batchCount > 1) {
+                toast.info(`Batch ${b + 1} of ${batchCount}`)
+            }
+            await generateImage(
+                model,
+                finalPrompt,
+                referenceUrls,
+                modelSettings,
+                lastUsedRecipe || undefined,
+            )
+        }
 
         setLastUsedRecipe(null)
     }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages, activeFieldValues, generationCost, activeLora])

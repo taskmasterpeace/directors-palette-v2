@@ -71,4 +71,6 @@ export interface ShotCreatorSettings {
     // Z-Image Turbo / LoRA settings
     guidanceScale?: number // Guidance scale (0-20, default 0, auto-set to 1 when LoRA active)
     loraScale?: number // LoRA strength (0-2, default 1.0)
+    // Batch generation
+    batchCount?: number // Number of times to repeat generation (1 or 5, default 1)
 }

@@ -85,7 +85,7 @@ function GenerationNode({ data, selected }: NodeProps) {
         style={{
           width: '16px',
           height: '16px',
-          background: '#a855f7',
+          background: '#06b6d4',
           border: '2px solid #18181b'
         }}
       />

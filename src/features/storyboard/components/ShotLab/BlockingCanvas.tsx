@@ -19,7 +19,7 @@ export function BlockingCanvas({ shot, onUpdate }: BlockingCanvasProps) {
     const containerRef = useRef<HTMLDivElement>(null)
 
     // Colors
-    const ACTOR_COLOR = "#a855f7" // Purple 500
+    const ACTOR_COLOR = "#06b6d4" // Cyan 500
     const PROP_COLOR = "#eab308" // Yellow 500
 
     useEffect(() => {
