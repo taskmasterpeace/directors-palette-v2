@@ -175,6 +175,18 @@ export function usePromptGeneration() {
                     baseSettings.guidanceScale = shotCreatorSettings.guidanceScale
                 }
                 break
+            case 'qwen-image-edit':
+                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio || 'match_input_image'
+                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'webp'
+                baseSettings.trueCfgScale = shotCreatorSettings.guidanceScale ?? 4.5
+                baseSettings.numInferenceSteps = 28
+                baseSettings.loraScale = shotCreatorSettings.loraScale ?? 0.9
+                // Camera angle state
+                baseSettings.cameraEnabled = shotCreatorSettings.cameraEnabled ?? true
+                baseSettings.cameraAzimuth = shotCreatorSettings.cameraAzimuth ?? 0
+                baseSettings.cameraElevation = shotCreatorSettings.cameraElevation ?? 0
+                baseSettings.cameraDistance = shotCreatorSettings.cameraDistance ?? 5
+                break
         }
 
         return baseSettings

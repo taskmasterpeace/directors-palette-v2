@@ -22,7 +22,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana-2' | 'z-image-turbo' | 'firered-image-edit'
+export type ModelId = 'nano-banana-2' | 'z-image-turbo' | 'firered-image-edit' | 'qwen-image-edit'
 
 export interface ModelParameter {
     id: string
@@ -254,6 +254,50 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         default: 0,
         description: 'Guidance scale. Use 0 for Turbo models.'
     },
+    // Qwen Image Edit parameters
+    qwenTrueCfgScale: {
+        id: 'trueCfgScale',
+        label: 'CFG Scale',
+        type: 'slider',
+        min: 1,
+        max: 20,
+        step: 0.5,
+        default: 4.5,
+        description: 'Guidance strength. Higher = more faithful to prompt.'
+    },
+    qwenInferenceSteps: {
+        id: 'numInferenceSteps',
+        label: 'Inference Steps',
+        type: 'slider',
+        min: 1,
+        max: 50,
+        default: 28,
+        description: 'Number of denoising steps. Higher = better quality, slower.'
+    },
+    qwenLoraScale: {
+        id: 'loraScale',
+        label: 'Camera LoRA Strength',
+        type: 'slider',
+        min: 0,
+        max: 2,
+        step: 0.1,
+        default: 0.9,
+        description: 'Strength of camera angle control. 0.9 recommended.'
+    },
+    qwenAspectRatio: {
+        id: 'aspectRatio',
+        label: 'Aspect Ratio',
+        type: 'select',
+        default: 'match_input_image',
+        options: [
+            { value: 'match_input_image', label: 'Match Input Image' },
+            { value: '1:1', label: '1:1 Square' },
+            { value: '16:9', label: '16:9 Landscape' },
+            { value: '9:16', label: '9:16 Portrait' },
+            { value: '4:3', label: '4:3 Classic' },
+            { value: '3:4', label: '3:4 Portrait' },
+        ]
+    },
 }
 
 export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
@@ -307,6 +351,30 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         },
         maxReferenceImages: 0, // Text-to-image only - no image input support
         estimatedSeconds: 8,
+    },
+    'qwen-image-edit': {
+        id: 'qwen-image-edit',
+        name: 'qwen-image-edit',
+        displayName: 'Camera Angle',
+        type: 'editing',
+        icon: '🎥',
+        description: 'Control camera angle with 3D gizmo. Upload an image, choose your angle, and re-render from any viewpoint.',
+        badge: 'Camera',
+        badgeColor: 'bg-cyan-600',
+        textColor: 'text-cyan-300',
+        endpoint: 'qwen/qwen-image-edit-2511',
+        costPerImage: 0.05, // 5 pts = $0.05 (~$0.03 Replicate cost)
+        supportedParameters: ['aspectRatio', 'outputFormat', 'trueCfgScale', 'numInferenceSteps', 'loraScale'],
+        parameters: {
+            aspectRatio: MODEL_PARAMETERS.qwenAspectRatio,
+            outputFormat: MODEL_PARAMETERS.outputFormat,
+            trueCfgScale: MODEL_PARAMETERS.qwenTrueCfgScale,
+            numInferenceSteps: MODEL_PARAMETERS.qwenInferenceSteps,
+            loraScale: MODEL_PARAMETERS.qwenLoraScale,
+        },
+        maxReferenceImages: 3, // Qwen supports 1-3 input images
+        requiresInputImage: true,
+        estimatedSeconds: 30,
     },
     'firered-image-edit': {
         id: 'firered-image-edit',

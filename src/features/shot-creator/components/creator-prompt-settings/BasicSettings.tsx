@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import StyleSelector from './StyleSelector'
+import { CameraAngleSection } from '../camera-angle/CameraAngleSection'
 
 const BasicSettings = () => {
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
@@ -138,6 +139,11 @@ const BasicSettings = () => {
                     </div>
                 )}
             </div>
+
+            {/* Camera Angle Control (Qwen Image Edit only) */}
+            {selectedModel === 'qwen-image-edit' && (
+                <CameraAngleSection />
+            )}
         </div>
     )
 }

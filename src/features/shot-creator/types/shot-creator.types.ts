@@ -73,4 +73,9 @@ export interface ShotCreatorSettings {
     loraScale?: number // LoRA strength (0-2, default 1.0)
     // Batch generation
     batchCount?: number // Number of times to repeat generation (1 or 5, default 1)
+    // Camera angle control (Qwen Image Edit)
+    cameraAzimuth?: number      // 0-360 degrees (horizontal rotation)
+    cameraElevation?: number    // -30 to 60 degrees (vertical tilt)
+    cameraDistance?: number     // 0-10 (zoom: 0=wide, 10=close-up)
+    cameraEnabled?: boolean     // Whether camera angle control is active
 }

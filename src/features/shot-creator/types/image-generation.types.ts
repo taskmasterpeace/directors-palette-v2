@@ -10,6 +10,7 @@ export type ImageModel = Extract<ModelId,
   | 'nano-banana-2'
   | 'z-image-turbo'
   | 'firered-image-edit'
+  | 'qwen-image-edit'
 >
 
 // Model-specific settings interfaces
@@ -45,6 +46,19 @@ export interface FireRedEditSettings {
   outputQuality?: number
 }
 
+export interface QwenImageEditSettings {
+  aspectRatio?: string
+  outputFormat?: 'jpg' | 'png' | 'webp'
+  trueCfgScale?: number       // CFG guidance (1-20, default 4.5)
+  numInferenceSteps?: number  // Denoising steps (1-50, default 28)
+  loraScale?: number          // Camera LoRA strength (0-2, default 0.9)
+  // Camera angle (set by 3D gizmo)
+  cameraAzimuth?: number      // 0-360 degrees
+  cameraElevation?: number    // -30 to 60 degrees
+  cameraDistance?: number     // 0-10 (zoom)
+  cameraEnabled?: boolean     // Whether camera angle control is active
+}
+
 export interface SeedreamSettings {
   aspectRatio?: string
   outputFormat?: 'jpg' | 'png'
@@ -65,6 +79,7 @@ export type ImageModelSettings =
   | NanoBanana2Settings
   | ZImageTurboSettings
   | FireRedEditSettings
+  | QwenImageEditSettings
   | SeedreamSettings
   | NanoBananaProSettings
 

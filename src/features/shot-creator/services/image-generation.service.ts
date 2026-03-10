@@ -13,7 +13,9 @@ import type {
   NanoBanana2Settings,
   ZImageTurboSettings,
   FireRedEditSettings,
+  QwenImageEditSettings,
 } from '../types/image-generation.types'
+import { buildCameraAnglePrompt } from '../helpers/camera-angle.helper'
 import { ASPECT_RATIO_SIZES } from '@/config'
 import { logger } from '@/lib/logger'
 
@@ -45,6 +47,9 @@ export class ImageGenerationService {
         break
       case 'firered-image-edit':
         errors.push(...this.validateFireRedEdit(input))
+        break
+      case 'qwen-image-edit':
+        errors.push(...this.validateQwenImageEdit(input))
         break
     }
 
@@ -112,6 +117,8 @@ export class ImageGenerationService {
         return this.buildZImageTurboInput(input)
       case 'firered-image-edit':
         return this.buildFireRedEditInput(input)
+      case 'qwen-image-edit':
+        return this.buildQwenImageEditInput(input)
       default:
         throw new Error(`Unsupported model: ${input.model}`)
     }
@@ -239,6 +246,65 @@ export class ImageGenerationService {
     // Output quality
     if (settings.outputQuality !== undefined) {
       replicateInput.output_quality = settings.outputQuality
+    }
+
+    return replicateInput
+  }
+
+  /**
+   * Validate qwen-image-edit specific constraints
+   */
+  private static validateQwenImageEdit(input: ImageGenerationInput): string[] {
+    const errors: string[] = []
+
+    if (!input.referenceImages || input.referenceImages.length === 0) {
+      errors.push('Camera Angle requires an input image')
+    }
+
+    if (input.referenceImages && input.referenceImages.length > 3) {
+      errors.push('Camera Angle supports maximum 3 input images')
+    }
+
+    return errors
+  }
+
+  private static buildQwenImageEditInput(input: ImageGenerationInput) {
+    const settings = input.modelSettings as QwenImageEditSettings
+    const replicateInput: Record<string, unknown> = {}
+
+    // Build prompt: prepend camera angle tokens if camera is enabled
+    if (settings.cameraEnabled && settings.cameraAzimuth !== undefined) {
+      const cameraPrompt = buildCameraAnglePrompt({
+        azimuth: settings.cameraAzimuth ?? 0,
+        elevation: settings.cameraElevation ?? 0,
+        distance: settings.cameraDistance ?? 5,
+      })
+      // Camera angle prompt goes first, then user prompt
+      replicateInput.prompt = input.prompt
+        ? `${cameraPrompt} ${input.prompt}`
+        : cameraPrompt
+    } else {
+      replicateInput.prompt = input.prompt
+    }
+
+    // Image input (required)
+    if (input.referenceImages && input.referenceImages.length > 0) {
+      replicateInput.image = this.normalizeReferenceImages(input.referenceImages)
+    }
+
+    // CFG scale
+    if (settings.trueCfgScale !== undefined) {
+      replicateInput.true_cfg_scale = settings.trueCfgScale
+    }
+
+    // Inference steps
+    if (settings.numInferenceSteps !== undefined) {
+      replicateInput.num_inference_steps = settings.numInferenceSteps
+    }
+
+    // Output format
+    if (settings.outputFormat) {
+      replicateInput.output_format = settings.outputFormat
     }
 
     return replicateInput

@@ -46,7 +46,7 @@ export interface ShotCreatorSettings {
     aspectRatio: string
     resolution: string
     seed?: number
-    model?: 'nano-banana-2' | 'z-image-turbo'
+    model?: 'nano-banana-2' | 'z-image-turbo' | 'qwen-image-edit'
     maxImages?: number
     sequentialGeneration?: boolean
     promptLibrary?: PromptLibrarySettings
