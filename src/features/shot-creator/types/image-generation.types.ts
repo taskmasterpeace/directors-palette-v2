@@ -51,7 +51,7 @@ export interface QwenImageEditSettings {
   outputFormat?: 'jpg' | 'png' | 'webp'
   trueCfgScale?: number       // CFG guidance (1-20, default 4.5)
   numInferenceSteps?: number  // Denoising steps (1-50, default 28)
-  loraScale?: number          // Camera LoRA strength (0-2, default 0.9)
+  loraScale?: number          // Camera LoRA strength (0-2, default 1.25)
   // Camera angle (set by 3D gizmo)
   cameraAzimuth?: number      // 0-360 degrees
   cameraElevation?: number    // -30 to 60 degrees

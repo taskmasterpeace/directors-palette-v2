@@ -281,8 +281,8 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         min: 0,
         max: 2,
         step: 0.1,
-        default: 0.9,
-        description: 'Strength of camera angle control. 0.9 recommended.'
+        default: 1.25,
+        description: 'Strength of camera angle control. 1.25 recommended.'
     },
     qwenAspectRatio: {
         id: 'aspectRatio',

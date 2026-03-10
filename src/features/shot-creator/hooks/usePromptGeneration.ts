@@ -180,7 +180,7 @@ export function usePromptGeneration() {
                 baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'webp'
                 baseSettings.trueCfgScale = shotCreatorSettings.guidanceScale ?? 4.5
                 baseSettings.numInferenceSteps = 28
-                baseSettings.loraScale = shotCreatorSettings.loraScale ?? 0.9
+                baseSettings.loraScale = shotCreatorSettings.loraScale ?? 1.25
                 // Camera angle state
                 baseSettings.cameraEnabled = shotCreatorSettings.cameraEnabled ?? true
                 baseSettings.cameraAzimuth = shotCreatorSettings.cameraAzimuth ?? 0

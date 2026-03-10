@@ -289,7 +289,7 @@ export class ImageGenerationService {
 
       // Auto-inject multi-angle LoRA when camera control is active
       replicateInput.lora_weights = this.MULTI_ANGLE_LORA_URL
-      replicateInput.lora_scale = settings.loraScale ?? 0.9
+      replicateInput.lora_scale = settings.loraScale ?? 1.25
     } else {
       replicateInput.prompt = input.prompt
     }
