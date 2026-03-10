@@ -362,7 +362,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         badge: 'Camera',
         badgeColor: 'bg-cyan-600',
         textColor: 'text-cyan-300',
-        endpoint: 'qwen/qwen-image-edit-2511',
+        endpoint: 'qwen/qwen-image-edit-plus-lora',
         costPerImage: 0.05, // 5 pts = $0.05 (~$0.03 Replicate cost)
         supportedParameters: ['aspectRatio', 'outputFormat', 'trueCfgScale', 'numInferenceSteps', 'loraScale'],
         parameters: {

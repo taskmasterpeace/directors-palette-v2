@@ -268,6 +268,9 @@ export class ImageGenerationService {
     return errors
   }
 
+  // Multi-angle LoRA weights URL (HuggingFace direct link)
+  static readonly MULTI_ANGLE_LORA_URL = 'https://huggingface.co/fal/Qwen-Image-Edit-2511-Multiple-Angles-LoRA/resolve/main/qwen-image-edit-2511-multiple-angles-lora.safetensors'
+
   private static buildQwenImageEditInput(input: ImageGenerationInput) {
     const settings = input.modelSettings as QwenImageEditSettings
     const replicateInput: Record<string, unknown> = {}
@@ -283,6 +286,10 @@ export class ImageGenerationService {
       replicateInput.prompt = input.prompt
         ? `${cameraPrompt} ${input.prompt}`
         : cameraPrompt
+
+      // Auto-inject multi-angle LoRA when camera control is active
+      replicateInput.lora_weights = this.MULTI_ANGLE_LORA_URL
+      replicateInput.lora_scale = settings.loraScale ?? 0.9
     } else {
       replicateInput.prompt = input.prompt
     }
@@ -292,14 +299,9 @@ export class ImageGenerationService {
       replicateInput.image = this.normalizeReferenceImages(input.referenceImages)
     }
 
-    // CFG scale
-    if (settings.trueCfgScale !== undefined) {
-      replicateInput.true_cfg_scale = settings.trueCfgScale
-    }
-
-    // Inference steps
-    if (settings.numInferenceSteps !== undefined) {
-      replicateInput.num_inference_steps = settings.numInferenceSteps
+    // Aspect ratio
+    if (settings.aspectRatio) {
+      replicateInput.aspect_ratio = settings.aspectRatio
     }
 
     // Output format
@@ -342,6 +344,7 @@ export class ImageGenerationService {
   /** Version hashes for models that require version-based predictions */
   static readonly LORA_VERSION = '197b2db2015aa366d2bc61a941758adf4c31ac66b18573f5c66dc388ab081ca2'
   static readonly FIRERED_VERSION = '778e5a9b1a1c75e0f8013e19db9a9e6ff456c46d796e31070fe740a2874daa96'
+  static readonly QWEN_IMAGE_EDIT_VERSION = 'b37d69a6b94414c96cc4ecb16660b472bb62284f2293d4b65537c09b8500e200'
 
   /**
    * Check if a model requires version-based prediction (not model: shorthand)
@@ -349,6 +352,7 @@ export class ImageGenerationService {
   static getVersionForModel(model: ImageModel, loraActive?: boolean): string | null {
     if (loraActive && model === 'z-image-turbo') return this.LORA_VERSION
     if (model === 'firered-image-edit') return this.FIRERED_VERSION
+    if (model === 'qwen-image-edit') return this.QWEN_IMAGE_EDIT_VERSION
     return null
   }
 
