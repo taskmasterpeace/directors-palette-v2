@@ -51,7 +51,7 @@ const MODEL_CAPABILITIES: Record<ModelId, {
   'qwen-image-edit': {
     speed: '~30s',
     textRendering: 'Good',
-    refImages: 'Required (1-3)',
+    refImages: 'Required (1)',
     bestFor: ['Camera angle control', '3D viewpoint changes', 'Multi-angle renders', 'Object rotation']
   },
 }

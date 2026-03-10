@@ -2,6 +2,7 @@
 
 import React, { Suspense, useCallback } from 'react'
 import { useShotCreatorSettings } from '../../hooks/useShotCreatorSettings'
+import { useShotCreatorStore } from '../../store/shot-creator.store'
 import type { CameraAngle } from '../../helpers/camera-angle.helper'
 import { DEFAULT_CAMERA_ANGLE } from '../../helpers/camera-angle.helper'
 
@@ -16,8 +17,12 @@ const CameraAngleGizmo = React.lazy(() =>
  */
 export function CameraAngleSection() {
   const { settings, updateSettings } = useShotCreatorSettings()
+  const referenceImages = useShotCreatorStore(s => s.shotCreatorReferenceImages)
 
   const isEnabled = settings.cameraEnabled !== false // Default to enabled for this model
+
+  // Get first reference image URL to display in the 3D gizmo
+  const firstImageUrl = referenceImages[0]?.preview || referenceImages[0]?.url || undefined
 
   const currentAngle: CameraAngle = {
     azimuth: settings.cameraAzimuth ?? DEFAULT_CAMERA_ANGLE.azimuth,
@@ -64,7 +69,7 @@ export function CameraAngleSection() {
             </div>
           }
         >
-          <CameraAngleGizmo angle={currentAngle} onChange={handleAngleChange} />
+          <CameraAngleGizmo angle={currentAngle} onChange={handleAngleChange} imageUrl={firstImageUrl} />
         </Suspense>
       )}
     </div>

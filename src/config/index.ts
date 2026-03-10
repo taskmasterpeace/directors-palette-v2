@@ -308,7 +308,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         type: 'generation',
         icon: '🍌',
         description: 'Best for text rendering, Google search grounding, and high-quality reference image editing. Handles up to 14 reference images.',
-        badge: 'New',
+        badge: 'Premium',
         badgeColor: 'bg-green-600',
         textColor: 'text-green-300',
         endpoint: 'google/nano-banana-2',
@@ -333,7 +333,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
     'z-image-turbo': {
         id: 'z-image-turbo',
         name: 'z-image-turbo',
-        displayName: 'Z-Image Turbo',
+        displayName: 'Turbo Generation',
         type: 'generation',
         icon: '⚡',
         description: 'Ultra-fast generation with LoRA support. Best for rapid iterations, character/style LoRAs, and concept exploration.',
@@ -351,6 +351,29 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         },
         maxReferenceImages: 0, // Text-to-image only - no image input support
         estimatedSeconds: 8,
+    },
+    'firered-image-edit': {
+        id: 'firered-image-edit',
+        name: 'firered-image-edit',
+        displayName: 'Edit Image',
+        type: 'editing',
+        icon: '✏️',
+        description: 'Instruction-based image editing. Add/remove objects, change backgrounds, swap styles, fix details. Requires an input image.',
+        badge: 'Edit',
+        badgeColor: 'bg-orange-600',
+        textColor: 'text-orange-300',
+        endpoint: 'prunaai/firered-image-edit',
+        costPerImage: 0.04, // 4 pts = $0.04 (~$0.015 Replicate cost, ~62% margin)
+        supportedParameters: ['aspectRatio', 'outputFormat', 'trueCfgScale', 'numInferenceSteps'],
+        parameters: {
+            aspectRatio: MODEL_PARAMETERS.fireRedAspectRatio,
+            outputFormat: MODEL_PARAMETERS.outputFormat,
+            trueCfgScale: MODEL_PARAMETERS.fireRedCfgScale,
+            numInferenceSteps: MODEL_PARAMETERS.fireRedInferenceSteps,
+        },
+        maxReferenceImages: 1,
+        requiresInputImage: true,
+        estimatedSeconds: 12,
     },
     'qwen-image-edit': {
         id: 'qwen-image-edit',
@@ -375,29 +398,6 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         maxReferenceImages: 1, // Camera Angle: one subject image to rotate around
         requiresInputImage: true,
         estimatedSeconds: 30,
-    },
-    'firered-image-edit': {
-        id: 'firered-image-edit',
-        name: 'firered-image-edit',
-        displayName: 'Z-Image Edit',
-        type: 'editing',
-        icon: '✏️',
-        description: 'Instruction-based image editing. Add/remove objects, change backgrounds, swap styles, fix details. Requires an input image.',
-        badge: 'Edit',
-        badgeColor: 'bg-orange-600',
-        textColor: 'text-orange-300',
-        endpoint: 'prunaai/firered-image-edit',
-        costPerImage: 0.04, // 4 pts = $0.04 (~$0.015 Replicate cost, ~62% margin)
-        supportedParameters: ['aspectRatio', 'outputFormat', 'trueCfgScale', 'numInferenceSteps'],
-        parameters: {
-            aspectRatio: MODEL_PARAMETERS.fireRedAspectRatio,
-            outputFormat: MODEL_PARAMETERS.outputFormat,
-            trueCfgScale: MODEL_PARAMETERS.fireRedCfgScale,
-            numInferenceSteps: MODEL_PARAMETERS.fireRedInferenceSteps,
-        },
-        maxReferenceImages: 1,
-        requiresInputImage: true,
-        estimatedSeconds: 12,
     },
 }
 

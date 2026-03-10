@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useRef, useCallback, useMemo } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Canvas, useFrame, useThree, useLoader } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import type { CameraAngle } from '../../helpers/camera-angle.helper'
@@ -13,12 +13,28 @@ import {
 
 // ── 3D Scene Components ─────────────────────────────────────────────
 
-interface SubjectSphereProps {
+/** Subject image billboard at center — shows uploaded reference image */
+function SubjectImage({ imageUrl }: { imageUrl: string }) {
+  const texture = useLoader(THREE.TextureLoader, imageUrl)
+  // Compute aspect ratio from loaded texture
+  const aspect = texture.image ? texture.image.width / texture.image.height : 1
+  const height = 1.2
+  const width = height * aspect
+  return (
+    <mesh position={[0, 0, 0]}>
+      <planeGeometry args={[width, height]} />
+      <meshBasicMaterial map={texture} side={THREE.DoubleSide} />
+    </mesh>
+  )
+}
+
+interface CameraIndicatorProps {
   angle: CameraAngle
+  imageUrl?: string
 }
 
 /** Visual indicator showing where the camera is pointing from */
-function CameraIndicator({ angle }: SubjectSphereProps) {
+function CameraIndicator({ angle, imageUrl }: CameraIndicatorProps) {
   const meshRef = useRef<THREE.Mesh>(null)
   const lineObjRef = useRef<THREE.Line | null>(null)
 
@@ -38,7 +54,7 @@ function CameraIndicator({ angle }: SubjectSphereProps) {
     // Convert spherical coordinates to cartesian
     const azimuthRad = THREE.MathUtils.degToRad(angle.azimuth)
     const elevationRad = THREE.MathUtils.degToRad(angle.elevation)
-    const radius = 2 + (angle.distance / 10) * 2 // Map 0-10 to 2-4
+    const radius = 4 - (angle.distance / 10) * 2 // Map 0=far(4) to 10=close(2) — matches LoRA tokens
 
     const x = radius * Math.cos(elevationRad) * Math.sin(azimuthRad)
     const y = radius * Math.sin(elevationRad)
@@ -58,11 +74,22 @@ function CameraIndicator({ angle }: SubjectSphereProps) {
 
   return (
     <>
-      {/* Subject sphere at center */}
-      <mesh position={[0, 0, 0]}>
-        <sphereGeometry args={[0.5, 32, 32]} />
-        <meshStandardMaterial color="#06b6d4" opacity={0.6} transparent />
-      </mesh>
+      {/* Subject at center — show uploaded image or fallback sphere */}
+      {imageUrl ? (
+        <React.Suspense fallback={
+          <mesh position={[0, 0, 0]}>
+            <sphereGeometry args={[0.5, 32, 32]} />
+            <meshStandardMaterial color="#06b6d4" opacity={0.6} transparent />
+          </mesh>
+        }>
+          <SubjectImage imageUrl={imageUrl} />
+        </React.Suspense>
+      ) : (
+        <mesh position={[0, 0, 0]}>
+          <sphereGeometry args={[0.5, 32, 32]} />
+          <meshStandardMaterial color="#06b6d4" opacity={0.6} transparent />
+        </mesh>
+      )}
 
       {/* Camera indicator */}
       <mesh ref={meshRef}>
@@ -106,9 +133,10 @@ function CameraSetup() {
 interface CameraAngleGizmoProps {
   angle: CameraAngle
   onChange: (angle: CameraAngle) => void
+  imageUrl?: string
 }
 
-export function CameraAngleGizmo({ angle, onChange }: CameraAngleGizmoProps) {
+export function CameraAngleGizmo({ angle, onChange, imageUrl }: CameraAngleGizmoProps) {
   const description = getCameraAngleDescription(angle)
 
   const updateAngle = useCallback((key: keyof CameraAngle, value: number) => {
@@ -126,7 +154,7 @@ export function CameraAngleGizmo({ angle, onChange }: CameraAngleGizmoProps) {
           <CameraSetup />
           <ambientLight intensity={0.5} />
           <pointLight position={[5, 5, 5]} intensity={0.8} />
-          <CameraIndicator angle={angle} />
+          <CameraIndicator angle={angle} imageUrl={imageUrl} />
           <OrbitControls
             enableZoom={false}
             enablePan={false}

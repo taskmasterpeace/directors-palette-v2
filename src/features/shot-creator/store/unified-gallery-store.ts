@@ -235,10 +235,17 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
 
     // Merge: remaining pending placeholders first, then DB images
     const pendingIds = new Set(pendingImages.map(img => img.id))
-    const merged = [
+    const mergedRaw = [
       ...pendingImages,
       ...uniqueImages.filter(img => !pendingIds.has(img.id))
     ]
+    // Final dedup to prevent React duplicate key errors from race conditions
+    const seenIds = new Set<string>()
+    const merged = mergedRaw.filter(img => {
+      if (seenIds.has(img.id)) return false
+      seenIds.add(img.id)
+      return true
+    })
 
     set({
       images: merged,
