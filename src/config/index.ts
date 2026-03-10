@@ -372,7 +372,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
             numInferenceSteps: MODEL_PARAMETERS.qwenInferenceSteps,
             loraScale: MODEL_PARAMETERS.qwenLoraScale,
         },
-        maxReferenceImages: 3, // Qwen supports 1-3 input images
+        maxReferenceImages: 1, // Camera Angle: one subject image to rotate around
         requiresInputImage: true,
         estimatedSeconds: 30,
     },

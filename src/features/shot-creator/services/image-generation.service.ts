@@ -261,8 +261,8 @@ export class ImageGenerationService {
       errors.push('Camera Angle requires an input image')
     }
 
-    if (input.referenceImages && input.referenceImages.length > 3) {
-      errors.push('Camera Angle supports maximum 3 input images')
+    if (input.referenceImages && input.referenceImages.length > 1) {
+      errors.push('Camera Angle accepts only 1 input image')
     }
 
     return errors
