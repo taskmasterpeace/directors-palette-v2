@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Replicate from 'replicate'
+import { createClient } from '@supabase/supabase-js'
 import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { creditsService } from '@/features/credits'
 import { isAdminEmail } from '@/features/admin/types/admin.types'
 import { lognog } from '@/lib/lognog'
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
+import { randomUUID } from 'crypto'
 
 // Hunyuan 3D takes 2-3 minutes — need extended timeout
 export const maxDuration = 300
@@ -48,7 +50,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // If image is base64, upload to Replicate's file API first
+    // If image is base64, upload to Supabase Storage for a public URL
+    // (Replicate file API URLs require auth and don't work as model inputs)
     if (imageUrl.startsWith('data:')) {
       const base64Match = imageUrl.match(/^data:image\/\w+;base64,(.+)/)
       if (!base64Match) {
@@ -58,23 +61,23 @@ export async function POST(request: NextRequest) {
         )
       }
       const buffer = Buffer.from(base64Match[1], 'base64')
-      const mimeType = imageUrl.match(/^data:(image\/\w+)/)?.[1] || 'image/png'
+      const ext = imageUrl.match(/^data:image\/(\w+)/)?.[1] || 'png'
+      const mimeType = `image/${ext}`
 
-      const form = new FormData()
-      form.append('content', new Blob([buffer], { type: mimeType }), 'figurine-source.png')
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
+      const storagePath = `temp/figurine/${user.id}/${randomUUID()}.${ext}`
 
-      const fileResponse = await fetch('https://api.replicate.com/v1/files', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${process.env.REPLICATE_API_TOKEN}` },
-        body: form,
-      })
-      const fileData = await fileResponse.json()
-      const uploadedUrl = fileData.urls?.get
+      const { error: uploadError } = await supabase.storage
+        .from('directors-palette')
+        .upload(storagePath, buffer, { contentType: mimeType, upsert: true })
 
-      if (!uploadedUrl) {
+      if (uploadError) {
         lognog.error('figurine_3d_file_upload_failed', {
           type: 'error',
-          response: JSON.stringify(fileData).slice(0, 300),
+          response: uploadError.message,
           user_id: user.id,
         })
         return NextResponse.json(
@@ -82,7 +85,12 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         )
       }
-      imageUrl = uploadedUrl
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('directors-palette')
+        .getPublicUrl(storagePath)
+
+      imageUrl = publicUrl
     }
 
     // Check credits
