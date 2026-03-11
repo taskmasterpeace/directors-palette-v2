@@ -32,7 +32,6 @@ export async function POST(request: NextRequest) {
       materialId,
       materialName,
       sizeCm,
-      shapewaysPrice,
       ourPricePts,
       shippingAddress,
       figurineId,
@@ -56,15 +55,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Server-side price verification: re-fetch Shapeways pricing to prevent client tampering
+    const modelInfo = await shapewaysService.getModelPricing(shapewaysModelId)
+    const serverMaterial = modelInfo.pricing.find(p => p.materialId === materialId)
+    if (!serverMaterial) {
+      return NextResponse.json(
+        { error: 'Selected material not available for this model' },
+        { status: 400 }
+      )
+    }
+    // Recalculate: 30% markup, 100 pts/$1
+    const verifiedPricePts = Math.ceil(serverMaterial.price * 1.3 * 100)
+
     // Check credits (admins still pay for physical prints per spec)
     const balance = await creditsService.getBalance(user.id)
     const currentBalance = balance?.balance ?? 0
-    if (currentBalance < ourPricePts) {
+    if (currentBalance < verifiedPricePts) {
       return NextResponse.json(
         {
           error: 'Insufficient pts',
-          details: `You need ${ourPricePts} pts but only have ${currentBalance}.`,
-          required: ourPricePts,
+          details: `You need ${verifiedPricePts} pts but only have ${currentBalance}.`,
+          required: verifiedPricePts,
           balance: currentBalance,
         },
         { status: 402 }
@@ -76,7 +87,9 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       material_id: materialId,
       size_cm: sizeCm,
-      pts_cost: ourPricePts,
+      pts_cost: verifiedPricePts,
+      client_pts: ourPricePts,
+      shapeways_price: serverMaterial.price,
     })
 
     // Place order on Shapeways
@@ -86,12 +99,12 @@ export async function POST(request: NextRequest) {
       shippingAddress
     )
 
-    // Atomic pts deduction AFTER successful order
+    // Atomic pts deduction AFTER successful order — use server-verified price
     await creditsService.deductCredits(user.id, 'shapeways-print', {
       generationType: 'image',
       predictionId: orderResult.orderId,
       description: `Physical figurine print: ${materialName} ${sizeCm}cm`,
-      overrideAmount: ourPricePts,
+      overrideAmount: verifiedPricePts,
       user_email: user.email,
     })
 
@@ -111,8 +124,8 @@ export async function POST(request: NextRequest) {
         material_id: materialId,
         material_name: materialName,
         size_cm: sizeCm,
-        shapeways_price: shapewaysPrice,
-        our_price_pts: ourPricePts,
+        shapeways_price: serverMaterial.price,
+        our_price_pts: verifiedPricePts,
         status: 'pending',
         shipping_address: shippingAddress,
         dimensions: dimensions || null,
@@ -134,14 +147,14 @@ export async function POST(request: NextRequest) {
       shapeways_order_id: orderResult.orderId,
       material_id: materialId,
       size_cm: sizeCm,
-      pts_charged: ourPricePts,
+      pts_charged: verifiedPricePts,
     })
 
     return NextResponse.json({
       success: true,
       orderId: orderResult.orderId,
       status: orderResult.status,
-      ptsCharged: ourPricePts,
+      ptsCharged: verifiedPricePts,
     })
   } catch (error) {
     lognog.error('figurine_print_order_error', {
