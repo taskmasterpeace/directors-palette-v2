@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Upload, Box, Loader2, RotateCcw, Download, AlertCircle, Sparkles,
   Image as ImageIcon, Package, Truck, ChevronRight, Palette,
-  Layers, ArrowRight, CheckCircle2, Star,
+  Layers, ArrowRight, CheckCircle2, Star, Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useFigurineStore } from '../hooks/useFigurineStore'
@@ -117,12 +117,14 @@ export function FigurineStudio() {
     activeModelId,
     isGenerating,
     preSelectedImageUrl,
+    savedLoaded,
     startGeneration,
     setGenerationComplete,
     setGenerationFailed,
     setActiveModel,
     removeModel,
     setPreSelectedImage,
+    loadSavedModels,
   } = useFigurineStore()
 
   // Consume pre-selected image from gallery "Make Figurine" action
@@ -132,6 +134,19 @@ export function FigurineStudio() {
       setPreSelectedImage(null)
     }
   }, [preSelectedImageUrl, setPreSelectedImage])
+
+  // Load saved figurines from DB on mount
+  useEffect(() => {
+    if (savedLoaded) return
+    figurineService.listSaved().then((saved) => {
+      if (saved.length > 0) {
+        loadSavedModels(saved)
+      } else {
+        // Mark as loaded even if empty
+        loadSavedModels([])
+      }
+    })
+  }, [savedLoaded, loadSavedModels])
 
   const activeModel = models.find((m) => m.id === activeModelId)
 
@@ -186,6 +201,13 @@ export function FigurineStudio() {
     setSelectedImage(url)
     setError(null)
   }, [])
+
+  const handleDeleteSaved = useCallback(async (modelId: string, savedId?: string) => {
+    if (savedId) {
+      await figurineService.deleteSaved(savedId)
+    }
+    removeModel(modelId)
+  }, [removeModel])
 
   return (
     <div className="flex-1 h-full overflow-y-auto">
@@ -648,46 +670,80 @@ export function FigurineStudio() {
           </div>
         </motion.div>
 
-        {/* Previous Generations */}
-        {models.length > 1 && (
+        {/* Saved & Previous Figurines */}
+        {models.filter(m => m.id !== activeModelId).length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="space-y-3 pt-4 border-t border-border/20"
           >
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Previous Models
-            </h3>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Your Figurines
+              </h3>
+              <span className="text-[10px] text-muted-foreground">
+                {models.filter(m => m.status === 'ready').length} / 5 saved
+              </span>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
               {models.filter(m => m.id !== activeModelId).map((model) => (
-                <button
-                  key={model.id}
-                  onClick={() => setActiveModel(model.id)}
-                  className={cn(
-                    'relative rounded-lg overflow-hidden aspect-square border transition-all',
-                    'hover:scale-105 hover:border-cyan-500/50',
-                    model.status === 'ready' ? 'border-border/30' : 'border-red-500/30',
-                  )}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={model.sourceImageUrl}
-                    alt="Source"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent" />
-                  <div className="absolute bottom-1 left-1">
-                    {model.status === 'ready' ? (
-                      <div className="w-4 h-4 rounded-full bg-cyan-500/80 flex items-center justify-center">
-                        <Box className="w-2.5 h-2.5 text-white" />
-                      </div>
-                    ) : (
-                      <div className="w-4 h-4 rounded-full bg-red-500/80 flex items-center justify-center">
-                        <AlertCircle className="w-2.5 h-2.5 text-white" />
+                <div key={model.id} className="relative group">
+                  <button
+                    onClick={() => setActiveModel(model.id)}
+                    className={cn(
+                      'relative rounded-xl overflow-hidden aspect-square border transition-all w-full',
+                      'hover:scale-[1.03] hover:shadow-lg',
+                      activeModelId === model.id
+                        ? 'border-cyan-400 ring-2 ring-cyan-400/30'
+                        : model.status === 'ready'
+                          ? 'border-border/30 hover:border-cyan-500/50'
+                          : 'border-red-500/30',
+                    )}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={model.sourceImageUrl}
+                      alt="Source"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                    <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1">
+                      {model.status === 'ready' ? (
+                        <div className="w-5 h-5 rounded-full bg-cyan-500/80 flex items-center justify-center">
+                          <Box className="w-3 h-3 text-white" />
+                        </div>
+                      ) : model.status === 'generating' ? (
+                        <div className="w-5 h-5 rounded-full bg-amber-500/80 flex items-center justify-center">
+                          <Loader2 className="w-3 h-3 text-white animate-spin" />
+                        </div>
+                      ) : (
+                        <div className="w-5 h-5 rounded-full bg-red-500/80 flex items-center justify-center">
+                          <AlertCircle className="w-3 h-3 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    {model.savedId && (
+                      <div className="absolute top-1.5 left-1.5">
+                        <div className="px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm text-[9px] text-white/70 font-medium">
+                          Saved
+                        </div>
                       </div>
                     )}
-                  </div>
-                </button>
+                  </button>
+                  {/* Delete button */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDeleteSaved(model.id, model.savedId) }}
+                    className={cn(
+                      'absolute top-1.5 right-1.5 w-6 h-6 rounded-full',
+                      'bg-black/60 hover:bg-red-500/80 backdrop-blur-sm',
+                      'flex items-center justify-center transition-all',
+                      'opacity-0 group-hover:opacity-100',
+                    )}
+                    title="Remove"
+                  >
+                    <Trash2 className="w-3 h-3 text-white" />
+                  </button>
+                </div>
               ))}
             </div>
           </motion.div>

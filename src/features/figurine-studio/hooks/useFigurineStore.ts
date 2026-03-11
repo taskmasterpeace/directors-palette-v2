@@ -8,6 +8,8 @@ interface FigurineModel {
   status: FigurineStatus
   error?: string
   createdAt: string
+  /** If this model was loaded from the DB */
+  savedId?: string
 }
 
 interface FigurineStore {
@@ -16,6 +18,7 @@ interface FigurineStore {
   activeModelId: string | null
   isGenerating: boolean
   preSelectedImageUrl: string | null
+  savedLoaded: boolean
 
   // Actions
   startGeneration: (sourceImageUrl: string) => string
@@ -24,6 +27,7 @@ interface FigurineStore {
   setActiveModel: (id: string | null) => void
   removeModel: (id: string) => void
   setPreSelectedImage: (url: string | null) => void
+  loadSavedModels: (saved: { id: string; source_image_url: string; glb_url: string; created_at: string }[]) => void
 }
 
 let idCounter = 0
@@ -33,6 +37,7 @@ export const useFigurineStore = create<FigurineStore>((set) => ({
   activeModelId: null,
   isGenerating: false,
   preSelectedImageUrl: null,
+  savedLoaded: false,
 
   startGeneration: (sourceImageUrl) => {
     const id = `figurine-${Date.now()}-${++idCounter}`
@@ -79,4 +84,26 @@ export const useFigurineStore = create<FigurineStore>((set) => ({
     })),
 
   setPreSelectedImage: (url) => set({ preSelectedImageUrl: url }),
+
+  loadSavedModels: (saved) => {
+    set((state) => {
+      // Don't duplicate — only add models not already in the list
+      const existingGlbs = new Set(state.models.map(m => m.glbUrl).filter(Boolean))
+      const newModels = saved
+        .filter(s => !existingGlbs.has(s.glb_url))
+        .map(s => ({
+          id: `saved-${s.id}`,
+          sourceImageUrl: s.source_image_url,
+          glbUrl: s.glb_url,
+          status: 'ready' as const,
+          createdAt: s.created_at,
+          savedId: s.id,
+        }))
+
+      return {
+        models: [...state.models, ...newModels],
+        savedLoaded: true,
+      }
+    })
+  },
 }))

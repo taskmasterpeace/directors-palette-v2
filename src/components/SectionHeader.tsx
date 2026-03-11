@@ -70,7 +70,7 @@ const SECTION_CONFIG: Record<TabValue, { banner: string; title: string; subtitle
     helpTip: 'Create brands, generate on-brand content, and build multi-platform campaigns'
   },
   'figurine-studio': {
-    banner: '/banners/shot-creator.webp',
+    banner: '/banners/figurine-studio.webp',
     title: 'Figurine Studio',
     subtitle: 'Turn characters into 3D models and physical figurines',
     helpTip: 'Upload a character image, generate a 3D model, then order a physical figurine shipped to your door'

@@ -172,6 +172,34 @@ export async function POST(request: NextRequest) {
         })
       }
 
+      // Save figurine to DB (max 5 per user — delete oldest if at limit)
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      )
+      const { data: existing } = await supabaseAdmin
+        .from('figurines')
+        .select('id')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+
+      if (existing && existing.length >= 5) {
+        // Delete oldest to make room
+        const toDelete = existing.slice(0, existing.length - 4)
+        await supabaseAdmin
+          .from('figurines')
+          .delete()
+          .in('id', toDelete.map(f => f.id))
+      }
+
+      await supabaseAdmin.from('figurines').insert({
+        user_id: user.id,
+        source_image_url: imageUrl,
+        glb_url: glbUrl,
+        prediction_id: prediction.id,
+        credits_charged: userIsAdmin ? 0 : FIGURINE_3D_COST_CREDITS,
+      })
+
       lognog.info('figurine_3d_generation_completed', {
         type: 'business',
         event: 'figurine_3d_complete',
