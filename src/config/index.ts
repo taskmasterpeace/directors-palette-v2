@@ -146,6 +146,9 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
             { value: '1:1', label: '1:1 Square' },
             { value: '4:3', label: '4:3 Classic' },
             { value: '3:4', label: '3:4 Portrait' },
+            { value: '21:9', label: '21:9 Ultrawide' },
+            { value: '3:2', label: '3:2 Photo' },
+            { value: '2:3', label: '2:3 Photo Portrait' },
             { value: 'match_input_image', label: 'Match Input Image' }
         ]
     },

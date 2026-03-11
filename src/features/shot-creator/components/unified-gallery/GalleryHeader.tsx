@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
 import { CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,6 +13,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { SourceFilter } from './SourceFilter'
 
 // Storage limits constants
@@ -217,64 +222,40 @@ function SelectDropdown({ visibleImageCount, selectedCount, onSelectRecent, onSe
   onSelectAll: () => void
   onClearSelection?: () => void
 }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [open])
-
   const hasSelection = selectedCount > 0
   const options = [5, 10, 20].filter(n => n < visibleImageCount)
 
-  return (
-    <div ref={ref} className="relative">
+  if (hasSelection) {
+    return (
       <Button
-        variant={hasSelection ? 'default' : 'outline'}
+        variant="default"
         size="sm"
-        onClick={() => {
-          if (hasSelection && onClearSelection) {
-            onClearSelection()
-          } else {
-            setOpen(!open)
-          }
-        }}
-        className={hasSelection ? 'gap-1.5 bg-cyan-600 hover:bg-cyan-700 text-white' : 'gap-1'}
+        onClick={onClearSelection}
+        className="gap-1.5 bg-cyan-600 hover:bg-cyan-700 text-white"
       >
-        {hasSelection ? (
-          <>{selectedCount} selected — Clear</>
-        ) : (
-          <>
-            Select
-            <ChevronDown className="w-3 h-3" />
-          </>
-        )}
+        {selectedCount} selected — Clear
       </Button>
+    )
+  }
 
-      {open && !hasSelection && (
-        <div className="absolute right-0 top-full mt-1 z-50 min-w-[140px] rounded-lg border border-border bg-card shadow-xl py-1 animate-in fade-in-0 zoom-in-95">
-          {options.map(n => (
-            <button
-              key={n}
-              onClick={() => { onSelectRecent?.(n); setOpen(false) }}
-              className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent/50 transition-colors"
-            >
-              Last {n}
-            </button>
-          ))}
-          <button
-            onClick={() => { onSelectAll(); setOpen(false) }}
-            className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent/50 transition-colors font-medium"
-          >
-            All ({visibleImageCount})
-          </button>
-        </div>
-      )}
-    </div>
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-1">
+          Select
+          <ChevronDown className="w-3 h-3" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {options.map(n => (
+          <DropdownMenuItem key={n} onClick={() => onSelectRecent?.(n)}>
+            Last {n}
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuItem onClick={onSelectAll} className="font-medium">
+          All ({visibleImageCount})
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
