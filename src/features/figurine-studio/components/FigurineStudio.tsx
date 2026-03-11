@@ -5,12 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Upload, Box, Loader2, RotateCcw, Download, AlertCircle, Sparkles,
   Image as ImageIcon, Package, Truck, ChevronRight, Palette,
-  Layers, ArrowRight, CheckCircle2, Star, Trash2,
+  Layers, ArrowRight, CheckCircle2, Trash2, Printer,
+  FileBox, ChevronDown, Clock, RefreshCw,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useFigurineStore } from '../hooks/useFigurineStore'
 import { figurineService } from '../services/figurine.service'
 import { ModelViewer } from './ModelViewer'
+import { OrderPrintModal } from './OrderPrintModal'
 import { useCreditsStore } from '@/features/credits/store/credits.store'
 import { cn } from '@/utils/utils'
 
@@ -60,37 +62,19 @@ function PipelineStep({ step, label, icon: Icon, active, completed, delay }: {
   )
 }
 
-// Material card for the physical figurine teaser
-function MaterialCard({ name, color, price, popular }: {
-  name: string
-  color: string
-  price: string
-  popular?: boolean
-}) {
-  return (
-    <div className={cn(
-      'relative p-3 rounded-xl border transition-all cursor-pointer group',
-      'hover:scale-[1.03] hover:shadow-lg',
-      popular
-        ? 'border-cyan-500/40 bg-cyan-500/5 hover:border-cyan-400/60 hover:shadow-cyan-500/10'
-        : 'border-border/30 bg-card/20 hover:border-border/60',
-    )}>
-      {popular && (
-        <div className="absolute -top-2 right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-cyan-500 text-[9px] font-bold text-white uppercase tracking-wider">
-          <Star className="w-2.5 h-2.5" />
-          Popular
-        </div>
-      )}
-      <div
-        className="w-full aspect-square rounded-lg mb-2 border border-border/20"
-        style={{
-          background: color,
-        }}
-      />
-      <p className="text-xs font-medium text-foreground/80">{name}</p>
-      <p className="text-[10px] text-muted-foreground">From {price}</p>
-    </div>
-  )
+// Real material cards for the showcase
+const SHOWCASE_MATERIALS = [
+  { name: 'PLA Basic', gradient: 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 50%, #cccccc 100%)', price: '~780 pts' },
+  { name: 'Nylon White', gradient: 'linear-gradient(135deg, #fafafa 0%, #eeeeee 50%, #e0e0e0 100%)', price: '~4,290 pts' },
+  { name: 'Full Color Standard', gradient: 'linear-gradient(135deg, #e8d5b7 0%, #d4c4a8 30%, #c9b896 60%, #bfad85 100%)', price: '~15,990 pts', popular: true },
+  { name: 'Full Color Smooth', gradient: 'linear-gradient(135deg, #f0e6d3 0%, #e8dcc8 30%, #dfd2bc 60%, #d6c8b0 100%)', price: '~18,200 pts' },
+]
+
+const STATUS_BADGES: Record<string, { label: string; color: string }> = {
+  pending: { label: 'Pending', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
+  in_production: { label: 'In Production', color: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' },
+  shipped: { label: 'Shipped', color: 'bg-green-500/20 text-green-400 border-green-500/30' },
+  cancelled: { label: 'Cancelled', color: 'bg-red-500/20 text-red-400 border-red-500/30' },
 }
 
 const BG_PRESETS = [
@@ -109,7 +93,16 @@ export function FigurineStudio() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [bgColor, setBgColor] = useState('#09090b')
+  const [showPrintModal, setShowPrintModal] = useState(false)
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false)
+  const [isConvertingObj, setIsConvertingObj] = useState(false)
+  const [orders, setOrders] = useState<Array<{
+    id: string; shapeways_order_id: string; material_name: string;
+    size_cm: number; our_price_pts: number; status: string; created_at: string;
+  }>>([])
+  const [ordersLoaded, setOrdersLoaded] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const downloadMenuRef = useRef<HTMLDivElement>(null)
   const { balance } = useCreditsStore()
 
   const {
@@ -202,12 +195,53 @@ export function FigurineStudio() {
     setError(null)
   }, [])
 
+  // Load print orders
+  useEffect(() => {
+    if (ordersLoaded) return
+    figurineService.listOrders().then((loaded) => {
+      setOrders(loaded)
+      setOrdersLoaded(true)
+    })
+  }, [ordersLoaded])
+
+  // Close download menu on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (downloadMenuRef.current && !downloadMenuRef.current.contains(e.target as Node)) {
+        setShowDownloadMenu(false)
+      }
+    }
+    if (showDownloadMenu) {
+      document.addEventListener('mousedown', handleClick)
+      return () => document.removeEventListener('mousedown', handleClick)
+    }
+  }, [showDownloadMenu])
+
   const handleDeleteSaved = useCallback(async (modelId: string, savedId?: string) => {
     if (savedId) {
       await figurineService.deleteSaved(savedId)
     }
     removeModel(modelId)
   }, [removeModel])
+
+  const handleDownloadObj = useCallback(async () => {
+    if (!activeModel?.glbUrl) return
+    setIsConvertingObj(true)
+    setShowDownloadMenu(false)
+    try {
+      const blob = await figurineService.convertToObj(activeModel.glbUrl)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'figurine-obj.zip'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      setError('Failed to convert model to OBJ')
+    } finally {
+      setIsConvertingObj(false)
+    }
+  }, [activeModel?.glbUrl])
 
   return (
     <div className="flex-1 h-full overflow-y-auto">
@@ -272,7 +306,6 @@ export function FigurineStudio() {
             >
               {selectedImage ? (
                 <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={selectedImage}
                     alt="Character to convert"
@@ -390,14 +423,41 @@ export function FigurineStudio() {
                 3D Preview
               </h2>
               {activeModel?.glbUrl && (
-                <a
-                  href={activeModel.glbUrl}
-                  download="figurine.glb"
-                  className="inline-flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  Download GLB
-                </a>
+                <div className="relative" ref={downloadMenuRef}>
+                  <button
+                    onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                    className="inline-flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    Download
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+                  {showDownloadMenu && (
+                    <div className="absolute right-0 top-full mt-1 w-48 py-1 rounded-lg border border-border/40 bg-background/95 backdrop-blur-sm shadow-xl z-20">
+                      <a
+                        href={activeModel.glbUrl}
+                        download="figurine.glb"
+                        onClick={() => setShowDownloadMenu(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-xs text-foreground/80 hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors"
+                      >
+                        <Box className="w-3.5 h-3.5" />
+                        Download GLB
+                      </a>
+                      <button
+                        onClick={handleDownloadObj}
+                        disabled={isConvertingObj}
+                        className="flex items-center gap-2 px-3 py-2 text-xs text-foreground/80 hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors w-full text-left disabled:opacity-50"
+                      >
+                        {isConvertingObj ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <FileBox className="w-3.5 h-3.5" />
+                        )}
+                        {isConvertingObj ? 'Converting...' : 'Download OBJ (Print-Ready)'}
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -554,26 +614,25 @@ export function FigurineStudio() {
                 </div>
 
                 {/* Physical Figurine CTA */}
-                <div className="p-4 rounded-xl border border-violet-500/30 bg-gradient-to-br from-violet-500/5 via-card/30 to-amber-500/5 space-y-3">
+                <div className="p-4 rounded-xl border border-cyan-500/30 bg-gradient-to-br from-cyan-500/5 via-card/30 to-cyan-500/5 space-y-3">
                   <div className="flex items-center gap-2">
-                    <Package className="w-4 h-4 text-violet-400" />
-                    <span className="text-xs font-semibold text-violet-300 uppercase tracking-wider">Order Physical Figurine</span>
+                    <Printer className="w-4 h-4 text-cyan-400" />
+                    <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Order Physical Figurine</span>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Turn this 3D model into a real figurine printed in full color and shipped to your door. Choose from multiple materials and sizes.
+                    Turn this 3D model into a real figurine. Choose from 5 materials — from affordable PLA to full-color premium.
                   </p>
                   <Button
-                    disabled
+                    onClick={() => setShowPrintModal(true)}
                     className={cn(
                       'w-full h-10 rounded-lg font-semibold text-xs transition-all',
-                      'bg-gradient-to-r from-violet-600/80 to-violet-500/80',
-                      'text-white/80 shadow-lg shadow-violet-500/10',
-                      'disabled:opacity-60',
+                      'bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400',
+                      'text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40',
                     )}
                   >
                     <span className="flex items-center gap-2">
                       <Truck className="w-3.5 h-3.5" />
-                      Coming Soon &mdash; Join Waitlist
+                      Order Print &mdash; From 780 pts
                     </span>
                   </Button>
                 </div>
@@ -590,47 +649,49 @@ export function FigurineStudio() {
           className="pt-6 border-t border-border/20"
         >
           <div className="text-center space-y-2 mb-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-400 text-xs font-medium tracking-wider uppercase">
-              <Package className="w-3.5 h-3.5" />
-              Coming Soon
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-xs font-medium tracking-wider uppercase">
+              <Printer className="w-3.5 h-3.5" />
+              Physical Prints
             </div>
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground/90">
               From Screen to Shelf
             </h2>
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Once your 3D model is ready, choose a material and size. We handle printing and shipping.
+              Generate a 3D model, choose a material and size. We print and ship worldwide.
             </p>
           </div>
 
           {/* Material Preview Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
-            <MaterialCard
-              name="Full Color Sandstone"
-              color="linear-gradient(135deg, #e8d5b7 0%, #c9b896 50%, #a89672 100%)"
-              price="3,500 pts"
-              popular
-            />
-            <MaterialCard
-              name="Smooth Resin"
-              color="linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 50%, #bdbdbd 100%)"
-              price="2,800 pts"
-            />
-            <MaterialCard
-              name="Metallic Bronze"
-              color="linear-gradient(135deg, #cd7f32 0%, #b87333 50%, #a0522d 100%)"
-              price="5,200 pts"
-            />
-            <MaterialCard
-              name="Flexible Plastic"
-              color="linear-gradient(135deg, #4fc3f7 0%, #29b6f6 50%, #0288d1 100%)"
-              price="2,200 pts"
-            />
+            {SHOWCASE_MATERIALS.map((mat) => (
+              <div
+                key={mat.name}
+                className={cn(
+                  'relative p-3 rounded-xl border transition-all',
+                  mat.popular
+                    ? 'border-cyan-500/40 bg-cyan-500/5'
+                    : 'border-border/30 bg-card/20',
+                )}
+              >
+                {mat.popular && (
+                  <div className="absolute -top-2 right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-cyan-500 text-[9px] font-bold text-white uppercase tracking-wider">
+                    Popular
+                  </div>
+                )}
+                <div
+                  className="w-full aspect-square rounded-lg mb-2 border border-border/20"
+                  style={{ background: mat.gradient }}
+                />
+                <p className="text-xs font-medium text-foreground/80">{mat.name}</p>
+                <p className="text-[10px] text-muted-foreground">From {mat.price}</p>
+              </div>
+            ))}
           </div>
 
           {/* How it works */}
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
             {[
-              { icon: Palette, title: 'Choose Material', desc: '90+ materials including sandstone, resin, metal, and flexible plastics' },
+              { icon: Palette, title: 'Choose Material', desc: '5 curated materials from PLA to full-color nylon' },
               { icon: Package, title: 'We Print It', desc: 'Professional 3D printing with quality checks and full-color support' },
               { icon: Truck, title: 'Ships To You', desc: 'Delivered worldwide with tracking. Typical delivery in 10-14 business days' },
             ].map((item, i) => (
@@ -641,8 +702,8 @@ export function FigurineStudio() {
                 transition={{ delay: 0.6 + i * 0.1 }}
                 className="p-4 rounded-xl bg-card/20 border border-border/20 text-center space-y-2"
               >
-                <div className="w-10 h-10 mx-auto rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
-                  <item.icon className="w-5 h-5 text-violet-400" />
+                <div className="w-10 h-10 mx-auto rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                  <item.icon className="w-5 h-5 text-cyan-400" />
                 </div>
                 <h3 className="text-sm font-semibold text-foreground/80">{item.title}</h3>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">{item.desc}</p>
@@ -650,6 +711,65 @@ export function FigurineStudio() {
             ))}
           </div>
         </motion.div>
+
+        {/* Order History */}
+        {orders.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-3 pt-4 border-t border-border/20"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                My Print Orders
+              </h3>
+              <button
+                onClick={() => { setOrdersLoaded(false) }}
+                className="text-[10px] text-muted-foreground hover:text-cyan-400 transition-colors flex items-center gap-1"
+              >
+                <RefreshCw className="w-3 h-3" />
+                Refresh
+              </button>
+            </div>
+            <div className="space-y-2">
+              {orders.map((order) => {
+                const badge = STATUS_BADGES[order.status] || STATUS_BADGES.pending
+                return (
+                  <div
+                    key={order.id}
+                    className="flex items-center justify-between p-3 rounded-xl bg-card/30 border border-border/20"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                        <Package className="w-4 h-4 text-cyan-400" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-foreground/80">
+                          {order.material_name} &middot; {order.size_cm}cm
+                        </p>
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {new Date(order.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-semibold text-cyan-400 tabular-nums">
+                        {order.our_price_pts.toLocaleString()} pts
+                      </span>
+                      <span className={cn(
+                        'px-2 py-0.5 rounded-full text-[10px] font-semibold border',
+                        badge.color,
+                      )}>
+                        {badge.label}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </motion.div>
+        )}
 
         {/* Saved & Previous Figurines */}
         {models.filter(m => m.id !== activeModelId).length > 0 && (
@@ -681,7 +801,6 @@ export function FigurineStudio() {
                           : 'border-red-500/30',
                     )}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={model.sourceImageUrl}
                       alt="Source"
@@ -730,6 +849,20 @@ export function FigurineStudio() {
           </motion.div>
         )}
       </div>
+
+      {/* Print Order Modal */}
+      {activeModel?.glbUrl && (
+        <OrderPrintModal
+          isOpen={showPrintModal}
+          onClose={() => {
+            setShowPrintModal(false)
+            // Refresh orders after closing in case an order was placed
+            setOrdersLoaded(false)
+          }}
+          glbUrl={activeModel.glbUrl}
+          figurineId={activeModel.savedId}
+        />
+      )}
     </div>
   )
 }

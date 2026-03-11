@@ -161,6 +161,48 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      // Re-host GLB to Supabase Storage (Replicate URLs expire after ~1 hour)
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      )
+
+      let permanentGlbUrl = glbUrl
+      const glbStoragePath = `figurines/${user.id}/${randomUUID()}.glb`
+
+      try {
+        const glbResponse = await fetch(glbUrl)
+        if (glbResponse.ok) {
+          const glbBuffer = Buffer.from(await glbResponse.arrayBuffer())
+          const { error: glbUploadError } = await supabaseAdmin.storage
+            .from('directors-palette')
+            .upload(glbStoragePath, glbBuffer, {
+              contentType: 'model/gltf-binary',
+              upsert: true,
+            })
+
+          if (!glbUploadError) {
+            const { data: { publicUrl } } = supabaseAdmin.storage
+              .from('directors-palette')
+              .getPublicUrl(glbStoragePath)
+            permanentGlbUrl = publicUrl
+          } else {
+            lognog.error('figurine_glb_rehost_upload_failed', {
+              type: 'error',
+              error: glbUploadError.message,
+              user_id: user.id,
+            })
+          }
+        }
+      } catch (rehostErr) {
+        lognog.error('figurine_glb_rehost_failed', {
+          type: 'error',
+          error: rehostErr instanceof Error ? rehostErr.message : String(rehostErr),
+          user_id: user.id,
+        })
+        // Fall through — use original Replicate URL as fallback
+      }
+
       // Deduct credits
       if (!userIsAdmin) {
         await creditsService.deductCredits(user.id, 'hunyuan-3d', {
@@ -173,10 +215,6 @@ export async function POST(request: NextRequest) {
       }
 
       // Save figurine to DB (max 5 per user — delete oldest if at limit)
-      const supabaseAdmin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      )
       const { data: existing } = await supabaseAdmin
         .from('figurines')
         .select('id')
@@ -195,7 +233,8 @@ export async function POST(request: NextRequest) {
       await supabaseAdmin.from('figurines').insert({
         user_id: user.id,
         source_image_url: imageUrl,
-        glb_url: glbUrl,
+        glb_url: permanentGlbUrl,
+        glb_storage_path: permanentGlbUrl !== glbUrl ? glbStoragePath : null,
         prediction_id: prediction.id,
         credits_charged: userIsAdmin ? 0 : FIGURINE_3D_COST_CREDITS,
       })
@@ -208,11 +247,12 @@ export async function POST(request: NextRequest) {
         prediction_id: prediction.id,
         duration_ms: Date.now() - apiStart,
         credits_charged: userIsAdmin ? 0 : FIGURINE_3D_COST_CREDITS,
+        glb_rehosted: permanentGlbUrl !== glbUrl,
       })
 
       return NextResponse.json({
         success: true,
-        glbUrl,
+        glbUrl: permanentGlbUrl,
         predictionId: prediction.id,
         creditsCharged: userIsAdmin ? 0 : FIGURINE_3D_COST_CREDITS,
         rawOutput: completed.output,

@@ -84,4 +84,8 @@ export const RATE_LIMITS = {
   ADMIN_CREDIT_GRANT: { maxRequests: 10, windowSeconds: 60 },
   /** API key operations: 20 per 60 seconds */
   API_KEY_OPS: { maxRequests: 20, windowSeconds: 60 },
+  /** Print quote: 5 per 60 seconds */
+  PRINT_QUOTE: { maxRequests: 5, windowSeconds: 60 },
+  /** Print order: 3 per 3600 seconds (1 hour) */
+  PRINT_ORDER: { maxRequests: 3, windowSeconds: 3600 },
 } as const

@@ -174,7 +174,6 @@ export function CommunityCard({
           <div className="space-y-2">
             {content.thumbnailUrl && (
               <div className="relative aspect-video rounded overflow-hidden bg-muted/20 mb-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={content.thumbnailUrl}
                   alt={`${item.name} preview`}
