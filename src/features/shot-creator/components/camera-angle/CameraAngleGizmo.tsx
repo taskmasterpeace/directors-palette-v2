@@ -2,7 +2,7 @@
 
 import React, { useRef, useCallback, useMemo } from 'react'
 import { Canvas, useFrame, useThree, useLoader } from '@react-three/fiber'
-import { OrbitControls, Text } from '@react-three/drei'
+import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import type { CameraAngle } from '../../helpers/camera-angle.helper'
 import {
@@ -87,17 +87,15 @@ function CameraIndicator({ angle, imageUrl }: CameraIndicatorProps) {
         </mesh>
       )}
 
-      {/* "F" marker on the front (positive Z) so you know which side is front */}
-      <Text
-        position={[0, -0.85, 1.2]}
-        fontSize={0.22}
-        color="#06b6d4"
-        anchorX="center"
-        anchorY="middle"
-        fontWeight={700}
-      >
-        FRONT
-      </Text>
+      {/* Front marker — small cyan arrow on the ground pointing toward camera default position */}
+      <mesh position={[0, -0.95, 1.4]} rotation={[Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.12, 0.3, 4]} />
+        <meshStandardMaterial color="#06b6d4" emissive="#06b6d4" emissiveIntensity={0.5} />
+      </mesh>
+      <mesh position={[0, -0.95, 1.1]}>
+        <boxGeometry args={[0.06, 0.06, 0.4]} />
+        <meshStandardMaterial color="#06b6d4" emissive="#06b6d4" emissiveIntensity={0.3} />
+      </mesh>
 
       {/* Camera indicator cone */}
       <mesh ref={meshRef}>
