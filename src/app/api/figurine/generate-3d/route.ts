@@ -10,7 +10,7 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 })
 
-// Cost: ~$0.046 on Replicate, we charge 25 credits ($0.25)
+// Cost: ~$0.16 on Replicate (Hunyuan 3D 3.1), we charge 25 credits ($0.25)
 const FIGURINE_3D_COST_CREDITS = 25
 
 export async function POST(request: NextRequest) {
@@ -106,53 +106,35 @@ export async function POST(request: NextRequest) {
       user_email: user.email,
     })
 
-    // Run Trellis model on Replicate
-    // Input requires `images` as an array, and we use version hash (not model name)
+    // Run Hunyuan 3D 3.1 on Replicate (image-to-3D)
     const prediction = await replicate.predictions.create({
-      version: 'e8f6c45206993f297372f5436b90350817bd9b4a0d52d2a76df50c1c8afa2b3c',
+      version: 'a2838628b41a2e0ee2eb19b3ea98a40d75f8d7639bf5a1ddd37ea299bb334854',
       input: {
-        images: [imageUrl],
-        texture_size: 1024,
-        mesh_simplify: 0.95,
-        generate_color: true,
-        generate_model: true,
-        randomize_seed: true,
-        ss_sampling_steps: 12,
-        slat_sampling_steps: 12,
-        ss_guidance_strength: 7.5,
-        slat_guidance_strength: 3,
+        image: imageUrl,
+        enable_pbr: false,
+        face_count: 500000,
+        generate_type: 'Normal',
       },
     })
 
-    // Wait for completion (Trellis takes ~33 seconds)
-    const completed = await replicate.wait(prediction, { interval: 2000 })
+    // Wait for completion (Hunyuan 3D takes ~2-3 minutes)
+    const completed = await replicate.wait(prediction, { interval: 3000 })
 
     if (completed.status === 'succeeded' && completed.output) {
-      // Trellis output is typically: { model_file: "url.glb", ... } or just a URL
+      // Hunyuan 3D 3.1 returns a direct string URL to the .glb file
       let glbUrl: string | null = null
 
       if (typeof completed.output === 'string') {
         glbUrl = completed.output
       } else if (typeof completed.output === 'object') {
+        // Fallback: try common field names if output format changes
         const output = completed.output as Record<string, unknown>
-        // Trellis returns model_file for GLB
         glbUrl = (output.model_file as string) ||
                  (output.mesh as string) ||
                  (output.glb as string) ||
                  null
-
-        // If output is an array, first item might be the GLB
-        if (!glbUrl && Array.isArray(completed.output)) {
-          for (const item of completed.output) {
-            if (typeof item === 'string' && (item.endsWith('.glb') || item.includes('glb'))) {
-              glbUrl = item
-              break
-            }
-          }
-          // Fallback: just use first output
-          if (!glbUrl && completed.output.length > 0 && typeof completed.output[0] === 'string') {
-            glbUrl = completed.output[0]
-          }
+        if (!glbUrl && Array.isArray(completed.output) && completed.output.length > 0) {
+          glbUrl = typeof completed.output[0] === 'string' ? completed.output[0] : null
         }
       }
 
@@ -170,10 +152,10 @@ export async function POST(request: NextRequest) {
 
       // Deduct credits
       if (!userIsAdmin) {
-        await creditsService.deductCredits(user.id, 'trellis-3d', {
+        await creditsService.deductCredits(user.id, 'hunyuan-3d', {
           generationType: 'image',
           predictionId: prediction.id,
-          description: '3D Figurine generation (Trellis)',
+          description: '3D Figurine generation (Hunyuan 3D 3.1)',
           overrideAmount: FIGURINE_3D_COST_CREDITS,
           user_email: user.email,
         })

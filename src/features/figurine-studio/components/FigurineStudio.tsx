@@ -418,7 +418,7 @@ export function FigurineStudio() {
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-medium text-foreground/80">Generating 3D Model</p>
-                    <p className="text-xs text-muted-foreground mt-1">This takes about 30-45 seconds...</p>
+                    <p className="text-xs text-muted-foreground mt-1">This takes about 2-3 minutes...</p>
                   </div>
                   {/* Animated progress dots */}
                   <div className="flex gap-1.5">
