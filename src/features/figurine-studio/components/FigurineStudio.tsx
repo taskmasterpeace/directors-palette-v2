@@ -220,25 +220,6 @@ export function FigurineStudio() {
       </div>
 
       <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
-        {/* Hero Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center space-y-3"
-        >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-xs font-medium tracking-wider uppercase">
-            <Box className="w-3.5 h-3.5" />
-            Character to Figurine
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-cyan-300 via-white to-violet-300 bg-clip-text text-transparent">
-            Figurine Studio
-          </h1>
-          <p className="text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
-            Turn any character into a 3D model you can inspect, download, and soon — order as a real physical figurine shipped to your door.
-          </p>
-        </motion.div>
-
         {/* Pipeline Progress Bar */}
         <motion.div
           initial={{ opacity: 0 }}
