@@ -46,7 +46,7 @@ export function usePromptGeneration() {
         setStageReferenceImages,
     } = useShotCreatorStore()
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
-    const { generateImage, isGenerating, cancelGeneration } = useImageGeneration()
+    const { generateImage, isGenerating, cancelGeneration, pendingConfirmation, confirmGeneration, dismissConfirmation } = useImageGeneration()
     const { wildcards } = useWildCardStore()
     const { activeFieldValues, setActiveRecipe: _setActiveRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts } = useRecipeStore()
     const activeLoras = useLoraStore(useShallow((s) => s.getActiveLoras()))
@@ -690,12 +690,22 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
         setLastUsedRecipe(null)
     }, [canGenerate, isGenerating, shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings, generateImage, buildModelSettings, lastUsedRecipe, getActiveRecipe, getActiveValidation, buildActivePrompts, updateSettings, setStageReferenceImages, activeFieldValues, generationCost, activeLoras])
 
+    // Confirm large batch and re-trigger generation
+    const handleConfirmGeneration = useCallback(() => {
+        confirmGeneration()
+        // Re-trigger after state update
+        setTimeout(() => handleGenerate(), 0)
+    }, [confirmGeneration, handleGenerate])
+
     return {
         handleGenerate,
         canGenerate,
         generationCost,
         isGenerating,
         cancelGeneration,
+        pendingConfirmation,
+        handleConfirmGeneration,
+        dismissConfirmation,
         // Model settings builder (exposed in case component needs it)
         buildModelSettings,
     }

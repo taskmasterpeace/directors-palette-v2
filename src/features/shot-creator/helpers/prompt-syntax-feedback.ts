@@ -29,6 +29,8 @@ export interface DynamicPromptResult {
     // New fields for combined syntax
     creditCost?: number
     imageBreakdown?: string
+    // Set when count > 10 but under hard limit — UI should confirm before generating
+    needsConfirmation?: boolean
 }
 
 export interface DynamicPromptConfig {
@@ -45,9 +47,9 @@ export interface DynamicPromptConfig {
 }
 
 const DEFAULT_CONFIG: DynamicPromptConfig = {
-    maxOptions: 10,        // Maximum bracket/pipe options allowed
+    maxOptions: 50,        // Hard maximum bracket/pipe options allowed
     maxPreview: 5,         // Maximum prompts to show in preview
-    maxTotalImages: 10,    // Maximum total images when combining syntax
+    maxTotalImages: 50,    // Hard maximum total images when combining syntax
     trimWhitespace: true,  // Clean up spacing
     creditsPerImage: 20,   // Credits per image for cost calculation
     disablePipeSyntax: false,
@@ -103,6 +105,7 @@ function parsePipePrompt(
         }
     }
 
+    const SOFT_LIMIT = 10
     return {
         isValid: true,
         hasBrackets: false,
@@ -113,7 +116,8 @@ function parsePipePrompt(
         originalPrompt: prompt,
         options,
         previewCount: Math.min(options.length, config.maxPreview),
-        totalCount: options.length
+        totalCount: options.length,
+        needsConfirmation: options.length > SOFT_LIMIT,
     }
 }
 
@@ -314,6 +318,12 @@ export function parseDynamicPrompt(
 
         const totalCount = expandedPrompts.length
 
+        const SOFT_LIMIT = 10
+        const confirmWarnings = [...wildCardWarnings]
+        if (totalCount > SOFT_LIMIT) {
+            confirmWarnings.push(`⚠️ Large batch: ${totalCount} images will be generated (${totalCount * finalConfig.creditsPerImage} pts)`)
+        }
+
         return {
             isValid: true,
             hasBrackets: true,
@@ -328,11 +338,12 @@ export function parseDynamicPrompt(
             slotMachineSeeds: hasSlotMachineSyntax ? slotMachineSeeds : undefined,
             previewCount: Math.min(totalCount, finalConfig.maxPreview),
             totalCount,
-            warnings: wildCardWarnings.length > 0 ? wildCardWarnings : undefined,
+            warnings: confirmWarnings.length > 0 ? confirmWarnings : undefined,
             creditCost: totalCount * finalConfig.creditsPerImage,
             imageBreakdown: hasWildCards
                 ? `${wildCardNames.length} wildcard(s) × ${options.length} bracket options = ${totalCount} images`
-                : `${options.length} bracket options`
+                : `${options.length} bracket options`,
+            needsConfirmation: totalCount > SOFT_LIMIT,
         }
     }
 
@@ -444,6 +455,7 @@ function parseBracketsAndPipes(
     // → "red car | fast bike", "red car | slow bike", "blue car | fast bike", "blue car | slow bike"
     const allPrompts = cartesianProductStrings(expandedSegments).map(combo => combo.join(' | '))
 
+    const SOFT_LIMIT = 10
     return {
         isValid: true,
         hasBrackets: true,
@@ -457,11 +469,14 @@ function parseBracketsAndPipes(
         totalCount: allPrompts.length,
         warnings: [
             ...context.wildCardWarnings,
-            `📸 Generating ${allPrompts.length} pipe chains (${creditCost} credits)`
+            allPrompts.length > SOFT_LIMIT
+                ? `⚠️ Large batch: ${allPrompts.length} pipe chains (${creditCost} pts)`
+                : `📸 Generating ${allPrompts.length} pipe chains (${creditCost} credits)`
         ],
         isCrossCombination: true,
         creditCost,
-        imageBreakdown: `${pipeSegments.length} pipe segments with brackets = ${allPrompts.length} chains`
+        imageBreakdown: `${pipeSegments.length} pipe segments with brackets = ${allPrompts.length} chains`,
+        needsConfirmation: allPrompts.length > SOFT_LIMIT,
     }
 }
 

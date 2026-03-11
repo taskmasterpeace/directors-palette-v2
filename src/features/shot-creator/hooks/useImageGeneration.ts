@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { imageGenerationService } from '../services/image-generation.service'
 import { useShotCreatorStore } from '../store/shot-creator.store'
@@ -212,6 +212,12 @@ async function prepareReferenceImagesForAPI(referenceImages: string[]): Promise<
     return uploadedUrls
 }
 
+export interface PendingConfirmation {
+    imageCount: number
+    totalCost: number
+    costPerImage: number
+}
+
 export function useImageGeneration() {
     const { toast } = useToast()
     const [_progress, setProgress] = useState<GenerationProgress>({ status: 'idle' })
@@ -223,6 +229,9 @@ export function useImageGeneration() {
     const [isPipeChaining, setIsPipeChaining] = useState(false)
     // Track current prediction ID for cancel functionality
     const [currentPredictionId, setCurrentPredictionId] = useState<string | null>(null)
+    // Large batch confirmation
+    const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null)
+    const skipConfirmationRef = useRef(false)
 
     // Load wildcards on mount
     useEffect(() => {
@@ -555,6 +564,25 @@ export function useImageGeneration() {
                     }
                 }
 
+                // Large batch confirmation — ask user before generating 10+ images
+                if (promptResult.needsConfirmation && !skipConfirmationRef.current) {
+                    setShotCreatorProcessing(false)
+                    const modelConfig = getModelConfig(model)
+                    const costPerImg = modelConfig ? modelConfig.costPerImage : 0.10
+                    const ptsPerImage = Math.round(costPerImg * 100)
+                    const totalPts = ptsPerImage * promptResult.totalCount
+                    setPendingConfirmation({
+                        imageCount: promptResult.totalCount,
+                        totalCost: totalPts,
+                        costPerImage: ptsPerImage,
+                    })
+                    return {
+                        success: false,
+                        error: 'awaiting_confirmation',
+                    }
+                }
+                skipConfirmationRef.current = false
+
                 variations = promptResult.expandedPrompts
                 totalVariations = promptResult.totalCount
                 isPipeChaining = promptResult.hasPipes
@@ -882,11 +910,23 @@ export function useImageGeneration() {
         }
     }, [currentPredictionId, toast, setShotCreatorProcessing])
 
+    const confirmGeneration = useCallback(() => {
+        skipConfirmationRef.current = true
+        setPendingConfirmation(null)
+    }, [])
+
+    const dismissConfirmation = useCallback(() => {
+        setPendingConfirmation(null)
+    }, [])
+
     return {
         generateImage,
         resetProgress,
         cancelGeneration,
         currentPredictionId,
+        pendingConfirmation,
+        confirmGeneration,
+        dismissConfirmation,
         // Only block during pipe chaining - regular generations can run concurrently
         isGenerating: isPipeChaining,
     }

@@ -67,6 +67,9 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
         generationCost,
         isGenerating,
         cancelGeneration,
+        pendingConfirmation,
+        handleConfirmGeneration,
+        dismissConfirmation,
     } = usePromptGeneration()
 
     // ── Generation countdown timer ─────────────────────────────────────
@@ -609,6 +612,23 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                         </div>
                     )
                 })()}
+
+                {/* Large batch confirmation warning */}
+                {pendingConfirmation && (
+                    <div className="p-4 bg-amber-50 dark:bg-amber-950 border border-amber-300 dark:border-amber-700 rounded-lg space-y-3">
+                        <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                            You&apos;re about to generate {pendingConfirmation.imageCount} images for {pendingConfirmation.totalCost} pts ({pendingConfirmation.costPerImage} pts each). Continue?
+                        </p>
+                        <div className="flex gap-2">
+                            <Button size="sm" onClick={handleConfirmGeneration} className="bg-amber-600 hover:bg-amber-700 text-white">
+                                Yes, generate {pendingConfirmation.imageCount} images
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={dismissConfirmation}>
+                                Cancel
+                            </Button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Generate button - sticky on mobile so it's always visible */}
                 <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-background/95 backdrop-blur-sm border-t border-border shadow-[0_-4px_12px_rgba(0,0,0,0.15)] lg:static lg:p-0 lg:bg-transparent lg:backdrop-blur-none lg:border-0 lg:shadow-none lg:z-auto">
