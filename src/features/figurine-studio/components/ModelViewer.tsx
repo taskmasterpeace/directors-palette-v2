@@ -9,6 +9,7 @@ interface ModelViewerProps {
   autoRotate?: boolean
   cameraControls?: boolean
   poster?: string
+  backgroundColor?: string
 }
 
 export function ModelViewer({
@@ -18,6 +19,7 @@ export function ModelViewer({
   autoRotate = true,
   cameraControls = true,
   poster,
+  backgroundColor = 'transparent',
 }: ModelViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const loaded = useRef(false)
@@ -48,7 +50,7 @@ export function ModelViewer({
         style={{
           width: '100%',
           height: '100%',
-          backgroundColor: 'transparent',
+          backgroundColor,
           '--poster-color': 'transparent',
         } as React.CSSProperties}
       />

@@ -93,10 +93,22 @@ function MaterialCard({ name, color, price, popular }: {
   )
 }
 
+const BG_PRESETS = [
+  { label: 'Dark', value: '#09090b' },
+  { label: 'Gray', value: '#3f3f46' },
+  { label: 'White', value: '#ffffff' },
+  { label: 'Blue', value: '#1e3a5f' },
+  { label: 'Green', value: '#14532d' },
+  { label: 'Purple', value: '#3b0764' },
+  { label: 'Warm', value: '#451a03' },
+  { label: 'Red', value: '#7f1d1d' },
+]
+
 export function FigurineStudio() {
   const [dragOver, setDragOver] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [bgColor, setBgColor] = useState('#09090b')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { balance } = useCreditsStore()
 
@@ -387,12 +399,14 @@ export function FigurineStudio() {
             </div>
 
             {/* 3D Viewer Area */}
-            <div className={cn(
-              'relative rounded-xl overflow-hidden aspect-square',
-              'bg-gradient-to-br from-zinc-900 via-zinc-950 to-black',
-              'border border-border/30',
-              'shadow-inner',
-            )}>
+            <div
+              className={cn(
+                'relative rounded-xl overflow-hidden aspect-square',
+                'border border-border/30',
+                'shadow-inner transition-colors duration-300',
+              )}
+              style={{ backgroundColor: bgColor }}
+            >
               {/* Grid floor pattern */}
               <div className="absolute inset-0 opacity-[0.03]"
                 style={{
@@ -441,6 +455,7 @@ export function FigurineStudio() {
                   className="w-full h-full"
                   autoRotate
                   cameraControls
+                  backgroundColor={bgColor}
                 />
               )}
 
@@ -475,6 +490,45 @@ export function FigurineStudio() {
                 </div>
               )}
             </div>
+
+            {/* Background Color Controls */}
+            {(activeModel?.status === 'ready' || activeModel?.status === 'generating') && (
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider shrink-0">BG</span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {BG_PRESETS.map((preset) => (
+                    <button
+                      key={preset.value}
+                      onClick={() => setBgColor(preset.value)}
+                      title={preset.label}
+                      className={cn(
+                        'w-6 h-6 rounded-full border-2 transition-all hover:scale-110',
+                        bgColor === preset.value
+                          ? 'border-cyan-400 ring-2 ring-cyan-400/30 scale-110'
+                          : 'border-border/40 hover:border-border/80',
+                      )}
+                      style={{ backgroundColor: preset.value }}
+                    />
+                  ))}
+                  <label className="relative cursor-pointer" title="Custom color">
+                    <div className={cn(
+                      'w-6 h-6 rounded-full border-2 border-dashed border-border/40 hover:border-border/80 transition-all flex items-center justify-center',
+                      !BG_PRESETS.some(p => p.value === bgColor) && 'border-cyan-400 ring-2 ring-cyan-400/30',
+                    )}
+                      style={{ backgroundColor: !BG_PRESETS.some(p => p.value === bgColor) ? bgColor : undefined }}
+                    >
+                      <Palette className="w-3 h-3 text-muted-foreground" />
+                    </div>
+                    <input
+                      type="color"
+                      value={bgColor}
+                      onChange={(e) => setBgColor(e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
 
             {/* Model Ready Panel with Physical Order Teaser */}
             {activeModel?.status === 'ready' && (
