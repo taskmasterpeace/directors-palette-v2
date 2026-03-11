@@ -166,6 +166,17 @@ export const COMMUNITY_LORAS: LoraItem[] = [
         defaultLoraScale: 1.0,
         createdAt: 0,
     },
+    {
+        id: 'zit-comic1',
+        name: 'ZIT Comic',
+        type: 'style',
+        referenceTag: 'zit',
+        triggerWord: 'zit_comic1_v1',
+        weightsUrl: `${LORA_STORAGE_BASE}/zit-comic1/zit_comic1_v1.safetensors`,
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 0.95,
+        createdAt: 0,
+    },
 ]
 
 export const useLoraStore = create<LoraStore>()(
