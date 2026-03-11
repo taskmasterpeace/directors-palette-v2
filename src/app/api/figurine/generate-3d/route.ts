@@ -6,6 +6,9 @@ import { isAdminEmail } from '@/features/admin/types/admin.types'
 import { lognog } from '@/lib/lognog'
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
 
+// Hunyuan 3D takes 2-3 minutes — need extended timeout
+export const maxDuration = 300
+
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 })

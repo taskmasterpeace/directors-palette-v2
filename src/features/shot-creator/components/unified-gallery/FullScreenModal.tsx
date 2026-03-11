@@ -32,6 +32,7 @@ interface FullscreenModalProps {
     onGenerateBRollGrid?: () => void
     isGeneratingBRoll?: boolean
     onShare?: () => void
+    onMakeFigurine?: () => void
     onRegenerate?: (image: GeneratedImage) => void
     showReferenceNamePrompt: (defaultValue?: string) => Promise<string | null>
 }
@@ -57,6 +58,7 @@ function FullscreenModal({
     isGeneratingCinematic,
     onGenerateBRollGrid,
     isGeneratingBRoll,
+    onMakeFigurine,
     onShare,
     onRegenerate,
     showReferenceNamePrompt
@@ -549,6 +551,19 @@ function FullscreenModal({
                                     <Layout className="w-3.5 h-3.5 mr-1" />
                                     Layout
                                 </Button>
+
+                                {onMakeFigurine && (
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="flex-1 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/10"
+                                        onClick={onMakeFigurine}
+                                        title="Send to Figurine Studio"
+                                    >
+                                        <Box className="w-3.5 h-3.5 mr-1" />
+                                        Figurine
+                                    </Button>
+                                )}
                             </div>
 
                             {/* Extract Grid Cells */}

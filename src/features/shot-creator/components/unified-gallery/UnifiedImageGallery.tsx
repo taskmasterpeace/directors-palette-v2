@@ -1005,6 +1005,7 @@ CRITICAL RULES:
                             isGeneratingCinematic={generatingCinematicId === fullscreenImage.id}
                             onGenerateBRollGrid={() => handleGenerateBRollGrid(fullscreenImage)}
                             isGeneratingBRoll={generatingBRollId === fullscreenImage.id}
+                            onMakeFigurine={(currentTab === 'gallery' || currentTab === 'shot-creator') && fullscreenImage ? () => handleMakeFigurine(fullscreenImage) : undefined}
                             onShare={() => handleShare(fullscreenImage)}
                             onRegenerate={handleRegenerate}
                             showReferenceNamePrompt={showReferenceNamePrompt}
