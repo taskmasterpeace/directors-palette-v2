@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Layers, Plus, Check, Star } from 'lucide-react'
 import { COMMUNITY_LORAS, useLoraStore } from '../../store/lora.store'
 import { cn } from '@/utils/utils'
@@ -10,7 +10,16 @@ type FilterType = 'all' | 'character' | 'style'
 
 export function LoraCommunityBrowser() {
     const [filter, setFilter] = useState<FilterType>('all')
-    const { addFromCommunity, removeFromCollection, isInCollection, isLoraUsed, getLoraRating, rateLora } = useLoraStore()
+    // Subscribe to `loras` directly for proper reactivity (not just methods)
+    const loras = useLoraStore(s => s.loras)
+    const addFromCommunity = useLoraStore(s => s.addFromCommunity)
+    const removeFromCollection = useLoraStore(s => s.removeFromCollection)
+    const isLoraUsed = useLoraStore(s => s.isLoraUsed)
+    const getLoraRating = useLoraStore(s => s.getLoraRating)
+    const rateLora = useLoraStore(s => s.rateLora)
+
+    // Compute collection membership reactively from loras array
+    const collectionIds = useMemo(() => new Set(loras.map(l => l.id)), [loras])
 
     const filtered = COMMUNITY_LORAS.filter((lora) => {
         if (filter === 'all') return true
@@ -62,7 +71,7 @@ export function LoraCommunityBrowser() {
                 ) : (
                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                         {filtered.map((lora) => {
-                            const added = isInCollection(lora.id)
+                            const added = collectionIds.has(lora.id)
                             const used = isLoraUsed(lora.id)
                             const rating = getLoraRating(lora.id)
                             return (

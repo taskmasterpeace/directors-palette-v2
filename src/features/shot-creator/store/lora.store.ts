@@ -234,11 +234,11 @@ export const useLoraStore = create<LoraStore>()(
             addFromCommunity: (loraId) => {
                 const community = COMMUNITY_LORAS.find((l) => l.id === loraId)
                 if (!community) return
-                const { loras } = get()
-                if (loras.some((l) => l.id === loraId)) return
-                set((state) => ({
-                    loras: [...state.loras, { ...community }],
-                }))
+                // Use functional update for atomic dedup check + add
+                set((state) => {
+                    if (state.loras.some((l) => l.id === loraId)) return state
+                    return { loras: [...state.loras, { ...community }] }
+                })
             },
 
             removeFromCollection: (loraId) => {
