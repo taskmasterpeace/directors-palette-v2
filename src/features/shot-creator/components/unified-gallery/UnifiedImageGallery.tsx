@@ -68,6 +68,7 @@ export function UnifiedImageGallery({
         setFullscreenImage,
         selectedImages,
         handleSelectAll,
+        handleSelectRecent,
         handleClearSelection,
         handleDeleteSelected,
         handleImageSelect: _handleImageSelect,
@@ -945,6 +946,10 @@ CRITICAL RULES:
                         sourceFilter={sourceFilter}
                         onSearchChange={handleSearchChange}
                         onSelectAll={handleSelectAll}
+                        onSelectRecent={handleSelectRecent}
+                        visibleImageCount={paginatedImages.length}
+                        selectedCount={selectedImages.length}
+                        onClearSelection={handleClearSelection}
                         onGridSizeChange={setGridSize}
                         onAspectRatioChange={setUseNativeAspectRatio}
                         onSourceFilterChange={setSourceFilter}

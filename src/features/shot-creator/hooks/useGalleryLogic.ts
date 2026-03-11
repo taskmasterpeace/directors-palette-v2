@@ -93,9 +93,14 @@ export function useGalleryLogic(
     selectNone()
   }, [selectNone])
 
-  const handleSelectAll = useCallback(() => {
-    selectAllIds(paginatedImages.map(img => img.url))
+  const handleSelectRecent = useCallback((count?: number) => {
+    const urls = paginatedImages.map(img => img.url)
+    selectAllIds(count ? urls.slice(0, count) : urls)
   }, [selectAllIds, paginatedImages])
+
+  const handleSelectAll = useCallback(() => {
+    handleSelectRecent()
+  }, [handleSelectRecent])
 
   const handleDeleteSelected = async () => {
     let successCount = 0
@@ -374,6 +379,7 @@ export function useGalleryLogic(
     handleImageSelect,
     handleImageSelectWithModifiers, // Selection with Shift/Ctrl modifier key support
     handleSelectAll,
+    handleSelectRecent,
     handleClearSelection,
     handleDeleteSelected,
     handleCopyImage,

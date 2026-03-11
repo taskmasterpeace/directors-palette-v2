@@ -1,10 +1,11 @@
 'use client'
 
+import { useState, useRef, useEffect } from 'react'
 import { CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { ImageIcon, Search, Grid3x3, Grid2x2, Menu, Square, RectangleHorizontal } from 'lucide-react'
+import { ImageIcon, Search, Grid3x3, Grid2x2, Menu, Square, RectangleHorizontal, ChevronDown } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { GridSize, GeneratedImage } from '../../store/unified-gallery-store'
 import {
@@ -30,6 +31,10 @@ interface GalleryHeaderProps {
   sourceFilter: GeneratedImage['source'] | null
   onSearchChange: (query: string) => void
   onSelectAll: () => void
+  onSelectRecent?: (count: number) => void
+  visibleImageCount?: number
+  selectedCount?: number
+  onClearSelection?: () => void
   onGridSizeChange: (size: GridSize) => void
   onAspectRatioChange: (useNative: boolean) => void
   onSourceFilterChange: (source: GeneratedImage['source'] | null) => void
@@ -47,6 +52,10 @@ export function GalleryHeader({
   sourceFilter,
   onSearchChange,
   onSelectAll,
+  onSelectRecent,
+  visibleImageCount = 0,
+  selectedCount = 0,
+  onClearSelection,
   onGridSizeChange,
   onAspectRatioChange,
   onSourceFilterChange,
@@ -187,29 +196,85 @@ export function GalleryHeader({
             </Button>
           </div>
 
-          {/* Select All Button - bulk actions are now in floating BulkActionsToolbar */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onSelectAll}
-                >
-                  Select All
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-[250px]">
-                <p className="font-medium mb-1">Selection shortcuts:</p>
-                <ul className="text-xs space-y-0.5">
-                  <li>• <kbd className="px-1 py-0.5 rounded bg-muted text-muted-foreground">Shift</kbd>+click for range select</li>
-                  <li>• <kbd className="px-1 py-0.5 rounded bg-muted text-muted-foreground">Ctrl</kbd>/<kbd className="px-1 py-0.5 rounded bg-muted text-muted-foreground">⌘</kbd>+click to toggle</li>
-                </ul>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          {/* Select / Deselect dropdown */}
+          <SelectDropdown
+            visibleImageCount={visibleImageCount}
+            selectedCount={selectedCount}
+            onSelectRecent={onSelectRecent}
+            onSelectAll={onSelectAll}
+            onClearSelection={onClearSelection}
+          />
         </div>
       </div>
     </CardHeader>
+  )
+}
+
+function SelectDropdown({ visibleImageCount, selectedCount, onSelectRecent, onSelectAll, onClearSelection }: {
+  visibleImageCount: number
+  selectedCount: number
+  onSelectRecent?: (count: number) => void
+  onSelectAll: () => void
+  onClearSelection?: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  const hasSelection = selectedCount > 0
+  const options = [5, 10, 20].filter(n => n < visibleImageCount)
+
+  return (
+    <div ref={ref} className="relative">
+      <Button
+        variant={hasSelection ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => {
+          if (hasSelection && onClearSelection) {
+            onClearSelection()
+          } else {
+            setOpen(!open)
+          }
+        }}
+        className={hasSelection ? 'gap-1.5 bg-cyan-600 hover:bg-cyan-700 text-white' : 'gap-1'}
+      >
+        {hasSelection ? (
+          <>{selectedCount} selected — Clear</>
+        ) : (
+          <>
+            Select
+            <ChevronDown className="w-3 h-3" />
+          </>
+        )}
+      </Button>
+
+      {open && !hasSelection && (
+        <div className="absolute right-0 top-full mt-1 z-50 min-w-[140px] rounded-lg border border-border bg-card shadow-xl py-1 animate-in fade-in-0 zoom-in-95">
+          {options.map(n => (
+            <button
+              key={n}
+              onClick={() => { onSelectRecent?.(n); setOpen(false) }}
+              className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent/50 transition-colors"
+            >
+              Last {n}
+            </button>
+          ))}
+          <button
+            onClick={() => { onSelectAll(); setOpen(false) }}
+            className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent/50 transition-colors font-medium"
+          >
+            All ({visibleImageCount})
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
