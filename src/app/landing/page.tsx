@@ -489,16 +489,16 @@ export default function LandingPage() {
                             className="text-neutral-400 text-lg max-w-xl mx-auto"
                             style={{ fontFamily: "'DM Sans', sans-serif" }}
                         >
-                            Buy credits when you need them. Use them whenever. They never expire.
+                            Buy pts when you need them. Use them whenever. They never expire.
                         </p>
                     </div>
 
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-5xl mx-auto">
                         {[
-                            { name: "Starter", price: "$5.99", credits: "500 credits", images: "~25 images", popular: false },
-                            { name: "Creator", price: "$11.99", credits: "1,000 credits", images: "~50 images", popular: true },
-                            { name: "Pro", price: "$23.99", credits: "2,000 credits", images: "~100 images", popular: false },
-                            { name: "Studio", price: "$47.99", credits: "4,000 credits", images: "~200 images", popular: false },
+                            { name: "Starter", price: "$5.99", credits: "500 pts", images: "~25 images", popular: false },
+                            { name: "Creator", price: "$11.99", credits: "1,000 pts", images: "~50 images", popular: true },
+                            { name: "Pro", price: "$23.99", credits: "2,000 pts", images: "~100 images", popular: false },
+                            { name: "Studio", price: "$47.99", credits: "4,000 pts", images: "~200 images", popular: false },
                         ].map((tier) => (
                             <Card key={tier.name} className={`bg-neutral-900/50 ${tier.popular ? "border-amber-500/50 border-2" : "border-neutral-800"} relative`}>
                                 {tier.popular && (

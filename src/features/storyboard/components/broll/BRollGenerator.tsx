@@ -124,7 +124,7 @@ export function BRollGenerator() {
 
         if (balance < totalCost) {
             toast.error(
-                `Insufficient credits. Need ${totalCost} tokens but you have ${balance}.`,
+                `Insufficient pts. Need ${totalCost} pts but you have ${balance}.`,
                 { duration: 5000 }
             )
             return
@@ -132,7 +132,7 @@ export function BRollGenerator() {
 
         // Confirm generation
         const confirmed = confirm(
-            `Generate ${shotsToGenerate.length} B-Roll images for approximately ${totalCost} tokens?\n\nYour balance: ${balance} tokens`
+            `Generate ${shotsToGenerate.length} B-Roll images for approximately ${totalCost} pts?\n\nYour balance: ${balance} pts`
         )
         if (!confirmed) return
 
@@ -296,7 +296,7 @@ export function BRollGenerator() {
                                             ? 'text-red-500 border-red-500/30' : ''
                                     }`}>
                                         <Coins className="w-3 h-3 mr-1" />
-                                        {balance} tokens
+                                        {balance} pts
                                     </Badge>
                                 )}
                                 {isGeneratingImages && (

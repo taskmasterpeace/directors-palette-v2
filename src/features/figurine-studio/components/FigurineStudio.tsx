@@ -235,7 +235,7 @@ export function FigurineStudio() {
                 Source Image
               </h2>
               <span className="text-xs text-muted-foreground">
-                {GENERATION_COST} credits per model
+                {GENERATION_COST} pts per model
               </span>
             </div>
 
@@ -336,14 +336,14 @@ export function FigurineStudio() {
               ) : (
                 <span className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
-                  Generate 3D Model &mdash; {GENERATION_COST} credits
+                  Generate 3D Model &mdash; {GENERATION_COST} pts
                 </span>
               )}
             </Button>
 
             {balance !== null && balance < GENERATION_COST && (
               <p className="text-xs text-amber-400 text-center">
-                Insufficient credits. You have {balance}, need {GENERATION_COST}.
+                Insufficient pts. You have {balance}, need {GENERATION_COST}.
               </p>
             )}
 
@@ -550,23 +550,23 @@ export function FigurineStudio() {
             <MaterialCard
               name="Full Color Sandstone"
               color="linear-gradient(135deg, #e8d5b7 0%, #c9b896 50%, #a89672 100%)"
-              price="3,500 credits"
+              price="3,500 pts"
               popular
             />
             <MaterialCard
               name="Smooth Resin"
               color="linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 50%, #bdbdbd 100%)"
-              price="2,800 credits"
+              price="2,800 pts"
             />
             <MaterialCard
               name="Metallic Bronze"
               color="linear-gradient(135deg, #cd7f32 0%, #b87333 50%, #a0522d 100%)"
-              price="5,200 credits"
+              price="5,200 pts"
             />
             <MaterialCard
               name="Flexible Plastic"
               color="linear-gradient(135deg, #4fc3f7 0%, #29b6f6 50%, #0288d1 100%)"
-              price="2,200 credits"
+              price="2,200 pts"
             />
           </div>
 

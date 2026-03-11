@@ -98,7 +98,7 @@ export function BRollSheetModal({
                     </DialogTitle>
                     <DialogDescription>
                         Generate 9 complementary B-roll shots that maintain visual continuity
-                        <Badge variant="outline" className="ml-2 text-xs">Cost: ~{getImageCostTokens(generationSettings.imageModel, generationSettings.resolution)} tokens</Badge>
+                        <Badge variant="outline" className="ml-2 text-xs">Cost: ~{getImageCostTokens(generationSettings.imageModel, generationSettings.resolution)} pts</Badge>
                     </DialogDescription>
                 </DialogHeader>
 

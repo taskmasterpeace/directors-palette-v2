@@ -74,7 +74,7 @@ export function RedeemUsageDialog({ children }: { children?: React.ReactNode }) 
                 <DialogHeader>
                     <DialogTitle>Redeem Code</DialogTitle>
                     <DialogDescription>
-                        Enter your coupon code to receive extra credits.
+                        Enter your coupon code to receive extra pts.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -99,7 +99,7 @@ export function RedeemUsageDialog({ children }: { children?: React.ReactNode }) 
                         <div className="space-y-2">
                             <h3 className="text-xl font-bold">Success!</h3>
                             <p className="text-muted-foreground">
-                                You&apos;ve received <span className="text-foreground font-bold">{successData.points} credits</span>.
+                                You&apos;ve received <span className="text-foreground font-bold">{successData.points} pts</span>.
                             </p>
                         </div>
                     </div>

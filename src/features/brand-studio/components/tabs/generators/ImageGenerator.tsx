@@ -49,7 +49,7 @@ export function ImageGenerator({ onBack }: { onBack: () => void }) {
         </div>
         <div>
           <h3 className="text-lg font-bold tracking-tight">Image Generator</h3>
-          <p className="text-xs text-muted-foreground">10 credits per image</p>
+          <p className="text-xs text-muted-foreground">10 pts per image</p>
         </div>
       </div>
 
@@ -142,7 +142,7 @@ export function ImageGenerator({ onBack }: { onBack: () => void }) {
                 <img src={lastResult.url} alt="Generated image" className="w-full object-contain" />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">{lastResult.creditsUsed} credits used</span>
+                <span className="text-xs text-muted-foreground">{lastResult.creditsUsed} pts used</span>
                 <a href={lastResult.url} download target="_blank" rel="noopener noreferrer">
                   <Button size="sm" variant="outline" className="gap-1.5 text-xs">
                     <Download className="w-3 h-3" />

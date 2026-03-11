@@ -106,7 +106,7 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                 throw new Error(data.error || 'Failed to grant credits')
             }
 
-            alert(`Successfully granted ${amount} credits ($${(amount / 100).toFixed(2)}) to ${selectedUser.email}`)
+            alert(`Successfully granted ${amount} pts ($${(amount / 100).toFixed(2)}) to ${selectedUser.email}`)
             setGrantDialogOpen(false)
             setGrantAmount('')
             setGrantDescription('')
@@ -151,7 +151,7 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                         Admin Dashboard
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Manage users, credits, and view analytics
+                        Manage users, pts, and view analytics
                     </p>
                 </div>
                 <Button onClick={loadData} variant="outline" size="sm">
@@ -217,7 +217,7 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
 
                 <Card className="bg-zinc-900 border-zinc-800">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Credits Purchased</CardTitle>
+                        <CardTitle className="text-sm font-medium text-zinc-400">Pts Purchased</CardTitle>
                         <DollarSign className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent>
@@ -227,7 +227,7 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
 
                 <Card className="bg-zinc-900 border-zinc-800">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-zinc-400">Credits Used</CardTitle>
+                        <CardTitle className="text-sm font-medium text-zinc-400">Pts Used</CardTitle>
                         <TrendingUp className="h-4 w-4 text-blue-500" />
                     </CardHeader>
                     <CardContent>
@@ -250,7 +250,7 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
             <Card className="bg-zinc-900 border-zinc-800">
                 <CardHeader>
                     <CardTitle className="text-white">Users</CardTitle>
-                    <CardDescription>All registered users and their credit balances</CardDescription>
+                    <CardDescription>All registered users and their pts balances</CardDescription>
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-4">
                         <div className="flex items-center gap-2 flex-1">
                             <Search className="w-4 h-4 text-zinc-500 hidden sm:block" />
@@ -399,13 +399,13 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                 </TabsContent>
             </Tabs>
 
-            {/* Grant Credits Dialog */}
+            {/* Grant Pts Dialog */}
             <Dialog open={grantDialogOpen} onOpenChange={setGrantDialogOpen}>
                 <DialogContent className="bg-zinc-900 border-zinc-800">
                     <DialogHeader>
-                        <DialogTitle className="text-white">Grant Credits</DialogTitle>
+                        <DialogTitle className="text-white">Grant Pts</DialogTitle>
                         <DialogDescription>
-                            Grant credits to {selectedUser?.email}
+                            Grant pts to {selectedUser?.email}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -457,7 +457,7 @@ export function AdminDashboard({ currentUserEmail }: AdminDashboardProps) {
                             ) : (
                                 <>
                                     <Gift className="w-4 h-4 mr-2" />
-                                    Grant Credits
+                                    Grant Pts
                                 </>
                             )}
                         </Button>

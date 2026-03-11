@@ -175,7 +175,7 @@ export function CreditsDisplay() {
             }
         } catch (error) {
             logger.credits.error('Checkout error', { error: error instanceof Error ? error.message : String(error) })
-            alert('Payment system not configured yet. Contact admin for points.')
+            alert('Payment system not configured yet. Contact admin for pts.')
         } finally {
             setPurchasingId(null)
         }
@@ -201,7 +201,7 @@ export function CreditsDisplay() {
                                         {loading ? (
                                             <LoadingSpinner size="xs" color="current" />
                                         ) : (
-                                            `${formatTokens(tokens)} tokens`
+                                            `${formatTokens(tokens)} pts`
                                         )}
                                     </span>
                                     <Plus className="w-3 h-3 text-zinc-500" />
@@ -209,7 +209,7 @@ export function CreditsDisplay() {
                             </DialogTrigger>
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className="bg-zinc-900 border-zinc-700 text-white">
-                            <p className="font-mono">{tokens.toLocaleString()} tokens exactly</p>
+                            <p className="font-mono">{tokens.toLocaleString()} pts exactly</p>
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
@@ -229,7 +229,7 @@ export function CreditsDisplay() {
                                     </div>
                                     <div>
                                         <DialogHeader>
-                                            <DialogTitle className="text-2xl font-bold text-white tracking-tight">Token Store</DialogTitle>
+                                            <DialogTitle className="text-2xl font-bold text-white tracking-tight">Pts Store</DialogTitle>
                                         </DialogHeader>
                                         <p className="text-sm text-zinc-400">Power your creative workflow</p>
                                     </div>
@@ -238,7 +238,7 @@ export function CreditsDisplay() {
                                     <div className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-1">Your Balance</div>
                                     <div className="text-3xl font-bold font-mono text-amber-400 drop-shadow-sm">
                                         {loading ? <LoadingSpinner size="md" color="current" /> : formatTokens(tokens)}
-                                        <span className="text-sm text-zinc-500 ml-1 font-sans font-normal">tokens</span>
+                                        <span className="text-sm text-zinc-500 ml-1 font-sans font-normal">pts</span>
                                     </div>
                                 </div>
                             </div>
@@ -324,13 +324,13 @@ export function CreditsDisplay() {
                                                         <span className="text-xl sm:text-2xl font-bold text-white">{pkg.formatted_price}</span>
                                                     </div>
 
-                                                    {/* Tokens */}
+                                                    {/* Pts */}
                                                     <div className="mb-2 sm:mb-3 pb-2 sm:pb-3 border-b border-white/10">
                                                         <div className="flex items-baseline gap-1.5">
                                                             <span className="text-lg sm:text-xl font-bold font-mono text-amber-400">
                                                                 {formatTokens(pkg.total_credits)}
                                                             </span>
-                                                            <span className="text-[10px] sm:text-xs text-zinc-400">tokens</span>
+                                                            <span className="text-[10px] sm:text-xs text-zinc-400">pts</span>
                                                         </div>
                                                         {hasBonus && (
                                                             <div className="text-[10px] text-green-400 font-medium mt-0.5">
@@ -377,7 +377,7 @@ export function CreditsDisplay() {
                             {/* Compact footer */}
                             <div className="flex items-center justify-center gap-6 mt-8 pt-4 border-t border-white/10 text-[10px] font-medium tracking-wide text-zinc-500 uppercase">
                                 <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-zinc-600" /> Secure checkout</span>
-                                <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-zinc-600" /> Tokens never expire</span>
+                                <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-zinc-600" /> Pts never expire</span>
                                 <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-zinc-600" /> Instant delivery</span>
                             </div>
                         </div>

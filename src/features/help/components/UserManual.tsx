@@ -709,7 +709,7 @@ export function UserManual() {
                         <Card className="bg-gradient-to-br from-slate-950/50 to-background border-slate-800/50 overflow-hidden">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <Info className="w-5 h-5 text-blue-400" /> Video Credit System Overview
+                                    <Info className="w-5 h-5 text-blue-400" /> Video Pts System Overview
                                 </CardTitle>
                                 <CardDescription>Visual guide to models, pricing, and storage limits</CardDescription>
                             </CardHeader>
@@ -815,7 +815,7 @@ export function UserManual() {
                                     </div>
                                 </div>
                                 <div className="p-4 rounded-lg bg-muted/50 border border-border/50">
-                                    <p className="text-sm"><strong>Example:</strong> Seedance Lite @ 720p (5 pts/sec) × 8 seconds = <span className="text-amber-400 font-bold">40 points</span></p>
+                                    <p className="text-sm"><strong>Example:</strong> Seedance Lite @ 720p (5 pts/sec) × 8 seconds = <span className="text-amber-400 font-bold">40 pts</span></p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -865,7 +865,7 @@ export function UserManual() {
                         <Card className="bg-gradient-to-br from-cyan-950/50 to-background border-cyan-800/50 overflow-hidden">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <Info className="w-5 h-5 text-cyan-400" /> Image Credit System Overview
+                                    <Info className="w-5 h-5 text-cyan-400" /> Image Pts System Overview
                                 </CardTitle>
                                 <CardDescription>Visual guide to models, pricing, and reference image support</CardDescription>
                             </CardHeader>
@@ -895,7 +895,7 @@ export function UserManual() {
                                         <CardTitle className="flex items-center gap-2">
                                             <span className="text-2xl">⚡</span> Z-Image Turbo
                                         </CardTitle>
-                                        <span className="px-2 py-1 text-xs font-bold rounded bg-cyan-500/20 text-cyan-400">5 TOKENS</span>
+                                        <span className="px-2 py-1 text-xs font-bold rounded bg-cyan-500/20 text-cyan-400">5 PTS</span>
                                     </div>
                                     <CardDescription>Fast Flux-based generation with great text</CardDescription>
                                 </CardHeader>
@@ -940,7 +940,7 @@ export function UserManual() {
                                         <CardTitle className="flex items-center gap-2">
                                             <span className="text-2xl">🍌</span> Nano Banana
                                         </CardTitle>
-                                        <span className="px-2 py-1 text-xs font-bold rounded bg-yellow-500/20 text-yellow-400">8 TOKENS</span>
+                                        <span className="px-2 py-1 text-xs font-bold rounded bg-yellow-500/20 text-yellow-400">8 PTS</span>
                                     </div>
                                     <CardDescription>Google Imagen 3 - Professional quality</CardDescription>
                                 </CardHeader>
@@ -986,7 +986,7 @@ export function UserManual() {
                                         <CardTitle className="flex items-center gap-2">
                                             <span className="text-2xl">🔥</span> Nano Banana Pro
                                         </CardTitle>
-                                        <span className="px-2 py-1 text-xs font-bold rounded bg-amber-500/20 text-amber-400">20 TOKENS</span>
+                                        <span className="px-2 py-1 text-xs font-bold rounded bg-amber-500/20 text-amber-400">20 PTS</span>
                                     </div>
                                     <CardDescription>Google Imagen 3 Premium - State-of-the-art</CardDescription>
                                 </CardHeader>
@@ -1034,7 +1034,7 @@ export function UserManual() {
                                             <span className="text-2xl">🎨</span> GPT Image Family
                                         </CardTitle>
                                         <div className="flex gap-2 text-xs font-bold">
-                                            <span className="px-2 py-1 rounded bg-green-500/20 text-green-400">3-27 TOKENS</span>
+                                            <span className="px-2 py-1 rounded bg-green-500/20 text-green-400">3-27 PTS</span>
                                         </div>
                                     </div>
                                     <CardDescription>OpenAI GPT Image 1.5 - Premium quality with transparent backgrounds</CardDescription>
@@ -1043,17 +1043,17 @@ export function UserManual() {
                                     <div className="grid grid-cols-3 gap-2 text-xs">
                                         <div className="p-2 rounded bg-green-500/10 border border-green-500/20 text-center">
                                             <span className="font-semibold text-green-400">Low</span>
-                                            <p className="text-muted-foreground">3 tokens</p>
+                                            <p className="text-muted-foreground">3 pts</p>
                                             <p className="text-[10px] text-muted-foreground/70">Fast drafts</p>
                                         </div>
                                         <div className="p-2 rounded bg-blue-500/10 border border-blue-500/20 text-center">
                                             <span className="font-semibold text-blue-400">Medium</span>
-                                            <p className="text-muted-foreground">10 tokens</p>
+                                            <p className="text-muted-foreground">10 pts</p>
                                             <p className="text-[10px] text-muted-foreground/70">Standard</p>
                                         </div>
                                         <div className="p-2 rounded bg-violet-500/10 border border-violet-500/20 text-center">
                                             <span className="font-semibold text-violet-400">High</span>
-                                            <p className="text-muted-foreground">27 tokens</p>
+                                            <p className="text-muted-foreground">27 pts</p>
                                             <p className="text-[10px] text-muted-foreground/70">Premium</p>
                                         </div>
                                     </div>
@@ -1217,14 +1217,14 @@ export function UserManual() {
                             </CardContent>
                         </Card>
 
-                        {/* Token System */}
+                        {/* Pts System */}
                         <Card className="bg-muted/30 border-border/50">
                             <CardContent className="p-4">
                                 <h4 className="font-semibold mb-2 flex items-center gap-2">
-                                    <Info className="w-4 h-4" /> Token System
+                                    <Info className="w-4 h-4" /> Pts System
                                 </h4>
                                 <p className="text-sm text-muted-foreground">
-                                    1 token = $0.01. Tokens are deducted per generation. Purchase tokens through your account settings.
+                                    1 pt = $0.01. Pts are deducted per generation. Purchase pts through your account settings.
                                     Reference images (style matching) are only available on models that support them.
                                 </p>
                             </CardContent>

@@ -185,7 +185,7 @@ export function ApiUsageTab() {
 
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">Credits Used</CardTitle>
+            <CardTitle className="text-sm font-medium text-zinc-400">Pts Used</CardTitle>
             <Zap className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>

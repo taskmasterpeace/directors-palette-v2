@@ -146,7 +146,7 @@ export function GalleryHeader({
               </Tooltip>
             </TooltipProvider>
             <Badge variant="outline" className="text-xs">
-              {totalCredits} credits
+              {totalCredits} pts
             </Badge>
           </div>
         </div>

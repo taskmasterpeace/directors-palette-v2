@@ -55,7 +55,7 @@ export function VideoGenerator({ onBack }: { onBack: () => void }) {
         </div>
         <div>
           <h3 className="text-lg font-bold tracking-tight">Video Generator</h3>
-          <p className="text-xs text-muted-foreground">{selectedModel.cost} credits per video</p>
+          <p className="text-xs text-muted-foreground">{selectedModel.cost} pts per video</p>
         </div>
       </div>
 

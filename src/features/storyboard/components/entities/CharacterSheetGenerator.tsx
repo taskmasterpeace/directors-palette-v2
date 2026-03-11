@@ -282,7 +282,7 @@ export function CharacterSheetGenerator() {
 
         if (currentBalance < totalCost) {
             toast.error(
-                `Insufficient credits. You need ${totalCost} tokens for ${characters.length} characters but only have ${currentBalance}.`,
+                `Insufficient pts. You need ${totalCost} pts for ${characters.length} characters but only have ${currentBalance}.`,
                 { duration: 5000 }
             )
             return

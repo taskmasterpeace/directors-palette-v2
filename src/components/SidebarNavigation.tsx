@@ -478,7 +478,7 @@ export function SidebarNavigation() {
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent side="right">
-                                    <p>{balance} Tokens</p>
+                                    <p>{balance} pts</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>

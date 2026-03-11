@@ -105,12 +105,12 @@ export function ContactSheetModal({
         const currentBalance = useCreditsStore.getState().balance
 
         if (currentBalance < estimatedCost) {
-            toast.error(`Insufficient credits. Need ~${estimatedCost} tokens but you have ${currentBalance}.`)
+            toast.error(`Insufficient pts. Need ~${estimatedCost} pts but you have ${currentBalance}.`)
             return
         }
 
         const confirmed = confirm(
-            `Generate Contact Sheet?\n\nCost: ~${estimatedCost} tokens\nYour balance: ${currentBalance} tokens`
+            `Generate Contact Sheet?\n\nCost: ~${estimatedCost} pts\nYour balance: ${currentBalance} pts`
         )
         if (!confirmed) return
 
@@ -161,7 +161,7 @@ export function ContactSheetModal({
                     </DialogTitle>
                     <DialogDescription>
                         Generate a single 3x3 grid with 9 camera angles, then auto-slice into cells
-                        <Badge variant="outline" className="ml-2 text-xs">Cost: ~{getImageCostTokens(generationSettings.imageModel, generationSettings.resolution)} tokens</Badge>
+                        <Badge variant="outline" className="ml-2 text-xs">Cost: ~{getImageCostTokens(generationSettings.imageModel, generationSettings.resolution)} pts</Badge>
                         {balance > 0 && (
                             <Badge variant="outline" className={`ml-1 text-xs ${balance < getImageCostTokens(generationSettings.imageModel, generationSettings.resolution) ? 'text-red-500 border-red-500/30' : ''}`}>
                                 <Coins className="w-3 h-3 mr-1" />

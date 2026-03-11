@@ -340,7 +340,7 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                     <Coins className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="font-medium">{selectedShots.size} shots</span>
                     <span className="text-muted-foreground">=</span>
-                    <span className="font-medium">~{estimatedCost} tokens</span>
+                    <span className="font-medium">~{estimatedCost} pts</span>
                     <span className="text-muted-foreground/50">|</span>
                     <span className={`font-medium ${balance - estimatedCost < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
                         {balance} bal
@@ -535,7 +535,7 @@ export function GenerationQueue({ chapterIndex = 0 }: GenerationQueueProps) {
                             ) : (
                                 <>
                                     <Play className="w-4 h-4 mr-2" />
-                                    Generate {selectedShots.size} Selected Shots (~{estimatedCost} tokens)
+                                    Generate {selectedShots.size} Selected Shots (~{estimatedCost} pts)
                                 </>
                             )}
                         </Button>

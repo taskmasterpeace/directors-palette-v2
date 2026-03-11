@@ -62,7 +62,7 @@ export function MusicGenerator({ onBack }: { onBack: () => void }) {
         </div>
         <div>
           <h3 className="text-lg font-bold tracking-tight">Music Generator</h3>
-          <p className="text-xs text-muted-foreground">15 credits per track</p>
+          <p className="text-xs text-muted-foreground">15 pts per track</p>
         </div>
       </div>
 
@@ -180,7 +180,7 @@ export function MusicGenerator({ onBack }: { onBack: () => void }) {
                 />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">{lastResult.creditsUsed} credits used</span>
+                <span className="text-xs text-muted-foreground">{lastResult.creditsUsed} pts used</span>
                 <a href={lastResult.url} download target="_blank" rel="noopener noreferrer">
                   <Button size="sm" variant="outline" className="gap-1.5 text-xs">
                     <Download className="w-3 h-3" />

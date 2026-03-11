@@ -63,7 +63,7 @@ export function CreditInsufficiencyModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-amber-500" />
-            Insufficient Credits
+            Insufficient Pts
           </DialogTitle>
         </DialogHeader>
 
@@ -72,14 +72,14 @@ export function CreditInsufficiencyModal({
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-amber-800">Credit Requirements</h3>
+                <h3 className="font-semibold text-amber-800">Pts Requirements</h3>
                 <p className="text-amber-700">
-                  {operation} requires <strong>{required} credits</strong> but you only have <strong>{available} credits</strong>
+                  {operation} requires <strong>{required} pts</strong> but you only have <strong>{available} pts</strong>
                 </p>
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-amber-800">{shortfall}</div>
-                <div className="text-sm text-amber-600">credits needed</div>
+                <div className="text-sm text-amber-600">pts needed</div>
               </div>
             </div>
           </div>
@@ -88,7 +88,7 @@ export function CreditInsufficiencyModal({
           <div>
             <h3 className="font-semibold mb-3 flex items-center gap-2">
               <CreditCard className="h-4 w-4" />
-              Purchase Credits
+              Purchase Pts
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {CREDIT_PACKAGES.map((pkg, index) => (
@@ -104,7 +104,7 @@ export function CreditInsufficiencyModal({
                     <div>
                       <div className="font-semibold flex items-center gap-2">
                         <Zap className="h-4 w-4 text-yellow-500" />
-                        {pkg.credits.toLocaleString()} Credits
+                        {pkg.credits.toLocaleString()} Pts
                         {pkg.bonus && (
                           <Badge variant="secondary">+{pkg.bonus} bonus</Badge>
                         )}
@@ -116,7 +116,7 @@ export function CreditInsufficiencyModal({
                     <div className="text-right">
                       <div className="font-bold">${pkg.price.toFixed(2)}</div>
                       <div className="text-xs text-gray-500">
-                        {(pkg.price / (pkg.credits + (pkg.bonus || 0)) * 100).toFixed(1)}¢/credit
+                        {(pkg.price / (pkg.credits + (pkg.bonus || 0)) * 100).toFixed(1)}¢/pt
                       </div>
                     </div>
                   </div>
@@ -150,7 +150,7 @@ export function CreditInsufficiencyModal({
                       <div className="text-sm text-gray-600">{alt.description}</div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold text-green-600">{alt.credits} credits</div>
+                      <div className="font-semibold text-green-600">{alt.credits} pts</div>
                       <Button
                         variant="outline"
                         size="sm"
@@ -175,7 +175,7 @@ export function CreditInsufficiencyModal({
               className="flex items-center gap-2"
             >
               <CreditCard className="h-4 w-4" />
-              Buy {recommendedPackage.credits} Credits - ${recommendedPackage.price.toFixed(2)}
+              Buy {recommendedPackage.credits} Pts - ${recommendedPackage.price.toFixed(2)}
             </Button>
           </div>
         </div>

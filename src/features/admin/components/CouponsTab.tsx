@@ -230,7 +230,7 @@ function CreateCouponDialog({ onSuccess }: { onSuccess: () => void }) {
                 <DialogHeader>
                     <DialogTitle className="text-white">Create New Coupon</DialogTitle>
                     <DialogDescription>
-                        Create a coupon code that users can redeem for free credits.
+                        Create a coupon code that users can redeem for free pts.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
