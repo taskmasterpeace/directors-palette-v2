@@ -28,8 +28,10 @@ export class ImageGenerationService {
   static validateInput(input: ImageGenerationInput): { valid: boolean; errors: string[] } {
     const errors: string[] = []
 
-    // Common validations
-    if (!input.prompt?.trim()) {
+    // Common validations — prompt is optional for qwen-image-edit with camera enabled
+    const qwenSettings = input.modelSettings as QwenImageEditSettings | undefined
+    const cameraProviesPrompt = input.model === 'qwen-image-edit' && qwenSettings?.cameraEnabled
+    if (!input.prompt?.trim() && !cameraProviesPrompt) {
       errors.push('Prompt is required')
     }
 

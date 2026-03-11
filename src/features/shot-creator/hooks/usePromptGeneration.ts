@@ -144,8 +144,13 @@ export function usePromptGeneration() {
             return shotCreatorReferenceImages.length > 0 || shotCreatorPrompt.trim().length > 0
         }
 
+        // Camera Angle model: prompt is optional when camera is enabled (angle tokens serve as prompt)
+        if (shotCreatorSettings.model === 'qwen-image-edit' && shotCreatorSettings.cameraEnabled) {
+            return shotCreatorReferenceImages.length > 0
+        }
+
         return shotCreatorPrompt.length > 0
-    }, [shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings.quickMode, getActiveRecipe, getActiveValidation])
+    }, [shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings.quickMode, shotCreatorSettings.model, shotCreatorSettings.cameraEnabled, getActiveRecipe, getActiveValidation])
 
     // ── Build model settings from shotCreatorSettings ──────────────────
     const buildModelSettings = useCallback(() => {
