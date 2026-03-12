@@ -40,15 +40,18 @@ export async function GET(request: Request) {
 
     const data = await res.json()
 
-    // Transform into our variant format
-    const variants = data.variants?.map((v: Record<string, unknown>) => ({
-      id: v.id,
-      title: v.title,
-      color: extractColor(v.title as string),
-      colorHex: extractColorHex(v.options as Record<string, unknown>),
-      size: extractSize(v.title as string),
-      price: v.price,
-    })) ?? []
+    // Transform into our variant format using structured options fields
+    const variants = data.variants?.map((v: { id: number; title: string; options: Record<string, string>; price: number }) => {
+      const opts = v.options ?? {}
+      return {
+        id: v.id,
+        title: v.title,
+        color: opts.color ?? 'Default',
+        colorHex: opts.color ? '#333333' : '#333333', // Printify doesn't provide hex — UI fetches swatches separately
+        size: opts.size ?? 'One Size',
+        price: v.price,
+      }
+    }) ?? []
 
     const result = { blueprintId, providerId, variants }
 
@@ -65,17 +68,3 @@ export async function GET(request: Request) {
   }
 }
 
-// Helpers to parse Printify variant titles (format: "Black / S", "White / M", etc.)
-function extractColor(title: string): string {
-  return title.split('/')[0]?.trim() ?? title
-}
-
-function extractSize(title: string): string {
-  const parts = title.split('/')
-  return parts.length > 1 ? parts[parts.length - 1].trim() : 'One Size'
-}
-
-function extractColorHex(options: Record<string, unknown>): string {
-  if (options?.color) return String(options.color)
-  return '#333333'
-}

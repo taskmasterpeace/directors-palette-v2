@@ -39,10 +39,10 @@ export async function POST(request: NextRequest) {
     if (!variantsRes.ok) throw new Error('Failed to verify pricing')
 
     const variantsData = await variantsRes.json()
-    const matchingVariant = variantsData.variants?.find((v: { title: string; id: number }) => {
-      const parts = v.title.split('/')
-      const vColor = parts[0]?.trim()
-      const vSize = parts.length > 1 ? parts[parts.length - 1]?.trim() : 'One Size'
+    const matchingVariant = variantsData.variants?.find((v: { id: number; options: Record<string, string> }) => {
+      const opts = v.options ?? {}
+      const vColor = opts.color ?? 'Default'
+      const vSize = opts.size ?? 'One Size'
       return vColor === color && (vSize === size || (!size && vSize === 'One Size'))
     })
 
