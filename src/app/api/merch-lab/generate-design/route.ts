@@ -38,15 +38,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 1: Generate with Recraft V3 (native transparent background)
+    // Prompt engineering: we're generating print-ready designs for merchandise
+    // The model needs clear instructions about isolation and transparency
     const styleHints: Record<string, string> = {
-      'center': 'isolated centered graphic, print-ready design',
-      'left-chest': 'small compact logo design, minimal, clean',
-      'back': 'large bold graphic design, detailed illustration',
-      'all-over': 'seamless repeating pattern, tileable design',
-      'wrap': 'wide panoramic design, wrapping artwork',
+      'center': 'single isolated centered graphic on empty transparent background, print-ready t-shirt design',
+      'left-chest': 'small compact logo or emblem on empty transparent background, minimal clean pocket-sized design',
+      'back': 'large bold graphic on empty transparent background, detailed illustration for back print',
+      'all-over': 'seamless repeating pattern, tileable design for all-over print',
+      'wrap': 'wide panoramic design on empty transparent background, wrapping mug artwork',
     }
     const hint = styleHints[designStyle ?? 'center'] ?? styleHints.center
-    const enhancedPrompt = `${prompt.trim()}, transparent background, clean edges, vector art style, bold lines, ${hint}`
+    const enhancedPrompt = `${prompt.trim()}, ${hint}, no background, isolated on transparent, crisp clean edges, high contrast, vector art style, bold lines, print-ready`
 
     const output = await replicate.run(RECRAFT_MODEL, {
       input: {
@@ -56,7 +58,9 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    const imageUrl = typeof output === 'string' ? output : (output as { url?: string })?.url ?? String(output)
+    // Replicate SDK returns FileOutput objects — extract URL safely
+    const imageUrl = extractUrl(output)
+    if (!imageUrl) throw new Error('No image URL in Recraft output')
 
     // Step 2: Background removal cleanup pass
     let cleanUrl = imageUrl
@@ -64,7 +68,8 @@ export async function POST(request: NextRequest) {
       const bgOutput = await replicate.run(BG_REMOVER_MODEL, {
         input: { image: imageUrl },
       })
-      cleanUrl = typeof bgOutput === 'string' ? bgOutput : (bgOutput as { url?: string })?.url ?? String(bgOutput)
+      const bgUrl = extractUrl(bgOutput)
+      if (bgUrl) cleanUrl = bgUrl
     } catch (bgErr) {
       lognog.warn('merch_bg_removal_failed', { error: String(bgErr) })
     }
@@ -112,4 +117,25 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+/** Extract a URL string from Replicate output (handles string, FileOutput, array) */
+function extractUrl(output: unknown): string | null {
+  // Array output (some models return [url])
+  if (Array.isArray(output) && output.length > 0) {
+    return extractUrl(output[0])
+  }
+  // Plain string
+  if (typeof output === 'string' && output.startsWith('http')) {
+    return output
+  }
+  // FileOutput object — has .url property or toString() returns the URL
+  if (output && typeof output === 'object') {
+    if ('url' in output && typeof (output as Record<string, unknown>).url === 'string') {
+      return (output as Record<string, unknown>).url as string
+    }
+    const str = String(output)
+    if (str.startsWith('http')) return str
+  }
+  return null
 }
