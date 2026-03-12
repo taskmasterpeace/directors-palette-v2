@@ -7,9 +7,9 @@ import { Sparkles, Loader2, Plus, X } from 'lucide-react'
 import type { QualityTier } from '../types'
 
 const QUALITY_TIERS: { id: QualityTier; label: string; ptsPerImage: number }[] = [
-  { id: 'turbo', label: 'Quick', ptsPerImage: 6 },
-  { id: 'balanced', label: 'Standard', ptsPerImage: 8 },
-  { id: 'quality', label: 'Premium', ptsPerImage: 11 },
+  { id: 'turbo', label: 'Quick', ptsPerImage: 20 },
+  { id: 'balanced', label: 'Standard', ptsPerImage: 24 },
+  { id: 'quality', label: 'Premium', ptsPerImage: 28 },
 ]
 
 const BATCH_OPTIONS = [1, 3, 5] as const
