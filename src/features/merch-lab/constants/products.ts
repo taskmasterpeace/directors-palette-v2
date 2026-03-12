@@ -29,13 +29,13 @@ export const MERCH_PRODUCTS: PrintifyProduct[] = [
     hasFrontBack: true,
   },
   {
-    blueprintId: 375,
+    blueprintId: 507,
     name: 'Tote Bag',
     icon: '👜',
     category: 'accessory',
     designStyles: ['all-over'],
-    hasSizes: false,
-    hasFrontBack: true,
+    hasSizes: true,
+    hasFrontBack: false,
   },
   {
     blueprintId: 478,
@@ -59,12 +59,12 @@ export const MERCH_PRODUCTS: PrintifyProduct[] = [
 
 // Preferred print providers per blueprint (update after Printify account setup)
 export const PRINTIFY_PROVIDERS: Record<number, number> = {
-  12: 99,
-  77: 99,
-  49: 99,
-  375: 99,
-  478: 99,
-  400: 99,
+  12: 99,   // T-Shirt — Printify Choice (996 variants, 125 colors)
+  77: 99,   // Hoodie — Printify Choice (274 variants, 36 colors)
+  49: 99,   // Crewneck — Printify Choice (257 variants, 8 colors)
+  507: 48,  // Tote Bag — Colorway (15 variants, 5 colors x 3 sizes)
+  478: 99,  // Mug — Printify Choice (2 variants: 11oz, 15oz)
+  400: 99,  // Stickers — Printify Choice (4 variants: 2"/3"/4"/5.5")
 }
 
 export const MARGIN_MULTIPLIER = 1.25

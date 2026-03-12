@@ -33,22 +33,32 @@ export function ColorPicker() {
       ) : colors.length === 0 ? (
         <p className="text-xs text-muted-foreground/50">Select a product to see colors</p>
       ) : (
-        <div className="flex flex-wrap gap-1.5">
-          {colors.map((c) => (
-            <button
-              key={c.name}
-              title={c.name}
-              onClick={() => setColor(c.name, c.hex)}
-              className={cn(
-                'h-7 w-7 rounded-full border-2 transition-all hover:scale-110',
-                selectedColor === c.name
-                  ? 'border-cyan-500 ring-2 ring-cyan-500/30'
-                  : 'border-border/30'
-              )}
-              style={{ backgroundColor: c.hex }}
-            />
-          ))}
-        </div>
+        <>
+          <div className="max-h-[180px] overflow-y-auto rounded-lg pr-1">
+            <div className="flex flex-wrap gap-1.5">
+              {colors.map((c) => (
+                <button
+                  key={c.name}
+                  title={c.name}
+                  onClick={() => setColor(c.name, c.hex)}
+                  className={cn(
+                    'h-7 w-7 rounded-full border-2 transition-all hover:scale-110',
+                    selectedColor === c.name
+                      ? 'border-cyan-500 ring-2 ring-cyan-500/30'
+                      : 'border-border/30',
+                    c.name === 'White' && 'border-border/50'
+                  )}
+                  style={{ backgroundColor: c.hex }}
+                />
+              ))}
+            </div>
+          </div>
+          {selectedColor && (
+            <div className="mt-2 text-[11px] text-muted-foreground/70">
+              Selected: <span className="font-medium text-foreground/80">{selectedColor}</span>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
