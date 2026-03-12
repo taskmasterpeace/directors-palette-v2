@@ -9,21 +9,32 @@ import { lognog } from '@/lib/lognog'
 export const maxDuration = 180
 
 const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN })
+const IDEOGRAM_API_KEY = process.env.IDEOGRAM_API_KEY!
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// Ideogram V3 pricing on Replicate (per image)
-// Turbo: $0.03, Balanced: $0.06, Quality: $0.09
+// Ideogram Direct API pricing (transparent endpoint X1) + Real-ESRGAN upscale ($0.01)
+// Turbo: $0.04 + $0.01 = $0.05, Default: $0.07 + $0.01 = $0.08, Quality: $0.10 + $0.01 = $0.11
 const QUALITY_CONFIG = {
-  turbo:    { model: 'ideogram-ai/ideogram-v3-turbo' as const,    costPts: 3 },
-  balanced: { model: 'ideogram-ai/ideogram-v3-balanced' as const, costPts: 6 },
-  quality:  { model: 'ideogram-ai/ideogram-v3-quality' as const,  costPts: 9 },
+  turbo:    { renderingSpeed: 'TURBO' as const,   costPts: 6 },
+  balanced: { renderingSpeed: 'DEFAULT' as const,  costPts: 8 },
+  quality:  { renderingSpeed: 'QUALITY' as const,  costPts: 11 },
 }
 
 type QualityTier = keyof typeof QUALITY_CONFIG
+
+// Map design styles to optimal aspect ratios for Printify print areas
+// T-shirt front: 2767×3362 (~4:5), Hoodie front: 2919×1944 (~3:2), Mug: 2475×1155 (~2:1), Tote: 2102×4051 (~1:2)
+const STYLE_ASPECT_RATIOS: Record<string, string> = {
+  'center': '4x5',       // Portrait — fits t-shirt/hoodie front center
+  'left-chest': '1x1',   // Square — small logo area
+  'back': '4x5',         // Portrait — same as front
+  'all-over': '1x1',     // Square — tileable pattern
+  'wrap': '2x1',         // Landscape — mug wrap
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,24 +62,51 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Insufficient pts', required: totalPts }, { status: 402 })
     }
 
-    // Build enhanced prompt with design context
+    // Build enhanced prompt
     const enhancedPrompt = buildMerchPrompt(prompt.trim(), designStyle, designColors)
+    const aspectRatio = STYLE_ASPECT_RATIOS[designStyle ?? 'center'] ?? '4x5'
 
     // Generate all images in parallel
     const generateOne = async () => {
-      const output = await replicate.run(config.model, {
-        input: {
+      // Step 1: Generate transparent image via Ideogram Direct API
+      const ideogramRes = await fetch('https://api.ideogram.ai/v1/ideogram-v3/generate-transparent', {
+        method: 'POST',
+        headers: {
+          'Api-Key': IDEOGRAM_API_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           prompt: enhancedPrompt,
-          aspect_ratio: '1:1',
-          magic_prompt_option: 'Auto',
+          rendering_speed: config.renderingSpeed,
+          aspect_ratio: aspectRatio,
+          magic_prompt: 'Auto',
+          num_images: 1,
+        }),
+      })
+
+      if (!ideogramRes.ok) {
+        const errBody = await ideogramRes.text()
+        throw new Error(`Ideogram API error ${ideogramRes.status}: ${errBody}`)
+      }
+
+      const ideogramData = await ideogramRes.json()
+      const generatedUrl = ideogramData.data?.[0]?.url
+      if (!generatedUrl) throw new Error('No image URL in Ideogram response')
+
+      // Step 2: Upscale with Real-ESRGAN via Replicate for print-ready resolution
+      const upscaleOutput = await replicate.run('nightmareai/real-esrgan:b3ef194191d13140337468c916c2c5b96dd0cb06dffc032a022a31807f6a5ea8', {
+        input: {
+          image: generatedUrl,
+          scale: 2,
+          face_enhance: false,
         },
       })
 
-      const imageUrl = extractUrl(output)
-      if (!imageUrl) throw new Error('No image URL in Ideogram output')
+      const upscaledUrl = extractUrl(upscaleOutput)
+      if (!upscaledUrl) throw new Error('Upscale failed — no output URL')
 
-      // Download and upload to Supabase Storage
-      const imgResponse = await fetch(imageUrl)
+      // Step 3: Download upscaled image and upload to Supabase Storage
+      const imgResponse = await fetch(upscaledUrl)
       const imgBuffer = Buffer.from(await imgResponse.arrayBuffer())
       const id = randomUUID()
       const storagePath = `merch-lab/${user.id}/${id}.png`
@@ -146,8 +184,8 @@ function buildMerchPrompt(
   const hint = styleHints[designStyle ?? 'center'] ?? styleHints.center
   parts.push(hint)
 
-  // Add transparency and quality instructions
-  parts.push('on transparent background, isolated graphic, crisp clean edges, high contrast, print-ready')
+  // Add quality instructions (no need to mention transparent — the endpoint handles it)
+  parts.push('isolated graphic, crisp clean edges, high contrast, print-ready')
 
   return parts.join(', ')
 }
