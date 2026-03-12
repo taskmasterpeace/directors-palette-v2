@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
         input: {
           prompt: enhancedPrompt,
           aspect_ratio: '1:1',
-          magic_prompt_option: 'AUTO',
+          magic_prompt_option: 'Auto',
         },
       })
 
