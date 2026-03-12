@@ -11,15 +11,6 @@ const STEPS = ['shipping', 'review', 'processing', 'confirmation'] as const
 
 const COUNTRIES = [
   { code: 'US', name: 'United States' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'AU', name: 'Australia' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'FR', name: 'France' },
-  { code: 'JP', name: 'Japan' },
-  { code: 'NL', name: 'Netherlands' },
-  { code: 'SE', name: 'Sweden' },
-  { code: 'MX', name: 'Mexico' },
 ]
 
 export function OrderModal() {
