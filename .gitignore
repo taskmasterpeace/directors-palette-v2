@@ -56,3 +56,4 @@ playwright-out.txt
 # misc artifacts
 nul
 vercel-deploy.log
+.superpowers/
