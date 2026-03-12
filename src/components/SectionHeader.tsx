@@ -75,6 +75,12 @@ const SECTION_CONFIG: Record<TabValue, { banner: string; title: string; subtitle
     subtitle: 'Turn characters into 3D models and physical figurines',
     helpTip: 'Upload a character image, generate a 3D model, then order a physical figurine shipped to your door'
   },
+  'merch-lab': {
+    banner: '/banners/merch-lab.webp',
+    title: 'Merch Lab',
+    subtitle: 'Design custom merch with AI and order prints',
+    helpTip: 'Pick a product, generate a design with AI, preview it on a mockup, and order directly through Printify'
+  },
   'prompt-tools': {
     banner: '/banners/prompt-tools.webp',
     title: 'Prompt Tools',

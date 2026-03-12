@@ -19,6 +19,7 @@ import { SectionHeader } from "@/components/SectionHeader"
 import { NodeWorkflow } from "@/features/node-workflow"
 import { BrandStudioLayout } from "@/features/brand-studio"
 import { FigurineStudio } from "@/features/figurine-studio"
+import { MerchLab } from "@/features/merch-lab"
 import { useAuth } from "@/features/auth/hooks/useAuth"
 
 export default function Home() {
@@ -143,6 +144,17 @@ export default function Home() {
                   <SectionHeader section="figurine-studio" />
                   <div className="flex-1 overflow-hidden">
                     <FigurineStudio />
+                  </div>
+                </PageTransition>
+              </TabsContent>
+            )}
+
+            {activeTab === 'merch-lab' && (
+              <TabsContent key="merch-lab" value="merch-lab" className="h-full m-0 p-0 outline-none data-[state=active]:flex flex-col" forceMount>
+                <PageTransition>
+                  <SectionHeader section="merch-lab" />
+                  <div className="flex-1 overflow-hidden">
+                    <MerchLab />
                   </div>
                 </PageTransition>
               </TabsContent>

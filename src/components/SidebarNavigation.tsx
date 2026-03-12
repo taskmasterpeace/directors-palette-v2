@@ -24,7 +24,8 @@ import {
     Circle,
     ArrowRight,
     Brush,
-    Box
+    Box,
+    Shirt
 } from 'lucide-react'
 import { useLayoutStore, TabValue } from '@/store/layout.store'
 import { useSidebarWizardSteps, useNavigateToWizardStep } from '@/features/storybook/hooks/useSidebarWizardSteps'
@@ -107,6 +108,13 @@ const NAV_SECTIONS: NavSection[] = [
                 icon: Box,
                 banner: '/banners/shot-creator.webp',
                 tooltipExpanded: 'Turn characters into 3D models and physical figurines'
+            },
+            {
+                id: 'merch-lab',
+                label: 'Merch Lab',
+                icon: Shirt,
+                banner: '/banners/merch-lab.webp',
+                tooltipExpanded: 'Design and order custom merchandise'
             }
         ]
     },

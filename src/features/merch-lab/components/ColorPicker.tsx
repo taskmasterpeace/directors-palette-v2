@@ -1,0 +1,55 @@
+'use client'
+
+import { useMemo } from 'react'
+import { useMerchLabStore } from '../hooks'
+import { cn } from '@/utils/utils'
+
+export function ColorPicker() {
+  const variants = useMerchLabStore((s) => s.variants)
+  const isLoadingCatalog = useMerchLabStore((s) => s.isLoadingCatalog)
+  const selectedColor = useMerchLabStore((s) => s.selectedColor)
+  const setColor = useMerchLabStore((s) => s.setColor)
+
+  const colors = useMemo(() => {
+    const seen = new Set<string>()
+    return variants.filter((v) => {
+      if (seen.has(v.color)) return false
+      seen.add(v.color)
+      return true
+    }).map((v) => ({ name: v.color, hex: v.colorHex }))
+  }, [variants])
+
+  return (
+    <div className="border-b border-border/30 p-4">
+      <div className="mb-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+        2. Product Color
+      </div>
+      {isLoadingCatalog ? (
+        <div className="flex gap-1.5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-7 w-7 animate-pulse rounded-full bg-card/50" />
+          ))}
+        </div>
+      ) : colors.length === 0 ? (
+        <p className="text-xs text-muted-foreground/50">Select a product to see colors</p>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {colors.map((c) => (
+            <button
+              key={c.name}
+              title={c.name}
+              onClick={() => setColor(c.name, c.hex)}
+              className={cn(
+                'h-7 w-7 rounded-full border-2 transition-all hover:scale-110',
+                selectedColor === c.name
+                  ? 'border-cyan-500 ring-2 ring-cyan-500/30'
+                  : 'border-border/30'
+              )}
+              style={{ backgroundColor: c.hex }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

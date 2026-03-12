@@ -1,0 +1,1 @@
+export { MerchLab } from './MerchLab'
