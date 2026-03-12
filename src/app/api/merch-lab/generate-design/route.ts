@@ -6,7 +6,7 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth'
 import { creditsService } from '@/features/credits'
 import { lognog } from '@/lib/lognog'
 
-export const maxDuration = 120
+export const maxDuration = 180
 
 const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN })
 
@@ -15,9 +15,15 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const DESIGN_PTS = 5
-const RECRAFT_MODEL = 'recraft-ai/recraft-v3'
-const BG_REMOVER_MODEL = '851-labs/background-remover'
+// Ideogram V3 pricing on Replicate (per image)
+// Turbo: $0.03, Balanced: $0.06, Quality: $0.09
+const QUALITY_CONFIG = {
+  turbo:    { model: 'ideogram-ai/ideogram-v3-turbo' as const,    costPts: 3 },
+  balanced: { model: 'ideogram-ai/ideogram-v3-balanced' as const, costPts: 6 },
+  quality:  { model: 'ideogram-ai/ideogram-v3-quality' as const,  costPts: 9 },
+}
+
+type QualityTier = keyof typeof QUALITY_CONFIG
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,90 +32,86 @@ export async function POST(request: NextRequest) {
 
     const { user } = auth
 
-    // Check balance
-    const balance = await creditsService.getBalance(user.id)
-    if ((balance?.balance ?? 0) < DESIGN_PTS) {
-      return NextResponse.json({ error: 'Insufficient pts', required: DESIGN_PTS }, { status: 402 })
-    }
-
-    const { prompt, designStyle } = await request.json()
+    const { prompt, designStyle, designColors, count = 1, qualityTier = 'balanced' } = await request.json()
     if (!prompt?.trim()) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 })
     }
 
-    // Step 1: Generate with Recraft V3 (native transparent background)
-    // Prompt engineering: we're generating print-ready designs for merchandise
-    // The model needs clear instructions about isolation and transparency
-    const styleHints: Record<string, string> = {
-      'center': 'single isolated centered graphic on empty transparent background, print-ready t-shirt design',
-      'left-chest': 'small compact logo or emblem on empty transparent background, minimal clean pocket-sized design',
-      'back': 'large bold graphic on empty transparent background, detailed illustration for back print',
-      'all-over': 'seamless repeating pattern, tileable design for all-over print',
-      'wrap': 'wide panoramic design on empty transparent background, wrapping mug artwork',
-    }
-    const hint = styleHints[designStyle ?? 'center'] ?? styleHints.center
-    const enhancedPrompt = `${prompt.trim()}, ${hint}, no background, isolated on transparent, crisp clean edges, high contrast, vector art style, bold lines, print-ready`
+    // Validate count (1, 3, or 5)
+    const batchCount = [1, 3, 5].includes(count) ? count : 1
 
-    const output = await replicate.run(RECRAFT_MODEL, {
-      input: {
-        prompt: enhancedPrompt,
-        output_format: 'png',
-        style: 'digital_illustration',
-      },
-    })
+    // Validate quality tier
+    const tier: QualityTier = (qualityTier in QUALITY_CONFIG) ? qualityTier : 'balanced'
+    const config = QUALITY_CONFIG[tier]
+    const totalPts = config.costPts * batchCount
 
-    // Replicate SDK returns FileOutput objects — extract URL safely
-    const imageUrl = extractUrl(output)
-    if (!imageUrl) throw new Error('No image URL in Recraft output')
-
-    // Step 2: Background removal cleanup pass
-    let cleanUrl = imageUrl
-    try {
-      const bgOutput = await replicate.run(BG_REMOVER_MODEL, {
-        input: { image: imageUrl },
-      })
-      const bgUrl = extractUrl(bgOutput)
-      if (bgUrl) cleanUrl = bgUrl
-    } catch (bgErr) {
-      lognog.warn('merch_bg_removal_failed', { error: String(bgErr) })
+    // Check balance
+    const balance = await creditsService.getBalance(user.id)
+    if ((balance?.balance ?? 0) < totalPts) {
+      return NextResponse.json({ error: 'Insufficient pts', required: totalPts }, { status: 402 })
     }
 
-    // Step 3: Download and upload to Supabase Storage
-    const imgResponse = await fetch(cleanUrl)
-    const imgBuffer = Buffer.from(await imgResponse.arrayBuffer())
-    const id = randomUUID()
-    const storagePath = `merch-lab/${user.id}/${id}.png`
+    // Build enhanced prompt with design context
+    const enhancedPrompt = buildMerchPrompt(prompt.trim(), designStyle, designColors)
 
-    const { error: uploadError } = await supabase.storage
-      .from('directors-palette')
-      .upload(storagePath, imgBuffer, {
-        contentType: 'image/png',
-        upsert: true,
-        cacheControl: 'public, max-age=31536000, immutable',
+    // Generate all images in parallel
+    const generateOne = async () => {
+      const output = await replicate.run(config.model, {
+        input: {
+          prompt: enhancedPrompt,
+          aspect_ratio: '1:1',
+          magic_prompt_option: 'AUTO',
+        },
       })
 
-    if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`)
+      const imageUrl = extractUrl(output)
+      if (!imageUrl) throw new Error('No image URL in Ideogram output')
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('directors-palette')
-      .getPublicUrl(storagePath)
+      // Download and upload to Supabase Storage
+      const imgResponse = await fetch(imageUrl)
+      const imgBuffer = Buffer.from(await imgResponse.arrayBuffer())
+      const id = randomUUID()
+      const storagePath = `merch-lab/${user.id}/${id}.png`
 
-    // Step 4: Deduct pts
+      const { error: uploadError } = await supabase.storage
+        .from('directors-palette')
+        .upload(storagePath, imgBuffer, {
+          contentType: 'image/png',
+          upsert: true,
+          cacheControl: 'public, max-age=31536000, immutable',
+        })
+
+      if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`)
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('directors-palette')
+        .getPublicUrl(storagePath)
+
+      return { id, url: publicUrl }
+    }
+
+    const results = await Promise.all(
+      Array.from({ length: batchCount }, () => generateOne())
+    )
+
+    // Deduct pts for all generations
     await creditsService.deductCredits(user.id, 'merch-design', {
       generationType: 'image',
-      predictionId: id,
-      description: `Merch Lab design: ${prompt.trim().slice(0, 50)}`,
-      overrideAmount: DESIGN_PTS,
+      predictionId: results[0].id,
+      description: `Merch Lab ${batchCount}x ${tier}: ${prompt.trim().slice(0, 40)}`,
+      overrideAmount: totalPts,
       user_email: user.email,
     })
 
     lognog.info('merch_design_generated', {
       type: 'business',
       user_id: user.id,
-      pts_charged: DESIGN_PTS,
+      pts_charged: totalPts,
+      batch_count: batchCount,
+      quality_tier: tier,
     })
 
-    return NextResponse.json({ id, url: publicUrl })
+    return NextResponse.json({ designs: results })
   } catch (error) {
     lognog.error('merch_design_error', { error: String(error) })
     return NextResponse.json(
@@ -119,17 +121,45 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/** Build a merch-optimized prompt with style and color context */
+function buildMerchPrompt(
+  prompt: string,
+  designStyle?: string,
+  designColors?: string[]
+): string {
+  const styleHints: Record<string, string> = {
+    'center': 'single isolated centered graphic, print-ready t-shirt design',
+    'left-chest': 'small compact logo or emblem, minimal clean pocket-sized design',
+    'back': 'large bold graphic, detailed illustration for back print',
+    'all-over': 'seamless repeating pattern, tileable design for all-over print',
+    'wrap': 'wide panoramic design, wrapping mug artwork',
+  }
+
+  const parts: string[] = [prompt]
+
+  // Add color guidance if user selected design colors
+  if (designColors?.length) {
+    parts.push(`using the colors: ${designColors.join(', ')}`)
+  }
+
+  // Add style context
+  const hint = styleHints[designStyle ?? 'center'] ?? styleHints.center
+  parts.push(hint)
+
+  // Add transparency and quality instructions
+  parts.push('on transparent background, isolated graphic, crisp clean edges, high contrast, print-ready')
+
+  return parts.join(', ')
+}
+
 /** Extract a URL string from Replicate output (handles string, FileOutput, array) */
 function extractUrl(output: unknown): string | null {
-  // Array output (some models return [url])
   if (Array.isArray(output) && output.length > 0) {
     return extractUrl(output[0])
   }
-  // Plain string
   if (typeof output === 'string' && output.startsWith('http')) {
     return output
   }
-  // FileOutput object — has .url property or toString() returns the URL
   if (output && typeof output === 'object') {
     if ('url' in output && typeof (output as Record<string, unknown>).url === 'string') {
       return (output as Record<string, unknown>).url as string

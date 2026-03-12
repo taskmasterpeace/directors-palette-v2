@@ -9,6 +9,7 @@ export interface PrintifyProduct {
 }
 
 export type DesignStyle = 'center' | 'all-over' | 'left-chest' | 'back' | 'wrap'
+export type QualityTier = 'turbo' | 'balanced' | 'quality'
 
 export interface PrintifyVariant {
   id: number
@@ -52,6 +53,9 @@ export interface MerchLabState {
 
   // Design
   prompt: string
+  designColors: string[]
+  qualityTier: QualityTier
+  batchCount: 1 | 3 | 5
   generatedDesigns: GeneratedDesign[]
   activeDesignIndex: number
   designPosition: { x: number; y: number; scale: number }
@@ -83,7 +87,11 @@ export interface MerchLabState {
   setColor: (color: string, hex: string) => void
   setDesignStyle: (style: DesignStyle) => void
   setPrompt: (prompt: string) => void
+  setDesignColors: (colors: string[]) => void
+  setQualityTier: (tier: QualityTier) => void
+  setBatchCount: (count: 1 | 3 | 5) => void
   addDesign: (design: GeneratedDesign) => void
+  addDesigns: (designs: GeneratedDesign[]) => void
   setActiveDesignIndex: (index: number) => void
   setDesignPosition: (pos: { x: number; y: number; scale: number }) => void
   setSize: (size: string) => void

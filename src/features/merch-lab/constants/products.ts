@@ -69,4 +69,3 @@ export const PRINTIFY_PROVIDERS: Record<number, number> = {
 
 export const MARGIN_MULTIPLIER = 1.25
 export const MAX_QUANTITY = 25
-export const DESIGN_GENERATION_PTS = 5

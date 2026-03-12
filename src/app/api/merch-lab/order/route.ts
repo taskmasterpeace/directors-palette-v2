@@ -13,7 +13,7 @@ const PRINTIFY_SHOP_ID = process.env.PRINTIFY_SHOP_ID!
 const ESTIMATED_SHIPPING: Record<string, number> = {
   apparel: 499, accessory: 399, drinkware: 599, sticker: 299,
 }
-const USD_CENTS_PER_PT = 16
+// 1 pt = 1 cent (verified from credits system)
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     const shippingCents = ESTIMATED_SHIPPING[category ?? 'apparel'] ?? 499
     const totalCents = Math.ceil((matchingVariant.price + shippingCents) * MARGIN_MULTIPLIER)
-    const verifiedPts = Math.ceil(totalCents / USD_CENTS_PER_PT) * quantity
+    const verifiedPts = totalCents * quantity // 1 pt = 1 cent
 
     // Step 2: Check and deduct pts
     const balance = await creditsService.getBalance(user.id)

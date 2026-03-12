@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { MerchLabState, GeneratedDesign, ShippingAddress, DesignStyle, PrintifyVariant } from '../types'
+import type { MerchLabState, GeneratedDesign, ShippingAddress, DesignStyle, QualityTier, PrintifyVariant } from '../types'
 
 const initialOrderState = {
   selectedSize: null as string | null,
@@ -22,6 +22,9 @@ export const useMerchLabStore = create<MerchLabState>((set) => ({
 
   // Design
   prompt: '',
+  designColors: [] as string[],
+  qualityTier: 'balanced' as QualityTier,
+  batchCount: 1 as 1 | 3 | 5,
   generatedDesigns: [] as GeneratedDesign[],
   activeDesignIndex: 0,
   designPosition: { x: 0.5, y: 0.5, scale: 1 },
@@ -43,7 +46,11 @@ export const useMerchLabStore = create<MerchLabState>((set) => ({
   setColor: (color, hex) => set({ selectedColor: color, selectedColorHex: hex }),
   setDesignStyle: (style) => set({ designStyle: style }),
   setPrompt: (prompt) => set({ prompt }),
+  setDesignColors: (colors) => set({ designColors: colors }),
+  setQualityTier: (tier) => set({ qualityTier: tier }),
+  setBatchCount: (count) => set({ batchCount: count }),
   addDesign: (design) => set((s) => ({ generatedDesigns: [design, ...s.generatedDesigns], activeDesignIndex: 0 })),
+  addDesigns: (designs) => set((s) => ({ generatedDesigns: [...designs, ...s.generatedDesigns], activeDesignIndex: 0 })),
   setActiveDesignIndex: (index) => set({ activeDesignIndex: index }),
   setDesignPosition: (pos) => set({ designPosition: pos }),
   setSize: (size) => set({ selectedSize: size }),

@@ -15,8 +15,7 @@ const ESTIMATED_SHIPPING: Record<string, number> = {
   sticker: 299,    // $2.99
 }
 
-// Approximate USD to pts conversion (1 pt ~ $0.16)
-const USD_CENTS_PER_PT = 16
+// 1 pt = 1 cent (verified from credits system: centsToTokens is 1:1)
 
 export async function GET(request: Request) {
   try {
@@ -49,7 +48,7 @@ export async function GET(request: Request) {
     const baseCostCents = variant.price
     const shippingCents = ESTIMATED_SHIPPING[category] ?? 499
     const totalCents = Math.ceil((baseCostCents + shippingCents) * MARGIN_MULTIPLIER)
-    const pricePts = Math.ceil(totalCents / USD_CENTS_PER_PT)
+    const pricePts = totalCents // 1 pt = 1 cent
 
     return NextResponse.json({
       baseCostCents,
