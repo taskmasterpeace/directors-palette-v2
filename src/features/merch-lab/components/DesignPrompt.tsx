@@ -3,14 +3,26 @@
 import { useState } from 'react'
 import { useMerchLabStore } from '../hooks'
 import { cn } from '@/utils/utils'
-import { Sparkles, Loader2, Plus, X } from 'lucide-react'
-import type { QualityTier } from '../types'
+import { Sparkles, Loader2, Plus, X, Banana, Hexagon } from 'lucide-react'
+import type { QualityTier, DesignModel } from '../types'
 
-const QUALITY_TIERS: { id: QualityTier; label: string; ptsPerImage: number }[] = [
-  { id: 'turbo', label: 'Quick', ptsPerImage: 20 },
-  { id: 'balanced', label: 'Standard', ptsPerImage: 24 },
-  { id: 'quality', label: 'Premium', ptsPerImage: 28 },
+const MODEL_OPTIONS: { id: DesignModel; label: string; desc: string }[] = [
+  { id: 'ideogram', label: 'Ideogram V3', desc: 'Great text rendering' },
+  { id: 'nano-banana', label: 'Nano Banana', desc: 'Sharp edges, 4K native' },
 ]
+
+const QUALITY_TIERS: Record<DesignModel, { id: QualityTier; label: string; ptsPerImage: number }[]> = {
+  ideogram: [
+    { id: 'turbo', label: 'Quick', ptsPerImage: 20 },
+    { id: 'balanced', label: 'Standard', ptsPerImage: 24 },
+    { id: 'quality', label: 'Premium', ptsPerImage: 28 },
+  ],
+  'nano-banana': [
+    { id: 'turbo', label: '1K', ptsPerImage: 13 },
+    { id: 'balanced', label: '2K', ptsPerImage: 20 },
+    { id: 'quality', label: '4K', ptsPerImage: 30 },
+  ],
+}
 
 const BATCH_OPTIONS = [1, 3, 5] as const
 
@@ -34,6 +46,8 @@ export function DesignPrompt() {
   const setPrompt = useMerchLabStore((s) => s.setPrompt)
   const designColors = useMerchLabStore((s) => s.designColors)
   const setDesignColors = useMerchLabStore((s) => s.setDesignColors)
+  const designModel = useMerchLabStore((s) => s.designModel)
+  const setDesignModel = useMerchLabStore((s) => s.setDesignModel)
   const qualityTier = useMerchLabStore((s) => s.qualityTier)
   const setQualityTier = useMerchLabStore((s) => s.setQualityTier)
   const batchCount = useMerchLabStore((s) => s.batchCount)
@@ -45,7 +59,8 @@ export function DesignPrompt() {
 
   const [showColors, setShowColors] = useState(false)
 
-  const tierConfig = QUALITY_TIERS.find((t) => t.id === qualityTier)!
+  const tiers = QUALITY_TIERS[designModel]
+  const tierConfig = tiers.find((t) => t.id === qualityTier) ?? tiers[1]
   const totalPts = tierConfig.ptsPerImage * batchCount
 
   const handleGenerate = async () => {
@@ -63,6 +78,7 @@ export function DesignPrompt() {
           prompt: prompt.trim(),
           designStyle,
           designColors: designColors.length > 0 ? designColors : undefined,
+          designModel,
           count: batchCount,
           qualityTier,
         }),
@@ -152,13 +168,43 @@ export function DesignPrompt() {
         )}
       </div>
 
+      {/* Model Selector */}
+      <div className="mt-3">
+        <div className="mb-1.5 text-[10px] text-muted-foreground/40">AI Model</div>
+        <div className="flex gap-1">
+          {MODEL_OPTIONS.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => setDesignModel(m.id)}
+              className={cn(
+                'flex-1 rounded-md border px-2 py-1.5 text-left transition-all',
+                designModel === m.id
+                  ? 'border-cyan-500 bg-cyan-500/15'
+                  : 'border-border/30 hover:border-cyan-500/30'
+              )}
+            >
+              <div className={cn(
+                'flex items-center gap-1.5 text-[11px] font-medium',
+                designModel === m.id ? 'text-cyan-400' : 'text-muted-foreground/70'
+              )}>
+                {m.id === 'ideogram' ? <Hexagon className="h-3 w-3" /> : <Banana className="h-3 w-3" />}
+                {m.label}
+              </div>
+              <div className="text-[9px] text-muted-foreground/40 mt-0.5">{m.desc}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Quality + Batch */}
       <div className="mt-3 flex gap-3">
         {/* Quality Tier */}
         <div className="flex-1">
-          <div className="mb-1.5 text-[10px] text-muted-foreground/40">Quality</div>
+          <div className="mb-1.5 text-[10px] text-muted-foreground/40">
+            {designModel === 'ideogram' ? 'Quality' : 'Resolution'}
+          </div>
           <div className="flex gap-1">
-            {QUALITY_TIERS.map((tier) => (
+            {tiers.map((tier) => (
               <button
                 key={tier.id}
                 onClick={() => setQualityTier(tier.id)}

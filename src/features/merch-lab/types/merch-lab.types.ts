@@ -10,6 +10,7 @@ export interface PrintifyProduct {
 
 export type DesignStyle = 'center' | 'all-over' | 'left-chest' | 'back' | 'wrap'
 export type QualityTier = 'turbo' | 'balanced' | 'quality'
+export type DesignModel = 'ideogram' | 'nano-banana'
 
 export interface PrintifyVariant {
   id: number
@@ -54,6 +55,7 @@ export interface MerchLabState {
   // Design
   prompt: string
   designColors: string[]
+  designModel: DesignModel
   qualityTier: QualityTier
   batchCount: 1 | 3 | 5
   generatedDesigns: GeneratedDesign[]
@@ -88,6 +90,7 @@ export interface MerchLabState {
   setDesignStyle: (style: DesignStyle) => void
   setPrompt: (prompt: string) => void
   setDesignColors: (colors: string[]) => void
+  setDesignModel: (model: DesignModel) => void
   setQualityTier: (tier: QualityTier) => void
   setBatchCount: (count: 1 | 3 | 5) => void
   addDesign: (design: GeneratedDesign) => void

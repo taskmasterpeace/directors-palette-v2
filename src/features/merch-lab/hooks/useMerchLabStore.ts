@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { MerchLabState, GeneratedDesign, ShippingAddress, DesignStyle, QualityTier, PrintifyVariant } from '../types'
+import type { MerchLabState, GeneratedDesign, ShippingAddress, DesignStyle, DesignModel, QualityTier, PrintifyVariant } from '../types'
 
 const initialOrderState = {
   selectedSize: null as string | null,
@@ -23,6 +23,7 @@ export const useMerchLabStore = create<MerchLabState>((set) => ({
   // Design
   prompt: '',
   designColors: [] as string[],
+  designModel: 'ideogram' as DesignModel,
   qualityTier: 'balanced' as QualityTier,
   batchCount: 1 as 1 | 3 | 5,
   generatedDesigns: [] as GeneratedDesign[],
@@ -47,6 +48,7 @@ export const useMerchLabStore = create<MerchLabState>((set) => ({
   setDesignStyle: (style) => set({ designStyle: style }),
   setPrompt: (prompt) => set({ prompt }),
   setDesignColors: (colors) => set({ designColors: colors }),
+  setDesignModel: (model) => set({ designModel: model }),
   setQualityTier: (tier) => set({ qualityTier: tier }),
   setBatchCount: (count) => set({ batchCount: count }),
   addDesign: (design) => set((s) => ({ generatedDesigns: [design, ...s.generatedDesigns], activeDesignIndex: 0 })),
