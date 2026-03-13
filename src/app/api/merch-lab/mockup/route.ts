@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         title: `Mockup Preview - ${Date.now()}`,
         blueprint_id: blueprintId,
         print_provider_id: providerId,
-        variants: [{ id: variantId, price: 0, is_enabled: true }],
+        variants: [{ id: variantId, price: 100, is_enabled: true }],
         print_areas: [{
           variant_ids: [variantId],
           placeholders: [{
@@ -122,15 +122,26 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await res.json()
-    const images = data.images ?? []
+    const rawImages = (data.images ?? []) as Array<{ src: string; position: string; variant_ids: number[]; is_default?: boolean }>
+
+    // Printify puts most mockups under position "other" — use camera_label from URL to categorize
+    const images = rawImages.map((img) => {
+      let position = img.position
+      if (position === 'other' || !position) {
+        const labelMatch = img.src.match(/camera_label=([a-z0-9_-]+)/)
+        const label = labelMatch?.[1] ?? ''
+        if (label.startsWith('front') || label === 'person-1' || label === 'lifestyle') {
+          position = 'front'
+        } else if (label.startsWith('back')) {
+          position = 'back'
+        }
+      }
+      return { src: img.src, position, isDefault: img.is_default ?? false }
+    })
 
     return NextResponse.json({
       ready: images.length > 0,
-      images: images.map((img: { src: string; position: string; variant_ids: number[] }) => ({
-        src: img.src,
-        position: img.position ?? 'default',
-        variantIds: img.variant_ids ?? [],
-      })),
+      images,
     })
   } catch (error) {
     lognog.error('mockup_poll_error', { error: String(error) })
