@@ -208,7 +208,7 @@ export function MockupPreview() {
 
         {!activeDesign && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="rounded-xl border-2 border-dashed border-cyan-500/30 px-8 py-6 text-center text-sm text-cyan-500/50">
+            <div className="rounded-xl border-2 border-dashed border-amber-500/30 px-8 py-6 text-center text-sm text-amber-500/50">
               Your design appears here
             </div>
           </div>
@@ -216,7 +216,7 @@ export function MockupPreview() {
 
         {activeDesign && isLoadingMockup && (
           <div className="absolute right-3 top-3">
-            <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-cyan-400" />
+            <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-amber-400" />
           </div>
         )}
       </div>

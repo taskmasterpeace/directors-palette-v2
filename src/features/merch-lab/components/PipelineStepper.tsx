@@ -25,7 +25,7 @@ export function PipelineStepper({ currentStep }: { currentStep: 1 | 2 | 3 }) {
               <ArrowRight
                 className={cn(
                   'h-3.5 w-3.5 transition-colors',
-                  currentStep > i ? 'text-cyan-400' : 'text-muted-foreground/20'
+                  currentStep > i ? 'text-amber-400' : 'text-muted-foreground/20'
                 )}
               />
             )}
@@ -34,9 +34,9 @@ export function PipelineStepper({ currentStep }: { currentStep: 1 | 2 | 3 }) {
                 className={cn(
                   'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all duration-300',
                   completed
-                    ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/30'
+                    ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30'
                     : active
-                      ? 'border-2 border-cyan-400 bg-cyan-500/15 text-cyan-400'
+                      ? 'border-2 border-amber-400 bg-amber-500/15 text-amber-400'
                       : 'border border-border/40 bg-card/40 text-muted-foreground/40'
                 )}
               >
@@ -51,7 +51,7 @@ export function PipelineStepper({ currentStep }: { currentStep: 1 | 2 | 3 }) {
                   className={cn(
                     'text-[10px] font-semibold uppercase tracking-wider transition-colors',
                     completed
-                      ? 'text-cyan-400'
+                      ? 'text-amber-400'
                       : active
                         ? 'text-foreground/80'
                         : 'text-muted-foreground/30'

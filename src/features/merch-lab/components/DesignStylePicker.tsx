@@ -41,7 +41,7 @@ export function DesignStylePicker() {
               className={cn(
                 'rounded-[10px] border-2 p-3 text-left transition-all hover:bg-card/60',
                 designStyle === style
-                  ? 'border-cyan-500 bg-cyan-500/10'
+                  ? 'border-amber-500 bg-amber-500/10'
                   : 'border-transparent bg-card/30'
               )}
             >

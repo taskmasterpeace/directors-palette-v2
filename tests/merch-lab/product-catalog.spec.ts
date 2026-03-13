@@ -69,7 +69,7 @@ test.describe('Merch Lab: Product Catalog', () => {
 
   test('AOP products have AOP badge', async ({ page }) => {
     // Apparel tab is default, AOP products should have badge text
-    const aopBadges = page.locator('.text-cyan-400:has-text("AOP")')
+    const aopBadges = page.locator('.text-amber-400:has-text("AOP")')
     await expect(aopBadges.first()).toBeVisible()
   })
 })

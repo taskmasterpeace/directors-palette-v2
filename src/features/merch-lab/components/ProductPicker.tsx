@@ -36,8 +36,8 @@ export function ProductPicker() {
             className={cn(
               'flex-1 rounded-md border px-2 py-1.5 text-[10px] font-medium transition-all',
               activeTab === cat.id
-                ? 'border-cyan-500 bg-cyan-500/15 text-cyan-400'
-                : 'border-border/30 text-muted-foreground/60 hover:border-cyan-500/30'
+                ? 'border-amber-500 bg-amber-500/15 text-amber-400'
+                : 'border-border/30 text-muted-foreground/40 hover:border-amber-500/30 hover:text-muted-foreground/70'
             )}
           >
             {cat.label}
@@ -55,14 +55,14 @@ export function ProductPicker() {
               className={cn(
                 'relative flex flex-col items-center gap-1 rounded-[10px] border-2 p-2.5 transition-all hover:bg-card/60',
                 selectedProductId === product.blueprintId
-                  ? 'border-cyan-500 bg-cyan-500/10'
-                  : 'border-transparent bg-card/30'
+                  ? 'border-amber-500 bg-amber-500/10'
+                  : 'border-transparent bg-card/30 hover:border-border/40'
               )}
             >
-              <Icon className="h-6 w-6 text-muted-foreground" />
-              <span className="text-[11px] font-medium text-muted-foreground">{product.name}</span>
+              <Icon className={cn('h-6 w-6', selectedProductId === product.blueprintId ? 'text-amber-400' : 'text-muted-foreground/60')} />
+              <span className={cn('text-[11px] font-medium', selectedProductId === product.blueprintId ? 'text-amber-300' : 'text-muted-foreground/60')}>{product.name}</span>
               {isAOP(product.name) && (
-                <span className="absolute right-1 top-1 rounded-sm bg-cyan-500/20 px-1 py-0.5 text-[8px] font-bold text-cyan-400">
+                <span className="absolute right-1 top-1 rounded-sm bg-amber-500/20 px-1 py-0.5 text-[8px] font-bold text-amber-400">
                   AOP
                 </span>
               )}

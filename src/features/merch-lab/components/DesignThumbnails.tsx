@@ -19,7 +19,7 @@ export function DesignThumbnails() {
           className={cn(
             'h-14 w-14 overflow-hidden rounded-lg border-2 transition-all',
             i === activeDesignIndex
-              ? 'border-cyan-500 ring-2 ring-cyan-500/30'
+              ? 'border-amber-500 ring-2 ring-amber-500/30'
               : 'border-border/30 hover:border-border/60'
           )}
         >

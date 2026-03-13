@@ -122,7 +122,7 @@ export function DesignPrompt() {
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         placeholder="A fierce cyberpunk dragon breathing neon fire..."
-        className="w-full rounded-[10px] border border-border/30 bg-card/30 p-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/20"
+        className="w-full rounded-[10px] border border-border/30 bg-card/30 p-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/20"
         rows={3}
       />
 
@@ -147,7 +147,7 @@ export function DesignPrompt() {
                   title={color.name}
                   className={cn(
                     'relative h-7 w-7 rounded-full border-2 transition-all',
-                    selected ? 'border-cyan-500 scale-110' : 'border-border/30 hover:border-border/60',
+                    selected ? 'border-amber-500 scale-110' : 'border-border/30 hover:border-border/60',
                     color.name === 'White' && 'border-border/50'
                   )}
                   style={{ backgroundColor: color.hex }}
@@ -179,13 +179,13 @@ export function DesignPrompt() {
               className={cn(
                 'flex-1 rounded-md border px-2 py-1.5 text-left transition-all',
                 designModel === m.id
-                  ? 'border-cyan-500 bg-cyan-500/15'
-                  : 'border-border/30 hover:border-cyan-500/30'
+                  ? 'border-amber-500 bg-amber-500/15'
+                  : 'border-border/30 hover:border-amber-500/30'
               )}
             >
               <div className={cn(
                 'flex items-center gap-1.5 text-[11px] font-medium',
-                designModel === m.id ? 'text-cyan-400' : 'text-muted-foreground/70'
+                designModel === m.id ? 'text-amber-400' : 'text-muted-foreground/70'
               )}>
                 {m.id === 'ideogram' ? <Hexagon className="h-3 w-3" /> : <Banana className="h-3 w-3" />}
                 {m.label}
@@ -211,8 +211,8 @@ export function DesignPrompt() {
                 className={cn(
                   'flex-1 rounded-md border px-2 py-1 text-[10px] transition-all',
                   qualityTier === tier.id
-                    ? 'border-cyan-500 bg-cyan-500/15 text-cyan-400'
-                    : 'border-border/30 text-muted-foreground/60 hover:border-cyan-500/30'
+                    ? 'border-amber-500 bg-amber-500/15 text-amber-400'
+                    : 'border-border/30 text-muted-foreground/60 hover:border-amber-500/30'
                 )}
               >
                 {tier.label}
@@ -232,8 +232,8 @@ export function DesignPrompt() {
                 className={cn(
                   'rounded-md border px-2.5 py-1 text-[10px] transition-all',
                   batchCount === n
-                    ? 'border-cyan-500 bg-cyan-500/15 text-cyan-400'
-                    : 'border-border/30 text-muted-foreground/60 hover:border-cyan-500/30'
+                    ? 'border-amber-500 bg-amber-500/15 text-amber-400'
+                    : 'border-border/30 text-muted-foreground/60 hover:border-amber-500/30'
                 )}
               >
                 {n}x
@@ -247,7 +247,7 @@ export function DesignPrompt() {
       <button
         onClick={handleGenerate}
         disabled={!prompt.trim() || isGenerating}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-[10px] bg-gradient-to-r from-cyan-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:from-cyan-500 hover:to-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-[10px] bg-gradient-to-r from-amber-600 to-amber-500 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:from-amber-500 hover:to-amber-400 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isGenerating ? (
           <>

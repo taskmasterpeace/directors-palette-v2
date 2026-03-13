@@ -51,7 +51,7 @@ export function ColorPicker() {
                   className={cn(
                     'h-7 w-7 rounded-full border-2 transition-all hover:scale-110',
                     selectedColor === c.name
-                      ? 'border-cyan-500 ring-2 ring-cyan-500/30'
+                      ? 'border-amber-500 ring-2 ring-amber-500/30'
                       : 'border-border/30',
                     c.name === 'White' && 'border-border/50'
                   )}

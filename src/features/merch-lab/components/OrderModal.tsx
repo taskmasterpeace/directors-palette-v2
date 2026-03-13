@@ -110,7 +110,7 @@ export function OrderModal() {
     setFieldErrors({})
   }
 
-  const inputClass = 'w-full rounded-lg border border-border/50 bg-card/30 px-3 py-2 text-sm focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/20'
+  const inputClass = 'w-full rounded-lg border border-border/50 bg-card/30 px-3 py-2 text-sm focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/20'
   const labelClass = 'text-[11px] font-medium text-muted-foreground/70 mb-1 block'
 
   return (
@@ -128,7 +128,7 @@ export function OrderModal() {
           <div className="mb-2 text-lg font-semibold">Order {product?.name}</div>
           <div className="flex gap-1">
             {STEPS.map((_, i) => (
-              <div key={i} className={`h-1 flex-1 rounded-full ${i <= stepIndex ? 'bg-cyan-500' : 'bg-border/30'}`} />
+              <div key={i} className={`h-1 flex-1 rounded-full ${i <= stepIndex ? 'bg-amber-500' : 'bg-border/30'}`} />
             ))}
           </div>
         </div>
@@ -192,7 +192,7 @@ export function OrderModal() {
                 </div>
               </div>
               <button onClick={handleShippingSubmit}
-                className="mt-5 w-full rounded-[10px] bg-gradient-to-r from-cyan-600 to-cyan-500 py-2.5 text-sm font-semibold text-white">
+                className="mt-5 w-full rounded-[10px] bg-gradient-to-r from-amber-600 to-amber-500 py-2.5 text-sm font-semibold text-white">
                 Continue to Review
               </button>
             </motion.div>
@@ -211,7 +211,7 @@ export function OrderModal() {
                 {selectedSize && <div className="flex justify-between"><span className="text-muted-foreground">Size</span><span>{selectedSize}</span></div>}
                 <div className="flex justify-between"><span className="text-muted-foreground">Quantity</span><span>{quantity}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Ship to</span><span>{shippingAddress?.city}, {shippingAddress?.state} {shippingAddress?.zip}</span></div>
-                <div className="border-t border-border/20 pt-2 flex justify-between font-semibold text-cyan-400">
+                <div className="border-t border-border/20 pt-2 flex justify-between font-semibold text-amber-400">
                   <span>Total</span><span>{(pricePts ?? 0) * quantity} pts</span>
                 </div>
               </div>
@@ -230,7 +230,7 @@ export function OrderModal() {
 
           {orderModalStep === 'processing' && (
             <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-4 py-8">
-              <Loader2 className="h-10 w-10 animate-spin text-cyan-500" />
+              <Loader2 className="h-10 w-10 animate-spin text-amber-500" />
               <p className="text-sm text-muted-foreground">Submitting your order to Printify...</p>
             </motion.div>
           )}
@@ -248,7 +248,7 @@ export function OrderModal() {
                 )}
               </div>
               <button onClick={handleClose}
-                className="mt-2 rounded-[10px] bg-gradient-to-r from-cyan-600 to-cyan-500 px-6 py-2.5 text-sm font-semibold text-white">
+                className="mt-2 rounded-[10px] bg-gradient-to-r from-amber-600 to-amber-500 px-6 py-2.5 text-sm font-semibold text-white">
                 Done
               </button>
             </motion.div>

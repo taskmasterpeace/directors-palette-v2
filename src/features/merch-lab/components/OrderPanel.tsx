@@ -103,8 +103,8 @@ export function OrderPanel() {
                   className={cn(
                     'rounded-md border px-3 py-1 text-[11px] transition-all',
                     selectedSize === size
-                      ? 'border-cyan-500 bg-cyan-500/15 text-cyan-400'
-                      : 'border-border/30 hover:border-cyan-500/30'
+                      ? 'border-amber-500 bg-amber-500/15 text-amber-400'
+                      : 'border-border/30 hover:border-amber-500/30'
                   )}
                 >
                   {size}
@@ -131,7 +131,7 @@ export function OrderPanel() {
       </div>
 
       <div className="my-4 text-center">
-        <div className="text-3xl font-bold text-cyan-400">
+        <div className="text-3xl font-bold text-amber-400">
           {pricePts ? `${pricePts * quantity} pts` : '— pts'}
         </div>
       </div>

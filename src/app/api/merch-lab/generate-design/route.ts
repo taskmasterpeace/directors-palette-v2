@@ -144,7 +144,7 @@ async function generateIdeogram(prompt: string, tier: QualityTier, designStyle: 
       rendering_speed: config.renderingSpeed,
       aspect_ratio: aspectRatio,
       upscale_factor: 'X2',
-      magic_prompt: 'Auto',
+      magic_prompt: 'AUTO',
       num_images: 1,
     }),
   })
