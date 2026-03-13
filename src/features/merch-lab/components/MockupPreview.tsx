@@ -2,7 +2,6 @@
 
 import { useRef, useEffect, useCallback, useState } from 'react'
 import { useMerchLabStore } from '../hooks'
-import { MERCH_PRODUCTS } from '../constants/products'
 import { DesignThumbnails } from './DesignThumbnails'
 import { MockupControls } from './MockupControls'
 import { ImageDown } from 'lucide-react'
@@ -95,10 +94,30 @@ function drawProductShape(ctx: CanvasRenderingContext2D, w: number, h: number, c
   ctx.shadowOffsetY = 0
 }
 
-function getPrintZone(w: number, h: number, category: string) {
-  switch (category) {
-    case 'apparel':
-      return { x: w * 0.25, y: h * 0.2, w: w * 0.5, h: h * 0.45 }
+// Print zones vary by design style for apparel
+function getPrintZone(w: number, h: number, shapeType: string, designStyle: string, view: string) {
+  // Back view for apparel
+  if (shapeType === 'apparel' && view === 'back') {
+    return { x: w * 0.2, y: h * 0.18, w: w * 0.6, h: h * 0.5 }
+  }
+
+  // Style-specific zones for apparel front
+  if (shapeType === 'apparel') {
+    switch (designStyle) {
+      case 'left-chest':
+        return { x: w * 0.28, y: h * 0.2, w: w * 0.2, h: h * 0.18 }
+      case 'back':
+        // "Back print" style selected but viewing front — show small indicator
+        return { x: w * 0.3, y: h * 0.25, w: w * 0.4, h: h * 0.35 }
+      case 'all-over':
+        return { x: w * 0.15, y: h * 0.1, w: w * 0.7, h: h * 0.65 }
+      case 'center':
+      default:
+        return { x: w * 0.25, y: h * 0.2, w: w * 0.5, h: h * 0.45 }
+    }
+  }
+
+  switch (shapeType) {
     case 'wall-art':
       return { x: 35, y: 35, w: w - 70, h: h - 70 }
     case 'accessory':
@@ -119,6 +138,7 @@ export function MockupPreview() {
   const generatedDesigns = useMerchLabStore((s) => s.generatedDesigns)
   const activeDesignIndex = useMerchLabStore((s) => s.activeDesignIndex)
   const designPosition = useMerchLabStore((s) => s.designPosition)
+  const designStyle = useMerchLabStore((s) => s.designStyle)
   const mockupView = useMerchLabStore((s) => s.mockupView)
   const mockupImages = useMerchLabStore((s) => s.mockupImages)
   const isLoadingMockup = useMerchLabStore((s) => s.isLoadingMockup)
@@ -126,7 +146,6 @@ export function MockupPreview() {
 
   const [mockupFadedIn, setMockupFadedIn] = useState(false)
 
-  const product = MERCH_PRODUCTS.find((p) => p.blueprintId === selectedProductId)
   const activeDesign = generatedDesigns[activeDesignIndex]
 
   const mockupImage = mockupImages.find((img) => img.position === mockupView) ?? mockupImages[0]
@@ -149,24 +168,37 @@ export function MockupPreview() {
     const w = canvas.width
     const h = canvas.height
     const color = selectedColorHex || '#2a2a2a'
+    const shapeType = getShapeType(selectedProductId)
 
     ctx.clearRect(0, 0, w, h)
-    drawProductShape(ctx, w, h, color, getShapeType(selectedProductId))
+    drawProductShape(ctx, w, h, color, shapeType)
 
     if (activeDesign?.url) {
       const img = new Image()
-      img.crossOrigin = 'anonymous'
       img.onload = () => {
-        const printZone = getPrintZone(w, h, getShapeType(selectedProductId))
+        // Redraw the shape first (img load is async)
+        ctx.clearRect(0, 0, w, h)
+        drawProductShape(ctx, w, h, color, shapeType)
+
+        const printZone = getPrintZone(w, h, shapeType, designStyle, mockupView)
         const dw = printZone.w * designPosition.scale
         const dh = printZone.h * designPosition.scale
         const dx = printZone.x + (printZone.w * designPosition.x) - dw / 2
         const dy = printZone.y + (printZone.h * designPosition.y) - dh / 2
+
+        // Clip to the product shape area
+        ctx.save()
+        ctx.globalAlpha = mockupView === 'back' && designStyle !== 'back' ? 0.3 : 1
         ctx.drawImage(img, dx, dy, dw, dh)
+        ctx.restore()
+      }
+      img.onerror = () => {
+        // If direct load fails (CORS), try without crossOrigin
+        console.warn('Design image load failed, retrying without crossOrigin')
       }
       img.src = activeDesign.url
     }
-  }, [selectedColorHex, activeDesign, designPosition, product, selectedProductId])
+  }, [selectedColorHex, activeDesign, designPosition, selectedProductId, designStyle, mockupView])
 
   useEffect(() => { drawMockup() }, [drawMockup])
 
@@ -182,7 +214,6 @@ export function MockupPreview() {
       a.click()
       URL.revokeObjectURL(url)
     } catch {
-      // Fallback: open in new tab
       window.open(activeDesign.url, '_blank')
     }
   }
