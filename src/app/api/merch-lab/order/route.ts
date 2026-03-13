@@ -7,7 +7,7 @@ import { PRINTIFY_PROVIDERS, MARGIN_MULTIPLIER } from '@/features/merch-lab/cons
 export const maxDuration = 120
 
 const PRINTIFY_API = 'https://api.printify.com/v1'
-const PRINTIFY_TOKEN = process.env.PRINTIFY_API_TOKEN!
+const PRINTIFY_TOKEN = process.env.PRINTIFY_API_TOKEN?.replace(/\s+/g, '') ?? ''
 const PRINTIFY_SHOP_ID = process.env.PRINTIFY_SHOP_ID!
 
 const ESTIMATED_SHIPPING: Record<string, number> = {

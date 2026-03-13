@@ -5,7 +5,7 @@ import { PRINTIFY_PROVIDERS } from '@/features/merch-lab/constants/products'
 export const maxDuration = 30
 
 const PRINTIFY_API = 'https://api.printify.com/v1'
-const PRINTIFY_TOKEN = process.env.PRINTIFY_API_TOKEN
+const PRINTIFY_TOKEN = process.env.PRINTIFY_API_TOKEN?.replace(/\s+/g, '')
 
 // Simple in-memory cache: blueprintId -> { data, timestamp }
 const cache = new Map<number, { data: unknown; timestamp: number }>()

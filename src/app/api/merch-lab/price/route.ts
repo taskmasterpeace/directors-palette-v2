@@ -5,7 +5,7 @@ import { PRINTIFY_PROVIDERS, MARGIN_MULTIPLIER } from '@/features/merch-lab/cons
 export const maxDuration = 30
 
 const PRINTIFY_API = 'https://api.printify.com/v1'
-const PRINTIFY_TOKEN = process.env.PRINTIFY_API_TOKEN
+const PRINTIFY_TOKEN = process.env.PRINTIFY_API_TOKEN?.replace(/\s+/g, '')
 
 // Estimated shipping costs in cents by product category
 const ESTIMATED_SHIPPING: Record<string, number> = {

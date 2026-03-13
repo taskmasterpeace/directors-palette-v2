@@ -6,7 +6,7 @@ import { PRINTIFY_PROVIDERS } from '@/features/merch-lab/constants/products'
 export const maxDuration = 60
 
 const PRINTIFY_API = 'https://api.printify.com/v1'
-const PRINTIFY_TOKEN = process.env.PRINTIFY_API_TOKEN!
+const PRINTIFY_TOKEN = process.env.PRINTIFY_API_TOKEN?.replace(/\s+/g, '') ?? ''
 const PRINTIFY_SHOP_ID = process.env.PRINTIFY_SHOP_ID!
 
 export async function POST(request: NextRequest) {
