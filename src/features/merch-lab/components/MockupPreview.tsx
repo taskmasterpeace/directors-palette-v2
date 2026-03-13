@@ -170,12 +170,21 @@ export function MockupPreview() {
 
   useEffect(() => { drawMockup() }, [drawMockup])
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!activeDesign?.url) return
-    const a = document.createElement('a')
-    a.href = activeDesign.url
-    a.download = `merch-design-${activeDesign.id}.png`
-    a.click()
+    try {
+      const res = await fetch(activeDesign.url)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `merch-design-${activeDesign.id}.png`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      // Fallback: open in new tab
+      window.open(activeDesign.url, '_blank')
+    }
   }
 
   return (
