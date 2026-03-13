@@ -8,6 +8,19 @@ import { MockupControls } from './MockupControls'
 import { ImageDown } from 'lucide-react'
 import { cn } from '@/utils/utils'
 
+// Map blueprint IDs to canvas shape types (independent of tab categories)
+const SHAPE_MAP: Record<number, string> = {
+  12: 'apparel', 77: 'apparel', 281: 'apparel', 450: 'apparel', // T-Shirt, Hoodie, AOP variants
+  282: 'wall-art', 937: 'wall-art', 532: 'wall-art',           // Poster, Canvas, Puzzle
+  478: 'drinkware',                                               // Mug
+  400: 'sticker',                                                 // Stickers
+  413: 'accessory',                                               // AOP Backpack
+}
+
+function getShapeType(blueprintId: number | null): string {
+  return SHAPE_MAP[blueprintId ?? 12] ?? 'apparel'
+}
+
 function drawProductShape(ctx: CanvasRenderingContext2D, w: number, h: number, color: string, category: string) {
   ctx.fillStyle = color
   ctx.shadowColor = 'rgba(0,0,0,0.3)'
@@ -138,13 +151,13 @@ export function MockupPreview() {
     const color = selectedColorHex || '#2a2a2a'
 
     ctx.clearRect(0, 0, w, h)
-    drawProductShape(ctx, w, h, color, product?.category ?? 'apparel')
+    drawProductShape(ctx, w, h, color, getShapeType(selectedProductId))
 
     if (activeDesign?.url) {
       const img = new Image()
       img.crossOrigin = 'anonymous'
       img.onload = () => {
-        const printZone = getPrintZone(w, h, product?.category ?? 'apparel')
+        const printZone = getPrintZone(w, h, getShapeType(selectedProductId))
         const dw = printZone.w * designPosition.scale
         const dh = printZone.h * designPosition.scale
         const dx = printZone.x + (printZone.w * designPosition.x) - dw / 2
@@ -153,7 +166,7 @@ export function MockupPreview() {
       }
       img.src = activeDesign.url
     }
-  }, [selectedColorHex, activeDesign, designPosition, product])
+  }, [selectedColorHex, activeDesign, designPosition, product, selectedProductId])
 
   useEffect(() => { drawMockup() }, [drawMockup])
 
