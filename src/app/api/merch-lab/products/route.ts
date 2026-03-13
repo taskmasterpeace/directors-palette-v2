@@ -9,7 +9,7 @@ const PRINTIFY_TOKEN = process.env.PRINTIFY_API_TOKEN
 
 // Simple in-memory cache: blueprintId -> { data, timestamp }
 const cache = new Map<number, { data: unknown; timestamp: number }>()
-const CACHE_TTL = 60 * 60 * 1000 // 1 hour
+const CACHE_TTL = 15 * 60 * 1000 // 15 minutes
 
 // Printify doesn't return hex values — comprehensive color name → hex mapping
 const COLOR_HEX_MAP: Record<string, string> = {
@@ -91,6 +91,11 @@ export async function GET(request: Request) {
 
     if (!blueprintId || !PRINTIFY_PROVIDERS[blueprintId]) {
       return NextResponse.json({ error: 'Invalid blueprint ID' }, { status: 400 })
+    }
+
+    const bustCache = request.headers.get('x-bust-cache') === '1'
+    if (bustCache) {
+      cache.delete(blueprintId)
     }
 
     // Check cache

@@ -1,10 +1,12 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import { useMerchLabStore } from '../hooks'
 import { MERCH_PRODUCTS, MAX_QUANTITY } from '../constants/products'
 import { cn } from '@/utils/utils'
 import { Minus, Plus, ShoppingCart } from 'lucide-react'
+
+const NO_COLOR_PRODUCTS = [282, 937, 532, 400, 413]
 
 function OrderRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -23,6 +25,7 @@ export function OrderPanel() {
   const variants = useMerchLabStore((s) => s.variants)
   const selectedSize = useMerchLabStore((s) => s.selectedSize)
   const setSize = useMerchLabStore((s) => s.setSize)
+  const setColor = useMerchLabStore((s) => s.setColor)
   const quantity = useMerchLabStore((s) => s.quantity)
   const setQuantity = useMerchLabStore((s) => s.setQuantity)
   const pricePts = useMerchLabStore((s) => s.pricePts)
@@ -30,8 +33,25 @@ export function OrderPanel() {
   const setOrderModalOpen = useMerchLabStore((s) => s.setOrderModalOpen)
 
   const product = MERCH_PRODUCTS.find((p) => p.blueprintId === selectedProductId)
+  const isNoColorProduct = NO_COLOR_PRODUCTS.includes(selectedProductId ?? 0)
+
+  // Auto-select first variant for no-color products
+  useEffect(() => {
+    if (isNoColorProduct && variants.length > 0 && !selectedColor) {
+      const first = variants[0]
+      setColor(first.color, first.colorHex)
+    }
+  }, [isNoColorProduct, variants, selectedColor, setColor])
 
   const sizes = useMemo(() => {
+    if (isNoColorProduct) {
+      const seen = new Set<string>()
+      return variants.filter((v) => {
+        if (seen.has(v.size)) return false
+        seen.add(v.size)
+        return true
+      }).map((v) => v.size)
+    }
     if (!selectedColor) return []
     const colorVariants = variants.filter((v) => v.color === selectedColor)
     const seen = new Set<string>()
@@ -40,9 +60,11 @@ export function OrderPanel() {
       seen.add(v.size)
       return true
     }).map((v) => v.size)
-  }, [variants, selectedColor])
+  }, [variants, selectedColor, isNoColorProduct])
 
-  const canOrder = generatedDesigns.length > 0 && selectedColor && (!product?.hasSizes || selectedSize)
+  const canOrder = generatedDesigns.length > 0
+    && (isNoColorProduct || selectedColor)
+    && (!product?.hasSizes || selectedSize)
 
   return (
     <div className="flex h-full flex-col border-l border-border/30 p-5">
@@ -52,19 +74,23 @@ export function OrderPanel() {
 
       <div className="flex-1 space-y-0">
         <OrderRow label="Product" value={product?.name ?? '—'} />
-        <OrderRow
-          label="Color"
-          value={
-            selectedColor ? (
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-3.5 w-3.5 rounded-full border border-border/30"
-                  style={{ backgroundColor: selectedColorHex ?? undefined }} />
-                {selectedColor}
-              </span>
-            ) : '—'
-          }
-        />
-        <OrderRow label="Style" value={designStyle.replace('-', ' ').replace(/\b\w/g, (c) => c.toUpperCase())} />
+        {!isNoColorProduct && (
+          <OrderRow
+            label="Color"
+            value={
+              selectedColor ? (
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block h-3.5 w-3.5 rounded-full border border-border/30"
+                    style={{ backgroundColor: selectedColorHex ?? undefined }} />
+                  {selectedColor}
+                </span>
+              ) : '—'
+            }
+          />
+        )}
+        {!isNoColorProduct && (
+          <OrderRow label="Style" value={designStyle.replace('-', ' ').replace(/\b\w/g, (c) => c.toUpperCase())} />
+        )}
 
         {product?.hasSizes && (
           <div className="border-b border-border/20 py-3">

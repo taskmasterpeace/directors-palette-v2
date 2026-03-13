@@ -5,7 +5,7 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from '@/components/ui/resizable'
-import { usePrintify, useMerchLabStore } from '../hooks'
+import { usePrintify, usePrintifyMockup, useMerchLabStore } from '../hooks'
 import { ProductPicker } from './ProductPicker'
 import { ColorPicker } from './ColorPicker'
 import { DesignStylePicker } from './DesignStylePicker'
@@ -17,6 +17,7 @@ import { PipelineStepper } from './PipelineStepper'
 
 export function MerchLab() {
   usePrintify()
+  usePrintifyMockup()
 
   const selectedColor = useMerchLabStore((s) => s.selectedColor)
   const designCount = useMerchLabStore((s) => s.generatedDesigns.length)

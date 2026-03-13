@@ -41,6 +41,7 @@ const IDEOGRAM_ASPECT_RATIOS: Record<string, string> = {
   'back': '4x5',
   'all-over': '1x1',
   'wrap': '2x1',
+  'full-bleed': '3x4',
 }
 
 const NB2_ASPECT_RATIOS: Record<string, string> = {
@@ -49,6 +50,7 @@ const NB2_ASPECT_RATIOS: Record<string, string> = {
   'back': '4:5',
   'all-over': '1:1',
   'wrap': '2:1',
+  'full-bleed': '3:4',
 }
 
 export async function POST(request: NextRequest) {
@@ -225,6 +227,7 @@ function buildMerchPrompt(
     'back': 'large bold graphic, detailed illustration for back print',
     'all-over': 'seamless repeating pattern, tileable design for all-over print',
     'wrap': 'wide panoramic design, wrapping mug artwork',
+    'full-bleed': 'full bleed edge-to-edge artwork, poster or canvas print',
   }
 
   const parts: string[] = [prompt]

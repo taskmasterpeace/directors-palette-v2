@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { MerchLabState, GeneratedDesign, ShippingAddress, DesignStyle, DesignModel, QualityTier, PrintifyVariant } from '../types'
+import { MERCH_PRODUCTS } from '../constants/products'
 
 const initialOrderState = {
   selectedSize: null as string | null,
@@ -37,13 +38,33 @@ export const useMerchLabStore = create<MerchLabState>((set) => ({
   // Order
   ...initialOrderState,
 
+  // Mockup
+  mockupProductId: null,
+  mockupUploadId: null,
+  mockupImages: [] as Array<{ src: string; position: string }>,
+  isLoadingMockup: false,
+
   // UI
   isGenerating: false,
   mockupView: 'front' as const,
   error: null,
 
   // Actions
-  setProduct: (id) => set({ selectedProductId: id, selectedColor: null, selectedColorHex: null, selectedSize: null, variants: [] }),
+  setProduct: (id) => {
+    const product = MERCH_PRODUCTS.find((p) => p.blueprintId === id)
+    const defaultStyle = product?.designStyles[0] ?? 'center'
+    set({
+      selectedProductId: id,
+      selectedColor: null,
+      selectedColorHex: null,
+      selectedSize: null,
+      variants: [],
+      designStyle: defaultStyle as DesignStyle,
+      mockupProductId: null,
+      mockupImages: [],
+      isLoadingMockup: false,
+    })
+  },
   setColor: (color, hex) => set({ selectedColor: color, selectedColorHex: hex }),
   setDesignStyle: (style) => set({ designStyle: style }),
   setPrompt: (prompt) => set({ prompt }),
@@ -68,6 +89,10 @@ export const useMerchLabStore = create<MerchLabState>((set) => ({
   setOrderModalStep: (step) => set({ orderModalStep: step }),
   setPrintifyProductId: (id) => set({ printifyProductId: id }),
   setPrintifyOrderId: (id) => set({ printifyOrderId: id }),
+  setMockupProductId: (id) => set({ mockupProductId: id }),
+  setMockupUploadId: (id) => set({ mockupUploadId: id }),
+  setMockupImages: (images) => set({ mockupImages: images }),
+  setIsLoadingMockup: (loading) => set({ isLoadingMockup: loading }),
   setError: (error) => set({ error }),
   resetOrder: () => set(initialOrderState),
 }))

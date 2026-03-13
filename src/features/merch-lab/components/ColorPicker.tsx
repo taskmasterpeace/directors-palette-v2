@@ -4,7 +4,10 @@ import { useMemo } from 'react'
 import { useMerchLabStore } from '../hooks'
 import { cn } from '@/utils/utils'
 
+const NO_COLOR_PRODUCTS = [282, 937, 532, 400, 413]
+
 export function ColorPicker() {
+  const selectedProductId = useMerchLabStore((s) => s.selectedProductId)
   const variants = useMerchLabStore((s) => s.variants)
   const isLoadingCatalog = useMerchLabStore((s) => s.isLoadingCatalog)
   const selectedColor = useMerchLabStore((s) => s.selectedColor)
@@ -18,6 +21,10 @@ export function ColorPicker() {
       return true
     }).map((v) => ({ name: v.color, hex: v.colorHex }))
   }, [variants])
+
+  if (NO_COLOR_PRODUCTS.includes(selectedProductId ?? 0)) {
+    return null
+  }
 
   return (
     <div className="border-b border-border/30 p-4">

@@ -2,13 +2,13 @@ export interface PrintifyProduct {
   blueprintId: number
   name: string
   icon: string
-  category: 'apparel' | 'accessory' | 'drinkware' | 'sticker'
+  category: 'apparel' | 'accessory' | 'drinkware' | 'sticker' | 'wall-art'
   designStyles: DesignStyle[]
   hasSizes: boolean
   hasFrontBack: boolean
 }
 
-export type DesignStyle = 'center' | 'all-over' | 'left-chest' | 'back' | 'wrap'
+export type DesignStyle = 'center' | 'all-over' | 'left-chest' | 'back' | 'wrap' | 'full-bleed'
 export type QualityTier = 'turbo' | 'balanced' | 'quality'
 export type DesignModel = 'ideogram' | 'nano-banana'
 
@@ -76,6 +76,12 @@ export interface MerchLabState {
   variants: PrintifyVariant[]
   isLoadingCatalog: boolean
 
+  // Mockup
+  mockupProductId: string | null
+  mockupUploadId: string | null
+  mockupImages: Array<{ src: string; position: string }>
+  isLoadingMockup: boolean
+
   // UI
   isGenerating: boolean
   isOrdering: boolean
@@ -110,6 +116,10 @@ export interface MerchLabState {
   setOrderModalStep: (step: MerchLabState['orderModalStep']) => void
   setPrintifyProductId: (id: string | null) => void
   setPrintifyOrderId: (id: string | null) => void
+  setMockupProductId: (id: string | null) => void
+  setMockupUploadId: (id: string | null) => void
+  setMockupImages: (images: Array<{ src: string; position: string }>) => void
+  setIsLoadingMockup: (loading: boolean) => void
   setError: (error: string | null) => void
   resetOrder: () => void
 }

@@ -11,7 +11,7 @@ const PRINTIFY_TOKEN = process.env.PRINTIFY_API_TOKEN!
 const PRINTIFY_SHOP_ID = process.env.PRINTIFY_SHOP_ID!
 
 const ESTIMATED_SHIPPING: Record<string, number> = {
-  apparel: 499, accessory: 399, drinkware: 599, sticker: 299,
+  apparel: 499, accessory: 399, drinkware: 599, sticker: 299, 'wall-art': 599,
 }
 // 1 pt = 1 cent (verified from credits system)
 
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     const { user } = auth
 
-    const { blueprintId, designUrl, color, size, quantity, shippingAddress, category, designPosition } = await request.json()
+    const { blueprintId, designUrl, color, size, quantity, shippingAddress, category, designPosition, printifyProductId } = await request.json()
 
     if (!blueprintId || !designUrl || !shippingAddress) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -69,49 +69,58 @@ export async function POST(request: NextRequest) {
     const ptsDeducted = true
 
     try {
-      // Step 3: Upload design image to Printify
-      const uploadRes = await fetch(`${PRINTIFY_API}/uploads/images.json`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${PRINTIFY_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          file_name: 'merch-design.png',
-          url: designUrl,
-        }),
-      })
-      if (!uploadRes.ok) throw new Error('Failed to upload design to Printify')
-      const uploadData = await uploadRes.json()
+      // Step 3: Get or create Printify product
+      let productId: string
 
-      // Step 4: Create product on Printify
-      const productRes = await fetch(`${PRINTIFY_API}/shops/${PRINTIFY_SHOP_ID}/products.json`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${PRINTIFY_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: `Custom Merch - ${Date.now()}`,
-          blueprint_id: blueprintId,
-          print_provider_id: providerId,
-          variants: [
-            { id: matchingVariant.id, price: matchingVariant.price, is_enabled: true },
-          ],
-          print_areas: [
-            {
-              variant_ids: [matchingVariant.id],
-              placeholders: [
-                { position: 'front', images: [{ id: uploadData.id, x: designPosition?.x ?? 0.5, y: designPosition?.y ?? 0.5, scale: designPosition?.scale ?? 1, angle: 0 }] },
-              ],
-            },
-          ],
-        }),
-      })
-      if (!productRes.ok) throw new Error('Failed to create Printify product')
-      const productData = await productRes.json()
+      if (printifyProductId) {
+        // Reuse existing product from mockup flow
+        productId = printifyProductId
+      } else {
+        // Upload design image to Printify
+        const uploadRes = await fetch(`${PRINTIFY_API}/uploads/images.json`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${PRINTIFY_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            file_name: 'merch-design.png',
+            url: designUrl,
+          }),
+        })
+        if (!uploadRes.ok) throw new Error('Failed to upload design to Printify')
+        const uploadData = await uploadRes.json()
 
-      // Step 5: Submit order
+        // Create product on Printify
+        const productRes = await fetch(`${PRINTIFY_API}/shops/${PRINTIFY_SHOP_ID}/products.json`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${PRINTIFY_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: `Custom Merch - ${Date.now()}`,
+            blueprint_id: blueprintId,
+            print_provider_id: providerId,
+            variants: [
+              { id: matchingVariant.id, price: matchingVariant.price, is_enabled: true },
+            ],
+            print_areas: [
+              {
+                variant_ids: [matchingVariant.id],
+                placeholders: [
+                  { position: 'front', images: [{ id: uploadData.id, x: designPosition?.x ?? 0.5, y: designPosition?.y ?? 0.5, scale: designPosition?.scale ?? 1, angle: 0 }] },
+                ],
+              },
+            ],
+          }),
+        })
+        if (!productRes.ok) throw new Error('Failed to create Printify product')
+        const productData = await productRes.json()
+        productId = productData.id
+      }
+
+      // Step 4: Submit order
       const orderRes = await fetch(`${PRINTIFY_API}/shops/${PRINTIFY_SHOP_ID}/orders.json`, {
         method: 'POST',
         headers: {
@@ -121,7 +130,7 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           external_id: `dp-merch-${Date.now()}`,
           line_items: [
-            { product_id: productData.id, variant_id: matchingVariant.id, quantity },
+            { product_id: productId, variant_id: matchingVariant.id, quantity },
           ],
           shipping_method: 1,
           address_to: {

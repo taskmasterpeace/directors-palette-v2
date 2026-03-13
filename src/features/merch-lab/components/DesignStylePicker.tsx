@@ -11,6 +11,7 @@ const STYLE_META: Record<DesignStyle, { label: string; description: string }> = 
   'left-chest': { label: 'Left Chest', description: 'Small logo, pocket area' },
   'back': { label: 'Back Print', description: 'Large graphic on back' },
   'wrap': { label: 'Wrap', description: 'Design wraps around surface' },
+  'full-bleed': { label: 'Full Bleed', description: 'Edge-to-edge coverage' },
 }
 
 export function DesignStylePicker() {
@@ -20,6 +21,10 @@ export function DesignStylePicker() {
 
   const product = MERCH_PRODUCTS.find((p) => p.blueprintId === selectedProductId)
   const availableStyles = product?.designStyles ?? ['center']
+
+  if (availableStyles.length <= 1) {
+    return null
+  }
 
   return (
     <div className="border-b border-border/30 p-4">

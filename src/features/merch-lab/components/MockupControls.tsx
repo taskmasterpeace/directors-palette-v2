@@ -10,6 +10,9 @@ export function MockupControls() {
   const designPosition = useMerchLabStore((s) => s.designPosition)
   const setDesignPosition = useMerchLabStore((s) => s.setDesignPosition)
 
+  const mockupImages = useMerchLabStore((s) => s.mockupImages)
+  const hasPrintifyMockup = mockupImages.length > 0
+
   const product = MERCH_PRODUCTS.find((p) => p.blueprintId === selectedProductId)
 
   const btnClass = 'flex items-center gap-1.5 rounded-lg border border-border/30 bg-card/30 px-3 py-1.5 text-xs text-muted-foreground transition-all hover:bg-card/60'
@@ -26,18 +29,22 @@ export function MockupControls() {
           </button>
         </>
       )}
-      <button
-        onClick={() => setDesignPosition({ ...designPosition, scale: Math.min(2, designPosition.scale + 0.1) })}
-        className={btnClass}
-      >
-        <Maximize2 className="h-3.5 w-3.5" /> Larger
-      </button>
-      <button
-        onClick={() => setDesignPosition({ ...designPosition, scale: Math.max(0.2, designPosition.scale - 0.1) })}
-        className={btnClass}
-      >
-        <Minimize2 className="h-3.5 w-3.5" /> Smaller
-      </button>
+      {!hasPrintifyMockup && (
+        <>
+          <button
+            onClick={() => setDesignPosition({ ...designPosition, scale: Math.min(2, designPosition.scale + 0.1) })}
+            className={btnClass}
+          >
+            <Maximize2 className="h-3.5 w-3.5" /> Larger
+          </button>
+          <button
+            onClick={() => setDesignPosition({ ...designPosition, scale: Math.max(0.2, designPosition.scale - 0.1) })}
+            className={btnClass}
+          >
+            <Minimize2 className="h-3.5 w-3.5" /> Smaller
+          </button>
+        </>
+      )}
     </div>
   )
 }

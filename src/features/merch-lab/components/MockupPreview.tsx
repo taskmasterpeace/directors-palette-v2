@@ -1,11 +1,12 @@
 'use client'
 
-import { useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect, useCallback, useState } from 'react'
 import { useMerchLabStore } from '../hooks'
 import { MERCH_PRODUCTS } from '../constants/products'
 import { DesignThumbnails } from './DesignThumbnails'
 import { MockupControls } from './MockupControls'
 import { ImageDown } from 'lucide-react'
+import { cn } from '@/utils/utils'
 
 function drawProductShape(ctx: CanvasRenderingContext2D, w: number, h: number, color: string, category: string) {
   ctx.fillStyle = color
@@ -28,6 +29,16 @@ function drawProductShape(ctx: CanvasRenderingContext2D, w: number, h: number, c
       ctx.lineTo(cx - bw / 2 - 40, top + 30)
       ctx.closePath()
       ctx.fill()
+      break
+    }
+    case 'wall-art': {
+      const pad = 30
+      ctx.beginPath()
+      ctx.roundRect(pad, pad, w - pad * 2, h - pad * 2, 4)
+      ctx.fill()
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)'
+      ctx.lineWidth = 2
+      ctx.strokeRect(pad + 4, pad + 4, w - pad * 2 - 8, h - pad * 2 - 8)
       break
     }
     case 'accessory': {
@@ -75,6 +86,8 @@ function getPrintZone(w: number, h: number, category: string) {
   switch (category) {
     case 'apparel':
       return { x: w * 0.25, y: h * 0.2, w: w * 0.5, h: h * 0.45 }
+    case 'wall-art':
+      return { x: 35, y: 35, w: w - 70, h: h - 70 }
     case 'accessory':
       return { x: w * 0.25, y: h * 0.25, w: w * 0.5, h: h * 0.5 }
     case 'drinkware':
@@ -94,10 +107,25 @@ export function MockupPreview() {
   const activeDesignIndex = useMerchLabStore((s) => s.activeDesignIndex)
   const designPosition = useMerchLabStore((s) => s.designPosition)
   const mockupView = useMerchLabStore((s) => s.mockupView)
+  const mockupImages = useMerchLabStore((s) => s.mockupImages)
+  const isLoadingMockup = useMerchLabStore((s) => s.isLoadingMockup)
   const error = useMerchLabStore((s) => s.error)
+
+  const [mockupFadedIn, setMockupFadedIn] = useState(false)
 
   const product = MERCH_PRODUCTS.find((p) => p.blueprintId === selectedProductId)
   const activeDesign = generatedDesigns[activeDesignIndex]
+
+  const mockupImage = mockupImages.find((img) => img.position === mockupView) ?? mockupImages[0]
+  const hasMockup = !!mockupImage?.src
+
+  useEffect(() => {
+    setMockupFadedIn(false)
+    if (hasMockup) {
+      const timer = setTimeout(() => setMockupFadedIn(true), 50)
+      return () => clearTimeout(timer)
+    }
+  }, [hasMockup, mockupImage?.src])
 
   const drawMockup = useCallback(() => {
     const canvas = canvasRef.current
@@ -148,8 +176,23 @@ export function MockupPreview() {
           ref={canvasRef}
           width={400}
           height={480}
-          className="rounded-2xl"
+          className={cn(
+            'rounded-2xl transition-opacity duration-300',
+            hasMockup && mockupFadedIn ? 'opacity-0 absolute inset-0' : 'opacity-100'
+          )}
         />
+
+        {hasMockup && (
+          <img
+            src={mockupImage.src}
+            alt="Product mockup"
+            className={cn(
+              'h-[480px] w-[400px] rounded-2xl object-contain transition-opacity duration-300',
+              mockupFadedIn ? 'opacity-100' : 'opacity-0'
+            )}
+          />
+        )}
+
         {!activeDesign && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="rounded-xl border-2 border-dashed border-cyan-500/30 px-8 py-6 text-center text-sm text-cyan-500/50">
@@ -157,7 +200,21 @@ export function MockupPreview() {
             </div>
           </div>
         )}
+
+        {activeDesign && isLoadingMockup && (
+          <div className="absolute right-3 top-3">
+            <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-cyan-400" />
+          </div>
+        )}
       </div>
+
+      {activeDesign && isLoadingMockup && (
+        <div className="text-[10px] text-muted-foreground/40">Loading product preview...</div>
+      )}
+
+      {activeDesign && !isLoadingMockup && !hasMockup && generatedDesigns.length > 0 && (
+        <div className="text-[10px] text-muted-foreground/30">Preview unavailable</div>
+      )}
 
       {error && (
         <div className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-400">
