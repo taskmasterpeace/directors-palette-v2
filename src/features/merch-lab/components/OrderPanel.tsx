@@ -62,6 +62,13 @@ export function OrderPanel() {
     }).map((v) => v.size)
   }, [variants, selectedColor, isNoColorProduct])
 
+  // Auto-select first size when sizes become available
+  useEffect(() => {
+    if (sizes.length > 0 && !selectedSize) {
+      setSize(sizes[0])
+    }
+  }, [sizes, selectedSize, setSize])
+
   const canOrder = generatedDesigns.length > 0
     && (isNoColorProduct || selectedColor)
     && (!product?.hasSizes || selectedSize)

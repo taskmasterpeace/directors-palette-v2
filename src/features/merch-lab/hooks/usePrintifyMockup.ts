@@ -3,14 +3,13 @@ import { useMerchLabStore } from './useMerchLabStore'
 import { MERCH_PRODUCTS } from '../constants/products'
 
 const POLL_INTERVAL = 2000
-const POLL_TIMEOUT = 30000
+const POLL_TIMEOUT = 45000
 
 export function usePrintifyMockup() {
   const generatedDesigns = useMerchLabStore((s) => s.generatedDesigns)
   const activeDesignIndex = useMerchLabStore((s) => s.activeDesignIndex)
   const selectedProductId = useMerchLabStore((s) => s.selectedProductId)
   const selectedColor = useMerchLabStore((s) => s.selectedColor)
-  const designPosition = useMerchLabStore((s) => s.designPosition)
   const variants = useMerchLabStore((s) => s.variants)
   const mockupUploadId = useMerchLabStore((s) => s.mockupUploadId)
 
@@ -23,7 +22,6 @@ export function usePrintifyMockup() {
   const pollTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const activeDesign = generatedDesigns[activeDesignIndex]
-  const product = MERCH_PRODUCTS.find((p) => p.blueprintId === selectedProductId)
 
   const cleanup = useCallback(() => {
     if (pollTimerRef.current) {
@@ -37,47 +35,64 @@ export function usePrintifyMockup() {
 
     try {
       const res = await fetch(`/api/merch-lab/mockup?productId=${productId}`)
-      if (!res.ok) throw new Error('Poll failed')
+      if (!res.ok) {
+        console.warn('[Mockup] Poll failed:', res.status)
+        throw new Error('Poll failed')
+      }
 
       const data = await res.json()
 
       if (requestIdRef.current !== reqId) return
 
       if (data.ready && data.images.length > 0) {
+        console.log('[Mockup] Images ready:', data.images.length)
         setMockupImages(data.images)
         setIsLoadingMockup(false)
         return
       }
 
       if (Date.now() - startTime > POLL_TIMEOUT) {
+        console.warn('[Mockup] Poll timeout after', POLL_TIMEOUT, 'ms')
         setIsLoadingMockup(false)
         return
       }
 
       pollTimerRef.current = setTimeout(() => pollForMockup(productId, reqId, startTime), POLL_INTERVAL)
-    } catch {
+    } catch (err) {
+      console.error('[Mockup] Poll error:', err)
       if (requestIdRef.current === reqId) {
         setIsLoadingMockup(false)
       }
     }
   }, [setMockupImages, setIsLoadingMockup])
 
+  // Only trigger on design URL + product + color changes (not designPosition)
+  const activeDesignUrl = activeDesign?.url
+  const activeDesignId = activeDesign?.id
+
   useEffect(() => {
-    if (!activeDesign?.url || !selectedProductId || !selectedColor) {
+    if (!activeDesignUrl || !selectedProductId || !selectedColor) {
       cleanup()
       return
     }
 
     const matchingVariant = variants.find((v) => v.color === selectedColor)
-    if (!matchingVariant) return
+    if (!matchingVariant) {
+      console.warn('[Mockup] No matching variant for color:', selectedColor)
+      return
+    }
 
+    const product = MERCH_PRODUCTS.find((p) => p.blueprintId === selectedProductId)
     const designStyle = product?.designStyles[0] ?? 'center'
     const reqId = ++requestIdRef.current
+    const currentDesignPosition = useMerchLabStore.getState().designPosition
 
     cleanup()
     setMockupImages([])
     setIsLoadingMockup(true)
     setMockupProductId(null)
+
+    console.log('[Mockup] Creating mockup for', { blueprintId: selectedProductId, color: selectedColor, designStyle })
 
     const createMockup = async () => {
       try {
@@ -87,8 +102,8 @@ export function usePrintifyMockup() {
           body: JSON.stringify({
             blueprintId: selectedProductId,
             variantId: matchingVariant.id,
-            designUrl: activeDesign.url,
-            designPosition,
+            designUrl: activeDesignUrl,
+            designPosition: currentDesignPosition,
             designStyle,
             existingUploadId: mockupUploadId ?? undefined,
           }),
@@ -97,16 +112,20 @@ export function usePrintifyMockup() {
         if (requestIdRef.current !== reqId) return
 
         if (!res.ok) {
+          const errData = await res.json().catch(() => ({}))
+          console.error('[Mockup] Create failed:', res.status, errData)
           setIsLoadingMockup(false)
           return
         }
 
         const data = await res.json()
+        console.log('[Mockup] Draft product created:', data.printifyProductId)
         setMockupProductId(data.printifyProductId)
         setMockupUploadId(data.uploadId)
 
         pollForMockup(data.printifyProductId, reqId, Date.now())
-      } catch {
+      } catch (err) {
+        console.error('[Mockup] Create error:', err)
         if (requestIdRef.current === reqId) {
           setIsLoadingMockup(false)
         }
@@ -116,7 +135,7 @@ export function usePrintifyMockup() {
     createMockup()
 
     return cleanup
-  }, [activeDesign?.url, activeDesign?.id, selectedProductId, selectedColor, variants, product, designPosition, mockupUploadId, cleanup, setMockupImages, setIsLoadingMockup, setMockupProductId, setMockupUploadId, pollForMockup])
+  }, [activeDesignUrl, activeDesignId, selectedProductId, selectedColor, variants, mockupUploadId, cleanup, setMockupImages, setIsLoadingMockup, setMockupProductId, setMockupUploadId, pollForMockup])
 
   useEffect(() => cleanup, [cleanup])
 }
