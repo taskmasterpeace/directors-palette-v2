@@ -27,6 +27,7 @@ function getCategory(name) {
   if (name.includes('fullbody') || name.includes('waistup') || name.includes('dresscode')) return 'outfits'
   if (name.includes('accessories') || name.includes('handbags')) return 'accessories'
   if (name.includes('sneakers') || name.includes('footwear')) return 'footwear'
+  if (name.includes('actions')) return 'actions'
   if (name.includes('settings') || name.includes('settingsbattlerap')) return 'settings'
   if (name.includes('trainingdata') || name.includes('locations')) return 'training_data'
   return 'general'
@@ -63,6 +64,10 @@ function getDescription(name) {
     trainingdata_locations_nopeople: 'Location descriptions without people',
     trainingdata_locations_people: 'Location descriptions with people',
     trainingdata: 'General training data prompts',
+    actions_relaxed: 'Relaxed poses - leaning, sitting, slouching, hands in pockets',
+    actions_confident: 'Confident poses - arms crossed, wide stance, adjusting lapels',
+    actions_active: 'Active poses - mid-stride, jumping, climbing, sprinting',
+    actions_expressive: 'Expressive poses - laughing, pointing, flexing, dabbing',
   }
   return descriptions[name] || name.replace(/_/g, ' ')
 }
