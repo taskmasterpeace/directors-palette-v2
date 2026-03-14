@@ -108,7 +108,7 @@ async function main() {
     const description = getDescription(name)
 
     const content = readFileSync(join(SOURCE_DIR, file), 'utf-8').trim()
-    const lines = content.split('\n').filter(l => l.trim().length > 0)
+    const lines = content.split('\n').filter(l => l.trim().length > 0 && !l.trim().startsWith('---'))
 
     if (lines.length === 0) {
       console.log(`  SKIP ${name} (empty file)`)
@@ -142,7 +142,7 @@ async function main() {
         category,
         description,
         content: lines.join('\n'),
-        is_shared: false,
+        is_shared: true,
       })
       if (error) {
         console.error(`    ERROR inserting ${name}:`, error.message)
