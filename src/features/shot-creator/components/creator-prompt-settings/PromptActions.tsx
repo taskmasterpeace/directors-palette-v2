@@ -39,6 +39,8 @@ import { logger } from '@/lib/logger'
 import { useTextareaResize } from "../../hooks/useTextareaResize"
 import { usePromptGeneration } from "../../hooks/usePromptGeneration"
 import { getModelConfig, type ModelId } from "@/config"
+import { useWildcardAutocomplete } from "@/shared/hooks/useWildcardAutocomplete"
+import { WildcardAutocomplete } from "@/shared/components/WildcardAutocomplete"
 
 const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef: React.RefObject<HTMLTextAreaElement | null>; showResizeControls?: boolean }) => {
     const {
@@ -102,6 +104,14 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
         selectIndex: selectAutocompleteIndex
     } = autocomplete
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
+
+    // ── Wildcard autocomplete ───────────────────────────────────────
+    const wildcardAutocomplete = useWildcardAutocomplete({
+        textareaRef,
+        value: shotCreatorPrompt,
+        onChange: setShotCreatorPrompt,
+    })
+    const [wildcardDropdownPos, setWildcardDropdownPos] = useState({ top: 0, left: 0, width: 400 })
 
     // Handle selecting a recipe
     const _handleSelectRecipe = useCallback((recipeId: string) => {
@@ -231,7 +241,19 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
         }, 0)
     }, [shotCreatorPrompt, autocompleteCursorPos, textareaRef, setShotCreatorPrompt, libraryItems, shotCreatorReferenceImages, setShotCreatorReferenceImages])
 
-    // Detect @ symbol and show autocomplete
+    // Calculate wildcard dropdown position
+    const calculateWildcardDropdownPosition = useCallback(() => {
+        if (!textareaRef.current) return
+        const rect = textareaRef.current.getBoundingClientRect()
+        const isMobile = window.innerWidth < 768
+        setWildcardDropdownPos({
+            top: isMobile ? Math.max(rect.top - 310, 10) : rect.bottom + 4,
+            left: Math.max(rect.left, 10),
+            width: rect.width,
+        })
+    }, [textareaRef])
+
+    // Detect @ symbol and show autocomplete, also detect _ for wildcard autocomplete
     const handleTextareaKeyUp = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         const textarea = e.currentTarget
         const cursorPos = textarea.selectionStart
@@ -243,18 +265,26 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
             const textAfterAt = textBeforeCursor.substring(lastAtIndex)
             if (textAfterAt.includes(' ')) {
                 setShowAutocomplete(false)
+            } else {
+                const search = textAfterAt.substring(1)
+                setAutocompleteSearch(search)
+                setAutocompleteCursorPos(cursorPos)
+                setShowAutocomplete(true)
+                selectAutocompleteIndex(0)
+                // Mutual exclusion: close wildcard autocomplete
+                wildcardAutocomplete.close()
                 return
             }
-
-            const search = textAfterAt.substring(1)
-            setAutocompleteSearch(search)
-            setAutocompleteCursorPos(cursorPos)
-            setShowAutocomplete(true)
-            selectAutocompleteIndex(0)
         } else {
             setShowAutocomplete(false)
         }
-    }, [shotCreatorPrompt, selectAutocompleteIndex])
+
+        // Try wildcard detection if @ autocomplete is not active
+        if (!showAutocomplete) {
+            wildcardAutocomplete.detectTrigger()
+            calculateWildcardDropdownPosition()
+        }
+    }, [shotCreatorPrompt, selectAutocompleteIndex, wildcardAutocomplete, showAutocomplete, calculateWildcardDropdownPosition])
 
     // Flatten suggestions for keyboard navigation
     const flatSuggestions = React.useMemo(() => {
@@ -279,6 +309,12 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
             return
         }
 
+        // Wildcard autocomplete takes priority if open
+        if (wildcardAutocomplete.isOpen) {
+            const handled = wildcardAutocomplete.handleKeyDown(e)
+            if (handled) return
+        }
+
         if (!showAutocomplete || !hasSuggestions) return
 
         if (e.key === 'ArrowDown') {
@@ -298,7 +334,7 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
             e.preventDefault()
             setShowAutocomplete(false)
         }
-    }, [showAutocomplete, hasSuggestions, flatSuggestions, autocompleteSelectedIndex, selectAutocompleteSuggestion, selectAutocompleteIndex, canGenerate, isGenerating, handleGenerate])
+    }, [showAutocomplete, hasSuggestions, flatSuggestions, autocompleteSelectedIndex, selectAutocompleteSuggestion, selectAutocompleteIndex, canGenerate, isGenerating, handleGenerate, wildcardAutocomplete])
 
     // Calculate dropdown position based on cursor
     const calculateDropdownPosition = useCallback(() => {
@@ -321,6 +357,7 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
             })
         }
     }, [textareaRef])
+
 
     // Handle @ symbol for reference support
     const handlePromptChange = useCallback(async (value: string) => {
@@ -403,8 +440,8 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                             onChange={(value) => handlePromptChange(value)}
                             onKeyUp={handleTextareaKeyUp}
                             onKeyDown={handleAutocompleteKeyDown}
-                            onMouseUp={calculateDropdownPosition}
-                            onTouchEnd={calculateDropdownPosition}
+                            onMouseUp={() => { calculateDropdownPosition(); calculateWildcardDropdownPosition() }}
+                            onTouchEnd={() => { calculateDropdownPosition(); calculateWildcardDropdownPosition() }}
                             placeholder="Enter your prompt here... Use @tag for references"
                             className={cn("resize-none", customHeight !== null ? 'h-full' : getTextareaHeight(textareaSize))}
                         />
@@ -486,6 +523,17 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                                     )
                                 })}
                             </div>
+                        )}
+
+                        {/* Wildcard autocomplete dropdown */}
+                        {wildcardAutocomplete.isOpen && wildcardAutocomplete.flatItems.length > 0 && (
+                            <WildcardAutocomplete
+                                groups={wildcardAutocomplete.filteredGroups}
+                                selectedIndex={wildcardAutocomplete.selectedIndex}
+                                onSelect={wildcardAutocomplete.selectWildcard}
+                                onHover={wildcardAutocomplete.setSelectedIndex}
+                                position={wildcardDropdownPos}
+                            />
                         )}
                     </div>
 

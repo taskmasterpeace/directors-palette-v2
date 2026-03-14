@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useMerchLabStore } from '../hooks'
 import { cn } from '@/utils/utils'
 import { Sparkles, Loader2, Plus, X, Banana, Hexagon } from 'lucide-react'
 import type { QualityTier, DesignModel } from '../types'
+import { useWildcardAutocomplete } from '@/shared/hooks/useWildcardAutocomplete'
+import { WildcardAutocomplete } from '@/shared/components/WildcardAutocomplete'
 
 const MODEL_OPTIONS: { id: DesignModel; label: string; desc: string }[] = [
   { id: 'ideogram', label: 'Ideogram V3', desc: 'Great text rendering' },
@@ -58,6 +60,35 @@ export function DesignPrompt() {
   const setError = useMerchLabStore((s) => s.setError)
 
   const [showColors, setShowColors] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Wildcard autocomplete
+  const wildcardAC = useWildcardAutocomplete({
+    textareaRef,
+    value: prompt,
+    onChange: setPrompt,
+  })
+  const [wcDropdownPos, setWcDropdownPos] = useState({ top: 0, left: 0, width: 400 })
+
+  const calcWcPos = useCallback(() => {
+    if (!textareaRef.current) return
+    const rect = textareaRef.current.getBoundingClientRect()
+    const isMobile = window.innerWidth < 768
+    setWcDropdownPos({
+      top: isMobile ? Math.max(rect.top - 310, 10) : rect.bottom + 4,
+      left: Math.max(rect.left, 10),
+      width: rect.width,
+    })
+  }, [])
+
+  const handleKeyUp = useCallback(() => {
+    wildcardAC.detectTrigger()
+    calcWcPos()
+  }, [wildcardAC, calcWcPos])
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    wildcardAC.handleKeyDown(e)
+  }, [wildcardAC])
 
   const tiers = QUALITY_TIERS[designModel]
   const tierConfig = tiers.find((t) => t.id === qualityTier) ?? tiers[1]
@@ -118,13 +149,27 @@ export function DesignPrompt() {
         4. Describe Your Design
       </div>
 
-      <textarea
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        placeholder="A fierce cyberpunk dragon breathing neon fire..."
-        className="w-full rounded-[10px] border border-border/30 bg-card/30 p-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/20"
-        rows={3}
-      />
+      <div className="relative">
+        <textarea
+          ref={textareaRef}
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          onKeyUp={handleKeyUp}
+          onKeyDown={handleKeyDown}
+          placeholder="A fierce cyberpunk dragon breathing neon fire... Use _wildcard_ for random entries"
+          className="w-full rounded-[10px] border border-border/30 bg-card/30 p-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/20"
+          rows={3}
+        />
+        {wildcardAC.isOpen && wildcardAC.flatItems.length > 0 && (
+          <WildcardAutocomplete
+            groups={wildcardAC.filteredGroups}
+            selectedIndex={wildcardAC.selectedIndex}
+            onSelect={wildcardAC.selectWildcard}
+            onHover={wildcardAC.setSelectedIndex}
+            position={wcDropdownPos}
+          />
+        )}
+      </div>
 
       {/* Design Colors */}
       <div className="mt-3">
