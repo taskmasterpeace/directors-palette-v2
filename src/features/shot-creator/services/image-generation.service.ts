@@ -197,21 +197,16 @@ export class ImageGenerationService {
       replicateInput.output_format = settings.outputFormat
     }
 
-    // LoRA support — img2img variant accepts single LoRA (string), text-to-image accepts arrays
+    // LoRA support — img2img variant has a Replicate bug (Path has no len()),
+    // so we skip LoRA for img2img until they fix it. Text-to-image uses arrays.
     const hasRefImage = input.referenceImages && input.referenceImages.length > 0
     if (hasRefImage) {
-      // img2img mode: single image input + single LoRA
+      // img2img mode: single image input + strength
       replicateInput.image = this.normalizeReferenceImages(input.referenceImages!)[0]
       replicateInput.strength = settings.img2imgStrength ?? 0.6
-
-      // img2img variant takes single LoRA (not arrays)
-      if (settings.loraWeightsUrls && settings.loraWeightsUrls.length > 0) {
-        replicateInput.lora_weights = settings.loraWeightsUrls[0]
-        replicateInput.lora_scales = settings.loraScales?.[0] ?? 1.0
-      } else if (settings.loraWeightsUrl) {
-        replicateInput.lora_weights = settings.loraWeightsUrl
-        replicateInput.lora_scales = settings.loraScale ?? 1.0
-      }
+      // NOTE: LoRA params intentionally omitted — Replicate's z-image-turbo-img2img
+      // has a bug where lora_weights URI is converted to a Python Path object,
+      // then their code does len(Path) which throws TypeError.
     } else {
       // Text-to-image mode: multi-LoRA arrays
       if (settings.loraWeightsUrls && settings.loraWeightsUrls.length > 0) {
