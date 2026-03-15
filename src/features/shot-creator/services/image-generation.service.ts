@@ -87,9 +87,9 @@ export class ImageGenerationService {
   private static validateZImageTurbo(input: ImageGenerationInput): string[] {
     const errors: string[] = []
 
-    // Z-Image Turbo is TEXT-TO-IMAGE ONLY - no image input support
-    if (input.referenceImages && input.referenceImages.length > 0) {
-      errors.push('Z-Image Turbo is text-to-image only and does not support reference images')
+    // Z-Image Turbo supports 0 or 1 reference image (img2img mode)
+    if (input.referenceImages && input.referenceImages.length > 1) {
+      errors.push('Z-Image Turbo supports at most 1 reference image for img2img mode')
     }
 
     return errors
@@ -197,18 +197,31 @@ export class ImageGenerationService {
       replicateInput.output_format = settings.outputFormat
     }
 
-    // LoRA support — API expects arrays for lora_weights and lora_scales
-    if (settings.loraWeightsUrls && settings.loraWeightsUrls.length > 0) {
-      replicateInput.lora_weights = settings.loraWeightsUrls
-      replicateInput.lora_scales = settings.loraScales || settings.loraWeightsUrls.map(() => 1.0)
-    } else if (settings.loraWeightsUrl) {
-      // backward compat: single LoRA
-      replicateInput.lora_weights = [settings.loraWeightsUrl]
-      replicateInput.lora_scales = [settings.loraScale ?? 1.0]
-    }
+    // LoRA support — img2img variant accepts single LoRA (string), text-to-image accepts arrays
+    const hasRefImage = input.referenceImages && input.referenceImages.length > 0
+    if (hasRefImage) {
+      // img2img mode: single image input + single LoRA
+      replicateInput.image = this.normalizeReferenceImages(input.referenceImages!)[0]
+      replicateInput.strength = settings.img2imgStrength ?? 0.6
 
-    // Note: Z-Image Turbo is TEXT-TO-IMAGE ONLY
-    // It does NOT support image input - reference images are ignored
+      // img2img variant takes single LoRA (not arrays)
+      if (settings.loraWeightsUrls && settings.loraWeightsUrls.length > 0) {
+        replicateInput.lora_weights = settings.loraWeightsUrls[0]
+        replicateInput.lora_scales = settings.loraScales?.[0] ?? 1.0
+      } else if (settings.loraWeightsUrl) {
+        replicateInput.lora_weights = settings.loraWeightsUrl
+        replicateInput.lora_scales = settings.loraScale ?? 1.0
+      }
+    } else {
+      // Text-to-image mode: multi-LoRA arrays
+      if (settings.loraWeightsUrls && settings.loraWeightsUrls.length > 0) {
+        replicateInput.lora_weights = settings.loraWeightsUrls
+        replicateInput.lora_scales = settings.loraScales || settings.loraWeightsUrls.map(() => 1.0)
+      } else if (settings.loraWeightsUrl) {
+        replicateInput.lora_weights = [settings.loraWeightsUrl]
+        replicateInput.lora_scales = [settings.loraScale ?? 1.0]
+      }
+    }
 
     return replicateInput
   }
@@ -333,10 +346,13 @@ export class ImageGenerationService {
   /**
    * Get Replicate model identifier
    */
-  static getReplicateModelId(model: ImageModel, loraActive?: boolean): string {
+  static getReplicateModelId(model: ImageModel, loraActive?: boolean, hasReferenceImage?: boolean): string {
     const modelConfig = getModelConfig(model)
-    // When LoRA is active on z-image-turbo, use the LoRA-enabled variant
-    // This model requires version-based prediction (not model: shorthand)
+    // When reference image is provided on z-image-turbo, use img2img variant
+    if (model === 'z-image-turbo' && hasReferenceImage) {
+      return 'prunaai/z-image-turbo-img2img'
+    }
+    // When LoRA is active on z-image-turbo (text-to-image), use the LoRA-enabled variant
     if (loraActive && model === 'z-image-turbo') {
       return 'prunaai/z-image-turbo-lora'
     }
@@ -345,13 +361,15 @@ export class ImageGenerationService {
 
   /** Version hashes for models that require version-based predictions */
   static readonly LORA_VERSION = '197b2db2015aa366d2bc61a941758adf4c31ac66b18573f5c66dc388ab081ca2'
+  static readonly IMG2IMG_VERSION = '5c958e90e0f904240629ee35c69196e3bd790b5528c0696705ebdb1656871dd8'
   static readonly FIRERED_VERSION = '778e5a9b1a1c75e0f8013e19db9a9e6ff456c46d796e31070fe740a2874daa96'
   static readonly QWEN_IMAGE_EDIT_VERSION = 'b37d69a6b94414c96cc4ecb16660b472bb62284f2293d4b65537c09b8500e200'
 
   /**
    * Check if a model requires version-based prediction (not model: shorthand)
    */
-  static getVersionForModel(model: ImageModel, loraActive?: boolean): string | null {
+  static getVersionForModel(model: ImageModel, loraActive?: boolean, hasReferenceImage?: boolean): string | null {
+    if (model === 'z-image-turbo' && hasReferenceImage) return this.IMG2IMG_VERSION
     if (loraActive && model === 'z-image-turbo') return this.LORA_VERSION
     if (model === 'firered-image-edit') return this.FIRERED_VERSION
     if (model === 'qwen-image-edit') return this.QWEN_IMAGE_EDIT_VERSION

@@ -577,10 +577,11 @@ export async function POST(request: NextRequest) {
       userId: user.id, // ✅ Use authenticated user
     });
 
-    // Get model identifier - swap to LoRA variant if LoRA weights present
+    // Get model identifier - swap to LoRA/img2img variant as needed
     const ms = modelSettings as Record<string, unknown>
     const loraActive = !!ms?.loraWeightsUrl || (Array.isArray(ms?.loraWeightsUrls) && (ms.loraWeightsUrls as string[]).length > 0)
-    const replicateModelId = ImageGenerationService.getReplicateModelId(model as ImageModel, loraActive);
+    const hasReferenceImage = processedReferenceImages && processedReferenceImages.length > 0
+    const replicateModelId = ImageGenerationService.getReplicateModelId(model as ImageModel, loraActive, hasReferenceImage);
     lognog.devDebug('Using Replicate model', {
       model_id: replicateModelId,
       lora_active: loraActive,
@@ -598,7 +599,7 @@ export async function POST(request: NextRequest) {
     let prediction;
     try {
       // Build prediction options - some models require version-based predictions
-      const versionHash = ImageGenerationService.getVersionForModel(model as ImageModel, loraActive);
+      const versionHash = ImageGenerationService.getVersionForModel(model as ImageModel, loraActive, hasReferenceImage);
       const predictionOptions: Record<string, unknown> = versionHash
         ? { version: versionHash, input: replicateInput }
         : { model: replicateModelId, input: replicateInput };

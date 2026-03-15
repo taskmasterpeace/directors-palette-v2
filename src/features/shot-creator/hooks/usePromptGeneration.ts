@@ -170,6 +170,10 @@ export function usePromptGeneration() {
             case 'z-image-turbo':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
                 baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
+                // Img2img strength (when reference image is provided)
+                if (shotCreatorSettings.img2imgStrength !== undefined) {
+                    baseSettings.img2imgStrength = shotCreatorSettings.img2imgStrength
+                }
                 // Inject LoRA settings when active (supports multiple)
                 if (activeLoras.length > 0) {
                     baseSettings.loraWeightsUrls = activeLoras.map(l => l.weightsUrl)

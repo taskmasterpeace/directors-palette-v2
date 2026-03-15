@@ -35,6 +35,7 @@ export interface ZImageTurboSettings {
   loraWeightsUrls?: string[]  // multiple LoRAs
   loraScales?: number[]       // multiple scales
   loraName?: string
+  img2imgStrength?: number    // 0-1, controls how much reference image is transformed (img2img mode)
 }
 
 export interface FireRedEditSettings {

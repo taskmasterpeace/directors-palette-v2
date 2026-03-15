@@ -16,12 +16,14 @@ import { getModelConfig, ModelId } from '@/config'
 import { Button } from "@/components/ui/button"
 import { Shuffle } from "lucide-react"
 import { useLoraStore } from "../../store/lora.store"
+import { useShotCreatorStore } from "../../store/shot-creator.store"
 import { useShallow } from "zustand/react/shallow"
 
 const AdvancedSettings = () => {
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
     const selectedModel = shotCreatorSettings.model || 'nano-banana-2'
     const modelConfig = useMemo(() => getModelConfig(selectedModel as ModelId), [selectedModel])
+    const referenceImageCount = useShotCreatorStore(s => s.shotCreatorReferenceImages.length)
 
     // Generate random seed
     const generateRandomSeed = useCallback(() => {
@@ -174,6 +176,29 @@ const AdvancedSettings = () => {
                     <p className="text-xs text-muted-foreground">
                         Use 0 for turbo speed, higher for more prompt adherence
                         {activeLora && ' (auto-set to 1 for LoRA)'}
+                    </p>
+                </div>
+            )}
+
+            {/* Img2Img Strength - Z-Image Turbo with reference image */}
+            {selectedModel === 'z-image-turbo' && referenceImageCount > 0 && (
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-sm text-foreground">Img2Img Strength</Label>
+                        <span className="text-sm text-cyan-400 font-medium tabular-nums">
+                            {shotCreatorSettings.img2imgStrength ?? 0.6}
+                        </span>
+                    </div>
+                    <Slider
+                        value={[shotCreatorSettings.img2imgStrength ?? 0.6]}
+                        onValueChange={([val]) => updateSettings({ img2imgStrength: val })}
+                        min={0}
+                        max={1}
+                        step={0.05}
+                        className="w-full"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Low = subtle style transfer (keeps character), high = dramatic transformation
                     </p>
                 </div>
             )}

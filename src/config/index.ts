@@ -237,6 +237,17 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
             { value: '3:4', label: '3:4 Portrait' },
         ]
     },
+    // Z-Image Turbo img2img strength (how much to transform the reference image)
+    img2imgStrength: {
+        id: 'img2imgStrength',
+        label: 'Img2Img Strength',
+        type: 'slider',
+        min: 0,
+        max: 1,
+        step: 0.05,
+        default: 0.6,
+        description: 'How much to transform the reference image. Low = subtle style transfer, high = dramatic change.'
+    },
     // Z-Image Turbo parameters (Replicate API: 1-50 steps, 0-20 guidance, defaults per API docs)
     numInferenceSteps: {
         id: 'numInferenceSteps',
@@ -339,20 +350,21 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         displayName: 'Turbo Generation',
         type: 'generation',
         icon: '⚡',
-        description: 'Ultra-fast generation with LoRA support. Best for rapid iterations, character/style LoRAs, and concept exploration.',
+        description: 'Ultra-fast generation with LoRA support. Add a reference image for img2img style transfer. Best for rapid iterations, character/style LoRAs, and concept exploration.',
         badge: 'Turbo',
         badgeColor: 'bg-cyan-600',
         textColor: 'text-cyan-300',
         endpoint: 'prunaai/z-image-turbo',
         costPerImage: 0.03, // 3 pts = $0.03 (~$0.01 Replicate cost)
-        supportedParameters: ['outputFormat', 'aspectRatio', 'numInferenceSteps', 'guidanceScale'],
+        supportedParameters: ['outputFormat', 'aspectRatio', 'numInferenceSteps', 'guidanceScale', 'img2imgStrength'],
         parameters: {
             outputFormat: MODEL_PARAMETERS.outputFormat,
             aspectRatio: MODEL_PARAMETERS.aspectRatio,
             numInferenceSteps: MODEL_PARAMETERS.numInferenceSteps,
-            guidanceScale: MODEL_PARAMETERS.guidanceScale
+            guidanceScale: MODEL_PARAMETERS.guidanceScale,
+            img2imgStrength: MODEL_PARAMETERS.img2imgStrength,
         },
-        maxReferenceImages: 0, // Text-to-image only - no image input support
+        maxReferenceImages: 1, // Supports 1 reference image for img2img mode
         estimatedSeconds: 8,
     },
     'firered-image-edit': {
