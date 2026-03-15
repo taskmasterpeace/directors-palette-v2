@@ -57,8 +57,8 @@ class CreditsService {
      * Get user's current credit balance
      * Creates record if doesn't exist (new user)
      */
-    async getBalance(userId: string): Promise<UserCredits | null> {
-        const supabase = await getCreditsClient()
+    async getBalance(userId: string, useServiceRole = false): Promise<UserCredits | null> {
+        const supabase = useServiceRole ? await getAdminCreditsClient() : await getCreditsClient()
 
         // Try to get existing record
         const { data, error } = await supabase
@@ -173,10 +173,11 @@ class CreditsService {
             description?: string
             overrideAmount?: number  // For video: calculated cost based on duration/resolution
             user_email?: string  // For LogNog analytics
+            useServiceRole?: boolean  // For API key routes (no Supabase auth session)
         } = {}
     ): Promise<{ success: boolean; transaction?: CreditTransaction; error?: string; newBalance?: number }> {
-        const { generationType = 'image', predictionId, description, overrideAmount, user_email } = options
-        const supabase = await getCreditsClient()
+        const { generationType = 'image', predictionId, description, overrideAmount, user_email, useServiceRole = false } = options
+        const supabase = useServiceRole ? await getAdminCreditsClient() : await getCreditsClient()
 
         // Get pricing for this model (used for metadata, may be overridden for videos)
         const pricing = await this.getModelPricing(modelId)
@@ -249,7 +250,7 @@ class CreditsService {
         }
 
         // FALLBACK: Standard non-atomic deduction (for backwards compatibility)
-        const balance = await this.getBalance(userId)
+        const balance = await this.getBalance(userId, useServiceRole)
         if (!balance) {
             return { success: false, error: 'Unable to fetch user balance' }
         }

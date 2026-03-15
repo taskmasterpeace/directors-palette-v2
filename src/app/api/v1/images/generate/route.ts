@@ -213,7 +213,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
       // Calculate total cost: 1 image per input (anchor is free)
       const numImages = inputUrls.length
       const costInCents = Math.round(modelConfig.costPerImage * 100) * numImages
-      const balance = await creditsService.getBalance(validatedKey.userId)
+      const balance = await creditsService.getBalance(validatedKey.userId, true)
 
       if (!balance || balance.balance < costInCents) {
         return NextResponse.json(
@@ -298,6 +298,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
         // Deduct credits for this image
         const deductResult = await creditsService.deductCredits(validatedKey.userId, model, {
           description: `API Anchor Transform image ${i + 1}/${inputUrls.length} (${model})`,
+          useServiceRole: true,
         })
 
         if (deductResult.success) {
@@ -306,7 +307,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
       }
 
       // Get remaining balance
-      const newBalance = await creditsService.getBalance(validatedKey.userId)
+      const newBalance = await creditsService.getBalance(validatedKey.userId, true)
 
       // Log usage
       await apiKeyService.logUsage({
@@ -341,7 +342,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
     // Normal mode (not Anchor Transform)
     // Check credits - costPerImage is in "credits" (dollars), but balance is in cents
     const costInCents = Math.round(modelConfig.costPerImage * 100)
-    const balance = await creditsService.getBalance(validatedKey.userId)
+    const balance = await creditsService.getBalance(validatedKey.userId, true)
 
     if (!balance || balance.balance < costInCents) {
       return NextResponse.json(
@@ -429,6 +430,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
     // Deduct credits using the model ID
     const deductResult = await creditsService.deductCredits(validatedKey.userId, model, {
       description: `API image generation (${model})`,
+      useServiceRole: true,
     })
 
     if (!deductResult.success) {
@@ -437,7 +439,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
     }
 
     // Get remaining balance
-    const newBalance = await creditsService.getBalance(validatedKey.userId)
+    const newBalance = await creditsService.getBalance(validatedKey.userId, true)
 
     // Log usage
     await apiKeyService.logUsage({

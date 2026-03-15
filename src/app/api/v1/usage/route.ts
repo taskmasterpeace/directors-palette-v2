@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
 
     // User's own usage
     const usage = await apiKeyService.getUserUsage(userId, 100)
-    const credits = await creditsService.getBalance(userId)
+    const credits = await creditsService.getBalance(userId, true)
 
     // Calculate stats from usage
     const totalRequests = usage.length

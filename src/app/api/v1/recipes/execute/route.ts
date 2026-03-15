@@ -215,7 +215,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<RecipeExe
     const totalCostInCents = costInCents * stages.length
 
     // Check credits
-    const balance = await creditsService.getBalance(validatedKey.userId)
+    const balance = await creditsService.getBalance(validatedKey.userId, true)
     if (!balance || balance.balance < totalCostInCents) {
       return NextResponse.json(
         {
@@ -300,11 +300,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<RecipeExe
       // Deduct credits for this stage
       await creditsService.deductCredits(validatedKey.userId, model, {
         description: `API recipe stage ${i + 1}/${stages.length}`,
+        useServiceRole: true,
       })
     }
 
     // Get remaining balance
-    const newBalance = await creditsService.getBalance(validatedKey.userId)
+    const newBalance = await creditsService.getBalance(validatedKey.userId, true)
     const totalCostCredits = modelConfig.costPerImage * stages.length
 
     // Log usage
