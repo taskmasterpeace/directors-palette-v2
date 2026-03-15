@@ -764,9 +764,9 @@ function RecipeStageEditor({
             <div className="flex items-center gap-2">
               {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               <span className="font-medium text-sm">Stage {index + 1}</span>
-              {stage.fields.length > 0 && (
+              {(stage.fields?.length || 0) > 0 && (
                 <Badge variant="outline" className="text-xs">
-                  {stage.fields.length} fields
+                  {(stage.fields?.length || 0)} fields
                 </Badge>
               )}
               {stage.referenceImages.length > 0 && (
@@ -806,7 +806,7 @@ function RecipeStageEditor({
             </div>
 
             {/* Parsed Fields Preview */}
-            {stage.fields.length > 0 && (
+            {(stage.fields?.length || 0) > 0 && (
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">Detected Fields</Label>
                 <div className="flex gap-1 flex-wrap">

@@ -110,7 +110,7 @@ export function CommunityCard({
       }
       case 'recipe': {
         const content = item.content as RecipeContent
-        const fieldCount = content.stages.reduce((acc, s) => acc + s.fields.length, 0)
+        const fieldCount = content.stages.reduce((acc, s) => acc + (s.fields?.length || 0), 0)
         // Collect all reference images from all stages
         const allRefImages = content.stages.flatMap(s => s.referenceImages || []).slice(0, 4)
         return (

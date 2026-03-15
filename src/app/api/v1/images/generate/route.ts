@@ -268,13 +268,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
         })
 
         // Get the image URL from output
+        // Replicate SDK v1.x returns FileOutput objects — coerce to string to get the URL
         let imageUrl: string | null = null
         if (Array.isArray(output) && output.length > 0) {
-          imageUrl = output[0]
+          imageUrl = String(output[0])
         } else if (typeof output === 'string') {
           imageUrl = output
         } else if (output && typeof output === 'object' && 'url' in output) {
-          imageUrl = (output as { url: string }).url
+          imageUrl = String((output as { url: unknown }).url)
         }
 
         if (!imageUrl) {
@@ -402,13 +403,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
     })
 
     // Get the image URL from output
+    // Replicate SDK v1.x returns FileOutput objects — coerce to string to get the URL
     let imageUrl: string | null = null
     if (Array.isArray(output) && output.length > 0) {
-      imageUrl = output[0]
+      imageUrl = String(output[0])
     } else if (typeof output === 'string') {
       imageUrl = output
     } else if (output && typeof output === 'object' && 'url' in output) {
-      imageUrl = (output as { url: string }).url
+      imageUrl = String((output as { url: unknown }).url)
     }
 
     if (!imageUrl) {
