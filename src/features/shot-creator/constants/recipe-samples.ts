@@ -3218,23 +3218,219 @@ STYLE: photo quality, photo realistic, professional character reference sheet`,
     categoryId: 'artists',
   },
 
+  // Street Style Lookbook (Men) - 9-frame fashion lookbook with wildcard outfits
+  {
+    name: 'Street Style Lookbook (Men)',
+    description: '9 frames of the same character in different street outfits, each pulled from wildcards',
+    categoryId: 'character-sheets',
+    suggestedAspectRatio: '1:1',
+    isQuickAccess: false,
+    stages: [{
+      id: generateStageId(),
+      order: 0,
+      template: `Professional fashion lookbook. 3x3 grid, 9 frames. Same male character in each frame, consistent face and build. Each frame shows a different street outfit.
+
+Frame 1: <<OUTFIT_1:wildcard(blkmen_fullbody, random)>>, <<HAIR:wildcard(blkmen_hair, random)>>, <<SHOES_1:wildcard(blkmen_sneakers_color, random)>>
+Frame 2: <<OUTFIT_2:wildcard(blkmen_fullbody, random)>>, same hair, <<SHOES_2:wildcard(blkmen_sneakers_color, random)>>
+Frame 3: <<OUTFIT_3:wildcard(blkmen_fullbody, random)>>, same hair, <<SHOES_3:wildcard(blkmen_sneakers_color, random)>>
+Frame 4-9: Continue with unique random outfits and sneakers per frame.
+
+<<ACCESSORIES:wildcard(blkmen_accessories, random)>>
+
+Clean white studio background. Professional photography lighting. Full body shots. Editorial fashion photography style.`,
+      fields: [],
+      referenceImages: [],
+    }],
+  },
+
+  // Street Style Lookbook (Women) - 9-frame fashion lookbook with wildcard outfits
+  {
+    name: 'Street Style Lookbook (Women)',
+    description: '9 frames of the same character in different street outfits, each pulled from wildcards',
+    categoryId: 'character-sheets',
+    suggestedAspectRatio: '1:1',
+    isQuickAccess: false,
+    stages: [{
+      id: generateStageId(),
+      order: 0,
+      template: `Professional fashion lookbook. 3x3 grid, 9 frames. Same female character in each frame, consistent face and build. Each frame shows a different street outfit.
+
+Frame 1: <<OUTFIT_1:wildcard(blkwomen_fullbody, random)>>, <<HAIR:wildcard(blkwomen_hair, random)>>, <<SHOES_1:wildcard(blkwomen_sneakers_color, random)>>
+Frame 2: <<OUTFIT_2:wildcard(blkwomen_fullbody, random)>>, same hair, <<SHOES_2:wildcard(blkwomen_sneakers_color, random)>>
+Frame 3: <<OUTFIT_3:wildcard(blkwomen_fullbody, random)>>, same hair, <<SHOES_3:wildcard(blkwomen_sneakers_color, random)>>
+Frame 4-9: Continue with unique random outfits and sneakers per frame.
+
+<<ACCESSORIES:wildcard(blkwomen_accessories, random)>>
+<<HANDBAG:wildcard(blkwomen_handbags, random)>>
+
+Clean white studio background. Professional photography lighting. Full body shots. Editorial fashion photography style.`,
+      fields: [],
+      referenceImages: [],
+    }],
+  },
+
+  // Fashion Editorial (Women) - high-fashion editorial with curated wildcard looks
+  {
+    name: 'Fashion Editorial (Women)',
+    description: 'High-fashion editorial spread with curated looks from wildcards',
+    categoryId: 'portraits',
+    suggestedAspectRatio: '2:3',
+    isQuickAccess: false,
+    stages: [{
+      id: generateStageId(),
+      order: 0,
+      template: `High fashion editorial magazine spread. Single female model.
+
+Dress code: <<DRESS_CODE:wildcard(blkwomendresscode, browse)>>
+Hairstyle: <<HAIR:wildcard(blkwomen_hair, browse)>>
+Accessories: <<ACCESSORIES:wildcard(blkwomen_accessories, browse)>>
+Handbag: <<HANDBAG:wildcard(blkwomen_handbags, browse)>>
+Footwear: <<SHOES:wildcard(blkwomen_footwear, browse)>>
+
+Magazine-quality photography. Studio lighting with dramatic shadows. Editorial pose. Vogue/Harper's Bazaar aesthetic.`,
+      fields: [],
+      referenceImages: [],
+    }],
+  },
+
+  // Location Scouting Sheet - 9 different locations from wildcards
+  {
+    name: 'Location Scouting Sheet',
+    description: '9 different locations for a scene, mixing indoor and outdoor venues from wildcards',
+    categoryId: 'storyboards',
+    suggestedAspectRatio: '1:1',
+    isQuickAccess: false,
+    stages: [{
+      id: generateStageId(),
+      order: 0,
+      template: `Location scouting reference sheet. 3x3 grid, 9 frames. Each frame shows a different location, empty of people. Cinematic composition, establishing shot angle.
+
+Locations 1-5: <<INDOOR:wildcard(settings_indoor, random)>>
+Locations 6-9: <<OUTDOOR:wildcard(settings_outdoor, random)>>
+
+Golden hour and blue hour lighting mix. Film photography aesthetic. Wide angle lens. No people visible.`,
+      fields: [],
+      referenceImages: [],
+    }],
+  },
+
+  // Action Sequence (Men) - character action sequence across 9 frames
+  {
+    name: 'Action Sequence (Men)',
+    description: 'Character performing a sequence of actions across 9 frames',
+    categoryId: 'action',
+    suggestedAspectRatio: '16:9',
+    isQuickAccess: false,
+    stages: [{
+      id: generateStageId(),
+      order: 0,
+      template: `Action sequence. 3x3 grid, 9 frames. Same male character throughout. Each frame captures a different moment of action.
+
+Character outfit: <<OUTFIT:wildcard(blkmen_fullbody, browse)>>
+Character hair: <<HAIR:wildcard(blkmen_hair, browse)>>
+Location: <<LOCATION:wildcard(settingsbattlerap, browse)>>
+
+Frame actions:
+1-3: <<ACTION_START:wildcard(actions_relaxed, random)>>
+4-6: <<ACTION_MID:wildcard(actions_confident, random)>>
+7-9: <<ACTION_END:wildcard(actions_active, random)>>
+
+Cinematic realism. Dynamic camera angles. Motion blur on fast movements. Dramatic lighting.`,
+      fields: [],
+      referenceImages: [],
+    }],
+  },
+
+  // Sneaker Showcase (Men) - 9-frame sneaker showcase from different angles
+  {
+    name: 'Sneaker Showcase (Men)',
+    description: '9-frame grid focused on sneakers from different angles and lighting',
+    categoryId: 'product',
+    suggestedAspectRatio: '1:1',
+    isQuickAccess: false,
+    stages: [{
+      id: generateStageId(),
+      order: 0,
+      template: `Sneaker showcase. 3x3 grid, 9 frames. Each frame shows the same sneaker from a different angle and lighting.
+
+Sneaker: <<SNEAKER:wildcard(blkmen_sneakers_color, browse)>>
+
+Angles: front, side profile, back, top-down, 3/4 front, 3/4 back, close-up detail, on-foot shot, lifestyle shot.
+Clean studio background. Product photography lighting. Sharp focus. No people except the on-foot shot.`,
+      fields: [],
+      referenceImages: [],
+    }],
+  },
+
+  // Sneaker Showcase (Women) - 9-frame sneaker showcase from different angles
+  {
+    name: 'Sneaker Showcase (Women)',
+    description: '9-frame grid focused on sneakers from different angles and lighting',
+    categoryId: 'product',
+    suggestedAspectRatio: '1:1',
+    isQuickAccess: false,
+    stages: [{
+      id: generateStageId(),
+      order: 0,
+      template: `Sneaker showcase. 3x3 grid, 9 frames. Each frame shows the same sneaker from a different angle and lighting.
+
+Sneaker: <<SNEAKER:wildcard(blkwomen_sneakers_color, browse)>>
+
+Angles: front, side profile, back, top-down, 3/4 front, 3/4 back, close-up detail, on-foot shot, lifestyle shot.
+Clean studio background. Product photography lighting. Sharp focus. No people except the on-foot shot.`,
+      fields: [],
+      referenceImages: [],
+    }],
+  },
+
+  // Action Sequence (Women) - character action sequence across 9 frames
+  {
+    name: 'Action Sequence (Women)',
+    description: 'Character performing a sequence of actions across 9 frames',
+    categoryId: 'action',
+    suggestedAspectRatio: '16:9',
+    isQuickAccess: false,
+    stages: [{
+      id: generateStageId(),
+      order: 0,
+      template: `Action sequence. 3x3 grid, 9 frames. Same female character throughout. Each frame captures a different moment of action.
+
+Character outfit: <<OUTFIT:wildcard(blkwomen_fullbody, browse)>>
+Character hair: <<HAIR:wildcard(blkwomen_hair, browse)>>
+Location: <<LOCATION:wildcard(settingsbattlerap, browse)>>
+
+Frame actions:
+1-3: <<ACTION_START:wildcard(actions_relaxed, random)>>
+4-6: <<ACTION_MID:wildcard(actions_confident, random)>>
+7-9: <<ACTION_END:wildcard(actions_active, random)>>
+
+Cinematic realism. Dynamic camera angles. Motion blur on fast movements. Dramatic lighting.`,
+      fields: [],
+      referenceImages: [],
+    }],
+  },
+
   // Battle Rap - acappella battle rap scene generator
   {
     name: 'Battle Rap',
     description: 'Generate an intense acappella battle rap scene with two performers face-to-face, no microphones, surrounded by a crowd',
-    recipeNote: 'Tag your characters with @ to pull from your character library — set them once, reuse forever. Pick a preset location from the dropdown, or type your own in Custom Location. Attach a reference image for style/mood matching.',
+    recipeNote: 'Tag your characters with @ to pull from your character library. Use wildcard fields to select actions, outfits, hair, and locations from curated lists. Attach a reference image for style/mood matching.',
     stages: [{
       id: generateStageId(),
       order: 0,
       template: `A professional high-definition <<CAMERA_ANGLE:select(Over-the-shoulder shot,Low-angle side profile,Tight extreme close-up,Wide master shot,Eye-level centered shot)!>> of an acappella battle rap event. The camera is positioned behind Person B, looking over their shoulder at Person A who is standing face-to-face in a high-intensity verbal battle. Crucially, there are NO microphones; both performers have completely empty hands, using wild hand gestures and aggressive facial expressions.
 
 PERSON A: @<<PERSON_A:name!>>
-PERSON A ACTION: <<ACTION_A:select(Pointing aggressively at opponent,Throwing hands up mid-bar,Leaning forward with intense eye contact,Pounding chest with conviction,Waving dismissively at opponent)!>>
+PERSON A ACTION: <<ACTION_A:wildcard(actions_confident, browse)>>
+PERSON A OUTFIT: <<OUTFIT_A:wildcard(blkmen_fullbody, browse)>>
+PERSON A HAIR: <<HAIR_A:wildcard(blkmen_hair, browse)>>
 
 PERSON B: @<<PERSON_B:name!>>
-PERSON B ACTION: <<ACTION_B:select(Smirking with arms crossed,Shaking head in disbelief,Laughing and looking at the crowd,Stepping forward confrontationally,Grimacing and biting lower lip)!>>
+PERSON B ACTION: <<ACTION_B:wildcard(actions_expressive, browse)>>
+PERSON B OUTFIT: <<OUTFIT_B:wildcard(blkmen_fullbody, browse)>>
+PERSON B HAIR: <<HAIR_B:wildcard(blkmen_hair, browse)>>
 
-SETTING: <<LOCATION:select(Abandoned subway platform,Rain-slicked concrete alleyway,Packed local barbershop,Empty indoor swimming pool,Industrial rooftop at dusk,Dimly lit basement with exposed pipes,Street corner under an overpass,Back of a crowded bodega,Graffiti-covered parking garage,Outdoor basketball court at night)>> <<CUSTOM_LOCATION:text>>
+SETTING: <<LOCATION:wildcard(settingsbattlerap, browse)>>
 
 LIGHTING: <<LIGHTING_STYLE:select(Chiaroscuro high-contrast,Harsh overhead spotlight,Flickering industrial fluorescent,Natural golden-hour sunlight,Stark monochromatic grayscale)!>> creating deep shadows.
 
