@@ -39,6 +39,8 @@ export function parseStageTemplate(template: string, stageIndex: number): Recipe
 
     let type: RecipeFieldType = 'text';
     let options: string[] | undefined;
+    let wildcardName: string | undefined;
+    let wildcardMode: 'browse' | 'random' | undefined;
 
     // Parse type
     if (cleanTypeSpec === 'name') {
@@ -50,6 +52,13 @@ export function parseStageTemplate(template: string, stageIndex: number): Recipe
       const optionsMatch = cleanTypeSpec.match(/select\(([^)]+)\)/);
       if (optionsMatch) {
         options = optionsMatch[1].split(',').map(o => o.trim());
+      }
+    } else if (cleanTypeSpec.startsWith('wildcard(')) {
+      type = 'wildcard' as RecipeFieldType;
+      const wildcardMatch = cleanTypeSpec.match(/^wildcard\(([a-z0-9_]+),\s*(browse|random)\)$/);
+      if (wildcardMatch) {
+        wildcardName = wildcardMatch[1];
+        wildcardMode = wildcardMatch[2] as 'browse' | 'random';
       }
     }
 
@@ -69,6 +78,8 @@ export function parseStageTemplate(template: string, stageIndex: number): Recipe
       type,
       required,
       options,
+      wildcardName,
+      wildcardMode,
       placeholder,
     });
 
@@ -135,7 +146,8 @@ export function buildStagePrompt(
   template: string,
   fields: RecipeField[],
   values: RecipeFieldValues,
-  allUniqueFields?: RecipeField[]
+  allUniqueFields?: RecipeField[],
+  wildcardEntries?: Record<string, string[]>
 ): string {
   let result = template;
 
@@ -164,8 +176,20 @@ export function buildStagePrompt(
   const fieldRegex = /<<([A-Z_0-9]+):([^>]+)>>/g;
   result = result.replace(fieldRegex, (_match, name, typeSpec) => {
     const fieldData = valueByName.get(name);
-    const value = fieldData?.value || '';
+    let value = fieldData?.value || '';
     const isRequired = typeSpec.endsWith('!');
+    const cleanType = isRequired ? typeSpec.slice(0, -1) : typeSpec;
+
+    // If no user value and this is a wildcard field, pick a random entry
+    if (!value && cleanType.startsWith('wildcard(') && wildcardEntries) {
+      const wcMatch = cleanType.match(/^wildcard\(([a-z0-9_]+),\s*(browse|random)\)$/);
+      if (wcMatch) {
+        const entries = wildcardEntries[wcMatch[1]];
+        if (entries && entries.length > 0) {
+          value = entries[Math.floor(Math.random() * entries.length)];
+        }
+      }
+    }
 
     // If optional and empty, return empty string to remove placeholder
     if (!value && !isRequired) {
@@ -209,10 +233,11 @@ export interface RecipePromptResult {
  */
 export function buildRecipePrompts(
   stages: RecipeStage[],
-  values: RecipeFieldValues
+  values: RecipeFieldValues,
+  wildcardEntries?: Record<string, string[]>
 ): RecipePromptResult {
   const uniqueFields = getAllFields(stages);
-  const prompts = stages.map(stage => buildStagePrompt(stage.template, stage.fields, values, uniqueFields));
+  const prompts = stages.map(stage => buildStagePrompt(stage.template, stage.fields, values, uniqueFields, wildcardEntries));
 
   // Collect all reference images from all stages (deduplicated) for backward compatibility
   const referenceImages: string[] = [];

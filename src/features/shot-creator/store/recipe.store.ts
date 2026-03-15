@@ -12,8 +12,10 @@ import {
   parseStageTemplate,
   buildRecipePrompts,
   validateRecipe,
+  getAllFields,
 } from '../types/recipe.types'
 import { recipeService, DbQuickAccessItem } from '../services/recipe.service'
+import { useWildCardStore } from '../store/wildcard.store'
 import { logger } from '@/lib/logger'
 
 interface RecipeState {
@@ -579,7 +581,24 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
   buildActivePrompts: () => {
     const recipe = get().getActiveRecipe()
     if (!recipe) return null
-    return buildRecipePrompts(recipe.stages, get().activeFieldValues)
+
+    // Collect wildcard entries for any wildcard fields
+    const wildcardStore = useWildCardStore.getState()
+    const allFields = getAllFields(recipe.stages)
+    const wildcardEntries: Record<string, string[]> = {}
+
+    for (const field of allFields) {
+      if (field.type === 'wildcard' && field.wildcardName) {
+        const wc = wildcardStore.getWildCardByName(field.wildcardName)
+        if (wc) {
+          wildcardEntries[field.wildcardName] = wc.content
+            .split('\n')
+            .filter((l: string) => l.trim().length > 0)
+        }
+      }
+    }
+
+    return buildRecipePrompts(recipe.stages, get().activeFieldValues, wildcardEntries)
   },
 
   // Categories (local only for now - could be moved to DB later)

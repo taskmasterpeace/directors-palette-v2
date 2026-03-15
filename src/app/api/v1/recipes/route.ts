@@ -20,7 +20,7 @@ import { logger } from '@/lib/logger'
 interface ApiRecipeField {
   name: string
   label: string
-  type: 'name' | 'text' | 'select'
+  type: 'name' | 'text' | 'select' | 'wildcard'
   required: boolean
   options?: string[]
   description?: string

@@ -4,7 +4,7 @@
  */
 
 // Field types for recipe forms
-export type RecipeFieldType = 'name' | 'text' | 'select';
+export type RecipeFieldType = 'name' | 'text' | 'select' | 'wildcard';
 
 // A single field definition parsed from the recipe template
 export interface RecipeField {
@@ -14,6 +14,8 @@ export interface RecipeField {
   type: RecipeFieldType;         // Field type
   required: boolean;             // Whether field must be filled (marked with !)
   options?: string[];            // For 'select' type - dropdown options
+  wildcardName?: string;         // For 'wildcard' type - which wildcard to pull entries from
+  wildcardMode?: 'browse' | 'random'; // For 'wildcard' type - default mode set by recipe creator
   placeholder: string;           // Placeholder text (includes ! if required)
 }
 
