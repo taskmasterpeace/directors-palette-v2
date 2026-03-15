@@ -29,6 +29,7 @@ import { useRecipeStore } from '@/features/shot-creator/store/recipe.store'
 import { useWildCardStore } from '@/features/shot-creator/store/wildcard.store'
 import { useDirectorStore } from '@/features/music-lab/store/director.store'
 import { createLogger } from '@/lib/logger'
+import { GuidedRecipeBuilder } from './recipe-builder/GuidedRecipeBuilder'
 
 
 const log = createLogger('Community')
@@ -76,6 +77,7 @@ export function CommunityPage() {
   const [recipeStages, setRecipeStages] = useState<RecipeStage[]>([])
   const [recipeNote, setRecipeNote] = useState('')
   const [suggestedAspectRatio, setSuggestedAspectRatio] = useState('')
+  const [showRecipeBuilder, setShowRecipeBuilder] = useState(false)
 
   // Separate featured items by type
   const featuredByType = useMemo(() => {
@@ -415,6 +417,13 @@ export function CommunityPage() {
         />
         </div>
         <Button
+          onClick={() => setShowRecipeBuilder(true)}
+          className="bg-amber-600 hover:bg-amber-500 text-sm gap-2 flex-shrink-0"
+        >
+          <Plus className="w-4 h-4" />
+          Create Recipe
+        </Button>
+        <Button
           variant="outline"
           size="sm"
           onClick={refresh}
@@ -699,6 +708,13 @@ export function CommunityPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {showRecipeBuilder && (
+        <GuidedRecipeBuilder
+          open={showRecipeBuilder}
+          onClose={() => setShowRecipeBuilder(false)}
+        />
+      )}
     </div>
   )
 }
