@@ -78,7 +78,7 @@ async function main() {
       submitted_by_name: 'Directors Palette',
       status: 'approved',
       is_featured: false,
-      is_official: true,
+      // is_official: true,  // Uncomment after running migration: 20260315_community_is_official.sql
       add_count: 0,
       rating_sum: 0,
       rating_count: 0,
