@@ -276,10 +276,30 @@ export const useRecipeStore = create<RecipeState>()((set, get) => ({
       set({ activeRecipeId: null, activeFieldValues: {} })
     }
 
+    // Get recipe name before deletion (for library cleanup)
+    const recipe = get().getRecipe(id)
+    const recipeName = recipe?.name
+
     // Delete from database (use admin client for admin operations to bypass RLS)
     const success = await recipeService.deleteRecipe(id, userId, isAdmin)
     if (!success) {
       throw new Error('Failed to delete recipe from database')
+    }
+
+    // Also remove from user_library_items if it was added from community
+    if (recipeName) {
+      try {
+        const { getClient } = await import('@/lib/db/client')
+        const supabase = await getClient()
+        await supabase
+          .from('user_library_items')
+          .delete()
+          .eq('user_id', userId)
+          .eq('type', 'recipe')
+          .eq('name', recipeName)
+      } catch {
+        // Best-effort cleanup — doesn't block deletion
+      }
     }
 
     // Update local state
