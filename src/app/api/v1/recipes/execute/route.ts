@@ -21,6 +21,34 @@ const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 })
 
+/**
+ * Extract URL string from Replicate SDK output.
+ * SDK v1.x returns FileOutput (extends ReadableStream) with toString() returning the URL.
+ */
+function extractReplicateUrl(output: unknown): string | null {
+  if (!output) return null
+  if (typeof output === 'string') return output
+
+  const str = output.toString()
+  if (str.startsWith('http')) return str
+
+  if (typeof output === 'object') {
+    const obj = output as Record<string, unknown>
+    try {
+      if (typeof obj.url === 'function') {
+        const urlResult = obj.url.call(output)
+        if (urlResult?.href) return urlResult.href
+        const urlStr = String(urlResult)
+        if (urlStr.startsWith('http')) return urlStr
+      }
+      if (typeof obj.url === 'string') return obj.url
+      if (typeof obj.href === 'string') return obj.href
+    } catch { /* fallthrough */ }
+  }
+
+  return null
+}
+
 interface RecipeExecuteRequest {
   template: string  // Recipe template with <<FIELD:type>> placeholders
   variables: Record<string, string>  // Values for placeholders
@@ -263,15 +291,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<RecipeExe
       })
 
       // Get the image URL from output
-      // Replicate SDK v1.x returns FileOutput objects — coerce to string to get the URL
-      let imageUrl: string | null = null
-      if (Array.isArray(output) && output.length > 0) {
-        imageUrl = String(output[0])
-      } else if (typeof output === 'string') {
-        imageUrl = output
-      } else if (output && typeof output === 'object' && 'url' in output) {
-        imageUrl = String((output as { url: unknown }).url)
-      }
+      const firstOutput = Array.isArray(output) ? output[0] : output
+      const imageUrl = extractReplicateUrl(firstOutput)
 
       if (!imageUrl) {
         throw new Error(`No image URL in model output for stage ${i + 1}`)

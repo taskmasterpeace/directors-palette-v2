@@ -26,6 +26,41 @@ const replicate = new Replicate({
 })
 
 /**
+ * Extract URL string from Replicate SDK output.
+ * SDK v1.x returns FileOutput (extends ReadableStream) with toString() returning the URL.
+ */
+function extractReplicateUrl(output: unknown): string | null {
+  if (!output) return null
+
+  // Plain string
+  if (typeof output === 'string') return output
+
+  // FileOutput or any object — toString() is the most reliable approach
+  // FileOutput.toString() returns the URL string directly from the closure
+  const str = output.toString()
+  if (str.startsWith('http')) return str
+
+  // Fallback: try .url() method (returns URL object)
+  if (typeof output === 'object') {
+    const obj = output as Record<string, unknown>
+    try {
+      if (typeof obj.url === 'function') {
+        const urlResult = obj.url.call(output)
+        if (urlResult?.href) return urlResult.href
+        const urlStr = String(urlResult)
+        if (urlStr.startsWith('http')) return urlStr
+      }
+      if (typeof obj.url === 'string') return obj.url
+      if (typeof obj.href === 'string') return obj.href
+    } catch {
+      // url() failed, try other approaches
+    }
+  }
+
+  return null
+}
+
+/**
  * Check if a URL is accessible by Replicate and safe to fetch
  * Blocks private/internal IPs to prevent SSRF
  */
@@ -268,25 +303,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
         })
 
         // Get the image URL from output
-        // Replicate SDK v1.x returns FileOutput objects with .url() method
-        let imageUrl: string | null = null
         const firstOutput = Array.isArray(output) ? output[0] : output
-        if (typeof firstOutput === 'string') {
-          imageUrl = firstOutput
-        } else if (firstOutput && typeof firstOutput === 'object') {
-          const fo = firstOutput as Record<string, unknown>
-          if (typeof fo.url === 'function') {
-            const urlResult = (fo.url as () => URL)()
-            imageUrl = urlResult?.href || String(urlResult)
-          } else if (typeof fo.url === 'string') {
-            imageUrl = fo.url
-          } else if (typeof fo.href === 'string') {
-            imageUrl = fo.href
-          } else {
-            const str = String(firstOutput)
-            if (str.startsWith('http')) imageUrl = str
-          }
-        }
+        const imageUrl = extractReplicateUrl(firstOutput)
 
         if (!imageUrl) {
           throw new Error(`No image URL in model output for input ${i + 1}`)
@@ -413,34 +431,16 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
     })
 
     // Get the image URL from output
-    // Replicate SDK v1.x returns FileOutput objects with .url() method or ReadableStream
-    let imageUrl: string | null = null
+    // Replicate SDK v1.x returns FileOutput (extends ReadableStream) with .toString() and .url() methods
     const firstOutput = Array.isArray(output) ? output[0] : output
-    if (typeof firstOutput === 'string') {
-      imageUrl = firstOutput
-    } else if (firstOutput && typeof firstOutput === 'object') {
-      // FileOutput: try .url(), .href, toString(), or iterate known properties
-      const fo = firstOutput as Record<string, unknown>
-      if (typeof fo.url === 'function') {
-        const urlResult = (fo.url as () => URL)()
-        imageUrl = urlResult?.href || String(urlResult)
-      } else if (typeof fo.url === 'string') {
-        imageUrl = fo.url
-      } else if (typeof fo.href === 'string') {
-        imageUrl = fo.href
-      } else {
-        // Last resort: toString() on FileOutput returns the URL in some versions
-        const str = String(firstOutput)
-        if (str.startsWith('http')) imageUrl = str
-      }
-    }
+    const imageUrl = extractReplicateUrl(firstOutput)
 
     if (!imageUrl) {
       logger.generation.error('Could not extract image URL from Replicate output', {
         outputType: typeof output,
         isArray: Array.isArray(output),
         firstOutputType: typeof firstOutput,
-        firstOutputKeys: firstOutput && typeof firstOutput === 'object' ? Object.keys(firstOutput as object) : [],
+        firstOutputConstructor: firstOutput?.constructor?.name,
         firstOutputStr: String(firstOutput).slice(0, 200),
       })
       throw new Error('No image URL in model output')
