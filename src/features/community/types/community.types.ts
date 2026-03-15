@@ -105,6 +105,7 @@ export interface CommunityItem {
 
   // Featured
   isFeatured: boolean
+  isOfficial: boolean
 
   // Computed
   averageRating: number
@@ -137,6 +138,7 @@ export interface CommunityItemRow {
   rating_sum: number
   rating_count: number
   is_featured: boolean
+  is_official: boolean
   created_at: string
   updated_at: string
 }
@@ -321,6 +323,7 @@ export function rowToCommunityItem(row: CommunityItemRow): CommunityItem {
     ratingSum: row.rating_sum,
     ratingCount: row.rating_count,
     isFeatured: row.is_featured,
+    isOfficial: row.is_official ?? false,
     averageRating: row.rating_count > 0 ? row.rating_sum / row.rating_count : 0,
     content: row.content,
     createdAt: row.created_at,

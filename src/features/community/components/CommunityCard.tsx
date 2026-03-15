@@ -315,9 +315,16 @@ export function CommunityCard({
       </div>
 
       {/* Title */}
-      <h3 className="font-medium text-sm mb-1 line-clamp-1 group-hover:text-primary transition-colors">
-        {item.name}
-      </h3>
+      <div className="flex items-center gap-1.5 mb-1">
+        <h3 className="font-medium text-sm line-clamp-1 group-hover:text-primary transition-colors">
+          {item.name}
+        </h3>
+        {item.isOfficial && (
+          <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-amber-500/40 text-amber-400 shrink-0">
+            Official
+          </Badge>
+        )}
+      </div>
 
       {/* Description */}
       {item.description && (
