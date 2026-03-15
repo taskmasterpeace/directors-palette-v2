@@ -268,14 +268,24 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
         })
 
         // Get the image URL from output
-        // Replicate SDK v1.x returns FileOutput objects — coerce to string to get the URL
+        // Replicate SDK v1.x returns FileOutput objects with .url() method
         let imageUrl: string | null = null
-        if (Array.isArray(output) && output.length > 0) {
-          imageUrl = String(output[0])
-        } else if (typeof output === 'string') {
-          imageUrl = output
-        } else if (output && typeof output === 'object' && 'url' in output) {
-          imageUrl = String((output as { url: unknown }).url)
+        const firstOutput = Array.isArray(output) ? output[0] : output
+        if (typeof firstOutput === 'string') {
+          imageUrl = firstOutput
+        } else if (firstOutput && typeof firstOutput === 'object') {
+          const fo = firstOutput as Record<string, unknown>
+          if (typeof fo.url === 'function') {
+            const urlResult = (fo.url as () => URL)()
+            imageUrl = urlResult?.href || String(urlResult)
+          } else if (typeof fo.url === 'string') {
+            imageUrl = fo.url
+          } else if (typeof fo.href === 'string') {
+            imageUrl = fo.href
+          } else {
+            const str = String(firstOutput)
+            if (str.startsWith('http')) imageUrl = str
+          }
         }
 
         if (!imageUrl) {
@@ -403,17 +413,36 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
     })
 
     // Get the image URL from output
-    // Replicate SDK v1.x returns FileOutput objects — coerce to string to get the URL
+    // Replicate SDK v1.x returns FileOutput objects with .url() method or ReadableStream
     let imageUrl: string | null = null
-    if (Array.isArray(output) && output.length > 0) {
-      imageUrl = String(output[0])
-    } else if (typeof output === 'string') {
-      imageUrl = output
-    } else if (output && typeof output === 'object' && 'url' in output) {
-      imageUrl = String((output as { url: unknown }).url)
+    const firstOutput = Array.isArray(output) ? output[0] : output
+    if (typeof firstOutput === 'string') {
+      imageUrl = firstOutput
+    } else if (firstOutput && typeof firstOutput === 'object') {
+      // FileOutput: try .url(), .href, toString(), or iterate known properties
+      const fo = firstOutput as Record<string, unknown>
+      if (typeof fo.url === 'function') {
+        const urlResult = (fo.url as () => URL)()
+        imageUrl = urlResult?.href || String(urlResult)
+      } else if (typeof fo.url === 'string') {
+        imageUrl = fo.url
+      } else if (typeof fo.href === 'string') {
+        imageUrl = fo.href
+      } else {
+        // Last resort: toString() on FileOutput returns the URL in some versions
+        const str = String(firstOutput)
+        if (str.startsWith('http')) imageUrl = str
+      }
     }
 
     if (!imageUrl) {
+      logger.generation.error('Could not extract image URL from Replicate output', {
+        outputType: typeof output,
+        isArray: Array.isArray(output),
+        firstOutputType: typeof firstOutput,
+        firstOutputKeys: firstOutput && typeof firstOutput === 'object' ? Object.keys(firstOutput as object) : [],
+        firstOutputStr: String(firstOutput).slice(0, 200),
+      })
       throw new Error('No image URL in model output')
     }
 
