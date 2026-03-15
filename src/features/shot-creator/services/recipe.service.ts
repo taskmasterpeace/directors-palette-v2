@@ -524,24 +524,26 @@ class RecipeService {
   async initializeSystemRecipes(): Promise<void> {
     const supabase = await getRecipeClient()
 
-    // Check if system recipes already exist
+    // Check if user already has any recipes (system or user-owned)
     const { data: existing } = await supabase
       .from('user_recipes')
       .select('id')
-      .eq('is_system', true)
       .limit(1)
 
     if (existing && existing.length > 0) {
-      logger.shotCreator.info('System recipes already initialized')
+      logger.shotCreator.info('User already has recipes, skipping starter seed')
       return
     }
 
-    logger.shotCreator.info('Initializing system recipes...')
+    logger.shotCreator.info('Seeding 3 starter recipes for new user...')
 
-    // Insert sample recipes as system recipes (no user_id)
-    for (const sample of SAMPLE_RECIPES) {
+    // Only seed the 3 starter recipes from SAMPLE_RECIPES
+    const STARTER_NAMES = ['Battle Rap', 'Character Sheet', 'Product Photography']
+    const starters = SAMPLE_RECIPES.filter(r => STARTER_NAMES.includes(r.name))
+
+    for (const sample of starters) {
       const dbRecipe = {
-        user_id: null, // System recipes have no owner
+        user_id: null,
         name: sample.name,
         description: sample.description || null,
         recipe_note: sample.recipeNote || null,
@@ -549,6 +551,8 @@ class RecipeService {
           id: stage.id,
           order: stage.order,
           template: stage.template,
+          type: stage.type || 'generation',
+          toolId: stage.toolId,
           fields: [],
           referenceImages: stage.referenceImages,
         })),
@@ -566,13 +570,13 @@ class RecipeService {
         .insert(dbRecipe)
 
       if (error) {
-        logger.shotCreator.error('Error inserting system recipe "[name]"', { name: sample.name, error })
+        logger.shotCreator.error('Error inserting starter recipe', { name: sample.name, error })
       } else {
-        logger.shotCreator.info('Inserted system recipe', { name: sample.name })
+        logger.shotCreator.info('Inserted starter recipe', { name: sample.name })
       }
     }
 
-    logger.shotCreator.info('System recipes initialization complete')
+    logger.shotCreator.info('Starter recipes initialization complete')
   }
 }
 
