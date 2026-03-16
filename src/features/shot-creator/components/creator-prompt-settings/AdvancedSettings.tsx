@@ -10,20 +10,115 @@ import {
 } from '@/components/ui/select'
 import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
-import React, { useCallback, useMemo } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useShotCreatorSettings } from "../../hooks"
 import { getModelConfig, ModelId } from '@/config'
 import { Button } from "@/components/ui/button"
-import { Shuffle } from "lucide-react"
+import { Shuffle, Save, Trash2 } from "lucide-react"
 import { useLoraStore } from "../../store/lora.store"
 import { useShotCreatorStore } from "../../store/shot-creator.store"
 import { useShallow } from "zustand/react/shallow"
+import { ShotCreatorSettings } from "../../types"
+
+// ── Preset system (localStorage) ─────────────────────────────────────────
+interface SettingsPreset {
+    id: string
+    name: string
+    settings: Partial<ShotCreatorSettings>
+    createdAt: number
+}
+
+const PRESETS_KEY = 'dp-shot-creator-presets'
+
+function loadPresets(): SettingsPreset[] {
+    try {
+        const raw = localStorage.getItem(PRESETS_KEY)
+        return raw ? JSON.parse(raw) : []
+    } catch { return [] }
+}
+
+function savePresets(presets: SettingsPreset[]) {
+    localStorage.setItem(PRESETS_KEY, JSON.stringify(presets))
+}
+
+// ── Default label (clickable reset) ──────────────────────────────────────
+function DefaultLabel({ value, defaultValue, onReset }: {
+    value: number | undefined
+    defaultValue: number
+    onReset: () => void
+}) {
+    const isDefault = value === undefined || value === defaultValue
+    return (
+        <button
+            type="button"
+            onClick={onReset}
+            className={`text-[10px] tabular-nums transition-colors ${
+                isDefault
+                    ? 'text-muted-foreground/50 cursor-default'
+                    : 'text-cyan-400/70 hover:text-cyan-400 cursor-pointer'
+            }`}
+            disabled={isDefault}
+            title={isDefault ? `At default (${defaultValue})` : `Reset to default (${defaultValue})`}
+        >
+            {isDefault ? `default` : `reset to ${defaultValue}`}
+        </button>
+    )
+}
 
 const AdvancedSettings = () => {
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
     const selectedModel = shotCreatorSettings.model || 'nano-banana-2'
     const modelConfig = useMemo(() => getModelConfig(selectedModel as ModelId), [selectedModel])
     const referenceImageCount = useShotCreatorStore(s => s.shotCreatorReferenceImages.length)
+
+    // ── Presets ───────────────────────────────────────────────────────────
+    const [presets, setPresets] = useState<SettingsPreset[]>([])
+    const [showSaveInput, setShowSaveInput] = useState(false)
+    const [presetName, setPresetName] = useState('')
+
+    useEffect(() => { setPresets(loadPresets()) }, [])
+
+    const handleSavePreset = useCallback(() => {
+        if (!presetName.trim()) return
+        const preset: SettingsPreset = {
+            id: crypto.randomUUID(),
+            name: presetName.trim(),
+            settings: {
+                guidanceScale: shotCreatorSettings.guidanceScale,
+                img2imgStrength: shotCreatorSettings.img2imgStrength,
+                loraScale: shotCreatorSettings.loraScale,
+                safetyFilterLevel: shotCreatorSettings.safetyFilterLevel,
+                googleSearch: shotCreatorSettings.googleSearch,
+                imageSearch: shotCreatorSettings.imageSearch,
+                sequentialGeneration: shotCreatorSettings.sequentialGeneration,
+                maxImages: shotCreatorSettings.maxImages,
+                outputFormat: shotCreatorSettings.outputFormat,
+                batchCount: shotCreatorSettings.batchCount,
+            },
+            createdAt: Date.now(),
+        }
+        const updated = [...presets, preset]
+        setPresets(updated)
+        savePresets(updated)
+        setPresetName('')
+        setShowSaveInput(false)
+    }, [presetName, presets, shotCreatorSettings])
+
+    const handleLoadPreset = useCallback((presetId: string) => {
+        const preset = presets.find(p => p.id === presetId)
+        if (!preset) return
+        // Only apply non-undefined values from preset
+        const clean = Object.fromEntries(
+            Object.entries(preset.settings).filter(([, v]) => v !== undefined)
+        )
+        updateSettings(clean)
+    }, [presets, updateSettings])
+
+    const handleDeletePreset = useCallback((presetId: string) => {
+        const updated = presets.filter(p => p.id !== presetId)
+        setPresets(updated)
+        savePresets(updated)
+    }, [presets])
 
     // Generate random seed
     const generateRandomSeed = useCallback(() => {
@@ -64,8 +159,88 @@ const AdvancedSettings = () => {
     const activeLoras = useLoraStore(useShallow((s) => s.getActiveLoras()))
     const activeLora = activeLoras.length > 0 ? activeLoras[0] : null
 
+    // Default values for sliders
+    const guidanceDefault = activeLora ? 1 : 0
+    const img2imgDefault = 0.6
+    const loraScaleDefault = 1.25
+    const maxImagesDefault = 3
+
     return (
         <div className="space-y-4 border-t border-border pt-4">
+            {/* ── Presets ────────────────────────────────────────────── */}
+            {presets.length > 0 || showSaveInput ? (
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-xs text-muted-foreground uppercase tracking-wider">Presets</Label>
+                        {!showSaveInput && (
+                            <button
+                                type="button"
+                                onClick={() => setShowSaveInput(true)}
+                                className="text-[10px] text-cyan-400/70 hover:text-cyan-400 transition-colors"
+                            >
+                                + Save current
+                            </button>
+                        )}
+                    </div>
+                    {showSaveInput && (
+                        <div className="flex gap-1.5">
+                            <Input
+                                value={presetName}
+                                onChange={(e) => setPresetName(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleSavePreset()
+                                    if (e.key === 'Escape') { setShowSaveInput(false); setPresetName('') }
+                                }}
+                                placeholder="Preset name..."
+                                className="h-7 text-xs bg-card border-border text-white"
+                                autoFocus
+                            />
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleSavePreset}
+                                disabled={!presetName.trim()}
+                                className="h-7 px-2 bg-card border-border hover:bg-secondary"
+                            >
+                                <Save className="w-3 h-3" />
+                            </Button>
+                        </div>
+                    )}
+                    <div className="flex flex-wrap gap-1.5">
+                        {presets.map(p => (
+                            <div key={p.id} className="group flex items-center gap-0.5">
+                                <button
+                                    type="button"
+                                    onClick={() => handleLoadPreset(p.id)}
+                                    className="text-xs px-2 py-0.5 rounded-md bg-card border border-border hover:border-cyan-400/50 hover:text-cyan-400 transition-colors text-muted-foreground"
+                                >
+                                    {p.name}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleDeletePreset(p.id)}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground/50 hover:text-red-400 p-0.5"
+                                    title="Delete preset"
+                                >
+                                    <Trash2 className="w-2.5 h-2.5" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <div className="flex items-center justify-between">
+                    <Label className="text-xs text-muted-foreground uppercase tracking-wider">Settings</Label>
+                    <button
+                        type="button"
+                        onClick={() => setShowSaveInput(true)}
+                        className="text-[10px] text-muted-foreground/50 hover:text-cyan-400/70 transition-colors"
+                    >
+                        Save as preset
+                    </button>
+                </div>
+            )}
+
             {/* Seed - for models that support it */}
             {supportsSeed && (
                 <div className="space-y-2">
@@ -160,17 +335,20 @@ const AdvancedSettings = () => {
             {supportsGuidanceScale && (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <Label className="text-sm text-foreground">
-                            {referenceImageCount > 0 && selectedModel === 'z-image-turbo'
-                                ? 'Prompt Influence'
-                                : 'Prompt Influence'}
-                        </Label>
+                        <div className="flex items-center gap-2">
+                            <Label className="text-sm text-foreground">Prompt Influence</Label>
+                            <DefaultLabel
+                                value={shotCreatorSettings.guidanceScale}
+                                defaultValue={guidanceDefault}
+                                onReset={() => updateSettings({ guidanceScale: guidanceDefault })}
+                            />
+                        </div>
                         <span className="text-sm text-muted-foreground font-medium tabular-nums">
-                            {shotCreatorSettings.guidanceScale ?? (activeLora ? 1 : 0)}
+                            {shotCreatorSettings.guidanceScale ?? guidanceDefault}
                         </span>
                     </div>
                     <Slider
-                        value={[shotCreatorSettings.guidanceScale ?? (activeLora ? 1 : 0)]}
+                        value={[shotCreatorSettings.guidanceScale ?? guidanceDefault]}
                         onValueChange={([val]) => updateSettings({ guidanceScale: val })}
                         min={0}
                         max={20}
@@ -190,13 +368,20 @@ const AdvancedSettings = () => {
             {selectedModel === 'z-image-turbo' && referenceImageCount > 0 && (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <Label className="text-sm text-foreground">Image Transform</Label>
+                        <div className="flex items-center gap-2">
+                            <Label className="text-sm text-foreground">Image Transform</Label>
+                            <DefaultLabel
+                                value={shotCreatorSettings.img2imgStrength}
+                                defaultValue={img2imgDefault}
+                                onReset={() => updateSettings({ img2imgStrength: img2imgDefault })}
+                            />
+                        </div>
                         <span className="text-sm text-cyan-400 font-medium tabular-nums">
-                            {shotCreatorSettings.img2imgStrength ?? 0.6}
+                            {shotCreatorSettings.img2imgStrength ?? img2imgDefault}
                         </span>
                     </div>
                     <Slider
-                        value={[shotCreatorSettings.img2imgStrength ?? 0.6]}
+                        value={[shotCreatorSettings.img2imgStrength ?? img2imgDefault]}
                         onValueChange={([val]) => updateSettings({ img2imgStrength: val })}
                         min={0}
                         max={1}
@@ -213,13 +398,20 @@ const AdvancedSettings = () => {
             {selectedModel === 'qwen-image-edit' && (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <Label className="text-sm text-foreground">Camera LoRA Scale</Label>
+                        <div className="flex items-center gap-2">
+                            <Label className="text-sm text-foreground">Camera LoRA Scale</Label>
+                            <DefaultLabel
+                                value={shotCreatorSettings.loraScale}
+                                defaultValue={loraScaleDefault}
+                                onReset={() => updateSettings({ loraScale: loraScaleDefault })}
+                            />
+                        </div>
                         <span className="text-sm text-cyan-400 font-medium tabular-nums">
-                            {shotCreatorSettings.loraScale ?? 1.25}
+                            {shotCreatorSettings.loraScale ?? loraScaleDefault}
                         </span>
                     </div>
                     <Slider
-                        value={[shotCreatorSettings.loraScale ?? 1.25]}
+                        value={[shotCreatorSettings.loraScale ?? loraScaleDefault]}
                         onValueChange={([val]) => updateSettings({ loraScale: val })}
                         min={0}
                         max={2}
@@ -242,7 +434,7 @@ const AdvancedSettings = () => {
                             onCheckedChange={(checked) => updateSettings({
                                 sequentialGeneration: checked === true,
                                 // Reset maxImages when disabling
-                                maxImages: checked === true ? (shotCreatorSettings.maxImages || 3) : undefined
+                                maxImages: checked === true ? (shotCreatorSettings.maxImages || maxImagesDefault) : undefined
                             })}
                         />
                         <Label htmlFor="sequentialGeneration" className="text-sm text-foreground cursor-pointer">
@@ -269,13 +461,20 @@ const AdvancedSettings = () => {
                     {shotCreatorSettings.sequentialGeneration && supportsMaxImages && (
                         <div className="space-y-2 pl-6">
                             <div className="flex items-center justify-between">
-                                <Label className="text-sm text-foreground">Max Images</Label>
+                                <div className="flex items-center gap-2">
+                                    <Label className="text-sm text-foreground">Max Images</Label>
+                                    <DefaultLabel
+                                        value={shotCreatorSettings.maxImages}
+                                        defaultValue={maxImagesDefault}
+                                        onReset={() => updateSettings({ maxImages: maxImagesDefault })}
+                                    />
+                                </div>
                                 <span className="text-sm text-amber-400 font-medium">
-                                    {shotCreatorSettings.maxImages || 3}
+                                    {shotCreatorSettings.maxImages || maxImagesDefault}
                                 </span>
                             </div>
                             <Slider
-                                value={[shotCreatorSettings.maxImages || 3]}
+                                value={[shotCreatorSettings.maxImages || maxImagesDefault]}
                                 onValueChange={([val]) => updateSettings({ maxImages: val })}
                                 min={2}
                                 max={15}
