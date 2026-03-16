@@ -177,6 +177,28 @@ export const COMMUNITY_LORAS: LoraItem[] = [
         defaultLoraScale: 0.95,
         createdAt: 0,
     },
+    {
+        id: 'action-figure',
+        name: 'Action Figure',
+        type: 'style',
+        referenceTag: 'action-figure',
+        triggerWord: 'act01nfig stle action figure',
+        weightsUrl: `${LORA_STORAGE_BASE}/action-figure/action_figure_lora_weights.safetensors`,
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 1.0,
+        createdAt: 0,
+    },
+    {
+        id: 'dc-animation',
+        name: 'DC Animation',
+        type: 'style',
+        referenceTag: 'dc-animation',
+        triggerWord: 'dcan1me style American animation',
+        weightsUrl: `${LORA_STORAGE_BASE}/dc-animation/dc_animation_lora_weights.safetensors`,
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 1.0,
+        createdAt: 0,
+    },
 ]
 
 export const useLoraStore = create<LoraStore>()(
