@@ -60,12 +60,15 @@ export function RecipeFormFields({
   const renderSelectOptions = (options?: string[]) => {
     if (!options) return null
 
+    // Filter out empty strings — Radix Select crashes on empty value
+    const safeOptions = options.filter(opt => opt !== '')
+
     // Check if any option uses the ---Header--- pattern
-    const hasHeaders = options.some(opt => opt.startsWith('---') && opt.endsWith('---'))
+    const hasHeaders = safeOptions.some(opt => opt.startsWith('---') && opt.endsWith('---'))
 
     if (!hasHeaders) {
       // Flat list — no grouping
-      return options.map((opt) => (
+      return safeOptions.map((opt) => (
         <SelectItem key={opt} value={opt} className="text-sm">
           {opt}
         </SelectItem>
@@ -76,7 +79,7 @@ export function RecipeFormFields({
     const groups: { label: string; items: string[] }[] = []
     let currentGroup: { label: string; items: string[] } | null = null
 
-    for (const opt of options) {
+    for (const opt of safeOptions) {
       if (opt.startsWith('---') && opt.endsWith('---')) {
         // This is a category header
         currentGroup = { label: opt.slice(3, -3).trim(), items: [] }
