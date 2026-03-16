@@ -209,17 +209,17 @@ const AdvancedSettings = () => {
                 </div>
             )}
 
-            {/* LoRA Scale - only for qwen-image-edit (z-image-turbo uses per-LoRA scales in the LoRA section) */}
-            {activeLora && selectedModel !== 'z-image-turbo' && (
+            {/* Camera LoRA Scale - only for qwen-image-edit (auto-injected camera angle LoRA) */}
+            {selectedModel === 'qwen-image-edit' && (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <Label className="text-sm text-foreground">LoRA Scale</Label>
+                        <Label className="text-sm text-foreground">Camera LoRA Scale</Label>
                         <span className="text-sm text-cyan-400 font-medium tabular-nums">
-                            {shotCreatorSettings.loraScale ?? activeLora.defaultLoraScale}
+                            {shotCreatorSettings.loraScale ?? 1.25}
                         </span>
                     </div>
                     <Slider
-                        value={[shotCreatorSettings.loraScale ?? activeLora.defaultLoraScale]}
+                        value={[shotCreatorSettings.loraScale ?? 1.25]}
                         onValueChange={([val]) => updateSettings({ loraScale: val })}
                         min={0}
                         max={2}
@@ -227,7 +227,7 @@ const AdvancedSettings = () => {
                         className="w-full"
                     />
                     <p className="text-xs text-muted-foreground">
-                        Strength of the LoRA effect (0 = none, 1 = full, 2 = exaggerated)
+                        Strength of the camera angle LoRA (0 = none, 1.25 = default, 2 = exaggerated)
                     </p>
                 </div>
             )}
