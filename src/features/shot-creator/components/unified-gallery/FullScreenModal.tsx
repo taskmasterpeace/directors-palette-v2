@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import Image from 'next/image'
-import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, Eraser, Clapperboard, Layers, Share2, RefreshCw, Ratio, Box, Sliders } from 'lucide-react'
+import { X, Copy, Download, ChevronLeft, ChevronRight, FileText, Link, Tag, Sparkles, Film, Layout, Save, Trash2, Info, Grid3x3, Eraser, Clapperboard, Layers, Share2, RefreshCw, Ratio, Box, Sliders, Hash } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 import { GeneratedImage } from "../../store/unified-gallery-store"
 import { useIsMobile } from '@/hooks/useMediaQuery'
@@ -328,7 +328,8 @@ function FullscreenModal({
                                 <div className="flex items-center gap-2">
                                     <Sliders className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
                                     <span className="text-white text-sm">{fullscreenImage.settings.loraName}</span>
-                                    {fullscreenImage.settings.loraScale != null && (
+                                    {/* Show scale suffix only for single LoRA (multi-LoRA has scales embedded in name) */}
+                                    {fullscreenImage.settings.loraScale != null && !fullscreenImage.settings.loraName.includes(' + ') && (
                                         <span className="text-muted-foreground text-xs">({fullscreenImage.settings.loraScale}x)</span>
                                     )}
                                 </div>
@@ -362,6 +363,17 @@ function FullscreenModal({
                                             <span className="text-emerald-400 text-sm font-medium">B-Roll</span>
                                         </>
                                     )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Seed */}
+                        {fullscreenImage.settings?.seed != null && (
+                            <div className="mb-4">
+                                <h4 className="text-muted-foreground text-xs uppercase mb-2">Seed</h4>
+                                <div className="flex items-center gap-2">
+                                    <Hash className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                                    <span className="text-white text-sm font-mono">{fullscreenImage.settings.seed}</span>
                                 </div>
                             </div>
                         )}

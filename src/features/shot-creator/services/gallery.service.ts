@@ -132,7 +132,7 @@ export class GalleryService {
         const resolution = (modelSettings.resolution as string) ||
             (modelSettings.size as string) ||
             '1024x1024'
-        const seed = (modelSettings.seed as number) || undefined
+        const seed = (modelSettings.seed as number) || (metadata as { fal_seed?: number }).fal_seed || undefined
         const customWidth = (modelSettings.width as number) ||
             (modelSettings.custom_width as number) ||
             undefined
@@ -173,10 +173,16 @@ export class GalleryService {
         const isGrid = (metadata as { isGrid?: boolean }).isGrid || undefined
         const gridType = (metadata as { gridType?: 'angles' | 'broll' }).gridType || undefined
 
-        // Extract LoRA metadata
-        const loraName = (modelSettings.loraName as string) || undefined
+        // Extract LoRA metadata — build combined name+scale string for multi-LoRA display
         const loraScalesArr = modelSettings.loraScales as number[] | undefined
         const loraScale = (modelSettings.loraScale as number) || (loraScalesArr?.[0]) || undefined
+        const rawLoraName = (modelSettings.loraName as string) || undefined
+        // For multi-LoRA, embed individual scales into the name (e.g., "Nava 0.8x + Pixar 1.2x")
+        let loraName = rawLoraName
+        if (rawLoraName && loraScalesArr && loraScalesArr.length > 1 && rawLoraName.includes(' + ')) {
+            const names = rawLoraName.split(' + ')
+            loraName = names.map((n, i) => `${n} ${loraScalesArr[i] ?? 1.0}x`).join(' + ')
+        }
 
         // Extract img2img strength
         const img2imgStrength = (modelSettings.img2imgStrength as number) || undefined
