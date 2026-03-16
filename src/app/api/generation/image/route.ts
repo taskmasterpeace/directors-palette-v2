@@ -28,8 +28,8 @@ async function callFalAiImg2ImgLora(params: {
   imageUrl: string;
   strength: number;
   loras: { path: string; scale: number }[];
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   outputFormat: string;
   numInferenceSteps?: number;
   numImages?: number;
@@ -37,17 +37,22 @@ async function callFalAiImg2ImgLora(params: {
   const falKey = process.env.FAL_KEY;
   if (!falKey) throw new Error('FAL_KEY not configured');
 
-  const body = {
+  const body: Record<string, unknown> = {
     prompt: params.prompt,
     image_url: params.imageUrl,
     strength: params.strength,
     loras: params.loras,
-    image_size: { width: params.width, height: params.height },
     output_format: params.outputFormat === 'jpg' ? 'jpeg' : params.outputFormat,
     num_inference_steps: params.numInferenceSteps || 8,
     num_images: Math.min(params.numImages || 1, 4),
     enable_safety_checker: false,
   };
+
+  // Only set image_size when explicit dimensions are provided
+  // Omitting it lets fal.ai use "auto" (match input image dimensions)
+  if (params.width && params.height) {
+    body.image_size = { width: params.width, height: params.height };
+  }
 
   lognog.devDebug('Calling fal.ai img2img+lora', {
     prompt_length: params.prompt.length,
@@ -687,10 +692,10 @@ export async function POST(request: NextRequest) {
           scale: loraScales[i] ?? 1.0,
         }));
 
-        // Get dimensions from aspect ratio
+        // Get dimensions from aspect ratio (omit for match_input_image → fal.ai auto-matches)
         const settings = modelSettings as Record<string, unknown>;
         const aspectRatio = (settings.aspectRatio as string) || '16:9';
-        const dimensions = ASPECT_RATIO_SIZES[aspectRatio] || { width: 1280, height: 720 };
+        const dimensions = aspectRatio !== 'match_input_image' ? ASPECT_RATIO_SIZES[aspectRatio] : undefined;
 
         const falStart = Date.now();
         const falResult = await callFalAiImg2ImgLora({
@@ -698,8 +703,8 @@ export async function POST(request: NextRequest) {
           imageUrl: falImageUrl,
           strength: (settings.img2imgStrength as number) ?? 0.6,
           loras: falLoras,
-          width: Math.min(dimensions.width, 2048),
-          height: Math.min(dimensions.height, 2048),
+          width: dimensions ? Math.min(dimensions.width, 2048) : undefined,
+          height: dimensions ? Math.min(dimensions.height, 2048) : undefined,
           outputFormat: (settings.outputFormat as string) || 'jpg',
         });
         const falLatency = Date.now() - falStart;

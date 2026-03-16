@@ -209,8 +209,8 @@ const AdvancedSettings = () => {
                 </div>
             )}
 
-            {/* LoRA Scale - only when LoRA is active */}
-            {activeLora && (
+            {/* LoRA Scale - only for qwen-image-edit (z-image-turbo uses per-LoRA scales in the LoRA section) */}
+            {activeLora && selectedModel !== 'z-image-turbo' && (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <Label className="text-sm text-foreground">LoRA Scale</Label>
