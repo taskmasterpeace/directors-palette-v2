@@ -175,7 +175,11 @@ export class GalleryService {
 
         // Extract LoRA metadata
         const loraName = (modelSettings.loraName as string) || undefined
-        const loraScale = (modelSettings.loraScale as number) || undefined
+        const loraScalesArr = modelSettings.loraScales as number[] | undefined
+        const loraScale = (modelSettings.loraScale as number) || (loraScalesArr?.[0]) || undefined
+
+        // Extract img2img strength
+        const img2imgStrength = (modelSettings.img2imgStrength as number) || undefined
 
         return {
             id: item.id,
@@ -195,6 +199,7 @@ export class GalleryService {
                 aspect_ratio: aspectRatio,
                 loraName,
                 loraScale,
+                img2imgStrength,
             },
             metadata: {
                 createdAt: item.created_at,

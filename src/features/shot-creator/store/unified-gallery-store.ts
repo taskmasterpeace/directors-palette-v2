@@ -28,6 +28,7 @@ export interface GeneratedImage {
     aspect_ratio?: string
     loraName?: string
     loraScale?: number
+    img2imgStrength?: number
   }
   metadata: {
     createdAt: string

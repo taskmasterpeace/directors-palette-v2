@@ -240,6 +240,8 @@ const ImageCardComponent = ({
         resolution={image.settings.resolution || '1024x1024'}
         loraName={image.settings.loraName}
         loraScale={image.settings.loraScale}
+        img2imgStrength={image.settings.img2imgStrength}
+        gridType={image.metadata?.gridType}
         gridSize={gridSize}
       />
 

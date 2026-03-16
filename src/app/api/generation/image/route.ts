@@ -32,6 +32,7 @@ async function callFalAiImg2ImgLora(params: {
   height: number;
   outputFormat: string;
   numInferenceSteps?: number;
+  numImages?: number;
 }): Promise<{ images: { url: string; width: number; height: number }[]; seed: number }> {
   const falKey = process.env.FAL_KEY;
   if (!falKey) throw new Error('FAL_KEY not configured');
@@ -44,6 +45,7 @@ async function callFalAiImg2ImgLora(params: {
     image_size: { width: params.width, height: params.height },
     output_format: params.outputFormat === 'jpg' ? 'jpeg' : params.outputFormat,
     num_inference_steps: params.numInferenceSteps || 8,
+    num_images: Math.min(params.numImages || 1, 4),
     enable_safety_checker: false,
   };
 
@@ -712,22 +714,17 @@ export async function POST(request: NextRequest) {
           user_email: user.email,
         });
 
-        // Download result from fal.ai and upload to Supabase Storage
-        const falOutputUrl = falResult.images[0]?.url;
-        if (!falOutputUrl) {
-          return NextResponse.json({ error: 'fal.ai returned no image' }, { status: 500 });
+        // Download results from fal.ai and upload to Supabase Storage
+        if (!falResult.images?.length) {
+          return NextResponse.json({ error: 'fal.ai returned no images' }, { status: 500 });
         }
 
-        const falPredictionId = `fal_${Date.now()}_${falResult.seed || Math.random().toString(36).slice(2, 8)}`;
-        const { buffer } = await StorageService.downloadAsset(falOutputUrl);
         const outputFormat = (settings.outputFormat as string) || 'jpg';
         const ext = outputFormat === 'jpeg' ? 'jpg' : outputFormat;
         const mimeType = `image/${outputFormat === 'jpg' ? 'jpeg' : outputFormat}`;
-        const { publicUrl, storagePath, fileSize } = await StorageService.uploadToStorage(
-          buffer, user.id, falPredictionId, ext, mimeType
-        );
+        const basePredictionId = `fal_${Date.now()}_${falResult.seed || Math.random().toString(36).slice(2, 8)}`;
 
-        // Build metadata
+        // Build metadata (shared across all images in batch)
         const metadata = ImageGenerationService.buildMetadata({
           model: model as ImageModel,
           prompt,
@@ -737,59 +734,82 @@ export async function POST(request: NextRequest) {
           recipeId,
           recipeName,
         });
-        const finalMetadata = extraMetadata
+        const baseMetadata = extraMetadata
           ? { ...metadata, ...extraMetadata, provider: 'fal', fal_seed: falResult.seed }
           : { ...metadata, provider: 'fal', fal_seed: falResult.seed };
 
-        // Create gallery entry (completed immediately — fal.ai is synchronous)
-        const { data: gallery, error: galleryError } = await supabase
-          .from('gallery')
-          .insert({
-            user_id: user.id,
-            prediction_id: falPredictionId,
-            generation_type: 'image',
-            status: 'completed',
-            public_url: publicUrl,
-            storage_path: storagePath,
-            file_size: fileSize,
-            mime_type: mimeType,
-            metadata: finalMetadata as Database['public']['Tables']['gallery']['Insert']['metadata'],
-            ...(folderId && { folder_id: folderId }),
-          })
-          .select()
-          .single();
+        const modelConfig = getModelConfig(model as ImageModel);
+        let firstGalleryId = '';
+        let firstPublicUrl = '';
 
-        if (galleryError || !gallery) {
-          lognog.devError('Gallery creation error (fal.ai)', { error: galleryError?.message });
-          return NextResponse.json({ error: 'Failed to create gallery entry' }, { status: 500 });
+        // Process each image from fal.ai response
+        for (let i = 0; i < falResult.images.length; i++) {
+          const falImg = falResult.images[i];
+          if (!falImg?.url) continue;
+
+          const imgPredictionId = falResult.images.length > 1 ? `${basePredictionId}_img_${i}` : basePredictionId;
+          const { buffer } = await StorageService.downloadAsset(falImg.url);
+          const { publicUrl, storagePath, fileSize } = await StorageService.uploadToStorage(
+            buffer, user.id, imgPredictionId, ext, mimeType
+          );
+
+          if (i === 0) {
+            firstPublicUrl = publicUrl;
+          }
+
+          const imgMetadata = falResult.images.length > 1
+            ? { ...baseMetadata, image_index: i, total_images: falResult.images.length }
+            : baseMetadata;
+
+          const { data: gallery, error: galleryError } = await supabase
+            .from('gallery')
+            .insert({
+              user_id: user.id,
+              prediction_id: imgPredictionId,
+              generation_type: 'image',
+              status: 'completed',
+              public_url: publicUrl,
+              storage_path: storagePath,
+              file_size: fileSize,
+              mime_type: mimeType,
+              metadata: imgMetadata as Database['public']['Tables']['gallery']['Insert']['metadata'],
+              ...(folderId && { folder_id: folderId }),
+            })
+            .select()
+            .single();
+
+          if (galleryError || !gallery) {
+            lognog.devError(`Gallery creation error (fal.ai image ${i})`, { error: galleryError?.message });
+            continue;
+          }
+
+          if (i === 0) firstGalleryId = gallery.id;
+
+          await generationEventsService.logGeneration({
+            user_id: user.id,
+            user_email: user.email,
+            gallery_id: gallery.id,
+            prediction_id: imgPredictionId,
+            generation_type: 'image',
+            model_id: model,
+            model_name: modelConfig?.name || model,
+            credits_cost: userIsAdmin ? 0 : modelCostCents,
+            is_admin_generation: userIsAdmin,
+            prompt,
+            settings: modelSettings,
+          });
         }
 
-        // Deduct credits (admins bypass)
+        // Deduct credits once per prediction (admins bypass)
         if (!userIsAdmin) {
           await creditsService.deductCredits(user.id, model, {
             generationType: 'image',
-            predictionId: falPredictionId,
-            description: `Image generation (${model} via fal.ai)`,
+            predictionId: basePredictionId,
+            description: `Image generation (${model} via fal.ai${falResult.images.length > 1 ? ` x${falResult.images.length}` : ''})`,
             overrideAmount: modelCostCents,
             user_email: user.email,
           });
         }
-
-        // Log generation event
-        const modelConfig = getModelConfig(model as ImageModel);
-        await generationEventsService.logGeneration({
-          user_id: user.id,
-          user_email: user.email,
-          gallery_id: gallery.id,
-          prediction_id: falPredictionId,
-          generation_type: 'image',
-          model_id: model,
-          model_name: modelConfig?.name || model,
-          credits_cost: userIsAdmin ? 0 : modelCostCents,
-          is_admin_generation: userIsAdmin,
-          prompt,
-          settings: modelSettings,
-        });
 
         lognog.info('generation_completed', {
           type: 'business',
@@ -797,18 +817,19 @@ export async function POST(request: NextRequest) {
           user_id: user.id,
           user_email: user.email,
           model,
-          prediction_id: falPredictionId,
+          prediction_id: basePredictionId,
           credits_deducted: userIsAdmin ? 0 : modelCostCents,
           reason: 'image_generation',
           provider: 'fal',
+          image_count: falResult.images.length,
         });
 
         return NextResponse.json({
-          predictionId: falPredictionId,
-          galleryId: gallery.id,
+          predictionId: basePredictionId,
+          galleryId: firstGalleryId,
           status: 'completed',
-          imageUrl: publicUrl,
-          imageCount: 1,
+          imageUrl: firstPublicUrl,
+          imageCount: falResult.images.length,
         });
       } catch (falError) {
         lognog.error('fal.ai generation failed', {

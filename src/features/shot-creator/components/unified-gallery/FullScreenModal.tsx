@@ -335,6 +335,37 @@ function FullscreenModal({
                             </div>
                         )}
 
+                        {/* Img2Img Strength */}
+                        {fullscreenImage.settings?.img2imgStrength != null && (
+                            <div className="mb-4">
+                                <h4 className="text-muted-foreground text-xs uppercase mb-2">Image Transform</h4>
+                                <div className="flex items-center gap-2">
+                                    <Sliders className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+                                    <span className="text-white text-sm">{Math.round(fullscreenImage.settings.img2imgStrength * 100)}% strength</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Grid Type (Angles / B-Roll) */}
+                        {fullscreenImage.metadata?.gridType && (
+                            <div className="mb-4">
+                                <h4 className="text-muted-foreground text-xs uppercase mb-2">Grid Type</h4>
+                                <div className="flex items-center gap-2">
+                                    {fullscreenImage.metadata.gridType === 'angles' ? (
+                                        <>
+                                            <Clapperboard className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                                            <span className="text-amber-400 text-sm font-medium">Cinematic Angles</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Layers className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                                            <span className="text-emerald-400 text-sm font-medium">B-Roll</span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Timestamp */}
                         <div className="mb-4">
                             <h4 className="text-muted-foreground text-xs uppercase mb-2">Created</h4>
@@ -367,6 +398,13 @@ function FullscreenModal({
                                             <Sliders className="w-3 h-3 text-cyan-400/70 flex-shrink-0" />
                                             <span className="text-muted-foreground">LoRA:</span>
                                             <span className="text-white">{fullscreenImage.settings.loraName} ({fullscreenImage.settings.loraScale ?? 1.0}x)</span>
+                                        </div>
+                                    )}
+                                    {fullscreenImage.settings?.img2imgStrength != null && (
+                                        <div className="flex items-center gap-2 text-xs">
+                                            <Sliders className="w-3 h-3 text-purple-400/70 flex-shrink-0" />
+                                            <span className="text-muted-foreground">Transform:</span>
+                                            <span className="text-white">{Math.round(fullscreenImage.settings.img2imgStrength * 100)}%</span>
                                         </div>
                                     )}
                                 </div>
