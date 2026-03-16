@@ -6,7 +6,7 @@ import { getAuthenticatedUser } from '@/lib/auth/api-auth';
 import { creditsService } from '@/features/credits';
 import { isAdminEmail } from '@/features/admin/types/admin.types';
 import { generationEventsService } from '@/features/admin/services/generation-events.service';
-import { getModelConfig, getModelCost, type ModelId } from '@/config';
+import { getModelConfig, getModelCost, type ModelId, ASPECT_RATIO_SIZES } from '@/config';
 import { StorageService } from '@/features/generation/services/storage.service';
 import { StorageLimitsService } from '@/features/storage/services/storage-limits.service';
 import type { Database } from '../../../../../supabase/database.types';
@@ -18,6 +18,66 @@ import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
+
+/**
+ * Call fal.ai z-image/turbo/image-to-image/lora
+ * Used when Replicate's img2img variant doesn't support LoRAs
+ */
+async function callFalAiImg2ImgLora(params: {
+  prompt: string;
+  imageUrl: string;
+  strength: number;
+  loras: { path: string; scale: number }[];
+  width: number;
+  height: number;
+  outputFormat: string;
+  numInferenceSteps?: number;
+}): Promise<{ images: { url: string; width: number; height: number }[]; seed: number }> {
+  const falKey = process.env.FAL_KEY;
+  if (!falKey) throw new Error('FAL_KEY not configured');
+
+  const body = {
+    prompt: params.prompt,
+    image_url: params.imageUrl,
+    strength: params.strength,
+    loras: params.loras,
+    image_size: { width: params.width, height: params.height },
+    output_format: params.outputFormat === 'jpg' ? 'jpeg' : params.outputFormat,
+    num_inference_steps: params.numInferenceSteps || 8,
+    enable_safety_checker: false,
+  };
+
+  lognog.devDebug('Calling fal.ai img2img+lora', {
+    prompt_length: params.prompt.length,
+    image_url_preview: params.imageUrl.substring(0, 80),
+    lora_count: params.loras.length,
+    strength: params.strength,
+    width: params.width,
+    height: params.height,
+  });
+
+  const response = await fetch('https://fal.run/fal-ai/z-image/turbo/image-to-image/lora', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Key ${falKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    lognog.error('fal.ai API error', {
+      status: response.status,
+      error: errorText,
+      type: 'integration',
+      integration: 'fal',
+    });
+    throw new Error(`fal.ai API error (${response.status}): ${errorText}`);
+  }
+
+  return response.json();
+}
 
 /**
  * Check if a URL is accessible by Replicate (external, public URL)
@@ -581,6 +641,190 @@ export async function POST(request: NextRequest) {
     const ms = modelSettings as Record<string, unknown>
     const loraActive = !!ms?.loraWeightsUrl || (Array.isArray(ms?.loraWeightsUrls) && (ms.loraWeightsUrls as string[]).length > 0)
     const hasReferenceImage = processedReferenceImages && processedReferenceImages.length > 0
+
+    // ── fal.ai path: img2img + LoRA (Replicate has a bug with this combo) ──
+    const useFalAi = model === 'z-image-turbo' && loraActive && hasReferenceImage && !!process.env.FAL_KEY
+    if (useFalAi) {
+      lognog.devDebug('Routing to fal.ai for img2img+lora', { model, loraActive, hasReferenceImage });
+
+      try {
+        // Get the reference image URL — need a publicly accessible URL for fal.ai
+        // processedReferenceImages may contain Replicate file URLs (auth-gated), so
+        // we use the ORIGINAL referenceImages and handle base64 → Supabase upload
+        let falImageUrl: string;
+        const originalRef = referenceImages[0];
+        const refUrl = typeof originalRef === 'string' ? originalRef : originalRef?.url;
+
+        if (refUrl.startsWith('data:image/')) {
+          // Upload base64 to Supabase Storage temp folder for a public URL
+          const matches = refUrl.match(/^data:image\/(\w+);base64,(.+)$/);
+          if (!matches) {
+            return NextResponse.json({ error: 'Invalid image data' }, { status: 400 });
+          }
+          const [, format, base64Data] = matches;
+          const imageBuffer = Buffer.from(base64Data, 'base64');
+          const ext = format === 'jpeg' ? 'jpg' : format;
+          const mimeType = `image/${format}`;
+          const tempId = `fal_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+          const { publicUrl } = await StorageService.uploadToStorage(
+            imageBuffer.buffer.slice(imageBuffer.byteOffset, imageBuffer.byteOffset + imageBuffer.byteLength),
+            user.id, `temp_${tempId}`, ext, mimeType
+          );
+          falImageUrl = publicUrl;
+        } else if (isPublicUrl(refUrl)) {
+          falImageUrl = refUrl;
+        } else {
+          return NextResponse.json({ error: 'Reference image must be a public URL or base64' }, { status: 400 });
+        }
+
+        // Build LoRA array for fal.ai: [{path, scale}]
+        const loraUrls = (ms.loraWeightsUrls as string[]) || (ms.loraWeightsUrl ? [ms.loraWeightsUrl as string] : []);
+        const loraScales = (ms.loraScales as number[]) || [ms.loraScale as number ?? 1.0];
+        const falLoras = loraUrls.map((url, i) => ({
+          path: url,
+          scale: loraScales[i] ?? 1.0,
+        }));
+
+        // Get dimensions from aspect ratio
+        const settings = modelSettings as Record<string, unknown>;
+        const aspectRatio = (settings.aspectRatio as string) || '16:9';
+        const dimensions = ASPECT_RATIO_SIZES[aspectRatio] || { width: 1280, height: 720 };
+
+        const falStart = Date.now();
+        const falResult = await callFalAiImg2ImgLora({
+          prompt,
+          imageUrl: falImageUrl,
+          strength: (settings.img2imgStrength as number) ?? 0.6,
+          loras: falLoras,
+          width: Math.min(dimensions.width, 2048),
+          height: Math.min(dimensions.height, 2048),
+          outputFormat: (settings.outputFormat as string) || 'jpg',
+        });
+        const falLatency = Date.now() - falStart;
+
+        lognog.debug(`fal.ai OK ${falLatency}ms z-image-turbo-img2img-lora`, {
+          type: 'integration',
+          integration: 'fal',
+          latency_ms: falLatency,
+          success: true,
+          model: 'fal-ai/z-image/turbo/image-to-image/lora',
+          user_id: user.id,
+          user_email: user.email,
+        });
+
+        // Download result from fal.ai and upload to Supabase Storage
+        const falOutputUrl = falResult.images[0]?.url;
+        if (!falOutputUrl) {
+          return NextResponse.json({ error: 'fal.ai returned no image' }, { status: 500 });
+        }
+
+        const falPredictionId = `fal_${Date.now()}_${falResult.seed || Math.random().toString(36).slice(2, 8)}`;
+        const { buffer } = await StorageService.downloadAsset(falOutputUrl);
+        const outputFormat = (settings.outputFormat as string) || 'jpg';
+        const ext = outputFormat === 'jpeg' ? 'jpg' : outputFormat;
+        const mimeType = `image/${outputFormat === 'jpg' ? 'jpeg' : outputFormat}`;
+        const { publicUrl, storagePath, fileSize } = await StorageService.uploadToStorage(
+          buffer, user.id, falPredictionId, ext, mimeType
+        );
+
+        // Build metadata
+        const metadata = ImageGenerationService.buildMetadata({
+          model: model as ImageModel,
+          prompt,
+          referenceImages,
+          modelSettings: modelSettings as ImageModelSettings,
+          userId: user.id,
+          recipeId,
+          recipeName,
+        });
+        const finalMetadata = extraMetadata
+          ? { ...metadata, ...extraMetadata, provider: 'fal', fal_seed: falResult.seed }
+          : { ...metadata, provider: 'fal', fal_seed: falResult.seed };
+
+        // Create gallery entry (completed immediately — fal.ai is synchronous)
+        const { data: gallery, error: galleryError } = await supabase
+          .from('gallery')
+          .insert({
+            user_id: user.id,
+            prediction_id: falPredictionId,
+            generation_type: 'image',
+            status: 'completed',
+            public_url: publicUrl,
+            storage_path: storagePath,
+            file_size: fileSize,
+            mime_type: mimeType,
+            metadata: finalMetadata as Database['public']['Tables']['gallery']['Insert']['metadata'],
+            ...(folderId && { folder_id: folderId }),
+          })
+          .select()
+          .single();
+
+        if (galleryError || !gallery) {
+          lognog.devError('Gallery creation error (fal.ai)', { error: galleryError?.message });
+          return NextResponse.json({ error: 'Failed to create gallery entry' }, { status: 500 });
+        }
+
+        // Deduct credits (admins bypass)
+        if (!userIsAdmin) {
+          await creditsService.deductCredits(user.id, model, {
+            generationType: 'image',
+            predictionId: falPredictionId,
+            description: `Image generation (${model} via fal.ai)`,
+            overrideAmount: modelCostCents,
+            user_email: user.email,
+          });
+        }
+
+        // Log generation event
+        const modelConfig = getModelConfig(model as ImageModel);
+        await generationEventsService.logGeneration({
+          user_id: user.id,
+          user_email: user.email,
+          gallery_id: gallery.id,
+          prediction_id: falPredictionId,
+          generation_type: 'image',
+          model_id: model,
+          model_name: modelConfig?.name || model,
+          credits_cost: userIsAdmin ? 0 : modelCostCents,
+          is_admin_generation: userIsAdmin,
+          prompt,
+          settings: modelSettings,
+        });
+
+        lognog.info('generation_completed', {
+          type: 'business',
+          event: 'generation_completed',
+          user_id: user.id,
+          user_email: user.email,
+          model,
+          prediction_id: falPredictionId,
+          credits_deducted: userIsAdmin ? 0 : modelCostCents,
+          reason: 'image_generation',
+          provider: 'fal',
+        });
+
+        return NextResponse.json({
+          predictionId: falPredictionId,
+          galleryId: gallery.id,
+          status: 'completed',
+          imageUrl: publicUrl,
+          imageCount: 1,
+        });
+      } catch (falError) {
+        lognog.error('fal.ai generation failed', {
+          type: 'error',
+          integration: 'fal',
+          error: falError instanceof Error ? falError.message : String(falError),
+          user_id: user.id,
+        });
+        return NextResponse.json(
+          { error: 'Image generation failed', details: falError instanceof Error ? falError.message : 'fal.ai error' },
+          { status: 500 }
+        );
+      }
+    }
+    // ── End fal.ai path ──
+
     const replicateModelId = ImageGenerationService.getReplicateModelId(model as ImageModel, loraActive, hasReferenceImage);
     lognog.devDebug('Using Replicate model', {
       model_id: replicateModelId,
