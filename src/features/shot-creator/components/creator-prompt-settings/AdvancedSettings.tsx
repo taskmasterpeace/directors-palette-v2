@@ -156,11 +156,15 @@ const AdvancedSettings = () => {
                 </div>
             )}
 
-            {/* Guidance Scale - for z-image-turbo */}
+            {/* Prompt Influence - for z-image-turbo */}
             {supportsGuidanceScale && (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <Label className="text-sm text-foreground">Guidance Scale</Label>
+                        <Label className="text-sm text-foreground">
+                            {referenceImageCount > 0 && selectedModel === 'z-image-turbo'
+                                ? 'Prompt Influence'
+                                : 'Prompt Influence'}
+                        </Label>
                         <span className="text-sm text-muted-foreground font-medium tabular-nums">
                             {shotCreatorSettings.guidanceScale ?? (activeLora ? 1 : 0)}
                         </span>
@@ -174,17 +178,19 @@ const AdvancedSettings = () => {
                         className="w-full"
                     />
                     <p className="text-xs text-muted-foreground">
-                        Use 0 for turbo speed, higher for more prompt adherence
-                        {activeLora && ' (auto-set to 1 for LoRA)'}
+                        {referenceImageCount > 0 && selectedModel === 'z-image-turbo'
+                            ? 'How closely the output follows your prompt. 0 = fastest, higher = more faithful to what you typed.'
+                            : <>Use 0 for turbo speed, higher for more prompt adherence{activeLora && ' (auto-set to 1 for LoRA)'}</>
+                        }
                     </p>
                 </div>
             )}
 
-            {/* Img2Img Strength - Z-Image Turbo with reference image */}
+            {/* Image Transform - Z-Image Turbo with reference image */}
             {selectedModel === 'z-image-turbo' && referenceImageCount > 0 && (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <Label className="text-sm text-foreground">Img2Img Strength</Label>
+                        <Label className="text-sm text-foreground">Image Transform</Label>
                         <span className="text-sm text-cyan-400 font-medium tabular-nums">
                             {shotCreatorSettings.img2imgStrength ?? 0.6}
                         </span>
@@ -198,7 +204,7 @@ const AdvancedSettings = () => {
                         className="w-full"
                     />
                     <p className="text-xs text-muted-foreground">
-                        Low = subtle style transfer (keeps character), high = dramatic transformation
+                        How much to change your reference image. Low keeps the original look, high reimagines it completely.
                     </p>
                 </div>
             )}
