@@ -347,7 +347,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
     'z-image-turbo': {
         id: 'z-image-turbo',
         name: 'z-image-turbo',
-        displayName: 'Turbo Generation',
+        displayName: 'Z-Image Turbo',
         type: 'generation',
         icon: '⚡',
         description: 'Ultra-fast generation with LoRA support. Add a reference image for img2img style transfer. Best for rapid iterations, character/style LoRAs, and concept exploration.',
