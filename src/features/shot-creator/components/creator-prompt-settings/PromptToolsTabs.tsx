@@ -86,7 +86,7 @@ export function PromptToolsTabs({
         </TabsList>
 
         <div className="p-4">
-          <TabsContent value="library" className="mt-0 h-[400px]">
+          <TabsContent value="library" className="mt-0 h-[60vh] lg:h-[400px]">
             <PromptLibrary
               onSelectPrompt={onSelectPrompt}
               showQuickAccess={true}
@@ -94,24 +94,24 @@ export function PromptToolsTabs({
             />
           </TabsContent>
 
-          <TabsContent value="wildcards" className="mt-0 h-[400px]">
+          <TabsContent value="wildcards" className="mt-0 h-[60vh] lg:h-[400px]">
             <div className="h-full overflow-auto">
               <WildCardManager />
             </div>
           </TabsContent>
 
-          <TabsContent value="recipes" className="mt-0 h-[400px]">
+          <TabsContent value="recipes" className="mt-0 h-[60vh] lg:h-[400px]">
             <RecipeBuilder
               onSelectRecipe={onSelectRecipe}
               className="h-full"
             />
           </TabsContent>
 
-          <TabsContent value="styles" className="mt-0 h-[400px]">
+          <TabsContent value="styles" className="mt-0 h-[60vh] lg:h-[400px]">
             <StylesTab />
           </TabsContent>
 
-          <TabsContent value="loras" className="mt-0 h-[400px]">
+          <TabsContent value="loras" className="mt-0 h-[60vh] lg:h-[400px]">
             <LoraCommunityBrowser />
           </TabsContent>
         </div>
