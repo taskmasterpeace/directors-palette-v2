@@ -184,6 +184,16 @@ export function usePromptGeneration() {
                     baseSettings.guidanceScale = shotCreatorSettings.guidanceScale
                 }
                 break
+            case 'flux-2-klein-9b':
+                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
+                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
+                // Inject LoRA settings when active
+                if (activeLoras.length > 0) {
+                    baseSettings.loraWeightsUrls = activeLoras.map(l => l.weightsUrl)
+                    baseSettings.loraScales = activeLoras.map(l => l.defaultLoraScale)
+                    baseSettings.loraName = activeLoras.map(l => l.name).join(' + ')
+                }
+                break
             case 'qwen-image-edit':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio || 'match_input_image'
                 baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'webp'
@@ -669,9 +679,9 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
             .filter((url): url is string => Boolean(url))
         const modelSettings = buildModelSettings()
 
-        // Prepend LoRA trigger words when active on z-image-turbo only
+        // Prepend LoRA trigger words when active on LoRA-capable models
         let finalPrompt = shotCreatorPrompt
-        if (activeLoras.length > 0 && model === 'z-image-turbo') {
+        if (activeLoras.length > 0 && (model === 'z-image-turbo' || model === 'flux-2-klein-9b')) {
             const triggerWords = activeLoras.map(l => l.triggerWord).join(', ')
             finalPrompt = `${triggerWords}, ${shotCreatorPrompt}`
         }
