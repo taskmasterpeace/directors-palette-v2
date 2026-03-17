@@ -240,10 +240,16 @@ export class ImageGenerationService {
 
   private static buildFlux2Klein9bInput(input: ImageGenerationInput) {
     const settings = input.modelSettings as Flux2Klein9bSettings
+    const hasLora = settings.loraWeightsUrls && settings.loraWeightsUrls.length > 0
+
     const replicateInput: Record<string, unknown> = {
       prompt: input.prompt,
-      go_fast: true,
       disable_safety_checker: true,
+    }
+
+    // go_fast only supported on base model, NOT the LoRA variant
+    if (!hasLora) {
+      replicateInput.go_fast = true
     }
 
     if (settings.aspectRatio) {
@@ -260,9 +266,11 @@ export class ImageGenerationService {
     }
 
     // LoRA support — arrays matching the base-lora variant API
-    if (settings.loraWeightsUrls && settings.loraWeightsUrls.length > 0) {
+    // Enforce minimum scale of 0.1 to prevent accidental zero-effect LoRAs
+    if (hasLora) {
       replicateInput.lora_weights = settings.loraWeightsUrls
-      replicateInput.lora_scales = settings.loraScales || settings.loraWeightsUrls.map(() => 1.0)
+      const scales = settings.loraScales || settings.loraWeightsUrls!.map(() => 1.0)
+      replicateInput.lora_scales = scales.map(s => Math.max(s, 0.1))
     }
 
     return replicateInput

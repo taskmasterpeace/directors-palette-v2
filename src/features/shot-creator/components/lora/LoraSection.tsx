@@ -176,10 +176,10 @@ function LoraCard({ lora, isActive, isAdmin, isBuiltIn, isUsed, currentRating, o
                     <span className="text-[10px] text-muted-foreground flex-shrink-0 uppercase tracking-wide">Scale</span>
                     <input
                         type="range"
-                        min={0}
+                        min={0.1}
                         max={2}
                         step={0.1}
-                        value={lora.defaultLoraScale}
+                        value={lora.defaultLoraScale || 1.0}
                         onChange={(e) => onUpdateScale(parseFloat(e.target.value))}
                         className="flex-1 h-1.5 accent-cyan-500 touch-none"
                         style={{ WebkitAppearance: 'none', padding: '8px 0' }}
