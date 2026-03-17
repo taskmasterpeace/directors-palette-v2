@@ -42,6 +42,12 @@ const MODEL_CAPABILITIES: Record<ModelId, {
     refImages: 'None',
     bestFor: ['Ultra-fast generation', 'LoRA styles & characters', 'Concept exploration']
   },
+  'flux-2-klein-9b': {
+    speed: '~15s',
+    textRendering: 'Excellent',
+    refImages: 'Up to 5',
+    bestFor: ['High-quality generation', 'LoRA styles', 'Image-to-image', 'Fine detail']
+  },
   'firered-image-edit': {
     speed: '~10s',
     textRendering: 'Good',

@@ -12,6 +12,7 @@ import type {
   ImageGenerationResponse,
   NanoBanana2Settings,
   ZImageTurboSettings,
+  Flux2Klein9bSettings,
   FireRedEditSettings,
   QwenImageEditSettings,
 } from '../types/image-generation.types'
@@ -46,6 +47,9 @@ export class ImageGenerationService {
         break
       case 'z-image-turbo':
         errors.push(...this.validateZImageTurbo(input))
+        break
+      case 'flux-2-klein-9b':
+        errors.push(...this.validateFlux2Klein9b(input))
         break
       case 'firered-image-edit':
         errors.push(...this.validateFireRedEdit(input))
@@ -96,6 +100,17 @@ export class ImageGenerationService {
   }
 
   /**
+   * Validate flux-2-klein-9b specific constraints
+   */
+  private static validateFlux2Klein9b(input: ImageGenerationInput): string[] {
+    const errors: string[] = []
+    if (input.referenceImages && input.referenceImages.length > 5) {
+      errors.push('Flux 2 supports maximum 5 reference images')
+    }
+    return errors
+  }
+
+  /**
    * Validate firered-image-edit specific constraints
    */
   private static validateFireRedEdit(input: ImageGenerationInput): string[] {
@@ -117,6 +132,8 @@ export class ImageGenerationService {
         return this.buildNanoBanana2Input(input)
       case 'z-image-turbo':
         return this.buildZImageTurboInput(input)
+      case 'flux-2-klein-9b':
+        return this.buildFlux2Klein9bInput(input)
       case 'firered-image-edit':
         return this.buildFireRedEditInput(input)
       case 'qwen-image-edit':
@@ -216,6 +233,36 @@ export class ImageGenerationService {
         replicateInput.lora_weights = [settings.loraWeightsUrl]
         replicateInput.lora_scales = [settings.loraScale ?? 1.0]
       }
+    }
+
+    return replicateInput
+  }
+
+  private static buildFlux2Klein9bInput(input: ImageGenerationInput) {
+    const settings = input.modelSettings as Flux2Klein9bSettings
+    const replicateInput: Record<string, unknown> = {
+      prompt: input.prompt,
+      go_fast: true,
+      disable_safety_checker: true,
+    }
+
+    if (settings.aspectRatio) {
+      replicateInput.aspect_ratio = settings.aspectRatio
+    }
+
+    if (settings.outputFormat) {
+      replicateInput.output_format = settings.outputFormat
+    }
+
+    // Reference images (up to 5)
+    if (input.referenceImages && input.referenceImages.length > 0) {
+      replicateInput.images = this.normalizeReferenceImages(input.referenceImages)
+    }
+
+    // LoRA support — arrays matching the base-lora variant API
+    if (settings.loraWeightsUrls && settings.loraWeightsUrls.length > 0) {
+      replicateInput.lora_weights = settings.loraWeightsUrls
+      replicateInput.lora_scales = settings.loraScales || settings.loraWeightsUrls.map(() => 1.0)
     }
 
     return replicateInput
@@ -350,6 +397,10 @@ export class ImageGenerationService {
     // When LoRA is active on z-image-turbo (text-to-image), use the LoRA-enabled variant
     if (loraActive && model === 'z-image-turbo') {
       return 'prunaai/z-image-turbo-lora'
+    }
+    // Flux 2 Klein 9B: use LoRA variant when LoRA is active
+    if (model === 'flux-2-klein-9b' && loraActive) {
+      return 'black-forest-labs/flux-2-klein-9b-base-lora'
     }
     return modelConfig.endpoint
   }

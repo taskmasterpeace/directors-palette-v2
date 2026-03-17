@@ -9,6 +9,7 @@ import type { ModelId } from '@/config'
 export type ImageModel = Extract<ModelId,
   | 'nano-banana-2'
   | 'z-image-turbo'
+  | 'flux-2-klein-9b'
   | 'firered-image-edit'
   | 'qwen-image-edit'
 >
@@ -36,6 +37,13 @@ export interface ZImageTurboSettings {
   loraScales?: number[]       // multiple scales
   loraName?: string
   img2imgStrength?: number    // 0-1, controls how much reference image is transformed (img2img mode)
+}
+
+export interface Flux2Klein9bSettings {
+  aspectRatio?: string
+  outputFormat?: 'jpg' | 'png' | 'webp'
+  loraWeightsUrls?: string[]  // multiple LoRAs
+  loraScales?: number[]       // multiple scales
 }
 
 export interface FireRedEditSettings {

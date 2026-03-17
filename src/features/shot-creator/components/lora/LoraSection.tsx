@@ -447,22 +447,28 @@ function LoraDialog({ onClose, editingLora }: {
 
 const COLLAPSED_MAX = 3
 
-export function LoraSection() {
+export function LoraSection({ selectedModel }: { selectedModel?: string }) {
     const { loras, activeLoraIds, toggleActiveLora, removeLora, updateLora, rateLora, getLoraRating, isLoraUsed } = useLoraStore()
     const { isAdmin } = useAdminAuth()
     const [showDialog, setShowDialog] = useState(false)
     const [editingLora, setEditingLora] = useState<LoraItem | null>(null)
     const [expanded, setExpanded] = useState(false)
 
-    const visibleLoras = expanded || loras.length <= COLLAPSED_MAX
-        ? loras
-        : loras.slice(0, COLLAPSED_MAX)
-    const hiddenCount = loras.length - COLLAPSED_MAX
+    // Filter LoRAs by model compatibility
+    const filteredLoras = loras.filter(lora => {
+        if (!lora.compatibleModels) return !selectedModel || selectedModel !== 'flux-2-klein-9b'
+        return !selectedModel || lora.compatibleModels.includes(selectedModel)
+    })
+
+    const visibleLoras = expanded || filteredLoras.length <= COLLAPSED_MAX
+        ? filteredLoras
+        : filteredLoras.slice(0, COLLAPSED_MAX)
+    const hiddenCount = filteredLoras.length - COLLAPSED_MAX
 
     // No LoRAs and not admin — nothing to show
-    if (loras.length === 0 && !isAdmin) return null
+    if (filteredLoras.length === 0 && !isAdmin) return null
 
-    if (loras.length === 0 && !showDialog) {
+    if (filteredLoras.length === 0 && !showDialog) {
         return (
             <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -496,8 +502,8 @@ export function LoraSection() {
                 <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                     <Layers className="w-3.5 h-3.5" />
                     LoRA
-                    {loras.length > 0 && (
-                        <span className="text-xs text-muted-foreground">({loras.length})</span>
+                    {filteredLoras.length > 0 && (
+                        <span className="text-xs text-muted-foreground">({filteredLoras.length})</span>
                     )}
                     {activeLoraIds.length > 0 && (
                         <span className="text-[10px] font-medium text-cyan-400 bg-cyan-500/15 px-1.5 py-0.5 rounded-full">
@@ -559,7 +565,7 @@ export function LoraSection() {
             </div>
 
             {/* Show more / less toggle */}
-            {loras.length > COLLAPSED_MAX && (
+            {filteredLoras.length > COLLAPSED_MAX && (
                 <button
                     onClick={() => setExpanded(!expanded)}
                     className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors w-full justify-center py-1"

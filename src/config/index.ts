@@ -22,7 +22,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana-2' | 'z-image-turbo' | 'firered-image-edit' | 'qwen-image-edit'
+export type ModelId = 'nano-banana-2' | 'z-image-turbo' | 'flux-2-klein-9b' | 'firered-image-edit' | 'qwen-image-edit'
 
 export interface ModelParameter {
     id: string
@@ -366,6 +366,26 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         },
         maxReferenceImages: 1, // Supports 1 reference image for img2img mode
         estimatedSeconds: 8,
+    },
+    'flux-2-klein-9b': {
+        id: 'flux-2-klein-9b',
+        name: 'flux-2-klein-9b',
+        displayName: 'Flux 2',
+        type: 'generation',
+        icon: '🔥',
+        description: 'High-quality generation with LoRA support and image-to-image. Supports up to 5 reference images.',
+        badge: 'Flux 2',
+        badgeColor: 'bg-violet-600',
+        textColor: 'text-violet-300',
+        endpoint: 'black-forest-labs/flux-2-klein-9b',
+        costPerImage: 0.05, // 5 pts = $0.05
+        supportedParameters: ['outputFormat', 'aspectRatio'],
+        parameters: {
+            outputFormat: MODEL_PARAMETERS.outputFormat,
+            aspectRatio: MODEL_PARAMETERS.aspectRatio,
+        },
+        maxReferenceImages: 5,
+        estimatedSeconds: 15,
     },
     'firered-image-edit': {
         id: 'firered-image-edit',

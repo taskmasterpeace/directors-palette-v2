@@ -16,6 +16,7 @@ export interface LoraItem {
     thumbnailUrl?: string
     defaultGuidanceScale: number  // e.g. 1.0
     defaultLoraScale: number      // e.g. 1.0
+    compatibleModels?: string[]  // If set, only show for these model IDs (e.g. ['flux-2-klein-9b'])
     createdAt: number
 }
 
@@ -80,9 +81,39 @@ const BUILT_IN_LORAS: LoraItem[] = [
     },
 ]
 
-export const BUILT_IN_LORA_IDS = new Set(BUILT_IN_LORAS.map(l => l.id))
-
 const LORA_STORAGE_BASE = 'https://tarohelkwuurakbxjyxm.supabase.co/storage/v1/object/public/directors-palette/loras'
+
+/** LoRAs that are only compatible with Flux 2 Klein 9B */
+const FLUX2_9B_LORAS: LoraItem[] = [
+    {
+        id: 'claymation-k9b',
+        name: 'Claymation',
+        type: 'style',
+        referenceTag: 'claymation',
+        triggerWord: 'Claymation',
+        weightsUrl: `${LORA_STORAGE_BASE}/claymation-k9b/Claymation_K9B.safetensors`,
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 1.0,
+        compatibleModels: ['flux-2-klein-9b'],
+        createdAt: 0,
+    },
+    {
+        id: 'inflate-k9b',
+        name: 'Inflate',
+        type: 'style',
+        referenceTag: 'inflate',
+        triggerWord: 'inflate the',
+        weightsUrl: `${LORA_STORAGE_BASE}/inflate-k9b/infl8_k9b.safetensors`,
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 1.0,
+        compatibleModels: ['flux-2-klein-9b'],
+        createdAt: 0,
+    },
+]
+
+const ALL_BUILT_IN_LORAS = [...BUILT_IN_LORAS, ...FLUX2_9B_LORAS]
+
+export const BUILT_IN_LORA_IDS = new Set(ALL_BUILT_IN_LORAS.map(l => l.id))
 
 /** All available LoRAs users can browse in the community tab */
 export const COMMUNITY_LORAS: LoraItem[] = [
@@ -199,12 +230,37 @@ export const COMMUNITY_LORAS: LoraItem[] = [
         defaultLoraScale: 1.0,
         createdAt: 0,
     },
+    // Flux 2 Klein 9B LoRAs
+    {
+        id: 'claymation-k9b',
+        name: 'Claymation',
+        type: 'style',
+        referenceTag: 'claymation',
+        triggerWord: 'Claymation',
+        weightsUrl: `${LORA_STORAGE_BASE}/claymation-k9b/Claymation_K9B.safetensors`,
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 1.0,
+        compatibleModels: ['flux-2-klein-9b'],
+        createdAt: 0,
+    },
+    {
+        id: 'inflate-k9b',
+        name: 'Inflate',
+        type: 'style',
+        referenceTag: 'inflate',
+        triggerWord: 'inflate the',
+        weightsUrl: `${LORA_STORAGE_BASE}/inflate-k9b/infl8_k9b.safetensors`,
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 1.0,
+        compatibleModels: ['flux-2-klein-9b'],
+        createdAt: 0,
+    },
 ]
 
 export const useLoraStore = create<LoraStore>()(
     persist(
         (set, get) => ({
-            loras: BUILT_IN_LORAS,
+            loras: ALL_BUILT_IN_LORAS,
             activeLoraIds: [],
             loraRatings: {},
             usedLoraIds: [],
@@ -315,15 +371,15 @@ export const useLoraStore = create<LoraStore>()(
         }),
         {
             name: 'directors-palette-lora-store',
-            version: 10,
+            version: 11,
             migrate: (persisted: unknown) => {
                 const state = persisted as Record<string, unknown>
                 const loras = (state?.loras as LoraItem[]) || []
-                const builtInIds = new Set(BUILT_IN_LORAS.map(l => l.id))
+                const builtInIds = new Set(ALL_BUILT_IN_LORAS.map(l => l.id))
                 // Remove old built-ins no longer in the list (createdAt === 0 means built-in)
                 const filtered = loras.filter(l => l.createdAt !== 0 || builtInIds.has(l.id))
                 // Ensure built-in LoRAs are present and up-to-date
-                for (const builtIn of BUILT_IN_LORAS) {
+                for (const builtIn of ALL_BUILT_IN_LORAS) {
                     const existing = filtered.find((l) => l.id === builtIn.id)
                     if (!existing) {
                         filtered.push(builtIn)
@@ -332,6 +388,7 @@ export const useLoraStore = create<LoraStore>()(
                         existing.defaultGuidanceScale = builtIn.defaultGuidanceScale
                         existing.type = builtIn.type
                         existing.referenceTag = builtIn.referenceTag
+                        existing.compatibleModels = builtIn.compatibleModels
                     }
                 }
                 // Ensure rating fields exist (v9)
