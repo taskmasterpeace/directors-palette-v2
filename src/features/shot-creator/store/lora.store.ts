@@ -109,6 +109,18 @@ const FLUX2_9B_LORAS: LoraItem[] = [
         compatibleModels: ['flux-2-klein-9b'],
         createdAt: 0,
     },
+    {
+        id: 'disney-golden-age-k9b',
+        name: 'Disney Golden Age',
+        type: 'style',
+        referenceTag: 'disney-golden-age',
+        triggerWord: 'dgastyle',
+        weightsUrl: `${LORA_STORAGE_BASE}/disney-golden-age-k9b/Disney_Golden_Age_FluxK9B.safetensors`,
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 1.0,
+        compatibleModels: ['flux-2-klein-9b'],
+        createdAt: 0,
+    },
 ]
 
 const ALL_BUILT_IN_LORAS = [...BUILT_IN_LORAS, ...FLUX2_9B_LORAS]
@@ -255,6 +267,18 @@ export const COMMUNITY_LORAS: LoraItem[] = [
         compatibleModels: ['flux-2-klein-9b'],
         createdAt: 0,
     },
+    {
+        id: 'disney-golden-age-k9b',
+        name: 'Disney Golden Age',
+        type: 'style',
+        referenceTag: 'disney-golden-age',
+        triggerWord: 'dgastyle',
+        weightsUrl: `${LORA_STORAGE_BASE}/disney-golden-age-k9b/Disney_Golden_Age_FluxK9B.safetensors`,
+        defaultGuidanceScale: 1.0,
+        defaultLoraScale: 1.0,
+        compatibleModels: ['flux-2-klein-9b'],
+        createdAt: 0,
+    },
 ]
 
 export const useLoraStore = create<LoraStore>()(
@@ -371,7 +395,7 @@ export const useLoraStore = create<LoraStore>()(
         }),
         {
             name: 'directors-palette-lora-store',
-            version: 11,
+            version: 12,
             migrate: (persisted: unknown) => {
                 const state = persisted as Record<string, unknown>
                 const loras = (state?.loras as LoraItem[]) || []
