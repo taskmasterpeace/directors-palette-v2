@@ -87,6 +87,67 @@ async function callFalAiImg2ImgLora(params: {
 }
 
 /**
+ * Call fal.ai flux-2/klein/9b/base/lora for text-to-image with LoRA
+ * Replicate's Klein 9B LoRA endpoint produces blurry results (insufficient inference steps).
+ * fal.ai exposes num_inference_steps and guidance_scale, producing crisp results.
+ */
+async function callFalAiKleinLora(params: {
+  prompt: string;
+  loras: { path: string; scale: number }[];
+  imageSize?: string | { width: number; height: number };
+  outputFormat: string;
+  numInferenceSteps?: number;
+  guidanceScale?: number;
+  numImages?: number;
+}): Promise<{ images: { url: string; width: number; height: number }[]; seed: number }> {
+  const falKey = process.env.FAL_KEY;
+  if (!falKey) throw new Error('FAL_KEY not configured');
+
+  const body: Record<string, unknown> = {
+    prompt: params.prompt,
+    loras: params.loras,
+    output_format: params.outputFormat === 'jpg' ? 'jpeg' : params.outputFormat,
+    num_inference_steps: params.numInferenceSteps || 28,
+    guidance_scale: params.guidanceScale || 5,
+    num_images: Math.min(params.numImages || 1, 4),
+    enable_safety_checker: false,
+  };
+
+  if (params.imageSize) {
+    body.image_size = params.imageSize;
+  }
+
+  lognog.devDebug('Calling fal.ai Klein 9B + LoRA', {
+    prompt_length: params.prompt.length,
+    lora_count: params.loras.length,
+    steps: body.num_inference_steps,
+    guidance: body.guidance_scale,
+  });
+
+  const response = await fetch('https://fal.run/fal-ai/flux-2/klein/9b/base/lora', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Key ${falKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    lognog.error('fal.ai Klein LoRA API error', {
+      status: response.status,
+      error: errorText,
+      type: 'integration',
+      integration: 'fal',
+    });
+    throw new Error(`fal.ai API error (${response.status}): ${errorText}`);
+  }
+
+  return response.json();
+}
+
+/**
  * Check if a URL is accessible by Replicate (external, public URL)
  * Blocks private/internal IPs to prevent SSRF
  */
@@ -849,7 +910,179 @@ export async function POST(request: NextRequest) {
         );
       }
     }
-    // ── End fal.ai path ──
+    // ── End fal.ai z-image path ──
+
+    // ── fal.ai path: Klein 9B + LoRA (Replicate endpoint lacks steps/guidance controls) ──
+    const useKleinFal = model === 'flux-2-klein-9b' && loraActive && !!process.env.FAL_KEY
+    if (useKleinFal) {
+      lognog.devDebug('Routing to fal.ai for Klein 9B + LoRA', { model, loraActive });
+
+      try {
+        // Build LoRA array for fal.ai: [{path, scale}]
+        const loraUrls = (ms.loraWeightsUrls as string[]) || (ms.loraWeightsUrl ? [ms.loraWeightsUrl as string] : []);
+        const loraScales = (ms.loraScales as number[]) || [ms.loraScale as number ?? 1.0];
+        const falLoras = loraUrls.map((url, i) => ({
+          path: url,
+          scale: loraScales[i] ?? 1.0,
+        }));
+
+        // Map aspect ratio to fal.ai image_size format
+        const settings = modelSettings as Record<string, unknown>;
+        const aspectRatio = (settings.aspectRatio as string) || '16:9';
+        const FAL_SIZE_MAP: Record<string, string> = {
+          '1:1': 'square_hd',
+          '16:9': 'landscape_16_9',
+          '9:16': 'portrait_16_9',
+          '4:3': 'landscape_4_3',
+          '3:4': 'portrait_4_3',
+        };
+        const falImageSize = FAL_SIZE_MAP[aspectRatio] || 'landscape_16_9';
+
+        const falStart = Date.now();
+        const falResult = await callFalAiKleinLora({
+          prompt,
+          loras: falLoras,
+          imageSize: falImageSize,
+          outputFormat: (settings.outputFormat as string) || 'jpg',
+        });
+        const falLatency = Date.now() - falStart;
+
+        lognog.debug(`fal.ai OK ${falLatency}ms klein-9b-lora`, {
+          type: 'integration',
+          integration: 'fal',
+          latency_ms: falLatency,
+          success: true,
+          model: 'fal-ai/flux-2/klein/9b/base/lora',
+          user_id: user.id,
+          user_email: user.email,
+        });
+
+        // Download results from fal.ai and upload to Supabase Storage
+        if (!falResult.images?.length) {
+          return NextResponse.json({ error: 'fal.ai returned no images' }, { status: 500 });
+        }
+
+        const outputFormat = (settings.outputFormat as string) || 'jpg';
+        const ext = outputFormat === 'jpeg' ? 'jpg' : outputFormat;
+        const mimeType = `image/${outputFormat === 'jpg' ? 'jpeg' : outputFormat}`;
+        const basePredictionId = `fal_klein_${Date.now()}_${falResult.seed || Math.random().toString(36).slice(2, 8)}`;
+
+        const metadata = ImageGenerationService.buildMetadata({
+          model: model as ImageModel,
+          prompt,
+          referenceImages,
+          modelSettings: modelSettings as ImageModelSettings,
+          userId: user.id,
+          recipeId,
+          recipeName,
+        });
+        const baseMetadata = extraMetadata
+          ? { ...metadata, ...extraMetadata, provider: 'fal', fal_seed: falResult.seed }
+          : { ...metadata, provider: 'fal', fal_seed: falResult.seed };
+
+        const modelConfig = getModelConfig(model as ImageModel);
+        let firstGalleryId = '';
+        let firstPublicUrl = '';
+
+        for (let i = 0; i < falResult.images.length; i++) {
+          const falImg = falResult.images[i];
+          if (!falImg?.url) continue;
+
+          const imgPredictionId = falResult.images.length > 1 ? `${basePredictionId}_img_${i}` : basePredictionId;
+          const { buffer } = await StorageService.downloadAsset(falImg.url);
+          const { publicUrl, storagePath, fileSize } = await StorageService.uploadToStorage(
+            buffer, user.id, imgPredictionId, ext, mimeType
+          );
+
+          if (i === 0) firstPublicUrl = publicUrl;
+
+          const imgMetadata = falResult.images.length > 1
+            ? { ...baseMetadata, image_index: i, total_images: falResult.images.length }
+            : baseMetadata;
+
+          const { data: gallery, error: galleryError } = await supabase
+            .from('gallery')
+            .insert({
+              user_id: user.id,
+              prediction_id: imgPredictionId,
+              generation_type: 'image',
+              status: 'completed',
+              public_url: publicUrl,
+              storage_path: storagePath,
+              file_size: fileSize,
+              mime_type: mimeType,
+              metadata: imgMetadata as Database['public']['Tables']['gallery']['Insert']['metadata'],
+              ...(folderId && { folder_id: folderId }),
+            })
+            .select()
+            .single();
+
+          if (galleryError || !gallery) {
+            lognog.devError(`Gallery creation error (fal.ai Klein image ${i})`, { error: galleryError?.message });
+            continue;
+          }
+
+          if (i === 0) firstGalleryId = gallery.id;
+
+          await generationEventsService.logGeneration({
+            user_id: user.id,
+            user_email: user.email,
+            gallery_id: gallery.id,
+            prediction_id: imgPredictionId,
+            generation_type: 'image',
+            model_id: model,
+            model_name: modelConfig?.name || model,
+            credits_cost: userIsAdmin ? 0 : modelCostCents,
+            is_admin_generation: userIsAdmin,
+            prompt,
+            settings: modelSettings,
+          });
+        }
+
+        if (!userIsAdmin) {
+          await creditsService.deductCredits(user.id, model, {
+            generationType: 'image',
+            predictionId: basePredictionId,
+            description: `Image generation (${model} via fal.ai${falResult.images.length > 1 ? ` x${falResult.images.length}` : ''})`,
+            overrideAmount: modelCostCents,
+            user_email: user.email,
+          });
+        }
+
+        lognog.info('generation_completed', {
+          type: 'business',
+          event: 'generation_completed',
+          user_id: user.id,
+          user_email: user.email,
+          model,
+          prediction_id: basePredictionId,
+          credits_deducted: userIsAdmin ? 0 : modelCostCents,
+          reason: 'image_generation',
+          provider: 'fal',
+          image_count: falResult.images.length,
+        });
+
+        return NextResponse.json({
+          predictionId: basePredictionId,
+          galleryId: firstGalleryId,
+          status: 'completed',
+          imageUrl: firstPublicUrl,
+          imageCount: falResult.images.length,
+        });
+      } catch (falError) {
+        lognog.error('fal.ai Klein LoRA generation failed', {
+          type: 'error',
+          integration: 'fal',
+          error: falError instanceof Error ? falError.message : String(falError),
+          user_id: user.id,
+        });
+        return NextResponse.json(
+          { error: 'Image generation failed', details: falError instanceof Error ? falError.message : 'fal.ai error' },
+          { status: 500 }
+        );
+      }
+    }
+    // ── End fal.ai Klein path ──
 
     const replicateModelId = ImageGenerationService.getReplicateModelId(model as ImageModel, loraActive, hasReferenceImage);
     lognog.devDebug('Using Replicate model', {

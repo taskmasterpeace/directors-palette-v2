@@ -42,6 +42,8 @@ export interface ZImageTurboSettings {
 export interface Flux2Klein9bSettings {
   aspectRatio?: string
   outputFormat?: 'jpg' | 'png' | 'webp'
+  loraWeightsUrls?: string[]  // LoRAs routed through fal.ai
+  loraScales?: number[]
 }
 
 export interface FireRedEditSettings {

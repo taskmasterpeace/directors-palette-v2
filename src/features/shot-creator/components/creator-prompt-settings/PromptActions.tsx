@@ -616,8 +616,8 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                 )}
 
                 {/* LoRA section - for models with LoRA support */}
-                {shotCreatorSettings.model === 'z-image-turbo' && (
-                    <LoraSection />
+                {(shotCreatorSettings.model === 'z-image-turbo' || shotCreatorSettings.model === 'flux-2-klein-9b') && (
+                    <LoraSection selectedModel={shotCreatorSettings.model} />
                 )}
 
                 {/* Prompt syntax feedback + Anchor Transform feedback */}
