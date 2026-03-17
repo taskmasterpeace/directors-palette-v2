@@ -355,7 +355,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         badgeColor: 'bg-cyan-600',
         textColor: 'text-cyan-300',
         endpoint: 'prunaai/z-image-turbo',
-        costPerImage: 0.03, // 3 pts = $0.03 (~$0.01 Replicate cost)
+        costPerImage: 0.04, // 4 pts = $0.04
         supportedParameters: ['outputFormat', 'aspectRatio', 'numInferenceSteps', 'guidanceScale', 'img2imgStrength'],
         parameters: {
             outputFormat: MODEL_PARAMETERS.outputFormat,
@@ -378,7 +378,7 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         badgeColor: 'bg-violet-600',
         textColor: 'text-violet-300',
         endpoint: 'black-forest-labs/flux-2-klein-9b',
-        costPerImage: 0.05, // 5 pts = $0.05
+        costPerImage: 0.04, // 4 pts = $0.04
         supportedParameters: ['outputFormat', 'aspectRatio'],
         parameters: {
             outputFormat: MODEL_PARAMETERS.outputFormat,
