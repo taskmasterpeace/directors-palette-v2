@@ -197,14 +197,16 @@ export class ImageGenerationService {
       replicateInput.output_format = settings.outputFormat
     }
 
-    // LoRA support — img2img+LoRA routes to self-hosted model in the API route,
-    // so LoRA params are omitted here for img2img. Text-to-image uses arrays.
+    // LoRA support — img2img variant has a Replicate bug (Path has no len()),
+    // so we skip LoRA for img2img until they fix it. Text-to-image uses arrays.
     const hasRefImage = input.referenceImages && input.referenceImages.length > 0
     if (hasRefImage) {
       // img2img mode: single image input + strength
-      // LoRA params handled by self-hosted model path in API route (not PrunaAI)
       replicateInput.image = this.normalizeReferenceImages(input.referenceImages!)[0]
       replicateInput.strength = settings.img2imgStrength ?? 0.6
+      // NOTE: LoRA params intentionally omitted — Replicate's z-image-turbo-img2img
+      // has a bug where lora_weights URI is converted to a Python Path object,
+      // then their code does len(Path) which throws TypeError.
     } else {
       // Text-to-image mode: multi-LoRA arrays
       if (settings.loraWeightsUrls && settings.loraWeightsUrls.length > 0) {

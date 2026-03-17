@@ -20,6 +20,73 @@ const replicate = new Replicate({
 });
 
 /**
+ * Call fal.ai z-image/turbo/image-to-image/lora
+ * Used when Replicate's img2img variant doesn't support LoRAs
+ */
+async function callFalAiImg2ImgLora(params: {
+  prompt: string;
+  imageUrl: string;
+  strength: number;
+  loras: { path: string; scale: number }[];
+  width?: number;
+  height?: number;
+  outputFormat: string;
+  numInferenceSteps?: number;
+  numImages?: number;
+}): Promise<{ images: { url: string; width: number; height: number }[]; seed: number }> {
+  const falKey = process.env.FAL_KEY;
+  if (!falKey) throw new Error('FAL_KEY not configured');
+
+  const body: Record<string, unknown> = {
+    prompt: params.prompt,
+    image_url: params.imageUrl,
+    strength: params.strength,
+    loras: params.loras,
+    output_format: params.outputFormat === 'jpg' ? 'jpeg' : params.outputFormat,
+    num_inference_steps: params.numInferenceSteps || 8,
+    num_images: Math.min(params.numImages || 1, 4),
+    enable_safety_checker: false,
+  };
+
+  // Only set image_size when explicit dimensions are provided
+  // Omitting it lets fal.ai use "auto" (match input image dimensions)
+  if (params.width && params.height) {
+    body.image_size = { width: params.width, height: params.height };
+  }
+
+  lognog.devDebug('Calling fal.ai img2img+lora', {
+    prompt_length: params.prompt.length,
+    image_url_preview: params.imageUrl.substring(0, 80),
+    lora_count: params.loras.length,
+    strength: params.strength,
+    width: params.width,
+    height: params.height,
+  });
+
+  const response = await fetch('https://fal.run/fal-ai/z-image/turbo/image-to-image/lora', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Key ${falKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    lognog.error('fal.ai API error', {
+      status: response.status,
+      error: errorText,
+      type: 'integration',
+      integration: 'fal',
+    });
+    throw new Error(`fal.ai API error (${response.status}): ${errorText}`);
+  }
+
+  return response.json();
+}
+
+/**
  * Check if a URL is accessible by Replicate (external, public URL)
  * Blocks private/internal IPs to prevent SSRF
  */
@@ -582,18 +649,21 @@ export async function POST(request: NextRequest) {
     const loraActive = !!ms?.loraWeightsUrl || (Array.isArray(ms?.loraWeightsUrls) && (ms.loraWeightsUrls as string[]).length > 0)
     const hasReferenceImage = processedReferenceImages && processedReferenceImages.length > 0
 
-    // ── Self-hosted Z-Image Turbo: img2img + LoRA (replaces fal.ai) ──
-    const useSelfHosted = model === 'z-image-turbo' && loraActive && hasReferenceImage;
-    if (useSelfHosted) {
-      lognog.devDebug('Routing to self-hosted z-image-turbo for img2img+lora', { model, loraActive, hasReferenceImage });
+    // ── fal.ai path: img2img + LoRA (Replicate has a bug with this combo) ──
+    const useFalAi = model === 'z-image-turbo' && loraActive && hasReferenceImage && !!process.env.FAL_KEY
+    if (useFalAi) {
+      lognog.devDebug('Routing to fal.ai for img2img+lora', { model, loraActive, hasReferenceImage });
 
       try {
-        // Get a publicly accessible reference image URL
-        let refImageUrl: string;
+        // Get the reference image URL — need a publicly accessible URL for fal.ai
+        // processedReferenceImages may contain Replicate file URLs (auth-gated), so
+        // we use the ORIGINAL referenceImages and handle base64 → Supabase upload
+        let falImageUrl: string;
         const originalRef = referenceImages[0];
         const refUrl = typeof originalRef === 'string' ? originalRef : originalRef?.url;
 
         if (refUrl.startsWith('data:image/')) {
+          // Upload base64 to Supabase Storage temp folder for a public URL
           const matches = refUrl.match(/^data:image\/(\w+);base64,(.+)$/);
           if (!matches) {
             return NextResponse.json({ error: 'Invalid image data' }, { status: 400 });
@@ -602,72 +672,64 @@ export async function POST(request: NextRequest) {
           const imageBuffer = Buffer.from(base64Data, 'base64');
           const ext = format === 'jpeg' ? 'jpg' : format;
           const mimeType = `image/${format}`;
-          const tempId = `sh_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+          const tempId = `fal_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
           const { publicUrl } = await StorageService.uploadToStorage(
             imageBuffer.buffer.slice(imageBuffer.byteOffset, imageBuffer.byteOffset + imageBuffer.byteLength),
             user.id, `temp_${tempId}`, ext, mimeType
           );
-          refImageUrl = publicUrl;
+          falImageUrl = publicUrl;
         } else if (isPublicUrl(refUrl)) {
-          refImageUrl = refUrl;
+          falImageUrl = refUrl;
         } else {
           return NextResponse.json({ error: 'Reference image must be a public URL or base64' }, { status: 400 });
         }
 
-        // Build comma-separated LoRA strings for self-hosted model
+        // Build LoRA array for fal.ai: [{path, scale}]
         const loraUrls = (ms.loraWeightsUrls as string[]) || (ms.loraWeightsUrl ? [ms.loraWeightsUrl as string] : []);
         const loraScales = (ms.loraScales as number[]) || [ms.loraScale as number ?? 1.0];
-        const loraWeightsStr = loraUrls.join(',');
-        const loraScalesStr = loraUrls.map((_, i) => loraScales[i] ?? 1.0).join(',');
+        const falLoras = loraUrls.map((url, i) => ({
+          path: url,
+          scale: loraScales[i] ?? 1.0,
+        }));
 
-        // Get dimensions from aspect ratio
+        // Get dimensions from aspect ratio (omit for match_input_image → fal.ai auto-matches)
         const settings = modelSettings as Record<string, unknown>;
         const aspectRatio = (settings.aspectRatio as string) || '16:9';
         const dimensions = aspectRatio !== 'match_input_image' ? ASPECT_RATIO_SIZES[aspectRatio] : undefined;
-        const outputFormat = (settings.outputFormat as string) || 'jpg';
 
-        const shStart = Date.now();
-        const shOutput = await replicate.run(
-          'taskmasterpeace/z-image-turbo:fd590bc7b76f3cf21c403b4cd08458e63edbe8264a2d7dacef1922ff7309c6c9',
-          {
-            input: {
-              prompt,
-              image: refImageUrl,
-              strength: (settings.img2imgStrength as number) ?? 0.6,
-              width: dimensions ? Math.min(dimensions.width, 2048) : 1024,
-              height: dimensions ? Math.min(dimensions.height, 2048) : 1024,
-              num_inference_steps: (settings.numInferenceSteps as number) || 8,
-              guidance_scale: (settings.guidanceScale as number) ?? 0.0,
-              num_images: Math.min((settings.batchCount as number) || 1, 4),
-              lora_weights: loraWeightsStr,
-              lora_scales: loraScalesStr,
-              output_format: outputFormat,
-              output_quality: 80,
-            },
-          }
-        ) as unknown[];
-        const shLatency = Date.now() - shStart;
+        const falStart = Date.now();
+        const falResult = await callFalAiImg2ImgLora({
+          prompt,
+          imageUrl: falImageUrl,
+          strength: (settings.img2imgStrength as number) ?? 0.6,
+          loras: falLoras,
+          width: dimensions ? Math.min(dimensions.width, 2048) : undefined,
+          height: dimensions ? Math.min(dimensions.height, 2048) : undefined,
+          outputFormat: (settings.outputFormat as string) || 'jpg',
+        });
+        const falLatency = Date.now() - falStart;
 
-        lognog.debug(`Self-hosted OK ${shLatency}ms z-image-turbo-img2img-lora`, {
+        lognog.debug(`fal.ai OK ${falLatency}ms z-image-turbo-img2img-lora`, {
           type: 'integration',
-          integration: 'replicate-self-hosted',
-          latency_ms: shLatency,
+          integration: 'fal',
+          latency_ms: falLatency,
           success: true,
-          model: 'taskmasterpeace/z-image-turbo',
+          model: 'fal-ai/z-image/turbo/image-to-image/lora',
           user_id: user.id,
           user_email: user.email,
         });
 
-        // replicate.run returns an array of file URLs
-        const imageOutputs = shOutput.filter((o): o is { url: () => string } | string => !!o);
-        if (!imageOutputs.length) {
-          return NextResponse.json({ error: 'Self-hosted model returned no images' }, { status: 500 });
+        // Download results from fal.ai and upload to Supabase Storage
+        if (!falResult.images?.length) {
+          return NextResponse.json({ error: 'fal.ai returned no images' }, { status: 500 });
         }
 
+        const outputFormat = (settings.outputFormat as string) || 'jpg';
         const ext = outputFormat === 'jpeg' ? 'jpg' : outputFormat;
         const mimeType = `image/${outputFormat === 'jpg' ? 'jpeg' : outputFormat}`;
-        const basePredictionId = `sh_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        const basePredictionId = `fal_${Date.now()}_${falResult.seed || Math.random().toString(36).slice(2, 8)}`;
 
+        // Build metadata (shared across all images in batch)
         const metadata = ImageGenerationService.buildMetadata({
           model: model as ImageModel,
           prompt,
@@ -678,28 +740,30 @@ export async function POST(request: NextRequest) {
           recipeName,
         });
         const baseMetadata = extraMetadata
-          ? { ...metadata, ...extraMetadata, provider: 'replicate-self-hosted' }
-          : { ...metadata, provider: 'replicate-self-hosted' };
+          ? { ...metadata, ...extraMetadata, provider: 'fal', fal_seed: falResult.seed }
+          : { ...metadata, provider: 'fal', fal_seed: falResult.seed };
 
         const modelConfig = getModelConfig(model as ImageModel);
         let firstGalleryId = '';
         let firstPublicUrl = '';
 
-        for (let i = 0; i < imageOutputs.length; i++) {
-          const output = imageOutputs[i];
-          // Replicate SDK v1 returns ReadableStream or FileOutput objects — extract URL
-          const imgUrl = typeof output === 'string' ? output : (output as { url: () => string }).url();
+        // Process each image from fal.ai response
+        for (let i = 0; i < falResult.images.length; i++) {
+          const falImg = falResult.images[i];
+          if (!falImg?.url) continue;
 
-          const imgPredictionId = imageOutputs.length > 1 ? `${basePredictionId}_img_${i}` : basePredictionId;
-          const { buffer } = await StorageService.downloadAsset(imgUrl);
+          const imgPredictionId = falResult.images.length > 1 ? `${basePredictionId}_img_${i}` : basePredictionId;
+          const { buffer } = await StorageService.downloadAsset(falImg.url);
           const { publicUrl, storagePath, fileSize } = await StorageService.uploadToStorage(
             buffer, user.id, imgPredictionId, ext, mimeType
           );
 
-          if (i === 0) firstPublicUrl = publicUrl;
+          if (i === 0) {
+            firstPublicUrl = publicUrl;
+          }
 
-          const imgMetadata = imageOutputs.length > 1
-            ? { ...baseMetadata, image_index: i, total_images: imageOutputs.length }
+          const imgMetadata = falResult.images.length > 1
+            ? { ...baseMetadata, image_index: i, total_images: falResult.images.length }
             : baseMetadata;
 
           const { data: gallery, error: galleryError } = await supabase
@@ -720,7 +784,7 @@ export async function POST(request: NextRequest) {
             .single();
 
           if (galleryError || !gallery) {
-            lognog.devError(`Gallery creation error (self-hosted image ${i})`, { error: galleryError?.message });
+            lognog.devError(`Gallery creation error (fal.ai image ${i})`, { error: galleryError?.message });
             continue;
           }
 
@@ -741,11 +805,12 @@ export async function POST(request: NextRequest) {
           });
         }
 
+        // Deduct credits once per prediction (admins bypass)
         if (!userIsAdmin) {
           await creditsService.deductCredits(user.id, model, {
             generationType: 'image',
             predictionId: basePredictionId,
-            description: `Image generation (${model} self-hosted${imageOutputs.length > 1 ? ` x${imageOutputs.length}` : ''})`,
+            description: `Image generation (${model} via fal.ai${falResult.images.length > 1 ? ` x${falResult.images.length}` : ''})`,
             overrideAmount: modelCostCents,
             user_email: user.email,
           });
@@ -760,8 +825,8 @@ export async function POST(request: NextRequest) {
           prediction_id: basePredictionId,
           credits_deducted: userIsAdmin ? 0 : modelCostCents,
           reason: 'image_generation',
-          provider: 'replicate-self-hosted',
-          image_count: imageOutputs.length,
+          provider: 'fal',
+          image_count: falResult.images.length,
         });
 
         return NextResponse.json({
@@ -769,22 +834,22 @@ export async function POST(request: NextRequest) {
           galleryId: firstGalleryId,
           status: 'completed',
           imageUrl: firstPublicUrl,
-          imageCount: imageOutputs.length,
+          imageCount: falResult.images.length,
         });
-      } catch (shError) {
-        lognog.error('Self-hosted z-image-turbo generation failed', {
+      } catch (falError) {
+        lognog.error('fal.ai generation failed', {
           type: 'error',
-          integration: 'replicate-self-hosted',
-          error: shError instanceof Error ? shError.message : String(shError),
+          integration: 'fal',
+          error: falError instanceof Error ? falError.message : String(falError),
           user_id: user.id,
         });
         return NextResponse.json(
-          { error: 'Image generation failed', details: shError instanceof Error ? shError.message : 'Self-hosted model error' },
+          { error: 'Image generation failed', details: falError instanceof Error ? falError.message : 'fal.ai error' },
           { status: 500 }
         );
       }
     }
-    // ── End self-hosted Z-Image Turbo path ──
+    // ── End fal.ai path ──
 
     const replicateModelId = ImageGenerationService.getReplicateModelId(model as ImageModel, loraActive, hasReferenceImage);
     lognog.devDebug('Using Replicate model', {
