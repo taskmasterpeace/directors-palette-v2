@@ -410,6 +410,8 @@ export class ImageGenerationService {
   static readonly IMG2IMG_VERSION = '5c958e90e0f904240629ee35c69196e3bd790b5528c0696705ebdb1656871dd8'
   static readonly FIRERED_VERSION = '778e5a9b1a1c75e0f8013e19db9a9e6ff456c46d796e31070fe740a2874daa96'
   static readonly QWEN_IMAGE_EDIT_VERSION = 'b37d69a6b94414c96cc4ecb16660b472bb62284f2293d4b65537c09b8500e200'
+  static readonly FLUX2_KLEIN_9B_VERSION = '963f7b2c4aa2bc7e6377b95759dcf3a21cf175f6e8b0d8c1efe7bf6c8a23b690'
+  static readonly FLUX2_KLEIN_9B_LORA_VERSION = '5e92f3f81c77962ddc86ddd75c8fc46c92a26730b1ac13701a39aa10eac464f0'
 
   /**
    * Check if a model requires version-based prediction (not model: shorthand)
@@ -417,6 +419,8 @@ export class ImageGenerationService {
   static getVersionForModel(model: ImageModel, loraActive?: boolean, hasReferenceImage?: boolean): string | null {
     if (model === 'z-image-turbo' && hasReferenceImage) return this.IMG2IMG_VERSION
     if (loraActive && model === 'z-image-turbo') return this.LORA_VERSION
+    if (model === 'flux-2-klein-9b' && loraActive) return this.FLUX2_KLEIN_9B_LORA_VERSION
+    if (model === 'flux-2-klein-9b') return this.FLUX2_KLEIN_9B_VERSION
     if (model === 'firered-image-edit') return this.FIRERED_VERSION
     if (model === 'qwen-image-edit') return this.QWEN_IMAGE_EDIT_VERSION
     return null
