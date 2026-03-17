@@ -42,8 +42,6 @@ export interface ZImageTurboSettings {
 export interface Flux2Klein9bSettings {
   aspectRatio?: string
   outputFormat?: 'jpg' | 'png' | 'webp'
-  loraWeightsUrls?: string[]  // multiple LoRAs
-  loraScales?: number[]       // multiple scales
 }
 
 export interface FireRedEditSettings {

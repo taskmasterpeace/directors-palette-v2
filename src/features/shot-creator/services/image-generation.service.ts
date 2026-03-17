@@ -240,16 +240,11 @@ export class ImageGenerationService {
 
   private static buildFlux2Klein9bInput(input: ImageGenerationInput) {
     const settings = input.modelSettings as Flux2Klein9bSettings
-    const hasLora = settings.loraWeightsUrls && settings.loraWeightsUrls.length > 0
 
     const replicateInput: Record<string, unknown> = {
       prompt: input.prompt,
+      go_fast: true,
       disable_safety_checker: true,
-    }
-
-    // go_fast only supported on base model, NOT the LoRA variant
-    if (!hasLora) {
-      replicateInput.go_fast = true
     }
 
     if (settings.aspectRatio) {
@@ -263,14 +258,6 @@ export class ImageGenerationService {
     // Reference images (up to 5)
     if (input.referenceImages && input.referenceImages.length > 0) {
       replicateInput.images = this.normalizeReferenceImages(input.referenceImages)
-    }
-
-    // LoRA support — arrays matching the base-lora variant API
-    // Enforce minimum scale of 0.1 to prevent accidental zero-effect LoRAs
-    if (hasLora) {
-      replicateInput.lora_weights = settings.loraWeightsUrls
-      const scales = settings.loraScales || settings.loraWeightsUrls!.map(() => 1.0)
-      replicateInput.lora_scales = scales.map(s => Math.max(s, 0.1))
     }
 
     return replicateInput
@@ -406,10 +393,6 @@ export class ImageGenerationService {
     if (loraActive && model === 'z-image-turbo') {
       return 'prunaai/z-image-turbo-lora'
     }
-    // Flux 2 Klein 9B: use LoRA variant when LoRA is active
-    if (model === 'flux-2-klein-9b' && loraActive) {
-      return 'black-forest-labs/flux-2-klein-9b-base-lora'
-    }
     return modelConfig.endpoint
   }
 
@@ -419,7 +402,6 @@ export class ImageGenerationService {
   static readonly FIRERED_VERSION = '778e5a9b1a1c75e0f8013e19db9a9e6ff456c46d796e31070fe740a2874daa96'
   static readonly QWEN_IMAGE_EDIT_VERSION = 'b37d69a6b94414c96cc4ecb16660b472bb62284f2293d4b65537c09b8500e200'
   static readonly FLUX2_KLEIN_9B_VERSION = '963f7b2c4aa2bc7e6377b95759dcf3a21cf175f6e8b0d8c1efe7bf6c8a23b690'
-  static readonly FLUX2_KLEIN_9B_LORA_VERSION = '5e92f3f81c77962ddc86ddd75c8fc46c92a26730b1ac13701a39aa10eac464f0'
 
   /**
    * Check if a model requires version-based prediction (not model: shorthand)
@@ -427,7 +409,6 @@ export class ImageGenerationService {
   static getVersionForModel(model: ImageModel, loraActive?: boolean, hasReferenceImage?: boolean): string | null {
     if (model === 'z-image-turbo' && hasReferenceImage) return this.IMG2IMG_VERSION
     if (loraActive && model === 'z-image-turbo') return this.LORA_VERSION
-    if (model === 'flux-2-klein-9b' && loraActive) return this.FLUX2_KLEIN_9B_LORA_VERSION
     if (model === 'flux-2-klein-9b') return this.FLUX2_KLEIN_9B_VERSION
     if (model === 'firered-image-edit') return this.FIRERED_VERSION
     if (model === 'qwen-image-edit') return this.QWEN_IMAGE_EDIT_VERSION

@@ -447,7 +447,7 @@ function LoraDialog({ onClose, editingLora }: {
 
 const COLLAPSED_MAX = 3
 
-export function LoraSection({ selectedModel }: { selectedModel?: string }) {
+export function LoraSection() {
     const { loras, activeLoraIds, toggleActiveLora, removeLora, updateLora, rateLora, getLoraRating, isLoraUsed } = useLoraStore()
     const { isAdmin } = useAdminAuth()
     const [showDialog, setShowDialog] = useState(false)
@@ -455,10 +455,7 @@ export function LoraSection({ selectedModel }: { selectedModel?: string }) {
     const [expanded, setExpanded] = useState(false)
 
     // Filter LoRAs by model compatibility
-    const filteredLoras = loras.filter(lora => {
-        if (!lora.compatibleModels) return !selectedModel || selectedModel !== 'flux-2-klein-9b'
-        return !selectedModel || lora.compatibleModels.includes(selectedModel)
-    })
+    const filteredLoras = loras.filter(lora => !lora.compatibleModels)
 
     const visibleLoras = expanded || filteredLoras.length <= COLLAPSED_MAX
         ? filteredLoras

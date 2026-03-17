@@ -157,12 +157,6 @@ export function usePromptGeneration() {
         const model = shotCreatorSettings.model || 'nano-banana-2'
         const baseSettings: Record<string, unknown> = {}
 
-        // Filter active LoRAs to only those compatible with the current model
-        const modelLoras = activeLoras.filter(l => {
-            if (!l.compatibleModels) return model !== 'flux-2-klein-9b' // Universal LoRAs: all models except Flux 2
-            return l.compatibleModels.includes(model) // Model-specific LoRAs
-        })
-
         switch (model) {
             case 'nano-banana-2':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
@@ -181,11 +175,11 @@ export function usePromptGeneration() {
                     baseSettings.img2imgStrength = shotCreatorSettings.img2imgStrength
                 }
                 // Inject LoRA settings when active (supports multiple)
-                if (modelLoras.length > 0) {
-                    baseSettings.loraWeightsUrls = modelLoras.map(l => l.weightsUrl)
-                    baseSettings.loraScales = modelLoras.map(l => l.defaultLoraScale)
-                    baseSettings.loraName = modelLoras.map(l => l.name).join(' + ')
-                    baseSettings.guidanceScale = shotCreatorSettings.guidanceScale ?? modelLoras[0].defaultGuidanceScale
+                if (activeLoras.length > 0) {
+                    baseSettings.loraWeightsUrls = activeLoras.map(l => l.weightsUrl)
+                    baseSettings.loraScales = activeLoras.map(l => l.defaultLoraScale)
+                    baseSettings.loraName = activeLoras.map(l => l.name).join(' + ')
+                    baseSettings.guidanceScale = shotCreatorSettings.guidanceScale ?? activeLoras[0].defaultGuidanceScale
                 } else if (shotCreatorSettings.guidanceScale !== undefined) {
                     baseSettings.guidanceScale = shotCreatorSettings.guidanceScale
                 }
@@ -193,12 +187,6 @@ export function usePromptGeneration() {
             case 'flux-2-klein-9b':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
                 baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
-                // Inject LoRA settings when active
-                if (modelLoras.length > 0) {
-                    baseSettings.loraWeightsUrls = modelLoras.map(l => l.weightsUrl)
-                    baseSettings.loraScales = modelLoras.map(l => l.defaultLoraScale)
-                    baseSettings.loraName = modelLoras.map(l => l.name).join(' + ')
-                }
                 break
             case 'qwen-image-edit':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio || 'match_input_image'
@@ -685,15 +673,10 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
             .filter((url): url is string => Boolean(url))
         const modelSettings = buildModelSettings()
 
-        // Prepend LoRA trigger words when active on LoRA-capable models
-        // Filter to only model-compatible LoRAs so we don't prepend wrong trigger words
-        const currentModelLoras = activeLoras.filter(l => {
-            if (!l.compatibleModels) return model !== 'flux-2-klein-9b'
-            return l.compatibleModels.includes(model)
-        })
+        // Prepend LoRA trigger words when active on Z-Image Turbo
         let finalPrompt = shotCreatorPrompt
-        if (currentModelLoras.length > 0 && (model === 'z-image-turbo' || model === 'flux-2-klein-9b')) {
-            const triggerWords = currentModelLoras.map(l => l.triggerWord).join(', ')
+        if (activeLoras.length > 0 && model === 'z-image-turbo') {
+            const triggerWords = activeLoras.map(l => l.triggerWord).join(', ')
             finalPrompt = `${triggerWords}, ${shotCreatorPrompt}`
         }
 

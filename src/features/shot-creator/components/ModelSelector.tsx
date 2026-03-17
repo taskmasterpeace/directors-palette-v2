@@ -46,7 +46,7 @@ const MODEL_CAPABILITIES: Record<ModelId, {
     speed: '~15s',
     textRendering: 'Excellent',
     refImages: 'Up to 5',
-    bestFor: ['High-quality generation', 'LoRA styles', 'Image-to-image', 'Fine detail']
+    bestFor: ['High-quality generation', 'Reference images', 'Image editing', 'Fine detail']
   },
   'firered-image-edit': {
     speed: '~10s',
