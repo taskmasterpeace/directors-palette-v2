@@ -87,13 +87,16 @@ async function callFalAiImg2ImgLora(params: {
 }
 
 /**
- * Call fal.ai flux-2/klein/9b/base/lora for text-to-image with LoRA
+ * Call fal.ai Klein 9B + LoRA
+ * Text-to-image: fal-ai/flux-2/klein/9b/base/lora
+ * Edit (img2img): fal-ai/flux-2/klein/9b/base/edit/lora
  * Replicate's Klein 9B LoRA endpoint produces blurry results (insufficient inference steps).
  * fal.ai exposes num_inference_steps and guidance_scale, producing crisp results.
  */
 async function callFalAiKleinLora(params: {
   prompt: string;
   loras: { path: string; scale: number }[];
+  imageUrls?: string[];  // If provided, uses edit endpoint (img2img + LoRA)
   imageSize?: string | { width: number; height: number };
   outputFormat: string;
   numInferenceSteps?: number;
@@ -102,6 +105,11 @@ async function callFalAiKleinLora(params: {
 }): Promise<{ images: { url: string; width: number; height: number }[]; seed: number }> {
   const falKey = process.env.FAL_KEY;
   if (!falKey) throw new Error('FAL_KEY not configured');
+
+  const isEdit = params.imageUrls && params.imageUrls.length > 0;
+  const endpoint = isEdit
+    ? 'https://fal.run/fal-ai/flux-2/klein/9b/base/edit/lora'
+    : 'https://fal.run/fal-ai/flux-2/klein/9b/base/lora';
 
   const body: Record<string, unknown> = {
     prompt: params.prompt,
@@ -113,18 +121,23 @@ async function callFalAiKleinLora(params: {
     enable_safety_checker: false,
   };
 
+  if (isEdit) {
+    body.image_urls = params.imageUrls;
+  }
+
   if (params.imageSize) {
     body.image_size = params.imageSize;
   }
 
-  lognog.devDebug('Calling fal.ai Klein 9B + LoRA', {
+  lognog.devDebug(`Calling fal.ai Klein 9B ${isEdit ? 'edit' : 'txt2img'} + LoRA`, {
     prompt_length: params.prompt.length,
     lora_count: params.loras.length,
+    image_count: params.imageUrls?.length || 0,
     steps: body.num_inference_steps,
     guidance: body.guidance_scale,
   });
 
-  const response = await fetch('https://fal.run/fal-ai/flux-2/klein/9b/base/lora', {
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Authorization': `Key ${falKey}`,
@@ -140,6 +153,7 @@ async function callFalAiKleinLora(params: {
       error: errorText,
       type: 'integration',
       integration: 'fal',
+      endpoint,
     });
     throw new Error(`fal.ai API error (${response.status}): ${errorText}`);
   }
@@ -915,7 +929,7 @@ export async function POST(request: NextRequest) {
     // ── fal.ai path: Klein 9B + LoRA (Replicate endpoint lacks steps/guidance controls) ──
     const useKleinFal = model === 'flux-2-klein-9b' && loraActive && !!process.env.FAL_KEY
     if (useKleinFal) {
-      lognog.devDebug('Routing to fal.ai for Klein 9B + LoRA', { model, loraActive });
+      lognog.devDebug('Routing to fal.ai for Klein 9B + LoRA', { model, loraActive, hasReferenceImage });
 
       try {
         // Build LoRA array for fal.ai: [{path, scale}]
@@ -938,21 +952,56 @@ export async function POST(request: NextRequest) {
         };
         const falImageSize = FAL_SIZE_MAP[aspectRatio] || 'landscape_16_9';
 
+        // Build reference image URLs for edit mode (img2img + LoRA)
+        let falImageUrls: string[] | undefined;
+        if (hasReferenceImage && processedReferenceImages.length > 0) {
+          // Get publicly accessible URLs for fal.ai
+          const imageUrls: string[] = [];
+          for (const ref of referenceImages) {
+            const refUrl = typeof ref === 'string' ? ref : ref?.url;
+            if (!refUrl) continue;
+
+            if (refUrl.startsWith('data:image/')) {
+              // Upload base64 to Supabase Storage for a public URL
+              const matches = refUrl.match(/^data:image\/(\w+);base64,(.+)$/);
+              if (!matches) continue;
+              const [, format, base64Data] = matches;
+              const imageBuffer = Buffer.from(base64Data, 'base64');
+              const ext = format === 'jpeg' ? 'jpg' : format;
+              const mimeType = `image/${format}`;
+              const tempId = `fal_klein_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+              const { publicUrl } = await StorageService.uploadToStorage(
+                imageBuffer.buffer.slice(imageBuffer.byteOffset, imageBuffer.byteOffset + imageBuffer.byteLength),
+                user.id, `temp_${tempId}`, ext, mimeType
+              );
+              imageUrls.push(publicUrl);
+            } else if (isPublicUrl(refUrl)) {
+              imageUrls.push(refUrl);
+            }
+          }
+          if (imageUrls.length > 0) {
+            falImageUrls = imageUrls.slice(0, 4); // fal.ai max 4 images
+          }
+        }
+
         const falStart = Date.now();
         const falResult = await callFalAiKleinLora({
           prompt,
           loras: falLoras,
+          imageUrls: falImageUrls,
           imageSize: falImageSize,
           outputFormat: (settings.outputFormat as string) || 'jpg',
         });
         const falLatency = Date.now() - falStart;
 
+        const falEndpoint = falImageUrls ? 'fal-ai/flux-2/klein/9b/base/edit/lora' : 'fal-ai/flux-2/klein/9b/base/lora';
         lognog.debug(`fal.ai OK ${falLatency}ms klein-9b-lora`, {
           type: 'integration',
           integration: 'fal',
           latency_ms: falLatency,
           success: true,
-          model: 'fal-ai/flux-2/klein/9b/base/lora',
+          model: falEndpoint,
+          edit_mode: !!falImageUrls,
           user_id: user.id,
           user_email: user.email,
         });
