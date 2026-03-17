@@ -121,6 +121,18 @@ const FLUX2_9B_LORAS: LoraItem[] = [
         compatibleModels: ['flux-2-klein-9b'],
         createdAt: 0,
     },
+    {
+        id: 'nava-k9b',
+        name: 'Nava',
+        type: 'style',
+        referenceTag: 'n4va',
+        triggerWord: 'n4va style',
+        weightsUrl: 'https://v3b.fal.media/files/b/0a9290d5/bVKO5g_LGpEF9Rq-wn3WL_pytorch_lora_weights_comfy_converted.safetensors',
+        defaultGuidanceScale: 5.0,
+        defaultLoraScale: 1.0,
+        compatibleModels: ['flux-2-klein-9b'],
+        createdAt: 0,
+    },
 ]
 
 const ALL_BUILT_IN_LORAS = [...BUILT_IN_LORAS, ...FLUX2_9B_LORAS]
@@ -360,7 +372,7 @@ export const useLoraStore = create<LoraStore>()(
         }),
         {
             name: 'directors-palette-lora-store',
-            version: 14,
+            version: 15,
             migrate: (persisted: unknown) => {
                 const state = persisted as Record<string, unknown>
                 const loras = (state?.loras as LoraItem[]) || []
