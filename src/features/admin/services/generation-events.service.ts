@@ -204,7 +204,8 @@ class GenerationEventsService {
                     uniqueUsers: 0,
                     byModel: [],
                     byStatus: [],
-                    topUsers: []
+                    topUsers: [],
+                    daily: [],
                 }
             }
 
@@ -224,6 +225,7 @@ class GenerationEventsService {
             const modelMap = new Map<string, { model_name: string | null; count: number; credits_total: number }>()
             const statusMap = new Map<string, number>()
             const userMap = new Map<string, { user_email: string | null; count: number; credits_used: number }>()
+            const dailyMap = new Map<string, { count: number; credits: number; users: Set<string> }>()
 
             for (const row of allEvents) {
                 total++
@@ -254,6 +256,14 @@ class GenerationEventsService {
                 userStats.count++
                 userStats.credits_used += row.credits_cost || 0
                 userMap.set(row.user_id, userStats)
+
+                // Daily stats
+                const day = row.created_at.substring(0, 10) // YYYY-MM-DD
+                const dayStats = dailyMap.get(day) || { count: 0, credits: 0, users: new Set<string>() }
+                dayStats.count++
+                dayStats.credits += row.credits_cost || 0
+                dayStats.users.add(row.user_id)
+                dailyMap.set(day, dayStats)
             }
 
             const byModel = Array.from(modelMap.entries()).map(([model_id, stats]) => ({
@@ -278,6 +288,17 @@ class GenerationEventsService {
                 .sort((a, b) => b.count - a.count)
                 .slice(0, 10)
 
+            // Build daily array (last 30 days, sorted by date)
+            const daily = Array.from(dailyMap.entries())
+                .map(([date, stats]) => ({
+                    date,
+                    count: stats.count,
+                    credits: stats.credits,
+                    uniqueUsers: stats.users.size,
+                }))
+                .sort((a, b) => a.date.localeCompare(b.date))
+                .slice(-30)
+
             return {
                 total,
                 today,
@@ -286,7 +307,8 @@ class GenerationEventsService {
                 uniqueUsers: uniqueUsersSet.size,
                 byModel,
                 byStatus,
-                topUsers
+                topUsers,
+                daily,
             }
         } catch (error) {
             log.error('[GenerationEvents] Error getting stats', { error: error instanceof Error ? error.message : String(error) })
@@ -298,7 +320,8 @@ class GenerationEventsService {
                 uniqueUsers: 0,
                 byModel: [],
                 byStatus: [],
-                topUsers: []
+                topUsers: [],
+                daily: [],
             }
         }
     }

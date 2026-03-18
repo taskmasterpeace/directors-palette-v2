@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Image as ImageIcon, Sparkles, TrendingUp, Users } from 'lucide-react'
+import { Image as ImageIcon, Sparkles, TrendingUp, Users, BarChart3 } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import type { GenerationStatsResponse } from '../types/generation-events.types'
 import { createLogger } from '@/lib/logger'
@@ -151,6 +151,74 @@ export function GenerationStats({ hideAdminAccounts = false }: GenerationStatsPr
                     </CardContent>
                 </Card>
             )}
+
+            {/* Daily Timeline */}
+            {stats?.daily && stats.daily.length > 0 && (
+                <Card className="bg-zinc-900 border-zinc-800 md:col-span-4">
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <BarChart3 className="h-4 w-4 text-cyan-500" />
+                            <CardTitle className="text-sm font-medium text-zinc-400">Daily Generations (Last 30 Days)</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <DailyChart data={stats.daily} />
+                    </CardContent>
+                </Card>
+            )}
+        </div>
+    )
+}
+
+/** Simple CSS bar chart — no chart library needed */
+function DailyChart({ data }: { data: { date: string; count: number; credits: number; uniqueUsers: number }[] }) {
+    const maxCount = Math.max(...data.map(d => d.count), 1)
+
+    return (
+        <div className="space-y-1">
+            {/* Chart bars */}
+            <div className="flex items-end gap-[2px] h-32">
+                {data.map((day) => {
+                    const height = Math.max((day.count / maxCount) * 100, 2)
+                    const dateObj = new Date(day.date + 'T00:00:00')
+                    const isToday = day.date === new Date().toISOString().substring(0, 10)
+                    return (
+                        <div
+                            key={day.date}
+                            className="group relative flex-1 flex flex-col justify-end"
+                        >
+                            {/* Tooltip */}
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10">
+                                <div className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs whitespace-nowrap shadow-lg">
+                                    <div className="font-medium text-white">
+                                        {dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    </div>
+                                    <div className="text-cyan-400">{day.count} generations</div>
+                                    <div className="text-amber-400">{day.credits} pts</div>
+                                    <div className="text-zinc-400">{day.uniqueUsers} user{day.uniqueUsers !== 1 ? 's' : ''}</div>
+                                </div>
+                            </div>
+                            {/* Bar */}
+                            <div
+                                className={`rounded-t-sm transition-colors ${isToday ? 'bg-cyan-500' : 'bg-cyan-700 group-hover:bg-cyan-500'}`}
+                                style={{ height: `${height}%` }}
+                            />
+                        </div>
+                    )
+                })}
+            </div>
+            {/* X-axis labels — show first, middle, last */}
+            <div className="flex justify-between text-[10px] text-zinc-500 pt-1">
+                {data.length > 0 && (
+                    <>
+                        <span>{new Date(data[0].date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        {data.length > 2 && (
+                            <span>{new Date(data[Math.floor(data.length / 2)].date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        )}
+                        <span>{new Date(data[data.length - 1].date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                    </>
+                )}
+            </div>
         </div>
     )
 }

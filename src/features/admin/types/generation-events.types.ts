@@ -50,6 +50,13 @@ export interface GenerationEventsListResponse {
     hasMore: boolean
 }
 
+export interface DailyStats {
+    date: string  // YYYY-MM-DD
+    count: number
+    credits: number
+    uniqueUsers: number
+}
+
 export interface GenerationStatsResponse {
     total: number
     today: number
@@ -59,6 +66,7 @@ export interface GenerationStatsResponse {
     byModel: ModelStats[]
     byStatus: StatusStats[]
     topUsers: TopUserStats[]
+    daily: DailyStats[]  // Last 30 days
 }
 
 export interface ModelStats {
