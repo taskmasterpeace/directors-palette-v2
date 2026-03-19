@@ -365,8 +365,8 @@ INSTRUCTIONS:
                                     },
                                     shotType: {
                                         type: 'string',
-                                        enum: ['establishing', 'wide', 'medium', 'close-up', 'detail'],
-                                        description: 'The type of camera shot'
+                                        enum: ['establishing', 'wide', 'medium', 'close-up', 'detail', 'over_shoulder', 'title_card', 'text_overlay', 'abstract', 'montage'],
+                                        description: 'The type of shot. Use establishing/wide/medium/close-up/detail for standard coverage. Use over_shoulder for conversations. Use title_card for chapter titles (NO characters). Use text_overlay for stats, quotes, social media. Use abstract for visual metaphors. Use montage for rapid-sequence composites.'
                                     },
                                     characterTags: {
                                         type: 'array',
