@@ -638,13 +638,25 @@ export interface ShotBreakdownResult {
 /**
  * Shot type for cinematic prompts
  */
-export type ShotType = 'establishing' | 'wide' | 'medium' | 'close-up' | 'detail' | 'unknown'
+export type ShotType =
+    | 'establishing'
+    | 'wide'
+    | 'medium'
+    | 'close-up'
+    | 'detail'
+    | 'over_shoulder'
+    | 'title_card'
+    | 'text_overlay'
+    | 'abstract'
+    | 'montage'
+    | 'unknown'
 
 /**
  * Generated shot prompt (AI-transformed from story segment)
  */
 export interface GeneratedShotPrompt {
     sequence: number
+    chapterLabel?: string              // Display label like "C3-05" (computed, not used for sorting)
     originalText: string           // The story segment that drove this shot
     prompt: string                 // AI-generated cinematic prompt
     shotType: ShotType             // Type of shot (establishing, wide, medium, close-up, detail)
