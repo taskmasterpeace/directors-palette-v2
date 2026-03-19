@@ -42,12 +42,6 @@ const MODEL_CAPABILITIES: Record<ModelId, {
     refImages: 'Up to 5',
     bestFor: ['High-quality generation', 'LoRA styles', 'Reference images', 'Fine detail']
   },
-  'firered-image-edit': {
-    speed: '~10s',
-    textRendering: 'Good',
-    refImages: 'Required (1)',
-    bestFor: ['Edit existing images', 'Add/remove objects', 'Background swap', 'Style transfer']
-  },
   'qwen-image-edit': {
     speed: '~30s',
     textRendering: 'Good',

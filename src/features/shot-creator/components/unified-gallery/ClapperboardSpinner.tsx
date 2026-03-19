@@ -6,7 +6,6 @@ import { useState, useEffect, useRef } from 'react'
 const MODEL_ESTIMATED_SECONDS: Record<string, number> = {
   'nano-banana-2': 60,
   'flux-2-klein-9b': 15,
-  'firered-image-edit': 10,
   'qwen-image-edit': 30,
 }
 
@@ -14,7 +13,6 @@ const MODEL_ESTIMATED_SECONDS: Record<string, number> = {
 const MODEL_DISPLAY_NAMES: Record<string, string> = {
   'nano-banana-2': 'Nano Banana 2',
   'flux-2-klein-9b': 'Flux 2 Klein',
-  'firered-image-edit': 'Edit Image',
   'qwen-image-edit': 'Camera Angle',
 }
 

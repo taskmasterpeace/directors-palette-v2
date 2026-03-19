@@ -12,7 +12,6 @@ import type {
   ImageGenerationResponse,
   NanoBanana2Settings,
   Flux2Klein9bSettings,
-  FireRedEditSettings,
   QwenImageEditSettings,
 } from '../types/image-generation.types'
 import { buildCameraAnglePrompt } from '../helpers/camera-angle.helper'
@@ -45,9 +44,6 @@ export class ImageGenerationService {
         break
       case 'flux-2-klein-9b':
         errors.push(...this.validateFlux2Klein9b(input))
-        break
-      case 'firered-image-edit':
-        errors.push(...this.validateFireRedEdit(input))
         break
       case 'qwen-image-edit':
         errors.push(...this.validateQwenImageEdit(input))
@@ -92,19 +88,6 @@ export class ImageGenerationService {
   }
 
   /**
-   * Validate firered-image-edit specific constraints
-   */
-  private static validateFireRedEdit(input: ImageGenerationInput): string[] {
-    const errors: string[] = []
-
-    if (!input.referenceImages || input.referenceImages.length === 0) {
-      errors.push('Z-Image Edit requires an input image to edit')
-    }
-
-    return errors
-  }
-
-  /**
    * Build Replicate input object based on model
    */
   static buildReplicateInput(input: ImageGenerationInput): Record<string, unknown> {
@@ -113,8 +96,6 @@ export class ImageGenerationService {
         return this.buildNanoBanana2Input(input)
       case 'flux-2-klein-9b':
         return this.buildFlux2Klein9bInput(input)
-      case 'firered-image-edit':
-        return this.buildFireRedEditInput(input)
       case 'qwen-image-edit':
         return this.buildQwenImageEditInput(input)
       default:
@@ -184,46 +165,6 @@ export class ImageGenerationService {
     // Reference images (up to 5)
     if (input.referenceImages && input.referenceImages.length > 0) {
       replicateInput.images = this.normalizeReferenceImages(input.referenceImages)
-    }
-
-    return replicateInput
-  }
-
-  private static buildFireRedEditInput(input: ImageGenerationInput) {
-    const settings = input.modelSettings as FireRedEditSettings
-    const replicateInput: Record<string, unknown> = {
-      prompt: input.prompt,
-      go_fast: settings.goFast !== false, // Default true
-    }
-
-    // Image input (required, array of URIs)
-    if (input.referenceImages && input.referenceImages.length > 0) {
-      replicateInput.image = this.normalizeReferenceImages(input.referenceImages)
-    }
-
-    // Aspect ratio
-    if (settings.aspectRatio) {
-      replicateInput.aspect_ratio = settings.aspectRatio
-    }
-
-    // CFG scale
-    if (settings.trueCfgScale !== undefined) {
-      replicateInput.true_cfg_scale = settings.trueCfgScale
-    }
-
-    // Inference steps
-    if (settings.numInferenceSteps !== undefined) {
-      replicateInput.num_inference_steps = settings.numInferenceSteps
-    }
-
-    // Output format
-    if (settings.outputFormat) {
-      replicateInput.output_format = settings.outputFormat
-    }
-
-    // Output quality
-    if (settings.outputQuality !== undefined) {
-      replicateInput.output_quality = settings.outputQuality
     }
 
     return replicateInput
@@ -315,7 +256,6 @@ export class ImageGenerationService {
   }
 
   /** Version hashes for models that require version-based predictions */
-  static readonly FIRERED_VERSION = '778e5a9b1a1c75e0f8013e19db9a9e6ff456c46d796e31070fe740a2874daa96'
   static readonly QWEN_IMAGE_EDIT_VERSION = 'b37d69a6b94414c96cc4ecb16660b472bb62284f2293d4b65537c09b8500e200'
   static readonly FLUX2_KLEIN_9B_VERSION = '963f7b2c4aa2bc7e6377b95759dcf3a21cf175f6e8b0d8c1efe7bf6c8a23b690'
 
@@ -324,7 +264,6 @@ export class ImageGenerationService {
    */
   static getVersionForModel(model: ImageModel, _loraActive?: boolean, _hasReferenceImage?: boolean): string | null {
     if (model === 'flux-2-klein-9b') return this.FLUX2_KLEIN_9B_VERSION
-    if (model === 'firered-image-edit') return this.FIRERED_VERSION
     if (model === 'qwen-image-edit') return this.QWEN_IMAGE_EDIT_VERSION
     return null
   }

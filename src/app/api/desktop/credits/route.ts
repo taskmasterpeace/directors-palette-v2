@@ -82,7 +82,7 @@ function mapModelToDesktopKey(modelId: string, generationType: string): string |
     }
 
     // Image models
-    if (id.includes('firered') || id.includes('edit')) return 'image_edit'
+    if (id.includes('edit')) return 'image_edit'
     if (generationType === 'image') return 'image'
 
     // Audio

@@ -9,7 +9,6 @@ import type { ModelId } from '@/config'
 export type ImageModel = Extract<ModelId,
   | 'nano-banana-2'
   | 'flux-2-klein-9b'
-  | 'firered-image-edit'
   | 'qwen-image-edit'
 >
 
@@ -29,15 +28,6 @@ export interface Flux2Klein9bSettings {
   outputFormat?: 'jpg' | 'png' | 'webp'
   loraWeightsUrls?: string[]  // LoRAs routed through fal.ai
   loraScales?: number[]
-}
-
-export interface FireRedEditSettings {
-  aspectRatio?: string
-  outputFormat?: 'jpg' | 'png' | 'webp'
-  trueCfgScale?: number
-  numInferenceSteps?: number
-  goFast?: boolean
-  outputQuality?: number
 }
 
 export interface QwenImageEditSettings {
@@ -71,7 +61,6 @@ export interface NanoBananaProSettings {
 // Union type for all model settings
 export type ImageModelSettings =
   | NanoBanana2Settings
-  | FireRedEditSettings
   | QwenImageEditSettings
   | SeedreamSettings
   | NanoBananaProSettings

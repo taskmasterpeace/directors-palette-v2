@@ -22,7 +22,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana-2' | 'flux-2-klein-9b' | 'firered-image-edit' | 'qwen-image-edit'
+export type ModelId = 'nano-banana-2' | 'flux-2-klein-9b' | 'qwen-image-edit'
 
 export interface ModelParameter {
     id: string
@@ -203,40 +203,6 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         default: false,
         description: 'Use web images as visual context (also enables web search)'
     },
-    // FireRed Image Edit parameters
-    fireRedCfgScale: {
-        id: 'trueCfgScale',
-        label: 'CFG Scale',
-        type: 'slider',
-        min: 0,
-        max: 20,
-        step: 0.5,
-        default: 4,
-        description: 'Guidance strength. Higher = more faithful to prompt.'
-    },
-    fireRedInferenceSteps: {
-        id: 'numInferenceSteps',
-        label: 'Inference Steps',
-        type: 'slider',
-        min: 1,
-        max: 100,
-        default: 40,
-        description: 'Number of denoising steps. Higher = better quality, slower.'
-    },
-    fireRedAspectRatio: {
-        id: 'aspectRatio',
-        label: 'Aspect Ratio',
-        type: 'select',
-        default: 'match_input_image',
-        options: [
-            { value: 'match_input_image', label: 'Match Input Image' },
-            { value: '1:1', label: '1:1 Square' },
-            { value: '16:9', label: '16:9 Landscape' },
-            { value: '9:16', label: '9:16 Portrait' },
-            { value: '4:3', label: '4:3 Classic' },
-            { value: '3:4', label: '3:4 Portrait' },
-        ]
-    },
     // Qwen Image Edit parameters
     qwenTrueCfgScale: {
         id: 'trueCfgScale',
@@ -332,29 +298,6 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         },
         maxReferenceImages: 5,
         estimatedSeconds: 15,
-    },
-    'firered-image-edit': {
-        id: 'firered-image-edit',
-        name: 'firered-image-edit',
-        displayName: 'Edit Image',
-        type: 'editing',
-        icon: '✏️',
-        description: 'Instruction-based image editing. Add/remove objects, change backgrounds, swap styles, fix details. Requires an input image.',
-        badge: 'Edit',
-        badgeColor: 'bg-orange-600',
-        textColor: 'text-orange-300',
-        endpoint: 'prunaai/firered-image-edit',
-        costPerImage: 0.04, // 4 pts = $0.04 (~$0.015 Replicate cost, ~62% margin)
-        supportedParameters: ['aspectRatio', 'outputFormat', 'trueCfgScale', 'numInferenceSteps'],
-        parameters: {
-            aspectRatio: MODEL_PARAMETERS.fireRedAspectRatio,
-            outputFormat: MODEL_PARAMETERS.outputFormat,
-            trueCfgScale: MODEL_PARAMETERS.fireRedCfgScale,
-            numInferenceSteps: MODEL_PARAMETERS.fireRedInferenceSteps,
-        },
-        maxReferenceImages: 1,
-        requiresInputImage: true,
-        estimatedSeconds: 12,
     },
     'qwen-image-edit': {
         id: 'qwen-image-edit',

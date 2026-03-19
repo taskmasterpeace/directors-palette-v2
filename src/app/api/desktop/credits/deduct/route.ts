@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
             if (generation_type === 'video_seedance') return id.includes('seedance')
             if (generation_type === 'video_i2v') return id.includes('i2v') && m.generation_type === 'video'
             if (generation_type === 'video_t2v') return m.generation_type === 'video' && !id.includes('seedance') && !id.includes('i2v')
-            if (generation_type === 'image_edit') return id.includes('edit') || id.includes('firered')
+            if (generation_type === 'image_edit') return id.includes('edit')
             return m.generation_type === typeConfig.generationType
         })
 

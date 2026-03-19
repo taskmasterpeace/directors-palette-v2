@@ -4,6 +4,8 @@
 
 export const MODEL_ICONS: Record<string, string> = {
   'nano-banana-2': '🍌',
+  'flux-2-klein-9b': '🔥',
+  'qwen-image-edit': '🎥',
 }
 
 export function getModelIcon(model?: string): string {
