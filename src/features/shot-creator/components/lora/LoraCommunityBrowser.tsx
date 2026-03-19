@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Layers, Plus, Check, Star } from 'lucide-react'
+import { useState, useMemo, useRef, useCallback } from 'react'
+import { Layers, Plus, Check, Star, Camera } from 'lucide-react'
 import { COMMUNITY_LORAS, useLoraStore } from '../../store/lora.store'
 import { cn } from '@/utils/utils'
 import { toast } from 'sonner'
@@ -12,11 +12,13 @@ export function LoraCommunityBrowser() {
     const [filter, setFilter] = useState<FilterType>('all')
     // Subscribe to `loras` directly for proper reactivity (not just methods)
     const loras = useLoraStore(s => s.loras)
+    const loraThumbnails = useLoraStore(s => s.loraThumbnails)
     const addFromCommunity = useLoraStore(s => s.addFromCommunity)
     const removeFromCollection = useLoraStore(s => s.removeFromCollection)
     const isLoraUsed = useLoraStore(s => s.isLoraUsed)
     const getLoraRating = useLoraStore(s => s.getLoraRating)
     const rateLora = useLoraStore(s => s.rateLora)
+    const setLoraThumbnail = useLoraStore(s => s.setLoraThumbnail)
 
     // Compute collection membership reactively from loras array
     const collectionIds = useMemo(() => new Set(loras.map(l => l.id)), [loras])
@@ -74,12 +76,13 @@ export function LoraCommunityBrowser() {
                             const added = collectionIds.has(lora.id)
                             const used = isLoraUsed(lora.id)
                             const rating = getLoraRating(lora.id)
+                            const customThumb = loraThumbnails[lora.id]
                             return (
                                 <CommunityLoraCard
                                     key={lora.id}
                                     name={lora.name}
                                     type={lora.type ?? 'style'}
-                                    thumbnailUrl={lora.thumbnailUrl}
+                                    thumbnailUrl={customThumb || lora.thumbnailUrl}
                                     referenceTag={lora.referenceTag}
                                     added={added}
                                     used={used}
@@ -96,6 +99,10 @@ export function LoraCommunityBrowser() {
                                     onRate={(stars) => {
                                         rateLora(lora.id, stars)
                                         toast.success(`Rated "${lora.name}" ${stars}/5`)
+                                    }}
+                                    onSetThumbnail={(url) => {
+                                        setLoraThumbnail(lora.id, url)
+                                        toast.success(`Thumbnail set for "${lora.name}"`)
                                     }}
                                 />
                             )
@@ -136,7 +143,7 @@ function FilterPill({ label, count, active, onClick }: {
     )
 }
 
-function CommunityLoraCard({ name, type, thumbnailUrl, referenceTag, added, used, rating, onToggle, onRate }: {
+function CommunityLoraCard({ name, type, thumbnailUrl, referenceTag, added, used, rating, onToggle, onRate, onSetThumbnail }: {
     name: string
     type: 'character' | 'style'
     thumbnailUrl?: string
@@ -146,8 +153,41 @@ function CommunityLoraCard({ name, type, thumbnailUrl, referenceTag, added, used
     rating: number | null
     onToggle: () => void
     onRate: (stars: number) => void
+    onSetThumbnail: (url: string) => void
 }) {
     const [showRating, setShowRating] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    const handleThumbnailPick = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        if (!file.type.startsWith('image/')) {
+            toast.error('Please select an image file')
+            return
+        }
+        // Read as data URL and save — small enough for localStorage
+        const reader = new FileReader()
+        reader.onload = () => {
+            // Create a canvas to crop to square
+            const img = new Image()
+            img.onload = () => {
+                const size = Math.min(img.width, img.height)
+                const canvas = document.createElement('canvas')
+                canvas.width = 256
+                canvas.height = 256
+                const ctx = canvas.getContext('2d')!
+                const sx = (img.width - size) / 2
+                const sy = (img.height - size) / 2
+                ctx.drawImage(img, sx, sy, size, size, 0, 0, 256, 256)
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+                onSetThumbnail(dataUrl)
+            }
+            img.src = reader.result as string
+        }
+        reader.readAsDataURL(file)
+        // Reset input so same file can be picked again
+        e.target.value = ''
+    }, [onSetThumbnail])
 
     return (
         <div className={cn(
@@ -179,6 +219,22 @@ function CommunityLoraCard({ name, type, thumbnailUrl, referenceTag, added, used
                 )}>
                     {type}
                 </span>
+
+                {/* Set Thumbnail button — bottom-right, shows on hover */}
+                <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute bottom-1.5 right-1.5 w-7 h-7 rounded-md flex items-center justify-center bg-black/60 text-white/80 hover:bg-cyan-500 hover:text-white opacity-0 group-hover:opacity-100 transition-all"
+                    title="Set thumbnail"
+                >
+                    <Camera className="w-3.5 h-3.5" />
+                </button>
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailPick}
+                    className="hidden"
+                />
 
                 {/* "Rate" badge for used but unrated */}
                 {used && rating === null && (

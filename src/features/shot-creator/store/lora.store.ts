@@ -31,6 +31,7 @@ interface LoraStore {
     activeLoraIds: string[]
     loraRatings: Record<string, LoraRating>
     usedLoraIds: string[]
+    loraThumbnails: Record<string, string>  // loraId → custom thumbnail URL override
 
     // Actions
     addLora: (lora: Omit<LoraItem, 'id' | 'createdAt'>) => string
@@ -38,6 +39,8 @@ interface LoraStore {
     updateLora: (id: string, updates: Partial<Omit<LoraItem, 'id' | 'createdAt'>>) => void
     toggleActiveLora: (id: string) => void
     isLoraActive: (id: string) => boolean
+    setLoraThumbnail: (id: string, url: string) => void
+    getLoraThumbnail: (id: string, fallback?: string) => string | undefined
 
     // Community actions
     addFromCommunity: (loraId: string) => void
@@ -277,6 +280,7 @@ export const useLoraStore = create<LoraStore>()(
             activeLoraIds: [],
             loraRatings: {},
             usedLoraIds: [],
+            loraThumbnails: {},
 
             addLora: (lora) => {
                 const id = `lora_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -320,6 +324,16 @@ export const useLoraStore = create<LoraStore>()(
             isLoraActive: (id) => {
                 const { activeLoraIds } = get()
                 return activeLoraIds.includes(id)
+            },
+
+            setLoraThumbnail: (id, url) => {
+                set((state) => ({
+                    loraThumbnails: { ...state.loraThumbnails, [id]: url },
+                }))
+            },
+
+            getLoraThumbnail: (id, fallback) => {
+                return get().loraThumbnails[id] || fallback
             },
 
             addFromCommunity: (loraId) => {
