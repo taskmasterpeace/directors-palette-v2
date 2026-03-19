@@ -40,7 +40,7 @@ const MODEL_CAPABILITIES: Record<ModelId, {
     speed: '~15s',
     textRendering: 'Excellent',
     refImages: 'Up to 5',
-    bestFor: ['High-quality generation', 'LoRA styles', 'Reference images', 'Fine detail']
+    bestFor: ['Fast generation', 'LoRA styles & characters', 'Image editing', 'Reference images']
   },
   'qwen-image-edit': {
     speed: '~30s',
