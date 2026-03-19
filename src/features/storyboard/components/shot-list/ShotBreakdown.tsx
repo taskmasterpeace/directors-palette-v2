@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Progress } from '@/components/ui/progress'
 import { SplitSquareVertical, Wand2, AlertCircle, CheckCircle, MapPin } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { Switch } from '@/components/ui/switch'
 import { useStoryboardStore } from '../../store'
 import { useDocumentaryPipeline } from '../../hooks/useDocumentaryPipeline'
 import { DIRECTORS } from '@/features/music-lab/data/directors.data'
@@ -18,9 +19,10 @@ import {
 } from '../../services/name-replacement.service'
 import { EditableShot } from './EditableShot'
 import { ShotTable } from './ShotTable'
+import { CoherenceSuggestions } from './CoherenceSuggestions'
 import { toast } from 'sonner'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
-import type { GeneratedShotPrompt, ShotType } from '../../types/storyboard.types'
+import type { GeneratedShotPrompt, ShotType, CoherenceSuggestion } from '../../types/storyboard.types'
 import { logger } from '@/lib/logger'
 
 interface ShotBreakdownProps {
@@ -55,7 +57,13 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
         setIsGeneratingPrompts,
         clearGeneratedPrompts,
         setShotNote,
-        updateGeneratedShot: _updateGeneratedShot
+        updateGeneratedShot: _updateGeneratedShot,
+        coherencePassEnabled,
+        narrativeSummary,
+        setCoherencePassEnabled,
+        setCoherenceSuggestions,
+        setIsRunningCoherencePass,
+        setNarrativeSummary,
     } = useStoryboardStore()
 
     const { runPipeline } = useDocumentaryPipeline()
@@ -278,6 +286,11 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                     throw new Error(data.error || 'Failed to generate prompts')
                 }
 
+                // Store narrative summary from first batch response
+                if (batchIndex === 0 && (data as { narrativeSummary?: string }).narrativeSummary) {
+                    setNarrativeSummary((data as { narrativeSummary?: string }).narrativeSummary!)
+                }
+
                 // Transform API response to GeneratedShotPrompt format
                 const batchPrompts: GeneratedShotPrompt[] = data.shots
                     .filter((shot): shot is { sequence: number; prompt: string; shotType?: string } => {
@@ -389,6 +402,45 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
             setError(`Some batches failed: ${errorSummary}${moreErrors}${missingWarning}`)
         }
 
+        // Run coherence pass if enabled
+        if (coherencePassEnabled && allPrompts.length > 0) {
+            setIsRunningCoherencePass(true)
+            try {
+                const coherenceRes = await fetch('/api/storyboard/coherence-pass', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        shots: allPrompts.map(p => ({
+                            sequence: p.sequence,
+                            chapterLabel: p.chapterLabel,
+                            prompt: p.prompt,
+                            shotType: p.shotType,
+                            characterTags: p.characterRefs.map(c =>
+                                '@' + c.name.toLowerCase().replace(/\s+/g, '_')
+                            ),
+                        })),
+                        narrativeSummary,
+                        model: selectedModel,
+                    })
+                })
+
+                const coherenceData = await safeJsonParse<{
+                    suggestions: CoherenceSuggestion[]
+                    error?: string
+                }>(coherenceRes)
+
+                if (coherenceRes.ok && coherenceData.suggestions) {
+                    setCoherenceSuggestions(coherenceData.suggestions)
+                    toast.info(`Coherence review: ${coherenceData.suggestions.length} suggestions`)
+                }
+            } catch (err) {
+                logger.storyboard.warn('Coherence pass failed', { error: err instanceof Error ? err.message : String(err) })
+                toast.warning('Coherence review failed — shot list is still usable')
+            } finally {
+                setIsRunningCoherencePass(false)
+            }
+        }
+
         setIsGeneratingPrompts(false)
 
         // Run documentary pipeline if documentary mode is enabled
@@ -479,6 +531,16 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                                 <p className="text-xs text-muted-foreground mt-1">
                                     Transform story segments into cinematic shot descriptions using AI.
                                 </p>
+                                <div className="flex items-center gap-2 mt-2">
+                                    <Switch
+                                        checked={coherencePassEnabled}
+                                        onCheckedChange={setCoherencePassEnabled}
+                                        id="coherence-toggle"
+                                    />
+                                    <label htmlFor="coherence-toggle" className="text-xs text-zinc-400 cursor-pointer">
+                                        Coherence review
+                                    </label>
+                                </div>
                             </div>
                             <Button
                                 onClick={handleGeneratePrompts}
@@ -563,6 +625,9 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                     </span>
                 </div>
             )}
+
+            {/* Coherence Suggestions (post-generation) */}
+            <CoherenceSuggestions />
 
             {/* Shot Table (post-generation) */}
             {promptsGenerated && (
