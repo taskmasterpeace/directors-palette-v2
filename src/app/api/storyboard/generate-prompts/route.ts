@@ -15,6 +15,7 @@ interface GeneratedShot {
     sequence: number
     prompt: string
     shotType: string
+    chapterLabel?: string
 }
 
 export async function POST(request: NextRequest) {
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     try {
         const body = await request.json()
-        const { segments, stylePrompt, characterDescriptions, storyContext, model, startFrom = 0 } = body
+        const { segments, stylePrompt, characterDescriptions, storyContext, model, startFrom = 0, chapterPrefix } = body
 
         if (!segments || !Array.isArray(segments)) {
             return NextResponse.json(
@@ -75,9 +76,19 @@ export async function POST(request: NextRequest) {
                     batch,
                     stylePrompt,
                     characterDescriptions,
-                    narrativeSummary
+                    narrativeSummary,
+                    undefined,
+                    chapterPrefix
                 )
-                allResults.push(...batchResults)
+
+                // Add chapter labels if chapterPrefix provided
+                const labeledResults = chapterPrefix
+                    ? batchResults.map(shot => ({
+                        ...shot,
+                        chapterLabel: `${chapterPrefix}-${String(shot.sequence).padStart(2, '0')}`
+                    }))
+                    : batchResults
+                allResults.push(...labeledResults)
 
                 // Log OpenRouter integration success for this batch
                 lognog.debug(`openrouter OK ${Date.now() - batchStart}ms ${model || 'openai/gpt-4.1-mini'}`, {

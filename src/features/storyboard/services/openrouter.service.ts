@@ -249,7 +249,8 @@ Generate exactly ${count} diverse B-roll shot descriptions.`
         stylePrompt?: string,
         characterDescriptions?: Record<string, string>,
         storyContext?: string,
-        locationDescriptions?: Record<string, string>
+        locationDescriptions?: Record<string, string>,
+        chapterPrefix?: string
     ): Promise<Array<{ sequence: number; prompt: string; shotType: string; characterTags?: string[] }>> {
         // Build character role context for director-style coverage
         const characters_with_roles = characterDescriptions && Object.keys(characterDescriptions).length > 0
@@ -336,7 +337,7 @@ IMPORTANT RULES:
 - For BATTLE RAP scenes: DO NOT include microphones. Battle rap is face-to-face without mics.
 - You SHOULD generate MORE shots than input segments — a single story beat often needs 2-4 shots for proper coverage
 - For dramatic or important moments, break the segment into multiple shots at different angles/distances
-- Number your output shots sequentially starting from 1 (total count will exceed input segment count)
+- Number your output shots sequentially starting from 1 (total count will exceed input segment count)${chapterPrefix ? `\n- Prefix each shot number with "${chapterPrefix}-" (e.g., ${chapterPrefix}-01, ${chapterPrefix}-02)` : ''}
 
 For each shot, describe:
 1. Shot type (use the full range: establishing, wide, medium, close-up, detail, over_shoulder, title_card, text_overlay, abstract, montage)
@@ -361,7 +362,7 @@ ${segments
     .join('\n\n')}
 
 INSTRUCTIONS:
-- Number shots sequentially starting from 1
+- Number shots sequentially starting from 1${chapterPrefix ? ` with prefix "${chapterPrefix}-"` : ''}
 - Generate 1.5x to 2x more shots than input segments (e.g., 5 segments → 8-10 shots)
 - For each shot: provide a detailed visual prompt (2-3 sentences), shot type, and characterTags
 - When a Director's Note is provided, incorporate that guidance into the shot
