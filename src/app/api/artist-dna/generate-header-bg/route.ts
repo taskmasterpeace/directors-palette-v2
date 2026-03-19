@@ -1,6 +1,6 @@
 /**
  * Artist DNA Generate Header Background API
- * Generates an atmospheric environment image via z-image-turbo based on artist DNA
+ * Generates an atmospheric environment image via nano-banana-2 based on artist DNA
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -106,11 +106,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing dna' }, { status: 400 })
     }
 
-    // Deduct credits (z-image-turbo = 5 pts)
-    const deductResult = await creditsService.deductCredits(auth.user.id, 'z-image-turbo', {
+    // Deduct credits (nano-banana-2 = 10 pts)
+    const deductResult = await creditsService.deductCredits(auth.user.id, 'nano-banana-2', {
       generationType: 'image',
       description: 'Artist DNA: header background generation',
-      overrideAmount: 5,
+      overrideAmount: 10,
       user_email: auth.user.email,
     })
     if (!deductResult.success) {
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
     const prompt = buildPrompt(dna)
 
     const prediction = await replicate.predictions.create({
-      model: 'prunaai/z-image-turbo',
+      model: 'google/nano-banana-2',
       input: {
         prompt,
         aspect_ratio: '21:9',

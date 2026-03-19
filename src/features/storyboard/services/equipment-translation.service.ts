@@ -12,7 +12,7 @@ import type { CameraSetup, MediumCategory, ShotType } from '../types/storyboard.
 // Image-only models that don't understand motion/equipment terms
 const IMAGE_ONLY_MODELS: ModelId[] = [
     'nano-banana-2',
-    'z-image-turbo',
+    'flux-2-klein-9b',
 ]
 
 // Motion terms that should be stripped for image models

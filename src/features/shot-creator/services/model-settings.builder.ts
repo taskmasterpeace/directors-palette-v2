@@ -28,12 +28,6 @@ export function buildModelSettings(
       modelSettings.personGeneration = settings.personGeneration || 'allow_all';
       break;
 
-    case 'z-image-turbo':
-      modelSettings.aspectRatio = settings.aspectRatio;
-      modelSettings.outputFormat = settings.outputFormat || 'jpg';
-      // numInferenceSteps and guidanceScale use config defaults (8 and 0)
-      break;
-
     default:
       // Unknown model - copy basic settings
       modelSettings.aspectRatio = settings.aspectRatio;
@@ -50,8 +44,6 @@ export function getDefaultOutputFormat(model: string): string {
   switch (model) {
     case 'nano-banana-2':
       return 'webp'; // nano-banana-2 always outputs WebP
-    case 'z-image-turbo':
-      return 'jpg';
     default:
       return 'webp';
   }

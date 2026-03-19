@@ -3,8 +3,8 @@
 import { ClapperboardSpinner } from '@/features/shot-creator/components/unified-gallery/ClapperboardSpinner'
 
 const TEST_MODELS = [
-  { model: 'z-image-turbo', label: 'Z-Image Turbo (2s)' },
-  { model: 'nano-banana-2', label: 'Nano Banana 2 (10s)' },
+  { model: 'flux-2-klein-9b', label: 'Flux 2 Klein (15s)' },
+  { model: 'nano-banana-2', label: 'Nano Banana 2 (60s)' },
 ]
 
 export default function TestClapperboardPage() {

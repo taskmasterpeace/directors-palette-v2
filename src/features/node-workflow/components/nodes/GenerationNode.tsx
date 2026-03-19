@@ -9,7 +9,7 @@ function GenerationNode({ data, selected }: NodeProps) {
   const typedData = data as unknown as GenerationNodeData
   const modelLabels: Record<string, string> = {
     'nano-banana-2': 'Nano Banana 2',
-    'z-image-turbo': 'Z-Image Turbo',
+    'flux-2-klein-9b': 'Flux 2 Klein',
   }
 
   return (

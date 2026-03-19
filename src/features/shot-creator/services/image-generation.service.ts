@@ -11,13 +11,11 @@ import type {
   ImageGenerationRequest,
   ImageGenerationResponse,
   NanoBanana2Settings,
-  ZImageTurboSettings,
   Flux2Klein9bSettings,
   FireRedEditSettings,
   QwenImageEditSettings,
 } from '../types/image-generation.types'
 import { buildCameraAnglePrompt } from '../helpers/camera-angle.helper'
-import { ASPECT_RATIO_SIZES } from '@/config'
 import { logger } from '@/lib/logger'
 
 export class ImageGenerationService {
@@ -44,9 +42,6 @@ export class ImageGenerationService {
     switch (input.model) {
       case 'nano-banana-2':
         errors.push(...this.validateNanoBanana2(input))
-        break
-      case 'z-image-turbo':
-        errors.push(...this.validateZImageTurbo(input))
         break
       case 'flux-2-klein-9b':
         errors.push(...this.validateFlux2Klein9b(input))
@@ -86,20 +81,6 @@ export class ImageGenerationService {
   }
 
   /**
-   * Validate z-image-turbo specific constraints
-   */
-  private static validateZImageTurbo(input: ImageGenerationInput): string[] {
-    const errors: string[] = []
-
-    // Z-Image Turbo supports 0 or 1 reference image (img2img mode)
-    if (input.referenceImages && input.referenceImages.length > 1) {
-      errors.push('Z-Image Turbo supports at most 1 reference image for img2img mode')
-    }
-
-    return errors
-  }
-
-  /**
    * Validate flux-2-klein-9b specific constraints
    */
   private static validateFlux2Klein9b(input: ImageGenerationInput): string[] {
@@ -130,8 +111,6 @@ export class ImageGenerationService {
     switch (input.model) {
       case 'nano-banana-2':
         return this.buildNanoBanana2Input(input)
-      case 'z-image-turbo':
-        return this.buildZImageTurboInput(input)
       case 'flux-2-klein-9b':
         return this.buildFlux2Klein9bInput(input)
       case 'firered-image-edit':
@@ -180,59 +159,6 @@ export class ImageGenerationService {
     // nano-banana-2 API uses `image_input` array (supports up to 14 images)
     if (input.referenceImages && input.referenceImages.length > 0) {
       replicateInput.image_input = this.normalizeReferenceImages(input.referenceImages)
-    }
-
-    return replicateInput
-  }
-
-  private static buildZImageTurboInput(input: ImageGenerationInput) {
-    const settings = input.modelSettings as ZImageTurboSettings
-    const replicateInput: Record<string, unknown> = {
-      prompt: input.prompt,
-    }
-
-    if (settings.numInferenceSteps) {
-      replicateInput.num_inference_steps = settings.numInferenceSteps
-    }
-
-    if (settings.guidanceScale !== undefined) {
-      replicateInput.guidance_scale = settings.guidanceScale
-    }
-
-    // Z-Image Turbo doesn't support aspect_ratio - convert to width/height
-    // Max dimensions: 2048px (API allows 64-2048)
-    if (settings.aspectRatio && settings.aspectRatio !== 'match_input_image') {
-      const dimensions = ASPECT_RATIO_SIZES[settings.aspectRatio]
-      if (dimensions) {
-        replicateInput.width = Math.min(dimensions.width, 2048)
-        replicateInput.height = Math.min(dimensions.height, 2048)
-      }
-    }
-
-    // Output format - API supports png, jpg, webp
-    if (settings.outputFormat) {
-      replicateInput.output_format = settings.outputFormat
-    }
-
-    // LoRA support — img2img variant has a Replicate bug (Path has no len()),
-    // so we skip LoRA for img2img until they fix it. Text-to-image uses arrays.
-    const hasRefImage = input.referenceImages && input.referenceImages.length > 0
-    if (hasRefImage) {
-      // img2img mode: single image input + strength
-      replicateInput.image = this.normalizeReferenceImages(input.referenceImages!)[0]
-      replicateInput.strength = settings.img2imgStrength ?? 0.6
-      // NOTE: LoRA params intentionally omitted — Replicate's z-image-turbo-img2img
-      // has a bug where lora_weights URI is converted to a Python Path object,
-      // then their code does len(Path) which throws TypeError.
-    } else {
-      // Text-to-image mode: multi-LoRA arrays
-      if (settings.loraWeightsUrls && settings.loraWeightsUrls.length > 0) {
-        replicateInput.lora_weights = settings.loraWeightsUrls
-        replicateInput.lora_scales = settings.loraScales || settings.loraWeightsUrls.map(() => 1.0)
-      } else if (settings.loraWeightsUrl) {
-        replicateInput.lora_weights = [settings.loraWeightsUrl]
-        replicateInput.lora_scales = [settings.loraScale ?? 1.0]
-      }
     }
 
     return replicateInput
@@ -383,22 +309,12 @@ export class ImageGenerationService {
   /**
    * Get Replicate model identifier
    */
-  static getReplicateModelId(model: ImageModel, loraActive?: boolean, hasReferenceImage?: boolean): string {
+  static getReplicateModelId(model: ImageModel, _loraActive?: boolean, _hasReferenceImage?: boolean): string {
     const modelConfig = getModelConfig(model)
-    // When reference image is provided on z-image-turbo, use img2img variant
-    if (model === 'z-image-turbo' && hasReferenceImage) {
-      return 'prunaai/z-image-turbo-img2img'
-    }
-    // When LoRA is active on z-image-turbo (text-to-image), use the LoRA-enabled variant
-    if (loraActive && model === 'z-image-turbo') {
-      return 'prunaai/z-image-turbo-lora'
-    }
     return modelConfig.endpoint
   }
 
   /** Version hashes for models that require version-based predictions */
-  static readonly LORA_VERSION = '197b2db2015aa366d2bc61a941758adf4c31ac66b18573f5c66dc388ab081ca2'
-  static readonly IMG2IMG_VERSION = '5c958e90e0f904240629ee35c69196e3bd790b5528c0696705ebdb1656871dd8'
   static readonly FIRERED_VERSION = '778e5a9b1a1c75e0f8013e19db9a9e6ff456c46d796e31070fe740a2874daa96'
   static readonly QWEN_IMAGE_EDIT_VERSION = 'b37d69a6b94414c96cc4ecb16660b472bb62284f2293d4b65537c09b8500e200'
   static readonly FLUX2_KLEIN_9B_VERSION = '963f7b2c4aa2bc7e6377b95759dcf3a21cf175f6e8b0d8c1efe7bf6c8a23b690'
@@ -406,9 +322,7 @@ export class ImageGenerationService {
   /**
    * Check if a model requires version-based prediction (not model: shorthand)
    */
-  static getVersionForModel(model: ImageModel, loraActive?: boolean, hasReferenceImage?: boolean): string | null {
-    if (model === 'z-image-turbo' && hasReferenceImage) return this.IMG2IMG_VERSION
-    if (loraActive && model === 'z-image-turbo') return this.LORA_VERSION
+  static getVersionForModel(model: ImageModel, _loraActive?: boolean, _hasReferenceImage?: boolean): string | null {
     if (model === 'flux-2-klein-9b') return this.FLUX2_KLEIN_9B_VERSION
     if (model === 'firered-image-edit') return this.FIRERED_VERSION
     if (model === 'qwen-image-edit') return this.QWEN_IMAGE_EDIT_VERSION

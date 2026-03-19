@@ -190,7 +190,7 @@ export interface ArtistDNA {
   catalog: ArtistCatalog
   socialCircle?: ArtistSocialCircle
   phone?: PhoneProfile
-  headerBackgroundUrl: string  // z-image-turbo generated atmospheric background
+  headerBackgroundUrl: string  // AI generated atmospheric background
   lowConfidenceFields: string[]  // field paths where data may be inaccurate (e.g. "identity.realName", "lexicon.adLibs")
 }
 

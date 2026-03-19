@@ -173,23 +173,6 @@ export function usePromptGeneration() {
                 if (shotCreatorSettings.googleSearch) baseSettings.googleSearch = true
                 if (shotCreatorSettings.imageSearch) baseSettings.imageSearch = true
                 break
-            case 'z-image-turbo':
-                baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
-                baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
-                // Img2img strength (when reference image is provided)
-                if (shotCreatorSettings.img2imgStrength !== undefined) {
-                    baseSettings.img2imgStrength = shotCreatorSettings.img2imgStrength
-                }
-                // Inject LoRA settings when active (supports multiple)
-                if (modelLoras.length > 0) {
-                    baseSettings.loraWeightsUrls = modelLoras.map(l => l.weightsUrl)
-                    baseSettings.loraScales = modelLoras.map(l => l.defaultLoraScale)
-                    baseSettings.loraName = modelLoras.map(l => l.name).join(' + ')
-                    baseSettings.guidanceScale = shotCreatorSettings.guidanceScale ?? modelLoras[0].defaultGuidanceScale
-                } else if (shotCreatorSettings.guidanceScale !== undefined) {
-                    baseSettings.guidanceScale = shotCreatorSettings.guidanceScale
-                }
-                break
             case 'flux-2-klein-9b':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
                 baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
@@ -691,7 +674,7 @@ Output a crisp, print-ready reference sheet with the exact style specified.`
             return l.compatibleModels.includes(model)
         })
         let finalPrompt = shotCreatorPrompt
-        if (currentModelLoras.length > 0 && (model === 'z-image-turbo' || model === 'flux-2-klein-9b')) {
+        if (currentModelLoras.length > 0 && model === 'flux-2-klein-9b') {
             const triggerWords = currentModelLoras.map(l => l.triggerWord).join(', ')
             finalPrompt = `${triggerWords}, ${shotCreatorPrompt}`
         }

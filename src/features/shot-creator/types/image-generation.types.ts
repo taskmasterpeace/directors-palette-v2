@@ -8,7 +8,6 @@ import type { ModelId } from '@/config'
 // Available image generation models
 export type ImageModel = Extract<ModelId,
   | 'nano-banana-2'
-  | 'z-image-turbo'
   | 'flux-2-klein-9b'
   | 'firered-image-edit'
   | 'qwen-image-edit'
@@ -23,20 +22,6 @@ export interface NanoBanana2Settings {
   googleSearch?: boolean
   imageSearch?: boolean
   outputFormat?: 'jpg' | 'png' | 'webp'
-}
-
-export interface ZImageTurboSettings {
-  aspectRatio?: string
-  outputFormat?: 'jpg' | 'png'
-  numInferenceSteps?: number
-  guidanceScale?: number
-  promptStrength?: number
-  loraWeightsUrl?: string     // single (backward compat)
-  loraScale?: number          // single (backward compat)
-  loraWeightsUrls?: string[]  // multiple LoRAs
-  loraScales?: number[]       // multiple scales
-  loraName?: string
-  img2imgStrength?: number    // 0-1, controls how much reference image is transformed (img2img mode)
 }
 
 export interface Flux2Klein9bSettings {
@@ -86,7 +71,6 @@ export interface NanoBananaProSettings {
 // Union type for all model settings
 export type ImageModelSettings =
   | NanoBanana2Settings
-  | ZImageTurboSettings
   | FireRedEditSettings
   | QwenImageEditSettings
   | SeedreamSettings
@@ -112,16 +96,6 @@ export interface NanoBanana2Input {
   person_generation?: string
 }
 
-export interface ZImageTurboInput {
-  prompt: string
-  image?: string // Uses separate image input instead of string[]
-  num_inference_steps?: number
-  guidance_scale?: number
-  prompt_strength?: number
-  aspect_ratio?: string // if supported, else width/height
-  output_format?: string
-}
-
 export interface SeedreamInput {
   prompt: string
   aspect_ratio?: string
@@ -144,7 +118,6 @@ export interface NanoBananaProInput {
 // Union type for all Replicate inputs
 export type ReplicateImageInput =
   | NanoBanana2Input
-  | ZImageTurboInput
   | SeedreamInput
   | NanoBananaProInput
 

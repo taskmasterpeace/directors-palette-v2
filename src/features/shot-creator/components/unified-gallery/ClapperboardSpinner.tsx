@@ -4,18 +4,18 @@ import { useState, useEffect, useRef } from 'react'
 
 /** Estimated generation time in seconds per model (measured averages) */
 const MODEL_ESTIMATED_SECONDS: Record<string, number> = {
-  'z-image-turbo': 2,
   'nano-banana-2': 60,
-  'seedream-5-lite': 49,
-  'nano-banana-pro': 30,
+  'flux-2-klein-9b': 15,
+  'firered-image-edit': 10,
+  'qwen-image-edit': 30,
 }
 
 /** Map model ID to a short display name */
 const MODEL_DISPLAY_NAMES: Record<string, string> = {
   'nano-banana-2': 'Nano Banana 2',
-  'z-image-turbo': 'Z-Image Turbo',
-  'seedream-5-lite': 'Seedream 5 Lite',
-  'nano-banana-pro': 'Nano Banana Pro',
+  'flux-2-klein-9b': 'Flux 2 Klein',
+  'firered-image-edit': 'Edit Image',
+  'qwen-image-edit': 'Camera Angle',
 }
 
 interface ClapperboardSpinnerProps {

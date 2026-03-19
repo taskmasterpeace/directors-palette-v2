@@ -22,7 +22,7 @@ export const ASPECT_RATIO_SIZES: Record<string, { width: number; height: number 
 };
 
 export type ModelType = 'generation' | 'editing'
-export type ModelId = 'nano-banana-2' | 'z-image-turbo' | 'flux-2-klein-9b' | 'firered-image-edit' | 'qwen-image-edit'
+export type ModelId = 'nano-banana-2' | 'flux-2-klein-9b' | 'firered-image-edit' | 'qwen-image-edit'
 
 export interface ModelParameter {
     id: string
@@ -237,37 +237,6 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
             { value: '3:4', label: '3:4 Portrait' },
         ]
     },
-    // Z-Image Turbo img2img strength (how much to transform the reference image)
-    img2imgStrength: {
-        id: 'img2imgStrength',
-        label: 'Img2Img Strength',
-        type: 'slider',
-        min: 0,
-        max: 1,
-        step: 0.05,
-        default: 0.6,
-        description: 'How much to transform the reference image. Low = subtle style transfer, high = dramatic change.'
-    },
-    // Z-Image Turbo parameters (Replicate API: 1-50 steps, 0-20 guidance, defaults per API docs)
-    numInferenceSteps: {
-        id: 'numInferenceSteps',
-        label: 'Inference Steps',
-        type: 'slider',
-        min: 1,
-        max: 50,
-        default: 8,
-        description: 'Number of denoising steps (1-50). Lower = faster.'
-    },
-    guidanceScale: {
-        id: 'guidanceScale',
-        label: 'Guidance Scale',
-        type: 'slider',
-        min: 0,
-        max: 20,
-        step: 0.5,
-        default: 0,
-        description: 'Guidance scale. Use 0 for Turbo models.'
-    },
     // Qwen Image Edit parameters
     qwenTrueCfgScale: {
         id: 'trueCfgScale',
@@ -343,29 +312,6 @@ export const MODEL_CONFIGS: Record<ModelId, ModelConfig> = {
         },
         maxReferenceImages: 14,
         estimatedSeconds: 60,
-    },
-    'z-image-turbo': {
-        id: 'z-image-turbo',
-        name: 'z-image-turbo',
-        displayName: 'Z-Image Turbo',
-        type: 'generation',
-        icon: '⚡',
-        description: 'Ultra-fast generation with LoRA support. Add a reference image for img2img style transfer. Best for rapid iterations, character/style LoRAs, and concept exploration.',
-        badge: 'Turbo',
-        badgeColor: 'bg-cyan-600',
-        textColor: 'text-cyan-300',
-        endpoint: 'prunaai/z-image-turbo',
-        costPerImage: 0.04, // 4 pts = $0.04
-        supportedParameters: ['outputFormat', 'aspectRatio', 'numInferenceSteps', 'guidanceScale', 'img2imgStrength'],
-        parameters: {
-            outputFormat: MODEL_PARAMETERS.outputFormat,
-            aspectRatio: MODEL_PARAMETERS.aspectRatio,
-            numInferenceSteps: MODEL_PARAMETERS.numInferenceSteps,
-            guidanceScale: MODEL_PARAMETERS.guidanceScale,
-            img2imgStrength: MODEL_PARAMETERS.img2imgStrength,
-        },
-        maxReferenceImages: 1, // Supports 1 reference image for img2img mode
-        estimatedSeconds: 8,
     },
     'flux-2-klein-9b': {
         id: 'flux-2-klein-9b',

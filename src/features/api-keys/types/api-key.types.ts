@@ -86,7 +86,7 @@ export interface ValidatedApiKey {
 // API Request/Response types
 export interface GenerateImageRequest {
   prompt: string
-  model?: 'nano-banana-2' | 'z-image-turbo'
+  model?: 'nano-banana-2' | 'flux-2-klein-9b'
   aspectRatio?: string
   outputFormat?: 'webp' | 'jpg' | 'png'
   referenceImages?: string[]  // URLs
@@ -96,8 +96,8 @@ export interface GenerateImageRequest {
   // Model-specific settings
   resolution?: string
   safetyFilterLevel?: string
-  numInferenceSteps?: number  // For z-image-turbo
-  guidanceScale?: number  // For z-image-turbo
+  numInferenceSteps?: number
+  guidanceScale?: number
 }
 
 export interface GenerateImageResponse {
@@ -114,7 +114,7 @@ export interface GenerateImageResponse {
 export interface ExecuteRecipeRequest {
   recipeId: string
   variables?: Record<string, string>
-  model?: 'nano-banana-2' | 'z-image-turbo'
+  model?: 'nano-banana-2' | 'flux-2-klein-9b'
   aspectRatio?: string
   outputFormat?: 'webp' | 'jpg' | 'png'
 }

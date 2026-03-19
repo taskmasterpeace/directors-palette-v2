@@ -16,7 +16,6 @@ import { getModelConfig, ModelId } from '@/config'
 import { Button } from "@/components/ui/button"
 import { Shuffle, Save, Trash2 } from "lucide-react"
 import { useLoraStore } from "../../store/lora.store"
-import { useShotCreatorStore } from "../../store/shot-creator.store"
 import { useShallow } from "zustand/react/shallow"
 import { ShotCreatorSettings } from "../../types"
 
@@ -69,8 +68,6 @@ const AdvancedSettings = () => {
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
     const selectedModel = shotCreatorSettings.model || 'nano-banana-2'
     const modelConfig = useMemo(() => getModelConfig(selectedModel as ModelId), [selectedModel])
-    const referenceImageCount = useShotCreatorStore(s => s.shotCreatorReferenceImages.length)
-
     // ── Presets ───────────────────────────────────────────────────────────
     const [presets, setPresets] = useState<SettingsPreset[]>([])
     const [showSaveInput, setShowSaveInput] = useState(false)
@@ -161,7 +158,6 @@ const AdvancedSettings = () => {
 
     // Default values for sliders
     const guidanceDefault = activeLora ? 1 : 0
-    const img2imgDefault = 0.6
     const loraScaleDefault = 1.25
     const maxImagesDefault = 3
 
@@ -331,7 +327,7 @@ const AdvancedSettings = () => {
                 </div>
             )}
 
-            {/* Prompt Influence - for z-image-turbo */}
+            {/* Prompt Influence */}
             {supportsGuidanceScale && (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -356,40 +352,7 @@ const AdvancedSettings = () => {
                         className="w-full"
                     />
                     <p className="text-xs text-muted-foreground">
-                        {referenceImageCount > 0 && selectedModel === 'z-image-turbo'
-                            ? 'How closely the output follows your prompt. 0 = fastest, higher = more faithful to what you typed.'
-                            : <>Use 0 for turbo speed, higher for more prompt adherence{activeLora && ' (auto-set to 1 for LoRA)'}</>
-                        }
-                    </p>
-                </div>
-            )}
-
-            {/* Image Transform - Z-Image Turbo with reference image */}
-            {selectedModel === 'z-image-turbo' && referenceImageCount > 0 && (
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <Label className="text-sm text-foreground">Image Transform</Label>
-                            <DefaultLabel
-                                value={shotCreatorSettings.img2imgStrength}
-                                defaultValue={img2imgDefault}
-                                onReset={() => updateSettings({ img2imgStrength: img2imgDefault })}
-                            />
-                        </div>
-                        <span className="text-sm text-cyan-400 font-medium tabular-nums">
-                            {shotCreatorSettings.img2imgStrength ?? img2imgDefault}
-                        </span>
-                    </div>
-                    <Slider
-                        value={[shotCreatorSettings.img2imgStrength ?? img2imgDefault]}
-                        onValueChange={([val]) => updateSettings({ img2imgStrength: val })}
-                        min={0}
-                        max={1}
-                        step={0.05}
-                        className="w-full"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                        How much to change your reference image. Low keeps the original look, high reimagines it completely.
+                        Use 0 for turbo speed, higher for more prompt adherence{activeLora && ' (auto-set to 1 for LoRA)'}
                     </p>
                 </div>
             )}

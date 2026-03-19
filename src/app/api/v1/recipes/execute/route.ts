@@ -52,7 +52,7 @@ function extractReplicateUrl(output: unknown): string | null {
 interface RecipeExecuteRequest {
   template: string  // Recipe template with <<FIELD:type>> placeholders
   variables: Record<string, string>  // Values for placeholders
-  model?: 'nano-banana-2' | 'z-image-turbo'
+  model?: 'nano-banana-2' | 'flux-2-klein-9b'
   aspectRatio?: string
   outputFormat?: 'webp' | 'jpg' | 'png'
   referenceImages?: string[]  // URLs
@@ -431,7 +431,7 @@ export async function GET(): Promise<NextResponse> {
         type: 'string',
         required: false,
         default: 'nano-banana-2',
-        options: ['nano-banana-2', 'z-image-turbo', 'seedream-5-lite', 'nano-banana-pro'],
+        options: ['nano-banana-2', 'flux-2-klein-9b'],
       },
       aspectRatio: {
         type: 'string',

@@ -19,7 +19,7 @@ import type { ModelId } from '@/config'
 import { logger } from '@/lib/logger'
 
 /** Valid image model IDs */
-const VALID_MODEL_IDS: ReadonlySet<string> = new Set(['nano-banana-2', 'z-image-turbo'])
+const VALID_MODEL_IDS: ReadonlySet<string> = new Set(['nano-banana-2', 'flux-2-klein-9b'])
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
@@ -185,7 +185,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
     // Validate model ID at runtime (prevent arbitrary strings via `as ModelId` cast)
     if (!VALID_MODEL_IDS.has(model)) {
       return NextResponse.json(
-        { success: false, error: `Invalid model: ${model}. Use: nano-banana-2, z-image-turbo, seedream-5-lite, or nano-banana-pro` },
+        { success: false, error: `Invalid model: ${model}. Use: nano-banana-2 or flux-2-klein-9b` },
         { status: 400 }
       )
     }
@@ -271,9 +271,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
       if (model === 'nano-banana-2') {
         if (resolution) (modelSettings as Record<string, unknown>).resolution = resolution
         if (safetyFilterLevel) (modelSettings as Record<string, unknown>).safetyFilterLevel = safetyFilterLevel
-      } else if (model === 'z-image-turbo') {
-        if (numInferenceSteps) (modelSettings as Record<string, unknown>).numInferenceSteps = numInferenceSteps
-        if (guidanceScale) (modelSettings as Record<string, unknown>).guidanceScale = guidanceScale
       }
 
       if (seed !== undefined) {
@@ -406,9 +403,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<GenerateI
     if (model === 'nano-banana-2') {
       if (resolution) (modelSettings as Record<string, unknown>).resolution = resolution
       if (safetyFilterLevel) (modelSettings as Record<string, unknown>).safetyFilterLevel = safetyFilterLevel
-    } else if (model === 'z-image-turbo') {
-      if (numInferenceSteps) (modelSettings as Record<string, unknown>).numInferenceSteps = numInferenceSteps
-      if (guidanceScale) (modelSettings as Record<string, unknown>).guidanceScale = guidanceScale
     }
 
     // Add seed to model settings if provided
@@ -540,7 +534,7 @@ export async function GET(): Promise<NextResponse> {
         type: 'string',
         required: false,
         default: 'nano-banana-2',
-        options: ['nano-banana-2', 'z-image-turbo', 'seedream-5-lite', 'nano-banana-pro'],
+        options: ['nano-banana-2', 'flux-2-klein-9b'],
         description: 'Model to use for generation',
       },
       aspectRatio: {
@@ -569,24 +563,16 @@ export async function GET(): Promise<NextResponse> {
       },
     },
     modelCosts: {
-      'nano-banana-2': '6 points/image ($0.06)',
-      'z-image-turbo': '3 points/image ($0.03)',
-      'seedream-5-lite': '4 points/image ($0.04)',
-      'nano-banana-pro': '25-45 points/image ($0.25-$0.45, varies by resolution)',
+      'nano-banana-2': '10 points/image ($0.10)',
+      'flux-2-klein-9b': '4 points/image ($0.04)',
     },
     modelCapabilities: {
       'nano-banana-2': {
         speed: 'Fast',
         quality: 'Excellent',
-        referenceImages: 'Up to 1',
-        resolution: 'Up to 4K',
+        referenceImages: 'Up to 14',
+        resolution: 'Up to 2K',
         bestFor: 'High-quality production images, accurate text rendering',
-      },
-      'z-image-turbo': {
-        speed: 'Very Fast',
-        quality: 'Good',
-        referenceImages: 'Up to 1',
-        bestFor: 'Rapid visualization, quick prototyping',
       },
       'seedream-5-lite': {
         speed: 'Medium',

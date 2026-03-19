@@ -36,12 +36,6 @@ const MODEL_CAPABILITIES: Record<ModelId, {
     refImages: 'Up to 14',
     bestFor: ['Text in images', 'Reference images', 'Google search', 'Highest quality']
   },
-  'z-image-turbo': {
-    speed: '~8s (Fast)',
-    textRendering: 'Good',
-    refImages: 'None',
-    bestFor: ['Ultra-fast generation', 'LoRA styles & characters', 'Concept exploration']
-  },
   'flux-2-klein-9b': {
     speed: '~15s',
     textRendering: 'Excellent',

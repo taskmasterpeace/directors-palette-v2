@@ -1,6 +1,6 @@
 import { DirectorFingerprint } from '../types/director.types'
 import { imageGenerationService } from '@/features/shot-creator/services/image-generation.service'
-import type { ZImageTurboSettings, ImageGenerationRequest } from '@/features/shot-creator/types/image-generation.types'
+import type { NanoBanana2Settings, ImageGenerationRequest } from '@/features/shot-creator/types/image-generation.types'
 import { logger } from '@/lib/logger'
 
 /**
@@ -15,7 +15,7 @@ export interface DirectorVisionResult {
 /**
  * Director Vision Service
  *
- * Generates rapid visualizations for director concepts using z-image-turbo.
+ * Generates rapid visualizations for director concepts using nano-banana-2.
  * Used for:
  * - Proposal Headers (Director Vibe)
  * - Timeline Block Previews
@@ -45,14 +45,12 @@ export class DirectorVisionService {
             // Ideally we fetch from /api/generation/image, but we can reuse the service wrapper if valid
             // imageGenerationService makes fetch calls to /api/generation/image
 
-            const settings: ZImageTurboSettings = {
-                numInferenceSteps: 2, // Turbo speed
-                guidanceScale: 1.0,   // Low guidance for speed/creativity
-                aspectRatio: '16:9'
+            const settings: NanoBanana2Settings = {
+                aspectRatio: '16:9',
             }
 
             const request: ImageGenerationRequest = {
-                model: 'z-image-turbo',
+                model: 'nano-banana-2',
                 prompt: fullPrompt,
                 modelSettings: settings,
                 referenceImages: []
