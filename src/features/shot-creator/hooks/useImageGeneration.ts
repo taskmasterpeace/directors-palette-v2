@@ -483,8 +483,15 @@ export function useImageGeneration() {
             }
 
             // ✅ AUTO-ENHANCE: Model-aware prompt enhancement (runs before style/LoRA injection)
+            // Auto-skip if prompt is already detailed (5+ sentences)
+            const sentenceCount = prompt.split(/[.!?]+/).filter(s => s.trim().length > 0).length
+            const shouldEnhance = settings.autoEnhance && sentenceCount < 5
+            if (settings.autoEnhance && !shouldEnhance) {
+                logger.shotCreator.info('Auto-enhance: skipped (prompt already detailed)', { sentenceCount })
+            }
+
             let enhancedPrompt = prompt
-            if (settings.autoEnhance) {
+            if (shouldEnhance) {
                 try {
                     logger.shotCreator.info('Auto-enhance: enhancing prompt for model', { model })
                     const enhanceRes = await fetch('/api/prompt-enhance', {

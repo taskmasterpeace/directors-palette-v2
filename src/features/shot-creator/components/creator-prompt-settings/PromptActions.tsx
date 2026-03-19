@@ -712,19 +712,30 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                         {/* Auto-enhance + Batch toggles - right side */}
                         <div className="flex items-center gap-3">
                             {/* Auto-Enhance toggle */}
-                            <button
-                                onClick={() => updateSettings({ autoEnhance: !shotCreatorSettings.autoEnhance })}
-                                className={cn(
-                                    "flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded transition-colors",
-                                    shotCreatorSettings.autoEnhance
-                                        ? "bg-cyan-600 text-white"
-                                        : "bg-muted text-muted-foreground hover:text-foreground"
-                                )}
-                                title="Auto-enhance prompt with model-optimized details (lighting, composition, atmosphere)"
-                            >
-                                <Wand2 className="w-3 h-3" />
-                                Enhance
-                            </button>
+                            {(() => {
+                                const sentenceCount = shotCreatorPrompt.split(/[.!?]+/).filter((s: string) => s.trim().length > 0).length
+                                const willSkip = shotCreatorSettings.autoEnhance && sentenceCount >= 5
+                                return (
+                                    <button
+                                        onClick={() => updateSettings({ autoEnhance: !shotCreatorSettings.autoEnhance })}
+                                        className={cn(
+                                            "flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded transition-colors",
+                                            shotCreatorSettings.autoEnhance && !willSkip
+                                                ? "bg-cyan-600 text-white"
+                                                : willSkip
+                                                    ? "bg-cyan-600/40 text-white/60"
+                                                    : "bg-muted text-muted-foreground hover:text-foreground"
+                                        )}
+                                        title={willSkip
+                                            ? `Auto-enhance paused — prompt is detailed enough (${sentenceCount} sentences)`
+                                            : "Auto-enhance prompt with model-optimized details (lighting, composition, atmosphere)"
+                                        }
+                                    >
+                                        <Wand2 className="w-3 h-3" />
+                                        {willSkip ? 'Enhanced' : 'Enhance'}
+                                    </button>
+                                )
+                            })()}
 
                             {/* Batch toggle */}
                             <div className="flex items-center gap-1">
