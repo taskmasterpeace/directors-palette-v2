@@ -730,6 +730,7 @@ export interface DocumentaryChapter {
     startIndex: number       // Text position start
     endIndex: number         // Text position end
     titleCard: TitleCard
+    titleCardShot?: GeneratedShotPrompt  // Title card as a shot for injection into sequence
     brollPool: BRollPoolCategory[]
     segments: ClassifiedSegment[]
 }

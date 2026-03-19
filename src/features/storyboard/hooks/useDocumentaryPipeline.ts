@@ -3,10 +3,10 @@
 import { useCallback } from 'react'
 import { useStoryboardStore } from '../store'
 import { detectChapters, mapSegmentsToChapters } from '../services/chapter-detection.service'
-import { createTitleCards } from '../services/title-card.service'
+import { createTitleCards, createTitleCardShot } from '../services/title-card.service'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
 import { toast } from 'sonner'
-import type { ClassifiedSegment, DocumentaryChapter, BRollPoolCategory } from '../types/storyboard.types'
+import type { ClassifiedSegment, DocumentaryChapter, BRollPoolCategory, GeneratedShotPrompt } from '../types/storyboard.types'
 import { logger } from '@/lib/logger'
 
 export function useDocumentaryPipeline() {
@@ -102,6 +102,11 @@ export function useDocumentaryPipeline() {
             setIsGeneratingTitleCards(true)
             const titleCards = createTitleCards(chapterNames, stylePrompt)
 
+            // Create title card shots for injection into the shot sequence
+            const titleCardShots: GeneratedShotPrompt[] = chapterNames.map((ch) =>
+                createTitleCardShot(ch.index, ch.name, stylePrompt)
+            )
+
             // === Step 5: Generate B-roll pools per chapter ===
             setIsGeneratingBrollPool(true)
             toast.info('Generating B-roll pools...')
@@ -166,6 +171,7 @@ export function useDocumentaryPipeline() {
                         prompt: '',
                         status: 'pending' as const,
                     },
+                    titleCardShot: titleCardShots[i],
                     brollPool: brollCategories,
                     segments: assignedSegments,
                 })

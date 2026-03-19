@@ -113,13 +113,13 @@ export function ShotTable({ chapterIndex = 0 }: ShotTableProps) {
 
     // Export: CSV download
     const handleExportCSV = useCallback(() => {
-        const header = 'Sequence,Shot Type,Description,Characters'
+        const header = 'Label,Sequence,Shot Type,Description,Characters'
         const rows = filteredPrompts.map(p => {
             const charTags = p.characterRefs.map(c =>
                 '@' + c.name.toLowerCase().replace(/\s+/g, '_')
             ).join('; ')
             const escapedPrompt = `"${p.prompt.replace(/"/g, '""')}"`
-            return `${p.sequence},${p.shotType},${escapedPrompt},"${charTags}"`
+            return `${p.chapterLabel || ''},${p.sequence},${p.shotType},${escapedPrompt},"${charTags}"`
         })
 
         const csv = [header, ...rows].join('\n')

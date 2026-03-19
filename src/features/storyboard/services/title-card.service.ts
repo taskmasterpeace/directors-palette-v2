@@ -1,4 +1,4 @@
-import type { TitleCard } from '../types/storyboard.types'
+import type { TitleCard, GeneratedShotPrompt, ShotType } from '../types/storyboard.types'
 
 /**
  * Generate a title card image prompt for a documentary chapter.
@@ -26,6 +26,26 @@ export function createTitleCards(
         prompt: buildTitleCardPrompt(ch.name, stylePrompt),
         status: 'pending' as const,
     }))
+}
+
+/**
+ * Create a title card as a GeneratedShotPrompt for injection into the shot sequence.
+ * Convention: title cards use sequence 0 within their chapter (CX-00).
+ */
+export function createTitleCardShot(
+    chapterIndex: number,
+    chapterName: string,
+    stylePrompt?: string
+): GeneratedShotPrompt {
+    return {
+        sequence: 0,
+        chapterLabel: `C${chapterIndex + 1}-00`,
+        originalText: `Chapter title: ${chapterName}`,
+        prompt: buildTitleCardPrompt(chapterName, stylePrompt),
+        shotType: 'title_card' as ShotType,
+        characterRefs: [],
+        edited: false,
+    }
 }
 
 /**
