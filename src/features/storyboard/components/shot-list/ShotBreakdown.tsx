@@ -20,7 +20,7 @@ import { EditableShot } from './EditableShot'
 import { ShotTable } from './ShotTable'
 import { toast } from 'sonner'
 import { safeJsonParse } from '@/features/shared/utils/safe-fetch'
-import type { GeneratedShotPrompt } from '../../types/storyboard.types'
+import type { GeneratedShotPrompt, ShotType } from '../../types/storyboard.types'
 import { logger } from '@/lib/logger'
 
 interface ShotBreakdownProps {
@@ -297,7 +297,7 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                             sequence: shot.sequence,
                             originalText: segment?.text || '',
                             prompt: processedPrompt,
-                            shotType: (shot.shotType || 'unknown') as 'establishing' | 'wide' | 'medium' | 'close-up' | 'detail' | 'unknown',
+                            shotType: (shot.shotType || 'unknown') as ShotType,
                             characterRefs: characters.filter(c => {
                                 const tag = '@' + c.name.toLowerCase().replace(/\s+/g, '_')
                                 const apiTags = (shot as { characterTags?: string[] }).characterTags || []
@@ -331,6 +331,32 @@ export function ShotBreakdown({ chapterIndex = 0 }: ShotBreakdownProps) {
                 const errorMsg = `Batch ${currentBatch} failed: ${err instanceof Error ? err.message : 'Unknown error'}`
                 errors.push(errorMsg)
                 // Continue with next batch instead of stopping completely
+            }
+        }
+
+        // Inject title card shots from documentary chapters
+        if (useStoryboardStore.getState().isDocumentaryMode) {
+            const docChapters = useStoryboardStore.getState().documentaryChapters
+            if (docChapters?.length) {
+                const titleCardShots = docChapters
+                    .filter(ch => ch.titleCardShot)
+                    .map(ch => ch.titleCardShot!)
+
+                allPrompts.unshift(...titleCardShots)
+
+                // Sort by chapter label then sequence within chapter
+                allPrompts.sort((a, b) => {
+                    const aChapter = a.chapterLabel ? parseInt(a.chapterLabel.split('-')[0].replace('C', '')) : 999
+                    const bChapter = b.chapterLabel ? parseInt(b.chapterLabel.split('-')[0].replace('C', '')) : 999
+                    if (aChapter !== bChapter) return aChapter - bChapter
+                    const aSeq = a.chapterLabel ? parseInt(a.chapterLabel.split('-')[1]) : a.sequence
+                    const bSeq = b.chapterLabel ? parseInt(b.chapterLabel.split('-')[1]) : b.sequence
+                    return aSeq - bSeq
+                })
+                allPrompts.forEach((p, i) => { p.sequence = i + 1 })
+
+                // Update store with title cards included
+                useStoryboardStore.getState().setGeneratedPrompts(allPrompts)
             }
         }
 
