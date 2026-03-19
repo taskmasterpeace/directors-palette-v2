@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       const modelSettings: ImageModelSettings = {
         aspectRatio: aspect_ratio,
         resolution: '2K',
-        outputFormat: 'webp',
+        outputFormat: 'png',
       } as ImageModelSettings
 
       const replicateInput = ImageGenerationService.buildReplicateInput({

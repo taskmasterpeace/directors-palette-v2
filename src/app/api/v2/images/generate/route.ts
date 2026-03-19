@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         aspectRatio: aspect_ratio,
         width: ASPECT_RATIO_SIZES[aspect_ratio]?.width,
         height: ASPECT_RATIO_SIZES[aspect_ratio]?.height,
-        outputFormat: 'webp',
+        outputFormat: 'png',
         maxImages: 1,
         seed,
       } as ImageModelSettings
