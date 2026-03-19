@@ -3443,4 +3443,67 @@ Surround them with a dense, diverse crowd of spectators with blurred faces. Auth
     quickAccessLabel: 'BattleRap',
     categoryId: 'scenes',
   },
+
+  // Documentary Title Card - cinematic chapter break title cards
+  {
+    name: 'Documentary Title Card',
+    description: 'Cinematic title card for documentary chapter breaks — no characters visible, atmospheric background with bold typography',
+    recipeNote: 'Use this for chapter title cards in documentary productions. No characters should be visible — pure atmosphere and typography.',
+    stages: [{
+      id: generateStageId(),
+      order: 0,
+      template: `A cinematic documentary title card. No people or characters visible anywhere in the frame.
+
+CHAPTER TITLE: "<<CHAPTER_TITLE:text!>>"
+<<SUBTITLE:text>>
+
+MOOD: <<MOOD:select(Triumphant,Somber,Tense,Reflective,Explosive,Nostalgic,Ominous,Hopeful)!>>
+ATMOSPHERE: <<ATMOSPHERE:select(Smoky haze with volumetric light,Rain-soaked urban night,Golden hour warmth,Harsh fluorescent industrial,Neon-lit darkness,Dusty archival grain,Cold blue steel,Fire and ember glow)>>
+
+The title text is rendered in bold, cinematic typography — large, centered, and clearly legible against the atmospheric background. The subtitle (if provided) appears smaller beneath the title in a complementary weight.
+
+Style: Documentary film aesthetic. Shallow depth of field on background elements. Cinematic color grading matching the mood. Film grain. No characters, no people, no silhouettes — this is a pure typography-over-atmosphere composition.
+
+16:9 widescreen framing. The title dominates the frame with breathing room around it.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '16:9',
+    requiresImage: false,
+    isQuickAccess: true,
+    quickAccessLabel: 'TitleCard',
+    categoryId: 'scenes',
+  },
+
+  // Documentary Text Overlay - stylized renders of social media, stats, quotes, forums
+  {
+    name: 'Documentary Text Overlay',
+    description: 'Stylized artistic renders of social media posts, statistics, quotes, and forum threads for documentary use',
+    recipeNote: 'Generate visually compelling text-based shots for documentaries — tweets, stats, forum posts, quotes. These are artistic renders, not screenshots.',
+    stages: [{
+      id: generateStageId(),
+      order: 0,
+      template: `A stylized artistic render of a <<OVERLAY_TYPE:select(Social media post / tweet,Forum thread / comment section,Statistics / data visualization,Quote card / pull quote,Text message conversation,News headline / article excerpt,Handwritten note / journal entry)!>> for a documentary.
+
+TEXT CONTENT: "<<TEXT_CONTENT:text!>>"
+CONTEXT: <<CONTEXT:text>>
+
+VISUAL STYLE: <<STYLE:select(Glowing neon on dark background,Chalk on blackboard,Projected onto concrete wall,Floating holographic display,Vintage newspaper print,Graffiti / street art style,Clean modern infographic,Typewriter on aged paper)!>>
+
+LIGHTING: <<LIGHTING:wildcard(battle_rap_lighting, random)>>
+
+This is NOT a screenshot — it is a cinematic, stylized artistic interpretation. The text is clearly legible but rendered with dramatic flair matching the visual style. The surrounding environment and lighting support the mood.
+
+Camera: slight depth of field, the text element is the hero of the frame. Atmospheric elements (dust, light rays, bokeh, smoke) add cinematic texture. 16:9 widescreen composition.
+
+Documentary film grain. High production value. The text overlay feels like a designed moment in the film, not a lazy screen grab.`,
+      fields: [],
+      referenceImages: [],
+    }],
+    suggestedAspectRatio: '16:9',
+    requiresImage: false,
+    isQuickAccess: true,
+    quickAccessLabel: 'TextShot',
+    categoryId: 'scenes',
+  },
 ]
