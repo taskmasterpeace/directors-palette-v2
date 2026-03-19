@@ -426,9 +426,35 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
             <div className="flex flex-col gap-3 px-4 sm:px-6 lg:px-8 pb-20 lg:pb-0">
                 {/* Textarea section */}
                 <div className="space-y-2">
-                    <label htmlFor="prompt" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Prompt
-                    </label>
+                    <div className="flex items-center justify-between">
+                        <label htmlFor="prompt" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Prompt
+                        </label>
+                        {(() => {
+                            const sentenceCount = shotCreatorPrompt.split(/[.!?]+/).filter((s: string) => s.trim().length > 0).length
+                            const willSkip = shotCreatorSettings.autoEnhance && sentenceCount >= 5
+                            return (
+                                <button
+                                    onClick={() => updateSettings({ autoEnhance: !shotCreatorSettings.autoEnhance })}
+                                    className={cn(
+                                        "flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded transition-colors",
+                                        shotCreatorSettings.autoEnhance && !willSkip
+                                            ? "bg-cyan-600 text-white"
+                                            : willSkip
+                                                ? "bg-cyan-600/40 text-white/60"
+                                                : "bg-muted text-muted-foreground hover:text-foreground"
+                                    )}
+                                    title={willSkip
+                                        ? `Auto-enhance paused — prompt is detailed enough (${sentenceCount} sentences)`
+                                        : "Auto-enhance prompt with model-optimized details (lighting, composition, atmosphere)"
+                                    }
+                                >
+                                    <Wand2 className="w-3 h-3" />
+                                    Enhance
+                                </button>
+                            )
+                        })()}
+                    </div>
                     <div
                         className="relative"
                         data-testid={showResizeControls ? "prompt-textarea-container" : undefined}
@@ -709,36 +735,8 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                             </Tooltip>
                         </TooltipProvider>
 
-                        {/* Auto-enhance + Batch toggles - right side */}
-                        <div className="flex items-center gap-3">
-                            {/* Auto-Enhance toggle */}
-                            {(() => {
-                                const sentenceCount = shotCreatorPrompt.split(/[.!?]+/).filter((s: string) => s.trim().length > 0).length
-                                const willSkip = shotCreatorSettings.autoEnhance && sentenceCount >= 5
-                                return (
-                                    <button
-                                        onClick={() => updateSettings({ autoEnhance: !shotCreatorSettings.autoEnhance })}
-                                        className={cn(
-                                            "flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded transition-colors",
-                                            shotCreatorSettings.autoEnhance && !willSkip
-                                                ? "bg-cyan-600 text-white"
-                                                : willSkip
-                                                    ? "bg-cyan-600/40 text-white/60"
-                                                    : "bg-muted text-muted-foreground hover:text-foreground"
-                                        )}
-                                        title={willSkip
-                                            ? `Auto-enhance paused — prompt is detailed enough (${sentenceCount} sentences)`
-                                            : "Auto-enhance prompt with model-optimized details (lighting, composition, atmosphere)"
-                                        }
-                                    >
-                                        <Wand2 className="w-3 h-3" />
-                                        Enhance
-                                    </button>
-                                )
-                            })()}
-
-                            {/* Batch toggle */}
-                            <div className="flex items-center gap-1">
+                        {/* Batch toggle - right side */}
+                        <div className="flex items-center gap-1">
                             <span className="text-xs text-muted-foreground mr-1">Batch:</span>
                             {[1, 3, 5].map((count) => (
                                 <button
@@ -754,7 +752,6 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                                     x{count}
                                 </button>
                             ))}
-                            </div>
                         </div>
                     </div>
                     <div className="flex gap-2">
