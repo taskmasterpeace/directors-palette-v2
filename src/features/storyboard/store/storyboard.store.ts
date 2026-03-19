@@ -19,6 +19,7 @@ import type {
     BRollPoolCategory,
     TitleCard,
     DocumentaryChapter,
+    CoherenceSuggestion,
 } from "../types/storyboard.types";
 import type { StoryChapter, ChapterDetectionResult } from "../services/chapter-detection.service";
 import type { ModelId } from "@/config";
@@ -123,6 +124,12 @@ export interface StoryboardStore {
     isClassifyingSegments: boolean
     isGeneratingBrollPool: boolean
     isGeneratingTitleCards: boolean
+
+    // ---- Coherence Pass State ----
+    coherencePassEnabled: boolean
+    coherenceSuggestions: CoherenceSuggestion[]
+    isRunningCoherencePass: boolean
+    narrativeSummary: string | null
 
     // ---- UI State ----
     internalTab: StoryboardTab
@@ -278,6 +285,14 @@ export interface StoryboardStore {
     setIsGeneratingBrollPool: (generating: boolean) => void
     setIsGeneratingTitleCards: (generating: boolean) => void
     clearDocumentaryData: () => void
+
+    // ---- Coherence Pass Actions ----
+    setCoherencePassEnabled: (enabled: boolean) => void
+    setCoherenceSuggestions: (suggestions: CoherenceSuggestion[]) => void
+    setIsRunningCoherencePass: (running: boolean) => void
+    setNarrativeSummary: (summary: string | null) => void
+    toggleCoherenceSuggestion: (id: string) => void
+    applyCoherenceSuggestions: () => void
 
     // ---- UI Actions ----
     setInternalTab: (tab: StoryboardTab) => void

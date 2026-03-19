@@ -675,6 +675,23 @@ export interface GeneratedShotPrompt {
 }
 
 /**
+ * A suggestion from the coherence pass review
+ */
+export interface CoherenceSuggestion {
+    id: string
+    type: 'edit' | 'insert'
+    targetSequence: number
+    description: string
+    newPrompt?: string
+    newShot?: {
+        prompt: string
+        shotType: ShotType
+        characterTags: string[]
+    }
+    accepted?: boolean
+}
+
+/**
  * Documentary Mode — Segment classification
  */
 export type SegmentClassification = 'action' | 'narration' | 'transition'

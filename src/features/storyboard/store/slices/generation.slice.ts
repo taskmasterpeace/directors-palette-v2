@@ -10,6 +10,7 @@ import type {
     ExtractionResult,
     GeneratedShotPrompt,
     GeneratedImageData,
+    CoherenceSuggestion,
 } from '../../types/storyboard.types'
 
 type Set = StoreApi<StoryboardStore>['setState']
@@ -45,6 +46,12 @@ export const generationInitialState = {
     isExtracting: false,
 
     generatedImages: {} as Record<number, GeneratedImageData>,
+
+    // Coherence pass
+    coherencePassEnabled: false,
+    coherenceSuggestions: [] as CoherenceSuggestion[],
+    isRunningCoherencePass: false,
+    narrativeSummary: null as string | null,
 }
 
 export const createGenerationSlice = (set: Set, _get: Get) => ({
@@ -204,4 +211,53 @@ export const createGenerationSlice = (set: Set, _get: Get) => ({
             }
         }
     })),
+
+    // ---- Coherence Pass Actions ----
+    setCoherencePassEnabled: (enabled: boolean) => set({ coherencePassEnabled: enabled }),
+    setCoherenceSuggestions: (suggestions: CoherenceSuggestion[]) => set({ coherenceSuggestions: suggestions }),
+    setIsRunningCoherencePass: (running: boolean) => set({ isRunningCoherencePass: running }),
+    setNarrativeSummary: (summary: string | null) => set({ narrativeSummary: summary }),
+    toggleCoherenceSuggestion: (id: string) => set((state) => ({
+        coherenceSuggestions: state.coherenceSuggestions.map(s =>
+            s.id === id ? { ...s, accepted: !s.accepted } : s
+        )
+    })),
+    applyCoherenceSuggestions: () => set((state) => {
+        const accepted = state.coherenceSuggestions.filter(s => s.accepted)
+        let updatedPrompts = [...state.generatedPrompts]
+
+        for (const suggestion of accepted) {
+            if (suggestion.type === 'edit' && suggestion.newPrompt) {
+                updatedPrompts = updatedPrompts.map(p =>
+                    p.sequence === suggestion.targetSequence
+                        ? { ...p, prompt: suggestion.newPrompt!, edited: true }
+                        : p
+                )
+            } else if (suggestion.type === 'insert' && suggestion.newShot) {
+                const insertAfterIdx = updatedPrompts.findIndex(p => p.sequence === suggestion.targetSequence)
+                if (insertAfterIdx !== -1) {
+                    const newShot: GeneratedShotPrompt = {
+                        sequence: suggestion.targetSequence + 0.5,
+                        originalText: suggestion.description,
+                        prompt: suggestion.newShot.prompt,
+                        shotType: suggestion.newShot.shotType,
+                        characterRefs: [],
+                        edited: false,
+                    }
+                    updatedPrompts.splice(insertAfterIdx + 1, 0, newShot)
+                }
+            }
+        }
+
+        // Renumber sequences
+        updatedPrompts = updatedPrompts
+            .sort((a, b) => a.sequence - b.sequence)
+            .map((p, i) => ({ ...p, sequence: i + 1 }))
+
+        return {
+            generatedPrompts: updatedPrompts,
+            promptsGenerated: updatedPrompts.length > 0,
+            coherenceSuggestions: []
+        }
+    }),
 })

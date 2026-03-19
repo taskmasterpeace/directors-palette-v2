@@ -190,6 +190,11 @@ export const createUiSlice = (set: Set, get: Get) => ({
         isClassifyingSegments: false,
         isGeneratingBrollPool: false,
         isGeneratingTitleCards: false,
+        // Reset coherence pass state
+        coherencePassEnabled: false,
+        coherenceSuggestions: [],
+        isRunningCoherencePass: false,
+        narrativeSummary: null,
         // Reset UI state
         internalTab: 'input' as StoryboardTab,
         storyText: '',
