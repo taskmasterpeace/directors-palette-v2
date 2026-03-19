@@ -732,7 +732,7 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                                         }
                                     >
                                         <Wand2 className="w-3 h-3" />
-                                        {willSkip ? 'Enhanced' : 'Enhance'}
+                                        Enhance
                                     </button>
                                 )
                             })()}
