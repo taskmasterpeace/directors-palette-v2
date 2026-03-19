@@ -279,7 +279,7 @@ ${Object.entries(locationDescriptions)
             : ''
 
         const storyOverview = storyContext
-            ? `\n\nFull story context for reference:\n${storyContext.substring(0, 2000)}${storyContext.length > 2000 ? '...' : ''}`
+            ? `\n\nStory context (director's brief):\n${storyContext}`
             : ''
 
         const messages: OpenRouterMessage[] = [
@@ -426,6 +426,40 @@ INSTRUCTIONS:
         } catch {
             throw new Error('Failed to parse shot prompts')
         }
+    }
+
+    /**
+     * Generate a narrative summary of the full story for cross-batch context.
+     * Replaces the 2,000 char truncation with a structured director's brief.
+     */
+    async generateNarrativeSummary(storyText: string): Promise<string> {
+        const messages: OpenRouterMessage[] = [
+            {
+                role: 'system',
+                content: `You are a script supervisor preparing a director's brief. Summarize the provided script into a structured overview that will be used as context for shot-by-shot planning. Keep under 1,500 characters.`
+            },
+            {
+                role: 'user',
+                content: `Summarize this script for a visual director. Include:
+- Overall arc (1 sentence)
+- Key characters and their roles (2-3 sentences)
+- Major visual themes and metaphors mentioned in the text (2-3 sentences)
+- Emotional progression chapter by chapter (1 sentence per chapter, or 1 sentence per act for non-chapter stories)
+- Any visual callbacks or parallels the text explicitly sets up
+
+Keep under 1,500 characters total.
+
+SCRIPT:
+${storyText}`
+            }
+        ]
+
+        const response = await this.callChat(messages)
+        const content = response.choices[0]?.message?.content
+        if (!content) {
+            throw new Error('No content in narrative summary response')
+        }
+        return content.substring(0, 1500)
     }
 
     /**
@@ -598,6 +632,39 @@ ${segments.map(s => `[${s.sequence}] "${s.text}"`).join('\n')}`
         } catch {
             throw new Error('Failed to parse segment classifications')
         }
+    }
+
+    /**
+     * Plain chat completion call (no tools).
+     */
+    async callChat(messages: OpenRouterMessage[]): Promise<OpenRouterResponse> {
+        const response = await fetch(`${this.baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.apiKey}`,
+                'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://directors-palette.app',
+                'X-Title': 'Directors Palette'
+            },
+            body: JSON.stringify({
+                model: this.model,
+                messages,
+            })
+        })
+
+        if (!response.ok) {
+            const errorText = await response.text()
+            let errorMessage = errorText
+            try {
+                const errorJson = JSON.parse(errorText)
+                errorMessage = errorJson.error?.message || errorJson.message || errorText
+            } catch {
+                // Keep raw text if not JSON
+            }
+            throw new Error(`OpenRouter API error: ${response.status} - ${errorMessage}`)
+        }
+
+        return response.json()
     }
 
     /**

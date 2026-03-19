@@ -41,6 +41,20 @@ export async function POST(request: NextRequest) {
 
         const service = createOpenRouterService(apiKey, model || 'openai/gpt-4.1-mini')
 
+        // Generate narrative summary for cross-batch context (replaces 2,000 char truncation)
+        let narrativeSummary = storyContext || ''
+        if (storyContext && storyContext.length > 2000) {
+            try {
+                narrativeSummary = await service.generateNarrativeSummary(storyContext)
+                logger.api.info('Generated narrative summary', { length: narrativeSummary.length })
+            } catch (summaryError) {
+                logger.api.warn('Narrative summary failed, falling back to truncated context', {
+                    error: summaryError instanceof Error ? summaryError.message : String(summaryError)
+                })
+                narrativeSummary = storyContext.substring(0, 2000)
+            }
+        }
+
         // Filter to segments we need to process (starting from startFrom)
         const segmentsToProcess: Segment[] = segments.filter((s: Segment) => s.sequence >= startFrom)
         const totalSegments = segmentsToProcess.length
@@ -61,7 +75,7 @@ export async function POST(request: NextRequest) {
                     batch,
                     stylePrompt,
                     characterDescriptions,
-                    storyContext
+                    narrativeSummary
                 )
                 allResults.push(...batchResults)
 
@@ -105,6 +119,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
             shots: allResults,
+            narrativeSummary: narrativeSummary !== storyContext ? narrativeSummary : undefined,
             totalRequested: segments.length,
             totalProcessed: allResults.length,
             errors: errors.length > 0 ? errors : undefined,
