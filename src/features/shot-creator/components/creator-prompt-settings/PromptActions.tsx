@@ -13,7 +13,8 @@ import {
     HelpCircle,
     X,
     Minimize2,
-    Maximize2
+    Maximize2,
+    Wand2
 } from 'lucide-react'
 import { useShotCreatorStore } from "@/features/shot-creator/store/shot-creator.store"
 import { useCustomStylesStore } from "../../store/custom-styles.store"
@@ -708,8 +709,25 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                             </Tooltip>
                         </TooltipProvider>
 
-                        {/* Batch toggle - right side */}
-                        <div className="flex items-center gap-1">
+                        {/* Auto-enhance + Batch toggles - right side */}
+                        <div className="flex items-center gap-3">
+                            {/* Auto-Enhance toggle */}
+                            <button
+                                onClick={() => updateSettings({ autoEnhance: !shotCreatorSettings.autoEnhance })}
+                                className={cn(
+                                    "flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded transition-colors",
+                                    shotCreatorSettings.autoEnhance
+                                        ? "bg-cyan-600 text-white"
+                                        : "bg-muted text-muted-foreground hover:text-foreground"
+                                )}
+                                title="Auto-enhance prompt with model-optimized details (lighting, composition, atmosphere)"
+                            >
+                                <Wand2 className="w-3 h-3" />
+                                Enhance
+                            </button>
+
+                            {/* Batch toggle */}
+                            <div className="flex items-center gap-1">
                             <span className="text-xs text-muted-foreground mr-1">Batch:</span>
                             {[1, 3, 5].map((count) => (
                                 <button
@@ -725,6 +743,7 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                                     x{count}
                                 </button>
                             ))}
+                            </div>
                         </div>
                     </div>
                     <div className="flex gap-2">

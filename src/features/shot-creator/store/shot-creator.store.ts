@@ -20,6 +20,7 @@ export const DEFAULT_SETTINGS: ShotCreatorSettings = {
     // Slot Machine syntax defaults
     disableSlotMachineSyntax: false, // Default: expand {seed} to [variations]
     slotMachineVariationCount: 3, // Default: 3 variations
+    autoEnhance: false, // Default: off — user opts in
 };
 export interface ShotCreatorStore {
     // ---- State ----

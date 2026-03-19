@@ -482,8 +482,32 @@ export function useImageGeneration() {
                 logger.shotCreator.info('References processed', { totalRefs: parsedRefs.allReferences.length, totalImages: uniqueReferenceImages.length })
             }
 
+            // ✅ AUTO-ENHANCE: Model-aware prompt enhancement (runs before style/LoRA injection)
+            let enhancedPrompt = prompt
+            if (settings.autoEnhance) {
+                try {
+                    logger.shotCreator.info('Auto-enhance: enhancing prompt for model', { model })
+                    const enhanceRes = await fetch('/api/prompt-enhance', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt, model })
+                    })
+                    if (enhanceRes.ok) {
+                        const enhanceData = await enhanceRes.json()
+                        if (enhanceData.enhanced) {
+                            enhancedPrompt = enhanceData.enhanced
+                            logger.shotCreator.info('Auto-enhance: done', { originalLen: prompt.length, enhancedLen: enhancedPrompt.length })
+                        }
+                    } else {
+                        logger.shotCreator.warn('Auto-enhance: API failed, using original prompt')
+                    }
+                } catch {
+                    logger.shotCreator.warn('Auto-enhance: error, using original prompt')
+                }
+            }
+
             // ✅ STYLE INJECTION: Check for selected style (preset or custom)
-            let promptWithStyle = prompt
+            let promptWithStyle = enhancedPrompt
             const selectedStyleId = settings.selectedStyle
             if (selectedStyleId) {
                 // Use custom styles store to find both preset and custom styles

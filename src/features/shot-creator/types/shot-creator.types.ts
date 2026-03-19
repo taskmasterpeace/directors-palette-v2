@@ -74,6 +74,8 @@ export interface ShotCreatorSettings {
     img2imgStrength?: number // Img2img strength (0-1, default 0.6) — controls how much reference image is transformed
     // Batch generation
     batchCount?: number // Number of times to repeat generation (1 or 5, default 1)
+    // Auto-enhance prompt at generation time (model-aware LLM enhancement)
+    autoEnhance?: boolean
     // Camera angle control (Qwen Image Edit)
     cameraAzimuth?: number      // 0-360 degrees (horizontal rotation)
     cameraElevation?: number    // -30 to 60 degrees (vertical tilt)
