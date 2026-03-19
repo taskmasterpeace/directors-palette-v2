@@ -133,6 +133,18 @@ const FLUX2_9B_LORAS: LoraItem[] = [
         compatibleModels: ['flux-2-klein-9b'],
         createdAt: 0,
     },
+    {
+        id: 'dcau-k9b',
+        name: 'DCAU',
+        type: 'style',
+        referenceTag: 'dcau',
+        triggerWord: 'DC animation style,with bold outlines,cel-shaded, muted color palette.',
+        weightsUrl: `${LORA_STORAGE_BASE}/dcau-style/dcau_lora_weights.safetensors`,
+        defaultGuidanceScale: 5.0,
+        defaultLoraScale: 1.0,
+        compatibleModels: ['flux-2-klein-9b'],
+        createdAt: 0,
+    },
 ]
 
 const ALL_BUILT_IN_LORAS = [...BUILT_IN_LORAS, ...FLUX2_9B_LORAS]
