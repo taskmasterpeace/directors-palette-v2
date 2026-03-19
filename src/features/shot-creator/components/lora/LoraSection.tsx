@@ -448,7 +448,7 @@ function LoraDialog({ onClose, editingLora }: {
 const COLLAPSED_MAX = 3
 
 export function LoraSection({ selectedModel }: { selectedModel?: string }) {
-    const { loras, activeLoraIds, toggleActiveLora, removeLora, updateLora, rateLora, getLoraRating, isLoraUsed } = useLoraStore()
+    const { loras, activeLoraIds, toggleActiveLora, removeLora, updateLora, rateLora, getLoraRating, isLoraUsed, loraThumbnails } = useLoraStore()
     const { isAdmin } = useAdminAuth()
     const [showDialog, setShowDialog] = useState(false)
     const [editingLora, setEditingLora] = useState<LoraItem | null>(null)
@@ -529,7 +529,7 @@ export function LoraSection({ selectedModel }: { selectedModel?: string }) {
                 {visibleLoras.map((lora) => (
                     <div key={lora.id} className="flex-shrink-0 min-w-[160px] sm:min-w-0 sm:flex-shrink">
                         <LoraCard
-                            lora={lora}
+                            lora={loraThumbnails[lora.id] ? { ...lora, thumbnailUrl: loraThumbnails[lora.id] } : lora}
                             isActive={activeLoraIds.includes(lora.id)}
                             isAdmin={isAdmin}
                             isBuiltIn={BUILT_IN_LORA_IDS.has(lora.id)}
