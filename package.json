@@ -105,6 +105,7 @@
     "stripe": "^20.0.0",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
+    "uuid": "^13.0.0",
     "vaul": "^1.1.2",
     "zod": "^3.25.76",
     "zustand": "^5.0.7"
@@ -120,6 +121,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.160.0",
+    "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^5.0.3",
     "@vitest/ui": "^3.2.4",
     "dotenv": "^17.2.3",

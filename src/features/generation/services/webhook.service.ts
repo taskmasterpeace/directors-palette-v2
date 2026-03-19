@@ -87,47 +87,90 @@ export class WebhookService {
       // Handle starting status
       if (status === 'starting') {
         await this.updateGalleryStatus(id, 'processing', null);
-        return;
       }
 
       // Handle processing status
-      if (status === 'processing') {
+      else if (status === 'processing') {
         await this.updateGalleryStatus(id, 'processing', null);
-        return;
       }
 
       // Handle succeeded status
-      if (status === 'succeeded' && output) {
+      else if (status === 'succeeded' && output) {
         await this.handleSuccessfulPrediction(galleryEntry, output, input);
-        return;
       }
 
       // Handle failed status
-      if (status === 'failed') {
+      else if (status === 'failed') {
         logger.generation.error('Prediction [id] failed', { id, error })
         await this.updateGalleryWithError(
           id,
           galleryEntry,
           error?.toString() || 'Prediction failed'
         );
-        return;
       }
 
       // Handle canceled status
-      if (status === 'canceled') {
+      else if (status === 'canceled') {
         await this.updateGalleryStatus(id, 'canceled', 'Prediction was canceled');
-        return;
       }
 
       // Handle succeeded with no output (edge case)
-      if (status === 'succeeded' && !output) {
+      else if (status === 'succeeded' && !output) {
         logger.generation.error('Prediction succeeded but has no output', { id })
         await this.updateGalleryWithError(
           id,
           galleryEntry,
           'Generation succeeded but produced no output'
         );
-        return;
+      }
+
+      // --- API v2 job integration ---
+      try {
+        const { getJobByPredictionId, updateJob: updateApiJob, fireWebhook, formatJobResponse } = await import('@/app/api/v2/_lib/job-manager')
+
+        const apiJob = await getJobByPredictionId(id)
+        if (apiJob) {
+          if (status === 'succeeded') {
+            // Get updated gallery for result URLs
+            const { data: updatedGallery } = await getSupabase()
+              .from('gallery')
+              .select('public_url, metadata')
+              .eq('prediction_id', id)
+              .single()
+
+            await updateApiJob(id, {
+              status: 'completed',
+              result: {
+                url: updatedGallery?.public_url,
+                metadata: updatedGallery?.metadata,
+              },
+              completedAt: new Date().toISOString(),
+            })
+
+            if (apiJob.webhook_url) {
+              const updated = await getJobByPredictionId(id)
+              if (updated) await fireWebhook(apiJob.webhook_url, formatJobResponse(updated))
+            }
+          } else if (status === 'failed' || status === 'canceled') {
+            await updateApiJob(id, {
+              status: 'failed',
+              errorMessage: error || 'Generation failed',
+            })
+
+            if (apiJob.webhook_url) {
+              const updated = await getJobByPredictionId(id)
+              if (updated) await fireWebhook(apiJob.webhook_url, formatJobResponse(updated))
+            }
+          } else if (status === 'processing' || status === 'starting') {
+            await updateApiJob(id, { status: 'processing' })
+          }
+        }
+      } catch (apiJobErr) {
+        // Non-fatal: don't break existing webhook processing
+        logger.api.error('Failed to update API v2 job', {
+          error: apiJobErr instanceof Error ? apiJobErr.message : String(apiJobErr),
+          predictionId: id,
+        })
       }
     } catch (processingError) {
       // If any processing step fails (download, upload, etc.), mark as failed
