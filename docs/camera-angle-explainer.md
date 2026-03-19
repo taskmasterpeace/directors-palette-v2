@@ -76,19 +76,6 @@ The interactive 3D viewport shows exactly where your camera will be:
 
 ---
 
-## LoRA Scale (Advanced Setting)
-
-- **Where:** In Advanced Settings, below the main sliders
-- **Range:** 0 to 2.0
-- **Default:** 1.25
-- **What it does:** Controls how strongly the camera angle instruction affects the output
-  - **Lower (0.5–1.0):** Subtle angle change, more freedom for AI interpretation
-  - **Default (1.25):** Recommended balance of accuracy and quality
-  - **Higher (1.5–2.0):** Stronger angle enforcement, but may reduce image quality
-- **When to adjust:** If the angle isn't changing enough, increase it. If the image looks distorted, decrease it.
-
----
-
 ## How It Works Under the Hood
 
 1. You upload a reference image (required — Camera Angle always needs a subject)
@@ -148,10 +135,6 @@ The system maps continuous slider values to the nearest discrete position:
 **Scene 6: Compare**
 - Show: Side-by-side of original and generated image at new angle
 - Caption: "Same subject, brand new perspective — in about 30 seconds"
-
-**Scene 7: Advanced Tip**
-- Show: LoRA Scale slider in Advanced Settings
-- Caption: "Adjust LoRA Scale for stronger or softer angle control (default: 1.25)"
 
 ---
 
