@@ -287,6 +287,18 @@ ${Object.entries(locationDescriptions)
                 role: 'system',
                 content: `You are a film director planning shot coverage for a visual storyboard. Your task is to convert story text segments into detailed STILL IMAGE descriptions suitable for AI image generation.
 
+SHOT TYPE GUIDE:
+- establishing: Wide view introducing a new location or scene
+- wide: Full scene with multiple subjects visible
+- medium: Subject from waist up, standard conversational framing
+- close-up: Face or single detail fills the frame
+- detail: Extreme close on a prop, hand, texture, or object
+- over_shoulder: Shot from behind one subject looking at another
+- title_card: Chapter/section title text with atmospheric background, NO characters visible
+- text_overlay: Social media posts, stats, quotes, documents rendered in the visual style
+- abstract: Visual metaphor or symbolic imagery — not a literal depiction of the narration
+- montage: Multi-panel or rapid-sequence composite showing progression or comparison
+
 DIRECTOR'S APPROACH:
 - Think like a director planning coverage for each scene
 - For key moments, generate a SEQUENCE of shots: establishing → wide → medium → close-up (use judgment — not every moment needs all four)
@@ -296,11 +308,27 @@ DIRECTOR'S APPROACH:
 
 CHARACTER COVERAGE:
 ${characters_with_roles}
-- Main characters MUST appear in at least 70% of shots — they are the visual through-line
-- Even when another character or object is the focus, try to include the main character reacting, observing, or in the background
+- Vary main character visibility based on genre and content type:
+  - Documentaries and ensemble pieces: 40-50% character visibility
+  - Character dramas and biopics: 60-70% character visibility
+  - Choose the appropriate percentage for THIS story, then maintain it consistently
+- Fill non-character shots with: crowd reactions, location establishing shots, abstract visuals, text overlays, and atmospheric mood shots
+- NOT every shot needs the main character — visual variety prevents fatigue
 - Use over-the-shoulder shots, reaction close-ups, or two-shots to keep the main character visible
 - When a character appears, use their @name tag (e.g., @geechi_gotti)
 - Each shot MUST list which characters are visible in it via characterTags
+
+VISUAL STORYTELLING:
+- Not every shot needs to literally depict what the narration describes
+- When the narration uses metaphor, irony, or thematic reflection, consider an "abstract" shot that visualizes the MEANING rather than the literal scene
+- Examples of abstract shots:
+  - Narration about wasted potential → an untouched trophy under a spotlight in a dark room
+  - Narration about gambling on reliability → a slot machine with the character's face on the reels
+  - Narration about duality → split-frame composition with contrasting lighting on each half
+  - Narration about online discourse → stylized social media feed rendered in the project's art style
+- Use "text_overlay" for stats, quotes, social media reactions, and documents
+- Use "abstract" for symbolic/metaphor shots
+- Include abstract and metaphor shots where the story naturally calls for them — this creates breathing room and visual depth
 
 IMPORTANT RULES:
 - These are STILL IMAGES, not video. Do NOT use movement terms like "dolly", "crane", "rack focus", "pan", "tilt"
@@ -311,7 +339,7 @@ IMPORTANT RULES:
 - Number your output shots sequentially starting from 1 (total count will exceed input segment count)
 
 For each shot, describe:
-1. Shot type (establishing, wide, medium, close-up, or detail)
+1. Shot type (use the full range: establishing, wide, medium, close-up, detail, over_shoulder, title_card, text_overlay, abstract, montage)
 2. Subject and action/pose — WHO is in this shot
 3. Setting/environment details
 4. Mood/atmosphere and lighting
@@ -337,7 +365,7 @@ INSTRUCTIONS:
 - Generate 1.5x to 2x more shots than input segments (e.g., 5 segments → 8-10 shots)
 - For each shot: provide a detailed visual prompt (2-3 sentences), shot type, and characterTags
 - When a Director's Note is provided, incorporate that guidance into the shot
-- The main character should appear in 70%+ of all shots`
+- Apply the character visibility percentage you chose based on the story's genre`
             }
         ]
 
