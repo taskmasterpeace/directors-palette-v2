@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const supabase = getSupabase()
 
     const { data, error, count } = await supabase
-      .from('recipes')
+      .from('user_recipes')
       .select('*', { count: 'exact' })
       .or(`user_id.eq.${auth.userId},is_shared.eq.true`)
       .order('created_at', { ascending: false })

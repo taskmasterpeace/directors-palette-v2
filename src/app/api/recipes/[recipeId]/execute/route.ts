@@ -7,20 +7,26 @@ import { lognog } from '@/lib/lognog'
 import { logger } from '@/lib/logger'
 
 /**
- * Recipe Execution API
+ * Recipe Execution API — supports single-stage and multi-stage recipes.
  *
- * Executes a recipe by building prompts, validating fields, and calling the generation API.
- * This endpoint:
- * - Loads recipe from database
- * - Validates required fields
- * - Builds prompts from templates + field values
- * - Auto-merges reference images
- * - Calls /api/generation/image
- * - Polls for completion
- * - Returns final image URL with credit tracking
+ * Multi-stage flow:
+ *   Stage 0 generates an image → that image URL becomes a reference for Stage 1 → etc.
+ *   Built-in recipe reference images (e.g., character sheet template) are merged per-stage.
  *
- * Used by storybook for recipe-based generation.
+ * Request body:
+ *   fieldValues           — key/value pairs for template fields
+ *   referenceImages       — flat URL array merged into Stage 0 (backward compat)
+ *   stageReferenceImages  — 2D array [[stage0_refs], [stage1_refs], …] for explicit control
+ *   modelSettings         — { model, aspectRatio, outputFormat }
+ *   folderId              — optional gallery folder
+ *   extraMetadata         — optional metadata
  */
+
+const MAX_POLL_ATTEMPTS = 60
+const POLL_INTERVAL_MS = 5_000
+
+export const maxDuration = 300 // 5 minutes for multi-stage
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ recipeId: string }> }
@@ -30,259 +36,193 @@ export async function POST(
   let userEmail: string | undefined
 
   try {
-    // Authenticate user
+    // ── Auth ──────────────────────────────────────────────────────────
     const auth = await getAuthenticatedUser(request)
     if (auth instanceof NextResponse) return auth
-
     const { user } = auth
     userId = user.id
     userEmail = user.email
 
-    // Extract recipeId from params
+    // ── Params & Body ────────────────────────────────────────────────
     const { recipeId } = await params
-
     if (!recipeId) {
-      return NextResponse.json(
-        { success: false, error: 'Recipe ID is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, error: 'Recipe ID is required' }, { status: 400 })
     }
 
-    // Parse request body
     const body = await request.json()
     const {
       fieldValues = {},
       referenceImages = [],
+      stageReferenceImages: userStageRefs,
       modelSettings = {},
-      // Gallery organization (for storybook projects)
       folderId,
       extraMetadata,
     }: {
       fieldValues?: RecipeFieldValues
       referenceImages?: string[]
-      modelSettings?: {
-        aspectRatio?: string
-        outputFormat?: string
-        model?: string
-      }
+      stageReferenceImages?: string[][]
+      modelSettings?: { aspectRatio?: string; outputFormat?: string; model?: string }
       folderId?: string
       extraMetadata?: Record<string, unknown>
     } = body
 
-    // Load recipe from database
-    // Support both ID and name lookup (name is useful for system recipes)
+    // ── Load Recipe ──────────────────────────────────────────────────
     let recipe = await getRecipe(recipeId, user.id)
-
-    // If not found by ID, try by name (for system recipes)
     if (!recipe) {
       const { getRecipeByName } = await import('@/features/shot-creator/services/recipe.service')
       recipe = await getRecipeByName(recipeId, user.id)
     }
-
     if (!recipe) {
-      return NextResponse.json(
-        { success: false, error: 'Recipe not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ success: false, error: 'Recipe not found' }, { status: 404 })
     }
 
-    // Validate required fields
+    // ── Validate Fields ──────────────────────────────────────────────
     const validation = validateRecipe(recipe.stages, fieldValues)
-
     if (!validation.isValid) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Missing required fields',
-          missingFields: validation.missingFields,
-        },
+        { success: false, error: 'Missing required fields', missingFields: validation.missingFields },
         { status: 400 }
       )
     }
 
-    // Build prompts from recipe
-    const { prompts, stageReferenceImages } = buildRecipePrompts(
-      recipe.stages,
-      fieldValues
-    )
+    // ── Build Prompts ────────────────────────────────────────────────
+    const { prompts, stageReferenceImages: recipeStageRefs } = buildRecipePrompts(recipe.stages, fieldValues)
+    const totalStages = prompts.length
 
-    // DEBUG: Log recipe execution details
-    logger.api.info('Recipe Execute: DEBUG', { detail: {
-      recipeName: recipe.name,
-      recipeId: recipe.id,
-      stageCount: recipe.stages.length,
-      promptsCount: prompts.length,
-      fieldValues,
-      referenceImages,
-      prompts: prompts.map((p, i) => ({ stage: i, promptPreview: p.substring(0, 150) + '...' }))
-    } })
+    logger.api.info('Recipe Execute: Start', {
+      detail: {
+        recipeName: recipe.name,
+        recipeId: recipe.id,
+        stageCount: totalStages,
+        fieldValues,
+        prompts: prompts.map((p, i) => ({ stage: i, preview: p.substring(0, 150) })),
+      },
+    })
 
-    // For now, only support single-stage recipes for storybook
-    if (prompts.length > 1) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Multi-stage recipes not yet supported in this endpoint',
-        },
-        { status: 400 }
-      )
-    }
-
-    const prompt = prompts[0]
-    const recipeReferenceImages = stageReferenceImages[0] || []
-
-    // Merge reference images: recipe images + provided images
-    const allReferenceImages = [
-      ...recipeReferenceImages,
-      ...referenceImages,
-    ]
-
-    // Determine model from modelSettings or recipe suggestion
     const model = modelSettings.model || recipe.suggestedModel || 'nano-banana-2'
     const aspectRatio = modelSettings.aspectRatio || recipe.suggestedAspectRatio || '16:9'
     const outputFormat = modelSettings.outputFormat || 'png'
+    const baseUrl = request.url
+    const cookieHeader = request.headers.get('cookie') || ''
 
-    // Call generation API
-    const generationResponse = await fetch(
-      new URL('/api/generation/image', request.url).toString(),
-      {
+    // ── Execute Stages ───────────────────────────────────────────────
+    const imageUrls: string[] = []
+    let previousImageUrl: string | undefined
+
+    for (let i = 0; i < totalStages; i++) {
+      const prompt = prompts[i]
+
+      // Build reference images for this stage:
+      //  1) Previous stage output (if any)
+      //  2) Recipe-defined refs for this stage (e.g., character sheet template)
+      //  3) User-provided refs for this stage (or flat referenceImages for stage 0)
+      const stageRefs: string[] = []
+
+      if (previousImageUrl) {
+        stageRefs.push(previousImageUrl)
+      }
+
+      // Recipe built-in refs for this stage
+      const builtInRefs = recipeStageRefs[i] || []
+      stageRefs.push(...builtInRefs)
+
+      // User-provided refs: prefer explicit per-stage, fall back to flat array on stage 0
+      if (userStageRefs && userStageRefs[i]) {
+        stageRefs.push(...userStageRefs[i])
+      } else if (i === 0 && referenceImages.length > 0) {
+        stageRefs.push(...referenceImages)
+      }
+
+      logger.api.info(`Recipe Execute: Stage ${i + 1}/${totalStages}`, {
+        detail: { stage: i, refCount: stageRefs.length, promptPreview: prompt.substring(0, 100) },
+      })
+
+      // Call generation API
+      const genRes = await fetch(new URL('/api/generation/image', baseUrl).toString(), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // Forward auth cookie
-          cookie: request.headers.get('cookie') || '',
-        },
+        headers: { 'Content-Type': 'application/json', cookie: cookieHeader },
         body: JSON.stringify({
           model,
           prompt,
-          referenceImages: allReferenceImages,
-          modelSettings: {
-            aspectRatio,
-            outputFormat,
-          },
-          // Gallery organization (for storybook projects)
+          referenceImages: stageRefs,
+          modelSettings: { aspectRatio, outputFormat },
           folderId,
           extraMetadata,
         }),
-      }
-    )
+      })
 
-    const generationData = await generationResponse.json()
-
-    if (!generationResponse.ok) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: generationData.error || 'Generation failed',
-        },
-        { status: generationResponse.status }
-      )
-    }
-
-    // Poll for completion
-    const predictionId = generationData.predictionId
-
-    if (!predictionId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'No prediction ID returned from generation',
-        },
-        { status: 500 }
-      )
-    }
-
-    // Poll with timeout (max 5 minutes)
-    const maxAttempts = 60
-    const pollInterval = 5000 // 5 seconds
-
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const statusResponse = await fetch(
-        new URL(`/api/generation/status/${predictionId}`, request.url).toString(),
-        {
-          headers: {
-            cookie: request.headers.get('cookie') || '',
-          },
-        }
-      )
-
-      const statusData = await statusResponse.json()
-
-      if (statusData.status === 'succeeded' && statusData.output) {
-        // Success - return image URL
-        const imageUrl = statusData.persistedUrl || statusData.output
-        const finalImageUrl = Array.isArray(imageUrl) ? imageUrl[0] : imageUrl
-
-        // Log recipe execution success
-        lognog.info('recipe_executed', {
-          type: 'business',
-          event: 'recipe_executed',
-          user_id: userId,
-          user_email: userEmail,
-          recipe_id: recipe.id,
-          recipe_name: recipe.name,
-          stage_count: recipe.stages.length,
-          prompt: prompt,
-          prompt_length: prompt.length,
-          model,
-          prediction_id: predictionId,
-        })
-
-        // Log API success
-        lognog.info(`POST /api/recipes/${recipeId}/execute 200 (${Date.now() - apiStart}ms)`, {
-          type: 'api',
-          route: `/api/recipes/${recipeId}/execute`,
-          method: 'POST',
-          status_code: 200,
-          duration_ms: Date.now() - apiStart,
-          user_id: userId,
-          user_email: userEmail,
-          model,
-        })
-
-        return NextResponse.json({
-          success: true,
-          imageUrl: finalImageUrl,
-          predictionId,
-          creditsUsed: statusData.creditsUsed || 0,
-          recipe: {
-            id: recipe.id,
-            name: recipe.name,
-          },
-        })
-      }
-
-      if (statusData.status === 'failed') {
+      const genData = await genRes.json()
+      if (!genRes.ok) {
         return NextResponse.json(
-          {
-            success: false,
-            error: statusData.error || 'Generation failed',
-          },
+          { success: false, error: genData.error || `Stage ${i + 1} generation failed` },
+          { status: genRes.status }
+        )
+      }
+
+      const predictionId = genData.predictionId
+      if (!predictionId) {
+        return NextResponse.json(
+          { success: false, error: `Stage ${i + 1}: no prediction ID returned` },
           { status: 500 }
         )
       }
 
-      // Still processing - wait before next poll
-      if (attempt < maxAttempts - 1) {
-        await new Promise(resolve => setTimeout(resolve, pollInterval))
+      // Poll for completion
+      const imageUrl = await pollForCompletion(baseUrl, cookieHeader, predictionId)
+      if (!imageUrl) {
+        return NextResponse.json(
+          { success: false, error: `Stage ${i + 1} timed out after 5 minutes` },
+          { status: 504 }
+        )
       }
+
+      if (imageUrl === 'FAILED') {
+        return NextResponse.json(
+          { success: false, error: `Stage ${i + 1} generation failed` },
+          { status: 500 }
+        )
+      }
+
+      imageUrls.push(imageUrl)
+      previousImageUrl = imageUrl
     }
 
-    // Timeout
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Generation timed out after 5 minutes',
-      },
-      { status: 504 }
-    )
+    // ── Success ──────────────────────────────────────────────────────
+    const finalImageUrl = imageUrls[imageUrls.length - 1]
 
+    lognog.info('recipe_executed', {
+      type: 'business',
+      event: 'recipe_executed',
+      user_id: userId,
+      user_email: userEmail,
+      recipe_id: recipe.id,
+      recipe_name: recipe.name,
+      stage_count: totalStages,
+      model,
+    })
+
+    lognog.info(`POST /api/recipes/${recipeId}/execute 200 (${Date.now() - apiStart}ms)`, {
+      type: 'api',
+      route: `/api/recipes/${recipeId}/execute`,
+      method: 'POST',
+      status_code: 200,
+      duration_ms: Date.now() - apiStart,
+      user_id: userId,
+      user_email: userEmail,
+      model,
+    })
+
+    return NextResponse.json({
+      success: true,
+      imageUrl: finalImageUrl,
+      imageUrls,
+      stagesCompleted: totalStages,
+      recipe: { id: recipe.id, name: recipe.name },
+    })
   } catch (error) {
-    logger.api.error('Recipe Execute: Error', { error: error instanceof Error ? error.message : String(error) })
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    logger.api.error('Recipe Execute: Error', { error: errorMessage })
 
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-
-    // Log error
     lognog.error(errorMessage, {
       type: 'error',
       stack: error instanceof Error ? error.stack : undefined,
@@ -291,25 +231,40 @@ export async function POST(
       user_email: userEmail,
     })
 
-    // Log API failure
-    lognog.info(`POST /api/recipes/[recipeId]/execute 500 (${Date.now() - apiStart}ms)`, {
-      type: 'api',
-      route: '/api/recipes/[recipeId]/execute',
-      method: 'POST',
-      status_code: 500,
-      duration_ms: Date.now() - apiStart,
-      user_id: userId,
-      user_email: userEmail,
-      error: errorMessage,
-    })
-
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Recipe execution failed',
-        message: errorMessage,
-      },
+      { success: false, error: 'Recipe execution failed', message: errorMessage },
       { status: 500 }
     )
   }
+}
+
+/**
+ * Poll the status endpoint until the prediction succeeds, fails, or times out.
+ * Returns the persisted image URL on success, 'FAILED' on failure, or null on timeout.
+ */
+async function pollForCompletion(
+  baseUrl: string,
+  cookieHeader: string,
+  predictionId: string
+): Promise<string | null> {
+  for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
+    const res = await fetch(new URL(`/api/generation/status/${predictionId}`, baseUrl).toString(), {
+      headers: { cookie: cookieHeader },
+    })
+    const data = await res.json()
+
+    if (data.status === 'succeeded' && data.output) {
+      const url = data.persistedUrl || data.output
+      return Array.isArray(url) ? url[0] : url
+    }
+
+    if (data.status === 'failed') {
+      return 'FAILED'
+    }
+
+    if (attempt < MAX_POLL_ATTEMPTS - 1) {
+      await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS))
+    }
+  }
+  return null
 }

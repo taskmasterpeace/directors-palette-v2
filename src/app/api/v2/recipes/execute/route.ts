@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     // Fetch recipe from DB
     const supabase = getSupabase()
     const { data: recipeData, error: recipeError } = await supabase
-      .from('recipes')
+      .from('user_recipes')
       .select('*')
       .eq('id', recipe_id)
       .single()
