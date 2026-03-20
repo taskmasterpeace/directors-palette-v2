@@ -21,7 +21,7 @@ import { useCustomStylesStore } from "../../store/custom-styles.store"
 import { useShotCreatorSettings } from "../../hooks"
 import { PromptSyntaxFeedback } from "./PromptSyntaxFeedback"
 import { useWildCardStore } from "../../store/wildcard.store"
-import { RecipeFormFields } from "../recipe"
+import { RecipeFormInline } from "../recipe"
 import { OrganizeButton } from "../prompt-organizer"
 import { PromptExpanderButton } from "../prompt-expander/PromptExpanderButton"
 import { DesktopPromptsRecipesBar } from "./DesktopPromptsRecipesBar"
@@ -53,7 +53,7 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
     const { settings: shotCreatorSettings, updateSettings } = useShotCreatorSettings()
     const { libraryItems } = useLibraryStore()
     const { wildcards: _wildcards } = useWildCardStore()
-    const { activeRecipeId, setActiveRecipe, getActiveRecipe } = useRecipeStore()
+    const { activeRecipeId, setActiveRecipe } = useRecipeStore()
 
     // ── Extracted hooks ────────────────────────────────────────────────
     const {
@@ -424,7 +424,10 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
     return (
         <Fragment>
             <div className="flex flex-col gap-3 px-4 sm:px-6 lg:px-8 pb-20 lg:pb-0">
-                {/* Textarea section */}
+                {/* Recipe inline form OR textarea */}
+                {activeRecipeId ? (
+                    <RecipeFormInline />
+                ) : (
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
                         <label htmlFor="prompt" className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -596,6 +599,7 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                         </div>
                     )}
                 </div>
+                )}
 
                 {/* Desktop Prompts/Recipes Bar (tabbed interface) */}
                 <DesktopPromptsRecipesBar
@@ -604,91 +608,79 @@ const PromptActions = ({ textareaRef, showResizeControls = true }: { textareaRef
                     currentPrompt={shotCreatorPrompt}
                 />
 
-                {/* Organize and Expand buttons */}
-                <div className="flex items-center gap-2">
-                    <OrganizeButton
-                        prompt={shotCreatorPrompt}
-                        onApply={setShotCreatorPrompt}
-                    />
-                    <PromptExpanderButton
-                        prompt={shotCreatorPrompt}
-                        onPromptChange={setShotCreatorPrompt}
-                    />
-                </div>
-
-                {/* Slot Machine Panel - appears when {} detected */}
-                <SlotMachinePanel
-                    prompt={shotCreatorPrompt}
-                    onApply={setShotCreatorPrompt}
-                    disabled={isGenerating}
-                />
-
-                {/* Recipe section */}
-                {activeRecipeId && (
-                    <div className="space-y-2 bg-slate-50 dark:bg-slate-900 p-4 rounded border border-slate-200 dark:border-slate-700">
-                        <div className="flex items-center justify-between">
-                            <h3 className="font-medium text-slate-900 dark:text-slate-100">
-                                {getActiveRecipe()?.name || 'Recipe'}
-                            </h3>
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => setActiveRecipe(null)}
-                            >
-                                <X className="w-4 h-4" />
-                            </Button>
+                {/* Organize, Expand, SlotMachine — only in freeform prompt mode */}
+                {!activeRecipeId && (
+                    <>
+                        <div className="flex items-center gap-2">
+                            <OrganizeButton
+                                prompt={shotCreatorPrompt}
+                                onApply={setShotCreatorPrompt}
+                            />
+                            <PromptExpanderButton
+                                prompt={shotCreatorPrompt}
+                                onPromptChange={setShotCreatorPrompt}
+                            />
                         </div>
-                        <RecipeFormFields />
-                    </div>
+
+                        <SlotMachinePanel
+                            prompt={shotCreatorPrompt}
+                            onApply={setShotCreatorPrompt}
+                            disabled={isGenerating}
+                        />
+                    </>
                 )}
 
                 {/* LoRA section - for models with LoRA support */}
-                {shotCreatorSettings.model === 'flux-2-klein-9b' && (
+                {!activeRecipeId && shotCreatorSettings.model === 'flux-2-klein-9b' && (
                     <LoraSection selectedModel={shotCreatorSettings.model} />
                 )}
 
-                {/* Prompt syntax feedback + Anchor Transform feedback */}
-                <PromptSyntaxFeedback
-                    prompt={shotCreatorPrompt}
-                    disablePipeSyntax={shotCreatorSettings.disablePipeSyntax}
-                    disableBracketSyntax={shotCreatorSettings.disableBracketSyntax}
-                    disableWildcardSyntax={shotCreatorSettings.disableWildcardSyntax}
-                    disableSlotMachineSyntax={shotCreatorSettings.disableSlotMachineSyntax}
-                    enableAnchorTransform={shotCreatorSettings.enableAnchorTransform}
-                    referenceImageCount={shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)}
-                    onTogglePipeSyntax={(disabled) => updateSettings({ disablePipeSyntax: disabled })}
-                    onToggleBracketSyntax={(disabled) => updateSettings({ disableBracketSyntax: disabled })}
-                    onToggleWildcardSyntax={(disabled) => updateSettings({ disableWildcardSyntax: disabled })}
-                    onToggleSlotMachineSyntax={(disabled) => updateSettings({ disableSlotMachineSyntax: disabled })}
-                    onToggleAnchorTransform={(enabled) => updateSettings({ enableAnchorTransform: enabled })}
-                />
+                {/* Prompt syntax feedback + Anchor Transform — freeform only */}
+                {!activeRecipeId && (
+                    <>
+                        <PromptSyntaxFeedback
+                            prompt={shotCreatorPrompt}
+                            disablePipeSyntax={shotCreatorSettings.disablePipeSyntax}
+                            disableBracketSyntax={shotCreatorSettings.disableBracketSyntax}
+                            disableWildcardSyntax={shotCreatorSettings.disableWildcardSyntax}
+                            disableSlotMachineSyntax={shotCreatorSettings.disableSlotMachineSyntax}
+                            enableAnchorTransform={shotCreatorSettings.enableAnchorTransform}
+                            referenceImageCount={shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)}
+                            onTogglePipeSyntax={(disabled) => updateSettings({ disablePipeSyntax: disabled })}
+                            onToggleBracketSyntax={(disabled) => updateSettings({ disableBracketSyntax: disabled })}
+                            onToggleWildcardSyntax={(disabled) => updateSettings({ disableWildcardSyntax: disabled })}
+                            onToggleSlotMachineSyntax={(disabled) => updateSettings({ disableSlotMachineSyntax: disabled })}
+                            onToggleAnchorTransform={(enabled) => updateSettings({ enableAnchorTransform: enabled })}
+                        />
 
-                {shotCreatorSettings.enableAnchorTransform && (() => {
-                    const totalImages = shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)
-                    const hasStyle = !!shotCreatorSettings.selectedStyle
+                        {shotCreatorSettings.enableAnchorTransform && (() => {
+                            const totalImages = shotCreatorReferenceImages.length + (shotCreatorSettings.selectedStyle ? 1 : 0)
+                            const hasStyle = !!shotCreatorSettings.selectedStyle
 
-                    let anchorName = 'Image 1'
-                    if (hasStyle) {
-                        const selectedStyle = useCustomStylesStore.getState().getStyleById(shotCreatorSettings.selectedStyle!)
-                        anchorName = selectedStyle?.name || 'Style Guide'
-                    } else if (shotCreatorReferenceImages[0]?.file?.name) {
-                        anchorName = shotCreatorReferenceImages[0].file.name
-                    }
+                            let anchorName = 'Image 1'
+                            if (hasStyle) {
+                                const selectedStyle = useCustomStylesStore.getState().getStyleById(shotCreatorSettings.selectedStyle!)
+                                anchorName = selectedStyle?.name || 'Style Guide'
+                            } else if (shotCreatorReferenceImages[0]?.file?.name) {
+                                anchorName = shotCreatorReferenceImages[0].file.name
+                            }
 
-                    const transformCount = totalImages - 1
+                            const transformCount = totalImages - 1
 
-                    return (
-                        <div className="flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg text-sm">
-                            <span className="text-orange-600 dark:text-orange-400">
-                                {totalImages < 2 ? (
-                                    '⚠️ Anchor requires at least 2 images (1 anchor + 1+ inputs)'
-                                ) : (
-                                    `¡ ${anchorName} will anchor ${transformCount} image${transformCount > 1 ? 's' : ''}`
-                                )}
-                            </span>
-                        </div>
-                    )
-                })()}
+                            return (
+                                <div className="flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg text-sm">
+                                    <span className="text-orange-600 dark:text-orange-400">
+                                        {totalImages < 2 ? (
+                                            '⚠️ Anchor requires at least 2 images (1 anchor + 1+ inputs)'
+                                        ) : (
+                                            `¡ ${anchorName} will anchor ${transformCount} image${transformCount > 1 ? 's' : ''}`
+                                        )}
+                                    </span>
+                                </div>
+                            )
+                        })()}
+                    </>
+                )}
 
                 {/* Large batch confirmation warning */}
                 {pendingConfirmation && (
