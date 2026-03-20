@@ -96,17 +96,17 @@ Black grid lines between all cells. Match the template layout exactly.`,
   {
     name: 'Character Sheet',
     description: 'Professional character reference sheet with full-body views, expressions, and accessories',
-    recipeNote: 'Attach a reference image AND describe your character. The text description anchors identity - the model follows text better than photos for likeness.',
+    recipeNote: 'Attach a reference image of your character and provide a short identity description (gender, ethnicity, build, distinctive features). Do NOT describe clothing — the model uses neutral defaults.',
     stages: [{
       id: 'stage_0',
       order: 0,
       template: `CHARACTER @<<CHARACTER_NAME:name!>>
 
-THE CHARACTER: <<CHARACTER_DESCRIPTION:text!>>
+Character identity: <<CHARACTER_DESCRIPTION:text!>>
 
-Create a professional character reference sheet of this EXACT person on a clean white/light gray background.
+Face consistency: Keep the person's facial features exactly the same as the reference image. Do not alter face, hairstyle, or body proportions.
 
-IDENTITY LOCK: The character in EVERY view and expression must match the description above. Same gender, ethnicity, skin tone, hair, build, clothing, and distinctive features in every single panel.
+Create a professional character reference sheet of this person on a clean white/light gray background.
 
 LAYOUT (Left to Right):
 
@@ -154,17 +154,17 @@ Professional character sheet suitable for animation/illustration reference.`,
   {
     name: 'Character Turnaround',
     description: 'Professional model turnaround sheet with 4 full-body views and 3 portrait close-ups - perfect identity consistency',
-    recipeNote: 'Attach a reference image AND describe your character. Text description is critical for identity - the model uses it to lock likeness across all views.',
+    recipeNote: 'Attach a reference image and provide a short identity description (gender, ethnicity, build, distinctive features).',
     stages: [{
       id: 'stage_turnaround_0',
       order: 0,
       template: `Create a professional character turnaround reference sheet.
 
-THE CHARACTER: <<CHARACTER_DESCRIPTION:text!>>
+Character identity: <<CHARACTER_DESCRIPTION:text!>>
 
-IDENTITY LOCK: This is the ONLY person in this sheet. Every panel shows this EXACT person — same gender, ethnicity, skin tone, facial structure, hair, build, and clothing. Do NOT deviate from this description.
+Face consistency: Keep the person's facial features exactly the same as the reference image. Do not alter face, hairstyle, or body proportions. Maintain perfect identity consistency across every panel.
 
-Use a clean, neutral plain background. Match the visual style of any attached reference image.
+Use a clean, neutral plain background.
 
 Arrange the composition into two horizontal rows:
 
@@ -180,7 +180,7 @@ BOTTOM ROW (3 highly detailed close-up portraits, aligned beneath the full-body 
 - Right profile portrait (facing right)
 
 CRITICAL REQUIREMENTS:
-- SAME PERSON in every panel — verify against the character description above
+- SAME PERSON in every panel — keep facial features exactly the same as reference image
 - Keep the subject in a relaxed A-pose
 - Consistent scale and alignment between views
 - Accurate anatomy and clear silhouette
@@ -291,11 +291,11 @@ Output: High-quality full-body character portrait suitable for reference.`,
         type: 'generation',
         template: `CHARACTER: @<<CHARACTER_NAME:name!>>
 
-THE CHARACTER: <<CHARACTER_DESCRIPTION:text!>>
+Character identity: <<CHARACTER_DESCRIPTION:text!>>
+
+Face consistency: Keep the person's facial features exactly the same as the reference image. Do not alter face, hairstyle, or body proportions. Every view and expression must be the SAME person.
 
 Create a professional character reference sheet using the previous image as the definitive reference.
-
-IDENTITY LOCK: This is the EXACT person from the reference. Every view and expression must show this same person — same gender, ethnicity, skin tone, facial structure, hair, build, and clothing. Do NOT generate a different person.
 
 CHARACTER SHEET LAYOUT (21:9 aspect ratio):
 
@@ -316,7 +316,7 @@ STYLE: Match the style from the reference image exactly
 
 CRITICAL REQUIREMENTS:
 - SOLID BLACK LINES (4-6 pixels) separating each expression cell
-- All expressions maintain the SAME face structure matching the description above
+- All expressions maintain the SAME face — keep facial features exactly the same as reference
 - Clean white/light gray background throughout
 - Production-ready layout for animation/illustration reference`,
         fields: [],
@@ -701,29 +701,23 @@ Maintain exact art style consistency from Stage 2.`,
   {
     name: 'Photo to Character Sheet (Multi-Ref)',
     description: 'Generate character sheet from multiple reference photos. Better likeness from multiple angles.',
-    recipeNote: 'Attach: Multiple photos of the same person + describe them in text. Text description is critical for identity preservation during stylization.',
+    recipeNote: 'Attach multiple photos of the same person from different angles. Provide short identity (gender, ethnicity, build). More references = better likeness.',
     stages: [
       // STAGE 1: Analyze all references and stylize
       {
         id: 'stage_0',
         order: 0,
-        template: `THE CHARACTER: <<CHARACTER_DESCRIPTION:text!>>
+        template: `Character identity: <<CHARACTER_DESCRIPTION:text!>>
 
-You have multiple reference photos of this person from different angles.
+You have multiple reference photos of this <<GENDER:select(male,female)!>> from different angles.
 
-IDENTITY LOCK: This is a <<GENDER:select(male,female)!>> character. Every output must match this gender and the description above exactly.
-
-Analyze ALL attached reference images:
-- Study facial structure from every available angle
-- Note how features look from front, side, 3/4 view
-- Verify skin tone, hair texture, body proportions match the description
+Face consistency: Keep the person's facial features exactly the same as the reference images. Study all angles to build complete understanding of this person's face, build, and distinctive features.
 
 Now transform this person into <<ART_STYLE:select(claymation,watercolor,cartoon,anime,3D animated,illustrated,storybook,Disney-style,Pixar-style)!>> style.
 
 ABSOLUTE LIKENESS PRESERVATION:
 Even in stylized form, someone who knows this person should recognize them instantly.
 Maintain ALL distinctive features in stylized form.
-The character's gender, ethnicity, and core features must NOT change.
 
 Output: The character in stylized form, full body, clean background.`,
         fields: [],
@@ -735,11 +729,11 @@ Output: The character in stylized form, full body, clean background.`,
         order: 1,
         template: `Name/Tag: @<<CHARACTER_NAME:name!>>
 
-THE CHARACTER: <<CHARACTER_DESCRIPTION:text!>>
+Character identity: <<CHARACTER_DESCRIPTION:text!>>
 
-Create a professional character reference sheet of this EXACT person.
+Face consistency: Keep the person's facial features exactly the same as the reference image. This is a <<GENDER:select(male,female)!>>. Do not alter face, hairstyle, or body proportions.
 
-IDENTITY LOCK: This is a <<GENDER:select(male,female)!>>. Every view and expression must show this same person — same gender, ethnicity, skin tone, build, and features.
+Create a professional character reference sheet of this person.
 
 CHARACTER SHEET LAYOUT (21:9 aspect ratio):
 
@@ -913,25 +907,25 @@ Black grid lines between all cells.`,
   {
     name: 'Character Through Ages',
     description: 'Show the same character at 9 different ages - from baby to elderly',
-    recipeNote: 'Attach your character reference AND describe them. The text description anchors identity across all 9 age panels.',
+    recipeNote: 'Attach your character reference and provide identity (gender, ethnicity, build, features). The character ages while keeping the same core identity.',
     stages: [{
       id: 'stage_0',
       order: 0,
       template: `This is @<<CHARACTER_NAME:name!>>.
 
-THE CHARACTER: <<CHARACTER_DESCRIPTION:text!>>
-GENDER: <<GENDER:select(male,female)!>>
+Character identity: <<CHARACTER_DESCRIPTION:text!>>
+Gender: <<GENDER:select(male,female)!>>
+
+Face consistency: Keep the person's facial features exactly the same as the reference image. This is a <<GENDER:select(male,female)!>> — do not change gender at any age.
 
 Generate a 3x3 grid showing this SAME CHARACTER at 9 different life stages.
 IMPORTANT: Separate each cell with a solid BLACK LINE (4-6 pixels wide) for clean extraction.
 
-IDENTITY LOCK — EVERY PANEL MUST SHOW:
-- The SAME <<GENDER:select(male,female)!>> person at different ages
-- Same ethnicity and skin tone throughout
-- Same core facial structure (adjusted for age)
+IDENTITY PRESERVATION — EVERY PANEL MUST SHOW:
+- The SAME person at different ages (same gender, ethnicity, skin tone)
+- Same core facial structure (adjusted for age appropriately)
 - Same distinctive features (birthmarks, dimples, nose shape, ear shape)
 - Same eye color and shape
-- Do NOT change the character's gender at any age
 
 THE 9 AGES (in order):
 
