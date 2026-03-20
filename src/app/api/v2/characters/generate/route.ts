@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
       description,
       style = 'cinematic',
       reference_image,
+      reference_images,
       style_reference,
       aspect_ratio = '16:9',
       webhook_url,
@@ -55,9 +56,13 @@ export async function POST(request: NextRequest) {
       .replace(/<CHARACTER_NAME>/g, characterLabel)
       .replace(/<STYLE_NAME>/g, style)
 
-    // Build reference images array
+    // Build reference images array (support both single and array)
     const referenceImages: string[] = []
-    if (reference_image) referenceImages.push(reference_image)
+    if (reference_images && Array.isArray(reference_images)) {
+      referenceImages.push(...reference_images)
+    } else if (reference_image) {
+      referenceImages.push(reference_image)
+    }
     if (style_reference) referenceImages.push(style_reference)
 
     const webhookUrl = process.env.WEBHOOK_URL
