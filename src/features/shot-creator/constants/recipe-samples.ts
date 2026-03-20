@@ -96,13 +96,15 @@ Black grid lines between all cells. Match the template layout exactly.`,
   {
     name: 'Character Sheet',
     description: 'Professional character reference sheet with full-body views, expressions, and accessories',
-    recipeNote: 'Attach a reference image of your character and provide a short identity description (gender, ethnicity, build, distinctive features). Do NOT describe clothing — the model uses neutral defaults.',
+    recipeNote: 'Attach a reference image. Identity = face/build/features only. Use OUTFIT field for clothing.',
     stages: [{
       id: 'stage_0',
       order: 0,
       template: `CHARACTER @<<CHARACTER_NAME:name!>>
 
 Character identity: <<CHARACTER_DESCRIPTION:text!>>
+
+OUTFIT: <<OUTFIT:text>>
 
 Face consistency: Keep the person's facial features exactly the same as the reference image. Do not alter face, hairstyle, or body proportions.
 
@@ -154,13 +156,15 @@ Professional character sheet suitable for animation/illustration reference.`,
   {
     name: 'Character Turnaround',
     description: 'Professional model turnaround sheet with 4 full-body views and 3 portrait close-ups - perfect identity consistency',
-    recipeNote: 'Attach a reference image and provide a short identity description (gender, ethnicity, build, distinctive features).',
+    recipeNote: 'Attach a reference image. Identity = face/build/features only. Use OUTFIT field for clothing.',
     stages: [{
       id: 'stage_turnaround_0',
       order: 0,
       template: `Create a professional character turnaround reference sheet.
 
 Character identity: <<CHARACTER_DESCRIPTION:text!>>
+
+OUTFIT: <<OUTFIT:text>>
 
 Face consistency: Keep the person's facial features exactly the same as the reference image. Do not alter face, hairstyle, or body proportions. Maintain perfect identity consistency across every panel.
 
@@ -701,13 +705,15 @@ Maintain exact art style consistency from Stage 2.`,
   {
     name: 'Photo to Character Sheet (Multi-Ref)',
     description: 'Generate character sheet from multiple reference photos. Better likeness from multiple angles.',
-    recipeNote: 'Attach multiple photos of the same person from different angles. Provide short identity (gender, ethnicity, build). More references = better likeness.',
+    recipeNote: 'Attach multiple photos from different angles. Identity = face/build/features. Use OUTFIT for clothing. More refs = better likeness.',
     stages: [
       // STAGE 1: Analyze all references and stylize
       {
         id: 'stage_0',
         order: 0,
         template: `Character identity: <<CHARACTER_DESCRIPTION:text!>>
+
+OUTFIT: <<OUTFIT:text>>
 
 You have multiple reference photos of this <<GENDER:select(male,female)!>> from different angles.
 
@@ -730,6 +736,8 @@ Output: The character in stylized form, full body, clean background.`,
         template: `Name/Tag: @<<CHARACTER_NAME:name!>>
 
 Character identity: <<CHARACTER_DESCRIPTION:text!>>
+
+OUTFIT: <<OUTFIT:text>>
 
 Face consistency: Keep the person's facial features exactly the same as the reference image. This is a <<GENDER:select(male,female)!>>. Do not alter face, hairstyle, or body proportions.
 
@@ -901,64 +909,6 @@ Black grid lines between all cells.`,
     isQuickAccess: true,
     quickAccessLabel: 'PageVar',
     categoryId: 'scenes',
-  },
-
-  // Character Through Ages - Same character at different life stages
-  {
-    name: 'Character Through Ages',
-    description: 'Show the same character at 9 different ages - from baby to elderly',
-    recipeNote: 'Attach your character reference and provide identity (gender, ethnicity, build, features). The character ages while keeping the same core identity.',
-    stages: [{
-      id: 'stage_0',
-      order: 0,
-      template: `This is @<<CHARACTER_NAME:name!>>.
-
-Character identity: <<CHARACTER_DESCRIPTION:text!>>
-Gender: <<GENDER:select(male,female)!>>
-
-Face consistency: Keep the person's facial features exactly the same as the reference image. This is a <<GENDER:select(male,female)!>> — do not change gender at any age.
-
-Generate a 3x3 grid showing this SAME CHARACTER at 9 different life stages.
-IMPORTANT: Separate each cell with a solid BLACK LINE (4-6 pixels wide) for clean extraction.
-
-IDENTITY PRESERVATION — EVERY PANEL MUST SHOW:
-- The SAME person at different ages (same gender, ethnicity, skin tone)
-- Same core facial structure (adjusted for age appropriately)
-- Same distinctive features (birthmarks, dimples, nose shape, ear shape)
-- Same eye color and shape
-
-THE 9 AGES (in order):
-
-ROW 1 - CHILDHOOD:
-1. BABY (0-1): Infant version, soft features, same distinctive markers
-2. TODDLER (2-4): Playful, curious expression, developing features
-3. CHILD (6-8): School age, personality emerging, same core features
-
-ROW 2 - YOUTH TO ADULT:
-4. PRETEEN (10-12): Transitioning features, recognizable identity
-5. TEENAGER (15-17): Young adult features forming, same person clearly
-6. YOUNG ADULT (25-30): Prime of life, full adult features
-
-ROW 3 - MATURITY:
-7. MIDDLE AGE (45-50): Some aging signs, same core identity
-8. SENIOR (65-70): Gray hair, wrinkles, but still recognizably them
-9. ELDERLY (80+): Advanced age, wisdom in eyes, same person
-
-Each cell shows a portrait (shoulders-up or chest-up) with appropriate:
-- Age-appropriate hairstyle (but consistent hair texture/color until graying)
-- Age-appropriate clothing style for each era
-- Age-appropriate expression and demeanor
-
-<<ART_STYLE:select(realistic,illustrated,3D animated,painterly,claymation)>>
-
-Black grid lines between all cells. No text labels.`,
-      fields: [],
-      referenceImages: [],
-    }],
-    suggestedAspectRatio: '1:1',
-    isQuickAccess: true,
-    quickAccessLabel: 'Ages',
-    categoryId: 'characters',
   },
 
   // Character Generator - Generate 9 unique character designs from basic traits
