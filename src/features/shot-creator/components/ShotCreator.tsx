@@ -25,6 +25,7 @@ import {
     ResizableHandle,
 } from '@/components/ui/resizable'
 import { logger } from '@/lib/logger'
+import { useRecipeStore } from '../store/recipe.store'
 
 const ShotCreator = () => {
     const { setActiveTab } = useLayoutStore()
@@ -53,6 +54,7 @@ const ShotCreator = () => {
         loadLibraryItems()
     }, [loadLibraryItems])
 
+    const { activeRecipeId } = useRecipeStore()
     const modelConfig = getModelConfig((shotCreatorSettings.model || 'nano-banana-2') as ModelId)
 
     // Fix resolution mismatch on initial render
@@ -238,28 +240,30 @@ const ShotCreator = () => {
             <div className="flex-1 overflow-hidden">
                 {/* Mobile Layout (< lg) */}
                 <div className="lg:hidden space-y-4">
-                    {/* Reference Images (or just model selector when maxImages=0) */}
-                    <div className={modelConfig?.maxReferenceImages === 0 ? 'px-1' : 'bg-background/30 p-0'}>
-                        <CreatorReferenceManager
-                            compact={true}
-                            maxImages={modelConfig?.maxReferenceImages ?? 3}
-                            modelSelector={
-                                <ModelSelector
-                                    selectedModel={shotCreatorSettings.model || 'nano-banana-2'}
-                                    onModelChange={(model: string) => {
-                                        const newModel = model as ModelId
-                                        const newModelConfig = getModelConfig(newModel)
-                                        const defaultResolution = newModelConfig.parameters.resolution?.default as string | undefined
-                                        const updates: { model: ModelId; resolution?: string } = { model: newModel }
-                                        if (defaultResolution) updates.resolution = defaultResolution
-                                        updateSettings(updates)
-                                    }}
-                                    compact={true}
-                                    showTooltips={false}
-                                />
-                            }
-                        />
-                    </div>
+                    {/* Reference Images — hidden when recipe is active (inline form has its own) */}
+                    {!activeRecipeId && (
+                        <div className={modelConfig?.maxReferenceImages === 0 ? 'px-1' : 'bg-background/30 p-0'}>
+                            <CreatorReferenceManager
+                                compact={true}
+                                maxImages={modelConfig?.maxReferenceImages ?? 3}
+                                modelSelector={
+                                    <ModelSelector
+                                        selectedModel={shotCreatorSettings.model || 'nano-banana-2'}
+                                        onModelChange={(model: string) => {
+                                            const newModel = model as ModelId
+                                            const newModelConfig = getModelConfig(newModel)
+                                            const defaultResolution = newModelConfig.parameters.resolution?.default as string | undefined
+                                            const updates: { model: ModelId; resolution?: string } = { model: newModel }
+                                            if (defaultResolution) updates.resolution = defaultResolution
+                                            updateSettings(updates)
+                                        }}
+                                        compact={true}
+                                        showTooltips={false}
+                                    />
+                                }
+                            />
+                        </div>
+                    )}
 
                     {/* Prompt */}
                     <div className="bg-background/30">
@@ -328,31 +332,33 @@ const ShotCreator = () => {
                         {/* LEFT PANEL - Reference Images & Prompt */}
                         <ResizablePanel defaultSize={rightPanelCollapsed ? 100 : 60} minSize={30}>
                             <div className="h-full pr-3 space-y-4 overflow-y-auto">
-                                {/* Reference Images (or just model selector when maxImages=0) */}
-                                <div className={modelConfig?.maxReferenceImages === 0
-                                    ? 'px-1'
-                                    : 'bg-background/30 rounded-lg border border-border/50 p-4'
-                                }>
-                                    <CreatorReferenceManager
-                                        compact={true}
-                                        maxImages={modelConfig?.maxReferenceImages ?? 3}
-                                        modelSelector={
-                                            <ModelSelector
-                                                selectedModel={shotCreatorSettings.model || 'nano-banana-2'}
-                                                onModelChange={(model: string) => {
-                                                    const newModel = model as ModelId
-                                                    const newModelConfig = getModelConfig(newModel)
-                                                    const defaultResolution = newModelConfig.parameters.resolution?.default as string | undefined
-                                                    const updates: { model: ModelId; resolution?: string } = { model: newModel }
-                                                    if (defaultResolution) updates.resolution = defaultResolution
-                                                    updateSettings(updates)
-                                                }}
-                                                compact={true}
-                                                showTooltips={false}
-                                            />
-                                        }
-                                    />
-                                </div>
+                                {/* Reference Images — hidden when recipe is active */}
+                                {!activeRecipeId && (
+                                    <div className={modelConfig?.maxReferenceImages === 0
+                                        ? 'px-1'
+                                        : 'bg-background/30 rounded-lg border border-border/50 p-4'
+                                    }>
+                                        <CreatorReferenceManager
+                                            compact={true}
+                                            maxImages={modelConfig?.maxReferenceImages ?? 3}
+                                            modelSelector={
+                                                <ModelSelector
+                                                    selectedModel={shotCreatorSettings.model || 'nano-banana-2'}
+                                                    onModelChange={(model: string) => {
+                                                        const newModel = model as ModelId
+                                                        const newModelConfig = getModelConfig(newModel)
+                                                        const defaultResolution = newModelConfig.parameters.resolution?.default as string | undefined
+                                                        const updates: { model: ModelId; resolution?: string } = { model: newModel }
+                                                        if (defaultResolution) updates.resolution = defaultResolution
+                                                        updateSettings(updates)
+                                                    }}
+                                                    compact={true}
+                                                    showTooltips={false}
+                                                />
+                                            }
+                                        />
+                                    </div>
+                                )}
 
                                 {/* Prompt & Settings */}
                                 <div className="bg-background/30 rounded-lg border border-border/50">

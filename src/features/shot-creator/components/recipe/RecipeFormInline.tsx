@@ -416,7 +416,7 @@ export function RecipeFormInline() {
                   <ImageIcon className="w-5 h-5 text-slate-400" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-slate-300">Drop your character photo here</p>
+                  <p className="text-sm text-slate-300">Drop reference image here</p>
                   <p className="text-xs text-slate-500 mt-0.5">or click to upload</p>
                 </div>
               </button>
