@@ -76,7 +76,9 @@ export function LoraCommunityBrowser() {
                             const added = collectionIds.has(lora.id)
                             const used = isLoraUsed(lora.id)
                             const rating = getLoraRating(lora.id)
-                            const customThumb = loraThumbnails[lora.id]
+                            // Check loraThumbnails map, then the user's lora object, then the static default
+                            const userLora = loras.find(l => l.id === lora.id)
+                            const customThumb = loraThumbnails[lora.id] || userLora?.thumbnailUrl
                             return (
                                 <CommunityLoraCard
                                     key={lora.id}
