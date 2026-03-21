@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRecipeStore } from '../../store/recipe.store'
 import { useShotCreatorStore } from '../../store/shot-creator.store'
-import { useLoraStore } from '../../store/lora.store'
+import { useLoraStore, type LoraItem } from '../../store/lora.store'
 import { useReferenceImageManager } from '../../hooks/useReferenceImageManager'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -40,6 +40,37 @@ const RECIPE_PAIRS: Record<string, string> = {
   'Character Turnaround (From Description)': 'Character Turnaround',
 }
 
+function LoraIntensitySlider({ lora, loraThumbnails, onUpdateScale }: {
+  lora: LoraItem
+  loraThumbnails: Record<string, string>
+  onUpdateScale: (scale: number) => void
+}) {
+  const thumb = loraThumbnails[lora.id] || lora.thumbnailUrl
+  const scale = lora.defaultLoraScale
+  return (
+    <div className="flex items-center gap-2 px-1">
+      {thumb ? (
+        <img src={thumb} alt="" className="w-4 h-4 rounded object-cover flex-shrink-0" />
+      ) : (
+        <Wand2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+      )}
+      <span className="text-xs text-foreground/80 w-16 truncate flex-shrink-0">{lora.name}</span>
+      <input
+        type="range"
+        min={0}
+        max={2}
+        step={0.1}
+        value={scale}
+        onChange={e => onUpdateScale(parseFloat(e.target.value))}
+        className="flex-1 h-1.5 accent-[oklch(0.75_0.16_75)] cursor-pointer"
+      />
+      <span className="text-xs text-primary font-medium tabular-nums w-7 text-right flex-shrink-0">
+        {scale.toFixed(1)}
+      </span>
+    </div>
+  )
+}
+
 export function RecipeFormInline() {
   const {
     activeRecipeId,
@@ -58,6 +89,7 @@ export function RecipeFormInline() {
   const loras = useLoraStore(s => s.loras)
   const activeLoraIds = useLoraStore(s => s.activeLoraIds)
   const toggleActiveLora = useLoraStore(s => s.toggleActiveLora)
+  const updateLora = useLoraStore(s => s.updateLora)
   const loraThumbnails = useLoraStore(s => s.loraThumbnails)
 
   const wildcardStore = useWildCardStore()
@@ -65,7 +97,6 @@ export function RecipeFormInline() {
   const [wildcardSearches, setWildcardSearches] = useState<Record<string, string>>({})
   const [showOptional, setShowOptional] = useState(false)
   const [showRecipeSwitch, setShowRecipeSwitch] = useState(false)
-  const [showLoras, setShowLoras] = useState(false)
   const [showNameSuggestions, setShowNameSuggestions] = useState(false)
   const [focusedNameField, setFocusedNameField] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -292,8 +323,11 @@ export function RecipeFormInline() {
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
             <Select value={value} onValueChange={v => setFieldValue(field.id, v)}>
-              <SelectTrigger className="h-10 text-sm bg-input border-border focus:border-primary focus:ring-primary/20">
-                <SelectValue placeholder={field.placeholder} />
+              <SelectTrigger className={cn(
+                "h-10 text-sm bg-input border-border focus:border-primary focus:ring-primary/20",
+                !value && "text-muted-foreground"
+              )}>
+                <SelectValue placeholder={`Choose ${field.label.toLowerCase()}...`} />
               </SelectTrigger>
               <SelectContent>{renderSelectOptions(field.options)}</SelectContent>
             </Select>
@@ -567,67 +601,69 @@ export function RecipeFormInline() {
           <div key={field.id}>{renderField(field)}</div>
         ))}
 
-        {/* Optional fields expander */}
-        {optionalFields.length > 0 && (
+        {/* More options: optional fields + LoRA influence together */}
+        {(optionalFields.length > 0 || loras.length > 0) && (
           <div>
             <button
               onClick={() => setShowOptional(!showOptional)}
               className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               {showOptional ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              More options ({optionalFields.length})
+              More options
+              {(optionalFields.length > 0 || activeLoras.length > 0) && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary font-medium">
+                  {optionalFields.length + activeLoras.length}
+                </span>
+              )}
             </button>
             {showOptional && (
               <div className="mt-3 space-y-4">
                 {optionalFields.map(field => (
                   <div key={field.id}>{renderField(field)}</div>
                 ))}
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* LoRA influence */}
-        {loras.length > 0 && (
-          <div>
-            <button
-              onClick={() => setShowLoras(!showLoras)}
-              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Wand2 className="w-3.5 h-3.5" />
-              LoRA Influence
-              {activeLoras.length > 0 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary font-medium">
-                  {activeLoras.length}
-                </span>
-              )}
-              {showLoras ? <ChevronUp className="w-3 h-3 ml-auto" /> : <ChevronDown className="w-3 h-3 ml-auto" />}
-            </button>
-            {showLoras && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {loras.map(lora => {
-                  const isActive = activeLoraIds.includes(lora.id)
-                  const thumb = loraThumbnails[lora.id] || lora.thumbnailUrl
-                  return (
-                    <button
-                      key={lora.id}
-                      onClick={() => toggleActiveLora(lora.id)}
-                      className={cn(
-                        'flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all',
-                        isActive
-                          ? 'bg-primary/20 text-primary border border-primary/40'
-                          : 'bg-muted/50 text-muted-foreground border border-border hover:border-primary/30 hover:text-foreground'
-                      )}
-                    >
-                      {thumb ? (
-                        <img src={thumb} alt="" className="w-4 h-4 rounded object-cover" />
-                      ) : (
-                        <Wand2 className="w-3 h-3" />
-                      )}
-                      {lora.name}
-                    </button>
-                  )
-                })}
+                {/* LoRA influence */}
+                {loras.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                      <Wand2 className="w-3.5 h-3.5" />
+                      LoRA Influence
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {loras.map(lora => {
+                        const isActive = activeLoraIds.includes(lora.id)
+                        const thumb = loraThumbnails[lora.id] || lora.thumbnailUrl
+                        return (
+                          <button
+                            key={lora.id}
+                            onClick={() => toggleActiveLora(lora.id)}
+                            className={cn(
+                              'flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all',
+                              isActive
+                                ? 'bg-primary/20 text-primary border border-primary/40'
+                                : 'bg-muted/50 text-muted-foreground border border-border hover:border-primary/30 hover:text-foreground'
+                            )}
+                          >
+                            {thumb ? (
+                              <img src={thumb} alt="" className="w-4 h-4 rounded object-cover" />
+                            ) : (
+                              <Wand2 className="w-3 h-3" />
+                            )}
+                            {lora.name}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {/* Intensity sliders for active LoRAs */}
+                    {activeLoras.length > 0 && (
+                      <div className="space-y-2 pt-1">
+                        {activeLoras.map(lora => (
+                          <LoraIntensitySlider key={lora.id} lora={lora} loraThumbnails={loraThumbnails} onUpdateScale={(scale) => updateLora(lora.id, { defaultLoraScale: scale })} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
