@@ -11,7 +11,6 @@ export function usePrintifyMockup() {
   const selectedProductId = useMerchLabStore((s) => s.selectedProductId)
   const selectedColor = useMerchLabStore((s) => s.selectedColor)
   const variants = useMerchLabStore((s) => s.variants)
-  const mockupUploadId = useMerchLabStore((s) => s.mockupUploadId)
 
   const setMockupProductId = useMerchLabStore((s) => s.setMockupProductId)
   const setMockupUploadId = useMerchLabStore((s) => s.setMockupUploadId)
@@ -66,7 +65,7 @@ export function usePrintifyMockup() {
     }
   }, [setMockupImages, setIsLoadingMockup])
 
-  // Only trigger on design URL + product + color changes (not designPosition)
+  // Only trigger on design URL + product + color changes (not designPosition or mockupUploadId)
   const activeDesignUrl = activeDesign?.url
   const activeDesignId = activeDesign?.id
 
@@ -86,6 +85,8 @@ export function usePrintifyMockup() {
     const designStyle = product?.designStyles[0] ?? 'center'
     const reqId = ++requestIdRef.current
     const currentDesignPosition = useMerchLabStore.getState().designPosition
+    // Read mockupUploadId imperatively to avoid re-triggering when it updates
+    const existingUploadId = useMerchLabStore.getState().mockupUploadId
 
     cleanup()
     setMockupImages([])
@@ -105,7 +106,7 @@ export function usePrintifyMockup() {
             designUrl: activeDesignUrl,
             designPosition: currentDesignPosition,
             designStyle,
-            existingUploadId: mockupUploadId ?? undefined,
+            existingUploadId: existingUploadId ?? undefined,
           }),
         })
 
@@ -135,7 +136,7 @@ export function usePrintifyMockup() {
     createMockup()
 
     return cleanup
-  }, [activeDesignUrl, activeDesignId, selectedProductId, selectedColor, variants, mockupUploadId, cleanup, setMockupImages, setIsLoadingMockup, setMockupProductId, setMockupUploadId, pollForMockup])
+  }, [activeDesignUrl, activeDesignId, selectedProductId, selectedColor, variants, cleanup, setMockupImages, setIsLoadingMockup, setMockupProductId, setMockupUploadId, pollForMockup])
 
   useEffect(() => cleanup, [cleanup])
 }
