@@ -62,6 +62,49 @@ export function RecipeFormInline() {
   const [focusedNameField, setFocusedNameField] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragOver, setIsDragOver] = useState(false)
+  // @ autocomplete state for text fields
+  const [atMenuField, setAtMenuField] = useState<string | null>(null)
+  const [atMenuFilter, setAtMenuFilter] = useState('')
+
+  // Available reference tags for @ autocomplete
+  const availableRefTags = shotCreatorReferenceImages
+    .flatMap(img => [...img.tags, ...(img.persistentTag ? [img.persistentTag] : [])])
+    .filter(Boolean)
+    .filter((t, i, arr) => arr.indexOf(t) === i)
+
+  // Handle @ key in textarea — show autocomplete
+  const handleTextareaChange = useCallback((fieldId: string, value: string, el: HTMLTextAreaElement) => {
+    setFieldValue(fieldId, value)
+    // Check if cursor is right after an @
+    const cursorPos = el.selectionStart
+    const textBefore = value.slice(0, cursorPos)
+    const atMatch = textBefore.match(/@(\w*)$/)
+    if (atMatch && availableRefTags.length > 0) {
+      setAtMenuField(fieldId)
+      setAtMenuFilter(atMatch[1])
+    } else {
+      setAtMenuField(null)
+    }
+  }, [setFieldValue, availableRefTags])
+
+  const insertAtTag = useCallback((fieldId: string, tag: string) => {
+    const current = activeFieldValues[fieldId] || ''
+    const el = textareaRefs.current[fieldId]
+    if (!el) return
+    const cursorPos = el.selectionStart
+    const textBefore = current.slice(0, cursorPos)
+    const textAfter = current.slice(cursorPos)
+    // Replace the @partial with @TAG
+    const replaced = textBefore.replace(/@\w*$/, `@${tag} `) + textAfter
+    setFieldValue(fieldId, replaced)
+    setAtMenuField(null)
+    // Restore focus after insert
+    setTimeout(() => {
+      const newPos = replaced.length - textAfter.length
+      el.focus()
+      el.setSelectionRange(newPos, newPos)
+    }, 0)
+  }, [activeFieldValues, setFieldValue])
 
   const { handleMultipleImageUpload, removeShotCreatorImage } = useReferenceImageManager(14)
 
@@ -184,7 +227,7 @@ export function RecipeFormInline() {
     return groups.map((group, gi) => (
       <SelectGroup key={gi}>
         {group.label && (
-          <SelectLabel className="text-xs font-semibold text-primary uppercase tracking-wider px-2 py-1.5">
+          <SelectLabel className="text-xs font-semibold text-amber-400 uppercase tracking-wider px-2 py-1.5">
             {group.label}
           </SelectLabel>
         )}
@@ -225,7 +268,7 @@ export function RecipeFormInline() {
                 onFocus={() => { setFocusedNameField(field.id); setShowNameSuggestions(true) }}
                 onBlur={() => setTimeout(() => setShowNameSuggestions(false), 150)}
                 placeholder={field.placeholder || 'Type a name or pick from references'}
-                className="h-10 text-sm bg-input border-border focus:border-primary focus:ring-primary/20"
+                className="h-10 text-sm bg-input border-border focus:border-amber-500 focus:ring-amber-500/20"
               />
               {/* Autocomplete suggestions from reference tags */}
               {showSuggestions && filteredTags.length > 0 && (
@@ -240,7 +283,7 @@ export function RecipeFormInline() {
                       }}
                       className="w-full text-left px-3 py-1.5 text-sm text-foreground/80 hover:bg-secondary transition-colors flex items-center gap-2"
                     >
-                      <span className="text-primary text-xs">@</span>
+                      <span className="text-amber-400 text-xs">@</span>
                       <span>{tag}</span>
                     </button>
                   ))}
@@ -251,32 +294,57 @@ export function RecipeFormInline() {
         )
       }
 
-      case 'text':
+      case 'text': {
+        const showAtMenu = atMenuField === field.id && availableRefTags.length > 0
+        const filteredRefTags = showAtMenu
+          ? availableRefTags.filter(t => !atMenuFilter || t.toLowerCase().includes(atMenuFilter.toLowerCase()))
+          : []
         return (
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
-            <textarea
-              ref={el => {
-                textareaRefs.current[field.id] = el
-                if (el) autoResize(el)
-              }}
-              value={value}
-              onChange={e => {
-                setFieldValue(field.id, e.target.value)
-                autoResize(e.target)
-              }}
-              placeholder={field.placeholder}
-              rows={1}
-              className={cn(
-                'w-full rounded-md text-sm bg-input border border-border px-3 py-2',
-                'focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none',
-                'resize-none overflow-hidden transition-colors',
-                'placeholder:text-muted-foreground/50'
+            <div className="relative">
+              <textarea
+                ref={el => {
+                  textareaRefs.current[field.id] = el
+                  if (el) autoResize(el)
+                }}
+                value={value}
+                onChange={e => {
+                  handleTextareaChange(field.id, e.target.value, e.target)
+                  autoResize(e.target)
+                }}
+                onBlur={() => setTimeout(() => setAtMenuField(null), 150)}
+                placeholder={field.placeholder}
+                rows={1}
+                className={cn(
+                  'w-full rounded-md text-sm bg-input border border-border px-3 py-2',
+                  'focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 focus:outline-none',
+                  'resize-none overflow-hidden transition-colors',
+                  'placeholder:text-muted-foreground/50'
+                )}
+                style={{ minHeight: '36px' }}
+              />
+              {/* @ autocomplete dropdown */}
+              {showAtMenu && filteredRefTags.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-popover border border-amber-500/30 rounded-lg shadow-xl overflow-hidden">
+                  <div className="px-3 py-1.5 text-[10px] text-amber-400/70 font-medium uppercase tracking-wider border-b border-border">Reference Tags</div>
+                  {filteredRefTags.map(tag => (
+                    <button
+                      key={tag}
+                      onMouseDown={e => e.preventDefault()}
+                      onClick={() => insertAtTag(field.id, tag)}
+                      className="w-full text-left px-3 py-1.5 text-sm text-foreground/80 hover:bg-amber-500/10 transition-colors flex items-center gap-2"
+                    >
+                      <span className="text-amber-400 text-xs">@</span>
+                      <span>{tag}</span>
+                    </button>
+                  ))}
+                </div>
               )}
-              style={{ minHeight: '36px' }}
-            />
+            </div>
           </div>
         )
+      }
 
       case 'select':
         return (
@@ -284,7 +352,7 @@ export function RecipeFormInline() {
             <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
             <Select value={value} onValueChange={v => setFieldValue(field.id, v)}>
               <SelectTrigger className={cn(
-                "h-10 text-sm bg-input border-border focus:border-primary focus:ring-primary/20",
+                "h-10 text-sm bg-input border-border focus:border-amber-500 focus:ring-amber-500/20",
                 !value && "text-muted-foreground"
               )}>
                 <SelectValue placeholder={`Choose ${field.label.toLowerCase()}...`} />
@@ -336,13 +404,13 @@ export function RecipeFormInline() {
               <div className="flex items-center gap-1">
                 <div
                   onClick={reRoll}
-                  className="h-10 flex items-center gap-2 px-3 rounded-md cursor-pointer text-sm bg-input border border-primary/30 hover:border-primary/50 transition-colors text-foreground select-none min-w-[140px] flex-1"
+                  className="h-10 flex items-center gap-2 px-3 rounded-md cursor-pointer text-sm bg-input border border-amber-500/30 hover:border-amber-500/50 transition-colors text-foreground select-none min-w-[140px] flex-1"
                   title="Click to re-roll"
                 >
-                  <Dices className="w-4 h-4 text-primary shrink-0" />
+                  <Dices className="w-4 h-4 text-amber-400 shrink-0" />
                   <span className="truncate">{truncated}</span>
                 </div>
-                <Button variant="ghost" size="sm" onClick={toggleMode} className="h-10 w-10 p-0 shrink-0 text-muted-foreground hover:text-primary" title="Switch to browse mode">
+                <Button variant="ghost" size="sm" onClick={toggleMode} className="h-10 w-10 p-0 shrink-0 text-muted-foreground hover:text-amber-400" title="Switch to browse mode">
                   <List className="w-4 h-4" />
                 </Button>
               </div>
@@ -382,7 +450,7 @@ export function RecipeFormInline() {
                   )}
                 </SelectContent>
               </Select>
-              <Button variant="ghost" size="sm" onClick={toggleMode} className="h-10 w-10 p-0 shrink-0 text-muted-foreground hover:text-primary" title="Switch to random mode">
+              <Button variant="ghost" size="sm" onClick={toggleMode} className="h-10 w-10 p-0 shrink-0 text-muted-foreground hover:text-amber-400" title="Switch to random mode">
                 <Dices className="w-4 h-4" />
               </Button>
             </div>
@@ -396,26 +464,31 @@ export function RecipeFormInline() {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
+    <div className="rounded-xl border border-amber-500/30 bg-card overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-secondary border-b border-border">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-amber-500/10 border-b border-amber-500/20">
         <div className="flex items-center gap-2 relative">
           <button
             onClick={() => setShowRecipeSwitch(!showRecipeSwitch)}
-            className="flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-primary transition-colors"
+            className="flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-amber-400 transition-colors"
           >
             <span>{activeRecipe.name.replace(' (From Description)', '')}</span>
             <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
           {activeRecipe.stages.length > 1 && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/20 text-primary font-medium">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-medium">
               {activeRecipe.stages.length} stages
+            </span>
+          )}
+          {activeRecipe.suggestedModel && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-300 font-medium">
+              {activeRecipe.suggestedModel === 'nano-banana-2' ? 'NB2' : activeRecipe.suggestedModel}
             </span>
           )}
 
           {/* Recipe switcher dropdown */}
           {showRecipeSwitch && (
-            <div className="absolute top-full left-0 mt-1 z-50 w-64 max-h-[300px] overflow-y-auto bg-popover border border-border rounded-lg shadow-xl">
+            <div className="absolute top-full left-0 mt-1 z-50 w-80 max-h-[360px] overflow-y-auto bg-popover border border-amber-500/20 rounded-lg shadow-xl">
               {recipes.map(r => (
                 <button
                   key={r.id}
@@ -424,13 +497,16 @@ export function RecipeFormInline() {
                     setShowRecipeSwitch(false)
                   }}
                   className={cn(
-                    'w-full text-left px-3 py-2 text-sm transition-colors',
+                    'w-full text-left px-3 py-2.5 transition-colors border-b border-border/50 last:border-0',
                     r.id === activeRecipeId
-                      ? 'bg-primary/20 text-primary'
-                      : 'text-foreground/80 hover:bg-secondary'
+                      ? 'bg-amber-500/15 text-amber-400'
+                      : 'text-foreground/80 hover:bg-amber-500/5'
                   )}
                 >
-                  {r.name}
+                  <div className="text-sm font-medium">{r.name}</div>
+                  {r.description && (
+                    <div className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{r.description}</div>
+                  )}
                 </button>
               ))}
             </div>
@@ -458,7 +534,7 @@ export function RecipeFormInline() {
                 className={cn(
                   'px-3 py-1 text-xs font-medium transition-colors',
                   !isDescriptionMode
-                    ? 'bg-primary/20 text-primary'
+                    ? 'bg-amber-500/20 text-amber-400'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 )}
               >
@@ -470,7 +546,7 @@ export function RecipeFormInline() {
                 className={cn(
                   'px-3 py-1 text-xs font-medium transition-colors border-l border-border',
                   isDescriptionMode
-                    ? 'bg-primary/20 text-primary'
+                    ? 'bg-amber-500/20 text-amber-400'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 )}
               >
@@ -496,10 +572,10 @@ export function RecipeFormInline() {
             className={cn(
               'relative rounded-lg border-2 border-dashed transition-colors',
               isDragOver
-                ? 'border-primary bg-primary/10'
+                ? 'border-amber-500 bg-amber-500/10'
                 : shotCreatorReferenceImages.length > 0
                   ? 'border-border bg-muted/30'
-                  : 'border-border hover:border-primary/50 bg-muted/20'
+                  : 'border-border hover:border-amber-500/50 bg-muted/20'
             )}
           >
             {shotCreatorReferenceImages.length > 0 ? (
@@ -524,7 +600,7 @@ export function RecipeFormInline() {
                   {/* Add more button */}
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-16 h-16 rounded-lg border border-dashed border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+                    className="w-16 h-16 rounded-lg border border-dashed border-border flex items-center justify-center text-muted-foreground hover:text-amber-400 hover:border-amber-500/50 transition-colors"
                   >
                     <Upload className="w-4 h-4" />
                   </button>
@@ -536,8 +612,8 @@ export function RecipeFormInline() {
                 onClick={() => fileInputRef.current?.click()}
                 className="w-full py-6 flex flex-col items-center gap-2 cursor-pointer"
               >
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <ImageIcon className="w-5 h-5 text-primary/60" />
+                <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                  <ImageIcon className="w-5 h-5 text-amber-500/60" />
                 </div>
                 <div className="text-center">
                   <p className="text-sm text-foreground/80">Drop or paste reference image here</p>

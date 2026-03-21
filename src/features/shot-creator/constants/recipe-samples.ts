@@ -18,6 +18,7 @@ export const SAMPLE_RECIPES: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>[] = 
     name: 'Style Guide Grid',
     description: 'Create a 3x3 visual style guide with 9 example tiles demonstrating the full visual language of a style',
     recipeNote: 'Attach a style reference image. Name your style. The model generates 9 tiles showing how the style handles characters, action, environments, vehicles, and group scenes.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -97,6 +98,7 @@ Black grid lines between all cells. Match the template layout exactly.`,
     name: 'Character Sheet',
     description: 'Professional character reference sheet with full-body views, expressions, and accessories',
     recipeNote: 'Attach a reference image. Identity = face/build/features. Specify outfit and attributes separately.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -158,6 +160,7 @@ Professional character sheet suitable for animation/illustration reference.`,
     name: 'Character Turnaround',
     description: 'Professional model turnaround sheet with 4 full-body views and 3 portrait close-ups - perfect identity consistency',
     recipeNote: 'Attach a reference image. Identity = face/build/features only. Use OUTFIT field for clothing.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_turnaround_0',
       order: 0,
@@ -211,6 +214,7 @@ Output a crisp, print-ready reference sheet look with sharp details.
     name: 'Character Turnaround (From Description)',
     description: 'Professional model turnaround from text description only - no reference photo needed',
     recipeNote: 'Describe your character in detail. Creates 4 full-body views and 3 portrait close-ups with perfect identity consistency.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_turnaround_desc_0',
       order: 0,
@@ -349,6 +353,7 @@ CRITICAL REQUIREMENTS:
     name: '9-Frame Cinematic',
     description: '3x3 cinematic contact sheet covering full shot range',
     recipeNote: 'Attach a reference image. The model will create 9 different framings of the same subject with black grid lines for extraction.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -394,6 +399,7 @@ STRICT REQUIREMENTS:
     name: 'Before/After Location',
     description: '3x3 grid showing same location in 9 different states/time periods',
     recipeNote: 'Attach a reference image of a location. The model will show the same camera angle with 9 different states (time of day, seasons, decades, or custom transformations).',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -442,6 +448,7 @@ STRICT REQUIREMENTS:
     name: 'Holiday Vibe',
     description: 'Add holiday decorations and atmosphere without changing the character',
     recipeNote: 'Attach the image you want to add holiday vibes to. The character and location will stay the same.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -474,6 +481,7 @@ The additions should feel organic and integrated, not pasted on.`,
     name: 'Story to 9 Frames',
     description: 'Tell an entire story in 9 cinematic frames. Attach character sheet and style guide for consistency.',
     recipeNote: 'Attach: 1) Character sheet, 2) Style guide. Enter your story. The AI will identify 9 key moments and visualize them.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -534,6 +542,7 @@ Black grid lines between all cells. No text, labels, or dialogue in frames.`,
     name: 'Talking Heads Multi-Angle',
     description: 'Same scene from 9 different camera angles - perfect for podcasts, interviews, TV shows, behind-the-scenes',
     recipeNote: 'Attach your character/scene reference. Get 9 angles: front, side, close-up, over-shoulder, wide, behind-the-scenes, and more.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -583,6 +592,7 @@ Black grid lines between all cells. No text labels.`,
   {
     name: 'Time of Day',
     description: 'Same location across 6 different times of day',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -617,6 +627,7 @@ Arrange as a 2 row × 3 column grid. No labels or text overlays.<<STYLE:select(,
     name: 'Photo to Character Sheet (Isolation)',
     description: 'Multi-stage: Extract character from photo → Apply art style → Generate character sheet. Best for single-photo input.',
     recipeNote: 'Attach: 1) Full-body photo of person, 2) Style guide for target art style. This version isolates the character first - use "Multi-Ref" version if you have multiple reference angles.',
+    suggestedModel: 'nano-banana-2',
     stages: [
       // STAGE 1: Isolate character from photo
       {
@@ -709,6 +720,7 @@ Maintain exact art style consistency from Stage 2.`,
     name: 'Photo to Character Sheet (Multi-Ref)',
     description: 'Generate character sheet from multiple reference photos. Better likeness from multiple angles.',
     recipeNote: 'Attach multiple photos from different angles. Identity = face/build/features. Use OUTFIT for clothing. More refs = better likeness.',
+    suggestedModel: 'nano-banana-2',
     stages: [
       // STAGE 1: Analyze all references and stylize
       {
@@ -777,6 +789,7 @@ White/light gray background. Clean, production-ready layout.`,
     name: 'Book Cover Generator',
     description: 'Generate 9 book cover variations, select one, upscale to final quality',
     recipeNote: 'Attach: 1) Style guide, 2) Main character sheet. Enter book title.',
+    suggestedModel: 'nano-banana-2',
     stages: [
       // STAGE 1: Generate 9 cover variations in grid
       {
@@ -863,6 +876,7 @@ Output a single high-quality children's book cover ready for print (300 DPI equi
     name: 'Story Page Variations',
     description: 'Generate 9 image variations for a single story page. Attach character sheet(s) and style guide.',
     recipeNote: 'Attach: 1) Character sheet(s), 2) Style guide. The 9 variations will be in a 3x3 grid with black separator lines for easy extraction.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -919,6 +933,7 @@ Black grid lines between all cells.`,
     name: 'Character Generator',
     description: 'Generate 9 unique character designs from basic traits. Pick your favorite to become your main character.',
     recipeNote: 'Attach your style guide. Enter character traits (age, gender, distinctive features). Get 9 unique designs to choose from!',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -966,6 +981,7 @@ No text labels. Black grid lines between cells.`,
     name: 'Wardrobe Sheet',
     description: 'Generate a labeled wardrobe reference sheet with 6 outfit variations',
     recipeNote: 'Attach your character reference. Name each outfit (e.g., "Street Look", "Club Fit", "Formal"). Labels appear below each cell.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -1023,6 +1039,7 @@ Black separator lines between cells for easy extraction.`,
     name: 'Location Sheet',
     description: 'Plan your music video locations - same character in 6 different environments with labels',
     recipeNote: 'Attach your character reference. Define each location (e.g., "Rooftop - Night", "Club Interior", "Street - Golden Hour"). Perfect for music video shot planning.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -1075,6 +1092,7 @@ Cinematic quality - these are music video shot references.`,
     name: 'Eye Level Grid',
     description: '3x3 grid with your image centered. All shots at eye level. Choose 8 shot sizes for surrounding frames.',
     recipeNote: 'Attach a reference image. It goes in the center. Pick sizes for the 8 surrounding frames - all at eye level.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -1115,6 +1133,7 @@ REQUIREMENTS:
     name: 'Low Angle Grid',
     description: '3x3 grid with your image centered. All shots from low angle looking UP. Choose 8 shot sizes.',
     recipeNote: 'Attach a reference image. It goes in the center. Pick sizes for the 8 surrounding frames - all looking UP at subject.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -1155,6 +1174,7 @@ REQUIREMENTS:
     name: 'High Angle Grid',
     description: '3x3 grid with your image centered. All shots from high angle looking DOWN. Choose 8 shot sizes.',
     recipeNote: 'Attach a reference image. It goes in the center. Pick sizes for the 8 surrounding frames - all looking DOWN at subject.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -1195,6 +1215,7 @@ REQUIREMENTS:
     name: 'Wide Shot Grid',
     description: '3x3 grid with your image centered. Environmental focus with wider shot options. Choose 8 shot sizes.',
     recipeNote: 'Attach a reference image. It goes in the center. Pick sizes for the 8 surrounding frames - biased toward establishing/environmental shots.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -1236,6 +1257,7 @@ REQUIREMENTS:
     name: '5 Minutes Later',
     description: 'Show time progression of an action through 9 frames - from normal state to consequences',
     recipeNote: 'Attach a starting image (person in normal state). Enter what action they decide to do. The 9 frames show the progression from decision to consequences.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -1297,6 +1319,7 @@ Black grid lines between all cells. No dialogue or captions.`,
     name: 'Professional Headshot',
     description: 'Transform any photo into a polished professional headshot for LinkedIn, websites, or corporate use',
     recipeNote: 'Upload a photo of the person. Choose style, lighting, and background options.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -1335,6 +1358,7 @@ QUALITY REQUIREMENTS:
     name: 'Virtual Try-On',
     description: 'Composite clothing onto a person - perfect for fashion visualization',
     recipeNote: 'Attach: 1) Photo of person (full body or upper body), 2) Photo of garment/clothing item. The AI will dress the person in the garment.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -1373,6 +1397,7 @@ Should look like an actual photo, not a composite.`,
     name: 'Magazine Cover',
     description: 'Transform a photo into a professional magazine cover with titles and layouts',
     recipeNote: 'Attach a photo of the subject. Enter magazine name and headline. Choose a color scheme.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -1414,6 +1439,7 @@ QUALITY: High-end glossy magazine finish, ready for print.`,
     name: 'Infographic Generator',
     description: 'Generate a visual infographic explaining any topic with icons and illustrations',
     recipeNote: 'Enter the topic to explain. The AI will create a visual infographic with icons, illustrations, and clear visual hierarchy.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -1460,6 +1486,7 @@ Output a single cohesive infographic image.`,
     name: 'Product Photography',
     description: 'Transform product photos into professional e-commerce/advertising quality shots',
     recipeNote: 'Attach a photo of the product. Choose lighting, background, and styling options.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -1498,6 +1525,7 @@ QUALITY REQUIREMENTS:
     name: 'Split View 3D',
     description: 'Create a split-view image showing realistic render on one side and wireframe/technical on the other',
     recipeNote: 'Attach an image of an object, character, or scene. The AI will create a dramatic split showing photorealistic vs technical view.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -1537,6 +1565,7 @@ Professional quality suitable for portfolio, presentation, or advertising.`,
     name: 'Viral Thumbnail',
     description: 'Create eye-catching YouTube/TikTok thumbnails with dramatic expressions and text',
     recipeNote: 'Attach a photo of the person. Enter the video title/hook. Choose an emotion style.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -1580,6 +1609,7 @@ REQUIREMENTS:
     name: 'Same Face Different Scenes',
     description: 'Generate 9 images of the same person in completely different scenes/locations while maintaining perfect likeness',
     recipeNote: 'Attach a photo of the person. The AI will place them in 9 different environments while keeping their face identical.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -1629,6 +1659,7 @@ Black grid lines between all 9 cells. No text labels.`,
     name: 'Action Figure Box',
     description: 'Transform a person into a collectible action figure in retail packaging',
     recipeNote: 'Attach a photo of the person. Enter their name/title. The AI will create a realistic action figure in packaging.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_0',
       order: 0,
@@ -3133,6 +3164,7 @@ The screen content is sharp and luminous, acting as a beacon of clarity amid the
     name: 'Artist Character Sheet',
     description: 'Professional artist reference sheet with full-body views, expressions, close-up details, and performance poses',
     recipeNote: 'Enter the artist details from your Artist DNA. Generates a 21:9 character sheet with body views, expression grid, accessories, and wardrobe variants.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: 'stage_artist_sheet_0',
       order: 0,
@@ -3178,6 +3210,7 @@ STYLE: photo quality, photo realistic, professional character reference sheet`,
   {
     name: 'Street Style Lookbook (Men)',
     description: '9 frames of the same character in different street outfits, each pulled from wildcards',
+    suggestedModel: 'nano-banana-2',
     categoryId: 'character-sheets',
     suggestedAspectRatio: '1:1',
     isQuickAccess: false,
@@ -3203,6 +3236,7 @@ Clean white studio background. Professional photography lighting. Full body shot
   {
     name: 'Street Style Lookbook (Women)',
     description: '9 frames of the same character in different street outfits, each pulled from wildcards',
+    suggestedModel: 'nano-banana-2',
     categoryId: 'character-sheets',
     suggestedAspectRatio: '1:1',
     isQuickAccess: false,
@@ -3229,6 +3263,7 @@ Clean white studio background. Professional photography lighting. Full body shot
   {
     name: 'Fashion Editorial (Women)',
     description: 'High-fashion editorial spread with curated looks from wildcards',
+    suggestedModel: 'nano-banana-2',
     categoryId: 'portraits',
     suggestedAspectRatio: '2:3',
     isQuickAccess: false,
@@ -3253,6 +3288,7 @@ Magazine-quality photography. Studio lighting with dramatic shadows. Editorial p
   {
     name: 'Location Scouting Sheet',
     description: '9 different locations for a scene, mixing indoor and outdoor venues from wildcards',
+    suggestedModel: 'nano-banana-2',
     categoryId: 'storyboards',
     suggestedAspectRatio: '1:1',
     isQuickAccess: false,
@@ -3274,6 +3310,7 @@ Golden hour and blue hour lighting mix. Film photography aesthetic. Wide angle l
   {
     name: 'Action Sequence (Men)',
     description: 'Character performing a sequence of actions across 9 frames',
+    suggestedModel: 'nano-banana-2',
     categoryId: 'action',
     suggestedAspectRatio: '16:9',
     isQuickAccess: false,
@@ -3301,6 +3338,7 @@ Cinematic realism. Dynamic camera angles. Motion blur on fast movements. Dramati
   {
     name: 'Sneaker Showcase (Men)',
     description: '9-frame grid focused on sneakers from different angles and lighting',
+    suggestedModel: 'nano-banana-2',
     categoryId: 'product',
     suggestedAspectRatio: '1:1',
     isQuickAccess: false,
@@ -3322,6 +3360,7 @@ Clean studio background. Product photography lighting. Sharp focus. No people ex
   {
     name: 'Sneaker Showcase (Women)',
     description: '9-frame grid focused on sneakers from different angles and lighting',
+    suggestedModel: 'nano-banana-2',
     categoryId: 'product',
     suggestedAspectRatio: '1:1',
     isQuickAccess: false,
@@ -3343,6 +3382,7 @@ Clean studio background. Product photography lighting. Sharp focus. No people ex
   {
     name: 'Action Sequence (Women)',
     description: 'Character performing a sequence of actions across 9 frames',
+    suggestedModel: 'nano-banana-2',
     categoryId: 'action',
     suggestedAspectRatio: '16:9',
     isQuickAccess: false,
@@ -3371,6 +3411,7 @@ Cinematic realism. Dynamic camera angles. Motion blur on fast movements. Dramati
     name: 'Battle Rap',
     description: 'Generate an intense acappella battle rap scene with two performers face-to-face, no microphones, surrounded by a crowd',
     recipeNote: 'Tag your characters with @ to pull from your character library. Use wildcard fields to select actions, outfits, hair, and locations from curated lists. Attach a reference image for style/mood matching.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: generateStageId(),
       order: 0,
@@ -3405,6 +3446,7 @@ Surround them with a dense, diverse crowd of spectators with blurred faces. Auth
     name: 'Documentary Title Card',
     description: 'Cinematic title card for documentary chapter breaks — no characters visible, atmospheric background with bold typography',
     recipeNote: 'Use this for chapter title cards in documentary productions. No characters should be visible — pure atmosphere and typography.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: generateStageId(),
       order: 0,
@@ -3436,6 +3478,7 @@ Style: Documentary film aesthetic. Shallow depth of field on background elements
     name: 'Documentary Text Overlay',
     description: 'Stylized artistic renders of social media posts, statistics, quotes, and forum threads for documentary use',
     recipeNote: 'Generate visually compelling text-based shots for documentaries — tweets, stats, forum posts, quotes. These are artistic renders, not screenshots.',
+    suggestedModel: 'nano-banana-2',
     stages: [{
       id: generateStageId(),
       order: 0,
