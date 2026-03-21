@@ -687,7 +687,7 @@ export const useUnifiedGalleryStore = create<UnifiedGalleryState>()((set, get) =
       gridSize: (savedGridSize === 'small' || savedGridSize === 'medium' || savedGridSize === 'large')
         ? savedGridSize
         : 'medium',
-      isSidebarCollapsed: savedSidebarCollapsed === 'true',
+      isSidebarCollapsed: savedSidebarCollapsed !== 'false',
       useNativeAspectRatio: savedNativeAspectRatio === 'true'
     })
   }
