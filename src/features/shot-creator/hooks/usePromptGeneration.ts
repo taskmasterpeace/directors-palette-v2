@@ -179,15 +179,19 @@ export function usePromptGeneration() {
         })
 
         switch (model) {
-            case 'nano-banana-2':
+            case 'nano-banana-2': {
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
-                baseSettings.resolution = shotCreatorSettings.resolution || '1K'
+                // Validate resolution — legacy values like "1024" must be mapped to "1K"/"2K"
+                const validResolutions = ['1K', '2K', '4K']
+                const rawRes = shotCreatorSettings.resolution || '1K'
+                baseSettings.resolution = validResolutions.includes(rawRes) ? rawRes : '1K'
                 baseSettings.safetyFilterLevel = shotCreatorSettings.safetyFilterLevel || 'block_only_high'
                 baseSettings.personGeneration = shotCreatorSettings.personGeneration || 'allow_all'
                 baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'
                 if (shotCreatorSettings.googleSearch) baseSettings.googleSearch = true
                 if (shotCreatorSettings.imageSearch) baseSettings.imageSearch = true
                 break
+            }
             case 'flux-2-klein-9b':
                 baseSettings.aspectRatio = shotCreatorSettings.aspectRatio
                 baseSettings.outputFormat = shotCreatorSettings.outputFormat || 'jpg'

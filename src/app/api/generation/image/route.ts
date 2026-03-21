@@ -1264,6 +1264,10 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
+    // RAW terminal log for debugging (bypasses lognog)
+    console.error('[API /generation/image] UNCAUGHT ERROR:', error instanceof Error ? error.message : String(error));
+    if (error instanceof Error) console.error('[API /generation/image] STACK:', error.stack);
+
     // Log error
     lognog.error(error instanceof Error ? error.message : 'Image generation failed', {
       type: 'error',

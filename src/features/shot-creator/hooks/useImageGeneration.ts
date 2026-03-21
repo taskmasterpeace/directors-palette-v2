@@ -857,6 +857,7 @@ export function useImageGeneration() {
         } catch (error) {
             const errMsg = error instanceof Error ? error.message : String(error)
             const errName = error instanceof Error ? error.name : typeof error
+            console.error('[ShotCreator] RAW generation failed:', errMsg, '| name:', errName)
             logger.shotCreator.error('Image generation failed', { message: errMsg, name: errName, type: typeof error })
 
             // Check if this is an insufficient credits error

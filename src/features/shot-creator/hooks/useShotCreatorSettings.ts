@@ -49,6 +49,11 @@ export function useShotCreatorSettings() {
           if (mergedSettings.model) {
             mergedSettings.model = migrateModelId(mergedSettings.model) as ModelId;
           }
+          // Migrate legacy resolution values (e.g., "1024" -> "1K", "2048" -> "2K")
+          if (mergedSettings.resolution && !['1K', '2K', '4K'].includes(mergedSettings.resolution)) {
+            const resMap: Record<string, string> = { '1024': '1K', '2048': '2K', '4096': '4K' }
+            mergedSettings.resolution = resMap[mergedSettings.resolution] || '1K'
+          }
           setSettings(mergedSettings);
         }
       } catch (error) {

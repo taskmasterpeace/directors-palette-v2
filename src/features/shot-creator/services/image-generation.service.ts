@@ -122,7 +122,9 @@ export class ImageGenerationService {
     }
 
     if (settings.resolution) {
-      replicateInput.resolution = settings.resolution
+      // Validate resolution — Replicate only accepts "1K", "2K", "4K"
+      const validResolutions = ['1K', '2K', '4K']
+      replicateInput.resolution = validResolutions.includes(settings.resolution) ? settings.resolution : '1K'
     }
 
     if (settings.outputFormat) {
@@ -301,6 +303,7 @@ export class ImageGenerationService {
 
       if (!response.ok) {
         const responseText = await response.text()
+        console.error('[ShotCreator] API error response:', response.status, responseText)
         let error: Record<string, unknown> = {}
         try {
           error = JSON.parse(responseText)
@@ -328,6 +331,11 @@ export class ImageGenerationService {
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error)
       const errName = error instanceof Error ? error.name : typeof error
+      // Raw console.error bypasses lognog sanitizer for debugging
+      console.error('[ShotCreator] RAW generation error:', errMsg, '| name:', errName, '| type:', typeof error)
+      if (error instanceof Error && error.stack) {
+        console.error('[ShotCreator] Stack:', error.stack)
+      }
       logger.shotCreator.error('Image generation error', { message: errMsg, name: errName, type: typeof error })
       throw error
     }
