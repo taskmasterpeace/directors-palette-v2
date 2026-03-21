@@ -220,9 +220,12 @@ export class ImageGenerationService {
       replicateInput.image = this.normalizeReferenceImages(input.referenceImages)
     }
 
-    // Aspect ratio
+    // Aspect ratio — qwen-image-edit only supports a limited set
     if (settings.aspectRatio) {
-      replicateInput.aspect_ratio = settings.aspectRatio
+      const validAspectRatios = ['1:1', '16:9', '9:16', '4:3', '3:4', 'match_input_image']
+      replicateInput.aspect_ratio = validAspectRatios.includes(settings.aspectRatio)
+        ? settings.aspectRatio
+        : '16:9'
     }
 
     // Output format
