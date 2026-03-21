@@ -9,6 +9,7 @@ import { useWildCardStore } from '../store/wildcard.store'
 import { useRecipeStore } from '../store/recipe.store'
 import { executeRecipe } from '@/features/shared/services/recipe-execution.service'
 import type { Recipe } from '../types/recipe.types'
+import { getAllFields } from '../types/recipe.types'
 import { toast } from 'sonner'
 import { logger } from '@/lib/logger'
 import { useLoraStore } from '../store/lora.store'
@@ -131,6 +132,20 @@ export function usePromptGeneration() {
             if (needsImage) {
                 const hasRefs = shotCreatorReferenceImages.length > 0 ||
                     activeRecipe.stages.some(s => (s.referenceImages?.length || 0) > 0)
+                // When user has uploaded reference images, only require 'name' fields
+                // (description is effectively provided by the image itself)
+                if (hasRefs && shotCreatorReferenceImages.length > 0) {
+                    const allFields = getAllFields(activeRecipe.stages)
+                    const nameFields = allFields.filter(f => f.type === 'name' && f.required)
+                    if (nameFields.length === 0) return true // No name fields required
+                    return nameFields.every(f => {
+                        const val = activeFieldValues[f.id]
+                        if (val && val.trim()) return true
+                        return Object.entries(activeFieldValues).some(([id, v]) =>
+                            id.includes(f.name.toLowerCase()) && v && v.trim()
+                        )
+                    })
+                }
                 return (validation?.isValid ?? false) && hasRefs
             }
             return validation?.isValid ?? false
@@ -150,7 +165,7 @@ export function usePromptGeneration() {
         }
 
         return shotCreatorPrompt.length > 0
-    }, [shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings.quickMode, shotCreatorSettings.model, shotCreatorSettings.cameraEnabled, getActiveRecipe, getActiveValidation])
+    }, [shotCreatorPrompt, shotCreatorReferenceImages, shotCreatorSettings.quickMode, shotCreatorSettings.model, shotCreatorSettings.cameraEnabled, getActiveRecipe, getActiveValidation, activeFieldValues])
 
     // ── Build model settings from shotCreatorSettings ──────────────────
     const buildModelSettings = useCallback(() => {
