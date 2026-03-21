@@ -316,7 +316,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!prompt) {
+    // Prompt can be empty for camera angle (angle tokens serve as prompt)
+    // and for style-transfer/character-sheet modes (reference images provide context)
+    const cameraEnabled = model === 'qwen-image-edit' && modelSettings?.cameraEnabled
+    const hasReferenceImages = referenceImages && referenceImages.length > 0
+    if (!prompt && !cameraEnabled && !hasReferenceImages) {
       return NextResponse.json(
         { error: 'Prompt is required' },
         { status: 400 }
