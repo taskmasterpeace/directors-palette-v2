@@ -228,10 +228,10 @@ export const MODEL_PARAMETERS: Record<string, ModelParameter> = {
         label: 'Camera LoRA Strength',
         type: 'slider',
         min: 0,
-        max: 2,
+        max: 4,
         step: 0.1,
         default: 1.25,
-        description: 'Strength of camera angle control. 1.25 recommended.'
+        description: 'Strength of camera angle control. 1.25 recommended, max 4.'
     },
     qwenAspectRatio: {
         id: 'aspectRatio',

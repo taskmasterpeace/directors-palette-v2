@@ -377,12 +377,12 @@ const AdvancedSettings = () => {
                         value={[shotCreatorSettings.loraScale ?? loraScaleDefault]}
                         onValueChange={([val]) => updateSettings({ loraScale: val })}
                         min={0}
-                        max={2}
+                        max={4}
                         step={0.1}
                         className="w-full"
                     />
                     <p className="text-xs text-muted-foreground">
-                        Strength of the camera angle LoRA (0 = none, 1.25 = default, 2 = exaggerated)
+                        Strength of the camera angle LoRA (0 = none, 1.25 = default, 4 = extreme)
                     </p>
                 </div>
             )}

@@ -5,6 +5,7 @@ import { useShotCreatorSettings } from '../../hooks/useShotCreatorSettings'
 import { useShotCreatorStore } from '../../store/shot-creator.store'
 import type { CameraAngle } from '../../helpers/camera-angle.helper'
 import { DEFAULT_CAMERA_ANGLE } from '../../helpers/camera-angle.helper'
+import { Slider } from '@/components/ui/slider'
 
 // Lazy load the 3D gizmo (Three.js is heavy)
 const CameraAngleGizmo = React.lazy(() =>
@@ -20,6 +21,7 @@ export function CameraAngleSection() {
   const referenceImages = useShotCreatorStore(s => s.shotCreatorReferenceImages)
 
   const isEnabled = settings.cameraEnabled !== false // Default to enabled for this model
+  const loraScale = settings.loraScale ?? 1.25
 
   // Get first reference image URL to display in the 3D gizmo
   const firstImageUrl = referenceImages[0]?.preview || referenceImages[0]?.url || undefined
@@ -62,15 +64,48 @@ export function CameraAngleSection() {
       </div>
 
       {isEnabled && (
-        <Suspense
-          fallback={
-            <div className="w-full h-[200px] rounded-lg bg-white/5 animate-pulse flex items-center justify-center">
-              <span className="text-xs text-white/30">Loading 3D controls...</span>
+        <>
+          <Suspense
+            fallback={
+              <div className="w-full h-[200px] rounded-lg bg-white/5 animate-pulse flex items-center justify-center">
+                <span className="text-xs text-white/30">Loading 3D controls...</span>
+              </div>
+            }
+          >
+            <CameraAngleGizmo angle={currentAngle} onChange={handleAngleChange} imageUrl={firstImageUrl} />
+          </Suspense>
+
+          {/* LoRA Intensity */}
+          <div className="space-y-1.5 pt-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-white/50">Intensity</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-cyan-400 font-medium tabular-nums">{loraScale.toFixed(1)}</span>
+                {loraScale !== 1.25 && (
+                  <button
+                    onClick={() => updateSettings({ loraScale: 1.25 })}
+                    className="text-[9px] px-1 py-0.5 rounded bg-white/5 text-white/30 hover:text-white/60 transition-colors"
+                  >
+                    reset
+                  </button>
+                )}
+              </div>
             </div>
-          }
-        >
-          <CameraAngleGizmo angle={currentAngle} onChange={handleAngleChange} imageUrl={firstImageUrl} />
-        </Suspense>
+            <Slider
+              value={[loraScale]}
+              onValueChange={([val]) => updateSettings({ loraScale: val })}
+              min={0}
+              max={4}
+              step={0.1}
+              className="w-full"
+            />
+            <div className="flex justify-between text-[9px] text-white/20">
+              <span>None</span>
+              <span>Default</span>
+              <span>Extreme</span>
+            </div>
+          </div>
+        </>
       )}
     </div>
   )
